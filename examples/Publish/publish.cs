@@ -53,8 +53,6 @@ namespace NATSExamples
         {
             IStatistics s = c.Stats;
             System.Console.WriteLine("Statistics:  ");
-            System.Console.WriteLine("   Incoming Payload Bytes: {0}", s.InBytes);
-            System.Console.WriteLine("   Incoming Messages: {0}", s.InMsgs);
             System.Console.WriteLine("   Outgoing Payload Bytes: {0}", s.OutBytes);
             System.Console.WriteLine("   Outgoing Messages: {0}", s.OutMsgs);
         }
