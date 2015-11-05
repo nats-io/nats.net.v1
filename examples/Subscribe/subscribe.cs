@@ -56,8 +56,6 @@ namespace NATSExamples
             System.Console.WriteLine("Statistics:  ");
             System.Console.WriteLine("   Incoming Payload Bytes: {0}", s.InBytes);
             System.Console.WriteLine("   Incoming Messages: {0}", s.InMsgs);
-            System.Console.WriteLine("   Outgoing Payload Bytes: {0}", s.OutBytes);
-            System.Console.WriteLine("   Outgoing Messages: {0}", s.OutMsgs);
         }
 
         private TimeSpan receiveAsyncSubscriber(IConnection c)
@@ -171,7 +169,7 @@ namespace NATSExamples
 
         private void banner()
         {
-            System.Console.WriteLine("Receving {0} messages on subject {1}",
+            System.Console.WriteLine("Receiving {0} messages on subject {1}",
                 count, subject);
             System.Console.WriteLine("  Url: {0}", url);
             System.Console.WriteLine("  Receiving: {0}",
