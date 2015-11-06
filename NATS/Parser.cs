@@ -179,7 +179,8 @@ namespace NATS.Client
                                 argBufStream.Position = 0;
                                 if (conn.msgArgs.size > msgBufBase.Length)
                                 {
-                                    msgBufBase = new byte[conn.msgArgs.size+1];
+                                    // Add 2 to account for the \r\n
+                                    msgBufBase = new byte[conn.msgArgs.size+2];
                                     msgBufStream = new MemoryStream(msgBufBase);
                                 }
                                 state = MSG_PAYLOAD;
