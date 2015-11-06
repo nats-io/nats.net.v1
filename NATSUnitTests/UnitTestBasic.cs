@@ -612,11 +612,13 @@ namespace NATSUnitTests
         {
             using (IConnection c = new ConnectionFactory().CreateConnection())
             {
-                int msgSize = 20480;
+                int msgSize = 51200;
                 byte[] msg = new byte[msgSize];
 
                 for (int i = 0; i < msgSize; i++)
                     msg[i] = (byte)'A';
+
+                msg[msgSize-1] = (byte)'Z';
 
                 using (IAsyncSubscription s = c.SubscribeAsync("foo"))
                 {
@@ -634,7 +636,7 @@ namespace NATSUnitTests
                     s.Start();
 
                     c.Publish("foo", msg);
-                    c.Flush(2000);
+                    c.Flush(1000);
 
                     lock(testLock)
                     {
@@ -643,6 +645,39 @@ namespace NATSUnitTests
                 }
             }
         }
+
+        [TestMethod]
+        public void TestSendAndRecv()
+        {
+            using (IConnection c = new ConnectionFactory().CreateConnection())
+            {
+                using (IAsyncSubscription s = c.SubscribeAsync("foo"))
+                {
+                    Object testLock = new Object();
+                    int received = 0;
+                    int count = 1000;
+
+                    s.MessageHandler += (sender, args) =>
+                    {
+                        Interlocked.Increment(ref received);
+                    };
+
+                    s.Start();
+
+                    for (int i = 0; i < count; i++)
+                    {
+                        c.Publish("foo", null);
+                    }
+                    c.Flush();
+
+                    if (received != count)
+                    {
+                        Assert.Fail("Recieved ({0}) != count ({1})");
+                    }
+                }
+            }
+        }
+
 
 
     } // class

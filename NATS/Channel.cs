@@ -10,8 +10,10 @@ using System.Threading.Tasks;
 
 namespace NATS.Client
 {
-    // Roll our own Channels - Concurrent Bag is more heavyweight
-    // than we need.
+    // This channel class really a blocking queue, is named the way it is
+    // so the code more closely reads with GO.  We implement our own channels 
+    // to be lightweight and performant - other concurrent classes do the
+    // task but are more heavyweight that what we want.
     internal sealed class Channel<T>
     {
         Queue<T> q;

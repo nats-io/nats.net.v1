@@ -109,7 +109,7 @@ namespace NATSUnitTests
             lock (mu)
             {
                 utils.bounceDefaultServer(1000);
-                Monitor.Wait(mu);
+                Monitor.Wait(mu, 10000);
             }
             c.Close();
             Assert.IsTrue(disconnected);
