@@ -672,7 +672,7 @@ namespace NATSUnitTests
 
                     if (received != count)
                     {
-                        Assert.Fail("Recieved ({0}) != count ({1})");
+                        Assert.Fail("Received ({0}) != count ({1})", received, count);
                     }
                 }
             }
