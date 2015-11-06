@@ -127,8 +127,8 @@ namespace NATS.Client
         // This is for both performance, and having to work around
         // interlinked read/writes (supported by the underlying network
         // stream, but not the BufferedStream).
-        private BufferedStream  bw      = null;
-        private BufferedStream  br      = null;
+        private Stream  bw      = null;
+        private Stream  br      = null;
         private MemoryStream    pending = null;
 
         Object flusherLock     = new Object();
@@ -211,11 +211,16 @@ namespace NATS.Client
             /// stream. It increases performance by providing an additional
             /// buffer.
             /// 
-            /// So, here's what we have:
+            /// So, here's what we have for writing:
             ///     Client code
             ///          ->BufferedStream (bw)
             ///              ->NetworkStream (srvStream)
             ///                  ->TCPClient (srvClient);
+            ///                  
+            ///  For reading:
+            ///     Client code
+            ///          ->NetworkStream (srvStream)
+            ///              ->TCPClient (srvClient);
             /// 
             /// TODO:  Test various scenarios for efficiency.  Is a 
             /// BufferedReader directly over a network stream really 
@@ -223,8 +228,7 @@ namespace NATS.Client
             /// 
             Object        mu     = new Object();
             TcpClient     client = null;
-            NetworkStream writeStream = null;
-            NetworkStream readStream = null;
+            NetworkStream stream = null;
 
             internal void open(Srv s, int timeoutMillis)
             {
@@ -250,8 +254,7 @@ namespace NATS.Client
                     client.ReceiveBufferSize = Defaults.defaultBufSize;
                     client.SendBufferSize    = Defaults.defaultBufSize;
 
-                    writeStream = client.GetStream();
-                    readStream = new NetworkStream(client.Client);
+                    stream = client.GetStream();
                 }
             }
 
@@ -278,37 +281,37 @@ namespace NATS.Client
 
             internal void teardown()
             {
+                TcpClient c;
+                NetworkStream s;
+
                 lock (mu)
                 {
-                    TcpClient c = client;
-                    NetworkStream ws = writeStream;
-                    NetworkStream rs = readStream;
+                    c = client;
+                    s = stream;
 
                     client = null;
-                    writeStream = null;
-                    readStream = null;
+                    stream = null;
+                }
 
-                    try
-                    {
-                        rs.Dispose();
-                        ws.Dispose();
-                        c.Close();
-                    }
-                    catch (Exception)
-                    {
-                        // ignore
-                    }
+                try
+                {
+                    s.Dispose();
+                    c.Close();
+                }
+                catch (Exception)
+                {
+                    // ignore
                 }
             }
 
-            internal BufferedStream getReadBufferedStream(int size)
+            internal Stream getReadBufferedStream()
             {
-                return new BufferedStream(readStream, size);
+                return stream;
             }
 
-            internal BufferedStream getWriteBufferedStream(int size)
+            internal Stream getWriteBufferedStream(int size)
             {
-                return new BufferedStream(writeStream, size);
+                return new BufferedStream(stream, size);
             }
 
             internal bool Connected
@@ -326,10 +329,10 @@ namespace NATS.Client
             {
                 get
                 {
-                    if (readStream == null)
+                    if (stream == null)
                         return false;
 
-                    return readStream.DataAvailable;
+                    return stream.DataAvailable;
                 }
             }
         }
@@ -535,8 +538,8 @@ namespace NATS.Client
                     bw.Flush();
                 }
 
-                bw = conn.getWriteBufferedStream(Defaults.defaultBufSize * 6);
-                br = conn.getReadBufferedStream(Defaults.defaultBufSize * 6);
+                bw = conn.getWriteBufferedStream(Defaults.defaultBufSize);
+                br = conn.getReadBufferedStream();
             }
             catch (Exception)
             {
@@ -1432,7 +1435,6 @@ namespace NATS.Client
         // messages. We use pings for the flush mechanism as well.
         internal void processPong()
         {
-            //System.Console.WriteLine("COLIN:  Processing pong.");
             Channel<bool> ch = null;
             lock (mu)
             {
