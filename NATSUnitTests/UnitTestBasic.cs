@@ -653,7 +653,6 @@ namespace NATSUnitTests
             {
                 using (IAsyncSubscription s = c.SubscribeAsync("foo"))
                 {
-                    Object testLock = new Object();
                     int received = 0;
                     int count = 1000;
 
@@ -673,6 +672,55 @@ namespace NATSUnitTests
                     if (received != count)
                     {
                         Assert.Fail("Received ({0}) != count ({1})", received, count);
+                    }
+                }
+            }
+        }
+
+
+        [TestMethod]
+        public void TestLargeSubjectAndReply()
+        {
+            using (IConnection c = new ConnectionFactory().CreateConnection())
+            {
+                String subject = "";
+                for (int i = 0; i < 1024; i++)
+                {
+                    subject += "A";
+                }
+
+                String reply = "";
+                for (int i = 0; i < 1024; i++)
+                {
+                    reply += "A";
+                }
+
+                using (IAsyncSubscription s = c.SubscribeAsync(subject))
+                {
+                    Object testLock = new Object();
+
+                    s.MessageHandler += (sender, args) =>
+                    {
+                        if (!subject.Equals(args.Message.Subject))
+                            Assert.Fail("Invalid subject received.");
+
+                        if (!reply.Equals(args.Message.Reply))
+                            Assert.Fail("Invalid subject received.");
+
+                        lock (testLock)
+                        {
+                            Monitor.Pulse(testLock);
+                        }
+                    };
+
+                    s.Start();
+
+                    c.Publish(subject, reply, null);
+                    c.Flush();
+
+                    lock (testLock)
+                    {
+                        Assert.IsTrue(Monitor.Wait(testLock, 1000));
                     }
                 }
             }
