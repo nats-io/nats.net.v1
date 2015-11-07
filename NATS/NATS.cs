@@ -102,18 +102,19 @@ namespace NATS.Client
          * Namespace level defaults
          */
 
-	    // Scratch storage for assembling protocol headers
-	    internal const int scratchSize = 512;
+        // Scratch storage for assembling protocol headers
+        internal const int scratchSize = 512;
 
-	    // The size of the bufio reader/writer on top of the socket.
-        // .NET perform better with small buffer sizes.
-        internal const int defaultBufSize    = 32512;
-        internal const int defaultReadLength = 512;
+        // The size of the bufio writer on top of the socket.
+        internal const int defaultBufSize = 32768;
 
-	    // The size of the bufio while we are reconnecting
+        // The read size from the network stream.
+        internal const int defaultReadLength = 20480;
+
+        // The size of the bufio while we are reconnecting
         internal const int defaultPendingSize = 1024 * 1024;
 
-	    // Default server pool size
+        // Default server pool size
         internal const int srvPoolSize = 4;
     }
 
@@ -220,7 +221,7 @@ namespace NATS.Client
         internal const string subProto   = "SUB {0} {1} {2}" + IC._CRLF_;
         internal const string unsubProto = "UNSUB {0} {1}" + IC._CRLF_;
 
-        internal const string pongProtoNoCRLF = "PONG"; 
+        internal const string pongProtoNoCRLF = "PONG";
 
         internal const string STALE_CONNECTION = "Stale Connection";
     }

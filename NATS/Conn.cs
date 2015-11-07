@@ -154,18 +154,22 @@ namespace NATS.Client
 
         int                 pout = 0;
 
-        // Prepare static protocol messages to minimize encoding costs.
-        private byte[] pingProtoBytes = null;
-        private int    pingProtoBytesLen;
-        private byte[] pongProtoBytes = null;
-        private int    pongProtoBytesLen;
-        private byte[] _CRLF_AS_BYTES = Encoding.UTF8.GetBytes(IC._CRLF_);
+        // Prepare protocol messages for efficiency
+        private byte[] PING_P_BYTES = null;
+        private int    PING_P_BYTES_LEN;
 
-        // Use a string builder to generate protocol messages.
-        StringBuilder   publishSb    = new StringBuilder(Defaults.scratchSize);
+        private byte[] PONG_P_BYTES = null;
+        private int    PONG_P_BYTES_LEN;
+
+        private byte[] PUB_P_BYTES = null;
+        private int    PUB_P_BYTES_LEN = 0;
+
+        private byte[] CRLF_BYTES = null;
+        private int    CRLF_BYTES_LEN = 0;
+
+        byte[] pubProtoBuf = null;
 
         TCPConnection conn = new TCPConnection();
-
 
         internal class Control
         {
@@ -251,7 +255,7 @@ namespace NATS.Client
 
                     client.NoDelay = false;
 
-                    client.ReceiveBufferSize = Defaults.defaultBufSize;
+                    client.ReceiveBufferSize = Defaults.defaultBufSize*2;
                     client.SendBufferSize    = Defaults.defaultBufSize;
 
                     stream = client.GetStream();
@@ -399,10 +403,27 @@ namespace NATS.Client
             this.opts = opts;
             this.pongs = createPongs();
             this.ps = new Parser(this);
-            this.pingProtoBytes = System.Text.Encoding.UTF8.GetBytes(IC.pingProto);
-            this.pingProtoBytesLen = pingProtoBytes.Length;
-            this.pongProtoBytes = System.Text.Encoding.UTF8.GetBytes(IC.pongProto);
-            this.pongProtoBytesLen = pongProtoBytes.Length;
+
+            PING_P_BYTES = System.Text.Encoding.UTF8.GetBytes(IC.pingProto);
+            PING_P_BYTES_LEN = PING_P_BYTES.Length;
+
+            PONG_P_BYTES = System.Text.Encoding.UTF8.GetBytes(IC.pongProto);
+            PONG_P_BYTES_LEN = PONG_P_BYTES.Length;
+
+            PUB_P_BYTES = Encoding.UTF8.GetBytes(IC._PUB_P_);
+            PUB_P_BYTES_LEN = PUB_P_BYTES.Length;
+
+            CRLF_BYTES = Encoding.UTF8.GetBytes(IC._CRLF_);
+            CRLF_BYTES_LEN = CRLF_BYTES.Length;
+
+            // predefine the start of the publish protocol message.
+            buildPublishProtocolBuffer(Defaults.scratchSize);
+        }
+
+        private void buildPublishProtocolBuffer(int size)
+        {
+            pubProtoBuf = new byte[size];
+            Buffer.BlockCopy(PUB_P_BYTES, 0, pubProtoBuf, 0, PUB_P_BYTES_LEN);
         }
 
 
@@ -859,7 +880,7 @@ namespace NATS.Client
             try
             {
                 writeString(connectProto());
-                bw.Write(pingProtoBytes, 0, pingProtoBytesLen);
+                bw.Write(PING_P_BYTES, 0, PING_P_BYTES_LEN);
                 bw.Flush();
             }
             catch (Exception ex)
@@ -1234,11 +1255,18 @@ namespace NATS.Client
         }
 
         // Roll our own fast conversion - we know it's the right
-        // encoding.
+        // encoding. 
         char[] convertToStrBuf = new char[Defaults.scratchSize];
 
+        // Caller must ensure thread safety.
         private string convertToString(byte[] buffer, long length)
         {
+            // expand if necessary
+            if (length > convertToStrBuf.Length)
+            {
+                convertToStrBuf = new char[length];
+            }
+
             for (int i = 0; i < length; i++)
             {
                 convertToStrBuf[i] = (char)buffer[i];
@@ -1246,6 +1274,22 @@ namespace NATS.Client
 
             // This is the copy operation for msg arg strings.
             return new String(convertToStrBuf, 0, (int)length);
+        }
+
+        // Since we know we don't need to decode the protocol string,
+        // just copy the chars into bytes.  This increased
+        // publish peformance by 30% as compared to Encoding.
+        private int writeStringToBuffer(byte[] buffer, int offset, string value)
+        {
+            int length = value.Length;
+            int end = offset + length;
+
+            for (int i = 0; i < length; i++)
+            {
+                buffer[i+offset] = (byte)value[i];
+            }
+
+            return end;
         }
 
         // Here we go ahead and convert the message args into
@@ -1427,7 +1471,7 @@ namespace NATS.Client
         // server. The server uses this mechanism to detect dead clients.
         internal void processPing()
         {
-            sendProto(pongProtoBytes, pongProtoBytesLen);
+            sendProto(PONG_P_BYTES, PONG_P_BYTES_LEN);
         }
 
 
@@ -1509,6 +1553,39 @@ namespace NATS.Client
             }
         }
 
+        // Use low level primitives to build the protocol for the publish
+        // message.
+        private int writePublishProto(byte[] dst, string subject, string reply, int msgSize)
+        {
+            // skip past the predefined "PUB "
+            int index = PUB_P_BYTES_LEN;
+
+            // Subject
+            index = writeStringToBuffer(dst, index, subject);
+
+            if (reply != null)
+            {
+                // " REPLY"
+                dst[index] = (byte)' ';
+                index++;
+
+                index = writeStringToBuffer(dst, index, reply);
+            }
+
+            // " "
+            dst[index] = (byte)' ';
+            index++;
+
+            // " SIZE"
+            index = writeStringToBuffer(dst, index, msgSize.ToString());
+
+            // "\r\n"
+            Buffer.BlockCopy(CRLF_BYTES, 0, dst, index, CRLF_BYTES_LEN);
+            index += CRLF_BYTES_LEN;
+
+            return index;
+        }
+
         // publish is the internal function to publish messages to a nats-server.
         // Sends a protocol data message by queueing into the bufio writer
         // and kicking the flush go routine. These writes should be protected.
@@ -1535,34 +1612,34 @@ namespace NATS.Client
                 if (lastEx != null)
                     throw lastEx;
 
-                // .NET is very performant using string builder.
-                publishSb.Clear();
-
-                if (reply == null)
+                int pubProtoLen;
+                // write our pubProtoBuf buffer to the buffered writer.
+                try
                 {
-                    publishSb.Append(IC._PUB_P_);
-                    publishSb.Append(" ");
-                    publishSb.Append(subject);
-                    publishSb.Append(" ");
+                    pubProtoLen = writePublishProto(pubProtoBuf, subject,
+                        reply, msgSize);
                 }
-                else
+                catch (IndexOutOfRangeException)
                 {
-                    publishSb.Append(IC._PUB_P_ + " " + subject + " " +
-                        reply + " ");
+                    // We can get here if we have very large subjects.
+                    // Expand with some room to spare.
+                    int resizeAmount = Defaults.scratchSize + subject.Length
+                        + (reply != null ? reply.Length : 0);
+
+                    buildPublishProtocolBuffer(resizeAmount);
+
+                    pubProtoLen = writePublishProto(pubProtoBuf, subject,
+                        reply, msgSize);
                 }
 
-                publishSb.Append(msgSize);
-                publishSb.Append(IC._CRLF_);
-
-                byte[] sendBytes = System.Text.Encoding.UTF8.GetBytes(publishSb.ToString());
-                bw.Write(sendBytes, 0, sendBytes.Length);
+                bw.Write(pubProtoBuf, 0, pubProtoLen);
 
                 if (msgSize > 0)
                 {
                     bw.Write(data, 0, msgSize);
                 }
 
-                bw.Write(_CRLF_AS_BYTES, 0, _CRLF_AS_BYTES.Length);
+                bw.Write(CRLF_BYTES, 0, CRLF_BYTES_LEN);
 
                 stats.outMsgs++;
                 stats.outBytes += msgSize;
@@ -1812,7 +1889,7 @@ namespace NATS.Client
             if (ch != null)
                 pongs.Enqueue(ch);
 
-            bw.Write(pingProtoBytes, 0, pingProtoBytesLen);
+            bw.Write(PING_P_BYTES, 0, PING_P_BYTES_LEN);
             bw.Flush();
         }
 
