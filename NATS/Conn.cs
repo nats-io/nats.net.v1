@@ -1987,17 +1987,6 @@ namespace NATS.Client
             bw.Flush();
         }
 
-
-        // Clear pending flush calls and reset
-        private void resetPendingFlush()
-        {
-            lock (mu)
-            {
-                clearPendingFlushCalls();
-                this.pongs = createPongs();
-            }
-        }
-
         // This will clear any pending flush calls and release pending calls.
         private void clearPendingFlushCalls()
         {
