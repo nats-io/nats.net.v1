@@ -8,7 +8,7 @@ set PATH=C:\Windows\Microsoft.NET\Framework64\v4.0.30319;%PATH%
 mkdir bin 2>NUL
 
 cd NATS
-csc.exe /nologo /out:..\bin\NATS.Client.DLL /target:library /doc:NATS.XML /optimize+ *.cs Properties\*.cs
+csc.exe /nologo /out:..\bin\NATS.Client.DLL /target:library /doc:..\bin\NATS.Client.XML /optimize+ *.cs Properties\*.cs
 
 cd ..\examples\publish
 csc.exe /nologo /out:..\..\bin\Publish.exe /r:..\..\bin\NATS.Client.dll /target:exe /optimize+ *.cs Properties\*.cs
