@@ -1,0 +1,1 @@
+doxygen DoxyFile.NATS.Client

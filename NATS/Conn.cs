@@ -95,9 +95,6 @@ namespace NATS.Client
 
     }
 
-    /// <summary>
-    /// Represents the connection to the server.
-    /// </summary>
     public class Connection : IConnection, IDisposable
     {
         Statistics stats = new Statistics();
@@ -669,9 +666,6 @@ namespace NATS.Client
             }
         }
 
-        /// <summary>
-        /// Returns the id of the server currently connected.
-        /// </summary>
         public string ConnectedId
         {
             get

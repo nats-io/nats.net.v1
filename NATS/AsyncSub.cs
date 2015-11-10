@@ -9,16 +9,6 @@ using System.Threading.Tasks;
 
 namespace NATS.Client
 {
-    /// <summary>
-    /// An object of this class is an asynchronous subscription representing interest
-    /// in a subject.   The subject can have wildcards (partial:*, full:>).
-    /// Messages will be delivered to the associated MsgHandler event delegates.
-    /// While nothing prevents event handlers from being added or 
-    /// removed while processing messages, no messages will be received until
-    /// Start() has been called.  This allows all event handlers to be added
-    /// before message processing begins.
-    /// </summary>
-    /// <remarks><see cref="MsgHandler">See MsgHandler</see>.</remarks>
     public sealed class AsyncSubscription : Subscription, IAsyncSubscription, ISubscription
     {
 
@@ -93,10 +83,6 @@ namespace NATS.Client
             }
         }
 
-        /// <summary>
-        /// Adds or removes a message handler to this subscriber.
-        /// </summary>
-        /// <remarks><see cref="MsgHandler">See MsgHandler</see></remarks>
         public event MsgHandler MessageHandler
         {
             add
@@ -109,10 +95,6 @@ namespace NATS.Client
             }
         }
 
-        /// <summary>
-        /// This completes the subsciption process notifying the server this subscriber
-        /// has interest.
-        /// </summary>
         public void Start()
         {
             if (isStarted())
