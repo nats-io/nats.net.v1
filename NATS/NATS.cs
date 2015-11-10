@@ -8,12 +8,31 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+/*! \mainpage %NATS .NET client.
+ *
+ * \section intro_sec Introduction
+ *
+ * The %NATS .NET Client is part of %NATS an open-source, cloud-native 
+ * messaging system, and is supported by [Apcera](http://www.apcera.com).
+ * This client, written in C#, follows the go client closely, but
+ * diverges in places to follow the common design semantics of a .NET API.
+ *
+ * \section install_sec Installation
+ * 
+ * Instructions to build and install the %NATS .NET C# client can be
+ * found at the [NATS .NET C# GitHub page](https://github.com/nats-io/csnats)
+ *
+ * \section other_doc_section Other Documentation
+ * 
+ * This documentation focuses on the %NATS .NET C# Client API; for additional
+ * information, refer to the following:
+ * 
+ * - [General Documentation for nats.io](http://nats.io/documentation) 
+ * - [NATS .NET C# Client found on GitHub](https://github.com/nats-io/csnats) 
+ * - [The NATS server (gnatsd) found on GitHub](https://github.com/nats-io/gnatsd)
+ */
 
-// This is the NATS .NET client.
-// 
-// This Apcera supported client library follows the go client closely, 
-// diverging where it makes sense to follow the common design 
-// semantics of the language.
+// Notes on the NATS .NET client.
 // 
 // While public and protected methods 
 // and properties adhere to the .NET coding guidlines, 
@@ -29,7 +48,7 @@ using System.Threading.Tasks;
 //     - Public members are accessed through a property.
 //     - When possible, internal members are accessed directly.
 //     - Internal Variable Names mirror those of the go client.
-//     - A minimal/no reliance on third party packages.
+//     - Minimal/no reliance on third party packages.
 //
 //     Coding guidelines are based on:
 //     http://blogs.msdn.com/b/brada/archive/2005/01/26/361363.aspx

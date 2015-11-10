@@ -30,6 +30,7 @@ The batch file will create a bin directory, and copy all binary files, including
 
 The recommended alternative is to load NATS.sln into Visual Studio 2013 Express or better.  Later versions of Visual Studio should automatically upgrade the solution and project files for you.  XML documenation is generated, so code completion, context help, etc, will be available in the editor.
 
+
 #### Project files
 
 The NATS Visual Studio Solution contains several projects, listed below.
@@ -45,6 +46,16 @@ The NATS Visual Studio Solution contains several projects, listed below.
   * Replier - A sample replier for the Requestor application.
 
 All examples provide statistics for benchmarking.
+
+### Building the API Documentation
+Doxygen is used for building the API documentation.  To build the API documentation, change directories to `documentation` and run the following command:
+
+```
+build_doc.bat
+```
+
+Doxygen will build the NATS .NET Client API documentation, placing it in the `documentationr\NATS.Client\html` directory.
+Doxygen is required to be installed and in the PATH.  Version 1.8 is known to work.
 
 ## Basic Usage
 
@@ -315,15 +326,13 @@ The NATS .NET client can throw the following exceptions:
 * NATSTimeoutException - The exception that is thrown when a NATS operation times out.
 
 ## Miscellaneous 
-Known Issues
+###Known Issues
 * Some unit tests are incomplete or fail.  This is due to long connect times with the underlying .NET TCPClient API, issues with the tests themselves, or bugs (This IS an alpha).
-* There can be an issue with a flush hanging in some situations.  I'm looking into it.
+* In the original v0.1-alphai release, there was an issue with a flush hanging in some situations.  This has been fixed in the current code base and will be included in the next release.
 
-TODO
-* API documentation
+###TODO
 * WCF bindings
 * Strong name the assembly
-
 
 ## License
 

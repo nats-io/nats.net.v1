@@ -1,0 +1,26 @@
+var namespace_n_a_t_s_1_1_client =
+[
+    [ "ConnectionFactory", "class_n_a_t_s_1_1_client_1_1_connection_factory.html", "class_n_a_t_s_1_1_client_1_1_connection_factory" ],
+    [ "ConnEventArgs", "class_n_a_t_s_1_1_client_1_1_conn_event_args.html", "class_n_a_t_s_1_1_client_1_1_conn_event_args" ],
+    [ "ErrEventArgs", "class_n_a_t_s_1_1_client_1_1_err_event_args.html", "class_n_a_t_s_1_1_client_1_1_err_event_args" ],
+    [ "IAsyncSubscription", "interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html", "interface_n_a_t_s_1_1_client_1_1_i_async_subscription" ],
+    [ "IConnection", "interface_n_a_t_s_1_1_client_1_1_i_connection.html", "interface_n_a_t_s_1_1_client_1_1_i_connection" ],
+    [ "IStatistics", "interface_n_a_t_s_1_1_client_1_1_i_statistics.html", "interface_n_a_t_s_1_1_client_1_1_i_statistics" ],
+    [ "ISubscription", "interface_n_a_t_s_1_1_client_1_1_i_subscription.html", "interface_n_a_t_s_1_1_client_1_1_i_subscription" ],
+    [ "ISyncSubscription", "interface_n_a_t_s_1_1_client_1_1_i_sync_subscription.html", "interface_n_a_t_s_1_1_client_1_1_i_sync_subscription" ],
+    [ "Msg", "class_n_a_t_s_1_1_client_1_1_msg.html", "class_n_a_t_s_1_1_client_1_1_msg" ],
+    [ "MsgHandlerEventArgs", "class_n_a_t_s_1_1_client_1_1_msg_handler_event_args.html", "class_n_a_t_s_1_1_client_1_1_msg_handler_event_args" ],
+    [ "NATSBadSubscriptionException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_bad_subscription_exception.html", null ],
+    [ "NATSConnectionClosedException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_connection_closed_exception.html", null ],
+    [ "NATSConnectionException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_connection_exception.html", null ],
+    [ "NATSException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_exception.html", null ],
+    [ "NATSMaxPayloadException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_max_payload_exception.html", null ],
+    [ "NATSNoServersException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_no_servers_exception.html", null ],
+    [ "NATSProtocolException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_protocol_exception.html", null ],
+    [ "NATSSecureConnRequiredException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_secure_conn_required_exception.html", null ],
+    [ "NATSSecureConnWantedException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_secure_conn_wanted_exception.html", null ],
+    [ "NATSSlowConsumerException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_slow_consumer_exception.html", null ],
+    [ "NATSStaleConnectionException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_stale_connection_exception.html", null ],
+    [ "NATSTimeoutException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_timeout_exception.html", null ],
+    [ "Options", "class_n_a_t_s_1_1_client_1_1_options.html", "class_n_a_t_s_1_1_client_1_1_options" ]
+];
