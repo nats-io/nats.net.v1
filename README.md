@@ -331,8 +331,10 @@ The NATS .NET client can throw the following exceptions:
 * In the original v0.1-alphai release, there was an issue with a flush hanging in some situations.  This has been fixed in the current code base and will be included in the next release.
 
 ###TODO
-* WCF bindings
-* Strong name the assembly
+* [ ] Update delegates from traditional model to custom
+* [ ] NuGet package
+* [ ] WCF bindings
+* [ ] Strong name the assembly
 
 ## License
 
