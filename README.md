@@ -88,34 +88,38 @@ Here are example snippets of using the API to create a connection, subscribe, pu
             // Creates a live connection to the default
             // NATS Server running locally
             IConnection c = cf.CreateConnection();
-
-            // Simple asynchronous subscriber on subject foo
-            IAsyncSubscription sAsync = c.SubscribeAsync("foo");
-
-            // Assign a message handler.  An anonymous delegate function
-            // is used for brevity.
-            sAsync.MessageHandler += (sender, msgArgs) =>
+            
+            // Setup an event handler to process incoming messages.
+            // An anonymous delegate function is used for brevity.
+            EventHandler<MsgHandlerEventArgs> h = (sender, args) =>
             {
                 // print the message
-                Console.WriteLine(msgArgs.Message);
+                Console.WriteLine(args.Message);
 
                 // Here are some of the accessible properties from
                 // the message:
-                // msgArgs.Message.Data;
-                // msgArgs.Message.Reply;
-                // msgArgs.Message.Subject;
-                // msgArgs.Message.ArrivalSubcription.Subject;
-                // msgArgs.Message.ArrivalSubcription.QueuedMessageCount;
-                // msgArgs.Message.ArrivalSubcription.Queue;
+                // args.Message.Data;
+                // args.Message.Reply;
+                // args.Message.Subject;
+                // args.Message.ArrivalSubcription.Subject;
+                // args.Message.ArrivalSubcription.QueuedMessageCount;
+                // args.Message.ArrivalSubcription.Queue;
 
                 // Unsubscribing from within the delegate function is supported.
-                msgArgs.Message.ArrivalSubcription.Unsubscribe();
+                args.Message.ArrivalSubcription.Unsubscribe();
             };
 
-            // Start the subscriber.  Asycnronous subscribers have a
-            // method to start receiving data.  This allows the message handler
-            // to be setup before data starts arriving; important if multicasting
-            // delegates.
+            // The simple way to create an asynchronous subscriber
+            // is to simply pass the event in.  Messages will start
+            // arriving immediately.
+            IAsyncSubscription s = c.SubscribeAsync("foo", h);
+
+            // Alternatively, create an asynchronous subscriber on subject foo, 
+            // assign a message handler, then start the subscriber.   When
+            // multicasting delegates, this allows all message handlers
+            // to be setup before messages start arriving.
+            IAsyncSubscription sAsync = c.SubscribeAsync("foo");
+            sAsync.MessageHandler += h;
             sAsync.Start();
 
             // Simple synchronous subscriber
@@ -196,7 +200,7 @@ ISyncSubscription s1 = c.SubscribeSync("foo", "job_workers");
 or
 
 ```C#
-IAsyncSubscription s = c.SubscribeAsync("foo", "job_workers");
+IAsyncSubscription s = c.SubscribeAsync("foo", "job_workers", myHandler);
 ```
 
 To unsubscribe, call the ISubscriber Unsubscribe method:
