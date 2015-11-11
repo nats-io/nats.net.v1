@@ -61,34 +61,33 @@ namespace NATSExamples
         private TimeSpan receiveAsyncSubscriber(IConnection c)
         {
             Stopwatch sw = new Stopwatch();
+            Object testLock = new Object();
 
-            using (IAsyncSubscription s = c.SubscribeAsync(subject))
+            EventHandler<MsgHandlerEventArgs> msgHandler = (sender, args) =>
             {
-                Object    testLock = new Object();
+                if (received == 0)
+                    sw.Start();
 
-                s.MessageHandler += (sender, args) =>
+                received++;
+
+                if (verbose)
+                    Console.WriteLine("Received: " + args.Message);
+
+                if (received >= count)
                 {
-                    if (received == 0)
-                        sw.Start();
-
-                    received++;
-
-                    if (verbose)
-                        Console.WriteLine("Received: " + args.Message);
-
-                    if (received >= count)
+                    sw.Stop();
+                    lock (testLock)
                     {
-                        sw.Stop();
-                        lock (testLock)
-                        {
-                            Monitor.Pulse(testLock);
-                        }
+                        Monitor.Pulse(testLock);
                     }
-                };
+                }
+            };
 
+            using (IAsyncSubscription s = c.SubscribeAsync(subject, msgHandler))
+            {
+                // just wait until we are done.
                 lock (testLock)
                 {
-                    s.Start();
                     Monitor.Wait(testLock);
                 }
             }
