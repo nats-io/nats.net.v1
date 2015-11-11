@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>NATS.Client</id>
+    <version>0.2.1.1</version>
+    <authors>Apcera, Inc.</authors>
+    <owners>Apcera, Inc.</owners>
+    <licenseUrl>https://raw.githubusercontent.com/nats-io/csnats/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/nats-io/csnats</projectUrl>
+    <iconUrl>https://www.apcera.com/sites/default/files/apcera_logo_0.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>NATS .NET Client API for nats.io</description>
+    <releaseNotes>Performance enhancements, delegate changes, API documentation.</releaseNotes>
+    <copyright>Copyright 2015 Apcera, Inc.</copyright>
+    <tags>Apcera NATS Messaging Cloud</tags>
+  </metadata>
+</package>
