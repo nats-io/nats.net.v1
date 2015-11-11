@@ -137,8 +137,8 @@ Public Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="events"></a>
 Events</h2></td></tr>
-<tr class="memitem:a3f52afb84179dda01f07c95f0b20a900"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespace_n_a_t_s_1_1_client.html#a46b6c9c084557ebf4f65f79d4407567d">MsgHandler</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html#a3f52afb84179dda01f07c95f0b20a900">MessageHandler</a></td></tr>
-<tr class="separator:a3f52afb84179dda01f07c95f0b20a900"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac6c7bc56443b70ae0743f94be94b119e"><td class="memItemLeft" align="right" valign="top">EventHandler&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg_handler_event_args.html">MsgHandlerEventArgs</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html#ac6c7bc56443b70ae0743f94be94b119e">MessageHandler</a></td></tr>
+<tr class="separator:ac6c7bc56443b70ae0743f94be94b119e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
 Additional Inherited Members</h2></td></tr>
@@ -156,7 +156,7 @@ Additional Inherited Members</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>An object of this class is an asynchronous subscription representing interest in a subject. The subject can have wildcards (partial:*, full:&gt;). Messages will be delivered to the associated MsgHandler event delegates. While nothing prevents event handlers from being added or removed while processing messages, no messages will be received until <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html#a5c4c7deef3ffec1ba136f2e51c301e2e" title="This completes the subsciption process notifying the server this subscriber has interest. ">Start()</a> has been called. This allows all event handlers to be added before message processing begins. </p>
-<p><a class="el" href="namespace_n_a_t_s_1_1_client.html#a46b6c9c084557ebf4f65f79d4407567d">See MsgHandler</a>.</p>
+<p><a class="el" href="">See MsgHandler</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a class="anchor" id="a5c4c7deef3ffec1ba136f2e51c301e2e"></a>
 <div class="memitem">
@@ -176,18 +176,18 @@ Additional Inherited Members</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Event Documentation</h2>
-<a class="anchor" id="a3f52afb84179dda01f07c95f0b20a900"></a>
+<a class="anchor" id="ac6c7bc56443b70ae0743f94be94b119e"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="namespace_n_a_t_s_1_1_client.html#a46b6c9c084557ebf4f65f79d4407567d">MsgHandler</a> NATS.Client.IAsyncSubscription.MessageHandler</td>
+          <td class="memname">EventHandler&lt;<a class="el" href="class_n_a_t_s_1_1_client_1_1_msg_handler_event_args.html">MsgHandlerEventArgs</a>&gt; NATS.Client.IAsyncSubscription.MessageHandler</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p>Adds or removes a message handlers for this subscriber. </p>
-<p><a class="el" href="namespace_n_a_t_s_1_1_client.html#a46b6c9c084557ebf4f65f79d4407567d">See MsgHandler</a></p>
+<p><a class="el" href="">See MsgHandler</a></p>
 
 </div>
 </div>

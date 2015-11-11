@@ -27,25 +27,25 @@ namespace NATS.Client
         /// Represents the method that will handle an event raised 
         /// when a connection is closed.
         /// </summary>
-        public ConnEventHandler  ClosedEventHandler = null;
+        public EventHandler<ConnEventArgs> ClosedEventHandler = null;
 
         /// <summary>
         /// Represents the method that will handle an event raised 
         /// when a connection has been disconnected from a server.
         /// </summary>
-        public ConnEventHandler  DisconnectedEventHandler = null;
+        public EventHandler<ConnEventArgs> DisconnectedEventHandler = null;
 
         /// <summary>
         /// Represents the method that will handle an event raised 
         /// when a connection has reconnected to a server.
         /// </summary>
-        public ConnEventHandler  ReconnectedEventHandler = null;
+        public EventHandler<ConnEventArgs> ReconnectedEventHandler = null;
 
         /// <summary>
         /// Represents the method that will handle an event raised 
         /// when an error occurs out of band.
         /// </summary>
-        public ErrorEventHandler AsyncErrorEventHandler = null;
+        public EventHandler<ErrEventArgs> AsyncErrorEventHandler = null;
 
         internal int maxPingsOut = Defaults.MaxPingOut;
 

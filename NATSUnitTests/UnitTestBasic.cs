@@ -669,6 +669,8 @@ namespace NATSUnitTests
                     }
                     c.Flush();
 
+                    Thread.Sleep(500);
+
                     if (received != count)
                     {
                         Assert.Fail("Received ({0}) != count ({1})", received, count);
@@ -726,7 +728,38 @@ namespace NATSUnitTests
             }
         }
 
+        [TestMethod]
+        public void TestAsyncSubHandlerAPI()
+        {
+            using (IConnection c = new ConnectionFactory().CreateConnection())
+            {
+                int received = 0;
 
+                EventHandler<MsgHandlerEventArgs> h = (sender, args) =>
+                {
+                    Interlocked.Increment(ref received);
+                };
+
+                using (IAsyncSubscription s = c.SubscribeAsync("foo", h))
+                {
+                    c.Publish("foo", null);
+                    c.Flush();
+                    Thread.Sleep(500);
+                }
+
+                using (IAsyncSubscription s = c.SubscribeAsync("foo", "bar", h))
+                {
+                    c.Publish("foo", null);
+                    c.Flush();
+                    Thread.Sleep(500);
+                }
+
+                if (received != 2)
+                {
+                    Assert.Fail("Received ({0}) != 2", received);
+                }
+            }
+        }
 
     } // class
 

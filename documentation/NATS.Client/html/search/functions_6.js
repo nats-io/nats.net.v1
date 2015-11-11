@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['msg',['Msg',['../class_n_a_t_s_1_1_client_1_1_msg.html#acc18756be7b885968f07e9deed1944fe',1,'NATS.Client.Msg.Msg()'],['../class_n_a_t_s_1_1_client_1_1_msg.html#a3ac0078d9df661e813043e2a39661360',1,'NATS.Client.Msg.Msg(string subject, string reply, byte[] data)'],['../class_n_a_t_s_1_1_client_1_1_msg.html#a050180d86545f5b766f47e1bebd1f776',1,'NATS.Client.Msg.Msg(string subject, byte[] data)'],['../class_n_a_t_s_1_1_client_1_1_msg.html#aa350543d1cc03914d6f2b7ed48f1e1a7',1,'NATS.Client.Msg.Msg(string subject)']]],
-  ['msghandler',['MsgHandler',['../namespace_n_a_t_s_1_1_client.html#a46b6c9c084557ebf4f65f79d4407567d',1,'NATS::Client']]]
+  ['newinbox',['NewInbox',['../interface_n_a_t_s_1_1_client_1_1_i_connection.html#aaa605bdb14aca0c3cbc7101282c3a056',1,'NATS::Client::IConnection']]],
+  ['nextmessage',['NextMessage',['../interface_n_a_t_s_1_1_client_1_1_i_sync_subscription.html#abff4071c0c522ca556f57ad899baa353',1,'NATS.Client.ISyncSubscription.NextMessage()'],['../interface_n_a_t_s_1_1_client_1_1_i_sync_subscription.html#a29d8865c23b821cc03aba53c700e4794',1,'NATS.Client.ISyncSubscription.NextMessage(int timeout)']]]
 ];

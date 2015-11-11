@@ -138,10 +138,14 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a63156f3482bc997f42f7a873858ab595"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5a608d7829d1739781fd3fc96406f878"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html">IAsyncSubscription</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a5a608d7829d1739781fd3fc96406f878">SubscribeAsync</a> (string subject)</td></tr>
 <tr class="separator:a5a608d7829d1739781fd3fc96406f878"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab063e2130a13a4becad6ca8fe433c42c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html">IAsyncSubscription</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#ab063e2130a13a4becad6ca8fe433c42c">SubscribeAsync</a> (string subject, EventHandler&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg_handler_event_args.html">MsgHandlerEventArgs</a> &gt; handler)</td></tr>
+<tr class="separator:ab063e2130a13a4becad6ca8fe433c42c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae2d6c78608ca4e8f0ecb1fe48199f6fb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_sync_subscription.html">ISyncSubscription</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#ae2d6c78608ca4e8f0ecb1fe48199f6fb">SubscribeSync</a> (string subject, string queue)</td></tr>
 <tr class="separator:ae2d6c78608ca4e8f0ecb1fe48199f6fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a684d4c5f74418e9ed378146bbc6c5c3e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html">IAsyncSubscription</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a684d4c5f74418e9ed378146bbc6c5c3e">SubscribeAsync</a> (string subject, string queue)</td></tr>
 <tr class="separator:a684d4c5f74418e9ed378146bbc6c5c3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2bd84c68207748ab316fbae933a536be"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html">IAsyncSubscription</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a2bd84c68207748ab316fbae933a536be">SubscribeAsync</a> (string subject, string queue, EventHandler&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg_handler_event_args.html">MsgHandlerEventArgs</a> &gt; handler)</td></tr>
+<tr class="separator:a2bd84c68207748ab316fbae933a536be"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a491851ff65f7f9e49dd1a62992d7a05d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a491851ff65f7f9e49dd1a62992d7a05d">Flush</a> (int timeout)</td></tr>
 <tr class="separator:a491851ff65f7f9e49dd1a62992d7a05d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6aa942af0cea9db31b4487f38f7fd241"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a6aa942af0cea9db31b4487f38f7fd241">Flush</a> ()</td></tr>
@@ -497,10 +501,46 @@ Properties</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>SubscribeAsynchronously will create an AsynchSubscriber with interest in a given subject. </p>
+<p>SubscribeAsynchronously will create an AsyncSubscriber with interest in a given subject. Start() must be called to begin receiving messages. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">subject</td><td>Subject of interest.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>A new Subscription</dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ab063e2130a13a4becad6ca8fe433c42c"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html">IAsyncSubscription</a> NATS.Client.IConnection.SubscribeAsync </td>
+          <td>(</td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>subject</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">EventHandler&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg_handler_event_args.html">MsgHandlerEventArgs</a> &gt;&#160;</td>
+          <td class="paramname"><em>handler</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>SubscribeAsynch will create an AsyncSubscriber with interest in a given subject, assign the handler, and immediately start receiving messages. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">subject</td><td>Subject of interest.</td></tr>
+    <tr><td class="paramname">handler</td><td>A message handler to initialize the MessageHandler event with.</td></tr>
   </table>
   </dd>
 </dl>
@@ -532,11 +572,54 @@ Properties</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>This method creates an asynchronous queue subscriber on the given subject. All subscribers with the same queue name will form the queue group and only one member of the group will be selected to receive any given message asynchronously. </p>
+<p>This method creates an asynchronous queue subscriber on the given subject. All subscribers with the same queue name will form the queue group and only one member of the group will be selected to receive any given message asynchronously. Start() must be called to begin receiving messages. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">subject</td><td>Subject of interest</td></tr>
     <tr><td class="paramname">queue</td><td>Name of the queue group</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>A new Subscription</dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a2bd84c68207748ab316fbae933a536be"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html">IAsyncSubscription</a> NATS.Client.IConnection.SubscribeAsync </td>
+          <td>(</td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>subject</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>queue</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">EventHandler&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg_handler_event_args.html">MsgHandlerEventArgs</a> &gt;&#160;</td>
+          <td class="paramname"><em>handler</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>This method creates an asynchronous queue subscriber on the given subject. All subscribers with the same queue name will form the queue group and only one member of the group will be selected to receive any given message asynchronously. Start() must be called to begin receiving messages. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">subject</td><td>Subject of interest</td></tr>
+    <tr><td class="paramname">queue</td><td>Name of the queue group</td></tr>
+    <tr><td class="paramname">handler</td><td>A message handler to initialize the MessageHandler event with.</td></tr>
   </table>
   </dd>
 </dl>

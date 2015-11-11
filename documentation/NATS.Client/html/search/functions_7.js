@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['newinbox',['NewInbox',['../interface_n_a_t_s_1_1_client_1_1_i_connection.html#aaa605bdb14aca0c3cbc7101282c3a056',1,'NATS::Client::IConnection']]],
-  ['nextmessage',['NextMessage',['../interface_n_a_t_s_1_1_client_1_1_i_sync_subscription.html#abff4071c0c522ca556f57ad899baa353',1,'NATS.Client.ISyncSubscription.NextMessage()'],['../interface_n_a_t_s_1_1_client_1_1_i_sync_subscription.html#a29d8865c23b821cc03aba53c700e4794',1,'NATS.Client.ISyncSubscription.NextMessage(int timeout)']]]
+  ['publish',['Publish',['../interface_n_a_t_s_1_1_client_1_1_i_connection.html#a707a183a5abd113ff9b6744a7aa84f09',1,'NATS.Client.IConnection.Publish(string subject, byte[] data)'],['../interface_n_a_t_s_1_1_client_1_1_i_connection.html#acc4803863365d6fa35df6a48fcb26f25',1,'NATS.Client.IConnection.Publish(Msg msg)'],['../interface_n_a_t_s_1_1_client_1_1_i_connection.html#a04229ac32f36b2e9205d365c9946018d',1,'NATS.Client.IConnection.Publish(string subject, string reply, byte[] data)']]]
 ];

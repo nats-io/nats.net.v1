@@ -140,7 +140,7 @@ namespace NATS.Client
     /// <summary>
     /// Event arguments for the ConnEventHandler type delegate.
     /// </summary>
-    public class ConnEventArgs
+    public class ConnEventArgs : EventArgs
     {
         private Connection c;   
             
@@ -161,7 +161,7 @@ namespace NATS.Client
     /// <summary>
     /// Event arguments for the ErrorEventHandler type delegate.
     /// </summary>
-    public class ErrEventArgs
+    public class ErrEventArgs : EventArgs
     {
         private Connection c;
         private Subscription s;
@@ -197,22 +197,7 @@ namespace NATS.Client
         {
             get { return err; }
         }
-
     }
-
-    /// <summary>
-    /// Delegate to handle a connection related event.
-    /// </summary>
-    /// <param name="sender">Sender object.</param>
-    /// <param name="e">Event arguments</param>
-    public delegate void ConnEventHandler(object sender, ConnEventArgs e);
-
-    /// <summary>
-    /// Delegate to handle error events.
-    /// </summary>
-    /// <param name="sender">Sender object.</param>
-    /// <param name="e">Sender object.</param>
-    public delegate void ErrorEventHandler(object sender, ErrEventArgs e);
 
     /**
      * Internal Constants
@@ -249,7 +234,7 @@ namespace NATS.Client
     /// This class is passed into the MsgHandler delegate, providing the
     /// message received.
     /// </summary>
-    public class MsgHandlerEventArgs
+    public class MsgHandlerEventArgs : EventArgs
     {
         internal Msg msg = null;
 
@@ -261,11 +246,4 @@ namespace NATS.Client
             get { return msg; }
         }
     }
-   
-    /// <summary>
-    /// This delegate handles event raised when a message arrives.
-    /// </summary>
-    /// <param name="sender">Sender object.</param>
-    /// <param name="args">MsgHandlerEventArgs</param>
-    public delegate void MsgHandler(object sender, MsgHandlerEventArgs args);
 }

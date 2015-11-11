@@ -1,10 +1,10 @@
 var class_n_a_t_s_1_1_client_1_1_options =
 [
     [ "ToString", "class_n_a_t_s_1_1_client_1_1_options.html#a06f85fd3986c1a735b867153cab4ba26", null ],
-    [ "AsyncErrorEventHandler", "class_n_a_t_s_1_1_client_1_1_options.html#a56425d33df9b955a42e1bfb88298dbef", null ],
-    [ "ClosedEventHandler", "class_n_a_t_s_1_1_client_1_1_options.html#a62c04281166afcd0bbb739752e153285", null ],
-    [ "DisconnectedEventHandler", "class_n_a_t_s_1_1_client_1_1_options.html#aeb959c36665977d719bc3e246f164c13", null ],
-    [ "ReconnectedEventHandler", "class_n_a_t_s_1_1_client_1_1_options.html#a9156b7b914ad32111d5ce3b1a2107eb7", null ],
+    [ "AsyncErrorEventHandler", "class_n_a_t_s_1_1_client_1_1_options.html#a2df13bb7ca6daac4fda3afd097cb6f82", null ],
+    [ "ClosedEventHandler", "class_n_a_t_s_1_1_client_1_1_options.html#a910d4dcebe9046e2ab1772f2007dce0e", null ],
+    [ "DisconnectedEventHandler", "class_n_a_t_s_1_1_client_1_1_options.html#a6116c0a92a645bbc356bde9533220ea4", null ],
+    [ "ReconnectedEventHandler", "class_n_a_t_s_1_1_client_1_1_options.html#ad39b3eec90490ebaa53276fc01668d9a", null ],
     [ "AllowReconnect", "class_n_a_t_s_1_1_client_1_1_options.html#aca0e26d763c9b7920eeb2506bfffc59b", null ],
     [ "MaxPingsOut", "class_n_a_t_s_1_1_client_1_1_options.html#af72a56c42d59f70432c80f8526edda6e", null ],
     [ "MaxReconnect", "class_n_a_t_s_1_1_client_1_1_options.html#a6879755fbefbc3c119c01eb1e1e7f183", null ],

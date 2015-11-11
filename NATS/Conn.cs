@@ -1112,7 +1112,7 @@ namespace NATS.Client
                 }
 
                 // get the event handler under the lock
-                ConnEventHandler reconnectedEh = Opts.ReconnectedEventHandler;
+                EventHandler<ConnEventArgs> reconnectedEh = Opts.ReconnectedEventHandler;
 
                 // Release the lock here, we will return below
                 Monitor.Exit(mu);
@@ -1728,7 +1728,8 @@ namespace NATS.Client
             subs[s.sid] = s;
         }
 
-        private AsyncSubscription subscribeAsync(string subject, string queue)
+        private AsyncSubscription subscribeAsync(string subject, string queue,
+            EventHandler<MsgHandlerEventArgs> handler)
         {
             AsyncSubscription s = null;
 
@@ -1740,6 +1741,12 @@ namespace NATS.Client
                 s = new AsyncSubscription(this, subject, queue);
 
                 addSubscription(s);
+
+                if (handler != null)
+                {
+                    s.MessageHandler += handler;
+                    s.Start();
+                }
             }
 
             return s;
@@ -1780,7 +1787,12 @@ namespace NATS.Client
 
         public IAsyncSubscription SubscribeAsync(string subject)
         {
-            return subscribeAsync(subject, null);
+            return subscribeAsync(subject, null, null);
+        }
+
+        public IAsyncSubscription SubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler)
+        {
+            return subscribeAsync(subject, null, handler);
         }
 
         public ISyncSubscription SubscribeSync(string subject, string queue)
@@ -1790,9 +1802,13 @@ namespace NATS.Client
 
         public IAsyncSubscription SubscribeAsync(string subject, string queue)
         {
-            return subscribeAsync(subject, queue);
+            return subscribeAsync(subject, queue, null);
         }
 
+        public IAsyncSubscription SubscribeAsync(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler)
+        {
+            return subscribeAsync(subject, queue, handler);
+        }
         // unsubscribe performs the low level unsubscribe to the server.
         // Use Subscription.Unsubscribe()
         internal void unsubscribe(Subscription sub, int max)
@@ -2004,8 +2020,8 @@ namespace NATS.Client
         // function. This function will handle the locking manually.
         private void close(ConnState closeState, bool invokeDelegates)
         {
-            ConnEventHandler disconnectedEventHandler = null;
-            ConnEventHandler closedEventHandler = null;
+            EventHandler<ConnEventArgs> disconnectedEventHandler = null;
+            EventHandler<ConnEventArgs> closedEventHandler = null;
 
             lock (mu)
             {

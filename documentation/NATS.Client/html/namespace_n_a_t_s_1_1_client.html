@@ -107,8 +107,7 @@ $(document).ready(function(){initNavTree('namespace_n_a_t_s_1_1_client.html','')
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
-<a href="#enum-members">Enumerations</a> &#124;
-<a href="#func-members">Functions</a>  </div>
+<a href="#enum-members">Enumerations</a>  </div>
   <div class="headertitle">
 <div class="title">NATS.Client Namespace Reference</div>  </div>
 </div><!--header-->
@@ -167,15 +166,6 @@ Classes</h2></td></tr>
 Enumerations</h2></td></tr>
 <tr class="memitem:a8144f718a812fe4318c33f202fc53484"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_n_a_t_s_1_1_client.html#a8144f718a812fe4318c33f202fc53484">ConnState</a> <tr class="separator:a8144f718a812fe4318c33f202fc53484"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
-Functions</h2></td></tr>
-<tr class="memitem:a83afd734fd681661895bcafe49d66fb7"><td class="memItemLeft" align="right" valign="top">delegate void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_n_a_t_s_1_1_client.html#a83afd734fd681661895bcafe49d66fb7">ConnEventHandler</a> (object sender, <a class="el" href="class_n_a_t_s_1_1_client_1_1_conn_event_args.html">ConnEventArgs</a> e)</td></tr>
-<tr class="separator:a83afd734fd681661895bcafe49d66fb7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a89b1861451bd0a3242b386545e6bcb10"><td class="memItemLeft" align="right" valign="top">delegate void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_n_a_t_s_1_1_client.html#a89b1861451bd0a3242b386545e6bcb10">ErrorEventHandler</a> (object sender, <a class="el" href="class_n_a_t_s_1_1_client_1_1_err_event_args.html">ErrEventArgs</a> e)</td></tr>
-<tr class="separator:a89b1861451bd0a3242b386545e6bcb10"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a46b6c9c084557ebf4f65f79d4407567d"><td class="memItemLeft" align="right" valign="top">delegate void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_n_a_t_s_1_1_client.html#a46b6c9c084557ebf4f65f79d4407567d">MsgHandler</a> (object sender, <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg_handler_event_args.html">MsgHandlerEventArgs</a> args)</td></tr>
-<tr class="separator:a46b6c9c084557ebf4f65f79d4407567d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Enumeration Type Documentation</h2>
 <a class="anchor" id="a8144f718a812fe4318c33f202fc53484"></a>
@@ -197,112 +187,6 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>State of the connection. </p>
-
-</div>
-</div>
-<h2 class="groupheader">Function Documentation</h2>
-<a class="anchor" id="a83afd734fd681661895bcafe49d66fb7"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">delegate void NATS.Client.ConnEventHandler </td>
-          <td>(</td>
-          <td class="paramtype">object&#160;</td>
-          <td class="paramname"><em>sender</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="class_n_a_t_s_1_1_client_1_1_conn_event_args.html">ConnEventArgs</a>&#160;</td>
-          <td class="paramname"><em>e</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Delegate to handle a connection related event. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">sender</td><td>Sender object.</td></tr>
-    <tr><td class="paramname">e</td><td>Event arguments</td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a class="anchor" id="a89b1861451bd0a3242b386545e6bcb10"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">delegate void NATS.Client.ErrorEventHandler </td>
-          <td>(</td>
-          <td class="paramtype">object&#160;</td>
-          <td class="paramname"><em>sender</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="class_n_a_t_s_1_1_client_1_1_err_event_args.html">ErrEventArgs</a>&#160;</td>
-          <td class="paramname"><em>e</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Delegate to handle error events. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">sender</td><td>Sender object.</td></tr>
-    <tr><td class="paramname">e</td><td>Sender object.</td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a class="anchor" id="a46b6c9c084557ebf4f65f79d4407567d"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">delegate void NATS.Client.MsgHandler </td>
-          <td>(</td>
-          <td class="paramtype">object&#160;</td>
-          <td class="paramname"><em>sender</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="class_n_a_t_s_1_1_client_1_1_msg_handler_event_args.html">MsgHandlerEventArgs</a>&#160;</td>
-          <td class="paramname"><em>args</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>This delegate handles event raised when a message arrives. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">sender</td><td>Sender object.</td></tr>
-    <tr><td class="paramname">args</td><td><a class="el" href="class_n_a_t_s_1_1_client_1_1_msg_handler_event_args.html" title="This class is passed into the MsgHandler delegate, providing the message received. ">MsgHandlerEventArgs</a></td></tr>
-  </table>
-  </dd>
-</dl>
 
 </div>
 </div>

@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['publish',['Publish',['../interface_n_a_t_s_1_1_client_1_1_i_connection.html#a707a183a5abd113ff9b6744a7aa84f09',1,'NATS.Client.IConnection.Publish(string subject, byte[] data)'],['../interface_n_a_t_s_1_1_client_1_1_i_connection.html#acc4803863365d6fa35df6a48fcb26f25',1,'NATS.Client.IConnection.Publish(Msg msg)'],['../interface_n_a_t_s_1_1_client_1_1_i_connection.html#a04229ac32f36b2e9205d365c9946018d',1,'NATS.Client.IConnection.Publish(string subject, string reply, byte[] data)']]]
+  ['request',['Request',['../interface_n_a_t_s_1_1_client_1_1_i_connection.html#af505ceaf2a275d19765370ecf0cbdacf',1,'NATS.Client.IConnection.Request(string subject, byte[] data, int timeout)'],['../interface_n_a_t_s_1_1_client_1_1_i_connection.html#a4210238627f16c565d8ce88421ada056',1,'NATS.Client.IConnection.Request(string subject, byte[] data)']]],
+  ['resetstats',['ResetStats',['../interface_n_a_t_s_1_1_client_1_1_i_connection.html#aeacf1cd47dffe1a641a4256721c021b6',1,'NATS::Client::IConnection']]]
 ];

@@ -101,12 +101,23 @@ namespace NATS.Client
         ISyncSubscription SubscribeSync(string subject);
 
         /// <summary>
-        /// SubscribeAsynchronously will create an AsynchSubscriber with
-        /// interest in a given subject.
+        /// SubscribeAsynchronously will create an AsyncSubscriber with
+        /// interest in a given subject.  Start() must be called to 
+        /// begin receiving messages.
         /// </summary>
         /// <param name="subject">Subject of interest.</param>
         /// <returns>A new Subscription</returns>
         IAsyncSubscription SubscribeAsync(string subject);
+
+        /// <summary>
+        /// SubscribeAsynch will create an AsyncSubscriber with
+        /// interest in a given subject, assign the handler, and immediately
+        /// start receiving messages.
+        /// </summary>
+        /// <param name="subject">Subject of interest.</param>
+        /// <param name="handler">A message handler to initialize the MessageHandler event with.</param>
+        /// <returns>A new Subscription</returns>
+        IAsyncSubscription SubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler);
 
         /// <summary>
         /// Creates a synchronous queue subscriber on the given
@@ -123,13 +134,26 @@ namespace NATS.Client
         /// This method creates an asynchronous queue subscriber on the given subject.
         /// All subscribers with the same queue name will form the queue group and
         /// only one member of the group will be selected to receive any given
-        /// message asynchronously.
+        /// message asynchronously. Start() must be called to 
+        /// begin receiving messages.
         /// </summary>
         /// <param name="subject">Subject of interest</param>
         /// <param name="queue">Name of the queue group</param>
         /// <returns>A new Subscription</returns>
         IAsyncSubscription SubscribeAsync(string subject, string queue);
 
+        /// <summary>
+        /// This method creates an asynchronous queue subscriber on the given subject.
+        /// All subscribers with the same queue name will form the queue group and
+        /// only one member of the group will be selected to receive any given
+        /// message asynchronously. Start() must be called to 
+        /// begin receiving messages.
+        /// </summary>
+        /// <param name="subject">Subject of interest</param>
+        /// <param name="queue">Name of the queue group</param>
+        /// <param name="handler">A message handler to initialize the MessageHandler event with.</param>
+        /// <returns>A new Subscription</returns>
+        IAsyncSubscription SubscribeAsync(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler);
         /// <summary>
         /// Flush will perform a round trip to the server and return when it
         /// receives the internal reply.
