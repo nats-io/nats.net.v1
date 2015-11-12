@@ -1,17 +1,23 @@
-<?xml version="1.0"?>
-<package >
-  <metadata>
-    <id>NATS.Client</id>
-    <version>0.2.1.1</version>
-    <authors>Apcera, Inc.</authors>
-    <owners>Apcera, Inc.</owners>
-    <licenseUrl>https://raw.githubusercontent.com/nats-io/csnats/master/LICENSE</licenseUrl>
-    <projectUrl>https://github.com/nats-io/csnats</projectUrl>
-    <iconUrl>https://www.apcera.com/sites/default/files/apcera_logo_0.png</iconUrl>
-    <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>NATS .NET Client API for nats.io</description>
-    <releaseNotes>Performance enhancements, delegate changes, API documentation.</releaseNotes>
-    <copyright>Copyright 2015 Apcera, Inc.</copyright>
-    <tags>Apcera NATS Messaging Cloud</tags>
-  </metadata>
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+    <metadata>
+        <id>NATS.Client</id>
+        <version>0.2.1.1</version>
+        <title>NATS .NET Client</title>
+        <authors>Apcera,Inc.</authors>
+        <owners>Apcera,Inc.</owners>
+        <licenseUrl>https://raw.githubusercontent.com/nats-io/csnats/master/LICENSE</licenseUrl>
+        <projectUrl>https://github.com/nats-io/csnats</projectUrl>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <description>NATS acts as a central nervous system for distributed systems at scale, such as mobile devices, IoT networks, and cloud native infrastructure.  This is the .NET client API.</description>
+        <summary>NATS .NET Client</summary>
+        <releaseNotes>Performance enhancements, delegate changes, API documentation.</releaseNotes>
+        <copyright>Copyright 2015 Apcera, Inc.</copyright>
+        <language />
+        <tags>Apcera NATS Messaging Cloud</tags>
+    </metadata>
+    <files>
+        <file src="lib\net45\NATS.Client.DLL" target="lib\net45\NATS.Client.DLL" />
+        <file src="lib\net45\NATS.Client.XML" target="lib\net45\NATS.Client.XML" />
+    </files>
 </package>
