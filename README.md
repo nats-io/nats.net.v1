@@ -47,6 +47,10 @@ The NATS Visual Studio Solution contains several projects, listed below.
 
 All examples provide statistics for benchmarking.
 
+### NuGet
+
+The NATS .NET Client can be found in the NuGet Gallery.  It can be found as the [NATS.Client Package](https://www.nuget.org/packages/NATS.Client).
+
 ### Building the API Documentation
 Doxygen is used for building the API documentation.  To build the API documentation, change directories to `documentation` and run the following command:
 
@@ -335,8 +339,8 @@ The NATS .NET client can throw the following exceptions:
 * In the original v0.1-alphai release, there was an issue with a flush hanging in some situations.  This has been fixed in the current code base and will be included in the next release.
 
 ###TODO
-* [ ] Update delegates from traditional model to custom
-* [ ] NuGet package
+* [X] Update delegates from traditional model to custom
+* [X] NuGet package
 * [ ] WCF bindings
 * [ ] Strong name the assembly
 
