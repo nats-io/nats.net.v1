@@ -98,7 +98,7 @@ namespace NATS.Client
             if (conn == null)
                 throw new NATSBadSubscriptionException();
 
-            conn.sendSubscriptonMessage(this);
+            conn.sendSubscriptionMessage(this);
             enableAsyncProcessing();
         }
 
