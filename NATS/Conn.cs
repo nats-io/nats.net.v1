@@ -1708,7 +1708,7 @@ namespace NATS.Client
             return IC.inboxPrefix + BitConverter.ToString(buf).Replace("-","");
         }
 
-        internal void sendSubscriptonMessage(AsyncSubscription s)
+        internal void sendSubscriptionMessage(AsyncSubscription s)
         {
             lock (mu)
             {
