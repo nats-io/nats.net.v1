@@ -336,7 +336,7 @@ The NATS .NET client can throw the following exceptions:
 ## Miscellaneous 
 ###Known Issues
 * Some unit tests are incomplete or fail.  This is due to long connect times with the underlying .NET TCPClient API, issues with the tests themselves, or bugs (This IS an alpha).
-* In the original v0.1-alphai release, there was an issue with a flush hanging in some situations.  This has been fixed in the current code base and will be included in the next release.
+* In the original v0.1-alpha release, there was an issue with a flush hanging in some situations.  This has been fixed in the v0.2-alpha release.
 
 ###TODO
 * [X] Update delegates from traditional model to custom
