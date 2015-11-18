@@ -342,7 +342,7 @@ The NATS .NET client can throw the following exceptions:
 * [X] Update delegates from traditional model to custom
 * [X] NuGet package
 * [ ] WCF bindings
-* [ ] Strong name the assembly
+* [X] Strong name the assembly
 
 ## License
 
