@@ -45,9 +45,9 @@ namespace NATSExamples
                     elapsed = receiveAsyncSubscriber(c);
                 }
 
-                System.Console.Write("Replied to {0} msgs in {1} seconds ", count, elapsed.TotalSeconds);
+                System.Console.Write("Replied to {0} msgs in {1} seconds ", received, elapsed.TotalSeconds);
                 System.Console.WriteLine("({0} replies/second).",
-                    (int)(count / elapsed.TotalSeconds));
+                    (int)(received / elapsed.TotalSeconds));
                 printStats(c);
 
             }
@@ -65,7 +65,7 @@ namespace NATSExamples
 
         private TimeSpan receiveAsyncSubscriber(IConnection c)
         {
-            Stopwatch sw = new Stopwatch();
+            Stopwatch sw = null;
             Object testLock = new Object();
 
             EventHandler<MsgHandlerEventArgs> msgHandler = (sender, args) =>
@@ -108,15 +108,16 @@ namespace NATSExamples
         {
             using (ISyncSubscription s = c.SubscribeSync(subject))
             {
-                s.NextMessage();
-                received++;
-
-                Stopwatch sw = Stopwatch.StartNew();
+                Stopwatch sw = new Stopwatch();
 
                 while (received < count)
                 {
-                    received++;
+                    if (received == 0)
+                        sw.Start();
+
                     Msg m = s.NextMessage();
+                    received++; 
+                    
                     if (verbose)
                         Console.WriteLine("Received: " + m);
 
@@ -125,6 +126,7 @@ namespace NATSExamples
                 }
 
                 sw.Stop();
+
                 return sw.Elapsed;
             }
         }
