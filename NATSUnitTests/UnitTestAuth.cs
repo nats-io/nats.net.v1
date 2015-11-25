@@ -12,6 +12,24 @@ namespace NATSUnitTests
     [TestClass]
     public class TestAuthorization
     {
+
+        private TestContext testContextInstance;
+        /// <summary>
+        ///Gets or sets the test context which provides
+        ///information about and functionality for the current test run.
+        ///</summary>
+        public TestContext TestContext
+        {
+            get
+            {
+                return testContextInstance;
+            }
+            set
+            {
+                testContextInstance = value;
+            }
+        }
+
         int hitDisconnect;
 
         UnitTestUtilities util = new UnitTestUtilities();
@@ -58,7 +76,7 @@ namespace NATSUnitTests
         [TestMethod]
         public void TestAuthSuccess()
         {
-            using (NATSServer s = util.CreateServerWithConfig("auth_1222.conf"))
+            using (NATSServer s = util.CreateServerWithConfig(TestContext, "auth_1222.conf"))
             {
                 IConnection c = new ConnectionFactory().CreateConnection("nats://username:password@localhost:1222");
                 c.Close();
@@ -70,7 +88,7 @@ namespace NATSUnitTests
         {
             try
             {
-                using (NATSServer s = util.CreateServerWithConfig("auth_1222.conf"))
+                using (NATSServer s = util.CreateServerWithConfig(TestContext, "auth_1222.conf"))
                 {
                     connectAndFail("nats://username@localhost:1222");
                     connectAndFail("nats://username:badpass@localhost:1222");

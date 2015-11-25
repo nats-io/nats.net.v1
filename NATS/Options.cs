@@ -2,6 +2,8 @@
 
 using System;
 using System.Text;
+using System.Security.Cryptography.X509Certificates;
+using System.Net.Security;
 
 namespace NATS.Client
 {
@@ -23,6 +25,8 @@ namespace NATS.Client
         int pingInterval  = Defaults.PingInterval;
         int timeout       = Defaults.Timeout;
 
+        internal X509Certificate2Collection certificates = null;
+ 
         /// <summary>
         /// Represents the method that will handle an event raised 
         /// when a connection is closed.
@@ -196,6 +200,38 @@ namespace NATS.Client
             get { return this.subChanLen; }
             set { this.subChanLen = value; }
         }
+
+        /// <summary>
+        /// Adds a certifcate for use with a secure connection.
+        /// </summary>
+        /// <param name="fileName">Path to the certificate file to add.</param>
+        public void AddCertificate(string fileName)
+        {
+            X509Certificate2 cert = new X509Certificate2(fileName);
+            AddCertificate(cert);
+        }
+
+        /// <summary>
+        /// Adds a certificate for use with a secure connection.
+        /// </summary>
+        /// <param name="certificate">Certificate to add.</param>
+        public void AddCertificate(X509Certificate2 certificate)
+        {
+            if (certificates == null)
+                certificates = new X509Certificate2Collection();
+
+            certificates.Add(certificate);
+        }
+
+        /// <summary>
+        /// Overrides the default NATS RemoteCertificationValidationCallback.
+        /// </summary>
+        /// <remarks>
+        /// The default callback simply checks if there were any protocol
+        /// errors.  Overriding this callback useful during testing, or accepting self
+        /// signed certificates.
+        /// </remarks>
+        public RemoteCertificateValidationCallback TLSRemoteCertificationValidationCallback;
 
         private void appendEventHandler(StringBuilder sb, String name, Delegate eh)
         {

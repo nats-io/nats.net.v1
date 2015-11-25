@@ -21,7 +21,7 @@ namespace NATSUnitTests
 
         public NATSServer()
         {
-            ProcessStartInfo psInfo = createProcessStartInfo();
+            ProcessStartInfo psInfo = createProcessStartInfo(null);
             this.p = Process.Start(psInfo);
             Thread.Sleep(500);
         }
@@ -42,7 +42,7 @@ namespace NATSUnitTests
 
         public NATSServer(int port)
         {
-            ProcessStartInfo psInfo = createProcessStartInfo();
+            ProcessStartInfo psInfo = createProcessStartInfo(null);
 
             addArgument(psInfo, "-p " + port);
 
@@ -66,22 +66,14 @@ namespace NATSUnitTests
             }
         }
 
-        private string buildConfigFileName(string configFile)
+        public NATSServer(TestContext context, string configFile)
         {
-            // TODO:  There is a better way with TestContext.
-            Assembly assembly = Assembly.GetAssembly(this.GetType());
-            string codebase   = assembly.CodeBase.Replace("file:///", "");
-            return Path.GetDirectoryName(codebase) + "\\..\\..\\config\\" + configFile;
-        }
-
-        public NATSServer(string configFile)
-        {
-            ProcessStartInfo psInfo = this.createProcessStartInfo();
-            addArgument(psInfo, " -config " + buildConfigFileName(configFile));
+            ProcessStartInfo psInfo = this.createProcessStartInfo(context);
+            addArgument(psInfo, " -config " + configFile);
             p = Process.Start(psInfo);
         }
 
-        private ProcessStartInfo createProcessStartInfo()
+        private ProcessStartInfo createProcessStartInfo(TestContext context)
         {
             string gnatsd = Properties.Settings.Default.gnatsd;
             ProcessStartInfo psInfo = new ProcessStartInfo(gnatsd);
@@ -93,6 +85,12 @@ namespace NATSUnitTests
             else
             {
                 psInfo.WindowStyle = ProcessWindowStyle.Hidden;
+            }
+
+            if (context != null)
+            {
+                psInfo.WorkingDirectory =
+                    UnitTestUtilities.GetConfigDir(context);
             }
 
             return psInfo;
@@ -123,6 +121,14 @@ namespace NATSUnitTests
         Object mu = new Object();
         static NATSServer defaultServer = null;
         Process authServerProcess = null;
+
+        static internal string GetConfigDir(TestContext context)
+        {
+            string baseDir = context.TestRunDirectory.Substring(
+                0, context.TestRunDirectory.IndexOf("\\TestResults"));
+
+            return baseDir + "\\NATSUnitTests\\config";
+        }
 
         public void StartDefaultServer()
         {
@@ -176,9 +182,14 @@ namespace NATSUnitTests
             return new NATSServer(p);
         }
 
-        internal NATSServer CreateServerWithConfig(string configFile)
+        internal NATSServer CreateServerWithConfig(TestContext context, string configFile)
         {
-            return new NATSServer(configFile);
+            return new NATSServer(context, configFile);
+        }
+
+        internal static String GetFullCertificatePath(TestContext context, string certificateName)
+        {
+            return GetConfigDir(context) + "\\certs\\" + certificateName;
         }
     }
 }
