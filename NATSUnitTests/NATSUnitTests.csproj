@@ -59,6 +59,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
     <Compile Include="Settings.cs" />
+    <Compile Include="UnitTestTLS.cs" />
     <Compile Include="UnitTestCluster.cs" />
     <Compile Include="UnitTestReconnect.cs" />
     <Compile Include="UnitTestSub.cs" />

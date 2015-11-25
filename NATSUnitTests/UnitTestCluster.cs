@@ -15,6 +15,23 @@ namespace NATSUnitTests
     [TestClass]
     public class TestCluster
     {
+        private TestContext testContextInstance;
+        /// <summary>
+        ///Gets or sets the test context which provides
+        ///information about and functionality for the current test run.
+        ///</summary>
+        public TestContext TestContext
+        {
+            get
+            {
+                return testContextInstance;
+            }
+            set
+            {
+                testContextInstance = value;
+            }
+        }
+
         string[] testServers = new string[] {
             "nats://localhost:1222",
             "nats://localhost:1223",
@@ -81,8 +98,8 @@ namespace NATSUnitTests
             opts.Servers = plainServers;
             opts.Timeout = 5000;
 
-            using (NATSServer as1 = utils.CreateServerWithConfig("auth_1222.conf"),
-                              as2 = utils.CreateServerWithConfig("auth_1224.conf"))
+            using (NATSServer as1 = utils.CreateServerWithConfig(TestContext, "auth_1222.conf"),
+                              as2 = utils.CreateServerWithConfig(TestContext, "auth_1224.conf"))
             {
                 UnitTestUtilities.testExpectedException(
                     () => { new ConnectionFactory().CreateConnection(opts); },

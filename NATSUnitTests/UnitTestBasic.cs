@@ -147,7 +147,7 @@ namespace NATSUnitTests
                 using (IAsyncSubscription s = c.SubscribeAsync("foo"))
                 {
                     asyncSub = s;
-                    s.MessageHandler += CheckRecveivedAndValidHandler;
+                    s.MessageHandler += CheckReceivedAndValidHandler;
                     s.Start();
 
                     lock (mu)
@@ -164,7 +164,7 @@ namespace NATSUnitTests
             }
         }
 
-        private void CheckRecveivedAndValidHandler(object sender, MsgHandlerEventArgs args)
+        private void CheckReceivedAndValidHandler(object sender, MsgHandlerEventArgs args)
         {
             System.Console.WriteLine("Received msg.");
 

@@ -9,6 +9,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Net.Sockets;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
+using System.Security.Authentication;
 
 // disable XM comment warnings
 #pragma warning disable 1591
@@ -34,7 +37,7 @@ namespace NATS.Client
         internal int Port;
         internal string Version;
         internal bool AuthRequired;
-        internal bool SslRequired;
+        internal bool TlsRequired;
         internal Int64 MaxPayload;
 
         Dictionary<string, string> parameters = new Dictionary<string, string>();
@@ -57,7 +60,7 @@ namespace NATS.Client
             Version = parameters["version"];
 
             AuthRequired = "true".Equals(parameters["auth_required"]);
-            SslRequired = "true".Equals(parameters["ssl_required"]);
+            TlsRequired = "true".Equals(parameters["tls_required"]);
             MaxPayload = Convert.ToInt64(parameters["max_payload"]);
         }
 
@@ -205,7 +208,7 @@ namespace NATS.Client
         /// Convenience class representing the TCP connection to prevent 
         /// managing two variables throughout the NATs client code.
         /// </summary>
-        private class TCPConnection
+        private sealed class TCPConnection
         {
             /// A note on the use of streams.  .NET provides a BufferedStream
             /// that can sit on top of an IO stream, in this case the network
@@ -215,27 +218,25 @@ namespace NATS.Client
             /// So, here's what we have for writing:
             ///     Client code
             ///          ->BufferedStream (bw)
-            ///              ->NetworkStream (srvStream)
+            ///              ->NetworkStream/SslStream (srvStream)
             ///                  ->TCPClient (srvClient);
             ///                  
             ///  For reading:
             ///     Client code
-            ///          ->NetworkStream (srvStream)
+            ///          ->NetworkStream/SslStream (srvStream)
             ///              ->TCPClient (srvClient);
             /// 
-            /// TODO:  Test various scenarios for efficiency.  Is a 
-            /// BufferedReader directly over a network stream really 
-            /// more efficient for NATS?
-            /// 
-            Object        mu     = new Object();
-            TcpClient     client = null;
-            NetworkStream stream = null;
+            Object        mu        = new Object();
+            TcpClient     client    = null;
+            NetworkStream stream    = null;
+            SslStream     sslStream = null;
+
+            string        hostName  = null;
 
             internal void open(Srv s, int timeoutMillis)
             {
                 lock (mu)
                 {
-
                     client = new TcpClient(s.url.Host, s.url.Port);
 #if async_connect
                     client = new TcpClient();
@@ -256,6 +257,47 @@ namespace NATS.Client
                     client.SendBufferSize    = Defaults.defaultBufSize;
 
                     stream = client.GetStream();
+
+                    // save off the hostname
+                    hostName = s.url.Host;
+                }
+            }
+
+            private static bool remoteCertificateValidation(
+                  object sender,
+                  X509Certificate certificate,
+                  X509Chain chain,
+                  SslPolicyErrors sslPolicyErrors)
+            {
+                if (sslPolicyErrors == SslPolicyErrors.None)
+                    return true;
+
+                return false;
+            }
+
+            internal void makeTLS(Options options)
+            {
+                RemoteCertificateValidationCallback cb = null;
+
+                if (stream == null)
+                    throw new NATSException("Internal error:  Cannot create SslStream from null stream.");
+
+                cb = options.TLSRemoteCertificationValidationCallback;
+                if (cb == null)
+                    cb = remoteCertificateValidation;
+
+                sslStream = new SslStream(stream, false, cb, null,
+                    EncryptionPolicy.RequireEncryption);
+
+                try
+                {
+                    SslProtocols protocol = (SslProtocols)Enum.Parse(typeof(SslProtocols), "Tls12");
+                    sslStream.AuthenticateAsClient(hostName, options.certificates, protocol, true);
+                }
+                catch (AuthenticationException ex)
+                {
+                    client.Close();
+                    throw new NATSConnectionException("TLS Authentication error", ex);
                 }
             }
 
@@ -307,12 +349,22 @@ namespace NATS.Client
 
             internal Stream getReadBufferedStream()
             {
+                if (sslStream != null)
+                    return sslStream;
+
                 return stream;
             }
 
             internal Stream getWriteBufferedStream(int size)
             {
-                return new BufferedStream(stream, size);
+                BufferedStream bs = null;
+
+                if (sslStream != null)
+                    bs = new BufferedStream(sslStream, size);
+                else
+                    bs = new BufferedStream(stream, size);
+
+                return bs;
             }
 
             internal bool Connected
@@ -570,8 +622,9 @@ namespace NATS.Client
         // makeSecureConn will wrap an existing Conn using TLS
         private void makeTLSConn()
         {
-            // TODO:  Notes... SSL for beta?  Encapsulate/overide writes to work with SSL and
-            // standard streams.  Buffered writer with an SSL stream?
+            conn.makeTLS(this.opts);
+            bw = conn.getWriteBufferedStream(Defaults.defaultBufSize);
+            br = conn.getReadBufferedStream();
         }
 
         // waitForExits will wait for all socket watcher Go routines to
@@ -760,11 +813,11 @@ namespace NATS.Client
         {
             // Check to see if we need to engage TLS
             // Check for mismatch in setups
-            if (Opts.Secure && info.SslRequired)
+            if (Opts.Secure && !info.TlsRequired)
             {
                 throw new NATSSecureConnWantedException();
             }
-            else if (info.SslRequired && !Opts.Secure)
+            else if (info.TlsRequired && !Opts.Secure)
             {
                 throw new NATSSecureConnRequiredException();
             }
@@ -943,7 +996,7 @@ namespace NATS.Client
             if (lastEx == null)
                 return;
 
-            if (info.SslRequired)
+            if (info.TlsRequired)
                 lastEx = new NATSSecureConnRequiredException();
             else
                 lastEx = new NATSConnectionClosedException();
