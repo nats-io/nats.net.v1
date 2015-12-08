@@ -13,7 +13,7 @@ using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Authentication;
 
-// disable XM comment warnings
+// disable XML comment warnings
 #pragma warning disable 1591
 
 namespace NATS.Client
@@ -98,14 +98,18 @@ namespace NATS.Client
 
     }
 
+    // TODO - for a pure object model, we can create
+    // an abstract subclass containing shared code between conn and 
+    // encoded conn rather than using this class as
+    // a base class.  This can happen anytime as we are using
+    // interfaces.
     public class Connection : IConnection, IDisposable
     {
         Statistics stats = new Statistics();
 
         // NOTE: We aren't using Mutex here to support enterprises using
         // .NET 4.0.
-        readonly object mu = new Object(); 
-
+        readonly internal object mu = new Object(); 
 
         private Random r = null;
 
@@ -147,7 +151,7 @@ namespace NATS.Client
 
         internal ConnState status = ConnState.CLOSED;
 
-        Exception lastEx;
+        internal Exception lastEx;
 
         Parser              ps = null;
         System.Timers.Timer ptmr = null;
@@ -1636,7 +1640,7 @@ namespace NATS.Client
         // publish is the internal function to publish messages to a nats-server.
         // Sends a protocol data message by queueing into the bufio writer
         // and kicking the flush go routine. These writes should be protected.
-        private void publish(string subject, string reply, byte[] data)
+        internal void publish(string subject, string reply, byte[] data)
         {
             if (string.IsNullOrWhiteSpace(subject))
             {
@@ -1711,7 +1715,7 @@ namespace NATS.Client
             publish(subject, reply, data);
         }
 
-        private Msg request(string subject, byte[] data, int timeout)
+        internal virtual Msg request(string subject, byte[] data, int timeout)
         {
             Msg    m     = null;
             string inbox = NewInbox();
@@ -1781,7 +1785,7 @@ namespace NATS.Client
             subs[s.sid] = s;
         }
 
-        private AsyncSubscription subscribeAsync(string subject, string queue,
+        internal AsyncSubscription subscribeAsync(string subject, string queue,
             EventHandler<MsgHandlerEventArgs> handler)
         {
             AsyncSubscription s = null;
@@ -1897,7 +1901,7 @@ namespace NATS.Client
             kickFlusher();
         }
 
-        internal void removeSub(Subscription s)
+        internal virtual void removeSub(Subscription s)
         {
             Subscription o;
 

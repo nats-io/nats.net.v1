@@ -45,8 +45,10 @@
     <Compile Include="Channel.cs" />
     <Compile Include="AsyncSub.cs" />
     <Compile Include="ConnectionFactory.cs" />
+    <Compile Include="EncodedConn.cs" />
     <Compile Include="IAsyncSubscription.cs" />
     <Compile Include="IConnection.cs" />
+    <Compile Include="IEncodedConnection.cs" />
     <Compile Include="IStatistics.cs" />
     <Compile Include="ISubscription.cs" />
     <Compile Include="ISyncSubscription.cs" />

@@ -2,9 +2,12 @@ var namespace_n_a_t_s_1_1_client =
 [
     [ "ConnectionFactory", "class_n_a_t_s_1_1_client_1_1_connection_factory.html", "class_n_a_t_s_1_1_client_1_1_connection_factory" ],
     [ "ConnEventArgs", "class_n_a_t_s_1_1_client_1_1_conn_event_args.html", "class_n_a_t_s_1_1_client_1_1_conn_event_args" ],
+    [ "EncodedConnection", "class_n_a_t_s_1_1_client_1_1_encoded_connection.html", "class_n_a_t_s_1_1_client_1_1_encoded_connection" ],
+    [ "EncodedMessageEventArgs", "class_n_a_t_s_1_1_client_1_1_encoded_message_event_args.html", "class_n_a_t_s_1_1_client_1_1_encoded_message_event_args" ],
     [ "ErrEventArgs", "class_n_a_t_s_1_1_client_1_1_err_event_args.html", "class_n_a_t_s_1_1_client_1_1_err_event_args" ],
     [ "IAsyncSubscription", "interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html", "interface_n_a_t_s_1_1_client_1_1_i_async_subscription" ],
     [ "IConnection", "interface_n_a_t_s_1_1_client_1_1_i_connection.html", "interface_n_a_t_s_1_1_client_1_1_i_connection" ],
+    [ "IEncodedConnection", "interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html", "interface_n_a_t_s_1_1_client_1_1_i_encoded_connection" ],
     [ "IStatistics", "interface_n_a_t_s_1_1_client_1_1_i_statistics.html", "interface_n_a_t_s_1_1_client_1_1_i_statistics" ],
     [ "ISubscription", "interface_n_a_t_s_1_1_client_1_1_i_subscription.html", "interface_n_a_t_s_1_1_client_1_1_i_subscription" ],
     [ "ISyncSubscription", "interface_n_a_t_s_1_1_client_1_1_i_sync_subscription.html", "interface_n_a_t_s_1_1_client_1_1_i_sync_subscription" ],

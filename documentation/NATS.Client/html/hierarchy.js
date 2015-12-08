@@ -2,8 +2,12 @@ var hierarchy =
 [
     [ "NATS.Client.ConnectionFactory", "class_n_a_t_s_1_1_client_1_1_connection_factory.html", null ],
     [ "NATS.Client.ConnEventArgs", "class_n_a_t_s_1_1_client_1_1_conn_event_args.html", null ],
+    [ "NATS.Client.EncodedMessageEventArgs", "class_n_a_t_s_1_1_client_1_1_encoded_message_event_args.html", null ],
     [ "NATS.Client.ErrEventArgs", "class_n_a_t_s_1_1_client_1_1_err_event_args.html", null ],
     [ "NATS.Client.IConnection", "interface_n_a_t_s_1_1_client_1_1_i_connection.html", null ],
+    [ "NATS.Client.IEncodedConnection", "interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html", [
+      [ "NATS.Client.EncodedConnection", "class_n_a_t_s_1_1_client_1_1_encoded_connection.html", null ]
+    ] ],
     [ "NATS.Client.IStatistics", "interface_n_a_t_s_1_1_client_1_1_i_statistics.html", null ],
     [ "NATS.Client.ISubscription", "interface_n_a_t_s_1_1_client_1_1_i_subscription.html", [
       [ "NATS.Client.IAsyncSubscription", "interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html", null ],

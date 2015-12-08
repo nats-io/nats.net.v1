@@ -155,8 +155,7 @@ Additional Inherited Members</h2></td></tr>
 <tr class="separator:ab474bbe759abcb118e92890918b78fb8 inherit properties_interface_n_a_t_s_1_1_client_1_1_i_subscription"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>An object of this class is an asynchronous subscription representing interest in a subject. The subject can have wildcards (partial:*, full:&gt;). Messages will be delivered to the associated MsgHandler event delegates. While nothing prevents event handlers from being added or removed while processing messages, no messages will be received until <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html#a5c4c7deef3ffec1ba136f2e51c301e2e" title="This completes the subsciption process notifying the server this subscriber has interest. ">Start()</a> has been called. This allows all event handlers to be added before message processing begins. </p>
-<p><a class="el" href="">See MsgHandler</a>.</p>
+<div class="textblock"><p>An object of this class is an asynchronous subscription representing interest in a subject. The subject can have wildcards (partial:*, full:&gt;). Messages will be delivered to the associated MessageHandler event delegates. While nothing prevents event handlers from being added or removed while processing messages. If the subscriber was created without providing a handler, no messages will be received until <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html#a5c4c7deef3ffec1ba136f2e51c301e2e" title="Starts receiving messages. ">Start()</a> has been called. This allows event handlers to be added before message processing begins. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a class="anchor" id="a5c4c7deef3ffec1ba136f2e51c301e2e"></a>
 <div class="memitem">
@@ -171,7 +170,8 @@ Additional Inherited Members</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>This completes the subsciption process notifying the server this subscriber has interest. </p>
+<p>Starts receiving messages. </p>
+<p>If a message handler was not passed when creating the subscriber, the subscriber must assign delegates then complete the subscription process with this method. </p>
 
 </div>
 </div>
@@ -186,8 +186,7 @@ Additional Inherited Members</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Adds or removes a message handlers for this subscriber. </p>
-<p><a class="el" href="">See MsgHandler</a></p>
+<p>Adds or removes a message handler for this subscriber. </p>
 
 </div>
 </div>

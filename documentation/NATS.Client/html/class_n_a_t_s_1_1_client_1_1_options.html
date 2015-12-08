@@ -119,6 +119,10 @@ $(document).ready(function(){initNavTree('class_n_a_t_s_1_1_client_1_1_options.h
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:a2c59d422c06ab0333a82977b61f56163"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a2c59d422c06ab0333a82977b61f56163">AddCertificate</a> (string fileName)</td></tr>
+<tr class="separator:a2c59d422c06ab0333a82977b61f56163"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:addbbdf0d44db4ddbe1ae01b369c9e80e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#addbbdf0d44db4ddbe1ae01b369c9e80e">AddCertificate</a> (X509Certificate2 certificate)</td></tr>
+<tr class="separator:addbbdf0d44db4ddbe1ae01b369c9e80e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a06f85fd3986c1a735b867153cab4ba26"><td class="memItemLeft" align="right" valign="top">override string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a06f85fd3986c1a735b867153cab4ba26">ToString</a> ()</td></tr>
 <tr class="separator:a06f85fd3986c1a735b867153cab4ba26"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -132,6 +136,8 @@ Public Attributes</h2></td></tr>
 <tr class="separator:ad39b3eec90490ebaa53276fc01668d9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2df13bb7ca6daac4fda3afd097cb6f82"><td class="memItemLeft" align="right" valign="top">EventHandler&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_err_event_args.html">ErrEventArgs</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a2df13bb7ca6daac4fda3afd097cb6f82">AsyncErrorEventHandler</a> = null</td></tr>
 <tr class="separator:a2df13bb7ca6daac4fda3afd097cb6f82"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3ee9fbb7b3cfbc49a9b3a314f883904d"><td class="memItemLeft" align="right" valign="top">RemoteCertificateValidationCallback&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a3ee9fbb7b3cfbc49a9b3a314f883904d">TLSRemoteCertificationValidationCallback</a></td></tr>
+<tr class="separator:a3ee9fbb7b3cfbc49a9b3a314f883904d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="properties"></a>
 Properties</h2></td></tr>
@@ -167,6 +173,54 @@ Properties</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>This class is used to setup all NATs client options. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
+<a class="anchor" id="a2c59d422c06ab0333a82977b61f56163"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void NATS.Client.Options.AddCertificate </td>
+          <td>(</td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>fileName</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Adds a certifcate for use with a secure connection. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">fileName</td><td>Path to the certificate file to add.</td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="addbbdf0d44db4ddbe1ae01b369c9e80e"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void NATS.Client.Options.AddCertificate </td>
+          <td>(</td>
+          <td class="paramtype">X509Certificate2&#160;</td>
+          <td class="paramname"><em>certificate</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Adds a certificate for use with a secure connection. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">certificate</td><td>Certificate to add.</td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a class="anchor" id="a06f85fd3986c1a735b867153cab4ba26"></a>
 <div class="memitem">
 <div class="memproto">
@@ -239,6 +293,21 @@ Properties</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Represents the method that will handle an event raised when a connection has reconnected to a server. </p>
+
+</div>
+</div>
+<a class="anchor" id="a3ee9fbb7b3cfbc49a9b3a314f883904d"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">RemoteCertificateValidationCallback NATS.Client.Options.TLSRemoteCertificationValidationCallback</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Overrides the default <a class="el" href="namespace_n_a_t_s.html">NATS</a> RemoteCertificationValidationCallback. </p>
+<p>The default callback simply checks if there were any protocol errors. Overriding this callback useful during testing, or accepting self signed certificates. </p>
 
 </div>
 </div>
