@@ -339,8 +339,9 @@ The NATS .NET client can throw the following exceptions:
 * In the original v0.1-alpha release, there was an issue with a flush hanging in some situations.  This has been fixed in the v0.2-alpha release.
 
 ###TODO
-* [ ] TLS
 * [ ] WCF bindings
+* [X] TLS
+* [X] Encoding (Serialization/Deserialization)
 * [X] Update delegates from traditional model to custom
 * [X] NuGet package
 * [X] Strong name the assembly
