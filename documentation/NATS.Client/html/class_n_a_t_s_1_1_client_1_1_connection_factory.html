@@ -128,6 +128,12 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a7e0f056f38dd7a482b42f6d10ea56b69"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5e2fa68a942f7da21ca585cf69ee7ef2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html">IConnection</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection_factory.html#a5e2fa68a942f7da21ca585cf69ee7ef2">CreateConnection</a> (<a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html">Options</a> opts)</td></tr>
 <tr class="separator:a5e2fa68a942f7da21ca585cf69ee7ef2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a21ed422ae966d4c02e06ff9ca6a3bf76"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html">IEncodedConnection</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection_factory.html#a21ed422ae966d4c02e06ff9ca6a3bf76">CreateEncodedConnection</a> ()</td></tr>
+<tr class="separator:a21ed422ae966d4c02e06ff9ca6a3bf76"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a221a264c7aa125bc6876349821eeb3f6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html">IEncodedConnection</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection_factory.html#a221a264c7aa125bc6876349821eeb3f6">CreateEncodedConnection</a> (string url)</td></tr>
+<tr class="separator:a221a264c7aa125bc6876349821eeb3f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7a3b5dc297ad03dea97db52dc9e10d35"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html">IEncodedConnection</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection_factory.html#a7a3b5dc297ad03dea97db52dc9e10d35">CreateEncodedConnection</a> (<a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html">Options</a> opts)</td></tr>
+<tr class="separator:a7a3b5dc297ad03dea97db52dc9e10d35"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
@@ -213,6 +219,74 @@ Static Public Member Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>CreateConnection to the NATs server using the provided options. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">opts</td><td>NATs client options</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>A new connection to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server</dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a21ed422ae966d4c02e06ff9ca6a3bf76"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html">IEncodedConnection</a> NATS.Client.ConnectionFactory.CreateEncodedConnection </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create an encoded connection to the NATs server using default options. </p>
+<dl class="section return"><dt>Returns</dt><dd>A new connection to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server</dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a221a264c7aa125bc6876349821eeb3f6"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html">IEncodedConnection</a> NATS.Client.ConnectionFactory.CreateEncodedConnection </td>
+          <td>(</td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>url</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>CreateEncodeedConnection will attempt to connect to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server. The url can contain username/password semantics. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">url</td><td>The url</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>A new connection to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server</dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a7a3b5dc297ad03dea97db52dc9e10d35"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html">IEncodedConnection</a> NATS.Client.ConnectionFactory.CreateEncodedConnection </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html">Options</a>&#160;</td>
+          <td class="paramname"><em>opts</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>CreateEncodedConnection to the NATs server using the provided options. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">opts</td><td>NATs client options</td></tr>

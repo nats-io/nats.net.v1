@@ -107,7 +107,8 @@ $(document).ready(function(){initNavTree('namespace_n_a_t_s_1_1_client.html','')
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
-<a href="#enum-members">Enumerations</a>  </div>
+<a href="#enum-members">Enumerations</a> &#124;
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">NATS.Client Namespace Reference</div>  </div>
 </div><!--header-->
@@ -119,11 +120,17 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_conn_event_args.html">ConnEventArgs</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_encoded_connection.html">EncodedConnection</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_encoded_message_event_args.html">EncodedMessageEventArgs</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_err_event_args.html">ErrEventArgs</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html">IAsyncSubscription</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html">IConnection</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html">IEncodedConnection</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_statistics.html">IStatistics</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -166,6 +173,13 @@ Classes</h2></td></tr>
 Enumerations</h2></td></tr>
 <tr class="memitem:a8144f718a812fe4318c33f202fc53484"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_n_a_t_s_1_1_client.html#a8144f718a812fe4318c33f202fc53484">ConnState</a> <tr class="separator:a8144f718a812fe4318c33f202fc53484"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:a17a0769f7076f1d1d8b105cdf562d79e"><td class="memItemLeft" align="right" valign="top">delegate byte[]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_n_a_t_s_1_1_client.html#a17a0769f7076f1d1d8b105cdf562d79e">Serializer</a> (Object obj)</td></tr>
+<tr class="separator:a17a0769f7076f1d1d8b105cdf562d79e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae3d017dda4668698e3b11180925776d1"><td class="memItemLeft" align="right" valign="top">delegate Object&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_n_a_t_s_1_1_client.html#ae3d017dda4668698e3b11180925776d1">Deserializer</a> (byte[] data)</td></tr>
+<tr class="separator:ae3d017dda4668698e3b11180925776d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Enumeration Type Documentation</h2>
 <a class="anchor" id="a8144f718a812fe4318c33f202fc53484"></a>
@@ -187,6 +201,56 @@ Enumerations</h2></td></tr>
 </div><div class="memdoc">
 
 <p>State of the connection. </p>
+
+</div>
+</div>
+<h2 class="groupheader">Function Documentation</h2>
+<a class="anchor" id="ae3d017dda4668698e3b11180925776d1"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">delegate Object NATS.Client.Deserializer </td>
+          <td>(</td>
+          <td class="paramtype">byte[]&#160;</td>
+          <td class="paramname"><em>data</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Overrides the default binary deserialization. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">data</td><td>Data from the mesasge payload</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The deserialized object.</dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a17a0769f7076f1d1d8b105cdf562d79e"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">delegate byte [] NATS.Client.Serializer </td>
+          <td>(</td>
+          <td class="paramtype">Object&#160;</td>
+          <td class="paramname"><em>obj</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Overrides default binary serialization. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">obj</td><td>The object to serialize</td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>

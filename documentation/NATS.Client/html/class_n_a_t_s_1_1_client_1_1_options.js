@@ -1,10 +1,13 @@
 var class_n_a_t_s_1_1_client_1_1_options =
 [
+    [ "AddCertificate", "class_n_a_t_s_1_1_client_1_1_options.html#a2c59d422c06ab0333a82977b61f56163", null ],
+    [ "AddCertificate", "class_n_a_t_s_1_1_client_1_1_options.html#addbbdf0d44db4ddbe1ae01b369c9e80e", null ],
     [ "ToString", "class_n_a_t_s_1_1_client_1_1_options.html#a06f85fd3986c1a735b867153cab4ba26", null ],
     [ "AsyncErrorEventHandler", "class_n_a_t_s_1_1_client_1_1_options.html#a2df13bb7ca6daac4fda3afd097cb6f82", null ],
     [ "ClosedEventHandler", "class_n_a_t_s_1_1_client_1_1_options.html#a910d4dcebe9046e2ab1772f2007dce0e", null ],
     [ "DisconnectedEventHandler", "class_n_a_t_s_1_1_client_1_1_options.html#a6116c0a92a645bbc356bde9533220ea4", null ],
     [ "ReconnectedEventHandler", "class_n_a_t_s_1_1_client_1_1_options.html#ad39b3eec90490ebaa53276fc01668d9a", null ],
+    [ "TLSRemoteCertificationValidationCallback", "class_n_a_t_s_1_1_client_1_1_options.html#a3ee9fbb7b3cfbc49a9b3a314f883904d", null ],
     [ "AllowReconnect", "class_n_a_t_s_1_1_client_1_1_options.html#aca0e26d763c9b7920eeb2506bfffc59b", null ],
     [ "MaxPingsOut", "class_n_a_t_s_1_1_client_1_1_options.html#af72a56c42d59f70432c80f8526edda6e", null ],
     [ "MaxReconnect", "class_n_a_t_s_1_1_client_1_1_options.html#a6879755fbefbc3c119c01eb1e1e7f183", null ],

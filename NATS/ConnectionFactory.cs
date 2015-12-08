@@ -74,6 +74,39 @@ namespace NATS.Client
             return nc;
         }
 
+        /// <summary>
+        /// Create an encoded connection to the NATs server using default options.
+        /// </summary>
+        /// <returns>A new connection to the NATS server</returns>
+        public IEncodedConnection CreateEncodedConnection()
+        {
+            return CreateEncodedConnection(new Options());
+        }
+
+        /// <summary>
+        /// CreateEncodeedConnection will attempt to connect to the NATS server.
+        /// The url can contain username/password semantics.
+        /// </summary>
+        /// <param name="url">The url</param>
+        /// <returns>A new connection to the NATS server</returns>
+        public IEncodedConnection CreateEncodedConnection(string url)
+        {
+            Options opts = new Options();
+            opts.Url = url;
+            return CreateEncodedConnection(opts);
+        }
+
+        /// <summary>
+        /// CreateEncodedConnection to the NATs server using the provided options.
+        /// </summary>
+        /// <param name="opts">NATs client options</param>
+        /// <returns>A new connection to the NATS server</returns>
+        public IEncodedConnection CreateEncodedConnection(Options opts)
+        {
+            EncodedConnection nc = new EncodedConnection(opts);
+            nc.connect();
+            return nc;
+        }
 
     }
 }
