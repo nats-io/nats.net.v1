@@ -150,6 +150,80 @@ Here are example snippets of using the API to create a connection, subscribe, pu
             // Closing a connection
             c.Close();
 ```
+## Basic Encoded Usage
+The .NET NATS client mirrors go encoding through serialization and
+deserialization.  Simply create an encoded connection and publish
+objects, and receive objects through an asyncronous subscription using
+the encoded message event handler.  By default, objects are serialized
+using the BinaryFormatter, but methods used to serialize and deserialize
+objects can be overridden.
+
+```C#
+        using (IEncodedConnection c = new ConnectionFactory().CreateEncodedConnection())
+        {
+            EventHandler<EncodedMessageEventArgs> eh = (sender, args) =>
+            {
+                // Here, obj is an instance of the object published to 
+                // this subscriber.  Retrieve it through the
+                // ReceivedObject property of the arguments.
+                MyObject obj = (MyObject)args.ReceivedObject;
+
+                System.Console.WriteLine("Company: " + obj.Company);
+            };
+
+            // Subscribe using the encoded message event handler
+            IAsyncSubscription s = c.SubscribeAsync("foo", eh);
+
+            MyObject obj = new MyObject();
+            obj.Company = "Apcera";
+            
+            // To publish an instance of your object, simply
+            // call the IEncodedConnection publish API and pass
+            // your object.
+            c.Publish("foo", obj);
+            c.Flush();
+        }
+```
+
+### Other Types of Serialization
+Optionally, one can override serialization.  Depending on the level of support or 
+third party packages used, objects can be serialized to JSON, SOAP, or a custom
+scheme.  XML was chosen as the example here as it is natively supported 
+in all versions of .NET.
+
+```C#
+        // Example XML serialization.
+        byte[] serializeToXML(Object obj)
+        {
+            MemoryStream  ms = new MemoryStream();
+            XmlSerializer x = new XmlSerializer(((SerializationTestObj)obj).GetType());
+
+            x.Serialize(ms, obj);
+
+            byte[] content = new byte[ms.Position];
+            Array.Copy(ms.GetBuffer(), content, ms.Position);
+
+            return content;
+        }
+
+        Object deserializeFromXML(byte[] data)
+        {
+            XmlSerializer x = new XmlSerializer(new SerializationTestObj().GetType());
+            MemoryStream ms = new MemoryStream(data);
+            return x.Deserialize(ms);
+        }
+        
+        <...>
+        
+        // Create an encoded connection and override the OnSerialize and
+        // OnDeserialize delegates.
+        IEncodedConnection c = new ConnectionFactory().CreateEncodedConnection();
+        c.OnDeserialize = deserializeFromXML;
+        c.OnSerialize = serializeToXML;
+        
+        // From here on, the connection will use the custom delegates
+        // for serialization.
+```
 
 ## Wildcard Subscriptions
 
