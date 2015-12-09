@@ -391,6 +391,57 @@ Other events can be assigned delegate methods through the options object.
             IConnection c = new ConnectionFactory().CreateConnection(opts);
 ```
 
+## TLS
+The NATS .NET client supports TLS 1.2.  Set the secure option, add
+the certificate, and connect.  Note that .NET requires both the 
+private key and certificate to be present in the same certificate file.
+
+```C#
+        Options opts = ConnectionFactory.GetDefaultOptions();
+        opts.Secure = true;
+        
+        // .NET requires the private key and cert in the 
+        //  same file. 'client.pfx' is generated from:
+        //
+        // openssl pkcs12 -export -out client.pfx 
+        //    -inkey client-key.pem -in client-cert.pem
+        X509Certificate2 cert = new X509Certificate2("client.pfx", "password");
+
+        opts.AddCertificate(cert);
+
+        IConnection c = new ConnectionFactory().CreateConnection(opts);
+```
+Many times, it is useful when developing an application (or necessary 
+when using self-signed certificates) to override server certificate
+validation.  This is achieved by overriding the remove certificate
+validation callback through the NATS client options.
+```C#
+        
+    private bool verifyServerCert(object sender,
+        X509Certificate certificate, X509Chain chain,
+                SslPolicyErrors sslPolicyErrors)
+        {
+            if (sslPolicyErrors == SslPolicyErrors.None)
+                return true;
+
+            // Do what is necessary to achieve the level of
+            // security you need given a policy error.
+        }        
+        
+        <...>
+        
+        Options opts = ConnectionFactory.GetDefaultOptions();
+        opts.Secure = true;
+        opts.TLSRemoteCertificationValidationCallback = verifyServerCert;
+        opts.AddCertificate("client.pfx");
+        
+        IConnection c = new ConnectionFactory().CreateConnection(opts);
+```
+The NATS server default cipher suites **may not be supported** by the Microsoft
+.NET framework.  Please refer to **gnatsd --help_tls** usage and configure
+the  NATS server to include the most secure cipher suites supported by the
+.NET framework.
+
 ## Exceptions
 
 The NATS .NET client can throw the following exceptions:
