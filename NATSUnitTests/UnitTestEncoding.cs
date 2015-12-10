@@ -22,6 +22,7 @@ namespace NATSUnitTests
         [TestInitialize()]
         public void Initialize()
         {
+            UnitTestUtilities.CleanupExistingServers();
             utils.StartDefaultServer();
         }
 

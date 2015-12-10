@@ -20,6 +20,7 @@ namespace NATSUnitTests
         [TestInitialize()]
         public void Initialize()
         {
+            UnitTestUtilities.CleanupExistingServers();
             utils.StartDefaultServer();
         }
 
@@ -600,10 +601,17 @@ namespace NATSUnitTests
         {
             using (IConnection c = new ConnectionFactory().CreateConnection())
             {
-                new Task(() => { c.Publish("foo", null); }).Start();
-                Thread.Sleep(200);
-
-                Assert.AreEqual(1, c.Stats.OutMsgs);
+                bool exThrown = false;
+                try
+                {
+                    c.Publish("", null);
+                }
+                catch (Exception e)
+                {
+                    if (e is NATSBadSubscriptionException)
+                        exThrown = true;
+                }
+                Assert.IsTrue(exThrown);
             }
         }
 

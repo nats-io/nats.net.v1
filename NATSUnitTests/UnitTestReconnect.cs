@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using System.Collections.Generic;
 
 namespace NATSUnitTests
 {
@@ -35,13 +36,7 @@ namespace NATSUnitTests
         [TestInitialize()]
         public void Initialize()
         {
-           // utils.StartDefaultServer();
-        }
-
-        [TestCleanup()]
-        public void Cleanup()
-        {
-           // utils.StopDefaultServer();
+            UnitTestUtilities.CleanupExistingServers();
         }
 
         [TestMethod]
@@ -288,104 +283,109 @@ namespace NATSUnitTests
             Interlocked.Increment(ref received);
         }
 
+        Dictionary<int, bool> results = new Dictionary<int, bool>();
+
+        void checkResults(int numSent)
+        {
+            lock (results)
+            {
+                for (int i = 0; i < numSent; i++)
+                {
+                    if (results.ContainsKey(i) == false)
+                    {
+                        Assert.Fail("Received incorrect number of messages, [%d] for seq: %d\n",
+                            results[i], i);
+                    }
+                }
+
+                results.Clear();
+            }
+        }
+
+        [Serializable]
+        class NumberObj
+        {
+            public  NumberObj(int value)
+            {
+                v = value;
+            }
+
+            public int v;
+        }
+
+        void sendAndCheckMsgs(IEncodedConnection ec, string subject, int numToSend)
+        {
+            for (int i = 0; i < numToSend; i++)
+            {
+                ec.Publish(subject, new NumberObj(i));
+            }
+            ec.Flush();
+
+            Thread.Sleep(500);
+
+            checkResults(numToSend);
+        }
+
         [TestMethod]
         public void TestQueueSubsOnReconnect()
         {
-            /// implement me.
-#if complete_me
+            Object reconnectLock = new Object();
+            Options opts = reconnectOptions;
+            IEncodedConnection ec;
 
-func TestQueueSubsOnReconnect(t *testing.T) {
-	ts := startReconnectServer(t)
+            string subj = "foo.bar";
+            string qgroup = "workers";
 
-	opts := reconnectOpts
+            opts.ReconnectedEventHandler += (sender, args) =>
+            {
+                lock (reconnectLock)
+                {
+                    Monitor.Pulse(reconnectLock);
+                }
+            };
 
-	// Allow us to block on reconnect complete.
-	reconnectsDone := make(chan bool)
-	opts.ReconnectedCB = func(nc *nats.Conn) {
-		reconnectsDone <- true
-	}
+            using(NATSServer ns = utils.CreateServerOnPort(22222))
+            {
+                ec = new ConnectionFactory().CreateEncodedConnection(opts);
 
-	// Helper to wait on a reconnect.
-	waitOnReconnect := func() {
-		select {
-		case <-reconnectsDone:
-			break
-		case <-time.After(2 * time.Second):
-			t.Fatalf("Expected a reconnect, timedout!\n")
-		}
-	}
+                EventHandler<EncodedMessageEventArgs> eh = (sender, args) =>
+                {
+                    int seq = ((NumberObj)args.ReceivedObject).v;
 
-	// Create connection
-	nc, _ := opts.Connect()
-	ec, err := nats.NewEncodedConn(nc, nats.JSON_ENCODER)
-	if err != nil {
-		t.Fatalf("Failed to create an encoded connection: %v\n", err)
-	}
+                    lock (results)
+                    {
+                        if (results.ContainsKey(seq) == false)
+                            results.Add(seq, true);
+                    }
+                };
 
-	// To hold results.
-	results := make(map[int]int)
-	var mu sync.Mutex
+                // Create Queue Subscribers
+	            ec.SubscribeAsync(subj, qgroup, eh);
+                ec.SubscribeAsync(subj, qgroup, eh);
 
-	// Make sure we got what we needed, 1 msg only and all seqnos accounted for..
-	checkResults := func(numSent int) {
-		mu.Lock()
-		defer mu.Unlock()
+                ec.Flush();
 
-		for i := 0; i < numSent; i++ {
-			if results[i] != 1 {
-				t.Fatalf("Received incorrect number of messages, [%d] for seq: %d\n", results[i], i)
-			}
-		}
+                sendAndCheckMsgs(ec, subj, 10);
+            }
+            // server should stop...
 
-		// Auto reset results map
-		results = make(map[int]int)
-	}
+            // give the OS time to shut it down.
+            Thread.Sleep(500);
 
-	subj := "foo.bar"
-	qgroup := "workers"
+            // start back up
+            using (NATSServer ns = utils.CreateServerOnPort(22222))
+            {
+                // wait for reconnect
+                lock (reconnectLock)
+                {
+                    Assert.IsTrue(Monitor.Wait(reconnectLock, 3000));
+                }
 
-	cb := func(seqno int) {
-		mu.Lock()
-		defer mu.Unlock()
-		results[seqno] = results[seqno] + 1
-	}
-
-	// Create Queue Subscribers
-	ec.QueueSubscribe(subj, qgroup, cb)
-	ec.QueueSubscribe(subj, qgroup, cb)
-
-	ec.Flush()
-
-	// Helper function to send messages and check results.
-	sendAndCheckMsgs := func(numToSend int) {
-		for i := 0; i < numToSend; i++ {
-			ec.Publish(subj, i)
-		}
-		// Wait for processing.
-		ec.Flush()
-		time.Sleep(50 * time.Millisecond)
-
-		// Check Results
-		checkResults(numToSend)
-	}
-
-	// Base Test
-	sendAndCheckMsgs(10)
-
-	// Stop and restart server
-	ts.Shutdown()
-	ts = startReconnectServer(t)
-	defer ts.Shutdown()
-
-	waitOnReconnect()
-
-	// Reconnect Base Test
-	sendAndCheckMsgs(10)
-}
-#endif
+                sendAndCheckMsgs(ec, subj, 10);
+            }
         }
 
-        //[TestMethod]
+        [TestMethod]
         public void TestClose()
         {
             Options opts = ConnectionFactory.GetDefaultOptions();
@@ -400,26 +400,98 @@ func TestQueueSubsOnReconnect(t *testing.T) {
                 
                 s1.Shutdown();
 
-                // FIXME - .NET says still reconnecting.
                 Thread.Sleep(100);
-                if (!c.IsClosed())
+                if (c.IsClosed())
                 {
-                    Assert.Fail("Invalid state, expecting closed, received: "
+                    Assert.Fail("Invalid state, expecting not closed, received: "
                         + c.State.ToString());
                 }
                 
                 using (NATSServer s2 = utils.CreateServerOnPort(22222))
                 {
-                    Thread.Sleep(10000);
+                    Thread.Sleep(1000);
                     Assert.IsFalse(c.IsClosed());
                 
                     c.Close();
-                    Thread.Sleep(1000);
                     Assert.IsTrue(c.IsClosed());
                 }
             }
         }
 
+        [TestMethod]
+        public void TestIsReconnectingAndStatus()
+        {
+            bool disconnected = false;
+            object disconnectedLock = new object();
+
+            bool reconnected = false;
+            object reconnectedLock = new object();
+
+
+            IConnection c = null;
+
+            Options opts = ConnectionFactory.GetDefaultOptions();
+            opts.Url = "nats://localhost:22222";
+            opts.AllowReconnect = true;
+            opts.MaxReconnect = 10000;
+            opts.ReconnectWait = 100;
+
+            opts.DisconnectedEventHandler += (sender, args) => 
+            {
+                lock (disconnectedLock)
+                {
+                    disconnected = true;
+                    Monitor.Pulse(disconnectedLock);
+                }
+            };
+
+            opts.ReconnectedEventHandler += (sender, args) => 
+            {
+                lock (reconnectedLock)
+                {
+                    reconnected = true;
+                    Monitor.Pulse(reconnectedLock);
+                }
+            };
+
+            using (NATSServer s = utils.CreateServerOnPort(22222))
+            {
+                c = new ConnectionFactory().CreateConnection(opts);
+
+                Assert.IsTrue(c.State == ConnState.CONNECTED);
+                Assert.IsTrue(c.IsReconnecting() == false);
+            }
+            // server stops here...
+
+            lock (disconnectedLock)
+            {
+                if (!disconnected)
+                    Assert.IsTrue(Monitor.Wait(disconnectedLock, 10000));
+            }
+
+            Assert.IsTrue(c.State == ConnState.RECONNECTING);
+            Assert.IsTrue(c.IsReconnecting() == true);
+
+            // restart the server
+            using (NATSServer s = utils.CreateServerOnPort(22222))
+            {
+                lock (reconnectedLock)
+                {
+                    // may have reconnected, if not, wait
+                    if (!reconnected)
+                        Assert.IsTrue(Monitor.Wait(reconnectedLock, 10000));
+                }
+
+                Assert.IsTrue(c.IsReconnecting() == false);
+                Assert.IsTrue(c.State == ConnState.CONNECTED);
+
+                c.Close();
+            }
+
+            Assert.IsTrue(c.IsReconnecting() == false);
+            Assert.IsTrue(c.State == ConnState.CLOSED);
+
+        }
 #if sdlfkjsdflkj
 
 func TestIsReconnectingAndStatus(t *testing.T) {

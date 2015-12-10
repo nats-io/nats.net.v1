@@ -1429,6 +1429,7 @@ namespace NATS.Client
         // async error handler if registered.
         void processSlowConsumer(Subscription s)
         {
+            lastEx = new NATSSlowConsumerException();
             if (opts.AsyncErrorEventHandler != null && !s.sc)
             {
                 new Task(() =>
@@ -1644,9 +1645,7 @@ namespace NATS.Client
         {
             if (string.IsNullOrWhiteSpace(subject))
             {
-                throw new ArgumentException(
-                    "Subject cannot be null, empty, or whitespace.",
-                    "subject");
+                throw new NATSBadSubscriptionException();
             }
 
             int msgSize = data != null ? data.Length : 0;
