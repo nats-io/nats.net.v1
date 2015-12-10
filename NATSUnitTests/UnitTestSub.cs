@@ -268,7 +268,7 @@ namespace NATSUnitTests
             {
                 using (s = c.SubscribeAsync("foo"))
                 {
-                    opts.AsyncErrorEventHandler = (sender, args) =>
+                    c.Opts.AsyncErrorEventHandler = (sender, args) =>
                     {
                         lock (subLock)
                         {
@@ -299,7 +299,7 @@ namespace NATSUnitTests
                                 return;
 
                             Console.WriteLine("Subscriber Waiting....");
-                            Assert.IsTrue(Monitor.Wait(subLock, 10000));
+                            Assert.IsTrue(Monitor.Wait(subLock, 500));
                             Console.WriteLine("Subscriber done.");
                             blockedOnSubscriber = true;
                         }
@@ -314,7 +314,7 @@ namespace NATSUnitTests
                         {
                             c.Publish("foo", null);
                         }
-
+ 
                         try
                         {
                             c.Flush(1000);
