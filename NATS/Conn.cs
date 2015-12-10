@@ -453,7 +453,7 @@ namespace NATS.Client
 
         internal Connection(Options opts)
         {
-            this.opts = opts;
+            this.opts = new Options(opts);
             this.pongs = createPongs();
             this.ps = new Parser(this);
 

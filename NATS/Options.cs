@@ -55,8 +55,52 @@ namespace NATS.Client
 
         internal int subChanLen = 40000;
 
-        // Options can only be created through ConnectionFactory.GetDefaultOptions();
+        // Options can only be publicly created through 
+        // ConnectionFactory.GetDefaultOptions();
         internal Options() { }
+
+        // Copy constructor
+        internal Options(Options o)
+        {
+            this.allowReconnect = o.allowReconnect;
+            this.AsyncErrorEventHandler = o.AsyncErrorEventHandler;
+            this.ClosedEventHandler = o.ClosedEventHandler;
+            this.DisconnectedEventHandler = o.DisconnectedEventHandler;
+            this.maxPingsOut = o.maxPingsOut;
+            this.maxReconnect = o.maxReconnect;
+
+            if (o.name != null)
+            {
+                this.name = new string(o.name.ToCharArray());
+            }
+
+            this.noRandomize = o.noRandomize;
+            this.pedantic = o.pedantic;
+            this.pingInterval = o.pingInterval;
+            this.ReconnectedEventHandler = o.ReconnectedEventHandler;
+            this.reconnectWait = o.reconnectWait;
+            this.secure = o.secure;
+            
+            if (o.servers != null)
+            {
+                this.servers = new string[o.servers.Length];
+                Array.Copy(o.servers, this.servers, o.servers.Length);
+            }
+
+            this.subChanLen = o.subChanLen;
+            this.timeout = o.timeout;
+            this.TLSRemoteCertificationValidationCallback = o.TLSRemoteCertificationValidationCallback;
+
+            if (o.url != null)
+            {
+                this.url = new String(o.url.ToCharArray());
+            }
+
+            if (o.certificates != null)
+            {
+                this.certificates = new X509Certificate2Collection(o.certificates);
+            }
+        }
 
         /// <summary>
         /// Gets or sets the url used to connect to the NATs server.  This may

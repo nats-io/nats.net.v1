@@ -194,10 +194,16 @@ namespace NATSUnitTests
 
         internal static void CleanupExistingServers()
         {
-            Process[] procs = Process.GetProcessesByName("gnatsd");
+            try
+            {
+                Process[] procs = Process.GetProcessesByName("gnatsd");
 
-            foreach (Process proc in procs)
-                proc.Kill();
+                foreach (Process proc in procs)
+                {
+                    proc.Kill();
+                }
+            }
+            catch (Exception) { } // ignore
         }
     }
 }
