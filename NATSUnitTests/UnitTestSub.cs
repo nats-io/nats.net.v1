@@ -22,6 +22,7 @@ namespace NATSUnitTests
         [TestInitialize()]
         public void Initialize()
         {
+            UnitTestUtilities.CleanupExistingServers();
             utils.StartDefaultServer();
         }
 
@@ -151,7 +152,7 @@ namespace NATSUnitTests
             }
         }
 
-        // TODO [TestMethod]
+        [TestMethod]
         public void TestSlowSubscriber()
         {
             Options opts = ConnectionFactory.GetDefaultOptions();
@@ -170,13 +171,9 @@ namespace NATSUnitTests
                     {
                         c.Flush();
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
-                        System.Console.WriteLine(ex);
-                        if (ex.InnerException != null)
-                            System.Console.WriteLine(ex.InnerException);
-
-                        throw ex;
+                        // ignore
                     }
 
                     try 
@@ -196,7 +193,7 @@ namespace NATSUnitTests
         public void TestSlowAsyncSubscriber()
         {
             Options opts = ConnectionFactory.GetDefaultOptions();
-            opts.SubChannelLength = 10;
+            opts.SubChannelLength = 100;
 
             using (IConnection c = new ConnectionFactory().CreateConnection(opts))
             {
@@ -206,11 +203,10 @@ namespace NATSUnitTests
 
                     s.MessageHandler += (sender, args) =>
                     {
+                        // block to back us up.
                         lock (mu)
                         {
-                            Console.WriteLine("Subscriber Waiting....");
                             Assert.IsTrue(Monitor.Wait(mu, 20000));
-                            Console.WriteLine("Subscriber done.");
                         }
                     };
 
@@ -221,7 +217,7 @@ namespace NATSUnitTests
                         c.Publish("foo", null);
                     }
 
-                    int flushTimeout = 1000;
+                    int flushTimeout = 5000;
 
                     Stopwatch sw = new Stopwatch();
                     sw.Start();
@@ -240,12 +236,13 @@ namespace NATSUnitTests
 
                     lock (mu)
                     {
+                        // release the subscriber
                         Monitor.Pulse(mu);
                     }
 
-                    if (sw.ElapsedMilliseconds < flushTimeout)
+                    if (sw.ElapsedMilliseconds >= flushTimeout)
                     {
-                        Assert.Fail("elapsed ({0}) < timeout ({1})",
+                        Assert.Fail("elapsed ({0}) > timeout ({1})",
                             sw.ElapsedMilliseconds, flushTimeout);
                     }
                     
@@ -317,7 +314,15 @@ namespace NATSUnitTests
                         {
                             c.Publish("foo", null);
                         }
-                        c.Flush(1000);
+
+                        try
+                        {
+                            c.Flush(1000);
+                        }
+                        catch (Exception)
+                        {
+                            // ignore - we're testing the error handler, not flush.
+                        }
 
                         Assert.IsTrue(Monitor.Wait(testLock, 1000));
                     }

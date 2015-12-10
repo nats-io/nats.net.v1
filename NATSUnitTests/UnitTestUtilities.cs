@@ -191,5 +191,13 @@ namespace NATSUnitTests
         {
             return GetConfigDir(context) + "\\certs\\" + certificateName;
         }
+
+        internal static void CleanupExistingServers()
+        {
+            Process[] procs = Process.GetProcessesByName("gnatsd");
+
+            foreach (Process proc in procs)
+                proc.Kill();
+        }
     }
 }

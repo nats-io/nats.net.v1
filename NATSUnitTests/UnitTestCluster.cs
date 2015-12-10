@@ -235,7 +235,7 @@ namespace NATSUnitTests
         }
 
 
-        //[TestMethod]
+        // TODO:  Create smaller variant [TestMethod]
         public void TestHotSpotReconnect()
         {
             int numClients = 10;
