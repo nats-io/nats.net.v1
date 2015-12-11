@@ -61,6 +61,8 @@ build_doc.bat
 Doxygen will build the NATS .NET Client API documentation, placing it in the `documentationr\NATS.Client\html` directory.
 Doxygen is required to be installed and in the PATH.  Version 1.8 is known to work.
 
+[Current API Documentation](http://htmlpreview.github.io/?https://github.com/nats-io/csnats/blob/master/documentation/NATS.Client/html/index.html)
+
 ## Basic Usage
 
 NATS .NET C# Client uses interfaces to reference most NATS client objects, and delegates for all types of events.
