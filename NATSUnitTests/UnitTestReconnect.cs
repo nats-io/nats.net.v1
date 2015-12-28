@@ -492,75 +492,49 @@ namespace NATSUnitTests
             Assert.IsTrue(c.State == ConnState.CLOSED);
 
         }
-#if sdlfkjsdflkj
 
-func TestIsReconnectingAndStatus(t *testing.T) {
-	ts := startReconnectServer(t)
-	// This will kill the last 'ts' server that is created
-	defer func() { ts.Shutdown() }()
-	disconnectedch := make(chan bool)
-	reconnectch := make(chan bool)
-	opts := nats.DefaultOptions
-	opts.Url = "nats://localhost:22222"
-	opts.AllowReconnect = true
-	opts.MaxReconnect = 10000
-	opts.ReconnectWait = 100 * time.Millisecond
 
-	opts.DisconnectedCB = func(_ *nats.Conn) {
-		disconnectedch <- true
-	}
-	opts.ReconnectedCB = func(_ *nats.Conn) {
-		reconnectch <- true
-	}
+        [TestMethod]
+        public void TestReconnectVerbose()
+        {
+            // an exception stops and fails the test.
+            IConnection c = null;
 
-	// Connect, verify initial reconnecting state check, then stop the server
-	nc, err := opts.Connect()
-	if err != nil {
-		t.Fatalf("Should have connected ok: %v", err)
-	}
-	if nc.IsReconnecting() == true {
-		t.Fatalf("IsReconnecting returned true when the connection is still open.")
-	}
-	if status := nc.Status(); status != nats.CONNECTED {
-		t.Fatalf("Status returned %d when connected instead of CONNECTED", status)
-	}
-	ts.Shutdown()
+            Object reconnectLock = new Object();
+            bool   reconnected = false;
 
-	// Wait until we get the disconnected callback
-	if e := Wait(disconnectedch); e != nil {
-		t.Fatalf("Disconnect callback wasn't triggered: %v", e)
-	}
-	if nc.IsReconnecting() == false {
-		t.Fatalf("IsReconnecting returned false when the client is reconnecting.")
-	}
-	if status := nc.Status(); status != nats.RECONNECTING {
-		t.Fatalf("Status returned %d when reconnecting instead of CONNECTED", status)
-	}
+            Options opts = ConnectionFactory.GetDefaultOptions();
+            opts.Verbose = true;
 
-	ts = startReconnectServer(t)
+            opts.ReconnectedEventHandler += (sender, args) =>
+            {
+                lock (reconnectLock)
+                {
+                    reconnected = true;
+                    Monitor.Pulse(reconnectLock);
+                }
+            };
 
-	// Wait until we get the reconnect callback
-	if e := Wait(reconnectch); e != nil {
-		t.Fatalf("Reconnect callback wasn't triggered: %v", e)
-	}
-	if nc.IsReconnecting() == true {
-		t.Fatalf("IsReconnecting returned true after the connection was reconnected.")
-	}
-	if status := nc.Status(); status != nats.CONNECTED {
-		t.Fatalf("Status returned %d when reconnected instead of CONNECTED", status)
-	}
+            using (NATSServer s = utils.CreateServerOnPort(4222))
+            {
+                c = new ConnectionFactory().CreateConnection(opts);
+                c.Flush();
 
-	// Close the connection, reconnecting should still be false
-	nc.Close()
-	if nc.IsReconnecting() == true {
-		t.Fatalf("IsReconnecting returned true after Close() was called.")
-	}
-	if status := nc.Status(); status != nats.CLOSED {
-		t.Fatalf("Status returned %d after Close() was called instead of CLOSED", status)
-	}
-}
+                // exit the block and enter a new server block - this
+                // restarts the server.
+            }
 
-#endif
+            using (NATSServer s = utils.CreateServerOnPort(4222))
+            {
+                lock (reconnectLock)
+                {
+                    if (!reconnected)
+                        Monitor.Wait(reconnectLock, 5000);
+                }
+
+                c.Flush();
+            }
+        }
 
     } // class
 
