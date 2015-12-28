@@ -171,6 +171,17 @@ namespace NATSUnitTests
                 typeof(NATSConnectionClosedException));
         }
 
+        [TestMethod]
+        public void TestConnectVerbose()
+        {
+
+            Options o = ConnectionFactory.GetDefaultOptions();
+            o.Verbose = true;
+
+            IConnection c = new ConnectionFactory().CreateConnection(o);
+            c.Close();
+        }
+        
         /// NOT IMPLEMENTED:
         /// TestServerSecureConnections
         /// TestErrOnConnectAndDeadlock

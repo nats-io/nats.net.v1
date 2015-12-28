@@ -226,6 +226,7 @@ namespace NATS.Client
         internal const string unsubProto = "UNSUB {0} {1}" + IC._CRLF_;
 
         internal const string pongProtoNoCRLF = "PONG";
+        internal const string okProtoNoCRLF = "+OK";
 
         internal const string STALE_CONNECTION = "Stale Connection";
     }

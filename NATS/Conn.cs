@@ -946,6 +946,13 @@ namespace NATS.Client
                 StreamReader sr = new StreamReader(br);
                 result = sr.ReadLine();
 
+
+                // If opts.verbose is set, handle +OK.
+                if (opts.Verbose == true && IC.okProtoNoCRLF.Equals(result))
+                {
+                    result = sr.ReadLine();
+                }
+
                 // Do not close or dispose the stream reader; 
                 // we need the underlying BufferedStream.
             }

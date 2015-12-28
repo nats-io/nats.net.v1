@@ -80,6 +80,7 @@ namespace NATS.Client
             this.ReconnectedEventHandler = o.ReconnectedEventHandler;
             this.reconnectWait = o.reconnectWait;
             this.secure = o.secure;
+            this.verbose = o.verbose;
             
             if (o.servers != null)
             {
