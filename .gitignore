@@ -1,0 +1,34 @@
+# Compiled Object files, Static and Dynamic libs (Shared Objects)
+*.DLL
+*.obj
+*.XML
+*.nupkg
+
+# Folders
+NATS/bin/
+NATS/obj/
+NATSUnitTests/bin/
+NATSUnitTests/obj/
+bin/
+examples/Publish/bin/
+examples/Publish/obj/
+examples/QueueGroup/bin/
+examples/QueueGroup/obj/
+examples/Replier/bin/
+examples/Replier/obj/
+examples/Requestor/bin/
+examples/Requestor/obj/
+examples/Subscribe/bin/
+examples/Subscribe/obj/
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# VStudio
+*.suo
+
+# Mac
+.DS_Store
+
