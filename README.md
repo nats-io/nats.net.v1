@@ -2,9 +2,10 @@
 # NATS - .NET C# Client
 A [C# .NET](https://msdn.microsoft.com/en-us/vstudio/aa496123.aspx) client for the [NATS messaging system](https://nats.io).
 
-This is an alpha release, based on the [NATS GO Client](https://github.com/nats-io/nats).
+This is an beta release, based on the [NATS GO Client](https://github.com/nats-io/nats).
 
 [![License MIT](https://img.shields.io/npm/l/express.svg)](http://opensource.org/licenses/MIT)
+[![API Documentation](https://img.shields.io/badge/doc-Doxygen-brightgreen.svg?style=flat)](http://nats-io.github.io/cnats)
 
 ## Installation
 
@@ -58,10 +59,10 @@ Doxygen is used for building the API documentation.  To build the API documentat
 build_doc.bat
 ```
 
-Doxygen will build the NATS .NET Client API documentation, placing it in the `documentationr\NATS.Client\html` directory.
+Doxygen will build the NATS .NET Client API documentation, placing it in the `documentation\NATS.Client\html` directory.
 Doxygen is required to be installed and in the PATH.  Version 1.8 is known to work.
 
-[Current API Documentation](http://htmlpreview.github.io/?https://github.com/nats-io/csnats/blob/master/documentation/NATS.Client/html/index.html)
+[Current API Documentation](http://nats-io.github.io/cnats)
 
 ## Basic Usage
 
@@ -462,7 +463,6 @@ The NATS .NET client can throw the following exceptions:
 
 ## Miscellaneous 
 ###Known Issues
-* Some unit tests are incomplete or fail.  This is due to long connect times with the underlying .NET TCPClient API, issues with the tests themselves, or bugs (This IS an alpha).
 * In the original v0.1-alpha release, there was an issue with a flush hanging in some situations.  This has been fixed in the v0.2-alpha release.
 
 ###TODO
