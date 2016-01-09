@@ -149,7 +149,7 @@ namespace NATS.Client
         /// <summary>
         /// Gets the subscription assigned to the messages.
         /// </summary>
-        public Subscription ArrivalSubcription
+        public ISubscription ArrivalSubcription
         {
             get { return sub; }
         }
