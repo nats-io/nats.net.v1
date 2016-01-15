@@ -467,6 +467,7 @@ The NATS .NET client can throw the following exceptions:
 
 ###TODO
 * [ ] WCF bindings
+* [ ] [.NET Core](https://github.com/dotnet/core) compatibility
 * [X] TLS
 * [X] Encoding (Serialization/Deserialization)
 * [X] Update delegates from traditional model to custom
