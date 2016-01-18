@@ -103,6 +103,15 @@ namespace NATS.Client
         internal NATSMaxPayloadException() : base("Maximum payload size has been exceeded") { }
         internal NATSMaxPayloadException(string err) : base(err) { }
     }
+
+    /// <summary>
+    /// The exception that is thrown when a subscriber has exceeded the maximum
+    /// number of messages that has been configured.
+    /// </summary>
+    public class NATSMaxMessagesException : NATSException
+    {
+        internal NATSMaxMessagesException() : base("Maximum number of messages have been exceeded.") { }
+    }
     
     /// <summary>
     /// The exception that is thrown when a subscriber operation is performed on

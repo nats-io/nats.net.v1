@@ -1910,6 +1910,7 @@ namespace NATS.Client
             }
 
             s.conn = null;
+            s.closed = true;
         }
 
         // FIXME: This is a hack
@@ -2104,7 +2105,7 @@ namespace NATS.Client
                 // pending NextMsg() calls.
                 foreach (Subscription s in subs.Values)
                 {
-                    s.closeChannel();
+                    s.close();
                 }
 
                 subs.Clear();

@@ -155,11 +155,11 @@ namespace NATSUnitTests
                 typeof(NATSConnectionClosedException));
 
             UnitTestUtilities.testExpectedException(
-                () => { s.NextMessage(); }, 
+                () => { s.NextMessage(); },
                 typeof(NATSConnectionClosedException));
 
             UnitTestUtilities.testExpectedException(
-                () => { s.NextMessage(100); }, 
+                () => { s.NextMessage(100); },
                 typeof(NATSConnectionClosedException));
 
             UnitTestUtilities.testExpectedException(
