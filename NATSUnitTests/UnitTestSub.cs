@@ -97,7 +97,7 @@ namespace NATSUnitTests
                             received++;
                         }
                     }
-                    catch (NATSBadSubscriptionException) { /* ignore */ }
+                    catch (NATSMaxMessagesException) { /* ignore */ }
 
                     Assert.IsTrue(received == max);
                     Assert.IsFalse(s.IsValid);
@@ -422,6 +422,25 @@ namespace NATSUnitTests
                 }
             }
         }
+
+        [TestMethod]
+        public void TestNextMessageOnClosedSub()
+        {
+            using (IConnection c = new ConnectionFactory().CreateConnection())
+            {
+                ISyncSubscription s = c.SubscribeSync("foo");
+                s.Unsubscribe();
+
+                try
+                {
+                    s.NextMessage();
+                }
+                catch (NATSBadSubscriptionException) { } // ignore.
+
+                // any other exceptions will fail the test.
+            }
+        }
+
     } // class
 
 } // namespace

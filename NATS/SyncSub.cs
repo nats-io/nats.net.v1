@@ -28,16 +28,32 @@ namespace NATS.Client
 
             lock (mu)
             {
-                if (conn == null)
-                    throw new NATSBadSubscriptionException();
-                if (mch == null)
+                if (connClosed)
+                {
                     throw new NATSConnectionClosedException();
+                }
+                else if (max > 0 && delivered >= max)
+                {
+                    throw new NATSMaxMessagesException();
+                }
+                else if (closed)
+                {
+                    throw new NATSBadSubscriptionException();
+                }
                 if (sc)
+                {
+                    sc = false;
                     throw new NATSSlowConsumerException();
+                }
 
                 localConn = this.conn;
                 localChannel = this.mch;
                 localMax = this.max;
+            }
+
+            if (localMax > 0 && this.delivered >= localMax)
+            {
+                throw new NATSMaxMessagesException();
             }
 
             if (timeout >= 0)
@@ -59,7 +75,7 @@ namespace NATS.Client
                 }
                 if (localMax > 0 && d > localMax)
                 {
-                    throw new NATSException("nats: Max messages delivered");
+                    throw new NATSMaxMessagesException();
                 }
             }
 

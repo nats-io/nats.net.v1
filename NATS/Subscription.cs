@@ -24,6 +24,9 @@ namespace NATS.Client
         internal bool       sc   = false;
 
         internal Connection conn = null;
+        internal bool closed = false;
+        internal bool connClosed = false;
+
         internal Channel<Msg> mch  = new Channel<Msg>();
 
         // Subject that represents this subscription. This can be different
@@ -37,12 +40,14 @@ namespace NATS.Client
             this.queue = queue;
         }
 
-        internal void closeChannel()
+        internal void close()
         {
             lock (mu)
             {
                 mch.close();
                 mch = null;
+                closed = true;
+                connClosed = true;
             }
         }
  

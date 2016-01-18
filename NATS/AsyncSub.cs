@@ -37,6 +37,8 @@ namespace NATS.Client
                 localConn = this.conn;
                 localHandler = MessageHandler;
                 localMax = this.max;
+                if (this.closed)
+                    return false;
             }
 
             // the message handler has not been setup yet, drop the 
