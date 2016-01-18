@@ -977,10 +977,6 @@ namespace NATS.Client
                     throw new NATSConnectionException(
                         result.TrimStart(IC._ERR_OP_.ToCharArray()));
                 }
-                else if (result.StartsWith("tls:"))
-                {
-                    throw new NATSSecureConnRequiredException(result);
-                }
                 else
                 {
                     throw new NATSException(result);
@@ -1006,11 +1002,6 @@ namespace NATS.Client
             status = ConnState.DISCONNECTED;
             if (lastEx == null)
                 return;
-
-            if (info.TlsRequired)
-                lastEx = new NATSSecureConnRequiredException();
-            else
-                lastEx = new NATSConnectionClosedException();
         }
 
         // This will process a disconnect when reconnect is allowed.
