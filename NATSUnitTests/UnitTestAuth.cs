@@ -95,8 +95,26 @@ namespace NATSUnitTests
                     connectAndFail("nats://localhost:1222");
                     connectAndFail("nats://badname:password@localhost:1222");
                 }
+            }
+            catch (Exception e)
+            {
+                System.Console.WriteLine(e);
+                throw e;
+            }
+        }
 
+        [TestMethod]
+        public void TestAuthToken()
+        {
+            try
+            {
+                using (NATSServer s = util.CreateServerWithArgs(TestContext, "-auth S3Cr3T0k3n!"))
+                {
+                    connectAndFail("nats://localhost:4222");
+                    connectAndFail("nats://invalid_token@localhost:4222");
 
+                    new ConnectionFactory().CreateConnection("nats://S3Cr3T0k3n!@localhost:4222").Close();
+                }
             }
             catch (Exception e)
             {

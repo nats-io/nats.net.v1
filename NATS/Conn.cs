@@ -431,11 +431,21 @@ namespace NATS.Client
                 sb.AppendFormat("\"verbose\":{0},\"pedantic\":{1},",
                     verbose ? "true" : "false",
                     pedantic ? "true" : "false");
+
+                // if there is a username with a password, then the username
+                // is a username/password.  Othwerwise, assume the username
+                // is a token.
                 if (user != null)
                 {
-                    sb.AppendFormat("\"user\":\"{0}\",", user);
                     if (pass != null)
+                    {
+                        sb.AppendFormat("\"user\":\"{0}\",", user);
                         sb.AppendFormat("\"pass\":\"{0}\",", pass);
+                    }
+                    else
+                    {
+                        sb.AppendFormat("\"auth_token\":\"{0}\",", user);
+                    }
                 }
 
                 sb.AppendFormat(
