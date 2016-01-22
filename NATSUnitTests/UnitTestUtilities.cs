@@ -66,10 +66,10 @@ namespace NATSUnitTests
             }
         }
 
-        public NATSServer(TestContext context, string configFile)
+        public NATSServer(TestContext context, string args)
         {
             ProcessStartInfo psInfo = this.createProcessStartInfo(context);
-            addArgument(psInfo, " -config " + configFile);
+            addArgument(psInfo, args);
             p = Process.Start(psInfo);
         }
 
@@ -184,7 +184,12 @@ namespace NATSUnitTests
 
         internal NATSServer CreateServerWithConfig(TestContext context, string configFile)
         {
-            return new NATSServer(context, configFile);
+            return new NATSServer(context, " -config " + configFile);
+        }
+
+        internal NATSServer CreateServerWithArgs(TestContext context, string args)
+        {
+            return new NATSServer(context, " " + args);
         }
 
         internal static String GetFullCertificatePath(TestContext context, string certificateName)
