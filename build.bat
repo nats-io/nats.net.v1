@@ -25,6 +25,9 @@ csc.exe /nologo /out:..\..\bin\Requestor.exe /r:..\..\bin\NATS.Client.dll /targe
 cd ..\replier
 csc.exe /nologo /out:..\..\bin\replier.exe /r:..\..\bin\NATS.Client.dll /target:exe /optimize+ *.cs Properties\*.cs
 
+cd ..\benchmark
+csc.exe /nologo /out:..\..\bin\benchmark.exe /r:..\..\bin\NATS.Client.dll /target:exe /optimize+ *.cs Properties\*.cs
+
 cd ..\..\
 
 
