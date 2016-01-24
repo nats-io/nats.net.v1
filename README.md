@@ -461,6 +461,63 @@ The NATS .NET client can throw the following exceptions:
 * NATSBadSubscriptionException - The exception that is thrown when a subscriber operation is performed on an invalid subscriber.
 * NATSTimeoutException - The exception that is thrown when a NATS operation times out.
 
+## Benchmarking the NATS .NET Client
+
+Benchmarking the NATS .NET Client is simple - run the benchmark application with a default NATS server running.  Tests can be customized, run benchmark -h for more details.  In order to get the best out of your test, update the priority of the benchmark application and the NATS server:
+
+```
+start /B /REALTIME gnatsd.exe
+```
+And the benchmark:
+```
+start /B /REALTIME benchmark.exe
+```
+
+The benchmarks include:
+
+* PubOnly<size> - publish only 
+* PubSub<size> - publish and subscribe
+* ReqReply<size> - request/reply
+* Lat<size> - latency.
+
+Note, kb/s is solely payload, excluding the NATS message protocol.  Latency is measure in microseconds.
+
+Here is some sample output, from a VM running on a Macbook Pro (thus the high latency).  Running the benchmarks in your environment is highly recommended.
+```
+PubOnlyNo         10000000         4369711 msgs/s              0 kb/s
+PubOnly8b         10000000         3384630 msgs/s          26442 kb/s
+PubOnly32b        10000000         2901377 msgs/s          90668 kb/s
+PubOnly256b       10000000         1098255 msgs/s         274563 kb/s
+PubOnly512b       10000000          594255 msgs/s         297127 kb/s
+PubOnly1k          1000000         2440030 msgs/s        2440030 kb/s
+PubOnly4k           500000         1315457 msgs/s        5261828 kb/s
+PubOnly8k           100000         3533244 msgs/s       28265952 kb/s
+PubSubNo          10000000         1206127 msgs/s              0 kb/s
+PubSub8b          10000000         1014879 msgs/s           7928 kb/s
+PubSub32b         10000000          666987 msgs/s          20843 kb/s
+PubSub256b        10000000          202496 msgs/s          50624 kb/s
+PubSub512b          500000         2174728 msgs/s        1087364 kb/s
+PubSub1k            500000         1137836 msgs/s        1137836 kb/s
+PubSub4k            500000          327685 msgs/s        1310740 kb/s
+PubSub8k            100000          892322 msgs/s        7138576 kb/s
+ReqReplNo            20000          495543 msgs/s              0 kb/s
+ReqRepl8b            10000          991107 msgs/s           7743 kb/s
+ReqRepl32b           10000          988409 msgs/s          30887 kb/s
+ReqRepl256b           5000         1975569 msgs/s         493892 kb/s
+ReqRepl512b           5000         1984859 msgs/s         992429 kb/s
+ReqRepl1k             5000         1970939 msgs/s        1970939 kb/s
+ReqRepl4k             5000         1978037 msgs/s        7912148 kb/s
+ReqRepl8k             5000         1742837 msgs/s       13942696 kb/s
+LatNo (us)      500 msgs, 148.78 avg, 89.70 min, 1255.80 max, 83.35 stddev
+Lat8b (us)      500 msgs, 155.90 avg, 96.40 min, 956.10 max, 44.26 stddev
+Lat32b (us)     500 msgs, 150.72 avg, 89.70 min, 1108.90 max, 59.82 stddev
+Lat256b (us)    500 msgs, 155.95 avg, 91.00 min, 299.30 max, 20.89 stddev
+Lat512b (us)    500 msgs, 151.69 avg, 107.70 min, 264.50 max, 19.72 stddev
+Lat1k (us)      500 msgs, 165.16 avg, 109.50 min, 433.60 max, 27.36 stddev
+Lat4k (us)      500 msgs, 216.54 avg, 160.70 min, 1421.70 max, 59.46 stddev
+Lat8k (us)      500 msgs, 271.21 avg, 219.80 min, 582.60 max, 28.71 stddev
+```
+
 ## Miscellaneous 
 ###Known Issues
 * In the original v0.1-alpha release, there was an issue with a flush hanging in some situations.  This has been fixed in the v0.2-alpha release.
@@ -468,8 +525,8 @@ The NATS .NET client can throw the following exceptions:
 ###TODO
 * [ ] WCF bindings
 * [ ] [.NET Core](https://github.com/dotnet/core) compatibility
-* [ ] Comprehensive benchmarking
-* [ ] Performance - reduce locking and implement a flush delay.
+* [X] Comprehensive benchmarking
+* [X] Performance - reduce locking and implement a flush delay.
 * [X] TLS
 * [X] Encoding (Serialization/Deserialization)
 * [X] Update delegates from traditional model to custom
