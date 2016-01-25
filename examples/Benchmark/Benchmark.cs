@@ -222,6 +222,9 @@ namespace Benchmark
         // TODO:  look into warming up the server, this client for accuracy.
         void runPubSubLatency(string testName, long testCount, long testSize)
         {
+            Object subcriberLock = new Object();
+            bool   subscriberDone = false;
+
             List<long> measurements = new List<long>((int)testCount);
 
             byte[] payload = generatePayload(testSize);
@@ -233,22 +236,43 @@ namespace Benchmark
 
             Stopwatch sw = new Stopwatch();
 
-            ISyncSubscription subs = subConn.SubscribeSync(subject);
+            IAsyncSubscription subs = subConn.SubscribeAsync(subject, (sender, args) =>
+            {
+                sw.Stop();
+
+                measurements.Add(sw.ElapsedTicks);
+
+                lock(subcriberLock)
+                {
+                    Monitor.Pulse(subcriberLock);
+                    subscriberDone = true;
+                }
+            });
+
             subConn.Flush();
 
             for (int i = 0; i < testCount; i++)
-            {
+            {             
+                lock (subcriberLock)
+                {
+                    subscriberDone = false;
+                }
+
                 sw.Reset();
                 sw.Start();
-             
+
                 pubConn.Publish(subject, payload);
                 pubConn.Flush();
-                
-                subs.NextMessage();
-                
-                sw.Stop();
-                
-                measurements.Add(sw.ElapsedTicks);
+             
+                // block on the subscriber finishing - we do not want any
+                // overlap in measurements.
+                lock (subcriberLock)
+                {
+                    if (!subscriberDone)
+                    {
+                        Monitor.Wait(subcriberLock);
+                    }
+                }
             }
 
             double latencyAvg = measurements.Average();
@@ -350,7 +374,6 @@ namespace Benchmark
 
         Benchmark(string[] args)
         {
-
             if (!parseArgs(args))
                 return;
 
