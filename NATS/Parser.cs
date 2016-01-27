@@ -191,16 +191,32 @@ namespace NATS.Client
                         }
                         break;
                     case MSG_PAYLOAD:
-                        long position = msgBufStream.Position;
-                        if (position >= conn.msgArgs.size)
+                        int  msgSize  = conn.msgArgs.size;
+                        if (msgSize == 0)
                         {
-                            conn.processMsg(msgBufBase, position);
-                            msgBufStream.Position = 0;
+                            conn.processMsg(msgBufBase, msgSize);
                             state = MSG_END;
                         }
                         else
                         {
-                            msgBufStream.WriteByte((byte)b);
+                            long position = msgBufStream.Position;
+                            int writeLen = msgSize - (int)position;
+                            int avail = len - i;
+
+                            if (avail < writeLen)
+                            {
+                                writeLen = avail;
+                            }
+
+                            msgBufStream.Write(buffer, i, writeLen);
+                            i += (writeLen - 1);
+
+                            if ((position + writeLen) >= msgSize)
+                            {
+                                conn.processMsg(msgBufBase, msgSize);
+                                msgBufStream.Position = 0;
+                                state = MSG_END;
+                            }
                         }
                         break;
                     case MSG_END:
