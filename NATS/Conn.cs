@@ -154,7 +154,7 @@ namespace NATS.Client
         internal Exception lastEx;
 
         Parser              ps = null;
-        System.Timers.Timer ptmr = null;
+        Timer               ptmr = null;
 
         int                 pout = 0;
 
@@ -659,6 +659,48 @@ namespace NATS.Client
             }
         }
 
+        private void pingTimerCallback(object state)
+        {
+            lock (mu)
+            {
+                if (status != ConnState.CONNECTED)
+                {
+                    return;
+                }
+
+                pout++;
+
+                if (pout > Opts.MaxPingsOut)
+                {
+                    processOpError(new NATSStaleConnectionException());
+                    return;
+                }
+
+                sendPing(null);
+            }
+        }
+
+        // caller must lock
+        private void stopPingTimer()
+        {
+            if (ptmr != null)
+            {
+                ptmr.Dispose();
+                ptmr = null;
+            }
+        }
+
+        // caller must lock
+        private void startPingTimer()
+        {
+            stopPingTimer();
+
+            ptmr = new Timer(pingTimerCallback, null,
+                opts.PingInterval,
+                opts.PingInterval);
+
+        }
+
         private void spinUpSocketWatchers()
         {
             Task t = null;
@@ -679,43 +721,8 @@ namespace NATS.Client
 
                 if (Opts.PingInterval > 0)
                 {
-                    if (ptmr == null)
-                    {
-                        ptmr = new System.Timers.Timer(Opts.PingInterval);
-                        ptmr.Elapsed += pingTimerEventHandler;
-                        ptmr.AutoReset = true;
-                        ptmr.Enabled = true;
-                        ptmr.Start();
-                    }
-                    else
-                    {
-                        ptmr.Stop();
-                        ptmr.Interval = Opts.PingInterval;
-                        ptmr.Start();
-                    }
+                    startPingTimer();
                 }
-
-            }
-        }
-
-        private void pingTimerEventHandler(Object sender, EventArgs args)
-        {
-            lock (mu)
-            {
-                if (status != ConnState.CONNECTED)
-                {
-                    return;
-                }
-
-                pout++;
-
-                if (pout > Opts.MaxPingsOut)
-                {
-                    processOpError(new NATSStaleConnectionException());
-                    return;
-                }
-
-                sendPing(null);
             }
         }
 
@@ -1026,10 +1033,7 @@ namespace NATS.Client
 
                 status = ConnState.RECONNECTING;
 
-                if (ptmr != null)
-                {
-                    ptmr.Stop();
-                }
+                stopPingTimer();
 
                 if (conn.isSetup())
                 {
@@ -1972,32 +1976,6 @@ namespace NATS.Client
             bw.Flush();
         }
 
-        private void processPingTimer()
-        {
-            lock (mu)
-            {
-                if (status != ConnState.CONNECTED)
-                    return;
-
-                // Check for violation
-                this.pout++;
-                if (this.pout <= Opts.MaxPingsOut)
-                {
-                    sendPing(null);
-
-                    // reset the timer
-                    ptmr.Stop();
-                    ptmr.Start();
-
-                    return;
-                }
-            }
-
-            // if we get here, we've encountered an error.  Process
-            // this outside of the lock.
-            processOpError(new NATSStaleConnectionException());
-        }
-
         public void Flush(int timeout)
         {
             if (timeout <= 0)
@@ -2112,8 +2090,7 @@ namespace NATS.Client
 
             lock (mu)
             {
-                if (ptmr != null)
-                    ptmr.Stop();
+                stopPingTimer();
 
                 // Close sync subscriber channels and release any
                 // pending NextMsg() calls.
