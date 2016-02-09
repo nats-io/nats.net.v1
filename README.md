@@ -523,6 +523,7 @@ Lat8k (us)      500 msgs, 271.21 avg, 219.80 min, 582.60 max, 28.71 stddev
 * In the original v0.1-alpha release, there was an issue with a flush hanging in some situations.  This has been fixed in the v0.2-alpha release.
 
 ###TODO
+* [ ] Expand Unit Tests to test internals (namely Parsing)
 * [ ] WCF bindings
 * [ ] [.NET Core](https://github.com/dotnet/core) compatibility
 * [X] Comprehensive benchmarking
@@ -532,6 +533,8 @@ Lat8k (us)      500 msgs, 271.21 avg, 219.80 min, 582.60 max, 28.71 stddev
 * [X] Update delegates from traditional model to custom
 * [X] NuGet package
 * [X] Strong name the assembly
+
+Any suggestions and/or contributions are welcome!
 
 ## License
 
