@@ -1388,6 +1388,10 @@ namespace NATS.Client
             {
                 throw new NATSException("Invalid Message - Bad or Missing Size: " + s);
             }
+            if (msgArgs.sid < 0)
+            {
+                throw new NATSException("Invalid Message - Bad or Missing Sid: " + s);
+            }
         }
 
 
