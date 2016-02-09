@@ -317,7 +317,8 @@ namespace NATS.Client
             {
                 set
                 {
-                    client.SendTimeout = value;
+                    if (client != null)
+                        client.SendTimeout = value;
                 }
             }
 
@@ -1100,8 +1101,7 @@ namespace NATS.Client
             Srv s;
             while ((s = selectNextServer()) != null)
             {
-                if (lastEx != null)
-                    break;
+                lastEx = null;
 
                 // Sleep appropriate amount of time before the
                 // connection attempt if connecting to same server
