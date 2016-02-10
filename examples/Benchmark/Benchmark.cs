@@ -169,7 +169,15 @@ namespace Benchmark
 
             ConnectionFactory cf = new ConnectionFactory();
 
-            IConnection subConn = cf.CreateConnection(url);
+            Options o = ConnectionFactory.GetDefaultOptions();
+            
+            o.Url = url;
+            o.SubChannelLength = 10000000;
+            o.AsyncErrorEventHandler += (sender, obj) => {
+                System.Console.WriteLine("Error: " + obj.Error);
+            };
+
+            IConnection subConn = cf.CreateConnection(o);
             IConnection pubConn = cf.CreateConnection(url);
 
             subConn.SubscribeAsync(subject, (sender, args) =>
