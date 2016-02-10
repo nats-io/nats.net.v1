@@ -175,6 +175,78 @@ namespace NATS.Client
 
         TCPConnection conn = new TCPConnection();
 
+        // One could use a task scheduler, but this is simpler and will
+        // likely be easier to port to .NET core.
+        private class CallbackScheduler
+        {
+            Channel<Task> tasks            = new Channel<Task>();
+            Task executorTask = null;
+            Object        runningLock      = new Object();
+            bool          schedulerRunning = false;
+
+            private bool Running
+            {
+                get
+                {
+                    lock (runningLock)
+                    {
+                        return schedulerRunning;
+                    }
+                }
+
+                set
+                {
+                    lock  (runningLock)
+                    {
+                        schedulerRunning = value;
+                    }
+                }
+            }
+
+            private void process()
+            {
+                while (this.Running)
+                {
+                    Task t = tasks.get(-1);
+                    try
+                    {
+                        t.RunSynchronously();
+                    }
+                    catch (Exception) { }
+                }
+            }
+
+            internal void Start()
+            {
+                lock (runningLock)
+                {
+                    schedulerRunning = true;
+                    executorTask = new Task(() => { process(); });
+                    executorTask.Start();
+                }
+            }
+
+            internal void Add(Task t)
+            {
+                lock (runningLock)
+                {
+                    if (schedulerRunning)
+                        tasks.add(t);
+                }
+            }
+
+            internal void Stop()
+            {
+                Add(new Task(() =>
+                {
+                    this.Running = false;
+                }));
+            }
+        }
+
+        CallbackScheduler callbackScheduler = new CallbackScheduler();
+
+
         internal class Control
         {
             // for efficiency, assign these once in the contructor;
@@ -482,6 +554,8 @@ namespace NATS.Client
 
             // predefine the start of the publish protocol message.
             buildPublishProtocolBuffer(Defaults.scratchSize);
+
+            callbackScheduler.Start();
         }
 
         private void buildPublishProtocolBuffer(int size)
@@ -1086,16 +1160,11 @@ namespace NATS.Client
 
             if (Opts.DisconnectedEventHandler != null)
             {
-                Monitor.Exit(mu);
+                EventHandler<ConnEventArgs> deh = Opts.DisconnectedEventHandler;
 
-                try
-                {
-                    Opts.DisconnectedEventHandler(this,
-                        new ConnEventArgs(this));
-                }
-                catch (Exception) { }
-
-                Monitor.Enter(mu);
+                callbackScheduler.Add(
+                    new Task(() => { deh(this, new ConnEventArgs(this)); })
+                );
             }
 
             Srv s;
@@ -1191,11 +1260,9 @@ namespace NATS.Client
 
                 if (reconnectedEh != null)
                 {
-                    try
-                    {
-                        reconnectedEh(this, new ConnEventArgs(this));
-                    }
-                    catch (Exception) { }
+                    callbackScheduler.Add(
+                        new Task(() => { reconnectedEh(this, new ConnEventArgs(this)); })
+                    );
                 }
 
                 return;
@@ -1448,11 +1515,10 @@ namespace NATS.Client
             lastEx = new NATSSlowConsumerException();
             if (opts.AsyncErrorEventHandler != null && !s.sc)
             {
-                new Task(() =>
-                {
-                    opts.AsyncErrorEventHandler(this,
-                        new ErrEventArgs(this, s, "Slow Consumer"));
-                }).Start();
+                EventHandler<ErrEventArgs> aseh = opts.AsyncErrorEventHandler;
+                callbackScheduler.Add(
+                    new Task(() => { aseh(this, new ErrEventArgs(this, s, "Slow Consumer")); })
+                );
             }
             s.sc = true;
         }
@@ -2110,10 +2176,10 @@ namespace NATS.Client
                 if (invokeDelegates && conn.isSetup() &&
                     Opts.DisconnectedEventHandler != null)
                 {
-                    // TODO:  Mirror go, but this can result in a callback
-                    // being invoked out of order
                     disconnectedEventHandler = Opts.DisconnectedEventHandler;
-                    new Task(() => { disconnectedEventHandler(this, new ConnEventArgs(this)); }).Start();
+
+                    callbackScheduler.Add(new Task(() => { 
+                        disconnectedEventHandler(this, new ConnEventArgs(this)); }));
                 }
 
                 // Go ahead and make sure we have flushed the outbound buffer.
@@ -2131,11 +2197,9 @@ namespace NATS.Client
 
             if (invokeDelegates && closedEventHandler != null)
             {
-                try
-                {
-                    closedEventHandler(this, new ConnEventArgs(this));
-                }
-                catch (Exception) { }
+                callbackScheduler.Add(
+                    new Task(() => { closedEventHandler(this, new ConnEventArgs(this)); })
+                );
             }
 
             lock (mu)
@@ -2147,6 +2211,7 @@ namespace NATS.Client
         public void Close()
         {
             close(ConnState.CLOSED, true);
+            callbackScheduler.Stop();
         }
 
         // assume the lock is head.

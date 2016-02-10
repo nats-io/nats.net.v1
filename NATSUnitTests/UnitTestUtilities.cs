@@ -145,7 +145,12 @@ namespace NATSUnitTests
         {
             lock (mu)
             {
-                defaultServer.Shutdown();
+                try
+                {
+                    defaultServer.Shutdown();
+                }
+                catch (Exception) { }
+
                 defaultServer = null;
             }
         }
