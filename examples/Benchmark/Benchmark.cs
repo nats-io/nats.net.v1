@@ -178,7 +178,7 @@ namespace Benchmark
             };
 
             IConnection subConn = cf.CreateConnection(o);
-            IConnection pubConn = cf.CreateConnection(o);
+            IConnection pubConn = cf.CreateConnection(url);
 
             subConn.SubscribeAsync(subject, (sender, args) =>
             {
