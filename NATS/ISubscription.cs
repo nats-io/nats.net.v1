@@ -84,20 +84,20 @@ namespace NATS.Client
         void GetPending(out long pendingBytes, out long pendingMessages);
 
         /// <summary>
-        /// Gets the maximum number of pending bytes recorded.
+        /// Gets the current number of pending bytes.
         /// </summary>
         long PendingBytes { get; }
 
         /// <summary>
-        /// Gets the maximum number of pending messages recorded.
+        /// Gets the current number of pending messages.
         /// </summary>
         long PendingMessages { get; }
 
         /// <summary>
         /// Gets the maximum pending messages and pending bytes recorded.
         /// </summary>
-        /// <param name="maxPendingBytes">Maximum number of pending bytes recored.</param>
-        /// <param name="maxPendingMessages">Maximum number of pending messages recored.</param>
+        /// <param name="maxPendingBytes">Maximum number of pending bytes recorded.</param>
+        /// <param name="maxPendingMessages">Maximum number of pending messages recorded.</param>
         void GetMaxPending(out long maxPendingBytes, out long maxPendingMessages);
 
         /// <summary>
@@ -124,8 +124,9 @@ namespace NATS.Client
         /// Gets the number of message dropped by violations of pending limits.
         /// </summary>
         /// <remarks>
-        /// If the server dgeclares the connection a slow consumer, this number may 
-        /// not be valid.</remarks>
+        /// If the server declares the connection a slow consumer, this number may 
+        /// not be valid.
+        /// </remarks>
         long Dropped { get; }
     }
 }
