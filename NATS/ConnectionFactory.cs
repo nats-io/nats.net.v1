@@ -21,13 +21,14 @@ namespace NATS.Client
         /// <summary>
         /// CreateConnection will attempt to connect to the NATS server.
         /// The url can contain username/password semantics.
+        /// Comma seperated arrays are also supported, e.g. urlA, urlB.
         /// </summary>
         /// <param name="url">The url</param>
         /// <returns>A new connection to the NATS server</returns>
         public IConnection CreateConnection(string url)
         {
             Options opts = new Options();
-            opts.Url = url;
+            opts.processUrlString(url);
             return CreateConnection(opts);
         }
 
@@ -48,7 +49,7 @@ namespace NATS.Client
         public IConnection CreateSecureConnection(string url)
         {
             Options opts = new Options();
-            opts.Url = url;
+            opts.processUrlString(url);
             opts.Secure = true;
             return CreateConnection(opts);
         }

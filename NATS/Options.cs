@@ -103,6 +103,20 @@ namespace NATS.Client
             }
         }
 
+        internal void processUrlString(String url)
+        {
+            if (url == null)
+                return;
+
+            string[] urls = url.Split(',');
+            for (int i = 0; i < urls.Length; i++)
+            {
+                urls[i] = urls[i].Trim();
+            }
+
+            this.servers = urls;
+        }
+
         /// <summary>
         /// Gets or sets the url used to connect to the NATs server.  This may
         /// contain user information.

@@ -771,6 +771,40 @@ namespace NATSUnitTests
             }
         }
 
+        [TestMethod]
+        public void TestUrlArgument()
+        {
+            string url1 = NATS.Client.Defaults.Url;
+            string url2 = "nats://localhost:4223";
+            string url3 = "nats://localhost:4224";
+
+            string urls = url1 + "," + url2 + "," + url3;
+            IConnection c = new ConnectionFactory().CreateConnection(urls);
+            Assert.IsTrue(c.Opts.Servers[0].Equals(url1));
+            Assert.IsTrue(c.Opts.Servers[1].Equals(url2));
+            Assert.IsTrue(c.Opts.Servers[2].Equals(url3));
+
+            c.Close();
+
+            urls = url1 + "    , " + url2 + "," + url3;
+            c = new ConnectionFactory().CreateConnection(urls);
+            Assert.IsTrue(c.Opts.Servers[0].Equals(url1));
+            Assert.IsTrue(c.Opts.Servers[1].Equals(url2));
+            Assert.IsTrue(c.Opts.Servers[2].Equals(url3));
+            c.Close();
+
+            try
+            {
+                urls = "  " + url1 + "    , " + url2 + ",";
+                c = new ConnectionFactory().CreateConnection(urls);
+                Assert.Fail("Invalid url was not detected");
+            }
+            catch (Exception) { }
+
+            c = new ConnectionFactory().CreateConnection(url1);
+            c.Close();
+        }
+
     } // class
 
 } // namespace
