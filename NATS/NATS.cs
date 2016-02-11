@@ -117,6 +117,16 @@ namespace NATS.Client
         /// </summary>
         public const string LangString     = ".NET";
 
+        /// <summary>
+        /// Default subscriber pending messages limit.
+        /// </summary>
+        public const long SubPendingMsgsLimit = 65536;
+
+        /// <summary>
+        /// Default subscriber pending bytes limit.
+        /// </summary>
+        public const long SubPendingBytesLimit = 65536 * 1024;
+
         /*
          * Namespace level defaults
          */

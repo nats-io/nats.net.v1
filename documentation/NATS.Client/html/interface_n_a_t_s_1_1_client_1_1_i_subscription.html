@@ -132,6 +132,14 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:ab51e1cbf3f877328371c80e36226d669"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af60510f6e75bc2fe6c31768f9b1e6e94"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#af60510f6e75bc2fe6c31768f9b1e6e94">AutoUnsubscribe</a> (int max)</td></tr>
 <tr class="separator:af60510f6e75bc2fe6c31768f9b1e6e94"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acec3df78fc38cac58aeb37c5370000ec"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#acec3df78fc38cac58aeb37c5370000ec">SetPendingLimits</a> (long messageLimit, long bytesLimit)</td></tr>
+<tr class="separator:acec3df78fc38cac58aeb37c5370000ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aedf741af5c64fcdf2897f101608b5a52"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#aedf741af5c64fcdf2897f101608b5a52">GetPending</a> (out long pendingBytes, out long pendingMessages)</td></tr>
+<tr class="separator:aedf741af5c64fcdf2897f101608b5a52"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adcd1652be7ee61b34ceb4e009cc1b67c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#adcd1652be7ee61b34ceb4e009cc1b67c">GetMaxPending</a> (out long maxPendingBytes, out long maxPendingMessages)</td></tr>
+<tr class="separator:adcd1652be7ee61b34ceb4e009cc1b67c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa941089ff64ccd48f530698cd460190b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#aa941089ff64ccd48f530698cd460190b">ClearMaxPending</a> ()</td></tr>
+<tr class="separator:aa941089ff64ccd48f530698cd460190b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="properties"></a>
 Properties</h2></td></tr>
@@ -145,6 +153,22 @@ Properties</h2></td></tr>
 <tr class="separator:a91c05cbdf2710acf1388bfe998107e86"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab474bbe759abcb118e92890918b78fb8"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#ab474bbe759abcb118e92890918b78fb8">QueuedMessageCount</a><code> [get]</code></td></tr>
 <tr class="separator:ab474bbe759abcb118e92890918b78fb8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a427d7471254da6620ae0ea361822b0d8"><td class="memItemLeft" align="right" valign="top">long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#a427d7471254da6620ae0ea361822b0d8">PendingByteLimit</a><code> [get, set]</code></td></tr>
+<tr class="separator:a427d7471254da6620ae0ea361822b0d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7e3c7d928bc31d00bcb8a4ab9194be1e"><td class="memItemLeft" align="right" valign="top">long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#a7e3c7d928bc31d00bcb8a4ab9194be1e">PendingMessageLimit</a><code> [get, set]</code></td></tr>
+<tr class="separator:a7e3c7d928bc31d00bcb8a4ab9194be1e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9681d873bde8b966ec86a992f84ad3ec"><td class="memItemLeft" align="right" valign="top">long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#a9681d873bde8b966ec86a992f84ad3ec">PendingBytes</a><code> [get]</code></td></tr>
+<tr class="separator:a9681d873bde8b966ec86a992f84ad3ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5b6ccb093a3bb473b12df00c11881c85"><td class="memItemLeft" align="right" valign="top">long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#a5b6ccb093a3bb473b12df00c11881c85">PendingMessages</a><code> [get]</code></td></tr>
+<tr class="separator:a5b6ccb093a3bb473b12df00c11881c85"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac4b99a8ce31bffd5f7a1bd3fd3c5a67b"><td class="memItemLeft" align="right" valign="top">long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#ac4b99a8ce31bffd5f7a1bd3fd3c5a67b">MaxPendingBytes</a><code> [get]</code></td></tr>
+<tr class="separator:ac4b99a8ce31bffd5f7a1bd3fd3c5a67b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a446168a33a8b8036ad8fff46e1d90b39"><td class="memItemLeft" align="right" valign="top">long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#a446168a33a8b8036ad8fff46e1d90b39">MaxPendingMessages</a><code> [get]</code></td></tr>
+<tr class="separator:a446168a33a8b8036ad8fff46e1d90b39"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a97e96a370cb01dd6808b7f90cbf4b886"><td class="memItemLeft" align="right" valign="top">long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#a97e96a370cb01dd6808b7f90cbf4b886">Delivered</a><code> [get]</code></td></tr>
+<tr class="separator:a97e96a370cb01dd6808b7f90cbf4b886"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abf4058acb532e468c9283c6498a3bb3b"><td class="memItemLeft" align="right" valign="top">long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#abf4058acb532e468c9283c6498a3bb3b">Dropped</a><code> [get]</code></td></tr>
+<tr class="separator:abf4058acb532e468c9283c6498a3bb3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Represents interest in a <a class="el" href="namespace_n_a_t_s.html">NATS</a> topic. </p>
@@ -167,6 +191,128 @@ Properties</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">max</td><td>Number of messages to receive before unsubscribing.</td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="aa941089ff64ccd48f530698cd460190b"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void NATS.Client.ISubscription.ClearMaxPending </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Clears the maximum pending statistics. </p>
+
+</div>
+</div>
+<a class="anchor" id="adcd1652be7ee61b34ceb4e009cc1b67c"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void NATS.Client.ISubscription.GetMaxPending </td>
+          <td>(</td>
+          <td class="paramtype">out long&#160;</td>
+          <td class="paramname"><em>maxPendingBytes</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">out long&#160;</td>
+          <td class="paramname"><em>maxPendingMessages</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Gets the maximum pending messages and pending bytes recorded. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">maxPendingBytes</td><td>Maximum number of pending bytes recored.</td></tr>
+    <tr><td class="paramname">maxPendingMessages</td><td>Maximum number of pending messages recored.</td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="aedf741af5c64fcdf2897f101608b5a52"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void NATS.Client.ISubscription.GetPending </td>
+          <td>(</td>
+          <td class="paramtype">out long&#160;</td>
+          <td class="paramname"><em>pendingBytes</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">out long&#160;</td>
+          <td class="paramname"><em>pendingMessages</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Gets pending messages and bytes. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">pendingBytes</td><td>Current number of pending bytes.</td></tr>
+    <tr><td class="paramname">pendingMessages</td><td>Current number of pending messages.</td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="acec3df78fc38cac58aeb37c5370000ec"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void NATS.Client.ISubscription.SetPendingLimits </td>
+          <td>(</td>
+          <td class="paramtype">long&#160;</td>
+          <td class="paramname"><em>messageLimit</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">long&#160;</td>
+          <td class="paramname"><em>bytesLimit</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Sets the message limit and bytes limit of a subscriber. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">messageLimit</td><td>Maximum number of pending messages to allow.</td></tr>
+    <tr><td class="paramname">bytesLimit</td><td>Maximum number of pending bytes to allow.</td></tr>
   </table>
   </dd>
 </dl>
@@ -213,6 +359,51 @@ Properties</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="a97e96a370cb01dd6808b7f90cbf4b886"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">long NATS.Client.ISubscription.Delivered</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">get</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Gets the number of messages delivered to a subscriber. </p>
+
+</div>
+</div>
+<a class="anchor" id="abf4058acb532e468c9283c6498a3bb3b"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">long NATS.Client.ISubscription.Dropped</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">get</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Gets the number of message dropped by violations of pending limits. </p>
+<p>If the server dgeclares the connection a slow consumer, this number may not be valid.</p>
+
+</div>
+</div>
 <a class="anchor" id="a91c05cbdf2710acf1388bfe998107e86"></a>
 <div class="memitem">
 <div class="memproto">
@@ -232,6 +423,138 @@ Properties</h2></td></tr>
 </div><div class="memdoc">
 
 <p>True if the subscription is active, false otherwise. </p>
+
+</div>
+</div>
+<a class="anchor" id="ac4b99a8ce31bffd5f7a1bd3fd3c5a67b"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">long NATS.Client.ISubscription.MaxPendingBytes</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">get</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Gets the maximum number of pending bytes recorded. </p>
+
+</div>
+</div>
+<a class="anchor" id="a446168a33a8b8036ad8fff46e1d90b39"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">long NATS.Client.ISubscription.MaxPendingMessages</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">get</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Gets the maximum number of pending messages recorded. </p>
+
+</div>
+</div>
+<a class="anchor" id="a427d7471254da6620ae0ea361822b0d8"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">long NATS.Client.ISubscription.PendingByteLimit</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">get</span><span class="mlabel">set</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Gets or sets the maximum number of pending bytes to allow. </p>
+
+</div>
+</div>
+<a class="anchor" id="a9681d873bde8b966ec86a992f84ad3ec"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">long NATS.Client.ISubscription.PendingBytes</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">get</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Gets the maximum number of pending bytes recorded. </p>
+
+</div>
+</div>
+<a class="anchor" id="a7e3c7d928bc31d00bcb8a4ab9194be1e"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">long NATS.Client.ISubscription.PendingMessageLimit</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">get</span><span class="mlabel">set</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Gets or sets the maximum number of pending messages to allow. </p>
+
+</div>
+</div>
+<a class="anchor" id="a5b6ccb093a3bb473b12df00c11881c85"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">long NATS.Client.ISubscription.PendingMessages</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">get</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Gets the maximum number of pending messages recorded. </p>
 
 </div>
 </div>

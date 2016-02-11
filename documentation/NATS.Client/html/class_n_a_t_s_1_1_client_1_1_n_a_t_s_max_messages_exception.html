@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.10"/>
-<title>NATS .NET Client: NATS.Client.NATSException Class Reference</title>
+<title>NATS .NET Client: NATS.Client.NATSMaxMessagesException Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -89,7 +89,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   </div>
 </div>
 <script type="text/javascript">
-$(document).ready(function(){initNavTree('class_n_a_t_s_1_1_client_1_1_n_a_t_s_exception.html','');});
+$(document).ready(function(){initNavTree('class_n_a_t_s_1_1_client_1_1_n_a_t_s_max_messages_exception.html','');});
 </script>
 <div id="doc-content">
 <!-- window showing the filter options -->
@@ -108,33 +108,22 @@ $(document).ready(function(){initNavTree('class_n_a_t_s_1_1_client_1_1_n_a_t_s_e
 
 <div class="header">
   <div class="summary">
-<a href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_exception-members.html">List of all members</a>  </div>
+<a href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_max_messages_exception-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">NATS.Client.NATSException Class Reference</div>  </div>
+<div class="title">NATS.Client.NATSMaxMessagesException Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <div class="dynheader">
-Inheritance diagram for NATS.Client.NATSException:</div>
+Inheritance diagram for NATS.Client.NATSMaxMessagesException:</div>
 <div class="dyncontent">
  <div class="center">
-  <img src="class_n_a_t_s_1_1_client_1_1_n_a_t_s_exception.png" usemap="#NATS.Client.NATSException_map" alt=""/>
-  <map id="NATS.Client.NATSException_map" name="NATS.Client.NATSException_map">
-<area href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_bad_subscription_exception.html" title="The exception that is thrown when a subscriber operation is performed on an invalid subscriber..." alt="NATS.Client.NATSBadSubscriptionException" shape="rect" coords="304,56,598,80"/>
-<area href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_connection_closed_exception.html" title="The exception that is thrown when a an operation is performed on a connection that is closed..." alt="NATS.Client.NATSConnectionClosedException" shape="rect" coords="304,112,598,136"/>
-<area href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_connection_exception.html" title="The exception that is thrown when there is a connection error. " alt="NATS.Client.NATSConnectionException" shape="rect" coords="304,168,598,192"/>
-<area href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_max_messages_exception.html" title="The exception that is thrown when a subscriber has exceeded the maximum number of messages that has b..." alt="NATS.Client.NATSMaxMessagesException" shape="rect" coords="304,224,598,248"/>
-<area href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_max_payload_exception.html" title="The exception that is thrown when a message payload exceeds what the maximum configured. " alt="NATS.Client.NATSMaxPayloadException" shape="rect" coords="304,280,598,304"/>
-<area href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_no_servers_exception.html" title="The exception that is thrown when a connection cannot be made to any server. " alt="NATS.Client.NATSNoServersException" shape="rect" coords="304,336,598,360"/>
-<area href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_protocol_exception.html" title="This exception that is thrown when there is an internal error with the NATS protocol. " alt="NATS.Client.NATSProtocolException" shape="rect" coords="304,392,598,416"/>
-<area href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_secure_conn_required_exception.html" title="The exception that is thrown when a secure connection is required. " alt="NATS.Client.NATSSecureConnRequiredException" shape="rect" coords="304,448,598,472"/>
-<area href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_secure_conn_wanted_exception.html" title="The exception that is thrown when a secure connection is requested, but not required. " alt="NATS.Client.NATSSecureConnWantedException" shape="rect" coords="304,504,598,528"/>
-<area href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_slow_consumer_exception.html" title="The exception that is thrown when a consumer (subscription) is slow. " alt="NATS.Client.NATSSlowConsumerException" shape="rect" coords="304,560,598,584"/>
-<area href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_stale_connection_exception.html" title="The exception that is thrown when an operation occurs on a connection that has been determined to be ..." alt="NATS.Client.NATSStaleConnectionException" shape="rect" coords="304,616,598,640"/>
-<area href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_timeout_exception.html" title="The exception that is thrown when a NATS operation times out. " alt="NATS.Client.NATSTimeoutException" shape="rect" coords="304,672,598,696"/>
+  <img src="class_n_a_t_s_1_1_client_1_1_n_a_t_s_max_messages_exception.png" usemap="#NATS.Client.NATSMaxMessagesException_map" alt=""/>
+  <map id="NATS.Client.NATSMaxMessagesException_map" name="NATS.Client.NATSMaxMessagesException_map">
+<area href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_exception.html" title="The exception that is thrown when there is a NATS error condition. All NATS exception inherit from th..." alt="NATS.Client.NATSException" shape="rect" coords="0,0,254,24"/>
 </map>
  </div></div>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>The exception that is thrown when there is a <a class="el" href="namespace_n_a_t_s.html">NATS</a> error condition. All <a class="el" href="namespace_n_a_t_s.html">NATS</a> exception inherit from this class. </p>
+<div class="textblock"><p>The exception that is thrown when a subscriber has exceeded the maximum number of messages that has been configured. </p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>
 <li>Exceptions.cs</li>
 </ul>
@@ -144,7 +133,7 @@ Inheritance diagram for NATS.Client.NATSException:</div>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="namespace_n_a_t_s.html">NATS</a></li><li class="navelem"><a class="el" href="namespace_n_a_t_s_1_1_client.html">Client</a></li><li class="navelem"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_exception.html">NATSException</a></li>
+    <li class="navelem"><a class="el" href="namespace_n_a_t_s.html">NATS</a></li><li class="navelem"><a class="el" href="namespace_n_a_t_s_1_1_client.html">Client</a></li><li class="navelem"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_max_messages_exception.html">NATSMaxMessagesException</a></li>
     <li class="footer">NATS.IO Supported By Apcera
     <a href="http://www.nats.io">
     </a></li>

@@ -49,7 +49,7 @@ namespace NATS.Client
             if (conn == null)
                 return false;
 
-            long d = Interlocked.Increment(ref delivered);
+            long d = tallyDeliveredMessage(msg);
             if (localMax <= 0 || d <= localMax)
             {
                 msgHandlerArgs.msg = msg;

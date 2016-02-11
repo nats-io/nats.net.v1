@@ -17,6 +17,7 @@ var namespace_n_a_t_s_1_1_client =
     [ "NATSConnectionClosedException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_connection_closed_exception.html", null ],
     [ "NATSConnectionException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_connection_exception.html", null ],
     [ "NATSException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_exception.html", null ],
+    [ "NATSMaxMessagesException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_max_messages_exception.html", null ],
     [ "NATSMaxPayloadException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_max_payload_exception.html", null ],
     [ "NATSNoServersException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_no_servers_exception.html", null ],
     [ "NATSProtocolException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_protocol_exception.html", null ],

@@ -58,5 +58,74 @@ namespace NATS.Client
         /// this subscriber.
         /// </summary>
         int QueuedMessageCount { get; }
+
+        /// <summary>
+        /// Sets the message limit and bytes limit of a subscriber.
+        /// </summary>
+        /// <param name="messageLimit">Maximum number of pending messages to allow.</param>
+        /// <param name="bytesLimit">Maximum number of pending bytes to allow.</param> 
+        void SetPendingLimits(long messageLimit, long bytesLimit);
+
+        /// <summary>
+        /// Gets or sets the maximum number of pending bytes to allow.
+        /// </summary>
+        long PendingByteLimit { get; set; }
+
+        /// <summary>
+        /// Gets or sets the maximum number of pending messages to allow.
+        /// </summary>
+        long PendingMessageLimit { get; set; }
+
+        /// <summary>
+        /// Gets pending messages and bytes.
+        /// </summary>
+        /// <param name="pendingBytes">Current number of pending bytes.</param>
+        /// <param name="pendingMessages">Current number of pending messages.</param>
+        void GetPending(out long pendingBytes, out long pendingMessages);
+
+        /// <summary>
+        /// Gets the maximum number of pending bytes recorded.
+        /// </summary>
+        long PendingBytes { get; }
+
+        /// <summary>
+        /// Gets the maximum number of pending messages recorded.
+        /// </summary>
+        long PendingMessages { get; }
+
+        /// <summary>
+        /// Gets the maximum pending messages and pending bytes recorded.
+        /// </summary>
+        /// <param name="maxPendingBytes">Maximum number of pending bytes recored.</param>
+        /// <param name="maxPendingMessages">Maximum number of pending messages recored.</param>
+        void GetMaxPending(out long maxPendingBytes, out long maxPendingMessages);
+
+        /// <summary>
+        /// Gets the maximum number of pending bytes recorded.
+        /// </summary>
+        long MaxPendingBytes { get; }
+
+        /// <summary>
+        /// Gets the maximum number of pending messages recorded.
+        /// </summary>
+        long MaxPendingMessages { get; }
+
+        /// <summary>
+        /// Clears the maximum pending statistics.
+        /// </summary>
+        void ClearMaxPending();
+
+        /// <summary>
+        /// Gets the number of messages delivered to a subscriber.
+        /// </summary>
+        long Delivered { get; }
+
+        /// <summary>
+        /// Gets the number of message dropped by violations of pending limits.
+        /// </summary>
+        /// <remarks>
+        /// If the server dgeclares the connection a slow consumer, this number may 
+        /// not be valid.</remarks>
+        long Dropped { get; }
     }
 }
