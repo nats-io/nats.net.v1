@@ -99,6 +99,8 @@ namespace NATSUnitTests
             }
         }
 
+
+
         private bool compare(byte[] p1, byte[] p2)
         {
             // null case

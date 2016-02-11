@@ -192,6 +192,8 @@ namespace NATSUnitTests
         [TestMethod]
         public void TestSlowAsyncSubscriber()
         {
+            ConditionalObj subCond = new ConditionalObj();
+
             Options opts = ConnectionFactory.GetDefaultOptions();
             opts.SubChannelLength = 100;
 
@@ -204,15 +206,23 @@ namespace NATSUnitTests
                     s.MessageHandler += (sender, args) =>
                     {
                         // block to back us up.
-                        lock (mu)
-                        {
-                            Assert.IsTrue(Monitor.Wait(mu, 20000));
-                        }
+                        subCond.wait(2000);
                     };
 
                     s.Start();
 
-                    for (int i = 0; i < (opts.SubChannelLength + 100); i++)
+                    Assert.IsTrue(s.PendingByteLimit == Defaults.SubPendingBytesLimit);
+                    Assert.IsTrue(s.PendingMessageLimit == Defaults.SubPendingMsgsLimit);
+
+                    long pml = 100;
+                    long pbl = 1024*1024;
+
+                    s.SetPendingLimits(pml, pbl);
+
+                    Assert.IsTrue(s.PendingByteLimit == pbl);
+                    Assert.IsTrue(s.PendingMessageLimit == pml);
+
+                    for (int i = 0; i < (pml + 100); i++)
                     {
                         c.Publish("foo", null);
                     }
@@ -222,31 +232,24 @@ namespace NATSUnitTests
                     Stopwatch sw = new Stopwatch();
                     sw.Start();
 
-                    bool flushFailed = false;
                     try
                     {
                         c.Flush(flushTimeout);
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-                        flushFailed = true;
+                        Assert.Fail("Flush failed." + ex);
                     }
 
                     sw.Stop();
 
-                    lock (mu)
-                    {
-                        // release the subscriber
-                        Monitor.Pulse(mu);
-                    }
+                    subCond.notify();
 
                     if (sw.ElapsedMilliseconds >= flushTimeout)
                     {
                         Assert.Fail("elapsed ({0}) > timeout ({1})",
                             sw.ElapsedMilliseconds, flushTimeout);
                     }
-                    
-                    Assert.IsTrue(flushFailed);
                 }
             }
         }
@@ -441,6 +444,248 @@ namespace NATSUnitTests
             }
         }
 
-    } // class
+        [TestMethod]
+        public void TestAsyncSubscriptionPending()
+        {
+            int total = 100;
+            int receivedCount = 0;
 
-} // namespace
+            ConditionalObj subDoneCond = new ConditionalObj();
+            ConditionalObj startProcessing = new ConditionalObj();
+
+            byte[] data = System.Text.Encoding.UTF8.GetBytes("0123456789");
+
+            using (IConnection c = new ConnectionFactory().CreateConnection())
+            {
+                ISubscription s = c.SubscribeAsync("foo", (sender, args) =>
+                {
+                    startProcessing.wait(60000);
+
+                    receivedCount++;
+                    if (receivedCount == total)
+                    {
+                        subDoneCond.notify();
+                    }
+                });
+
+                for (int i = 0; i < total; i++)
+                {
+                    c.Publish("foo", data);
+                }
+                c.Flush();
+
+                Thread.Sleep(1000);
+
+                int expectedPendingCount = total - 1;
+
+                Assert.IsTrue(s.QueuedMessageCount == expectedPendingCount);
+
+                Assert.IsTrue((s.MaxPendingBytes == (data.Length * total)) ||
+                    (s.MaxPendingBytes == (data.Length * expectedPendingCount)));
+                Assert.IsTrue((s.MaxPendingMessages == total) ||
+                    (s.MaxPendingMessages == expectedPendingCount));
+                Assert.IsTrue((s.PendingBytes == (data.Length * total)) ||
+                    (s.PendingBytes == (data.Length * expectedPendingCount)));
+
+                long pendingBytes;
+                long pendingMsgs;
+
+                s.GetPending(out pendingBytes, out pendingMsgs);
+                Assert.IsTrue(pendingBytes == s.PendingBytes);
+                Assert.IsTrue(pendingMsgs == s.PendingMessages);
+
+                long maxPendingBytes;
+                long maxPendingMsgs;
+                s.GetMaxPending(out maxPendingBytes, out maxPendingMsgs);
+                Assert.IsTrue(maxPendingBytes == s.MaxPendingBytes);
+                Assert.IsTrue(maxPendingMsgs == s.MaxPendingMessages);
+
+
+                Assert.IsTrue((s.PendingMessages == total) ||
+                    (s.PendingMessages == expectedPendingCount));
+
+                Assert.IsTrue(s.Delivered == 1);
+                Assert.IsTrue(s.Dropped == 0);
+
+                startProcessing.notify();
+
+                subDoneCond.wait(1000);
+
+                Assert.IsTrue(s.QueuedMessageCount == 0);
+
+                Assert.IsTrue((s.MaxPendingBytes == (data.Length * total)) ||
+                    (s.MaxPendingBytes == (data.Length * expectedPendingCount)));
+                Assert.IsTrue((s.MaxPendingMessages == total) ||
+                    (s.MaxPendingMessages == expectedPendingCount));
+
+                Assert.IsTrue(s.PendingMessages == 0);
+                Assert.IsTrue(s.PendingBytes == 0);
+
+                Assert.IsTrue(s.Delivered == total);
+                Assert.IsTrue(s.Dropped == 0);
+
+                s.Unsubscribe();
+
+                try
+                {
+                    long i = s.MaxPendingBytes;
+                    Assert.Fail("Should have receieved an exception.");
+                }
+                catch (Exception) { }
+                try
+                {
+                    long i = s.MaxPendingMessages;
+                    Assert.Fail("Should have receieved an exception.");
+                }
+                catch (Exception) { }
+                try
+                {
+                    long i = s.PendingMessageLimit;
+                    Assert.Fail("Should have receieved an exception.");
+                }
+                catch (Exception) { }
+                try
+                {
+                    long i = s.PendingByteLimit;
+                    Assert.Fail("Should have receieved an exception.");
+                }
+                catch (Exception) { }
+                try
+                {
+                    s.SetPendingLimits(1, 10);
+                    Assert.Fail("Should have receieved an exception.");
+                }
+                catch (Exception) { }
+                try
+                {
+                    s.ClearMaxPending();
+                    Assert.Fail("Should have receieved an exception.");
+                }
+                catch (Exception) { }
+                try
+                {
+                    long i = s.Delivered;
+                    Assert.Fail("Should have receieved an exception.");
+                }
+                catch (Exception) { }
+                try
+                {
+                    long i = s.Dropped;
+                    Assert.Fail("Should have receieved an exception.");
+                }
+                catch (Exception) { }
+            }
+        }
+
+        [TestMethod]
+        public void TestSyncSubscriptionPending()
+        {
+            int total = 100;
+
+            ConditionalObj subDoneCond = new ConditionalObj();
+            ConditionalObj startProcessing = new ConditionalObj();
+
+            byte[] data = System.Text.Encoding.UTF8.GetBytes("0123456789");
+
+            using (IConnection c = new ConnectionFactory().CreateConnection())
+            {
+                ISyncSubscription s = c.SubscribeSync("foo");
+
+                for (int i = 0; i < total; i++)
+                {
+                    c.Publish("foo", data);
+                }
+                c.Flush();
+
+                Assert.IsTrue(s.QueuedMessageCount == total);
+
+                Assert.IsTrue((s.MaxPendingBytes == (data.Length * total)) ||
+                    (s.MaxPendingBytes == (data.Length * total)));
+                Assert.IsTrue((s.MaxPendingMessages == total) ||
+                    (s.MaxPendingMessages == total));
+
+                Assert.IsTrue(s.Delivered == 0);
+                Assert.IsTrue(s.Dropped == 0);
+
+                for (int i = 0; i < total; i++)
+                {
+                    s.NextMessage();
+                }
+
+                Assert.IsTrue(s.QueuedMessageCount == 0);
+
+                Assert.IsTrue((s.MaxPendingBytes == (data.Length * total)) ||
+                    (s.MaxPendingBytes == (data.Length * total)));
+                Assert.IsTrue((s.MaxPendingMessages == total) ||
+                    (s.MaxPendingMessages == total));
+
+                Assert.IsTrue(s.Delivered == total);
+                Assert.IsTrue(s.Dropped == 0);
+
+                s.Unsubscribe();
+            }        
+        }
+
+        [TestMethod]
+        public void TestAsyncSubscriptionPendingDrain()
+        {
+            int total = 100;
+
+            byte[] data = System.Text.Encoding.UTF8.GetBytes("0123456789");
+
+            using (IConnection c = new ConnectionFactory().CreateConnection())
+            {
+                ISubscription s = c.SubscribeAsync("foo", (sender, args) => {});
+
+                for (int i = 0; i < total; i++)
+                {
+                    c.Publish("foo", data);
+                }
+                c.Flush();
+
+                while (s.Delivered != total)
+                {
+                    Thread.Sleep(50);
+                }
+
+                Assert.IsTrue(s.Dropped == 0);
+                Assert.IsTrue(s.PendingBytes == 0);
+                Assert.IsTrue(s.PendingMessages == 0);
+
+                s.Unsubscribe();
+            }
+        }
+
+        [TestMethod]
+        public void TestSyncSubscriptionPendingDrain()
+        {
+            int total = 100;
+
+            byte[] data = System.Text.Encoding.UTF8.GetBytes("0123456789");
+
+            using (IConnection c = new ConnectionFactory().CreateConnection())
+            {
+                ISyncSubscription s = c.SubscribeSync("foo");
+
+                for (int i = 0; i < total; i++)
+                {
+                    c.Publish("foo", data);
+                }
+                c.Flush();
+
+                while (s.Delivered != total)
+                {
+                    s.NextMessage(100);
+                }
+
+                Assert.IsTrue(s.Dropped == 0);
+                Assert.IsTrue(s.PendingBytes == 0);
+                Assert.IsTrue(s.PendingMessages == 0);
+
+                s.Unsubscribe();
+            }
+        }
+
+    }
+}
+

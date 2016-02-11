@@ -850,6 +850,8 @@ namespace NATS.Client
 
         internal void connect()
         {
+            Exception exToThrow = null;
+
             setupServerPool();
             // Create actual socket connection
             // For first connect we walk all servers in the pool and try
@@ -860,24 +862,25 @@ namespace NATS.Client
                 this.url = s.url;
                 try
                 {
-                    lastEx = null;
+                    exToThrow = null;
                     lock (mu)
                     {
                         if (createConn())
                         {
+                            processConnectInit();
+
                             s.didConnect = true;
                             s.reconnects = 0;
 
-                            processConnectInit();
-
                             connected = true;
+                            exToThrow = null;
                         }
                     }
 
                 }
                 catch (Exception e)
                 {
-                    lastEx = e;
+                    exToThrow = e;
                     close(ConnState.DISCONNECTED, false);
                     lock (mu)
                     {
@@ -894,10 +897,10 @@ namespace NATS.Client
             {
                 if (this.status != ConnState.CONNECTED)
                 {
-                    if (this.lastEx == null)
-                        this.lastEx = new NATSNoServersException("Unable to connect to a server.");
+                    if (exToThrow == null)
+                        exToThrow = new NATSNoServersException("Unable to connect to a server.");
 
-                    throw this.lastEx;
+                    throw exToThrow;
                 }
             }
         }
@@ -1151,6 +1154,8 @@ namespace NATS.Client
 
             // Hold the lock manually and release where needed below.
             Monitor.Enter(mu);
+
+            clearPendingFlushCalls();
 
             pending = new MemoryStream();
             bw = new BufferedStream(pending);
@@ -1494,10 +1499,7 @@ namespace NATS.Client
                     maxReached = s.tallyMessage(length);
                     if (maxReached == false)
                     {
-                        if (!s.addMessage(new Msg(msgArgs, s, msg, length), opts.subChanLen))
-                        {
-                            processSlowConsumer(s);
-                        }
+                        s.addMessage(new Msg(msgArgs, s, msg, length), opts.subChanLen);
                     } // maxreached == false
 
                 } // lock s.mu
@@ -1510,7 +1512,7 @@ namespace NATS.Client
 
         // processSlowConsumer will set SlowConsumer state and fire the
         // async error handler if registered.
-        void processSlowConsumer(Subscription s)
+        internal void processSlowConsumer(Subscription s)
         {
             lastEx = new NATSSlowConsumerException();
             if (opts.AsyncErrorEventHandler != null && !s.sc)
@@ -2048,6 +2050,8 @@ namespace NATS.Client
 
         public void Flush(int timeout)
         {
+            Exception ex = null;
+
             if (timeout <= 0)
             {
                 throw new ArgumentOutOfRangeException(
@@ -2069,22 +2073,25 @@ namespace NATS.Client
                 bool rv = ch.get(timeout);
                 if (!rv)
                 {
-                    lastEx = new NATSConnectionClosedException();
+                    ex = new NATSConnectionClosedException();
                 }
             }
             catch (NATSTimeoutException te)
             {
-                lastEx = te;
+                ex = te;
             }
             catch (Exception e)
             {
-                lastEx = new NATSException("Flush channel error.", e);
+                ex = new NATSException("Flush channel error.", e);
             }
 
-            if (lastEx != null)
+            if (ex != null)
             {
+                if (lastEx != null && !(lastEx is NATSSlowConsumerException))
+                    lastEx = ex;
+
                 removeFlushEntry(ch);
-                throw lastEx;
+                throw ex;
             }
         }
 
@@ -2115,19 +2122,17 @@ namespace NATS.Client
         }
 
         // This will clear any pending flush calls and release pending calls.
+        // Lock must be held by the caller.
         private void clearPendingFlushCalls()
         {
-            lock (mu)
+            // Clear any queued pongs, e.g. pending flush calls.
+            foreach (Channel<bool> ch in pongs)
             {
-                // Clear any queued pongs, e.g. pending flush calls.
-                foreach (Channel<bool> ch in pongs)
-                {
-                    if (ch != null)
-                        ch.add(true);
-                }
-
-                pongs.Clear();
+                if (ch != null)
+                    ch.add(true);
             }
+
+            pongs.Clear();
         }
 
 

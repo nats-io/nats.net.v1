@@ -202,40 +202,6 @@ namespace NATSUnitTests
             c.Close();
         }
 
-        internal class ConditionalObj
-        {
-            Object objLock = new Object();
-            bool   completed = false;
-
-            internal void wait(int timeout)
-            {
-                lock (objLock)
-                {
-                    if (completed)
-                        return;
-                    
-                    Assert.IsTrue(Monitor.Wait(objLock, timeout));
-                }
-            }
-
-            internal void reset()
-            {
-                lock (objLock)
-                {
-                    completed = false;
-                }
-            }
-
-            internal void notify()
-            {
-                lock (objLock)
-                {
-                    completed = true;
-                    Monitor.Pulse(objLock);
-                }
-            }
-        }
-
         [TestMethod]
         public void TestCallbacksOrder()
         {

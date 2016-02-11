@@ -180,7 +180,7 @@ namespace Benchmark
             IConnection subConn = cf.CreateConnection(o);
             IConnection pubConn = cf.CreateConnection(url);
 
-            subConn.SubscribeAsync(subject, (sender, args) =>
+            IAsyncSubscription s = subConn.SubscribeAsync(subject, (sender, args) =>
             {
                 subCount++;
                 if (subCount == testCount)
@@ -192,6 +192,7 @@ namespace Benchmark
                     }
                 }
             });
+            s.SetPendingLimits(10000000, 1000000000);
             subConn.Flush();
 
             Stopwatch sw = Stopwatch.StartNew();

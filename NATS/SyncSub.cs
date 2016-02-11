@@ -67,7 +67,7 @@ namespace NATS.Client
 
             if (msg != null)
             {
-                long d = Interlocked.Increment(ref this.delivered);
+                long d = tallyDeliveredMessage(msg);
                 if (d == max)
                 {
                     // Remove subscription if we have reached max.
