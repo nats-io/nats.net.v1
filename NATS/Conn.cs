@@ -52,8 +52,6 @@ namespace NATS.Client
             foreach (string s in kv_pairs)
                 addKVPair(s);
 
-            //parameters = kv_pairs.ToDictionary<string, string>(v => v.Split(',')[0], v=>v.Split(',')[1]);
-
             Id = parameters["server_id"];
             Host = parameters["host"];
             Port = Convert.ToInt32(parameters["port"]);
@@ -70,28 +68,25 @@ namespace NATS.Client
             string value;
 
             kv_pair.Trim();
+
             string[] parts = kv_pair.Split(':');
-            if (parts[0].StartsWith("{"))
-                key = parts[0].Substring(1);
-            else
-                key = parts[0];
 
-            if (parts[1].EndsWith("}"))
-                value = parts[1].Substring(0, parts[1].Length - 1);
-            else
-                value = parts[1];
+            // silently ignore what we don't understand.
+            if (parts.Length != 2)
+                return;
 
-            key.Trim();
-            value.Trim();
-
-            // trim off the quotes.
-            key = key.Substring(1, key.Length - 2);
-
-            // bools and numbers may not have quotes.
-            if (value.StartsWith("\""))
+            if (string.IsNullOrWhiteSpace(parts[0]) ||
+                string.IsNullOrWhiteSpace(parts[1]))
             {
-                value = value.Substring(1, value.Length - 2);
+                return;
             }
+
+            key   = parts[0].Trim().TrimStart('{');
+            value = parts[1].Trim().TrimEnd('}');
+
+            // trim off spaces and quotes.
+            key = key.Trim().Trim('\"');
+            value = value.Trim().Trim('\"');
 
             parameters.Add(key, value);
         }
