@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">0.3.0</span>
+   &#160;<span id="projectnumber">0.4.0</span>
    </div>
    <div id="projectbrief">The nats.io .NET C# Client, Supported by Apcera</div>
   </td>
@@ -163,6 +163,9 @@ $(document).ready(function(){initNavTree('functions.html','');});
 
 
 <h3><a class="anchor" id="index_c"></a>- c -</h3><ul>
+<li>ClearMaxPending()
+: <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#aa941089ff64ccd48f530698cd460190b">NATS.Client.ISubscription</a>
+</li>
 <li>Close()
 : <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a168251a7112d288d198fbb32515649ed">NATS.Client.IConnection</a>
 , <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a166c840eb8f42cf2b022e3fe8f72fc75">NATS.Client.IEncodedConnection</a>
@@ -204,8 +207,14 @@ $(document).ready(function(){initNavTree('functions.html','');});
 <li>Data
 : <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg.html#ac4deb024e50d441e9b20da3466b1309d">NATS.Client.Msg</a>
 </li>
+<li>Delivered
+: <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#a97e96a370cb01dd6808b7f90cbf4b886">NATS.Client.ISubscription</a>
+</li>
 <li>DisconnectedEventHandler
 : <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a6116c0a92a645bbc356bde9533220ea4">NATS.Client.Options</a>
+</li>
+<li>Dropped
+: <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#abf4058acb532e468c9283c6498a3bb3b">NATS.Client.ISubscription</a>
 </li>
 </ul>
 
@@ -228,6 +237,12 @@ $(document).ready(function(){initNavTree('functions.html','');});
 <h3><a class="anchor" id="index_g"></a>- g -</h3><ul>
 <li>GetDefaultOptions()
 : <a class="el" href="class_n_a_t_s_1_1_client_1_1_connection_factory.html#aead806fcd34d9edbbc2fcaa3ada6b7c3">NATS.Client.ConnectionFactory</a>
+</li>
+<li>GetMaxPending()
+: <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#adcd1652be7ee61b34ceb4e009cc1b67c">NATS.Client.ISubscription</a>
+</li>
+<li>GetPending()
+: <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#aedf741af5c64fcdf2897f101608b5a52">NATS.Client.ISubscription</a>
 </li>
 </ul>
 
@@ -265,6 +280,12 @@ $(document).ready(function(){initNavTree('functions.html','');});
 <li>MaxPayload
 : <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#adf18200f0d9177ed2d2a65b05e467c69">NATS.Client.IConnection</a>
 , <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a003a364e409ee49a25e22b9144504c04">NATS.Client.IEncodedConnection</a>
+</li>
+<li>MaxPendingBytes
+: <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#ac4b99a8ce31bffd5f7a1bd3fd3c5a67b">NATS.Client.ISubscription</a>
+</li>
+<li>MaxPendingMessages
+: <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#a446168a33a8b8036ad8fff46e1d90b39">NATS.Client.ISubscription</a>
 </li>
 <li>MaxPingsOut
 : <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#af72a56c42d59f70432c80f8526edda6e">NATS.Client.Options</a>
@@ -326,6 +347,18 @@ $(document).ready(function(){initNavTree('functions.html','');});
 <li>Pedantic
 : <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a5095fd095d6db679465eb80dfe37fbdf">NATS.Client.Options</a>
 </li>
+<li>PendingByteLimit
+: <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#a427d7471254da6620ae0ea361822b0d8">NATS.Client.ISubscription</a>
+</li>
+<li>PendingBytes
+: <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#a9681d873bde8b966ec86a992f84ad3ec">NATS.Client.ISubscription</a>
+</li>
+<li>PendingMessageLimit
+: <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#a7e3c7d928bc31d00bcb8a4ab9194be1e">NATS.Client.ISubscription</a>
+</li>
+<li>PendingMessages
+: <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#a5b6ccb093a3bb473b12df00c11881c85">NATS.Client.ISubscription</a>
+</li>
 <li>PingInterval
 : <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a5b593b856ab2b9df03637efdffff135c">NATS.Client.Options</a>
 </li>
@@ -382,6 +415,9 @@ $(document).ready(function(){initNavTree('functions.html','');});
 </li>
 <li>Servers
 : <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a2e0b5fe52ae54b89e42a9e49b47f94e1">NATS.Client.Options</a>
+</li>
+<li>SetPendingLimits()
+: <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#acec3df78fc38cac58aeb37c5370000ec">NATS.Client.ISubscription</a>
 </li>
 <li>Start()
 : <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html#a5c4c7deef3ffec1ba136f2e51c301e2e">NATS.Client.IAsyncSubscription</a>

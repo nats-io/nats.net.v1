@@ -1,5 +1,6 @@
 var searchData=
 [
+  ['clearmaxpending',['ClearMaxPending',['../interface_n_a_t_s_1_1_client_1_1_i_subscription.html#aa941089ff64ccd48f530698cd460190b',1,'NATS::Client::ISubscription']]],
   ['close',['Close',['../interface_n_a_t_s_1_1_client_1_1_i_connection.html#a168251a7112d288d198fbb32515649ed',1,'NATS.Client.IConnection.Close()'],['../interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a166c840eb8f42cf2b022e3fe8f72fc75',1,'NATS.Client.IEncodedConnection.Close()']]],
   ['closedeventhandler',['ClosedEventHandler',['../class_n_a_t_s_1_1_client_1_1_options.html#a910d4dcebe9046e2ab1772f2007dce0e',1,'NATS::Client::Options']]],
   ['conn',['Conn',['../class_n_a_t_s_1_1_client_1_1_conn_event_args.html#a11345de0669fdcfe2fae5fccf96acf29',1,'NATS.Client.ConnEventArgs.Conn()'],['../class_n_a_t_s_1_1_client_1_1_err_event_args.html#ad1598c7dfa6baf450c354006b5cac291',1,'NATS.Client.ErrEventArgs.Conn()']]],
