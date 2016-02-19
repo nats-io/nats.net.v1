@@ -1214,9 +1214,6 @@ namespace NATS.Client
                 // We are reconnected.
                 stats.reconnects++;
 
-                // Clear out server stats for the server we connected to..
-                s.didConnect = true;
-
                 // process our connect logic
                 try
                 {
@@ -1229,6 +1226,7 @@ namespace NATS.Client
                     continue;
                 }
 
+                s.didConnect = true; 
                 s.reconnects = 0;
 
                 // Process CreateConnection logic

@@ -400,6 +400,73 @@ namespace NATSUnitTests
         }
 
         [TestMethod]
+        public void TestProperFalloutAfterMaxAttemptsWithAuthMismatch()
+        {
+            Options opts = ConnectionFactory.GetDefaultOptions();
+
+            Object dmu = new Object();
+            Object cmu = new Object();
+
+            opts.Servers = new string[] {
+                "nats://localhost:1220",
+                "nats://localhost:1222"
+            };
+
+            opts.NoRandomize = true;
+            opts.MaxReconnect = 2;
+            opts.ReconnectWait = 25; // millis
+            opts.Timeout = 500;
+
+            bool disconnectHandlerCalled = false;
+
+            opts.DisconnectedEventHandler = (sender, args) =>
+            {
+                lock (dmu)
+                {
+                    disconnectHandlerCalled = true;
+                    Monitor.Pulse(dmu);
+                }
+            };
+
+            bool closedHandlerCalled = false;
+            opts.ClosedEventHandler = (sender, args) =>
+            {
+                lock (cmu)
+                {
+                    closedHandlerCalled = true;
+                    Monitor.Pulse(cmu);
+                }
+            };
+
+            using (NATSServer s1 = utils.CreateServerOnPort(1220),
+                   s2 = utils.CreateServerWithConfig(testContextInstance, "tls_1222_verify.conf"))
+            {
+                using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+                {
+                    s1.Shutdown();
+
+                    lock (dmu)
+                    {
+                        if (!disconnectHandlerCalled)
+                            Assert.IsTrue(Monitor.Wait(dmu, 20000));
+                    }
+
+                    lock (cmu)
+                    {
+                        if (!closedHandlerCalled)
+                            Assert.IsTrue(Monitor.Wait(cmu, 600000));
+                    }
+
+                    Assert.IsTrue(c.Stats.Reconnects != opts.MaxReconnect);
+
+                    Assert.IsTrue(disconnectHandlerCalled);
+                    Assert.IsTrue(closedHandlerCalled);
+                    Assert.IsTrue(c.IsClosed());
+                }
+            }
+        }
+
+        [TestMethod]
         public void TestTimeoutOnNoServers()
         {
             Options opts = ConnectionFactory.GetDefaultOptions();

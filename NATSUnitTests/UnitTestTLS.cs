@@ -166,6 +166,36 @@ namespace NATSUnitTests
         }
 
         [TestMethod]
+        public void TestTlsFailWithBadAuth()
+        {
+            using (NATSServer srv = util.CreateServerWithConfig(TestContext, "tls_1222_user.conf"))
+            {
+                Options opts = ConnectionFactory.GetDefaultOptions();
+                opts.Secure = true;
+                opts.Url = "nats://username:BADDPASSOWRD@localhost:1222";
+                opts.TLSRemoteCertificationValidationCallback = verifyServerCert;
+
+                // this will fail, because it's not complete - missing the private
+                // key.
+                opts.AddCertificate(UnitTestUtilities.GetFullCertificatePath(
+                        TestContext, "client-cert.pem"));
+
+                try
+                {
+                    new ConnectionFactory().CreateConnection(opts);
+                }
+                catch (NATSException nae)
+                {
+                    System.Console.WriteLine("Caught expected exception: " + nae.Message);
+                    System.Console.WriteLine("Exception output:" + nae);
+                    return;
+                }
+
+                Assert.Fail("Did not receive exception.");
+            }
+        }
+
+        [TestMethod]
         public void TestTlsSuccessSecureConnect()
         {
             using (NATSServer srv = util.CreateServerWithConfig(TestContext, "tls_1222.conf"))
