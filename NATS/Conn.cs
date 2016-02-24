@@ -69,7 +69,7 @@ namespace NATS.Client
 
             kv_pair.Trim();
 
-            string[] parts = kv_pair.Split(':');
+            string[] parts = kv_pair.Split(new string[] {"\":"}, StringSplitOptions.None);
 
             // silently ignore what we don't understand.
             if (parts.Length != 2)
