@@ -10,6 +10,8 @@ NATS/obj/
 NATSUnitTests/bin/
 NATSUnitTests/obj/
 bin/
+examples/Benchmark/bin/
+examples/Benchmark/obj/
 examples/Publish/bin/
 examples/Publish/obj/
 examples/QueueGroup/bin/
