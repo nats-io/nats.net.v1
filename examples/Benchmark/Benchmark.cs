@@ -117,7 +117,7 @@ namespace Benchmark
 
         void PrintResults(String testPrefix, Stopwatch sw, long testCount, long msgSize)
         {
-            int msgRate = (int)(count / sw.Elapsed.TotalSeconds);
+            int msgRate = (int)(testCount / sw.Elapsed.TotalSeconds);
 
             System.Console.WriteLine(
                 "{0}\t{1,10}\t{2,10} msgs/s\t{3,8} kb/s",
