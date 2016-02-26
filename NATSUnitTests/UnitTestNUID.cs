@@ -58,8 +58,6 @@ namespace NATS.Client
 
         static void printElapsedTime(long operations, Stopwatch sw)
         {
-            System.Console.WriteLine("Elapsed Ticks = " + sw.ElapsedTicks);
-            System.Console.WriteLine("Stopwatch freq = " + Stopwatch.Frequency);
             double nanoseconds = ((double)sw.ElapsedTicks /
                 ((double)Stopwatch.Frequency) * (double)1000000000);
             System.Console.WriteLine("Performed {0} operations in {1} nanos.  {2} ns/op",
