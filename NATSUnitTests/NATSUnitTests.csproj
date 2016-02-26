@@ -61,6 +61,7 @@
     </Compile>
     <Compile Include="Settings.cs" />
     <Compile Include="UnitTestEncoding.cs" />
+    <Compile Include="UnitTestNUID.cs" />
     <Compile Include="UnitTestTLS.cs" />
     <Compile Include="UnitTestCluster.cs" />
     <Compile Include="UnitTestReconnect.cs" />

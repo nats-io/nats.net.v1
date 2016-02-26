@@ -52,6 +52,7 @@
     <Compile Include="IStatistics.cs" />
     <Compile Include="ISubscription.cs" />
     <Compile Include="ISyncSubscription.cs" />
+    <Compile Include="NUID.cs" />
     <Compile Include="SyncSub.cs" />
     <Compile Include="Subscription.cs" />
     <Compile Include="Msg.cs" />
