@@ -229,8 +229,7 @@ namespace NATSUnitTests
                    srv2 = util.CreateServerWithConfig(TestContext, "tls_1224.conf"))
             {
                 System.Threading.Thread.Sleep(1000);
-                // we can't call create secure connection w/ the certs setup as they are
-                // so we'll override the 
+
                 Options opts = ConnectionFactory.GetDefaultOptions();
                 opts.Secure = true;
                 opts.NoRandomize = true;
