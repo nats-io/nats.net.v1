@@ -397,15 +397,16 @@ namespace NATS.Client
             internal void teardown()
             {
                 TcpClient c;
-                NetworkStream s;
+                Stream s;
 
                 lock (mu)
                 {
                     c = client;
-                    s = stream;
+                    s = getReadBufferedStream();
 
                     client = null;
                     stream = null;
+                    sslStream = null;
                 }
 
                 try

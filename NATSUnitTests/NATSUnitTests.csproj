@@ -82,11 +82,16 @@
     <None Include="app.config" />
     <None Include="config\auth_1224.conf" />
     <None Include="config\auth_1222.conf" />
+    <None Include="config\tls_1224.conf" />
+    <None Include="config\tls_1222.conf" />
+    <None Include="config\tls_1222_user.conf" />
+    <None Include="config\tls_1222_verify.conf" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
+  <ItemGroup />
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>
