@@ -219,5 +219,51 @@ namespace NATSUnitTests
                 }
             }
         }
+
+        [TestMethod]
+        public void TestTlsReconnect()
+        {
+            ConditionalObj reconnectedObj = new ConditionalObj();
+
+            using (NATSServer srv = util.CreateServerWithConfig(TestContext, "tls_1222.conf"),
+                   srv2 = util.CreateServerWithConfig(TestContext, "tls_1224.conf"))
+            {
+                System.Threading.Thread.Sleep(1000);
+
+                Options opts = ConnectionFactory.GetDefaultOptions();
+                opts.Secure = true;
+                opts.NoRandomize = true;
+                opts.TLSRemoteCertificationValidationCallback = verifyServerCert;
+                opts.Servers = new string[]{ "nats://localhost:1222" , "nats://localhost:1224" };
+                opts.ReconnectedEventHandler += (sender, obj) =>
+                {
+                    Console.WriteLine("Reconnected.");
+                    reconnectedObj.notify();
+                };
+
+                using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+                {
+                    // send a message to be sure.
+                    using (ISyncSubscription s = c.SubscribeSync("foo"))
+                    {
+                        c.Publish("foo", null);
+                        c.Flush();
+                        s.NextMessage();
+                        System.Console.WriteLine("Received msg over TLS conn.");
+
+                        // shutdown the server
+                        srv.Shutdown();
+
+                        // wait for reconnect
+                        reconnectedObj.wait(30000);
+
+                        c.Publish("foo", null);
+                        c.Flush();
+                        s.NextMessage();
+                        System.Console.WriteLine("Received msg over TLS conn.");
+                    }
+                }
+            }
+        }
     }
 }
