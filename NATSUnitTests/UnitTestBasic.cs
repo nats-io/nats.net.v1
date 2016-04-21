@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NATS.Client;
+using System.Diagnostics;
 
 namespace NATSUnitTests
 {
@@ -472,6 +473,174 @@ namespace NATSUnitTests
                 }
             }
         }
+
+        class TestReplier
+        {
+            string replySubject;
+            string id;
+            int delay;
+            private IConnection c;
+            private Stopwatch sw;
+            Random r = new Random();
+
+            public TestReplier(IConnection c, int maxDelay, string id, string replySubject, Stopwatch sw)
+            {
+                // Save off our data, then carry on.
+                this.c = c;
+                this.delay = maxDelay;
+                this.sw = sw;
+                this.id = id;
+                this.replySubject = replySubject;
+            }
+
+            public void process()
+            {
+                // delay the response to simulate a heavy workload and introduce
+                // variability
+                Thread.Sleep(r.Next( (delay/5), delay));
+                c.Publish(replySubject, Encoding.UTF8.GetBytes("reply"));
+                c.Flush();
+            }
+        }
+
+        // This test method tests mulitiple overlapping requests across many
+        // threads.  The responder simulates work, to introduce variablility
+        // in the request timing.
+        [TestMethod]
+        public void TestRequestSafetyWithThreads()
+        {
+            int MAX_DELAY = 1000;
+            int TEST_COUNT = 300;
+
+            Stopwatch sw = new Stopwatch();
+            byte[] response = Encoding.UTF8.GetBytes("reply");
+
+            ThreadPool.SetMinThreads(300, 300);
+
+            using (IConnection c1 = new ConnectionFactory().CreateConnection(),
+                               c2 = new ConnectionFactory().CreateConnection())
+            {
+                using (IAsyncSubscription s = c1.SubscribeAsync("foo", (sender, args) => {
+                    // We cannot block this thread... so copy our data, and spawn a thread
+                    // to handle a delay and responding.
+                    TestReplier t = new TestReplier(c1, MAX_DELAY,
+                        Encoding.UTF8.GetString(args.Message.Data), 
+                        args.Message.Reply,
+                        sw);
+                    new Thread(() => { t.process(); }).Start();
+                }))
+                {
+                    c1.Flush();
+
+                    // use lower level threads over tasks here for predictibility
+                    Thread[] threads = new Thread[TEST_COUNT];                  
+                    Random r = new Random();
+
+                    for (int i = 0; i < TEST_COUNT; i++)
+                    {
+                        threads[i] = new Thread((() =>
+                        {
+                            // randomly delay for a bit to test potential timing issues.
+                            Thread.Sleep(r.Next(100, 500));
+                            c2.Request("foo", null, MAX_DELAY * 2);
+                        }));
+                    }
+
+                    // sleep for one second to allow the threads to initialize.
+                    Thread.Sleep(1000);
+
+                    sw.Start();
+
+                    // start all of the threads at the same time.
+                    for (int i = 0; i < TEST_COUNT; i++)
+                    {
+                        threads[i].Start();
+                    }
+
+                    // wait for every thread to stop.
+                    for (int i = 0; i < TEST_COUNT; i++)
+                    {
+                        threads[i].Join();
+                    }
+
+                    sw.Stop();
+
+                    // check that we didn't process the requests consecutively.
+                    Assert.IsTrue(sw.ElapsedMilliseconds < (MAX_DELAY * 2));
+                }
+            }
+        }
+
+        // This test is a useful comparison in determining the difference
+        // between threads (above) and tasks and performance.  In some
+        // environments, the NATS client will fail here, but succeed in the 
+        // comparable test using threads.
+        // Do not automatically run, for comparison purposes and future dev.
+        //[TestMethod]
+        public void TestRequestSafetyWithTasks()
+        {
+            int MAX_DELAY = 1000;
+            int TEST_COUNT = 300;
+
+            ThreadPool.SetMinThreads(300, 300);
+
+            Stopwatch sw = new Stopwatch();
+            byte[] response = Encoding.UTF8.GetBytes("reply");
+
+            using (IConnection c1 = new ConnectionFactory().CreateConnection(),
+                               c2 = new ConnectionFactory().CreateConnection())
+            {
+                // Try parallel requests and check the performance.
+                using (IAsyncSubscription s = c1.SubscribeAsync("foo", (sender, args) =>
+                {
+                    // We cannot block this NATS thread... so copy our data, and spawn a thread
+                    // to handle a delay and responding.
+                    TestReplier t = new TestReplier(c1, MAX_DELAY,
+                        Encoding.UTF8.GetString(args.Message.Data),
+                        args.Message.Reply,
+                        sw);
+                    new Task(() => { t.process(); }).Start();
+                }))
+                {
+                    c1.Flush();
+
+                    // Depending on resources, Tasks can be queueud up for quite while.
+                    Task[] tasks = new Task[TEST_COUNT];
+                    Random r = new Random();
+
+                    for (int i = 0; i < TEST_COUNT; i++)
+                    {
+                        tasks[i] = new Task((() =>
+                        {
+                            // randomly delay for a bit to test potential timing issues.
+                            Thread.Sleep(r.Next(100, 500));
+                            c2.Request("foo", null, MAX_DELAY * 2);
+                        }));
+                    }
+
+                    // sleep for one second to allow the tasks to initialize.
+                    Thread.Sleep(1000);
+
+                    sw.Start();
+
+                    // start all of the threads at the same time.
+                    for (int i = 0; i < TEST_COUNT; i++)
+                    {
+                        tasks[i].Start();
+                    }
+
+                    Task.WaitAll(tasks);
+
+                    sw.Stop();
+
+                    System.Console.WriteLine("Test took {0} ms", sw.ElapsedMilliseconds);
+
+                    // check that we didn't process the requests consecutively.
+                    Assert.IsTrue(sw.ElapsedMilliseconds < (MAX_DELAY * 2));
+                }
+            }
+        }
+
 
         [TestMethod]
         public void TestFlushInHandler()
