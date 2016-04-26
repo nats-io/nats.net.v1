@@ -116,7 +116,7 @@ namespace NATS.Client
             get { return opts; }
         }
 
-        List<Task> wg = new List<Task>(2);
+        List<Thread> wg = new List<Thread>(2);
 
 
         private Uri             url     = null;
@@ -724,7 +724,10 @@ namespace NATS.Client
             {
                 try
                 {
-                    Task.WaitAll(this.wg.ToArray());
+                    foreach (Thread t in wg)
+                    {
+                        t.Join();
+                    }
                 }
                 catch (Exception) { }
             }
@@ -774,17 +777,31 @@ namespace NATS.Client
 
         private void spinUpSocketWatchers()
         {
-            Task t = null;
+            Thread t = null;
 
             waitForExits();
 
-            t = new Task(() => { readLoop(); });
+            // Ensure threads are started before we continue with
+            // ManualResetEvents.
+            ManualResetEvent readLoopStartEvent = new ManualResetEvent(false);
+            t = new Thread(() => {
+                readLoopStartEvent.Set();
+                readLoop(); 
+            });
             t.Start();
             wg.Add(t);
 
-            t = new Task(() => { flusher(); });
+            ManualResetEvent flusherStartEvent = new ManualResetEvent(false);
+            t = new Thread(() => {
+                flusherStartEvent.Set();
+                flusher();
+            });
             t.Start();
             wg.Add(t);
+
+            // wait for both threads to start before continuing.
+            flusherStartEvent.WaitOne(60000);
+            readLoopStartEvent.WaitOne(60000);
 
             lock (mu)
             {
@@ -838,10 +855,8 @@ namespace NATS.Client
             this.status = ConnState.CONNECTING;
 
             processExpectedInfo();
-
             sendConnect();
-
-            new Task(() => { spinUpSocketWatchers(); }).Start();
+            spinUpSocketWatchers();
         }
 
         internal void connect()
