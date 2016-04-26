@@ -1611,7 +1611,13 @@ namespace NATS.Client
                         return;
 
                     if (bw.CanWrite)
-                        bw.Flush();
+                    {
+                        try
+                        {
+                            bw.Flush();
+                        }
+                        catch (Exception) {  /* ignore */ }
+                    }
                 }
             }
         }
@@ -2201,7 +2207,13 @@ namespace NATS.Client
                 if (conn.isSetup())
                 {
                     if (bw != null)
-                        bw.Flush();
+                    {
+                        try
+                        {
+                            bw.Flush();
+                        }
+                        catch (Exception) { /* ignore */ }
+                    }
 
                     conn.teardown();
                 }
