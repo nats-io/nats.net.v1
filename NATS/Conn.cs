@@ -1149,23 +1149,57 @@ namespace NATS.Client
             pending = null;
         }
 
+
+        // Sleep guarantees no exceptions will be thrown out of it.
+        private static void Sleep(int millis)
+        {
+            if (millis <= 0)
+            {
+                return;
+            }
+
+            try
+            {
+                Thread.Sleep(millis);
+            }
+            catch (Exception) { }
+        }
+
+        // Schedules a connection event (connected/disconnected/reconnected)
+        // if non-null.
+        // Caller must lock.
+        private void scheduleConnEvent(EventHandler<ConnEventArgs> connEvent)
+        {
+            if (connEvent == null)
+                return;
+
+            // Schedule a reference to the event handler.
+            EventHandler<ConnEventArgs> eh = connEvent;
+            callbackScheduler.Add(
+                new Task(() => { eh(this, new ConnEventArgs(this)); })
+            );
+
+        }
+
         // Try to reconnect using the option parameters.
         // This function assumes we are allowed to reconnect.
+        //
+        // NOTE: locks are manually acquired/released to parallel the NATS
+        // go client
         private void doReconnect()
         {
             // We want to make sure we have the other watchers shutdown properly
             // here before we proceed past this point
             waitForExits();
 
-
-
             // FIXME(dlc) - We have an issue here if we have
             // outstanding flush points (pongs) and they were not
             // sent out, but are still in the pipe.
 
-            // Hold the lock manually and release where needed below.
+            // Hold manually release where needed below.
             Monitor.Enter(mu);
 
+            // clear any queued pongs, e..g. pending flush calls.
             clearPendingFlushCalls();
 
             pending = new MemoryStream();
@@ -1174,46 +1208,40 @@ namespace NATS.Client
             // Clear any errors.
             lastEx = null;
 
-            if (Opts.DisconnectedEventHandler != null)
-            {
-                EventHandler<ConnEventArgs> deh = Opts.DisconnectedEventHandler;
+            scheduleConnEvent(Opts.DisconnectedEventHandler);
 
-                callbackScheduler.Add(
-                    new Task(() => { deh(this, new ConnEventArgs(this)); })
-                );
-            }
-
-            Srv s;
-            while ((s = selectNextServer()) != null)
+            Srv cur;
+            while ((cur = selectNextServer()) != null)
             {
                 lastEx = null;
 
                 // Sleep appropriate amount of time before the
                 // connection attempt if connecting to same server
                 // we just got disconnected from.
-                double elapsedMillis = s.TimeSinceLastAttempt.TotalMilliseconds;
+                double elapsedMillis = cur.TimeSinceLastAttempt.TotalMilliseconds;
+                double sleepTime = 0;
 
                 if (elapsedMillis < Opts.ReconnectWait)
                 {
-                    double sleepTime = Opts.ReconnectWait - elapsedMillis;
+                    sleepTime = Opts.ReconnectWait - elapsedMillis;
+                }
 
-                    Monitor.Exit(mu);
-                    Thread.Sleep((int)sleepTime);
-                    Monitor.Enter(mu);
-                }
-                else
+                if (sleepTime <= 0)
                 {
-                    // Yield so other things like unsubscribes can
-                    // proceed.
-                    Monitor.Exit(mu);
-                    Thread.Sleep((int)50);
-                    Monitor.Enter(mu);
+                    // Release to allow parallel processes to close,
+                    // unsub, etc.  Note:  Use the sleep API - yield is
+                    // heavy handed here.
+                    sleepTime = 50;
                 }
+
+                Monitor.Exit(mu);
+                Sleep((int)sleepTime);
+                Monitor.Enter(mu);
 
                 if (isClosed())
                     break;
 
-                s.reconnects++;
+                cur.reconnects++;
 
                 try
                 {
@@ -1224,6 +1252,7 @@ namespace NATS.Client
                 {
                     // not yet connected, retry and hold
                     // the lock.
+                    lastEx = null;
                     continue;
                 }
 
@@ -1242,10 +1271,10 @@ namespace NATS.Client
                     continue;
                 }
 
-                s.didConnect = true; 
-                s.reconnects = 0;
+                // Clear out server stats for the server we connected to..
+                cur.didConnect = true;
+                cur.reconnects = 0;
 
-                // Process CreateConnection logic
                 try
                 {
                     // Send existing subscription state
@@ -1263,32 +1292,22 @@ namespace NATS.Client
                     continue;
                 }
 
-                // get the event handler under the lock
-                EventHandler<ConnEventArgs> reconnectedEh = Opts.ReconnectedEventHandler;
+                scheduleConnEvent(Opts.ReconnectedEventHandler);
 
-                // Release the lock here, we will return below
+                // Release lock here, we will return below
                 Monitor.Exit(mu);
 
-                // flush everything
+                // Make sure to flush everything
                 Flush();
 
-                if (reconnectedEh != null)
-                {
-                    callbackScheduler.Add(
-                        new Task(() => { reconnectedEh(this, new ConnEventArgs(this)); })
-                    );
-                }
-
                 return;
-
             }
 
-            // we have no more servers left to try.
+            // Call into close.. we have no more servers left..
             if (lastEx == null)
                 lastEx = new NATSNoServersException("Unable to reconnect");
 
             Monitor.Exit(mu);
-
             Close();
         }
 
@@ -2157,7 +2176,6 @@ namespace NATS.Client
         // function. This function will handle the locking manually.
         private void close(ConnState closeState, bool invokeDelegates)
         {
-            EventHandler<ConnEventArgs> disconnectedEventHandler = null;
             EventHandler<ConnEventArgs> closedEventHandler = null;
 
             lock (mu)
@@ -2193,13 +2211,9 @@ namespace NATS.Client
 
                 // perform appropriate callback is needed for a
                 // disconnect;
-                if (invokeDelegates && conn.isSetup() &&
-                    Opts.DisconnectedEventHandler != null)
+                if (invokeDelegates && conn.isSetup())
                 {
-                    disconnectedEventHandler = Opts.DisconnectedEventHandler;
-
-                    callbackScheduler.Add(new Task(() => { 
-                        disconnectedEventHandler(this, new ConnEventArgs(this)); }));
+                    scheduleConnEvent(Opts.DisconnectedEventHandler);
                 }
 
                 // Go ahead and make sure we have flushed the outbound buffer.
@@ -2218,18 +2232,11 @@ namespace NATS.Client
                     conn.teardown();
                 }
 
-                closedEventHandler = opts.ClosedEventHandler;
-            }
+                if (invokeDelegates)
+                {
+                    scheduleConnEvent(opts.ClosedEventHandler);
+                }
 
-            if (invokeDelegates && closedEventHandler != null)
-            {
-                callbackScheduler.Add(
-                    new Task(() => { closedEventHandler(this, new ConnEventArgs(this)); })
-                );
-            }
-
-            lock (mu)
-            {
                 status = closeState;
             }
         }
