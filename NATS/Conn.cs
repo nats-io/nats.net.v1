@@ -2171,8 +2171,6 @@ namespace NATS.Client
         // function. This function will handle the locking manually.
         private void close(ConnState closeState, bool invokeDelegates)
         {
-            EventHandler<ConnEventArgs> closedEventHandler = null;
-
             lock (mu)
             {
                 if (isClosed())
