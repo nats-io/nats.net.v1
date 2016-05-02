@@ -1151,13 +1151,8 @@ namespace NATS.Client
 
 
         // Sleep guarantees no exceptions will be thrown out of it.
-        private static void Sleep(int millis)
+        private static void sleep(int millis)
         {
-            if (millis <= 0)
-            {
-                return;
-            }
-
             try
             {
                 Thread.Sleep(millis);
@@ -1235,7 +1230,7 @@ namespace NATS.Client
                 }
 
                 Monitor.Exit(mu);
-                Sleep((int)sleepTime);
+                sleep((int)sleepTime);
                 Monitor.Enter(mu);
 
                 if (isClosed())
