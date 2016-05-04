@@ -308,6 +308,19 @@ namespace NATS.Client
             {
                 lock (mu)
                 {
+                    // If a connection was lost during a reconnect we 
+                    // we could have a defunct SSL stream remaining and 
+                    // need to clean up.
+                    if (sslStream != null)
+                    {
+                        try
+                        {
+                            sslStream.Dispose();
+                        }
+                        catch (Exception) { }
+                        sslStream = null;
+                    }
+
                     client = new TcpClient(s.url.Host, s.url.Port);
 #if async_connect
                     client = new TcpClient();
@@ -411,13 +424,13 @@ namespace NATS.Client
 
                 try
                 {
-                    s.Dispose();
-                    c.Close();
+                    if (s != null)
+                        s.Dispose();
+
+                    if (c != null)
+                        c.Close();
                 }
-                catch (Exception)
-                {
-                    // ignore
-                }
+                catch (Exception) { }
             }
 
             internal Stream getReadBufferedStream()
@@ -592,7 +605,7 @@ namespace NATS.Client
         {
             Srv s = this.currentServer;
             if (s == null)
-                throw new NATSNoServersException("No servers are configured.");
+                return null;
 
             int num = srvPool.Count;
             int maxReconnect = opts.MaxReconnect;
@@ -690,7 +703,13 @@ namespace NATS.Client
                 if (pending != null && bw != null)
                 {
                     // flush to the pending buffer;
-                    bw.Flush();
+                    try
+                    {
+                        // Make a best effort, but this shouldn't stop
+                        // conn creation.
+                        bw.Flush();
+                    }
+                    catch (Exception) { }
                 }
 
                 bw = conn.getWriteBufferedStream(Defaults.defaultBufSize);
@@ -750,7 +769,11 @@ namespace NATS.Client
                     return;
                 }
 
-                sendPing(null);
+                try
+                {
+                    sendPing(null);
+                }
+                catch (Exception) { }
             }
         }
 
@@ -775,6 +798,17 @@ namespace NATS.Client
 
         }
 
+        private string generateThreadName(string prefix)
+        {
+            string name = "unknown";
+            if (opts.Name != null)
+            {
+                name = opts.Name;
+            }
+
+            return prefix + "-" + name;
+        }
+
         private void spinUpSocketWatchers()
         {
             Thread t = null;
@@ -786,9 +820,10 @@ namespace NATS.Client
             ManualResetEvent readLoopStartEvent = new ManualResetEvent(false);
             t = new Thread(() => {
                 readLoopStartEvent.Set();
-                readLoop(); 
+                readLoop();
             });
             t.Start();
+            t.Name = generateThreadName("Reader");
             wg.Add(t);
 
             ManualResetEvent flusherStartEvent = new ManualResetEvent(false);
@@ -797,6 +832,7 @@ namespace NATS.Client
                 flusher();
             });
             t.Start();
+            t.Name = generateThreadName("Flusher");
             wg.Add(t);
 
             // wait for both threads to start before continuing.
@@ -856,7 +892,7 @@ namespace NATS.Client
 
             processExpectedInfo();
             sendConnect();
-            spinUpSocketWatchers();
+            new Task(() => { spinUpSocketWatchers(); }).Start();
         }
 
         internal void connect()
@@ -953,7 +989,7 @@ namespace NATS.Client
             catch (Exception e)
             {
                 processOpError(e);
-                return;
+                throw e;
             }
             finally
             {
@@ -1129,7 +1165,12 @@ namespace NATS.Client
                     conn.teardown();
                 }
 
-                new Task(() => { doReconnect(); }).Start();
+                Thread t = new Thread(() =>
+                {
+                    doReconnect();
+                });
+                t.Name = generateThreadName("Reconnect");
+                t.Start();
             }
         }
 
@@ -1251,9 +1292,6 @@ namespace NATS.Client
                     continue;
                 }
 
-                // We are reconnected.
-                stats.reconnects++;
-
                 // process our connect logic
                 try
                 {
@@ -1266,10 +1304,6 @@ namespace NATS.Client
                     continue;
                 }
 
-                // Clear out server stats for the server we connected to..
-                cur.didConnect = true;
-                cur.reconnects = 0;
-
                 try
                 {
                     // Send existing subscription state
@@ -1277,9 +1311,6 @@ namespace NATS.Client
 
                     // Now send off and clear pending buffer
                     flushReconnectPendingItems();
-
-                    // we are connected.
-                    status = ConnState.CONNECTED;
                 }
                 catch (Exception)
                 {
@@ -1287,13 +1318,27 @@ namespace NATS.Client
                     continue;
                 }
 
+                // We are reconnected.
+                stats.reconnects++;
+                cur.didConnect = true;
+                cur.reconnects = 0;
+                status = ConnState.CONNECTED;
+
                 scheduleConnEvent(Opts.ReconnectedEventHandler);
 
                 // Release lock here, we will return below
                 Monitor.Exit(mu);
 
                 // Make sure to flush everything
-                Flush();
+                // We have a corner case where the server we just
+                // connected to has failed as well - let the reader
+                // thread detect this and spawn another reconnect 
+                // thread to simplify locking.
+                try
+                {
+                    Flush();
+                }
+                catch (Exception) { }
 
                 return;
             }
