@@ -16,9 +16,10 @@ namespace NATS.Client
     // task but are more heavyweight that what we want.
     internal sealed class Channel<T>
     {
-        Queue<T>   q;
-        Object     qLock = new Object();
-        bool       finished = false;
+        readonly Queue<T> q;
+        readonly Object   qLock = new Object();
+
+        bool   finished = false;
         
         internal Channel()
         {
@@ -34,64 +35,59 @@ namespace NATS.Client
         {
             T rv = default(T);
 
-            // Locking...  Lock once here, unlock when done, 
-            // except when a timeout is reached.
             Monitor.Enter(qLock);
+
+            if (finished)
+            {
+                Monitor.Exit(qLock);
+                return default(T);
+            }
+
+            if (q.Count > 0)
+            {
+                rv = q.Dequeue();
+                Monitor.Exit(qLock);
+                return rv;
+            }
 
             // if we had a *rare* spurious wakeup from Monitor.Wait(),
             // we could have an empty queue.  Protect this case by
             // rechecking in a loop.  This should be very rare, 
             // so keep it simple and just wait again.  This may result in 
             // a longer timeout that specified.
-            while (true)
+            do
             {
+                if (timeout < 0)
+                {
+                    Monitor.Wait(qLock);
+                }
+                else
+                {
+                    if (Monitor.Wait(qLock, timeout) == false)
+                    {
+                        // Unlock before exiting.
+                        Monitor.Exit(qLock);
+                        throw new NATSTimeoutException();
+                    }
+                }
+
+                // we waited, but are woken up by a finish...
                 if (finished)
                     break;
 
+                // we can have an empty queue if there was a spurious wakeup.
                 if (q.Count > 0)
                 {
                     rv = q.Dequeue();
                     break;
                 }
-                else
-                {
-                    if (timeout < 0)
-                    {
-                        Monitor.Wait(qLock);
-                    }
-                    else
-                    {
-                        if (Monitor.Wait(qLock, timeout) == false)
-                        {
-                            // Unlock before exiting.
-                            Monitor.Exit(qLock);
-                            throw new NATSTimeoutException();
-                        }
-                    }
 
-                    // we waited, but are woken up by a finish...
-                    if (finished)
-                        break;
-
-                    try
-                    {
-                        rv = q.Dequeue();
-                        break;
-                    }
-                    catch (InvalidOperationException)
-                    {
-                        // Attempt to dequeue on an empty queue.  We can
-                        // only get here from a spurious wakeup.
-                        // continue on...
-                    }
-                }
-
-            }
+            } while (true);
 
             Monitor.Exit(qLock);
 
             return rv;
-        
+
         } // get
         
         internal void add(T item)
