@@ -395,7 +395,7 @@ namespace Benchmark
                     runPub("PUB", count, payloadSize);
                     break;
                 case BenchType.PUBSUB:
-                    runPub("PUBSUB", count, payloadSize);
+                    runPubSub("PUBSUB", count, payloadSize);
                     break;
                 case BenchType.REQREPLY:
                     runReqReply("REQREP", count, payloadSize);
