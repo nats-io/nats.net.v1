@@ -1885,6 +1885,7 @@ namespace NATS.Client
             s.AutoUnsubscribe(1);
 
             publish(subject, inbox, data);
+            Flush();
             m = s.NextMessage(timeout);
             try
             {
