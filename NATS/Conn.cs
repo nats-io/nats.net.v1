@@ -1615,6 +1615,8 @@ namespace NATS.Client
                 // waiting.
                 if (!flusherKicked)
                 {
+                    // A spurious wakeup here is OK - we'll just do
+                    // an earlier flush.
                     Monitor.Wait(flusherLock);
                 }
 
