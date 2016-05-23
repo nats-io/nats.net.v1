@@ -2200,14 +2200,12 @@ namespace NATS.Client
         // Lock must be held by the caller.
         private void clearPendingFlushCalls()
         {
-            lock (mu)
+
+            // Clear any queued pongs, e.g. pending flush calls.
+            foreach (Channel<bool> ch in pongs)
             {
-                // Clear any queued pongs, e.g. pending flush calls.
-                foreach (Channel<bool> ch in pongs)
-                {
-                    if (ch != null)
-                        ch.add(true);
-                }
+                if (ch != null)
+                    ch.add(true);
             }
             pongs.Clear();
         }
@@ -2234,11 +2232,11 @@ namespace NATS.Client
             // fch will be closed on finalizer
             kickFlusher();
 
-            // Clear any queued pongs, e.g. pending flush calls.
-            clearPendingFlushCalls();
-
             lock (mu)
             {
+                // Clear any queued pongs, e.g. pending flush calls.
+                clearPendingFlushCalls();
+
                 stopPingTimer();
 
                 // Close sync subscriber channels and release any
