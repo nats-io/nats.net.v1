@@ -2200,13 +2200,15 @@ namespace NATS.Client
         // Lock must be held by the caller.
         private void clearPendingFlushCalls()
         {
-            // Clear any queued pongs, e.g. pending flush calls.
-            foreach (Channel<bool> ch in pongs)
+            lock (mu)
             {
-                if (ch != null)
-                    ch.add(true);
+                // Clear any queued pongs, e.g. pending flush calls.
+                foreach (Channel<bool> ch in pongs)
+                {
+                    if (ch != null)
+                        ch.add(true);
+                }
             }
-
             pongs.Clear();
         }
 
