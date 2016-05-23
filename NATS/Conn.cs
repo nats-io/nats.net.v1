@@ -1,4 +1,4 @@
-﻿// Copyright 2015 Apcera Inc. All rights reserved.
+// Copyright 2015 Apcera Inc. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -1753,17 +1753,7 @@ namespace NATS.Client
             else
             {
                 ex = new NATSException(s);
-                lock (mu)
-                {
-                    lastEx = ex;
-
-                    if (status != ConnState.CONNECTING)
-                    {
-                        invokeDelegates = true;
-                    }
-                }
-
-                close(ConnState.CLOSED, invokeDelegates);
+				processOpError(ex);
             }
         }
 
