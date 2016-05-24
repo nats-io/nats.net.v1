@@ -2228,11 +2228,11 @@ namespace NATS.Client
                 }
 
                 status = ConnState.CLOSED;
-            }
 
-            // Kick the routines so they fall out.
-            // fch will be closed on finalizer
-            kickFlusher();
+                // Kick the routines so they fall out.
+                // fch will be closed on finalizer
+                kickFlusher();
+            }
 
             lock (mu)
             {
