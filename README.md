@@ -526,6 +526,7 @@ Lat8k (us)      500 msgs, 271.21 avg, 219.80 min, 582.60 max, 28.71 stddev
 * [ ] Expand Unit Tests to test internals (namely Parsing)
 * [ ] WCF bindings
 * [ ] [.NET Core](https://github.com/dotnet/core) compatibility
+* [ ] Enable client tracing for salient events around connections, subscriptions, errors, etc.
 * [X] Comprehensive benchmarking
 * [X] Performance - reduce locking and implement a flush delay.
 * [X] TLS
