@@ -122,5 +122,46 @@ namespace NATSUnitTests
                 throw e;
             }
         }
+
+
+        [TestMethod]
+        public void TestReconnectAuthTimeout()
+        {
+            ConditionalObj obj = new ConditionalObj();
+
+            using (NATSServer s1 = util.CreateServerWithConfig(TestContext, "auth_1222.conf"),
+                              s2 = util.CreateServerWithConfig(TestContext, "auth_1223_timeout.conf"),
+                              s3 = util.CreateServerWithConfig(TestContext, "auth_1224.conf"))
+            {
+
+                Options opts = ConnectionFactory.GetDefaultOptions();
+
+                opts.Servers = new string[]{
+                    "nats://username:password@localhost:1222",
+                    "nats://username:password@localhost:1223", 
+                    "nats://username:password@localhost:1224" };
+                opts.NoRandomize = true;
+
+                opts.ReconnectedEventHandler += (sender, args) =>
+                {
+                    System.Console.WriteLine("Reconnected.");
+                    obj.notify();
+                };
+
+                opts.DisconnectedEventHandler += (sender, args) =>
+                {
+                    System.Console.WriteLine("Disconnected.");
+                };
+
+                IConnection c = new ConnectionFactory().CreateConnection(opts);
+
+                s1.Shutdown();
+
+                // This should fail over to S2 where an authorization timeout occurs
+                // then successfully reconnect to S3.
+
+                obj.wait(20000);
+            }
+        }
     }
 }
