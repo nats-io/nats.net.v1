@@ -265,5 +265,49 @@ namespace NATSUnitTests
                 }
             }
         }
+
+        // Tests if reconnection can still occur after a user authorization failure
+        // under TLS.
+        [TestMethod]
+        public void TestTlsReconnectAuthTimeoutFailure()
+        {
+            ConditionalObj obj = new ConditionalObj();
+
+            using (NATSServer s1 = util.CreateServerWithConfig(TestContext, "auth_tls_1222.conf"),
+                              s2 = util.CreateServerWithConfig(TestContext, "auth_tls_1223_timeout.conf"),
+                              s3 = util.CreateServerWithConfig(TestContext, "auth_tls_1224.conf"))
+            {
+
+                Options opts = ConnectionFactory.GetDefaultOptions();
+                opts.Secure = true;
+                opts.NoRandomize = true;
+                opts.TLSRemoteCertificationValidationCallback = verifyServerCert;
+
+                opts.Servers = new string[]{
+                    "nats://username:password@localhost:1222",
+                    "nats://username:password@localhost:1223", 
+                    "nats://username:password@localhost:1224" };
+
+                opts.ReconnectedEventHandler += (sender, args) =>
+                {
+                    System.Console.WriteLine("Reconnected");
+                    obj.notify();
+                };
+
+                opts.DisconnectedEventHandler += (sender, args) =>
+                {
+                    System.Console.WriteLine("Disconnected.");
+                };
+
+                IConnection c = new ConnectionFactory().CreateConnection(opts);
+
+                s1.Shutdown();
+
+                // This should fail over to S2 where an authorization timeout occurs
+                // then successfully reconnect to S3.
+
+                obj.wait(20000);
+            }
+        }
     }
 }

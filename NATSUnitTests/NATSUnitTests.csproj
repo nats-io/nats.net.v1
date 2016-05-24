@@ -80,8 +80,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="config\auth_1223_timeout.conf" />
     <None Include="config\auth_1224.conf" />
     <None Include="config\auth_1222.conf" />
+    <None Include="config\auth_tls_1222.conf" />
+    <None Include="config\auth_tls_1223_timeout.conf" />
+    <None Include="config\auth_tls_1224.conf" />
     <None Include="config\tls_1224.conf" />
     <None Include="config\tls_1222.conf" />
     <None Include="config\tls_1222_user.conf" />
