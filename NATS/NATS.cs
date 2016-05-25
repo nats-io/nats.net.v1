@@ -239,6 +239,7 @@ namespace NATS.Client
         internal const string okProtoNoCRLF = "+OK";
 
         internal const string STALE_CONNECTION = "Stale Connection";
+        internal const string AUTH_TIMEOUT = "Authorization Timeout";
     }
 
     /// <summary>

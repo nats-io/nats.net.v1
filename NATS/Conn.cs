@@ -1752,6 +1752,13 @@ namespace NATS.Client
             {
                 processOpError(new NATSStaleConnectionException());
             }
+            else if (IC.AUTH_TIMEOUT.Equals(s))
+            {
+                // Protect against a timing issue where an authoriztion error
+                // is handled before the connection close from the server.
+                // This can happen in reconnect scenarios.
+                processOpError(new NATSConnectionException(IC.AUTH_TIMEOUT));
+            }
             else
             {
                 ex = new NATSException(s);
