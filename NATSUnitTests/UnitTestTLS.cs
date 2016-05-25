@@ -5,6 +5,9 @@ using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NATS.Client;
+using System.Reflection;
+using System.IO;
+using System.Threading;
 
 namespace NATSUnitTests
 {
@@ -269,7 +272,7 @@ namespace NATSUnitTests
         // Tests if reconnection can still occur after a user authorization failure
         // under TLS.
         [TestMethod]
-        public void TestTlsReconnectAuthTimeoutFailure()
+        public void TestTlsReconnectAuthTimeout()
         {
             ConditionalObj obj = new ConditionalObj();
 
@@ -294,18 +297,60 @@ namespace NATSUnitTests
                     obj.notify();
                 };
 
-                opts.DisconnectedEventHandler += (sender, args) =>
-                {
-                    System.Console.WriteLine("Disconnected.");
-                };
-
                 IConnection c = new ConnectionFactory().CreateConnection(opts);
-
                 s1.Shutdown();
 
                 // This should fail over to S2 where an authorization timeout occurs
                 // then successfully reconnect to S3.
 
+                obj.wait(20000);
+            }
+        }
+
+        [TestMethod]
+        public void TestTlsReconnectAuthTimeoutLateClose()
+        {
+            ConditionalObj obj = new ConditionalObj();
+
+            using (NATSServer s1 = util.CreateServerWithConfig(TestContext, "auth_tls_1222.conf"),
+                              s2 = util.CreateServerWithConfig(TestContext, "auth_tls_1224.conf"))
+            {
+
+                Options opts = ConnectionFactory.GetDefaultOptions();
+                opts.Secure = true;
+                opts.NoRandomize = true;
+                opts.TLSRemoteCertificationValidationCallback = verifyServerCert;
+
+                opts.Servers = new string[]{
+                    "nats://username:password@localhost:1222",
+                    "nats://username:password@localhost:1224" };
+
+                opts.ReconnectedEventHandler += (sender, args) =>
+                {
+                    obj.notify();
+                };
+
+                IConnection c = new ConnectionFactory().CreateConnection(opts);
+
+                // inject an authorization error, as if it were processed by an incoming 
+                // server message.
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    byte[] value = System.Text.Encoding.UTF8.GetBytes("Authorization Timeout");
+                    ms.Write(value, 0, value.Length);
+
+                    MethodInfo processErr = typeof(Connection).GetMethod(
+                        "processErr",
+                        BindingFlags.NonPublic | BindingFlags.Instance);
+
+                    processErr.Invoke(c, new object[] { ms });
+                }
+
+                // sleep to allow the client to process the error, then shutdown the server.
+                Thread.Sleep(250);
+                s1.Shutdown();
+
+                // Wait for a reconnect.
                 obj.wait(20000);
             }
         }
