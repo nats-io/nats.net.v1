@@ -1117,11 +1117,11 @@ namespace NATS.Client
                 else if (result.StartsWith(IC._ERR_OP_))
                 {
                     throw new NATSConnectionException(
-                        result.TrimStart(IC._ERR_OP_.ToCharArray()));
+                        result.Substring(IC._ERR_OP_.Length));
                 }
                 else
                 {
-                    throw new NATSException(result);
+                    throw new NATSException("Error from sendConnect(): " + result);
                 }
             }
         }
@@ -1745,8 +1745,7 @@ namespace NATS.Client
             bool invokeDelegates = false;
             Exception ex = null;
 
-            String s = System.Text.Encoding.UTF8.GetString(
-                errorStream.ToArray(), 0, (int)errorStream.Position);
+            string s = getNormalizedError(errorStream);
 
             if (IC.STALE_CONNECTION.Equals(s))
             {
@@ -1761,7 +1760,7 @@ namespace NATS.Client
             }
             else
             {
-                ex = new NATSException(s);
+                ex = new NATSException("Error from processErr(): " + s);
                 lock (mu)
                 {
                     lastEx = ex;
@@ -1774,6 +1773,14 @@ namespace NATS.Client
 
                 close(ConnState.CLOSED, invokeDelegates);
             }
+        }
+
+        // getNormalizedError extracts a string from a MemoryStream, then normalizes it
+        // by removing leading and trailing spaces and quotes, and converting to lowercase
+        private string getNormalizedError(MemoryStream errorStream)
+        {
+            string s = Encoding.UTF8.GetString(errorStream.ToArray(), 0, (int)errorStream.Position);
+            return s.Trim('\'', '"', ' ', '\t', '\r', '\n').ToLower();
         }
 
         // Use low level primitives to build the protocol for the publish

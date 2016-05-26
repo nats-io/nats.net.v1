@@ -7,6 +7,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NATS.Client;
 using System.Reflection;
 using System.IO;
+using System.Linq;
 using System.Threading;
 
 namespace NATSUnitTests
@@ -332,19 +333,19 @@ namespace NATSUnitTests
 
                 IConnection c = new ConnectionFactory().CreateConnection(opts);
 
-                // inject an authorization error, as if it were processed by an incoming 
-                // server message.
-                using (MemoryStream ms = new MemoryStream())
-                {
-                    byte[] value = System.Text.Encoding.UTF8.GetBytes("Authorization Timeout");
-                    ms.Write(value, 0, value.Length);
+                // inject an authorization timeout, as if it were processed by an incoming server message.
+                // this is done at the parser level so that parsing is also tested,
+                // therefore it needs reflection since Parser is an internal type.
+                Type parserType = typeof(Connection).Assembly.GetType("NATS.Client.Parser");
+                Assert.IsNotNull(parserType, "Failed to find NATS.Client.Parser");
+                BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance;
+                object parser = Activator.CreateInstance(parserType, flags, null, new object[] { c }, null);
+                Assert.IsNotNull(parser, "Failed to instanciate a NATS.Client.Parser");
+                MethodInfo parseMethod = parserType.GetMethod("parse", flags);
+                Assert.IsNotNull(parseMethod, "Failed to find method parse in NATS.Client.Parser");
 
-                    MethodInfo processErr = typeof(Connection).GetMethod(
-                        "processErr",
-                        BindingFlags.NonPublic | BindingFlags.Instance);
-
-                    processErr.Invoke(c, new object[] { ms });
-                }
+                byte[] bytes = "-ERR 'Authorization Timeout'\r\n".ToCharArray().Select(ch => (byte)ch).ToArray();
+                parseMethod.Invoke(parser, new object[] { bytes, bytes.Length });
 
                 // sleep to allow the client to process the error, then shutdown the server.
                 Thread.Sleep(250);

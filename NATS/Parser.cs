@@ -319,6 +319,7 @@ namespace NATS.Client
                                 break;
                             default:
                                 state = MINUS_ERR_ARG;
+                                i--;
                                 break;
                         }
                         break;
