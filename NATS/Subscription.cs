@@ -174,7 +174,7 @@ namespace NATS.Client
             }
         }
 
-        public virtual void Unsubscribe()
+        internal void unsubscribe(bool throwEx)
         {
             Connection c;
             lock (mu)
@@ -183,9 +183,19 @@ namespace NATS.Client
             }
 
             if (c == null)
-                throw new NATSBadSubscriptionException();
+            {
+                if (throwEx)
+                    throw new NATSBadSubscriptionException();
+
+                return;
+            }
 
             c.unsubscribe(this, 0);
+        }
+
+        public virtual void Unsubscribe()
+        {
+            unsubscribe(true);
         }
 
         public virtual void AutoUnsubscribe(int max)

@@ -1903,12 +1903,7 @@ namespace NATS.Client
             publish(subject, inbox, data);
             Flush();
             m = s.NextMessage(timeout);
-            try
-            {
-                // the auto unsubscribe should handle this.
-                s.Unsubscribe();
-            }
-            catch (Exception) {  /* NOOP */ }
+            s.unsubscribe(false);
 
             return m;
         }
