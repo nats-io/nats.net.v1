@@ -247,7 +247,7 @@ It would not, however, receive messages on:
 * foo.baz.bar
 * etc...
 
-The `>` wildcard matches any length of the fail of a subject, and can only be the last token.
+The `>` wildcard matches any length of the tail of a subject, and can only be the last token.
 
 ```c#
 IAsyncSubscription s = c.SubscribeAsync("foo.>");
