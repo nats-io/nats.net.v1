@@ -2,7 +2,7 @@
 # NATS - .NET C# Client
 A [C# .NET](https://msdn.microsoft.com/en-us/vstudio/aa496123.aspx) client for the [NATS messaging system](https://nats.io).
 
-This is a beta release, based on the [NATS GO Client](https://github.com/nats-io/nats).
+This Apcera supported client parallels the [NATS GO Client](https://github.com/nats-io/nats).
 
 [![License MIT](https://img.shields.io/npm/l/express.svg)](http://opensource.org/licenses/MIT)
 [![API Documentation](https://img.shields.io/badge/doc-Doxygen-brightgreen.svg?style=flat)](http://nats-io.github.io/csnats)
