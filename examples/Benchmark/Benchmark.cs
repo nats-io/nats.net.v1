@@ -317,13 +317,18 @@ namespace Benchmark
             IConnection subConn = cf.CreateConnection(url);
             IConnection pubConn = cf.CreateConnection(url);
 
-            subConn.SubscribeAsync(subject, (sender, args) =>
-            {
-                subConn.Publish(args.Message.Reply, payload);
-                subConn.Flush();
+            Thread t = new Thread(() => {
+                ISyncSubscription s = subConn.SubscribeSync(subject);
+                for (int i = 0; i < testCount; i++)
+                {
+                    Msg m  = s.NextMessage();
+                    subConn.Publish(m.Reply, payload);
+                    subConn.Flush();
+                }
             });
+            t.Start();
 
-            subConn.Flush();
+            Thread.Sleep(1000);
 
             Stopwatch sw = sw = Stopwatch.StartNew();
 
