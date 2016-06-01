@@ -518,14 +518,13 @@ Lat4k (us)      500 msgs, 216.54 avg, 160.70 min, 1421.70 max, 59.46 stddev
 Lat8k (us)      500 msgs, 271.21 avg, 219.80 min, 582.60 max, 28.71 stddev
 ```
 
-## Miscellaneous 
-###Known Issues
-* In the original v0.1-alpha release, there was an issue with a flush hanging in some situations.  This has been fixed in the v0.2-alpha release.
 
-###TODO
+## TODO
 * [ ] Expand Unit Tests to test internals (namely Parsing)
 * [ ] WCF bindings
-* [ ] [.NET Core](https://github.com/dotnet/core) compatibility
+* [ ] Travis CI, convert unit tests
+* [ ] Allow configuration for performance tuning (buffer sizes), defaults based on plaform.
+* [ ] [.NET Core](https://github.com/dotnet/core) compatibility, TLS required.
 * [ ] Enable client tracing for salient events around connections, subscriptions, errors, etc.
 * [X] Comprehensive benchmarking
 * [X] Performance - reduce locking and implement a flush delay.
