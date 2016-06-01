@@ -482,42 +482,41 @@ The benchmarks include:
 
 Note, kb/s is solely payload, excluding the NATS message protocol.  Latency is measure in microseconds.
 
-Here is some sample output, from a VM running on a Macbook Pro (thus the high latency).  Running the benchmarks in your environment is highly recommended.
+Here is some sample output, from a VM running on a Macbook Pro, simulating a cloud environment.  Running the benchmarks in your environment is *highly* recommended; these numbers below should reflect the low end of performance numbers.
 ```
-PubOnlyNo         10000000         4369711 msgs/s              0 kb/s
-PubOnly8b         10000000         3384630 msgs/s          26442 kb/s
-PubOnly32b        10000000         2901377 msgs/s          90668 kb/s
-PubOnly256b       10000000         1098255 msgs/s         274563 kb/s
-PubOnly512b       10000000          594255 msgs/s         297127 kb/s
-PubOnly1k          1000000         2440030 msgs/s        2440030 kb/s
-PubOnly4k           500000         1315457 msgs/s        5261828 kb/s
-PubOnly8k           100000         3533244 msgs/s       28265952 kb/s
-PubSubNo          10000000         1206127 msgs/s              0 kb/s
-PubSub8b          10000000         1014879 msgs/s           7928 kb/s
-PubSub32b         10000000          666987 msgs/s          20843 kb/s
-PubSub256b        10000000          202496 msgs/s          50624 kb/s
-PubSub512b          500000         2174728 msgs/s        1087364 kb/s
-PubSub1k            500000         1137836 msgs/s        1137836 kb/s
-PubSub4k            500000          327685 msgs/s        1310740 kb/s
-PubSub8k            100000          892322 msgs/s        7138576 kb/s
-ReqReplNo            20000          495543 msgs/s              0 kb/s
-ReqRepl8b            10000          991107 msgs/s           7743 kb/s
-ReqRepl32b           10000          988409 msgs/s          30887 kb/s
-ReqRepl256b           5000         1975569 msgs/s         493892 kb/s
-ReqRepl512b           5000         1984859 msgs/s         992429 kb/s
-ReqRepl1k             5000         1970939 msgs/s        1970939 kb/s
-ReqRepl4k             5000         1978037 msgs/s        7912148 kb/s
-ReqRepl8k             5000         1742837 msgs/s       13942696 kb/s
-LatNo (us)      500 msgs, 148.78 avg, 89.70 min, 1255.80 max, 83.35 stddev
-Lat8b (us)      500 msgs, 155.90 avg, 96.40 min, 956.10 max, 44.26 stddev
-Lat32b (us)     500 msgs, 150.72 avg, 89.70 min, 1108.90 max, 59.82 stddev
-Lat256b (us)    500 msgs, 155.95 avg, 91.00 min, 299.30 max, 20.89 stddev
-Lat512b (us)    500 msgs, 151.69 avg, 107.70 min, 264.50 max, 19.72 stddev
-Lat1k (us)      500 msgs, 165.16 avg, 109.50 min, 433.60 max, 27.36 stddev
-Lat4k (us)      500 msgs, 216.54 avg, 160.70 min, 1421.70 max, 59.46 stddev
-Lat8k (us)      500 msgs, 271.21 avg, 219.80 min, 582.60 max, 28.71 stddev
+PubOnlyNo	  10000000	   4715384 msgs/s	       0 kb/s
+PubOnly8b	  10000000	   4058182 msgs/s	   31704 kb/s
+PubOnly32b	  10000000	   3044199 msgs/s	   95131 kb/s
+PubOnly256b	  10000000	    408034 msgs/s	  102008 kb/s
+PubOnly512b	  10000000	    203681 msgs/s	  101840 kb/s
+PubOnly1k	   1000000	     94106 msgs/s	   94106 kb/s
+PubOnly4k	    500000	     52653 msgs/s	  210612 kb/s
+PubOnly8k	    100000	      8552 msgs/s	   68416 kb/s
+PubSubNo	  10000000	   1101135 msgs/s	       0 kb/s
+PubSub8b	  10000000	   1075814 msgs/s	    8404 kb/s
+PubSub32b	  10000000	    990223 msgs/s	   30944 kb/s
+PubSub256b	  10000000	    391208 msgs/s	   97802 kb/s
+PubSub512b	    500000	    190811 msgs/s	   95405 kb/s
+PubSub1k	    500000	     97392 msgs/s	   97392 kb/s
+PubSub4k	    500000	     23714 msgs/s	   94856 kb/s
+PubSub8k	    100000	     11870 msgs/s	   94960 kb/s
+ReqReplNo	     20000	      3245 msgs/s	       0 kb/s
+ReqRepl8b	     10000	      3237 msgs/s	      25 kb/s
+ReqRepl32b	     10000	      3076 msgs/s	      96 kb/s
+ReqRepl256b	      5000	      2446 msgs/s	     611 kb/s
+ReqRepl512b	      5000	      2530 msgs/s	    1265 kb/s
+ReqRepl1k	      5000	      2973 msgs/s	    2973 kb/s
+ReqRepl4k	      5000	      1944 msgs/s	    7776 kb/s
+ReqRepl8k	      5000	      1394 msgs/s	   11152 kb/s
+LatNo (us)	500 msgs, 141.74 avg, 86.00 min, 600.40 max, 23.28 stddev
+Lat8b (us)	500 msgs, 141.52 avg, 70.30 min, 307.00 max, 26.77 stddev
+Lat32b (us)	500 msgs, 139.64 avg, 93.70 min, 304.20 max, 15.88 stddev
+Lat256b (us)	500 msgs, 175.55 avg, 101.80 min, 323.90 max, 14.93 stddev
+Lat512b (us)	500 msgs, 182.56 avg, 103.00 min, 1982.00 max, 81.50 stddev
+Lat1k (us)	500 msgs, 193.15 avg, 86.20 min, 28705.20 max, 1277.13 stddev
+Lat4k (us)	500 msgs, 291.09 avg, 99.70 min, 43679.10 max, 2047.67 stddev
+Lat8k (us)	500 msgs, 363.56 avg, 131.50 min, 39428.50 max, 1990.81 stddev
 ```
-
 
 ## TODO
 * [ ] Expand Unit Tests to test internals (namely Parsing)
