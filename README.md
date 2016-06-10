@@ -519,6 +519,7 @@ Lat8k (us)	500 msgs, 363.56 avg, 131.50 min, 39428.50 max, 1990.81 stddev
 ```
 
 ## TODO
+* [ ] Another performance pass - look at stream directly over socket, contention, fastpath optimizations.
 * [ ] Expand Unit Tests to test internals (namely Parsing)
 * [ ] WCF bindings
 * [ ] Travis CI, convert unit tests
@@ -526,7 +527,6 @@ Lat8k (us)	500 msgs, 363.56 avg, 131.50 min, 39428.50 max, 1990.81 stddev
 * [ ] [.NET Core](https://github.com/dotnet/core) compatibility, TLS required.
 * [ ] Enable client tracing for salient events around connections, subscriptions, errors, etc.
 * [X] Comprehensive benchmarking
-* [X] Performance - reduce locking and implement a flush delay.
 * [X] TLS
 * [X] Encoding (Serialization/Deserialization)
 * [X] Update delegates from traditional model to custom
