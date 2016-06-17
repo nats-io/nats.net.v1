@@ -148,7 +148,6 @@ namespace NATS.Client
 
         internal Exception lastEx;
 
-        Parser              ps = null;
         Timer               ptmr = null;
 
         int                 pout = 0;
@@ -547,7 +546,6 @@ namespace NATS.Client
         {
             this.opts = new Options(opts);
             this.pongs = createPongs();
-            this.ps = new Parser(this);
 
             PING_P_BYTES = System.Text.Encoding.UTF8.GetBytes(IC.pingProto);
             PING_P_BYTES_LEN = PING_P_BYTES.Length;
@@ -1391,18 +1389,9 @@ namespace NATS.Client
             byte[] buffer = new byte[Defaults.defaultReadLength];
             Parser parser = new Parser(this);
             int    len;
-            bool   sb;
 
             while (true)
             {
-                sb = false;
-                lock (mu)
-                {
-                    sb = (isClosed() || isReconnecting());
-                    if (sb)
-                        this.ps = parser;
-                }
-
                 try
                 {
                     len = br.Read(buffer, 0, Defaults.defaultReadLength);
@@ -1416,11 +1405,6 @@ namespace NATS.Client
                     }
                     break;
                 }
-            }
-
-            lock (mu)
-            {
-                parser = null;
             }
         }
 
