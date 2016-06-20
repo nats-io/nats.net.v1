@@ -989,7 +989,7 @@ namespace NATS.Client
             catch (Exception e)
             {
                 processOpError(e);
-                throw e;
+                throw;
             }
             finally
             {
