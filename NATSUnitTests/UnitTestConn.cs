@@ -1,61 +1,40 @@
 ﻿// Copyright 2015 Apcera Inc. All rights reserved.
 
 using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NATS.Client;
 using System.Threading;
+using Xunit;
 
 namespace NATSUnitTests
 {
     /// <summary>
     /// Run these tests with the gnatsd auth.conf configuration file.
     /// </summary>
-    [TestClass]
-    public class TestConnection
+    public class TestConnection : IDisposable
     {
-
         UnitTestUtilities utils = new UnitTestUtilities();
-
-        private TestContext testContextInstance;
-        /// <summary>
-        ///Gets or sets the test context which provides
-        ///information about and functionality for the current test run.
-        ///</summary>
-        public TestContext TestContext
-        {
-            get
-            {
-                return testContextInstance;
-            }
-            set
-            {
-                testContextInstance = value;
-            }
-        }
-
-        [TestInitialize()]
-        public void Initialize()
+        
+        public TestConnection()
         {
             UnitTestUtilities.CleanupExistingServers();
             utils.StartDefaultServer();
         }
-
-        [TestCleanup()]
-        public void Cleanup()
+        
+        public void Dispose()
         {
             utils.StopDefaultServer();
         }
-
-        [TestMethod]
+        
+        [Fact]
         public void TestConnectionStatus()
         {
             IConnection c = new ConnectionFactory().CreateConnection();
-            Assert.AreEqual(ConnState.CONNECTED, c.State);
+            Assert.Equal(ConnState.CONNECTED, c.State);
             c.Close();
-            Assert.AreEqual(ConnState.CLOSED, c.State);
+            Assert.Equal(ConnState.CLOSED, c.State);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestCloseHandler()
         {
             bool closed = false;
@@ -66,16 +45,16 @@ namespace NATSUnitTests
             IConnection c = new ConnectionFactory().CreateConnection(o);
             c.Close();
             Thread.Sleep(1000);
-            Assert.IsTrue(closed);
+            Assert.True(closed);
 
             // now test using.
             closed = false;
             using (c = new ConnectionFactory().CreateConnection(o)) { };
             Thread.Sleep(1000);
-            Assert.IsTrue(closed);
+            Assert.True(closed);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestCloseDisconnectedHandler()
         {
             bool disconnected = false;
@@ -97,7 +76,7 @@ namespace NATSUnitTests
                 c.Close();
                 Monitor.Wait(mu, 20000);
             }
-            Assert.IsTrue(disconnected);
+            Assert.True(disconnected);
 
             // now test using.
             disconnected = false;
@@ -106,10 +85,10 @@ namespace NATSUnitTests
                 using (c = new ConnectionFactory().CreateConnection(o)) { };
                 Monitor.Wait(mu, 20000);
             }
-            Assert.IsTrue(disconnected);
+            Assert.True(disconnected);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestServerStopDisconnectedHandler()
         {
             bool disconnected = false;
@@ -133,10 +112,10 @@ namespace NATSUnitTests
                 Monitor.Wait(mu, 10000);
             }
             c.Close();
-            Assert.IsTrue(disconnected);
+            Assert.True(disconnected);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestClosedConnections()
         {
             IConnection c = new ConnectionFactory().CreateConnection();
@@ -191,7 +170,7 @@ namespace NATSUnitTests
                 typeof(NATSConnectionClosedException));
         }
 
-        [TestMethod]
+        [Fact]
         public void TestConnectVerbose()
         {
 
@@ -202,7 +181,7 @@ namespace NATSUnitTests
             c.Close();
         }
 
-        [TestMethod]
+        [Fact]
         public void TestCallbacksOrder()
         {
             bool firstDisconnect = true;
@@ -224,7 +203,7 @@ namespace NATSUnitTests
             ConditionalObj recvCh1     = new ConditionalObj();
             ConditionalObj recvCh2     = new ConditionalObj();
 
-            using (NATSServer s = utils.CreateServerWithConfig(TestContext, "auth_1222.conf"))
+            using (NATSServer s = utils.CreateServerWithConfig("auth_1222.conf"))
             {
                 Options o = ConnectionFactory.GetDefaultOptions();
 

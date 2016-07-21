@@ -1,39 +1,20 @@
 ﻿// Copyright 2015 Apcera Inc. All rights reserved.
 
 using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NATS.Client;
 using System.Threading;
 using System.Reflection;
 using System.IO;
 using System.Linq;
+using Xunit;
 
 namespace NATSUnitTests
 {
     /// <summary>
     /// Run these tests with the gnatsd auth.conf configuration file.
     /// </summary>
-    [TestClass]
     public class TestAuthorization
     {
-
-        private TestContext testContextInstance;
-        /// <summary>
-        ///Gets or sets the test context which provides
-        ///information about and functionality for the current test run.
-        ///</summary>
-        public TestContext TestContext
-        {
-            get
-            {
-                return testContextInstance;
-            }
-            set
-            {
-                testContextInstance = value;
-            }
-        }
-
         int hitDisconnect;
 
         UnitTestUtilities util = new UnitTestUtilities();
@@ -77,22 +58,22 @@ namespace NATSUnitTests
             hitDisconnect++;
         }
 
-        [TestMethod]
+        [Fact]
         public void TestAuthSuccess()
         {
-            using (NATSServer s = util.CreateServerWithConfig(TestContext, "auth_1222.conf"))
+            using (NATSServer s = util.CreateServerWithConfig("auth_1222.conf"))
             {
                 IConnection c = new ConnectionFactory().CreateConnection("nats://username:password@localhost:1222");
                 c.Close();
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestAuthFailure()
         {
             try
             {
-                using (NATSServer s = util.CreateServerWithConfig(TestContext, "auth_1222.conf"))
+                using (NATSServer s = util.CreateServerWithConfig("auth_1222.conf"))
                 {
                     connectAndFail("nats://username@localhost:1222");
                     connectAndFail("nats://username:badpass@localhost:1222");
@@ -107,12 +88,12 @@ namespace NATSUnitTests
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestAuthToken()
         {
             try
             {
-                using (NATSServer s = util.CreateServerWithArgs(TestContext, "-auth S3Cr3T0k3n!"))
+                using (NATSServer s = util.CreateServerWithArgs("-auth S3Cr3T0k3n!"))
                 {
                     connectAndFail("nats://localhost:4222");
                     connectAndFail("nats://invalid_token@localhost:4222");
@@ -128,14 +109,14 @@ namespace NATSUnitTests
         }
 
 
-        [TestMethod]
+        [Fact]
         public void TestReconnectAuthTimeout()
         {
             ConditionalObj obj = new ConditionalObj();
 
-            using (NATSServer s1 = util.CreateServerWithConfig(TestContext, "auth_1222.conf"),
-                              s2 = util.CreateServerWithConfig(TestContext, "auth_1223_timeout.conf"),
-                              s3 = util.CreateServerWithConfig(TestContext, "auth_1224.conf"))
+            using (NATSServer s1 = util.CreateServerWithConfig("auth_1222.conf"),
+                              s2 = util.CreateServerWithConfig("auth_1223_timeout.conf"),
+                              s3 = util.CreateServerWithConfig("auth_1224.conf"))
             {
 
                 Options opts = ConnectionFactory.GetDefaultOptions();
@@ -162,13 +143,13 @@ namespace NATSUnitTests
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestReconnectAuthTimeoutLateClose()
         {
             ConditionalObj obj = new ConditionalObj();
 
-            using (NATSServer s1 = util.CreateServerWithConfig(TestContext, "auth_1222.conf"),
-                              s2 = util.CreateServerWithConfig(TestContext, "auth_1224.conf"))
+            using (NATSServer s1 = util.CreateServerWithConfig("auth_1222.conf"),
+                              s2 = util.CreateServerWithConfig("auth_1224.conf"))
             {
 
                 Options opts = ConnectionFactory.GetDefaultOptions();
@@ -189,12 +170,14 @@ namespace NATSUnitTests
                 // this is done at the parser level so that parsing is also tested,
                 // therefore it needs reflection since Parser is an internal type.
                 Type parserType = typeof(Connection).Assembly.GetType("NATS.Client.Parser");
-                Assert.IsNotNull(parserType, "Failed to find NATS.Client.Parser");
+                Assert.NotNull(parserType);
+
                 BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance;
                 object parser = Activator.CreateInstance(parserType, flags, null, new object[] { c }, null);
-                Assert.IsNotNull(parser, "Failed to instanciate a NATS.Client.Parser");
+                Assert.NotNull(parser);
+
                 MethodInfo parseMethod = parserType.GetMethod("parse", flags);
-                Assert.IsNotNull(parseMethod, "Failed to find method parse in NATS.Client.Parser");
+                Assert.NotNull(parseMethod);
 
                 byte[] bytes = "-ERR 'Authorization Timeout'\r\n".ToCharArray().Select(ch => (byte)ch).ToArray();
                 parseMethod.Invoke(parser, new object[] { bytes, bytes.Length });

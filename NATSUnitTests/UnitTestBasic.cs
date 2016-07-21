@@ -4,54 +4,49 @@ using System;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NATS.Client;
 using System.Diagnostics;
+using Xunit;
 
 namespace NATSUnitTests
 {
     /// <summary>
     /// Run these tests with the gnatsd auth.conf configuration file.
     /// </summary>
-    [TestClass]
-    public class TestBasic
+    public class TestBasic : IDisposable
     {
         UnitTestUtilities utils = new UnitTestUtilities();
-
-        [TestInitialize()]
-        public void Initialize()
+        
+        public TestBasic()
         {
             UnitTestUtilities.CleanupExistingServers();
             utils.StartDefaultServer();
         }
 
-        [TestCleanup()]
-        public void Cleanup()
+        public void Dispose()
         {
             utils.StopDefaultServer();
         }
+        
 
-        [TestMethod]
+        [Fact]
         public void TestConnectedServer()
         {
             IConnection c = new ConnectionFactory().CreateConnection();
            
             string u = c.ConnectedUrl;
             
-            if (string.IsNullOrWhiteSpace(u))
-                Assert.Fail("Invalid connected url {0}.", u);
-                
-            if (!Defaults.Url.Equals(u))
-                Assert.Fail("Invalid connected url {0}.", u);
+            Assert.False(string.IsNullOrWhiteSpace(u), $"Invalid connected url {u}.");
 
+            Assert.NotEqual(Defaults.Url, u);
+            
             c.Close();
             u = c.ConnectedUrl;
 
-            if (u != null)
-                Assert.Fail("Url is not null after connection is closed.");
+            Assert.NotNull(u);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestMultipleClose()
         {
             IConnection c = new ConnectionFactory().CreateConnection();
@@ -68,21 +63,15 @@ namespace NATSUnitTests
             Task.WaitAll(tasks);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestBadOptionTimeoutConnect()
         {
             Options opts = ConnectionFactory.GetDefaultOptions();
 
-            try
-            {
-                opts.Timeout = -1;
-                Assert.Fail("Able to set invalid timeout.");
-            }
-            catch (Exception)
-            {}   
+            Assert.Throws<Exception>(() => opts.Timeout = -1); 
         }
 
-        [TestMethod]
+        [Fact]
         public void TestSimplePublish()
         {
             using (IConnection c = new ConnectionFactory().CreateConnection())
@@ -91,7 +80,7 @@ namespace NATSUnitTests
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestSimplePublishNoData()
         {
             using (IConnection c = new ConnectionFactory().CreateConnection())
@@ -143,7 +132,7 @@ namespace NATSUnitTests
         IAsyncSubscription asyncSub = null;
         Boolean received = false;
 
-        [TestMethod]
+        [Fact]
         public void TestAsyncSubscribe()
         {
             using (IConnection c = new ConnectionFactory().CreateConnection())
@@ -162,21 +151,18 @@ namespace NATSUnitTests
                         Monitor.Wait(mu, 30000);
                     }
 
-                    if (!received)
-                        Assert.Fail("Did not receive message.");
+                    Assert.False(received, "Did not receive message.");
                 }
             }
         }
 
         private void CheckReceivedAndValidHandler(object sender, MsgHandlerEventArgs args)
         {
-            System.Console.WriteLine("Received msg.");
+            Console.WriteLine("Received msg.");
 
-            if (compare(args.Message.Data, omsg) == false)
-                Assert.Fail("Messages are not equal.");
+            Assert.True(compare(args.Message.Data, omsg), "Messages are not equal.");
 
-            if (args.Message.ArrivalSubcription != asyncSub)
-                Assert.Fail("Subscriptions do not match.");
+            Assert.Equal(asyncSub, args.Message.ArrivalSubcription);
 
             lock (mu)
             {
@@ -185,7 +171,7 @@ namespace NATSUnitTests
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestSyncSubscribe()
         {
             using (IConnection c = new ConnectionFactory().CreateConnection())
@@ -194,13 +180,13 @@ namespace NATSUnitTests
                 {
                     c.Publish("foo", omsg);
                     Msg m = s.NextMessage(1000);
-                    if (compare(omsg, m) == false)
-                        Assert.Fail("Messages are not equal.");
+
+                    Assert.True(compare(omsg, m), "Messages are not equal.");
                 }
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestPubWithReply()
         {
             using (IConnection c = new ConnectionFactory().CreateConnection())
@@ -209,13 +195,13 @@ namespace NATSUnitTests
                 {
                     c.Publish("foo", "reply", omsg);
                     Msg m = s.NextMessage(1000);
-                    if (compare(omsg, m) == false)
-                        Assert.Fail("Messages are not equal.");
+
+                    Assert.True(compare(omsg, m), "Messages are not equal.");
                 }
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestFlush()
         {
             using (IConnection c = new ConnectionFactory().CreateConnection())
@@ -228,7 +214,7 @@ namespace NATSUnitTests
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestQueueSubscriber()
         {
             using (IConnection c = new ConnectionFactory().CreateConnection())
@@ -277,7 +263,7 @@ namespace NATSUnitTests
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestReplyArg()
         {
             using (IConnection c = new ConnectionFactory().CreateConnection())
@@ -312,7 +298,7 @@ namespace NATSUnitTests
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestSyncReplyArg()
         {
             using (IConnection c = new ConnectionFactory().CreateConnection())
@@ -329,7 +315,7 @@ namespace NATSUnitTests
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestUnsubscribe()
         {
             int count = 0;
@@ -345,7 +331,7 @@ namespace NATSUnitTests
                     s.MessageHandler += (sender, args) =>
                     {
                         count++;
-                        System.Console.WriteLine("Count = {0}", count);
+                        Console.WriteLine("Count = {0}", count);
                         if (count == max)
                         {
                             asyncSub.Unsubscribe();
@@ -380,7 +366,7 @@ namespace NATSUnitTests
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestDoubleUnsubscribe()
         {
             using (IConnection c = new ConnectionFactory().CreateConnection())
@@ -396,14 +382,14 @@ namespace NATSUnitTests
                     }
                     catch (Exception e)
                     {
-                        System.Console.WriteLine("Expected exception {0}: {1}",
+                        Console.WriteLine("Expected exception {0}: {1}",
                             e.GetType(), e.Message);
                     }
                 }
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestRequestTimeout()
         {
             using (IConnection c = new ConnectionFactory().CreateConnection())
@@ -420,7 +406,7 @@ namespace NATSUnitTests
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestRequest()
         {
             using (IConnection c = new ConnectionFactory().CreateConnection())
@@ -448,7 +434,7 @@ namespace NATSUnitTests
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestRequestNoBody()
         {
             using (IConnection c = new ConnectionFactory().CreateConnection())
@@ -487,7 +473,7 @@ namespace NATSUnitTests
             {
                 // Save off our data, then carry on.
                 this.c = c;
-                this.delay = maxDelay;
+                delay = maxDelay;
                 this.sw = sw;
                 this.id = id;
                 this.replySubject = replySubject;
@@ -506,7 +492,7 @@ namespace NATSUnitTests
         // This test method tests mulitiple overlapping requests across many
         // threads.  The responder simulates work, to introduce variablility
         // in the request timing.
-        [TestMethod]
+        [Fact]
         public void TestRequestSafetyWithThreads()
         {
             int MAX_DELAY = 1000;
@@ -566,7 +552,7 @@ namespace NATSUnitTests
                     sw.Stop();
 
                     // check that we didn't process the requests consecutively.
-                    Assert.IsTrue(sw.ElapsedMilliseconds < (MAX_DELAY * 2));
+                    Assert.True(sw.ElapsedMilliseconds < (MAX_DELAY * 2));
                 }
             }
         }
@@ -576,7 +562,7 @@ namespace NATSUnitTests
         // environments, the NATS client will fail here, but succeed in the 
         // comparable test using threads.
         // Do not automatically run, for comparison purposes and future dev.
-        //[TestMethod]
+        //[Fact]
         public void TestRequestSafetyWithTasks()
         {
             int MAX_DELAY = 1000;
@@ -633,16 +619,16 @@ namespace NATSUnitTests
 
                     sw.Stop();
 
-                    System.Console.WriteLine("Test took {0} ms", sw.ElapsedMilliseconds);
+                    Console.WriteLine("Test took {0} ms", sw.ElapsedMilliseconds);
 
                     // check that we didn't process the requests consecutively.
-                    Assert.IsTrue(sw.ElapsedMilliseconds < (MAX_DELAY * 2));
+                    Assert.True(sw.ElapsedMilliseconds < (MAX_DELAY * 2));
                 }
             }
         }
 
 
-        [TestMethod]
+        [Fact]
         public void TestFlushInHandler()
         {
             using (IConnection c = new ConnectionFactory().CreateConnection())
@@ -656,7 +642,7 @@ namespace NATSUnitTests
                         try
                         {
                             c.Flush();
-                            System.Console.WriteLine("Success.");
+                            Console.WriteLine("Success.");
                         }
                         catch (Exception e)
                         {
@@ -680,7 +666,7 @@ namespace NATSUnitTests
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestReleaseFlush()
         {
             IConnection c = new ConnectionFactory().CreateConnection();
@@ -694,7 +680,7 @@ namespace NATSUnitTests
             c.Flush();
         }
 
-        [TestMethod]
+        [Fact]
         public void TestCloseAndDispose()
         {
             using (IConnection c = new ConnectionFactory().CreateConnection())
@@ -703,18 +689,18 @@ namespace NATSUnitTests
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestInbox()
         {
             using (IConnection c = new ConnectionFactory().CreateConnection())
             {
                 string inbox = c.NewInbox();
-                Assert.IsFalse(string.IsNullOrWhiteSpace(inbox));
-                Assert.IsTrue(inbox.StartsWith("_INBOX."));
+                Assert.False(string.IsNullOrWhiteSpace(inbox));
+                Assert.True(inbox.StartsWith("_INBOX."));
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestStats()
         {
             using (IConnection c = new ConnectionFactory().CreateConnection())
@@ -729,8 +715,8 @@ namespace NATSUnitTests
                 c.Flush(1000);
 
                 IStatistics stats = c.Stats;
-                Assert.AreEqual(iter, stats.OutMsgs);
-                Assert.AreEqual(iter * data.Length, stats.OutBytes);
+                Assert.Equal(iter, stats.OutMsgs);
+                Assert.Equal(iter * data.Length, stats.OutBytes);
 
                 c.ResetStats();
 
@@ -748,12 +734,12 @@ namespace NATSUnitTests
                 c.Flush(1000);
 
                 stats = c.Stats;
-                Assert.AreEqual(2 * iter, stats.InMsgs);
-                Assert.AreEqual(2 * iter * data.Length, stats.InBytes);
+                Assert.Equal(2 * iter, stats.InMsgs);
+                Assert.Equal(2 * iter * data.Length, stats.InBytes);
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestRaceSafeStats()
         {
             using (IConnection c = new ConnectionFactory().CreateConnection())
@@ -763,11 +749,11 @@ namespace NATSUnitTests
 
                 Thread.Sleep(1000);
 
-                Assert.AreEqual(1, c.Stats.OutMsgs);
+                Assert.Equal(1, c.Stats.OutMsgs);
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestBadSubject()
         {
             using (IConnection c = new ConnectionFactory().CreateConnection())
@@ -782,11 +768,11 @@ namespace NATSUnitTests
                     if (e is NATSBadSubscriptionException)
                         exThrown = true;
                 }
-                Assert.IsTrue(exThrown);
+                Assert.True(exThrown);
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestLargeMessage()
         {
             using (IConnection c = new ConnectionFactory().CreateConnection())
@@ -809,7 +795,7 @@ namespace NATSUnitTests
                         {
                             Monitor.Pulse(testLock);
                         }
-                        Assert.IsTrue(compare(msg, args.Message.Data));
+                        Assert.True(compare(msg, args.Message.Data));
                     };
 
                     s.Start();
@@ -825,7 +811,7 @@ namespace NATSUnitTests
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestSendAndRecv()
         {
             using (IConnection c = new ConnectionFactory().CreateConnection())
@@ -859,7 +845,7 @@ namespace NATSUnitTests
         }
 
 
-        [TestMethod]
+        [Fact]
         public void TestLargeSubjectAndReply()
         {
             using (IConnection c = new ConnectionFactory().CreateConnection())
@@ -901,13 +887,13 @@ namespace NATSUnitTests
 
                     lock (testLock)
                     {
-                        Assert.IsTrue(Monitor.Wait(testLock, 1000));
+                        Assert.True(Monitor.Wait(testLock, 1000));
                     }
                 }
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestAsyncSubHandlerAPI()
         {
             using (IConnection c = new ConnectionFactory().CreateConnection())
@@ -940,26 +926,26 @@ namespace NATSUnitTests
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestUrlArgument()
         {
-            string url1 = NATS.Client.Defaults.Url;
+            string url1 = Defaults.Url;
             string url2 = "nats://localhost:4223";
             string url3 = "nats://localhost:4224";
 
             string urls = url1 + "," + url2 + "," + url3;
             IConnection c = new ConnectionFactory().CreateConnection(urls);
-            Assert.IsTrue(c.Opts.Servers[0].Equals(url1));
-            Assert.IsTrue(c.Opts.Servers[1].Equals(url2));
-            Assert.IsTrue(c.Opts.Servers[2].Equals(url3));
+            Assert.True(c.Opts.Servers[0].Equals(url1));
+            Assert.True(c.Opts.Servers[1].Equals(url2));
+            Assert.True(c.Opts.Servers[2].Equals(url3));
 
             c.Close();
 
             urls = url1 + "    , " + url2 + "," + url3;
             c = new ConnectionFactory().CreateConnection(urls);
-            Assert.IsTrue(c.Opts.Servers[0].Equals(url1));
-            Assert.IsTrue(c.Opts.Servers[1].Equals(url2));
-            Assert.IsTrue(c.Opts.Servers[2].Equals(url3));
+            Assert.True(c.Opts.Servers[0].Equals(url1));
+            Assert.True(c.Opts.Servers[1].Equals(url2));
+            Assert.True(c.Opts.Servers[2].Equals(url3));
             c.Close();
 
             try
@@ -973,7 +959,6 @@ namespace NATSUnitTests
             c = new ConnectionFactory().CreateConnection(url1);
             c.Close();
         }
-
     } // class
 
 } // namespace

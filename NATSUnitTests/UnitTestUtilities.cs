@@ -7,9 +7,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Diagnostics;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Reflection;
 using System.IO;
+using Xunit;
 
 namespace NATSUnitTests
 {
@@ -21,8 +21,8 @@ namespace NATSUnitTests
 
         public NATSServer()
         {
-            ProcessStartInfo psInfo = createProcessStartInfo(null);
-            this.p = Process.Start(psInfo);
+            ProcessStartInfo psInfo = createProcessStartInfo();
+            p = Process.Start(psInfo);
             Thread.Sleep(500);
         }
 
@@ -42,38 +42,21 @@ namespace NATSUnitTests
 
         public NATSServer(int port)
         {
-            ProcessStartInfo psInfo = createProcessStartInfo(null);
+            ProcessStartInfo psInfo = createProcessStartInfo();
 
             addArgument(psInfo, "-p " + port);
 
-            this.p = Process.Start(psInfo);
+            p = Process.Start(psInfo);
         }
 
-        private TestContext testContextInstance;
-        /// <summary>
-        ///Gets or sets the test context which provides
-        ///information about and functionality for the current test run.
-        ///</summary>
-        public TestContext TestContext
+        public NATSServer(string args)
         {
-            get
-            {
-                return testContextInstance;
-            }
-            set
-            {
-                testContextInstance = value;
-            }
-        }
-
-        public NATSServer(TestContext context, string args)
-        {
-            ProcessStartInfo psInfo = this.createProcessStartInfo(context);
+            ProcessStartInfo psInfo = createProcessStartInfo();
             addArgument(psInfo, args);
             p = Process.Start(psInfo);
         }
 
-        private ProcessStartInfo createProcessStartInfo(TestContext context)
+        private ProcessStartInfo createProcessStartInfo()
         {
             string gnatsd = Properties.Settings.Default.gnatsd;
             ProcessStartInfo psInfo = new ProcessStartInfo(gnatsd);
@@ -87,11 +70,7 @@ namespace NATSUnitTests
                 psInfo.WindowStyle = ProcessWindowStyle.Hidden;
             }
 
-            if (context != null)
-            {
-                psInfo.WorkingDirectory =
-                    UnitTestUtilities.GetConfigDir(context);
-            }
+            psInfo.WorkingDirectory = UnitTestUtilities.GetConfigDir();
 
             return psInfo;
         }
@@ -128,7 +107,7 @@ namespace NATSUnitTests
                 if (completed)
                     return;
 
-                Assert.IsTrue(Monitor.Wait(objLock, timeout));
+                Assert.True(Monitor.Wait(objLock, timeout));
             }
         }
 
@@ -156,12 +135,10 @@ namespace NATSUnitTests
         static NATSServer defaultServer = null;
         Process authServerProcess = null;
 
-        static internal string GetConfigDir(TestContext context)
+        internal static string GetConfigDir()
         {
-            string baseDir = context.TestRunDirectory.Substring(
-                0, context.TestRunDirectory.IndexOf("\\TestResults"));
-
-            return baseDir + "\\NATSUnitTests\\config";
+            var runningDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            return Path.Combine(runningDirectory, "config");
         }
 
         public void StartDefaultServer()
@@ -200,40 +177,25 @@ namespace NATSUnitTests
         {
             authServerProcess = Process.Start("gnatsd -config auth.conf");
         }
-
-        internal static void testExpectedException(Action call, Type exType)
-        {
-            try {
-               call.Invoke();
-            }
-            catch (Exception e)
-            {
-                System.Console.WriteLine(e);
-                Assert.IsInstanceOfType(e, exType);
-                return;
-            }
-
-            Assert.Fail("No exception thrown!");
-        }
-
+        
         internal NATSServer CreateServerOnPort(int p)
         {
             return new NATSServer(p);
         }
 
-        internal NATSServer CreateServerWithConfig(TestContext context, string configFile)
+        internal NATSServer CreateServerWithConfig(string configFile)
         {
-            return new NATSServer(context, " -config " + configFile);
+            return new NATSServer(" -config " + configFile);
         }
 
-        internal NATSServer CreateServerWithArgs(TestContext context, string args)
+        internal NATSServer CreateServerWithArgs(string args)
         {
-            return new NATSServer(context, " " + args);
+            return new NATSServer(" " + args);
         }
 
-        internal static String GetFullCertificatePath(TestContext context, string certificateName)
+        internal static String GetFullCertificatePath(string certificateName)
         {
-            return GetConfigDir(context) + "\\certs\\" + certificateName;
+            return GetConfigDir() + "\\certs\\" + certificateName;
         }
 
         internal static void CleanupExistingServers()
