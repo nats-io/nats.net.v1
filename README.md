@@ -519,13 +519,14 @@ Lat8k (us)	500 msgs, 363.56 avg, 131.50 min, 39428.50 max, 1990.81 stddev
 ```
 
 ## TODO
-* [ ] Another performance pass - look at stream directly over socket, contention, fastpath optimizations.
+* [ ] Another performance pass - look at stream directly over socket, contention, fastpath optimizations, rw locks.
 * [ ] Expand Unit Tests to test internals (namely Parsing)
 * [ ] WCF bindings
-* [ ] Travis CI, convert unit tests
+* [ ] Travis CI, convert unit tests to xunit
 * [ ] Allow configuration for performance tuning (buffer sizes), defaults based on plaform.
 * [ ] [.NET Core](https://github.com/dotnet/core) compatibility, TLS required.
-* [ ] Enable client tracing for salient events around connections, subscriptions, errors, etc.
+* [ ] Azure Service Bus Connector
+* [ ] Visual Studio [Starter Kit](https://msdn.microsoft.com/en-us/library/ccd9ychb.aspx)
 * [X] Comprehensive benchmarking
 * [X] TLS
 * [X] Encoding (Serialization/Deserialization)
