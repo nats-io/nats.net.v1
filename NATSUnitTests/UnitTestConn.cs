@@ -125,49 +125,27 @@ namespace NATSUnitTests
 
             // While we can annotate all the exceptions in the test framework,
             // just do it manually.
-            UnitTestUtilities.testExpectedException(
-                () => { c.Publish("foo", null); }, 
-                typeof(NATSConnectionClosedException));
+            Assert.ThrowsAny<NATSConnectionClosedException>(() => c.Publish("foo", null));
 
-            UnitTestUtilities.testExpectedException(
-                () => { c.Publish(new Msg("foo")); }, 
-                typeof(NATSConnectionClosedException));
+            Assert.ThrowsAny<NATSConnectionClosedException>(() => c.Publish(new Msg("foo")));
 
-            UnitTestUtilities.testExpectedException(
-                () => { c.SubscribeAsync("foo"); },
-                typeof(NATSConnectionClosedException));
+            Assert.ThrowsAny<NATSConnectionClosedException>(() => c.SubscribeAsync("foo"));
 
-            UnitTestUtilities.testExpectedException(
-                () => { c.SubscribeSync("foo"); }, 
-                typeof(NATSConnectionClosedException));
+            Assert.ThrowsAny<NATSConnectionClosedException>(() => c.SubscribeSync("foo"));
 
-            UnitTestUtilities.testExpectedException(
-                () => { c.SubscribeAsync("foo", "bar"); },
-                typeof(NATSConnectionClosedException));
+            Assert.ThrowsAny<NATSConnectionClosedException>(() => c.SubscribeAsync("foo", "bar"));
 
-            UnitTestUtilities.testExpectedException(
-                () => { c.SubscribeSync("foo", "bar"); }, 
-                typeof(NATSConnectionClosedException));
+            Assert.ThrowsAny<NATSConnectionClosedException>(() => c.SubscribeSync("foo", "bar"));
 
-            UnitTestUtilities.testExpectedException(
-                () => { c.Request("foo", null); }, 
-                typeof(NATSConnectionClosedException));
+            Assert.ThrowsAny<NATSConnectionClosedException>(() => c.Request("foo", null));
 
-            UnitTestUtilities.testExpectedException(
-                () => { s.NextMessage(); },
-                typeof(NATSConnectionClosedException));
+            Assert.ThrowsAny<NATSConnectionClosedException>(() => s.NextMessage());
 
-            UnitTestUtilities.testExpectedException(
-                () => { s.NextMessage(100); },
-                typeof(NATSConnectionClosedException));
+            Assert.ThrowsAny<NATSConnectionClosedException>(() => s.NextMessage(100));
 
-            UnitTestUtilities.testExpectedException(
-                () => { s.Unsubscribe(); }, 
-                typeof(NATSConnectionClosedException));
+            Assert.ThrowsAny<NATSConnectionClosedException>(() => s.Unsubscribe());
 
-            UnitTestUtilities.testExpectedException(
-                () => { s.AutoUnsubscribe(1); }, 
-                typeof(NATSConnectionClosedException));
+            Assert.ThrowsAny<NATSConnectionClosedException>(() => s.AutoUnsubscribe(1));
         }
 
         [Fact]

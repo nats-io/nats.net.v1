@@ -29,27 +29,19 @@ namespace NATSUnitTests
                 Options opts = ConnectionFactory.GetDefaultOptions();
                 opts.Url = url;
                 opts.DisconnectedEventHandler += handleDisconnect;
-                IConnection c = new ConnectionFactory().CreateConnection(url);
+                IConnection c = null;
 
-                Assert.Fail("Expected a failure; did not receive one");
-                
+                Assert.ThrowsAny<Exception>(() => c = new ConnectionFactory().CreateConnection(url));
+
                 c.Close();
             }
             catch (Exception e)
             {
-                if (e.Message.Contains("Authorization"))
-                {
-                    System.Console.WriteLine("Success with expected failure: " + e.Message);
-                }
-                else
-                {
-                    Assert.Fail("Unexpected exception thrown: " + e);
-                }
+                Assert.True(e.Message.Contains("Authorization"));
             }
             finally
             {
-                if (hitDisconnect > 0)
-                    Assert.Fail("The disconnect event handler was incorrectly invoked.");
+                Assert.False(hitDisconnect > 0, "The disconnect event handler was incorrectly invoked.");
             }
         }
 

@@ -40,16 +40,12 @@ namespace NATSUnitTests
 
             o.NoRandomize = true;
 
-            UnitTestUtilities.testExpectedException(
-                () => { cf.CreateConnection(); },
-                typeof(NATSNoServersException));
+            Assert.ThrowsAny<NATSNoServersException>(() => cf.CreateConnection());
 
             o.Servers = testServers;
 
-            UnitTestUtilities.testExpectedException(
-                () => { cf.CreateConnection(o); },
-                typeof(NATSNoServersException));
-
+            Assert.ThrowsAny<NATSNoServersException>(() => cf.CreateConnection(o));
+            
             // Make sure we can connect to first server if running
             using (NATSServer ns = utils.CreateServerOnPort(1222))
             {
@@ -83,9 +79,7 @@ namespace NATSUnitTests
             using (NATSServer as1 = utils.CreateServerWithConfig("auth_1222.conf"),
                               as2 = utils.CreateServerWithConfig("auth_1224.conf"))
             {
-                UnitTestUtilities.testExpectedException(
-                    () => { new ConnectionFactory().CreateConnection(opts); },
-                    typeof(NATSException));
+                Assert.ThrowsAny<NATSException>(() => new ConnectionFactory().CreateConnection(opts));
 
                 // Test that we can connect to a subsequent correct server.
                 string[] authServers = new string[] {

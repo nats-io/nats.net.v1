@@ -16,7 +16,7 @@ namespace NATSUnitTests
     public class TestBasic : IDisposable
     {
         UnitTestUtilities utils = new UnitTestUtilities();
-        
+
         public TestBasic()
         {
             UnitTestUtilities.CleanupExistingServers();
@@ -27,19 +27,19 @@ namespace NATSUnitTests
         {
             utils.StopDefaultServer();
         }
-        
+
 
         [Fact]
         public void TestConnectedServer()
         {
             IConnection c = new ConnectionFactory().CreateConnection();
-           
+
             string u = c.ConnectedUrl;
-            
+
             Assert.False(string.IsNullOrWhiteSpace(u), $"Invalid connected url {u}.");
 
             Assert.NotEqual(Defaults.Url, u);
-            
+
             c.Close();
             u = c.ConnectedUrl;
 
@@ -50,7 +50,7 @@ namespace NATSUnitTests
         public void TestMultipleClose()
         {
             IConnection c = new ConnectionFactory().CreateConnection();
-            
+
             Task[] tasks = new Task[10];
 
             for (int i = 0; i < 10; i++)
@@ -68,7 +68,7 @@ namespace NATSUnitTests
         {
             Options opts = ConnectionFactory.GetDefaultOptions();
 
-            Assert.Throws<Exception>(() => opts.Timeout = -1); 
+            Assert.Throws<Exception>(() => opts.Timeout = -1);
         }
 
         [Fact]
@@ -225,8 +225,7 @@ namespace NATSUnitTests
                     c.Publish("foo", omsg);
                     c.Flush(1000);
 
-                    if (s1.QueuedMessageCount + s2.QueuedMessageCount != 1)
-                        Assert.Fail("Invalid message count in queue.");
+                    Assert.Equal(1, s1.QueuedMessageCount + s2.QueuedMessageCount);
 
                     // Drain the messages.
                     try { s1.NextMessage(100); }
@@ -244,21 +243,13 @@ namespace NATSUnitTests
                     c.Flush(1000);
 
                     Thread.Sleep(1000);
-                    
+
                     int r1 = s1.QueuedMessageCount;
                     int r2 = s2.QueuedMessageCount;
 
-                    if ((r1 + r2) != total)
-                    {
-                        Assert.Fail("Incorrect number of messages: {0} vs {1}",
-                            (r1 + r2), total);
-                    }
+                    Assert.Equal(total, r1 + r2);
 
-                    if (Math.Abs(r1 - r2) > (total * .15))
-                    {
-                        Assert.Fail("Too much variance between {0} and {1}",
-                            r1, r2);
-                    }
+                    Assert.False(Math.Abs(r1 - r2) > total * .15, $"Too much variance between {r1} and {r2}");
                 }
             }
         }
@@ -273,7 +264,7 @@ namespace NATSUnitTests
                     s.MessageHandler += ExpectedReplyHandler;
                     s.Start();
 
-                    lock(mu)
+                    lock (mu)
                     {
                         received = false;
                         c.Publish("foo", "bar", null);
@@ -282,16 +273,14 @@ namespace NATSUnitTests
                 }
             }
 
-            if (!received)
-                Assert.Fail("Message not received.");
+            Assert.True(received);
         }
 
         private void ExpectedReplyHandler(object sender, MsgHandlerEventArgs args)
         {
-            if ("bar".Equals(args.Message.Reply) == false)
-                Assert.Fail("Expected \"bar\", received: " + args.Message);
+            Assert.Equal("bar", args.Message.Reply);
 
-            lock(mu)
+            lock (mu)
             {
                 received = true;
                 Monitor.Pulse(mu);
@@ -309,8 +298,8 @@ namespace NATSUnitTests
                     c.Flush(30000);
 
                     Msg m = s.NextMessage(1000);
-                    if ("bar".Equals(m.Reply) == false)
-                        Assert.Fail("Expected \"bar\", received: " + m);
+
+                    Assert.Equal("bar", m.Reply);
                 }
             }
         }
@@ -361,8 +350,7 @@ namespace NATSUnitTests
                     }
                 }
 
-                if (count != max)
-                    Assert.Fail("Received wrong # of messages after unsubscribe: {0} vs {1}", count, max);
+                Assert.Equal(max, count);
             }
         }
 
@@ -375,16 +363,7 @@ namespace NATSUnitTests
                 {
                     s.Unsubscribe();
 
-                    try
-                    {
-                        s.Unsubscribe();
-                        Assert.Fail("No Exception thrown.");
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine("Expected exception {0}: {1}",
-                            e.GetType(), e.Message);
-                    }
+                    Assert.ThrowsAny<Exception>(() => s.Unsubscribe());
                 }
             }
         }
@@ -394,15 +373,7 @@ namespace NATSUnitTests
         {
             using (IConnection c = new ConnectionFactory().CreateConnection())
             {
-                try
-                {
-                    c.Request("foo", null, 500);
-                    Assert.Fail("Expected an exception.");
-                }
-                catch (NATSTimeoutException) 
-                {
-                    Console.WriteLine("Received expected exception.");
-                }
+                Assert.ThrowsAny<Exception>(() => c.Request("foo", null, 500));
             }
         }
 
@@ -426,10 +397,7 @@ namespace NATSUnitTests
                     Msg m = c.Request("foo", Encoding.UTF8.GetBytes("help."),
                         5000);
 
-                    if (!compare(m.Data, response))
-                    {
-                        Assert.Fail("Response isn't valid");
-                    }
+                    Assert.True(compare(m.Data, response), "Response isn't valid");
                 }
             }
         }
@@ -452,10 +420,7 @@ namespace NATSUnitTests
 
                     Msg m = c.Request("foo", null, 50000);
 
-                    if (!compare(m.Data, response))
-                    {
-                        Assert.Fail("Response isn't valid");
-                    }
+                    Assert.True(compare(m.Data, response), "Response isn't valid");
                 }
             }
         }
@@ -483,7 +448,7 @@ namespace NATSUnitTests
             {
                 // delay the response to simulate a heavy workload and introduce
                 // variability
-                Thread.Sleep(r.Next( (delay/5), delay));
+                Thread.Sleep(r.Next((delay / 5), delay));
                 c.Publish(replySubject, Encoding.UTF8.GetBytes("reply"));
                 c.Flush();
             }
@@ -506,11 +471,12 @@ namespace NATSUnitTests
             using (IConnection c1 = new ConnectionFactory().CreateConnection(),
                                c2 = new ConnectionFactory().CreateConnection())
             {
-                using (IAsyncSubscription s = c1.SubscribeAsync("foo", (sender, args) => {
+                using (IAsyncSubscription s = c1.SubscribeAsync("foo", (sender, args) =>
+                {
                     // We cannot block this thread... so copy our data, and spawn a thread
                     // to handle a delay and responding.
                     TestReplier t = new TestReplier(c1, MAX_DELAY,
-                        Encoding.UTF8.GetString(args.Message.Data), 
+                        Encoding.UTF8.GetString(args.Message.Data),
                         args.Message.Reply,
                         sw);
                     new Thread(() => { t.process(); }).Start();
@@ -519,7 +485,7 @@ namespace NATSUnitTests
                     c1.Flush();
 
                     // use lower level threads over tasks here for predictibility
-                    Thread[] threads = new Thread[TEST_COUNT];                  
+                    Thread[] threads = new Thread[TEST_COUNT];
                     Random r = new Random();
 
                     for (int i = 0; i < TEST_COUNT; i++)
@@ -639,15 +605,7 @@ namespace NATSUnitTests
 
                     s.MessageHandler += (sender, args) =>
                     {
-                        try
-                        {
-                            c.Flush();
-                            Console.WriteLine("Success.");
-                        }
-                        catch (Exception e)
-                        {
-                            Assert.Fail("Unexpected exception: " + e);
-                        }
+                        c.Flush();
 
                         lock (mu)
                         {
@@ -783,7 +741,7 @@ namespace NATSUnitTests
                 for (int i = 0; i < msgSize; i++)
                     msg[i] = (byte)'A';
 
-                msg[msgSize-1] = (byte)'Z';
+                msg[msgSize - 1] = (byte)'Z';
 
                 using (IAsyncSubscription s = c.SubscribeAsync("foo"))
                 {
@@ -791,7 +749,7 @@ namespace NATSUnitTests
 
                     s.MessageHandler += (sender, args) =>
                     {
-                        lock(testLock)
+                        lock (testLock)
                         {
                             Monitor.Pulse(testLock);
                         }
@@ -803,7 +761,7 @@ namespace NATSUnitTests
                     c.Publish("foo", msg);
                     c.Flush(1000);
 
-                    lock(testLock)
+                    lock (testLock)
                     {
                         Monitor.Wait(testLock, 2000);
                     }
@@ -836,10 +794,7 @@ namespace NATSUnitTests
 
                     Thread.Sleep(500);
 
-                    if (received != count)
-                    {
-                        Assert.Fail("Received ({0}) != count ({1})", received, count);
-                    }
+                    Assert.Equal(count, received);
                 }
             }
         }
@@ -868,11 +823,9 @@ namespace NATSUnitTests
 
                     s.MessageHandler += (sender, args) =>
                     {
-                        if (!subject.Equals(args.Message.Subject))
-                            Assert.Fail("Invalid subject received.");
+                        Assert.Equal(subject, args.Message.Subject);
 
-                        if (!reply.Equals(args.Message.Reply))
-                            Assert.Fail("Invalid subject received.");
+                        Assert.Equal(reply, args.Message.Reply);
 
                         lock (testLock)
                         {
@@ -919,10 +872,7 @@ namespace NATSUnitTests
                     Thread.Sleep(500);
                 }
 
-                if (received != 2)
-                {
-                    Assert.Fail("Received ({0}) != 2", received);
-                }
+                Assert.Equal(2, received);
             }
         }
 
@@ -948,13 +898,9 @@ namespace NATSUnitTests
             Assert.True(c.Opts.Servers[2].Equals(url3));
             c.Close();
 
-            try
-            {
-                urls = "  " + url1 + "    , " + url2 + ",";
-                c = new ConnectionFactory().CreateConnection(urls);
-                Assert.Fail("Invalid url was not detected");
-            }
-            catch (Exception) { }
+            urls = "  " + url1 + "    , " + url2 + ",";
+
+            Assert.ThrowsAny<Exception>(() => new ConnectionFactory().CreateConnection(urls));
 
             c = new ConnectionFactory().CreateConnection(url1);
             c.Close();

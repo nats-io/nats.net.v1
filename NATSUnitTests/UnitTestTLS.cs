@@ -31,27 +31,19 @@ namespace NATSUnitTests
                 Options opts = ConnectionFactory.GetDefaultOptions();
                 opts.Url = url;
                 opts.DisconnectedEventHandler += handleDisconnect;
-                IConnection c = new ConnectionFactory().CreateConnection(url);
+                IConnection c = null;
 
-                Assert.Fail("Expected a failure; did not receive one");
+                Assert.ThrowsAny<Exception>(() => c = new ConnectionFactory().CreateConnection(url));
                 
                 c.Close();
             }
             catch (Exception e)
             {
-                if (e.Message.Contains("Authorization"))
-                {
-                    Console.WriteLine("Success with expected failure: " + e.Message);
-                }
-                else
-                {
-                    Assert.Fail("Unexpected exception thrown: " + e);
-                }
+                Assert.True(e.Message.Contains("Authorization"));
             }
             finally
             {
-                if (hitDisconnect > 0)
-                    Assert.Fail("The disconnect event handler was incorrectly invoked.");
+                Assert.False(hitDisconnect > 0, "The disconnect event handler was incorrectly invoked.");
             }
         }
 
@@ -133,17 +125,7 @@ namespace NATSUnitTests
                 // key.
                 opts.AddCertificate(UnitTestUtilities.GetFullCertificatePath("client-cert.pem"));
 
-                try
-                {
-                    new ConnectionFactory().CreateConnection(opts);
-                }
-                catch (NATSException nae)     
-                {
-                    Console.WriteLine("Caught expected exception: " + nae.Message);
-                    return;
-                }
-
-                Assert.Fail("Did not receive exception.");
+                Assert.ThrowsAny<NATSException>(() => new ConnectionFactory().CreateConnection(opts));
             }
         }
 
@@ -161,18 +143,7 @@ namespace NATSUnitTests
                 // key.
                 opts.AddCertificate(UnitTestUtilities.GetFullCertificatePath("client-cert.pem"));
 
-                try
-                {
-                    new ConnectionFactory().CreateConnection(opts);
-                }
-                catch (NATSException nae)
-                {
-                    Console.WriteLine("Caught expected exception: " + nae.Message);
-                    Console.WriteLine("Exception output:" + nae);
-                    return;
-                }
-
-                Assert.Fail("Did not receive exception.");
+                Assert.ThrowsAny<NATSException>(() => new ConnectionFactory().CreateConnection(opts));
             }
         }
 
