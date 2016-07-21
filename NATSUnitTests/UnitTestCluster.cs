@@ -90,7 +90,7 @@ namespace NATSUnitTests
 
                 using (IConnection c = new ConnectionFactory().CreateConnection(opts))
                 {
-                    Assert.True(c.ConnectedUrl.Equals(authServers[1]));
+                    Assert.Equal(authServers[1], c.ConnectedUrl);
                 }
             }
         }

@@ -137,7 +137,9 @@ namespace NATSUnitTests
 
         internal static string GetConfigDir()
         {
-            var runningDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            var codeBaseUrl = new Uri(Assembly.GetExecutingAssembly().CodeBase);
+            var codeBasePath = Uri.UnescapeDataString(codeBaseUrl.AbsolutePath);
+            var runningDirectory = Path.GetDirectoryName(codeBasePath);
             return Path.Combine(runningDirectory, "config");
         }
 

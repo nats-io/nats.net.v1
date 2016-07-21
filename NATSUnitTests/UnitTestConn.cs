@@ -190,20 +190,20 @@ namespace NATSUnitTests
                     Thread.Sleep(100);
                     if (firstDisconnect)
                     {
-                        System.Console.WriteLine("First disconnect.");
+                        Console.WriteLine("First disconnect.");
                         firstDisconnect = false;
                         dtime1 = DateTime.Now.Ticks;
                     }
                     else
                     {
-                        System.Console.WriteLine("Second disconnect.");
+                        Console.WriteLine("Second disconnect.");
                         dtime2 = DateTime.Now.Ticks;
                     }
                 };
 
                 o.ReconnectedEventHandler += (sender, args) =>
                 {
-                    System.Console.WriteLine("Reconnected.");
+                    Console.WriteLine("Reconnected.");
                     Thread.Sleep(50);
                     rtime = DateTime.Now.Ticks;
                     reconnected.notify();
@@ -213,14 +213,14 @@ namespace NATSUnitTests
                 {
                     if (args.Subscription.Subject.Equals("foo"))
                     {
-                        System.Console.WriteLine("Error handler foo.");
+                        Console.WriteLine("Error handler foo.");
                         Thread.Sleep(200);
                         atime1 = DateTime.Now.Ticks;
                         asyncErr1.notify();
                     }
                     else
                     {
-                        System.Console.WriteLine("Error handler bar.");
+                        Console.WriteLine("Error handler bar.");
                         atime2 = DateTime.Now.Ticks;
                         asyncErr2.notify();
                     }
@@ -228,7 +228,7 @@ namespace NATSUnitTests
 
                 o.ClosedEventHandler += (sender, args) =>
                 {
-                    System.Console.WriteLine("Closed handler.");
+                    Console.WriteLine("Closed handler.");
                     ctime = DateTime.Now.Ticks;
                     closed.notify();
                 };
@@ -251,7 +251,7 @@ namespace NATSUnitTests
 
                     EventHandler<MsgHandlerEventArgs> eh = (sender, args) =>
                     {
-                        System.Console.WriteLine("Received message on subject: " + args.Message.Subject);
+                        Console.WriteLine("Received message on subject: " + args.Message.Subject);
                         recvCh.notify();
                         if (args.Message.Subject.Equals("foo"))
                         {
@@ -298,14 +298,14 @@ namespace NATSUnitTests
                 if (dtime1 == orig || dtime2 == orig || rtime == orig || 
                     atime1 == orig || atime2 == orig || ctime == orig)
                 {
-                    System.Console.WriteLine("Error = callback didn't fire: {0}\n{1}\n{2}\n{3}\n{4}\n{5}\n",
+                    Console.WriteLine("Error = callback didn't fire: {0}\n{1}\n{2}\n{3}\n{4}\n{5}\n",
                         dtime1, dtime2, rtime, atime1, atime2, ctime);
                     throw new Exception("Callback didn't fire.");
                 }
 
                 if (rtime < dtime1 || dtime2 < rtime || atime2 < atime1|| ctime < atime2) 
                 {
-                    System.Console.WriteLine("Wrong callback order:{0}\n{1}\n{2}\n{3}\n{4}\n{5}\n",
+                    Console.WriteLine("Wrong callback order:{0}\n{1}\n{2}\n{3}\n{4}\n{5}\n",
                         dtime1, rtime, atime1, atime2, dtime2, ctime);
                     throw new Exception("Invalid callback order.");
  	            }

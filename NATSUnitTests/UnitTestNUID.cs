@@ -1,17 +1,12 @@
 ﻿// Copyright 2015 Apcera Inc. All rights reserved.
 
 using System;
-using NATS.Client;
-using System.Threading;
-using System.Text;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Xml.Serialization;
-using System.IO;
-using System.Diagnostics;
 using System.Collections.Generic;
+using System.Diagnostics;
+using NATS.Client;
 using Xunit;
 
-namespace NATS.Client
+namespace NATSUnitTests
 {
     /// <summary>
     /// Run these tests with the gnatsd auth.conf configuration file.
