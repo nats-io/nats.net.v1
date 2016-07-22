@@ -515,12 +515,6 @@ namespace NATSUnitTests
                 Assert.ThrowsAny<Exception>(() => s.PendingByteLimit);
 
                 Assert.ThrowsAny<Exception>(() => s.SetPendingLimits(1, 10));
-
-                Assert.ThrowsAny<Exception>(() => s.ClearMaxPending());
-
-                Assert.ThrowsAny<Exception>(() => s.Delivered);
-
-                Assert.ThrowsAny<Exception>(() => s.Dropped);
             }
         }
 
