@@ -36,7 +36,7 @@ namespace NATSUnitTests
 
             string u = c.ConnectedUrl;
 
-            Assert.False(string.IsNullOrWhiteSpace(u), $"Invalid connected url {u}.");
+            Assert.False(string.IsNullOrWhiteSpace(u), string.Format("Invalid connected url {0}.", u));
 
             Assert.Equal(Defaults.Url, u);
 
@@ -249,7 +249,7 @@ namespace NATSUnitTests
 
                     Assert.Equal(total, r1 + r2);
 
-                    Assert.False(Math.Abs(r1 - r2) > total * .15, $"Too much variance between {r1} and {r2}");
+                    Assert.False(Math.Abs(r1 - r2) > total * .15, string.Format("Too much variance between {0} and {1}", r1, r2));
                 }
             }
         }

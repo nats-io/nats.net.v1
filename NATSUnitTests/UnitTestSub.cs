@@ -228,7 +228,8 @@ namespace NATSUnitTests
                     subCond.notify();
 
                     Assert.False(sw.ElapsedMilliseconds >= flushTimeout,
-                        $"elapsed ({sw.ElapsedMilliseconds}) > timeout ({flushTimeout})");
+                        string.Format("elapsed ({0}) > timeout ({1})",
+                            sw.ElapsedMilliseconds, flushTimeout));
 
                 }
             }

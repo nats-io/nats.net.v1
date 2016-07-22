@@ -95,7 +95,7 @@ namespace NATSUnitTests
             for (int i = 0; i < count; i++)
             {
                 String n = NUID.NextGlobal;
-                Assert.False(m.ContainsKey(n), $"Duplicate NUID found: {n}");
+                Assert.False(m.ContainsKey(n), string.Format("Duplicate NUID found: {0}", n));
 
                 m.Add(n, true);
             }
