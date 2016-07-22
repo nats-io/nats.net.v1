@@ -1,20 +1,19 @@
 ﻿// Copyright 2015 Apcera Inc. All rights reserved.
 
 using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NATS.Client;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Collections.Generic;
+using Xunit;
 
 namespace NATSUnitTests
 {
     /// <summary>
     /// Run these tests with the gnatsd auth.conf configuration file.
     /// </summary>
-    [TestClass]
     public class TestReconnect
     {
 
@@ -32,14 +31,13 @@ namespace NATSUnitTests
         }
 
         UnitTestUtilities utils = new UnitTestUtilities();
-
-        [TestInitialize()]
-        public void Initialize()
+        
+        public TestReconnect()
         {
             UnitTestUtilities.CleanupExistingServers();
         }
 
-        [TestMethod]
+        [Fact]
         public void TestReconnectDisallowedFlags()
         {
             Options opts = ConnectionFactory.GetDefaultOptions();
@@ -63,13 +61,13 @@ namespace NATSUnitTests
                     lock (testLock)
                     {
                         ns.Shutdown();
-                        Assert.IsTrue(Monitor.Wait(testLock, 1000));
+                        Assert.True(Monitor.Wait(testLock, 1000));
                     }
                 }
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestReconnectAllowedFlags()
         {
             Options opts = ConnectionFactory.GetDefaultOptions();
@@ -94,16 +92,16 @@ namespace NATSUnitTests
                     lock (testLock)
                     {
                         ns.Shutdown();
-                        Assert.IsFalse(Monitor.Wait(testLock, 1000));
+                        Assert.False(Monitor.Wait(testLock, 1000));
                     }
 
-                    Assert.IsTrue(c.State == ConnState.RECONNECTING);
+                    Assert.True(c.State == ConnState.RECONNECTING);
                     c.Opts.ClosedEventHandler = null;
                 }
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestBasicReconnectFunctionality()
         {
             Options opts = ConnectionFactory.GetDefaultOptions();
@@ -147,7 +145,7 @@ namespace NATSUnitTests
                 lock (testLock)
                 {
                     ns.Shutdown();
-                    Assert.IsTrue(Monitor.Wait(testLock, 100000));
+                    Assert.True(Monitor.Wait(testLock, 100000));
                 }
 
                 System.Console.WriteLine("Sending message.");
@@ -159,17 +157,17 @@ namespace NATSUnitTests
                     lock (msgLock)
                     {
                         c.Flush(50000);
-                        Assert.IsTrue(Monitor.Wait(msgLock, 10000));
+                        Assert.True(Monitor.Wait(msgLock, 10000));
                     }
 
-                    Assert.IsTrue(c.Stats.Reconnects == 1);
+                    Assert.True(c.Stats.Reconnects == 1);
                 }
             }
         }
 
         int received = 0;
 
-        [TestMethod]
+        [Fact]
         public void TestExtendedReconnectFunctionality()
         {
             Options opts = reconnectOptions;
@@ -220,7 +218,7 @@ namespace NATSUnitTests
                     ns.Shutdown();
                     // server is stopped here.
 
-                    Assert.IsTrue(Monitor.Wait(disconnectedLock, 20000));
+                    Assert.True(Monitor.Wait(disconnectedLock, 20000));
                 }
 
                 // subscribe to bar while connected.
@@ -240,7 +238,7 @@ namespace NATSUnitTests
                     // wait for reconnect
                     lock (reconnectedLock)
                     {
-                        Assert.IsTrue(Monitor.Wait(reconnectedLock, 60000));
+                        Assert.True(Monitor.Wait(reconnectedLock, 60000));
                     }
 
                     c.Publish("foobar", payload);
@@ -263,15 +261,12 @@ namespace NATSUnitTests
                         lock (doneLock)
                         {
                             c.Publish("done", payload);
-                            Assert.IsTrue(Monitor.Wait(doneLock, 2000));
+                            Assert.True(Monitor.Wait(doneLock, 2000));
                         }
                     }
                 } // NATSServer
-
-                if (received != 4)
-                {
-                    Assert.Fail("Expected 4, received {0}.", received);
-                }
+                
+                Assert.Equal(4, received);
             }
         }
 
@@ -291,11 +286,8 @@ namespace NATSUnitTests
             {
                 for (int i = 0; i < numSent; i++)
                 {
-                    if (results.ContainsKey(i) == false)
-                    {
-                        Assert.Fail("Received incorrect number of messages, [%d] for seq: %d\n",
-                            results[i], i);
-                    }
+                    Assert.True(results.ContainsKey(i),
+                        $"Received incorrect number of messages, {results[i]} for seq: {i}");
                 }
 
                 results.Clear();
@@ -326,7 +318,7 @@ namespace NATSUnitTests
             checkResults(numToSend);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestQueueSubsOnReconnect()
         {
             Object reconnectLock = new Object();
@@ -378,14 +370,14 @@ namespace NATSUnitTests
                 // wait for reconnect
                 lock (reconnectLock)
                 {
-                    Assert.IsTrue(Monitor.Wait(reconnectLock, 3000));
+                    Assert.True(Monitor.Wait(reconnectLock, 3000));
                 }
 
                 sendAndCheckMsgs(ec, subj, 10);
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestClose()
         {
             Options opts = ConnectionFactory.GetDefaultOptions();
@@ -396,29 +388,25 @@ namespace NATSUnitTests
             using (NATSServer s1 = utils.CreateServerOnPort(22222))
             {
                 IConnection c = new ConnectionFactory().CreateConnection(opts);
-                Assert.IsFalse(c.IsClosed());
+                Assert.False(c.IsClosed());
                 
                 s1.Shutdown();
 
                 Thread.Sleep(100);
-                if (c.IsClosed())
-                {
-                    Assert.Fail("Invalid state, expecting not closed, received: "
-                        + c.State.ToString());
-                }
+                Assert.False(c.IsClosed(), $"Invalid state, expecting not closed, received: {c.State}");
                 
                 using (NATSServer s2 = utils.CreateServerOnPort(22222))
                 {
                     Thread.Sleep(1000);
-                    Assert.IsFalse(c.IsClosed());
+                    Assert.False(c.IsClosed());
                 
                     c.Close();
-                    Assert.IsTrue(c.IsClosed());
+                    Assert.True(c.IsClosed());
                 }
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestIsReconnectingAndStatus()
         {
             bool disconnected = false;
@@ -458,19 +446,19 @@ namespace NATSUnitTests
             {
                 c = new ConnectionFactory().CreateConnection(opts);
 
-                Assert.IsTrue(c.State == ConnState.CONNECTED);
-                Assert.IsTrue(c.IsReconnecting() == false);
+                Assert.True(c.State == ConnState.CONNECTED);
+                Assert.True(c.IsReconnecting() == false);
             }
             // server stops here...
 
             lock (disconnectedLock)
             {
                 if (!disconnected)
-                    Assert.IsTrue(Monitor.Wait(disconnectedLock, 10000));
+                    Assert.True(Monitor.Wait(disconnectedLock, 10000));
             }
 
-            Assert.IsTrue(c.State == ConnState.RECONNECTING);
-            Assert.IsTrue(c.IsReconnecting() == true);
+            Assert.True(c.State == ConnState.RECONNECTING);
+            Assert.True(c.IsReconnecting() == true);
 
             // restart the server
             using (NATSServer s = utils.CreateServerOnPort(22222))
@@ -479,22 +467,22 @@ namespace NATSUnitTests
                 {
                     // may have reconnected, if not, wait
                     if (!reconnected)
-                        Assert.IsTrue(Monitor.Wait(reconnectedLock, 10000));
+                        Assert.True(Monitor.Wait(reconnectedLock, 10000));
                 }
 
-                Assert.IsTrue(c.IsReconnecting() == false);
-                Assert.IsTrue(c.State == ConnState.CONNECTED);
+                Assert.True(c.IsReconnecting() == false);
+                Assert.True(c.State == ConnState.CONNECTED);
 
                 c.Close();
             }
 
-            Assert.IsTrue(c.IsReconnecting() == false);
-            Assert.IsTrue(c.State == ConnState.CLOSED);
+            Assert.True(c.IsReconnecting() == false);
+            Assert.True(c.State == ConnState.CLOSED);
 
         }
 
 
-        [TestMethod]
+        [Fact]
         public void TestReconnectVerbose()
         {
             // an exception stops and fails the test.

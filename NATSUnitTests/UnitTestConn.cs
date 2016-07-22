@@ -1,61 +1,40 @@
 ﻿// Copyright 2015 Apcera Inc. All rights reserved.
 
 using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NATS.Client;
 using System.Threading;
+using Xunit;
 
 namespace NATSUnitTests
 {
     /// <summary>
     /// Run these tests with the gnatsd auth.conf configuration file.
     /// </summary>
-    [TestClass]
-    public class TestConnection
+    public class TestConnection : IDisposable
     {
-
         UnitTestUtilities utils = new UnitTestUtilities();
-
-        private TestContext testContextInstance;
-        /// <summary>
-        ///Gets or sets the test context which provides
-        ///information about and functionality for the current test run.
-        ///</summary>
-        public TestContext TestContext
-        {
-            get
-            {
-                return testContextInstance;
-            }
-            set
-            {
-                testContextInstance = value;
-            }
-        }
-
-        [TestInitialize()]
-        public void Initialize()
+        
+        public TestConnection()
         {
             UnitTestUtilities.CleanupExistingServers();
             utils.StartDefaultServer();
         }
-
-        [TestCleanup()]
-        public void Cleanup()
+        
+        public void Dispose()
         {
             utils.StopDefaultServer();
         }
-
-        [TestMethod]
+        
+        [Fact]
         public void TestConnectionStatus()
         {
             IConnection c = new ConnectionFactory().CreateConnection();
-            Assert.AreEqual(ConnState.CONNECTED, c.State);
+            Assert.Equal(ConnState.CONNECTED, c.State);
             c.Close();
-            Assert.AreEqual(ConnState.CLOSED, c.State);
+            Assert.Equal(ConnState.CLOSED, c.State);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestCloseHandler()
         {
             bool closed = false;
@@ -66,16 +45,16 @@ namespace NATSUnitTests
             IConnection c = new ConnectionFactory().CreateConnection(o);
             c.Close();
             Thread.Sleep(1000);
-            Assert.IsTrue(closed);
+            Assert.True(closed);
 
             // now test using.
             closed = false;
             using (c = new ConnectionFactory().CreateConnection(o)) { };
             Thread.Sleep(1000);
-            Assert.IsTrue(closed);
+            Assert.True(closed);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestCloseDisconnectedHandler()
         {
             bool disconnected = false;
@@ -97,7 +76,7 @@ namespace NATSUnitTests
                 c.Close();
                 Monitor.Wait(mu, 20000);
             }
-            Assert.IsTrue(disconnected);
+            Assert.True(disconnected);
 
             // now test using.
             disconnected = false;
@@ -106,10 +85,10 @@ namespace NATSUnitTests
                 using (c = new ConnectionFactory().CreateConnection(o)) { };
                 Monitor.Wait(mu, 20000);
             }
-            Assert.IsTrue(disconnected);
+            Assert.True(disconnected);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestServerStopDisconnectedHandler()
         {
             bool disconnected = false;
@@ -133,10 +112,10 @@ namespace NATSUnitTests
                 Monitor.Wait(mu, 10000);
             }
             c.Close();
-            Assert.IsTrue(disconnected);
+            Assert.True(disconnected);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestClosedConnections()
         {
             IConnection c = new ConnectionFactory().CreateConnection();
@@ -146,52 +125,30 @@ namespace NATSUnitTests
 
             // While we can annotate all the exceptions in the test framework,
             // just do it manually.
-            UnitTestUtilities.testExpectedException(
-                () => { c.Publish("foo", null); }, 
-                typeof(NATSConnectionClosedException));
+            Assert.ThrowsAny<NATSConnectionClosedException>(() => c.Publish("foo", null));
 
-            UnitTestUtilities.testExpectedException(
-                () => { c.Publish(new Msg("foo")); }, 
-                typeof(NATSConnectionClosedException));
+            Assert.ThrowsAny<NATSConnectionClosedException>(() => c.Publish(new Msg("foo")));
 
-            UnitTestUtilities.testExpectedException(
-                () => { c.SubscribeAsync("foo"); },
-                typeof(NATSConnectionClosedException));
+            Assert.ThrowsAny<NATSConnectionClosedException>(() => c.SubscribeAsync("foo"));
 
-            UnitTestUtilities.testExpectedException(
-                () => { c.SubscribeSync("foo"); }, 
-                typeof(NATSConnectionClosedException));
+            Assert.ThrowsAny<NATSConnectionClosedException>(() => c.SubscribeSync("foo"));
 
-            UnitTestUtilities.testExpectedException(
-                () => { c.SubscribeAsync("foo", "bar"); },
-                typeof(NATSConnectionClosedException));
+            Assert.ThrowsAny<NATSConnectionClosedException>(() => c.SubscribeAsync("foo", "bar"));
 
-            UnitTestUtilities.testExpectedException(
-                () => { c.SubscribeSync("foo", "bar"); }, 
-                typeof(NATSConnectionClosedException));
+            Assert.ThrowsAny<NATSConnectionClosedException>(() => c.SubscribeSync("foo", "bar"));
 
-            UnitTestUtilities.testExpectedException(
-                () => { c.Request("foo", null); }, 
-                typeof(NATSConnectionClosedException));
+            Assert.ThrowsAny<NATSConnectionClosedException>(() => c.Request("foo", null));
 
-            UnitTestUtilities.testExpectedException(
-                () => { s.NextMessage(); },
-                typeof(NATSConnectionClosedException));
+            Assert.ThrowsAny<NATSConnectionClosedException>(() => s.NextMessage());
 
-            UnitTestUtilities.testExpectedException(
-                () => { s.NextMessage(100); },
-                typeof(NATSConnectionClosedException));
+            Assert.ThrowsAny<NATSConnectionClosedException>(() => s.NextMessage(100));
 
-            UnitTestUtilities.testExpectedException(
-                () => { s.Unsubscribe(); }, 
-                typeof(NATSConnectionClosedException));
+            Assert.ThrowsAny<NATSConnectionClosedException>(() => s.Unsubscribe());
 
-            UnitTestUtilities.testExpectedException(
-                () => { s.AutoUnsubscribe(1); }, 
-                typeof(NATSConnectionClosedException));
+            Assert.ThrowsAny<NATSConnectionClosedException>(() => s.AutoUnsubscribe(1));
         }
 
-        [TestMethod]
+        [Fact]
         public void TestConnectVerbose()
         {
 
@@ -202,7 +159,7 @@ namespace NATSUnitTests
             c.Close();
         }
 
-        [TestMethod]
+        [Fact]
         public void TestCallbacksOrder()
         {
             bool firstDisconnect = true;
@@ -224,7 +181,7 @@ namespace NATSUnitTests
             ConditionalObj recvCh1     = new ConditionalObj();
             ConditionalObj recvCh2     = new ConditionalObj();
 
-            using (NATSServer s = utils.CreateServerWithConfig(TestContext, "auth_1222.conf"))
+            using (NATSServer s = utils.CreateServerWithConfig("auth_1222.conf"))
             {
                 Options o = ConnectionFactory.GetDefaultOptions();
 
@@ -233,20 +190,20 @@ namespace NATSUnitTests
                     Thread.Sleep(100);
                     if (firstDisconnect)
                     {
-                        System.Console.WriteLine("First disconnect.");
+                        Console.WriteLine("First disconnect.");
                         firstDisconnect = false;
                         dtime1 = DateTime.Now.Ticks;
                     }
                     else
                     {
-                        System.Console.WriteLine("Second disconnect.");
+                        Console.WriteLine("Second disconnect.");
                         dtime2 = DateTime.Now.Ticks;
                     }
                 };
 
                 o.ReconnectedEventHandler += (sender, args) =>
                 {
-                    System.Console.WriteLine("Reconnected.");
+                    Console.WriteLine("Reconnected.");
                     Thread.Sleep(50);
                     rtime = DateTime.Now.Ticks;
                     reconnected.notify();
@@ -256,14 +213,14 @@ namespace NATSUnitTests
                 {
                     if (args.Subscription.Subject.Equals("foo"))
                     {
-                        System.Console.WriteLine("Error handler foo.");
+                        Console.WriteLine("Error handler foo.");
                         Thread.Sleep(200);
                         atime1 = DateTime.Now.Ticks;
                         asyncErr1.notify();
                     }
                     else
                     {
-                        System.Console.WriteLine("Error handler bar.");
+                        Console.WriteLine("Error handler bar.");
                         atime2 = DateTime.Now.Ticks;
                         asyncErr2.notify();
                     }
@@ -271,7 +228,7 @@ namespace NATSUnitTests
 
                 o.ClosedEventHandler += (sender, args) =>
                 {
-                    System.Console.WriteLine("Closed handler.");
+                    Console.WriteLine("Closed handler.");
                     ctime = DateTime.Now.Ticks;
                     closed.notify();
                 };
@@ -294,7 +251,7 @@ namespace NATSUnitTests
 
                     EventHandler<MsgHandlerEventArgs> eh = (sender, args) =>
                     {
-                        System.Console.WriteLine("Received message on subject: " + args.Message.Subject);
+                        Console.WriteLine("Received message on subject: " + args.Message.Subject);
                         recvCh.notify();
                         if (args.Message.Subject.Equals("foo"))
                         {
@@ -341,14 +298,14 @@ namespace NATSUnitTests
                 if (dtime1 == orig || dtime2 == orig || rtime == orig || 
                     atime1 == orig || atime2 == orig || ctime == orig)
                 {
-                    System.Console.WriteLine("Error = callback didn't fire: {0}\n{1}\n{2}\n{3}\n{4}\n{5}\n",
+                    Console.WriteLine("Error = callback didn't fire: {0}\n{1}\n{2}\n{3}\n{4}\n{5}\n",
                         dtime1, dtime2, rtime, atime1, atime2, ctime);
                     throw new Exception("Callback didn't fire.");
                 }
 
                 if (rtime < dtime1 || dtime2 < rtime || atime2 < atime1|| ctime < atime2) 
                 {
-                    System.Console.WriteLine("Wrong callback order:{0}\n{1}\n{2}\n{3}\n{4}\n{5}\n",
+                    Console.WriteLine("Wrong callback order:{0}\n{1}\n{2}\n{3}\n{4}\n{5}\n",
                         dtime1, rtime, atime1, atime2, dtime2, ctime);
                     throw new Exception("Invalid callback order.");
  	            }

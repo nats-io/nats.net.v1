@@ -1,37 +1,19 @@
 ﻿// Copyright 2015 Apcera Inc. All rights reserved.
 
 using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NATS.Client;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using Xunit;
 
 namespace NATSUnitTests
 {
     /// <summary>
     /// Run these tests with the gnatsd auth.conf configuration file.
     /// </summary>
-    [TestClass]
     public class TestCluster
     {
-        private TestContext testContextInstance;
-        /// <summary>
-        ///Gets or sets the test context which provides
-        ///information about and functionality for the current test run.
-        ///</summary>
-        public TestContext TestContext
-        {
-            get
-            {
-                return testContextInstance;
-            }
-            set
-            {
-                testContextInstance = value;
-            }
-        }
-
         string[] testServers = new string[] {
             "nats://localhost:1222",
             "nats://localhost:1223",
@@ -49,7 +31,7 @@ namespace NATSUnitTests
 
         UnitTestUtilities utils = new UnitTestUtilities();
 
-        [TestMethod]
+        [Fact]
         public void TestServersOption()
         {
             IConnection c = null;
@@ -58,21 +40,17 @@ namespace NATSUnitTests
 
             o.NoRandomize = true;
 
-            UnitTestUtilities.testExpectedException(
-                () => { cf.CreateConnection(); },
-                typeof(NATSNoServersException));
+            Assert.ThrowsAny<NATSNoServersException>(() => cf.CreateConnection());
 
             o.Servers = testServers;
 
-            UnitTestUtilities.testExpectedException(
-                () => { cf.CreateConnection(o); },
-                typeof(NATSNoServersException));
-
+            Assert.ThrowsAny<NATSNoServersException>(() => cf.CreateConnection(o));
+            
             // Make sure we can connect to first server if running
             using (NATSServer ns = utils.CreateServerOnPort(1222))
             {
                 c = cf.CreateConnection(o);
-                Assert.IsTrue(testServers[0].Equals(c.ConnectedUrl));
+                Assert.True(testServers[0].Equals(c.ConnectedUrl));
                 c.Close();
             }
 
@@ -80,12 +58,12 @@ namespace NATSUnitTests
             using (NATSServer ns = utils.CreateServerOnPort(1227))
             {
                 c = cf.CreateConnection(o);
-                Assert.IsTrue(testServers[5].Equals(c.ConnectedUrl));
+                Assert.True(testServers[5].Equals(c.ConnectedUrl));
                 c.Close();
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestAuthServers()
         {
             string[] plainServers = new string[] {
@@ -98,12 +76,10 @@ namespace NATSUnitTests
             opts.Servers = plainServers;
             opts.Timeout = 5000;
 
-            using (NATSServer as1 = utils.CreateServerWithConfig(TestContext, "auth_1222.conf"),
-                              as2 = utils.CreateServerWithConfig(TestContext, "auth_1224.conf"))
+            using (NATSServer as1 = utils.CreateServerWithConfig("auth_1222.conf"),
+                              as2 = utils.CreateServerWithConfig("auth_1224.conf"))
             {
-                UnitTestUtilities.testExpectedException(
-                    () => { new ConnectionFactory().CreateConnection(opts); },
-                    typeof(NATSException));
+                Assert.ThrowsAny<NATSException>(() => new ConnectionFactory().CreateConnection(opts));
 
                 // Test that we can connect to a subsequent correct server.
                 string[] authServers = new string[] {
@@ -114,12 +90,12 @@ namespace NATSUnitTests
 
                 using (IConnection c = new ConnectionFactory().CreateConnection(opts))
                 {
-                    Assert.IsTrue(c.ConnectedUrl.Equals(authServers[1]));
+                    Assert.Equal(authServers[1], c.ConnectedUrl);
                 }
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestBasicClusterReconnect()
         {
             string[] plainServers = new string[] {
@@ -168,17 +144,17 @@ namespace NATSUnitTests
                     lock (disconnectLock)
                     {
                         s1.Shutdown();
-                        Assert.IsTrue(Monitor.Wait(disconnectLock, 20000));
+                        Assert.True(Monitor.Wait(disconnectLock, 20000));
                     }
 
                     reconnectSw.Start();
 
                     lock (reconnectLock)
                     {
-                        Assert.IsTrue(Monitor.Wait(reconnectLock, 20000));
+                        Assert.True(Monitor.Wait(reconnectLock, 20000));
                     }
 
-                    Assert.IsTrue(c.ConnectedUrl.Equals(testServers[2]));
+                    Assert.True(c.ConnectedUrl.Equals(testServers[2]));
 
                     reconnectSw.Stop();
 
@@ -235,7 +211,7 @@ namespace NATSUnitTests
         }
 
 
-        // TODO:  Create smaller variant [TestMethod]
+        // TODO:  Create smaller variant [Fact]
         public void TestHotSpotReconnect()
         {
             int numClients = 10;
@@ -280,17 +256,15 @@ namespace NATSUnitTests
                     unknown++;
             }
 
-            Assert.IsTrue(unknown == 0);
+            Assert.True(unknown == 0);
             int delta = Math.Abs(s2Count - s3Count);
             int range = numClients / 30;
-            if (delta > range)
-            {
-                Assert.Fail("Connected clients to servers out of range: {0}/{1}", delta, range);
-            }
+
+            Assert.False(delta > range, $"Connected clients to servers out of range: {delta}/{range}");
 
         }
 
-        [TestMethod]
+        [Fact]
         public void TestProperReconnectDelay()
         {
             Object mu = new Object();
@@ -324,22 +298,22 @@ namespace NATSUnitTests
                 {
                     s1.Shutdown();
                     // wait for disconnect
-                    Assert.IsTrue(Monitor.Wait(mu, 10000));
+                    Assert.True(Monitor.Wait(mu, 10000));
 
 
                     // Wait, want to make sure we don't spin on
                     //reconnect to non-existant servers.
                     Thread.Sleep(1000);
 
-                    Assert.IsFalse(closedCbCalled);
-                    Assert.IsTrue(disconnectHandlerCalled);
-                    Assert.IsTrue(c.State == ConnState.RECONNECTING);
+                    Assert.False(closedCbCalled);
+                    Assert.True(disconnectHandlerCalled);
+                    Assert.True(c.State == ConnState.RECONNECTING);
                 }
 
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestProperFalloutAfterMaxAttempts()
         {
             Options opts = ConnectionFactory.GetDefaultOptions();
@@ -383,23 +357,23 @@ namespace NATSUnitTests
                     lock (dmu)
                     {
                         if (!disconnectHandlerCalled)
-                            Assert.IsTrue(Monitor.Wait(dmu, 20000));
+                            Assert.True(Monitor.Wait(dmu, 20000));
                     }
 
                     lock (cmu)
                     {
                         if (!closedHandlerCalled)
-                            Assert.IsTrue(Monitor.Wait(cmu, 60000));
+                            Assert.True(Monitor.Wait(cmu, 60000));
                     }
 
-                    Assert.IsTrue(disconnectHandlerCalled);
-                    Assert.IsTrue(closedHandlerCalled);
-                    Assert.IsTrue(c.IsClosed());
+                    Assert.True(disconnectHandlerCalled);
+                    Assert.True(closedHandlerCalled);
+                    Assert.True(c.IsClosed());
                 }
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestProperFalloutAfterMaxAttemptsWithAuthMismatch()
         {
             Options opts = ConnectionFactory.GetDefaultOptions();
@@ -439,7 +413,7 @@ namespace NATSUnitTests
             };
 
             using (NATSServer s1 = utils.CreateServerOnPort(1220),
-                   s2 = utils.CreateServerWithConfig(testContextInstance, "tls_1222_verify.conf"))
+                   s2 = utils.CreateServerWithConfig("tls_1222_verify.conf"))
             {
                 using (IConnection c = new ConnectionFactory().CreateConnection(opts))
                 {
@@ -448,25 +422,25 @@ namespace NATSUnitTests
                     lock (dmu)
                     {
                         if (!disconnectHandlerCalled)
-                            Assert.IsTrue(Monitor.Wait(dmu, 20000));
+                            Assert.True(Monitor.Wait(dmu, 20000));
                     }
 
                     lock (cmu)
                     {
                         if (!closedHandlerCalled)
-                            Assert.IsTrue(Monitor.Wait(cmu, 600000));
+                            Assert.True(Monitor.Wait(cmu, 600000));
                     }
 
-                    Assert.IsTrue(c.Stats.Reconnects != opts.MaxReconnect);
+                    Assert.True(c.Stats.Reconnects != opts.MaxReconnect);
 
-                    Assert.IsTrue(disconnectHandlerCalled);
-                    Assert.IsTrue(closedHandlerCalled);
-                    Assert.IsTrue(c.IsClosed());
+                    Assert.True(disconnectHandlerCalled);
+                    Assert.True(closedHandlerCalled);
+                    Assert.True(c.IsClosed());
                 }
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestTimeoutOnNoServers()
         {
             Options opts = ConnectionFactory.GetDefaultOptions();
@@ -508,7 +482,7 @@ namespace NATSUnitTests
                     lock (dmu)
                     {
                         if (!disconnectHandlerCalled)
-                           Assert.IsTrue(Monitor.Wait(dmu, 20000));
+                           Assert.True(Monitor.Wait(dmu, 20000));
                     }
 
                     Stopwatch sw = new Stopwatch();
@@ -517,7 +491,7 @@ namespace NATSUnitTests
                     lock (cmu)
                     {
                         if (!closedHandlerCalled)
-                            Assert.IsTrue(Monitor.Wait(cmu, 60000));
+                            Assert.True(Monitor.Wait(cmu, 60000));
                     }
 
                     sw.Stop();
@@ -528,14 +502,14 @@ namespace NATSUnitTests
                     // a connect timeout has been added.
                     //Assert.IsTrue(sw.ElapsedMilliseconds < (expected + 500));
 
-                    Assert.IsTrue(disconnectHandlerCalled);
-                    Assert.IsTrue(closedHandlerCalled);
-                    Assert.IsTrue(c.IsClosed());
+                    Assert.True(disconnectHandlerCalled);
+                    Assert.True(closedHandlerCalled);
+                    Assert.True(c.IsClosed());
                 }
             }
         }
 
-        //[TestMethod]
+        //[Fact]
         public void TestPingReconnect()
         {
             /// Work in progress
@@ -579,7 +553,7 @@ namespace NATSUnitTests
                     {
                         lock (mu)
                         {
-                            Assert.IsTrue(Monitor.Wait(mu, 100000));
+                            Assert.True(Monitor.Wait(mu, 100000));
                         }
                     }
                 }

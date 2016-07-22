@@ -1,38 +1,35 @@
 ﻿// Copyright 2015 Apcera Inc. All rights reserved.
 
 using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NATS.Client;
 using System.Threading;
 using System.Text;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Xml.Serialization;
 using System.IO;
+using Xunit;
 
 namespace NATSUnitTests
 {
     /// <summary>
     /// Run these tests with the gnatsd auth.conf configuration file.
     /// </summary>
-    [TestClass]
-    public class TestEncoding
+    public class TestEncoding : IDisposable
     {
         UnitTestUtilities utils = new UnitTestUtilities();
-
-        [TestInitialize()]
-        public void Initialize()
+        
+        public TestEncoding()
         {
             UnitTestUtilities.CleanupExistingServers();
             utils.StartDefaultServer();
         }
 
-        [TestCleanup()]
-        public void Cleanup()
+        public void Dispose()
         {
             utils.StopDefaultServer();
         }
-
-        [TestMethod]
+        
+        [Fact]
         public void TestEncodedObjectSerization()
         {
             using (IEncodedConnection c = new ConnectionFactory().CreateEncodedConnection())
@@ -42,7 +39,7 @@ namespace NATSUnitTests
 
                 EventHandler<EncodedMessageEventArgs> eh = (sender, args) =>
                 {
-                    Assert.IsTrue(args.ReceivedObject.Equals(myStr));
+                    Assert.True(args.ReceivedObject.Equals(myStr));
                     lock (mu)
                     {
                         Monitor.Pulse(mu);
@@ -75,7 +72,7 @@ namespace NATSUnitTests
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestEncodedInvalidObjectSerialization()
         {
             using (IEncodedConnection c = new ConnectionFactory().CreateEncodedConnection())
@@ -98,7 +95,7 @@ namespace NATSUnitTests
                         System.Console.WriteLine("Expected exception: " + e.Message);
                     }
 
-                    Assert.IsTrue(hitException);
+                    Assert.True(hitException);
 
                     lock (mu)
                     {
@@ -149,7 +146,7 @@ namespace NATSUnitTests
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestCustomObjectSerialization()
         {
             using (IEncodedConnection c = new ConnectionFactory().CreateEncodedConnection())
@@ -161,7 +158,7 @@ namespace NATSUnitTests
                 {
                     // Ensure we blow up in the cast
                     SerializationTestObj so = (SerializationTestObj)args.ReceivedObject;
-                    Assert.IsTrue(so.Equals(origObj));
+                    Assert.True(so.Equals(origObj));
 
                     lock (mu)
                     {
@@ -207,7 +204,7 @@ namespace NATSUnitTests
             return x.Deserialize(ms);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestEncodedSerizationOverrides()
         {
             using (IEncodedConnection c = new ConnectionFactory().CreateEncodedConnection())
@@ -222,7 +219,7 @@ namespace NATSUnitTests
                 EventHandler<EncodedMessageEventArgs> eh = (sender, args) =>
                 {
                     SerializationTestObj so = (SerializationTestObj)args.ReceivedObject;
-                    Assert.IsTrue(so.Equals(origObj));
+                    Assert.True(so.Equals(origObj));
 
                     lock (mu)
                     {
@@ -243,7 +240,7 @@ namespace NATSUnitTests
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestEncodedObjectRequestReply()
         {
             using (IEncodedConnection c = new ConnectionFactory().CreateEncodedConnection())
@@ -254,7 +251,7 @@ namespace NATSUnitTests
                 EventHandler<EncodedMessageEventArgs> eh = (sender, args) =>
                 {
                     SerializationTestObj so = (SerializationTestObj)args.ReceivedObject;
-                    Assert.IsTrue(so.Equals(origObj));
+                    Assert.True(so.Equals(origObj));
                     String str = "Received";
 
                     c.Publish(args.Reply, str);
@@ -268,8 +265,8 @@ namespace NATSUnitTests
 
                 using (IAsyncSubscription s = c.SubscribeAsync("foo", eh))
                 {
-                    Assert.IsTrue("Received".Equals(c.Request("foo", origObj, 1000)));
-                    Assert.IsTrue("Received".Equals(c.Request("foo", origObj)));
+                    Assert.True("Received".Equals(c.Request("foo", origObj, 1000)));
+                    Assert.True("Received".Equals(c.Request("foo", origObj)));
                 }
             }
         }
