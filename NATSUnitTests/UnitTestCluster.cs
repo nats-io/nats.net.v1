@@ -260,7 +260,7 @@ namespace NATSUnitTests
             int delta = Math.Abs(s2Count - s3Count);
             int range = numClients / 30;
 
-            Assert.False(delta > range, $"Connected clients to servers out of range: {delta}/{range}");
+            Assert.False(delta > range, string.Format("Connected clients to servers out of range: {0}/{0}", delta, range));
 
         }
 

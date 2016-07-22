@@ -287,7 +287,7 @@ namespace NATSUnitTests
                 for (int i = 0; i < numSent; i++)
                 {
                     Assert.True(results.ContainsKey(i),
-                        $"Received incorrect number of messages, {results[i]} for seq: {i}");
+                        string.Format("Received incorrect number of messages, {0} for seq: {1}", results[i], i));
                 }
 
                 results.Clear();
@@ -393,7 +393,7 @@ namespace NATSUnitTests
                 s1.Shutdown();
 
                 Thread.Sleep(100);
-                Assert.False(c.IsClosed(), $"Invalid state, expecting not closed, received: {c.State}");
+                Assert.False(c.IsClosed(), string.Format("Invalid state, expecting not closed, received: {0}", c.State));
                 
                 using (NATSServer s2 = utils.CreateServerOnPort(22222))
                 {
