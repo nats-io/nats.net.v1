@@ -393,7 +393,7 @@ namespace NATSUnitTests
                 s1.Shutdown();
 
                 Thread.Sleep(100);
-                Assert.True(c.IsClosed(), $"Invalid state, expecting not closed, received: {c.State}");
+                Assert.False(c.IsClosed(), $"Invalid state, expecting not closed, received: {c.State}");
                 
                 using (NATSServer s2 = utils.CreateServerOnPort(22222))
                 {

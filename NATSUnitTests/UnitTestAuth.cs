@@ -23,15 +23,14 @@ namespace NATSUnitTests
         {
             try
             {
-                System.Console.WriteLine("Trying: " + url);
+                Console.WriteLine("Trying: " + url);
 
                 hitDisconnect = 0;
                 Options opts = ConnectionFactory.GetDefaultOptions();
                 opts.Url = url;
                 opts.DisconnectedEventHandler += handleDisconnect;
-                IConnection c = null;
-
-                Assert.ThrowsAny<Exception>(() => c = new ConnectionFactory().CreateConnection(url));
+                IConnection c = new ConnectionFactory().CreateConnection(url);
+                Assert.True(false, "Expected a failure; did not receive one");
 
                 c.Close();
             }
@@ -63,40 +62,24 @@ namespace NATSUnitTests
         [Fact]
         public void TestAuthFailure()
         {
-            try
+            using (NATSServer s = util.CreateServerWithConfig("auth_1222.conf"))
             {
-                using (NATSServer s = util.CreateServerWithConfig("auth_1222.conf"))
-                {
-                    connectAndFail("nats://username@localhost:1222");
-                    connectAndFail("nats://username:badpass@localhost:1222");
-                    connectAndFail("nats://localhost:1222");
-                    connectAndFail("nats://badname:password@localhost:1222");
-                }
-            }
-            catch (Exception e)
-            {
-                System.Console.WriteLine(e);
-                throw e;
+                connectAndFail("nats://username@localhost:1222");
+                connectAndFail("nats://username:badpass@localhost:1222");
+                connectAndFail("nats://localhost:1222");
+                connectAndFail("nats://badname:password@localhost:1222");
             }
         }
 
         [Fact]
         public void TestAuthToken()
         {
-            try
+            using (NATSServer s = util.CreateServerWithArgs("-auth S3Cr3T0k3n!"))
             {
-                using (NATSServer s = util.CreateServerWithArgs("-auth S3Cr3T0k3n!"))
-                {
-                    connectAndFail("nats://localhost:4222");
-                    connectAndFail("nats://invalid_token@localhost:4222");
+                connectAndFail("nats://localhost:4222");
+                connectAndFail("nats://invalid_token@localhost:4222");
 
-                    new ConnectionFactory().CreateConnection("nats://S3Cr3T0k3n!@localhost:4222").Close();
-                }
-            }
-            catch (Exception e)
-            {
-                System.Console.WriteLine(e);
-                throw e;
+                new ConnectionFactory().CreateConnection("nats://S3Cr3T0k3n!@localhost:4222").Close();
             }
         }
 
@@ -115,7 +98,7 @@ namespace NATSUnitTests
 
                 opts.Servers = new string[]{
                     "nats://username:password@localhost:1222",
-                    "nats://username:password@localhost:1223", 
+                    "nats://username:password@localhost:1223",
                     "nats://username:password@localhost:1224" };
                 opts.NoRandomize = true;
 

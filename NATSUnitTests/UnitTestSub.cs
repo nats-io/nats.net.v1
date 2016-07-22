@@ -41,7 +41,7 @@ namespace NATSUnitTests
                 {
                     s.MessageHandler += (sender, arg) =>
                     {
-                        System.Console.WriteLine("Received msg.");
+                        Console.WriteLine("Received msg.");
                         received++;
                     };
 
@@ -172,13 +172,7 @@ namespace NATSUnitTests
                             // ignore
                         }
 
-                        try
-                        {
-                            s.NextMessage();
-                        }
-                        catch (NATSSlowConsumerException)
-                        {
-                        }
+                        s.NextMessage();
                     });
                 }
             }
@@ -268,7 +262,7 @@ namespace NATSUnitTests
 
                             Assert.True(args.Subscription == s);
 
-                            System.Console.WriteLine("Expected Error: " + args.Error);
+                            Console.WriteLine("Expected Error: " + args.Error);
                             Assert.True(args.Error.Contains("Slow"));
 
                             // release the subscriber
@@ -331,7 +325,7 @@ namespace NATSUnitTests
                 {
                     helper.MessageHandler += (sender, arg) =>
                     {
-                        System.Console.WriteLine("Helper");
+                        Console.WriteLine("Helper");
                         c.Publish(arg.Message.Reply,
                             Encoding.UTF8.GetBytes("Hello"));
                     };
@@ -339,13 +333,13 @@ namespace NATSUnitTests
 
                     start.MessageHandler += (sender, arg) =>
                     {
-                        System.Console.WriteLine("Responsder");
+                        Console.WriteLine("Responsder");
                         string responseIB = c.NewInbox();
                         IAsyncSubscription ia = c.SubscribeAsync(responseIB);
 
                         ia.MessageHandler += (iSender, iArgs) =>
                         {
-                            System.Console.WriteLine("Internal subscriber.");
+                            Console.WriteLine("Internal subscriber.");
                             lock (waitCond) { Monitor.Pulse(waitCond); }
                         };
                         ia.Start();
@@ -439,7 +433,7 @@ namespace NATSUnitTests
             ConditionalObj subDoneCond = new ConditionalObj();
             ConditionalObj startProcessing = new ConditionalObj();
 
-            byte[] data = System.Text.Encoding.UTF8.GetBytes("0123456789");
+            byte[] data = Encoding.UTF8.GetBytes("0123456789");
 
             using (IConnection c = new ConnectionFactory().CreateConnection())
             {
@@ -538,7 +532,7 @@ namespace NATSUnitTests
             ConditionalObj subDoneCond = new ConditionalObj();
             ConditionalObj startProcessing = new ConditionalObj();
 
-            byte[] data = System.Text.Encoding.UTF8.GetBytes("0123456789");
+            byte[] data = Encoding.UTF8.GetBytes("0123456789");
 
             using (IConnection c = new ConnectionFactory().CreateConnection())
             {
@@ -584,7 +578,7 @@ namespace NATSUnitTests
         {
             int total = 100;
 
-            byte[] data = System.Text.Encoding.UTF8.GetBytes("0123456789");
+            byte[] data = Encoding.UTF8.GetBytes("0123456789");
 
             using (IConnection c = new ConnectionFactory().CreateConnection())
             {
@@ -614,7 +608,7 @@ namespace NATSUnitTests
         {
             int total = 100;
 
-            byte[] data = System.Text.Encoding.UTF8.GetBytes("0123456789");
+            byte[] data = Encoding.UTF8.GetBytes("0123456789");
 
             using (IConnection c = new ConnectionFactory().CreateConnection())
             {

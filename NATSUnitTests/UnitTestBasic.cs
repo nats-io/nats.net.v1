@@ -38,12 +38,12 @@ namespace NATSUnitTests
 
             Assert.False(string.IsNullOrWhiteSpace(u), $"Invalid connected url {u}.");
 
-            Assert.NotEqual(Defaults.Url, u);
+            Assert.Equal(Defaults.Url, u);
 
             c.Close();
             u = c.ConnectedUrl;
 
-            Assert.NotNull(u);
+            Assert.Null(u);
         }
 
         [Fact]
@@ -68,7 +68,7 @@ namespace NATSUnitTests
         {
             Options opts = ConnectionFactory.GetDefaultOptions();
 
-            Assert.Throws<Exception>(() => opts.Timeout = -1);
+            Assert.ThrowsAny<Exception>(() => opts.Timeout = -1);
         }
 
         [Fact]
@@ -151,7 +151,7 @@ namespace NATSUnitTests
                         Monitor.Wait(mu, 30000);
                     }
 
-                    Assert.False(received, "Did not receive message.");
+                    Assert.True(received, "Did not receive message.");
                 }
             }
         }
