@@ -1,0 +1,4 @@
+before_build:
+  - nuget restore
+build:
+  project: NATS.sln
