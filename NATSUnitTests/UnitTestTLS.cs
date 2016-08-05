@@ -25,8 +25,6 @@ namespace NATSUnitTests
         {
             try
             {
-                Console.WriteLine("Trying: " + url);
-
                 hitDisconnect = 0;
                 Options opts = ConnectionFactory.GetDefaultOptions();
                 opts.Url = url;
@@ -105,7 +103,6 @@ namespace NATSUnitTests
                         c.Publish("foo", null);
                         c.Flush();
                         Msg m = s.NextMessage();
-                        Console.WriteLine("Received msg over TLS conn.");
                     }
                 }
             }
@@ -166,7 +163,6 @@ namespace NATSUnitTests
                         c.Publish("foo", null);
                         c.Flush();
                         Msg m = s.NextMessage();
-                        Console.WriteLine("Received msg over TLS conn.");
                     }
                 }
             }
@@ -189,7 +185,6 @@ namespace NATSUnitTests
                 opts.Servers = new string[]{ "nats://localhost:1222" , "nats://localhost:1224" };
                 opts.ReconnectedEventHandler += (sender, obj) =>
                 {
-                    Console.WriteLine("Reconnected.");
                     reconnectedObj.notify();
                 };
 
@@ -201,7 +196,6 @@ namespace NATSUnitTests
                         c.Publish("foo", null);
                         c.Flush();
                         s.NextMessage();
-                        Console.WriteLine("Received msg over TLS conn.");
 
                         // shutdown the server
                         srv.Shutdown();
@@ -212,7 +206,6 @@ namespace NATSUnitTests
                         c.Publish("foo", null);
                         c.Flush();
                         s.NextMessage();
-                        Console.WriteLine("Received msg over TLS conn.");
                     }
                 }
             }
@@ -242,7 +235,6 @@ namespace NATSUnitTests
 
                 opts.ReconnectedEventHandler += (sender, args) =>
                 {
-                    Console.WriteLine("Reconnected");
                     obj.notify();
                 };
 

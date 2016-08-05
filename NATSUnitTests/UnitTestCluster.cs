@@ -140,7 +140,6 @@ namespace NATSUnitTests
                 {
                     Stopwatch reconnectSw = new Stopwatch();
 
-                    System.Console.WriteLine("Connected to: " + c.ConnectedUrl);
                     lock (disconnectLock)
                     {
                         s1.Shutdown();

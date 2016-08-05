@@ -191,20 +191,17 @@ namespace NATSUnitTests
                     Thread.Sleep(100);
                     if (firstDisconnect)
                     {
-                        Console.WriteLine("First disconnect.");
                         firstDisconnect = false;
                         dtime1 = DateTime.Now.Ticks;
                     }
                     else
                     {
-                        Console.WriteLine("Second disconnect.");
                         dtime2 = DateTime.Now.Ticks;
                     }
                 };
 
                 o.ReconnectedEventHandler += (sender, args) =>
                 {
-                    Console.WriteLine("Reconnected.");
                     Thread.Sleep(100);
                     rtime = DateTime.Now.Ticks;
                     reconnected.notify();
@@ -214,14 +211,12 @@ namespace NATSUnitTests
                 {
                     if (args.Subscription.Subject.Equals("foo"))
                     {
-                        Console.WriteLine("Error handler foo.");
                         Thread.Sleep(200);
                         atime1 = DateTime.Now.Ticks;
                         asyncErr1.notify();
                     }
                     else
                     {
-                        Console.WriteLine("Error handler bar.");
                         atime2 = DateTime.Now.Ticks;
                         asyncErr2.notify();
                     }
@@ -229,7 +224,6 @@ namespace NATSUnitTests
 
                 o.ClosedEventHandler += (sender, args) =>
                 {
-                    Console.WriteLine("Closed handler.");
                     ctime = DateTime.Now.Ticks;
                     closed.notify();
                 };
@@ -252,7 +246,6 @@ namespace NATSUnitTests
 
                     EventHandler<MsgHandlerEventArgs> eh = (sender, args) =>
                     {
-                        Console.WriteLine("Received message on subject: " + args.Message.Subject);
                         recvCh.notify();
                         if (args.Message.Subject.Equals("foo"))
                         {

@@ -158,10 +158,7 @@ namespace NATSUnitTests
 
         private void CheckReceivedAndValidHandler(object sender, MsgHandlerEventArgs args)
         {
-            Console.WriteLine("Received msg.");
-
             Assert.True(compare(args.Message.Data, omsg), "Messages are not equal.");
-
             Assert.Equal(asyncSub, args.Message.ArrivalSubcription);
 
             lock (mu)
@@ -320,7 +317,6 @@ namespace NATSUnitTests
                     s.MessageHandler += (sender, args) =>
                     {
                         count++;
-                        Console.WriteLine("Count = {0}", count);
                         if (count == max)
                         {
                             asyncSub.Unsubscribe();
@@ -584,8 +580,6 @@ namespace NATSUnitTests
                     Task.WaitAll(tasks);
 
                     sw.Stop();
-
-                    Console.WriteLine("Test took {0} ms", sw.ElapsedMilliseconds);
 
                     // check that we didn't process the requests consecutively.
                     Assert.True(sw.ElapsedMilliseconds < (MAX_DELAY * 2));

@@ -92,10 +92,7 @@ namespace NATSUnitTests
                     catch (Exception e)
                     {
                         hitException = true;
-                        System.Console.WriteLine("Expected exception: " + e.Message);
                     }
-
-                    Assert.True(hitException);
 
                     lock (mu)
                     {
@@ -111,6 +108,8 @@ namespace NATSUnitTests
                         c.Flush();
 
                         Monitor.Wait(mu, 1000);
+
+                        Assert.True(hitException);
                     }
                 }
             }
@@ -191,8 +190,6 @@ namespace NATSUnitTests
 
             byte[] content = new byte[ms.Position];
             Array.Copy(ms.GetBuffer(), content, ms.Position);
-
-            System.Console.WriteLine("Content: " + Encoding.ASCII.GetString(content));
 
             return content;
         }
