@@ -89,7 +89,7 @@ namespace NATSUnitTests
                     {
                         Exception invalid = (Exception)args.ReceivedObject;
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         hitException = true;
                     }
