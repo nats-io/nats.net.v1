@@ -1,11 +1,7 @@
 ﻿// Copyright 2015 Apcera Inc. All rights reserved.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Reflection;
 using System.IO;
@@ -47,6 +43,7 @@ namespace NATSUnitTests
             addArgument(psInfo, "-p " + port);
 
             p = Process.Start(psInfo);
+            Thread.Sleep(500);
         }
 
         public NATSServer(string args)
@@ -54,6 +51,7 @@ namespace NATSUnitTests
             ProcessStartInfo psInfo = createProcessStartInfo();
             addArgument(psInfo, args);
             p = Process.Start(psInfo);
+            Thread.Sleep(500);
         }
 
         private ProcessStartInfo createProcessStartInfo()
