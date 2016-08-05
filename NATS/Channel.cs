@@ -113,6 +113,8 @@ namespace NATS.Client
             finished = true;
             Monitor.Pulse(qLock);
 
+            q.Clear();
+
             Monitor.Exit(qLock);
         }
 

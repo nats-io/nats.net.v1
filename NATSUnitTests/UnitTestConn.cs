@@ -4,6 +4,7 @@ using System;
 using NATS.Client;
 using System.Threading;
 using Xunit;
+using System.Diagnostics;
 
 namespace NATSUnitTests
 {
@@ -204,7 +205,7 @@ namespace NATSUnitTests
                 o.ReconnectedEventHandler += (sender, args) =>
                 {
                     Console.WriteLine("Reconnected.");
-                    Thread.Sleep(50);
+                    Thread.Sleep(100);
                     rtime = DateTime.Now.Ticks;
                     reconnected.notify();
                 };
@@ -311,7 +312,60 @@ namespace NATSUnitTests
  	            }
             }
         }
-        
+
+        [Fact]
+        public void TestConnectionMemoryLeak()
+        {
+            ConnectionFactory cf = new ConnectionFactory();
+            var sw = Stopwatch.StartNew();
+
+            GC.Collect();
+
+            long memStart = Process.GetCurrentProcess().PrivateMemorySize64;
+
+            while (sw.ElapsedMilliseconds < 10000)
+            {
+                using (IConnection conn = cf.CreateConnection()) { }
+            }
+
+            // allow the last dispose to finish.
+            Thread.Sleep(500);
+
+            GC.Collect();
+
+            double memGrowthPercent = 100 * (
+                ((double)(Process.GetCurrentProcess().PrivateMemorySize64 - memStart))
+                    / (double)memStart);
+
+            Assert.True(memGrowthPercent < 10.0);
+        }
+
+        [Fact]
+        public void TestConnectionCloseAndDispose()
+        {
+            // test that dispose code works after a connection
+            // has been closed and cleaned up.
+            using (var c = new ConnectionFactory().CreateConnection())
+            {
+                c.Close();
+                Thread.Sleep(500);
+            }
+
+            // attempt to test that dispose works while the connection close
+            // has passed off work to cleanup the callback scheduler, etc.
+            using (var c = new ConnectionFactory().CreateConnection())
+            {
+                c.Close();
+                Thread.Sleep(500);
+            }
+
+            // Check that dispose is idempotent.
+            using (var c = new ConnectionFactory().CreateConnection())
+            {
+                c.Dispose();
+            }
+        }
+
         /// NOT IMPLEMENTED:
         /// TestServerSecureConnections
         /// TestErrOnConnectAndDeadlock
