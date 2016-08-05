@@ -41,7 +41,6 @@ namespace NATSUnitTests
                 {
                     s.MessageHandler += (sender, arg) =>
                     {
-                        Console.WriteLine("Received msg.");
                         received++;
                     };
 
@@ -262,8 +261,6 @@ namespace NATSUnitTests
                             handledError = true;
 
                             Assert.True(args.Subscription == s);
-
-                            Console.WriteLine("Expected Error: " + args.Error);
                             Assert.True(args.Error.Contains("Slow"));
 
                             // release the subscriber
@@ -282,9 +279,7 @@ namespace NATSUnitTests
                             if (blockedOnSubscriber)
                                 return;
 
-                            Console.WriteLine("Subscriber Waiting....");
                             Assert.True(Monitor.Wait(subLock, 500));
-                            Console.WriteLine("Subscriber done.");
                             blockedOnSubscriber = true;
                         }
                     };
@@ -326,7 +321,6 @@ namespace NATSUnitTests
                 {
                     helper.MessageHandler += (sender, arg) =>
                     {
-                        Console.WriteLine("Helper");
                         c.Publish(arg.Message.Reply,
                             Encoding.UTF8.GetBytes("Hello"));
                     };
@@ -334,13 +328,11 @@ namespace NATSUnitTests
 
                     start.MessageHandler += (sender, arg) =>
                     {
-                        Console.WriteLine("Responsder");
                         string responseIB = c.NewInbox();
                         IAsyncSubscription ia = c.SubscribeAsync(responseIB);
 
                         ia.MessageHandler += (iSender, iArgs) =>
                         {
-                            Console.WriteLine("Internal subscriber.");
                             lock (waitCond) { Monitor.Pulse(waitCond); }
                         };
                         ia.Start();

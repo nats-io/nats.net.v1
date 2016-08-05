@@ -122,7 +122,7 @@ namespace NATSUnitTests
 
             opts.ReconnectedEventHandler = (sender, args) =>
             {
-                System.Console.WriteLine("Reconnected");
+                // NOOP
             };
 
             NATSServer ns = utils.CreateServerOnPort(22222);
@@ -132,7 +132,6 @@ namespace NATSUnitTests
                 IAsyncSubscription s = c.SubscribeAsync("foo");
                 s.MessageHandler += (sender, args) =>
                 {
-                    System.Console.WriteLine("Received message.");
                     lock (msgLock)
                     {
                         Monitor.Pulse(msgLock);   
@@ -148,9 +147,8 @@ namespace NATSUnitTests
                     Assert.True(Monitor.Wait(testLock, 100000));
                 }
 
-                System.Console.WriteLine("Sending message.");
                 c.Publish("foo", Encoding.UTF8.GetBytes("Hello"));
-                System.Console.WriteLine("Done sending message.");
+
                 // restart the server.
                 using (ns = utils.CreateServerOnPort(22222))
                 {
@@ -178,7 +176,6 @@ namespace NATSUnitTests
 
             opts.DisconnectedEventHandler = (sender, args) =>
             {
-                System.Console.WriteLine("Disconnected.");
                 lock (disconnectedLock)
                 {
                     Monitor.Pulse(disconnectedLock);
@@ -187,7 +184,6 @@ namespace NATSUnitTests
 
             opts.ReconnectedEventHandler = (sender, args) =>
             {
-                System.Console.WriteLine("Reconnected.");
                 lock (reconnectedLock)
                 {
                     Monitor.Pulse(reconnectedLock);
@@ -249,7 +245,6 @@ namespace NATSUnitTests
                         Object doneLock = new Object();
                         s4.MessageHandler += (sender, args) =>
                         {
-                            System.Console.WriteLine("Recieved done message.");
                             lock (doneLock)
                             {
                                 Monitor.Pulse(doneLock);
@@ -273,8 +268,6 @@ namespace NATSUnitTests
         private void incrReceivedMessageHandler(object sender,
             MsgHandlerEventArgs args)
         {
-            System.Console.WriteLine("Received message on subject {0}.",
-                args.Message.Subject);
             Interlocked.Increment(ref received);
         }
 

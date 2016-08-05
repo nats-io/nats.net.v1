@@ -54,7 +54,7 @@ namespace NATSUnitTests
         {
             double nanoseconds = ((double)sw.ElapsedTicks /
                 ((double)Stopwatch.Frequency) * (double)1000000000);
-            System.Console.WriteLine("Performed {0} operations in {1} nanos.  {2} ns/op",
+            System.Console.WriteLine("Nuid Test:  Performed {0} operations in {1} nanos.  {2} ns/op",
                 operations, nanoseconds, (long)(nanoseconds / (double)operations));
         }
 

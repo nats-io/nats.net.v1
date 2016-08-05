@@ -23,8 +23,6 @@ namespace NATSUnitTests
         {
             try
             {
-                Console.WriteLine("Trying: " + url);
-
                 hitDisconnect = 0;
                 Options opts = ConnectionFactory.GetDefaultOptions();
                 opts.Url = url;
