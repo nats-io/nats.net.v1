@@ -229,17 +229,26 @@ namespace NATS.Client
                 }
             }
 
-            internal void Stop()
+            internal void ScheduleStop()
             {
                 Add(new Task(() =>
                 {
                     this.Running = false;
+                    tasks.close();
                 }));
+            }
+
+            internal void WaitForCompletion()
+            {
+                try
+                {
+                    executorTask.Wait(5000);
+                }
+                catch (Exception) { }
             }
         }
 
         CallbackScheduler callbackScheduler = new CallbackScheduler();
-
 
         internal class Control
         {
@@ -788,12 +797,16 @@ namespace NATS.Client
         // caller must lock
         private void startPingTimer()
         {
+            pout = 0;
+
             stopPingTimer();
 
-            ptmr = new Timer(pingTimerCallback, null,
-                opts.PingInterval,
-                opts.PingInterval);
-
+            if (Opts.PingInterval > 0)
+            {
+                ptmr = new Timer(pingTimerCallback, null,
+                    opts.PingInterval,
+                    opts.PingInterval);
+            }
         }
 
         private string generateThreadName(string prefix)
@@ -836,16 +849,6 @@ namespace NATS.Client
             // wait for both threads to start before continuing.
             flusherStartEvent.WaitOne(60000);
             readLoopStartEvent.WaitOne(60000);
-
-            lock (mu)
-            {
-                this.pout = 0;
-
-                if (Opts.PingInterval > 0)
-                {
-                    startPingTimer();
-                }
-            }
         }
 
         public string ConnectedUrl
@@ -890,6 +893,15 @@ namespace NATS.Client
 
             processExpectedInfo();
             sendConnect();
+
+            // .NET vs go design difference here:
+            // Starting the ping timer earlier allows us
+            // to assign, and thus, dispose of it if the connection 
+            // is disposed before the socket watchers are running.
+            // Otherwise, the connection is referenced by an orphaned 
+            // ping timer which can create a memory leak.
+            startPingTimer();
+
             new Task(() => { spinUpSocketWatchers(); }).Start();
         }
 
@@ -2278,7 +2290,7 @@ namespace NATS.Client
         public void Close()
         {
             close(ConnState.CLOSED, true);
-            callbackScheduler.Stop();
+            callbackScheduler.ScheduleStop();
         }
 
         // assume the lock is head.
@@ -2385,6 +2397,7 @@ namespace NATS.Client
             try
             {
                 Close();
+                callbackScheduler.WaitForCompletion();
             }
             catch (Exception)
             {
