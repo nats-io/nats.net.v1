@@ -209,7 +209,7 @@ namespace NATSUnitTests
 
                 o.AsyncErrorEventHandler += (sender, args) =>
                 {
-                    Thread.Sleep(200);
+                    Thread.Sleep(100);
                     if (args.Subscription.Subject.Equals("foo"))
                     {
                         atime1 = DateTime.Now.Ticks;
@@ -224,12 +224,11 @@ namespace NATSUnitTests
 
                 o.ClosedEventHandler += (sender, args) =>
                 {
-                    Thread.Sleep(100);
                     ctime = DateTime.Now.Ticks;
                     closed.Set();
                 };
 
-                o.ReconnectWait = 50;
+                o.ReconnectWait = 500;
                 o.NoRandomize = true;
                 o.Servers = new string[] { "nats://localhost:4222", "nats:localhost:1222" };
                 o.SubChannelLength = 1;
@@ -239,7 +238,7 @@ namespace NATSUnitTests
                 {
                     // On hosted environments, some threads/tasks can start before others
                     // due to resource constraints.  Allow time to start.
-                    Thread.Sleep(500);
+                    Thread.Sleep(1000);
 
                     utils.StopDefaultServer();
 
@@ -247,7 +246,9 @@ namespace NATSUnitTests
 
                     utils.StartDefaultServer();
 
-                    reconnected.WaitOne(3000);
+                    Thread.Sleep(1000);
+
+                    Assert.True(reconnected.WaitOne(3000));
 
                     EventHandler<MsgHandlerEventArgs> eh = (sender, args) =>
                     {
@@ -281,8 +282,8 @@ namespace NATSUnitTests
 
                     ncp.Flush();
 
-                    asyncErr1.WaitOne(3000);
-                    asyncErr2.WaitOne(3000);
+                    Assert.True(asyncErr1.WaitOne(3000));
+                    Assert.True(asyncErr2.WaitOne(3000));
 
                     utils.StopDefaultServer();
 
@@ -290,7 +291,7 @@ namespace NATSUnitTests
                     closed.Reset();
                     nc.Close();
 
-                    closed.WaitOne(3000);
+                    Assert.True(closed.WaitOne(3000));
                 }
 
 
@@ -304,7 +305,13 @@ namespace NATSUnitTests
 
                 if (rtime < dtime1 || dtime2 < rtime || atime2 < atime1|| ctime < atime2) 
                 {
-                    Console.WriteLine("Wrong callback order:{0}\n{1}\n{2}\n{3}\n{4}\n{5}\n",
+                    Console.WriteLine("Wrong callback order:\n" +
+                        "dtime1: {0}\n" + 
+                        "rtime:  {1}\n" + 
+                        "atime1: {2}\n" + 
+                        "atime2: {3}\n" +
+                        "dtime2: {4}\n" + 
+                        "ctime:  {5}\n",
                         dtime1, rtime, atime1, atime2, dtime2, ctime);
                     throw new Exception("Invalid callback order.");
  	            }
