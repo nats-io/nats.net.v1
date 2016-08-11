@@ -306,7 +306,7 @@ namespace NATSUnitTests
                     throw new Exception("Callback didn't fire.");
                 }
 
-                if (rtime < dtime1 || dtime2 < rtime || atime2 < atime1|| ctime < atime2) 
+                if (rtime < dtime1 || dtime2 < rtime || ctime < atime2) 
                 {
                     Console.WriteLine("Wrong callback order:\n" +
                         "dtime1: {0}\n" + 
