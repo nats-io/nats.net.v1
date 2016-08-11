@@ -250,22 +250,25 @@ namespace NATSUnitTests
 
                     Assert.True(reconnected.WaitOne(3000));
 
+                    object asyncLock = new object();
                     EventHandler<MsgHandlerEventArgs> eh = (sender, args) =>
                     {
-                        recvCh.Set();
-                        if (args.Message.Subject.Equals("foo"))
+                        lock (asyncLock)
                         {
-                            recvCh1.Set();
-                        }
-                        else
-                        { 
-                            recvCh2.Set();
+                            recvCh.Set();
+                            if (args.Message.Subject.Equals("foo"))
+                            {
+                                recvCh1.Set();
+                            }
+                            else
+                            {
+                                recvCh2.Set();
+                            }
                         }
                     };
 
                     IAsyncSubscription sub1 = nc.SubscribeAsync("foo", eh);
                     IAsyncSubscription sub2 = nc.SubscribeAsync("bar", eh);
-
                     nc.Flush();
 
                     ncp.Publish("foo", System.Text.Encoding.UTF8.GetBytes("hello"));
