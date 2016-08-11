@@ -174,13 +174,13 @@ namespace NATSUnitTests
             long atime2 = orig;
             long ctime = orig;
 
-            ConditionalObj reconnected = new ConditionalObj();
-            ConditionalObj closed      = new ConditionalObj();
-            ConditionalObj asyncErr1   = new ConditionalObj();
-            ConditionalObj asyncErr2   = new ConditionalObj();
-            ConditionalObj recvCh      = new ConditionalObj();
-            ConditionalObj recvCh1     = new ConditionalObj();
-            ConditionalObj recvCh2     = new ConditionalObj();
+            AutoResetEvent reconnected = new AutoResetEvent(false);
+            AutoResetEvent closed      = new AutoResetEvent(false);
+            AutoResetEvent asyncErr1   = new AutoResetEvent(false);
+            AutoResetEvent asyncErr2   = new AutoResetEvent(false);
+            AutoResetEvent recvCh      = new AutoResetEvent(false);
+            AutoResetEvent recvCh1     = new AutoResetEvent(false);
+            AutoResetEvent recvCh2     = new AutoResetEvent(false);
 
             using (NATSServer s = utils.CreateServerWithConfig("auth_1222.conf"))
             {
@@ -204,28 +204,29 @@ namespace NATSUnitTests
                 {
                     Thread.Sleep(100);
                     rtime = DateTime.Now.Ticks;
-                    reconnected.notify();
+                    reconnected.Set();
                 };
 
                 o.AsyncErrorEventHandler += (sender, args) =>
                 {
+                    Thread.Sleep(200);
                     if (args.Subscription.Subject.Equals("foo"))
                     {
-                        Thread.Sleep(200);
                         atime1 = DateTime.Now.Ticks;
-                        asyncErr1.notify();
+                        asyncErr1.Set();
                     }
                     else
                     {
                         atime2 = DateTime.Now.Ticks;
-                        asyncErr2.notify();
+                        asyncErr2.Set();
                     }
                 };
 
                 o.ClosedEventHandler += (sender, args) =>
                 {
+                    Thread.Sleep(100);
                     ctime = DateTime.Now.Ticks;
-                    closed.notify();
+                    closed.Set();
                 };
 
                 o.ReconnectWait = 50;
@@ -236,24 +237,28 @@ namespace NATSUnitTests
                 using (IConnection nc = new ConnectionFactory().CreateConnection(o),
                        ncp = new ConnectionFactory().CreateConnection())
                 {
+                    // On hosted environments, some threads/tasks can start before others
+                    // due to resource constraints.  Allow time to start.
+                    Thread.Sleep(500);
+
                     utils.StopDefaultServer();
 
                     Thread.Sleep(1000);
 
                     utils.StartDefaultServer();
 
-                    reconnected.wait(3000);
+                    reconnected.WaitOne(3000);
 
                     EventHandler<MsgHandlerEventArgs> eh = (sender, args) =>
                     {
-                        recvCh.notify();
+                        recvCh.Set();
                         if (args.Message.Subject.Equals("foo"))
                         {
-                            recvCh1.notify();
+                            recvCh1.Set();
                         }
                         else
                         { 
-                            recvCh2.notify();
+                            recvCh2.Set();
                         }
                     };
 
@@ -266,7 +271,7 @@ namespace NATSUnitTests
                     ncp.Publish("bar", System.Text.Encoding.UTF8.GetBytes("hello"));
                     ncp.Flush();
 
-                    recvCh.wait(3000);
+                    recvCh.WaitOne(3000);
 
                     for (int i = 0; i < 3; i++)
                     {
@@ -276,16 +281,16 @@ namespace NATSUnitTests
 
                     ncp.Flush();
 
-                    asyncErr1.wait(3000);
-                    asyncErr2.wait(3000);
+                    asyncErr1.WaitOne(3000);
+                    asyncErr2.WaitOne(3000);
 
                     utils.StopDefaultServer();
 
                     Thread.Sleep(1000);
-                    closed.reset();
+                    closed.Reset();
                     nc.Close();
 
-                    closed.wait(3000);
+                    closed.WaitOne(3000);
                 }
 
 
