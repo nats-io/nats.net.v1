@@ -66,12 +66,15 @@ namespace NATSExamples
         private TimeSpan receiveAsyncSubscriber(IConnection c)
         {
             Stopwatch sw = null;
-            Object testLock = new Object();
+            AutoResetEvent subDone = new AutoResetEvent(false);
 
             EventHandler<MsgHandlerEventArgs> msgHandler = (sender, args) =>
             {
                 if (received == 0)
+                {
+                    sw = new Stopwatch();
                     sw.Start();
+                }
 
                 received++;
 
@@ -80,24 +83,19 @@ namespace NATSExamples
 
                 replyMsg.Subject = args.Message.Reply;
                 c.Publish(replyMsg);
+                c.Flush();
 
-                if (received >= count)
+                if (received == count)
                 {
                     sw.Stop();
-                    lock (testLock)
-                    {
-                        Monitor.Pulse(testLock);
-                    }
+                    subDone.Set();
                 }
             };
 
             using (IAsyncSubscription s = c.SubscribeAsync(subject, msgHandler))
             {
                 // just wait to complete
-                lock (testLock)
-                {
-                    Monitor.Wait(testLock);
-                }
+                subDone.WaitOne();
             }
 
             return sw.Elapsed;
@@ -134,7 +132,7 @@ namespace NATSExamples
         private void usage()
         {
             System.Console.Error.WriteLine(
-                "Usage:  Publish [-url url] [-subject subject] " +
+                "Usage:  Replier [-url url] [-subject subject] " +
                 "-count [count] [-sync] [-verbose]");
 
             System.Environment.Exit(-1);
