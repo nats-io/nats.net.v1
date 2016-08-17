@@ -10,19 +10,23 @@ namespace NATS.Client
         internal Uri url = null;
         internal bool didConnect = false;
         internal int reconnects = 0;
-        internal System.DateTime lastAttempt = System.DateTime.Now;
+        internal DateTime lastAttempt = DateTime.Now;
 
         // never create a srv object without a url.
         private Srv() { }
 
-        internal Srv(String urlString)
+        internal Srv(string urlString)
         {
-            this.url = new Uri(urlString);
+            // allow for host:port, without the prefix.
+            if (urlString.ToLower().StartsWith("nats") == false)
+                urlString = "nats://" + urlString;
+
+            url = new Uri(urlString);
         }
 
         internal void updateLastAttempt()
         {
-            lastAttempt = System.DateTime.Now;
+            lastAttempt = DateTime.Now;
         }
 
         internal TimeSpan TimeSinceLastAttempt

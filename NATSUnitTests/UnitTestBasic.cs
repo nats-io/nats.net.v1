@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using NATS.Client;
 using System.Diagnostics;
 using Xunit;
+using System.Collections.Generic;
 
 namespace NATSUnitTests
 {
@@ -892,13 +893,78 @@ namespace NATSUnitTests
             Assert.True(c.Opts.Servers[2].Equals(url3));
             c.Close();
 
-            urls = "  " + url1 + "    , " + url2 + ",";
-
-            Assert.ThrowsAny<Exception>(() => new ConnectionFactory().CreateConnection(urls));
-
             c = new ConnectionFactory().CreateConnection(url1);
             c.Close();
         }
+
+        [Fact]
+        public void TestAsyncInfoProtocolConnect()
+        {
+            using (NATSServer s1 = new NATSServer("-p 4223 --cluster nats://127.0.0.1:4555 --routes nats://127.0.0.1:4666"),
+                              s2 = new NATSServer("-p 4224 --cluster nats://127.0.0.1:4666 --routes nats://127.0.0.1:4555"))
+            {
+                // let the server cluster form
+                Thread.Sleep(1000);
+
+                var opts = ConnectionFactory.GetDefaultOptions();
+                opts.Url = "nats://127.0.0.1:4223";
+
+                var c = new ConnectionFactory().CreateConnection(opts);
+                Thread.Sleep(1000);
+
+                Assert.True(c.Servers.Length == 2);
+
+                c.Close();
+            }
+        }
+
+        [Fact]
+        public void TestAsyncInfoProtocolUpdate()
+        {
+            AutoResetEvent evReconnect = new AutoResetEvent(false);
+            var opts = ConnectionFactory.GetDefaultOptions();
+            opts.Url = "nats://127.0.0.1:4223";
+            string newUrl = null;
+
+            opts.ReconnectedEventHandler = (obj, args) =>
+            {
+                newUrl = args.Conn.ConnectedUrl;
+                evReconnect.Set();
+            };
+
+            // Specify localhost - the 127.0.0.1 should prevent one of the urls
+            // from being added - for adding servers, 127.0.0.1 matches localhost.
+            using (NATSServer s1 = new NATSServer("-a localhost -p 4223 --cluster nats://127.0.0.1:4555 --routes nats://127.0.0.1:4666"))
+            {
+                var c = new ConnectionFactory().CreateConnection(opts);
+
+                Assert.True(c.Servers.Length == 1);
+                Assert.True(c.Servers[0].Equals(opts.Url));
+
+                using (NATSServer s2 = new NATSServer("-a localhost -p 4224 --cluster nats://127.0.0.1:4666 --routes nats://127.0.0.1:4555"))
+                {
+                    // wait until the servers are routed and the conn has the updated
+                    // server list.
+                    for (int i = 0; i < 5; i++)
+                    {
+                        Thread.Sleep(500 * i);
+
+                        if (c.Servers.Length >= 2)
+                            break;
+                    }
+
+                    s1.Shutdown();
+
+                    Assert.True(evReconnect.WaitOne(10000));
+                    Assert.True(c.Servers.Length == 2);
+                    Assert.True(newUrl != null);
+                    Assert.False(newUrl.Equals(opts.Url));
+                }
+
+                c.Close();
+            }
+        }
+
     } // class
 
 } // namespace

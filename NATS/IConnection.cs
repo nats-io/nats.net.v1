@@ -1,9 +1,6 @@
 ﻿// Copyright 2015 Apcera Inc. All rights reserved.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace NATS.Client
 {
@@ -28,6 +25,12 @@ namespace NATS.Client
         string ConnectedId { get; }
 
         /// <summary>
+        /// Servers returns the list of known servers, including additional servers
+        /// discovered after a connection has been established.
+        /// </summary>
+        string[] Servers { get; }
+
+        /// <summary>
         /// LastError reports the last error encountered via the Connection.
         /// </summary>
         Exception LastError { get; }
@@ -42,7 +45,7 @@ namespace NATS.Client
         void Publish(string subject, byte[] data);
 
         /// <summary>
-        /// Publishes the Msg structure, which includes the
+        /// Publishes a Msg object, which includes the
         /// Subject, an optional Reply and an optional Data field.
         /// </summary>
         /// <param name="msg">The message to send.</param>

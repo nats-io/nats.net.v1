@@ -12,8 +12,14 @@ namespace NATSUnitTests
     class NATSServer : IDisposable
     {
         // Enable this for additional server debugging info.
-        bool debug = false;
+        static bool debug = false;
         Process p;
+
+        internal static bool Debug
+        {
+            set { debug = value; }
+            get { return debug; }
+        }
 
         public NATSServer()
         {
