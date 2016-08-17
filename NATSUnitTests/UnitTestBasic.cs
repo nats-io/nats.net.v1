@@ -912,7 +912,7 @@ namespace NATSUnitTests
                 var c = new ConnectionFactory().CreateConnection(opts);
                 Thread.Sleep(1000);
 
-                Assert.True(c.Servers.Length == 2);
+                Assert.True(c.Servers.Length >= 2);
 
                 c.Close();
             }
