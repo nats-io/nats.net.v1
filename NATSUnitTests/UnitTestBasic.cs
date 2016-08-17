@@ -814,7 +814,7 @@ namespace NATSUnitTests
 
                 using (IAsyncSubscription s = c.SubscribeAsync(subject))
                 {
-                    Object testLock = new Object();
+                    AutoResetEvent msgReceived = new AutoResetEvent(false);
 
                     s.MessageHandler += (sender, args) =>
                     {
@@ -822,10 +822,7 @@ namespace NATSUnitTests
 
                         Assert.Equal(reply, args.Message.Reply);
 
-                        lock (testLock)
-                        {
-                            Monitor.Pulse(testLock);
-                        }
+                        msgReceived.Set();
                     };
 
                     s.Start();
@@ -833,10 +830,7 @@ namespace NATSUnitTests
                     c.Publish(subject, reply, null);
                     c.Flush();
 
-                    lock (testLock)
-                    {
-                        Assert.True(Monitor.Wait(testLock, 1000));
-                    }
+                    Assert.True(msgReceived.WaitOne(10000));
                 }
             }
         }
