@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -30,67 +29,15 @@ namespace NATS.Client
         CONNECTING
     }
 
-    internal class ServerInfo
+    internal enum ClientProtcolVersion
     {
-        internal string Id;
-        internal string Host;
-        internal int Port;
-        internal string Version;
-        internal bool AuthRequired;
-        internal bool TlsRequired;
-        internal Int64 MaxPayload;
+        // clientProtoZero is the original client protocol from 2009.
+ 	    // http://nats.io/documentation/internals/nats-protocol/
+        ClientProtoZero = 0,
 
-        Dictionary<string, string> parameters = new Dictionary<string, string>();
-
-        // A quick and dirty way to convert the server info string.
-        // .NET 4.5/4.6 natively supports JSON, but 4.0 does not, and we
-        // don't want to require users to to download a seperate json.NET
-        // tool for a minimal amount of parsing.
-        internal ServerInfo(string jsonString)
-        {
-            string[] kv_pairs = jsonString.Split(',');
-            foreach (string s in kv_pairs)
-                addKVPair(s);
-
-            Id = parameters["server_id"];
-            Host = parameters["host"];
-            Port = Convert.ToInt32(parameters["port"]);
-            Version = parameters["version"];
-
-            AuthRequired = "true".Equals(parameters["auth_required"]);
-            TlsRequired = "true".Equals(parameters["tls_required"]);
-            MaxPayload = Convert.ToInt64(parameters["max_payload"]);
-        }
-
-        private void addKVPair(string kv_pair)
-        {
-            string key;
-            string value;
-
-            kv_pair.Trim();
-
-            string[] parts = kv_pair.Split(new string[] {"\":"}, StringSplitOptions.None);
-
-            // silently ignore what we don't understand.
-            if (parts.Length != 2)
-                return;
-
-            if (string.IsNullOrWhiteSpace(parts[0]) ||
-                string.IsNullOrWhiteSpace(parts[1]))
-            {
-                return;
-            }
-
-            key   = parts[0].Trim().TrimStart('{');
-            value = parts[1].Trim().TrimEnd('}');
-
-            // trim off spaces and quotes.
-            key = key.Trim().Trim('\"');
-            value = value.Trim().Trim('\"');
-
-            parameters.Add(key, value);
-        }
-
+        // ClientProtoInfo signals a client can receive more then the original INFO block.
+        // This can be used to update clients on other cluster members, etc.
+        ClientProtoInfo
     }
 
     // TODO - for a pure object model, we can create
@@ -118,9 +65,10 @@ namespace NATS.Client
 
         List<Thread> wg = new List<Thread>(2);
 
-
         private Uri             url     = null;
-        private LinkedList<Srv> srvPool = new LinkedList<Srv>();
+        private ServerPool srvPool = new ServerPool();
+
+        private Dictionary<string, Uri> urls = new Dictionary<string, Uri>();
 
         // we have a buffered reader for writing, and reading.
         // This is for both performance, and having to work around
@@ -484,70 +432,6 @@ namespace NATS.Client
             }
         }
 
-        private class ConnectInfo
-        {
-            bool verbose;
-            bool pedantic;
-            string user;
-            string pass;
-            bool ssl;
-            string name;
-            string lang = Defaults.LangString;
-            string version = Defaults.Version;
-
-            internal ConnectInfo(bool verbose, bool pedantic, string user, string pass,
-                bool secure, string name)
-            {
-                this.verbose  = verbose;
-                this.pedantic = pedantic;
-                this.user     = user;
-                this.pass     = pass;
-                this.ssl      = secure;
-                this.name     = name;
-            }
-
-            /// <summary>
-            /// .NET 4 does not natively support JSON parsing.  When moving to 
-            /// support only .NET 4.5 and above use the JSON support provided
-            /// by Microsoft. (System.json)
-            /// </summary>
-            /// <returns>JSON string repesentation of the current object.</returns>
-            internal string ToJson()
-            {
-                StringBuilder sb = new StringBuilder();
-
-                sb.Append("{");
-
-                sb.AppendFormat("\"verbose\":{0},\"pedantic\":{1},",
-                    verbose ? "true" : "false",
-                    pedantic ? "true" : "false");
-
-                // if there is a username with a password, then the username
-                // is a username/password.  Othwerwise, assume the username
-                // is a token.
-                if (user != null)
-                {
-                    if (pass != null)
-                    {
-                        sb.AppendFormat("\"user\":\"{0}\",", user);
-                        sb.AppendFormat("\"pass\":\"{0}\",", pass);
-                    }
-                    else
-                    {
-                        sb.AppendFormat("\"auth_token\":\"{0}\",", user);
-                    }
-                }
-
-                sb.AppendFormat(
-                    "\"ssl_required\":{0},\"name\":\"{1}\",\"lang\":\"{2}\",\"version\":\"{3}\"",
-                    ssl ? "true" : "false", name, lang, version);
-
-                sb.Append("}");
-
-                return sb.ToString();
-            }
-        }
-
         // Ensure we cannot instanciate a connection this way.
         private Connection() { }
 
@@ -580,92 +464,18 @@ namespace NATS.Client
             Buffer.BlockCopy(PUB_P_BYTES, 0, pubProtoBuf, 0, PUB_P_BYTES_LEN);
         }
 
-
-        /// Return bool indicating if we have more servers to try to establish
-        /// a connection.
-        private bool isServerAvailable()
-        {
-            return (srvPool.Count > 0);
-        }
-
-        // Return the currently selected server
-        private Srv currentServer
-        {
-            get
-            {
-                if (!isServerAvailable())
-                    return null;
-
-                foreach (Srv s in srvPool)
-                {
-                    if (s.url.OriginalString.Equals(this.url.OriginalString))
-                        return s;
-                }
-
-                return null;
-            }
-        }
-
-        // Pop the current server and put onto the end of the list. Select head of list as long
-        // as number of reconnect attempts under MaxReconnect.
-        private Srv selectNextServer()
-        {
-            Srv s = this.currentServer;
-            if (s == null)
-                return null;
-
-            int num = srvPool.Count;
-            int maxReconnect = opts.MaxReconnect;
-
-            // remove the current server.
-            srvPool.Remove(s);
-
-            if (maxReconnect > 0 && s.reconnects < maxReconnect)
-            {
-                // if we haven't surpassed max reconnects, add it
-                // to try again.
-                srvPool.AddLast(s);
-            }
-
-            if (srvPool.Count <= 0)
-            {
-                this.url = null;
-                return null;
-            }
-
-            Srv first = srvPool.First();
-            this.url = first.url;
-
-            return first;
-        }
-
         // Will assign the correct server to the Conn.Url
         private void pickServer()
         {
-            this.url = null;
+            url = null;
 
-            if (!isServerAvailable())
+            Srv s = srvPool.First();
+            if (s == null)
                 throw new NATSNoServersException("Unable to choose server; no servers available.");
 
-            this.url = srvPool.First().url;
+            url = s.url;
         }
 
-        private List<string> randomizeList(string[] serverArray)
-        {
-            List<string> randList = new List<string>();
-            List<string> origList = new List<string>(serverArray);
-
-            Random r = new Random();
-
-            while (origList.Count > 0)
-            {
-                int index = r.Next(0, origList.Count);
-                randList.Add(origList[index]);
-                origList.RemoveAt(index);
-            }
-
-            return randList;
-        }
 
         // Create the server pool using the options given.
         // We will place a Url option first, followed by any
@@ -673,39 +483,18 @@ namespace NATS.Client
         // the NoRandomize flag is set.
         private void setupServerPool()
         {
-            List<string> servers;
-
-            if (!string.IsNullOrWhiteSpace(Opts.Url))
-                srvPool.AddLast(new Srv(Opts.Url));
-
-            if (Opts.Servers != null)
-            {
-                if (Opts.NoRandomize)
-                    servers = new List<string>(Opts.Servers);
-                else
-                    servers = randomizeList(Opts.Servers);
-
-                foreach (string s in servers)
-                    srvPool.AddLast(new Srv(s));
-            }
-
-            // Place default URL if pool is empty.
-            if (srvPool.Count == 0)
-                srvPool.AddLast(new Srv(Defaults.Url));
-
+            srvPool.Setup(Opts);
             pickServer();
         }
 
         // createConn will connect to the server and wrap the appropriate
         // bufio structures. It will do the right thing when an existing
         // connection is in place.
-        private bool createConn()
+        private bool createConn(Srv s)
         {
-            currentServer.updateLastAttempt();
-
             try
             {
-                conn.open(currentServer, opts.Timeout);
+                conn.open(s, opts.Timeout);
 
                 if (pending != null && bw != null)
                 {
@@ -874,7 +663,18 @@ namespace NATS.Client
                     if (status != ConnState.CONNECTED)
                         return IC._EMPTY_;
 
-                    return this.info.Id;
+                    return this.info.serverId;
+                }
+            }
+        }
+
+        public string[] Servers
+        {
+            get
+            {
+                lock (mu)
+                {
+                    return srvPool.GetServerList();
                 }
             }
         }
@@ -905,54 +705,48 @@ namespace NATS.Client
             new Task(() => { spinUpSocketWatchers(); }).Start();
         }
 
+        internal bool connect(Srv s, out Exception exToThrow)
+        {
+            url = s.url;
+            try
+            {
+                exToThrow = null;
+                lock (mu)
+                {
+                    if (createConn(s))
+                    {
+                        processConnectInit();
+                        exToThrow = null;
+                        return true;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                exToThrow = e;
+                close(ConnState.DISCONNECTED, false);
+                lock (mu)
+                {
+                    url = null;
+                }
+            }
+
+            return false;
+        }
+
         internal void connect()
         {
             Exception exToThrow = null;
 
             setupServerPool();
-            // Create actual socket connection
-            // For first connect we walk all servers in the pool and try
-            // to connect immediately.
-            bool connected = false;
-            foreach (Srv s in srvPool)
-            {
-                this.url = s.url;
-                try
-                {
-                    exToThrow = null;
-                    lock (mu)
-                    {
-                        if (createConn())
-                        {
-                            processConnectInit();
 
-                            s.didConnect = true;
-                            s.reconnects = 0;
-
-                            connected = true;
-                            exToThrow = null;
-                        }
-                    }
-
-                }
-                catch (Exception e)
-                {
-                    exToThrow = e;
-                    close(ConnState.DISCONNECTED, false);
-                    lock (mu)
-                    {
-                        this.url = null;
-                    }
-                }
-
-                if (connected)
-                    break;
-
-            } // for
+            srvPool.ConnectToAServer((s) => {
+                return connect(s, out exToThrow);
+            });
 
             lock (mu)
             {
-                if (this.status != ConnState.CONNECTED)
+                if (status != ConnState.CONNECTED)
                 {
                     if (exToThrow == null)
                         exToThrow = new NATSNoServersException("Unable to connect to a server.");
@@ -969,11 +763,11 @@ namespace NATS.Client
         {
             // Check to see if we need to engage TLS
             // Check for mismatch in setups
-            if (Opts.Secure && !info.TlsRequired)
+            if (Opts.Secure && !info.tlsRequired)
             {
                 throw new NATSSecureConnWantedException();
             }
-            else if (info.TlsRequired && !Opts.Secure)
+            else if (info.tlsRequired && !Opts.Secure)
             {
                 throw new NATSSecureConnRequiredException();
             }
@@ -1043,9 +837,10 @@ namespace NATS.Client
         // applicable. The lock is assumed to be held upon entering.
         private string connectProto()
         {
-            String u = url.UserInfo;
-            String user = null;
-            String pass = null;
+            string u = url.UserInfo;
+            string user = null;
+            string pass = null;
+            string token = null;
 
             if (!string.IsNullOrEmpty(u))
             {
@@ -1063,12 +858,18 @@ namespace NATS.Client
                 }
                 else
                 {
-                    user = u;
+                    token = u;
                 }
+            }
+            else
+            {
+                user = opts.user;
+                pass = opts.password;
+                token = opts.token;
             }
 
             ConnectInfo info = new ConnectInfo(opts.Verbose, opts.Pedantic, user,
-                pass, opts.Secure, opts.Name);
+                pass, token, opts.Secure, opts.Name);
 
             StringBuilder sb = new StringBuilder();
 
@@ -1256,9 +1057,14 @@ namespace NATS.Client
 
             scheduleConnEvent(Opts.DisconnectedEventHandler);
 
+            // TODO:  Look at using a predicate delegate in the server pool to
+            // pass a method to, but locking is complex and would need to be
+            // reworked.
             Srv cur;
-            while ((cur = selectNextServer()) != null)
+            while ((cur = srvPool.SelectNextServer(Opts.MaxReconnect)) != null)
             {
+                url = cur.url;
+
                 lastEx = null;
 
                 // Sleep appropriate amount of time before the
@@ -1292,7 +1098,7 @@ namespace NATS.Client
                 try
                 {
                     // try to create a new connection
-                    createConn();
+                    createConn(cur);
                 }
                 catch (Exception)
                 {
@@ -1332,6 +1138,7 @@ namespace NATS.Client
                 stats.reconnects++;
                 cur.didConnect = true;
                 cur.reconnects = 0;
+                srvPool.CurrentServer = cur;
                 status = ConnState.CONNECTED;
 
                 scheduleConnEvent(Opts.ReconnectedEventHandler);
@@ -1715,14 +1522,27 @@ namespace NATS.Client
 
         // processInfo is used to parse the info messages sent
         // from the server.
-        internal void processInfo(string info)
+        internal void processInfo(string json)
         {
-            if (info == null || IC._EMPTY_.Equals(info))
+            if (json == null || IC._EMPTY_.Equals(json))
             {
                 return;
             }
 
-            this.info = new ServerInfo(info);
+            info = ServerInfo.CreateFromJson(json);
+            if (srvPool.Add(info.connectURLs))
+            {
+                if (opts.NoRandomize == false)
+                    srvPool.Shuffle();
+            }
+        }
+
+        internal void processAsyncInfo(byte[] jsonBytes, int length)
+        {
+            lock (mu)
+            {
+                processInfo(Encoding.UTF8.GetString(jsonBytes, 0, length));
+            }
         }
 
         // LastError reports the last error encountered via the Connection.
@@ -1827,7 +1647,7 @@ namespace NATS.Client
             lock (mu)
             {
                 // Proactively reject payloads over the threshold set by server.
-                if (msgSize > info.MaxPayload)
+                if (msgSize > info.maxPayload)
                     throw new NATSMaxPayloadException();
 
                 if (isClosed())
@@ -2365,7 +2185,7 @@ namespace NATS.Client
             {
                 lock (mu)
                 {
-                    return info.MaxPayload;
+                    return info.maxPayload;
                 }
             }
         }
@@ -2381,14 +2201,29 @@ namespace NATS.Client
             sb.Append("{");
             sb.AppendFormat("url={0};", url);
             sb.AppendFormat("info={0};", info);
-            sb.AppendFormat("status={0}", status);
+            sb.AppendFormat("status={0};", status);
             sb.Append("Subscriptions={");
             foreach (Subscription s in subs.Values)
             {
-                sb.Append("Subscription {" + s.ToString() + "}");
+                sb.Append("Subscription {" + s.ToString() + "};");
             }
-            sb.Append("}}");
+            sb.Append("};");
 
+            string[] servers = Servers;
+            if (servers != null)
+            {
+                bool printedFirst = false;
+                sb.Append("Servers {");
+                foreach (string s in servers)
+                {
+                    if (printedFirst)
+                        sb.Append(",");
+
+                    sb.AppendFormat("[{0}]", s);
+                    printedFirst = true;
+                }
+            }
+            sb.Append("}");
             return sb.ToString();
         }
 

@@ -232,7 +232,7 @@ namespace NATSUnitTests
 
                 o.ReconnectWait = 500;
                 o.NoRandomize = true;
-                o.Servers = new string[] { "nats://localhost:4222", "nats:localhost:1222" };
+                o.Servers = new string[] { "nats://localhost:4222", "nats://localhost:1222" };
                 o.SubChannelLength = 1;
 
                 using (IConnection nc = new ConnectionFactory().CreateConnection(o),
@@ -347,7 +347,7 @@ namespace NATSUnitTests
                 ((double)(Process.GetCurrentProcess().PrivateMemorySize64 - memStart))
                     / (double)memStart);
 
-            Assert.True(memGrowthPercent < 10.0);
+            Assert.True(memGrowthPercent < 20.0);
         }
 
         [Fact]
@@ -373,6 +373,41 @@ namespace NATSUnitTests
             using (var c = new ConnectionFactory().CreateConnection())
             {
                 c.Dispose();
+            }
+        }
+
+        [Fact]
+        public void TestUserPassTokenOptions()
+        {
+            using (new NATSServer("-p 4444 --auth foo"))
+            {
+                Options opts = ConnectionFactory.GetDefaultOptions();
+
+                opts.Url = "nats://localhost:4444";
+                opts.Token = "foo";
+                var c = new ConnectionFactory().CreateConnection(opts);
+                c.Close();
+
+                opts.Token = "garbage";
+                Assert.Throws<NATSConnectionException>(() => { new ConnectionFactory().CreateConnection(opts); });
+            }
+
+            using (new NATSServer("-p 4444 --user foo --pass b@r"))
+            {
+                Options opts = ConnectionFactory.GetDefaultOptions();
+
+                opts.Url = "nats://localhost:4444";
+                opts.User = "foo";
+                opts.Password = "b@r";
+                var c = new ConnectionFactory().CreateConnection(opts);
+                c.Close();
+
+                opts.Password = "garbage";
+                Assert.Throws<NATSConnectionException>(() => { new ConnectionFactory().CreateConnection(opts); });
+
+                opts.User = "baz";
+                opts.Password = "bar";
+                Assert.Throws<NATSConnectionException>(() => { new ConnectionFactory().CreateConnection(opts); });
             }
         }
 

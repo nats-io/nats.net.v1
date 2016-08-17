@@ -15,7 +15,7 @@ namespace NATS.Client
         string url = null;
         string[] servers = null;
         bool noRandomize = false;
-        String name = null;
+        string name = null;
         bool verbose = false;
         bool pedantic = false;
         bool secure = false;
@@ -55,6 +55,10 @@ namespace NATS.Client
 
         internal int subChanLen = 40000;
 
+        internal string user;
+        internal string password;
+        internal string token;
+
         // Options can only be publicly created through 
         // ConnectionFactory.GetDefaultOptions();
         internal Options() { }
@@ -62,48 +66,51 @@ namespace NATS.Client
         // Copy constructor
         internal Options(Options o)
         {
-            this.allowReconnect = o.allowReconnect;
-            this.AsyncErrorEventHandler = o.AsyncErrorEventHandler;
-            this.ClosedEventHandler = o.ClosedEventHandler;
-            this.DisconnectedEventHandler = o.DisconnectedEventHandler;
-            this.maxPingsOut = o.maxPingsOut;
-            this.maxReconnect = o.maxReconnect;
+            allowReconnect = o.allowReconnect;
+            AsyncErrorEventHandler = o.AsyncErrorEventHandler;
+            ClosedEventHandler = o.ClosedEventHandler;
+            DisconnectedEventHandler = o.DisconnectedEventHandler;
+            maxPingsOut = o.maxPingsOut;
+            maxReconnect = o.maxReconnect;
 
             if (o.name != null)
             {
-                this.name = new string(o.name.ToCharArray());
+                name = new string(o.name.ToCharArray());
             }
 
-            this.noRandomize = o.noRandomize;
-            this.pedantic = o.pedantic;
-            this.pingInterval = o.pingInterval;
-            this.ReconnectedEventHandler = o.ReconnectedEventHandler;
-            this.reconnectWait = o.reconnectWait;
-            this.secure = o.secure;
-            this.verbose = o.verbose;
+            noRandomize = o.noRandomize;
+            pedantic = o.pedantic;
+            pingInterval = o.pingInterval;
+            ReconnectedEventHandler = o.ReconnectedEventHandler;
+            reconnectWait = o.reconnectWait;
+            secure = o.secure;
+            user = o.user;
+            password = o.password;
+            token = o.token;
+            verbose = o.verbose;
             
             if (o.servers != null)
             {
-                this.servers = new string[o.servers.Length];
-                Array.Copy(o.servers, this.servers, o.servers.Length);
+                servers = new string[o.servers.Length];
+                Array.Copy(o.servers, servers, o.servers.Length);
             }
 
-            this.subChanLen = o.subChanLen;
-            this.timeout = o.timeout;
-            this.TLSRemoteCertificationValidationCallback = o.TLSRemoteCertificationValidationCallback;
+            subChanLen = o.subChanLen;
+            timeout = o.timeout;
+            TLSRemoteCertificationValidationCallback = o.TLSRemoteCertificationValidationCallback;
 
             if (o.url != null)
             {
-                this.url = new String(o.url.ToCharArray());
+                url = new String(o.url.ToCharArray());
             }
 
             if (o.certificates != null)
             {
-                this.certificates = new X509Certificate2Collection(o.certificates);
+                certificates = new X509Certificate2Collection(o.certificates);
             }
         }
 
-        internal void processUrlString(String url)
+        internal void processUrlString(string url)
         {
             if (url == null)
                 return;
@@ -114,7 +121,7 @@ namespace NATS.Client
                 urls[i] = urls[i].Trim();
             }
 
-            this.servers = urls;
+            servers = urls;
         }
 
         /// <summary>
@@ -123,8 +130,8 @@ namespace NATS.Client
         /// </summary>
         public string Url
         {
-            get { return this.url; }
-            set { this.url = value; }
+            get { return url; }
+            set { url = value; }
         }
 
         /// <summary>
@@ -132,8 +139,8 @@ namespace NATS.Client
         /// </summary>
         public string[] Servers
         {
-            get { return this.servers; }
-            set {  this.servers = value; }
+            get { return servers; }
+            set { servers = value; }
         }
 
         /// <summary>
@@ -141,8 +148,8 @@ namespace NATS.Client
         /// </summary>
         public bool NoRandomize
         {
-            get {  return this.noRandomize;  }
-            set { this.noRandomize = value;  }
+            get { return noRandomize;  }
+            set { noRandomize = value;  }
         }
 
         /// <summary>
@@ -150,8 +157,8 @@ namespace NATS.Client
         /// </summary>
         public string Name
         {
-            get {  return this.name; }
-            set  {  this.name = value; }
+            get { return name; }
+            set { name = value; }
         }
 
         /// <summary>
@@ -159,8 +166,8 @@ namespace NATS.Client
         /// </summary>
         public bool Verbose
         {
-            get {  return this.verbose;  }
-            set  { this.verbose = value; }
+            get { return verbose;  }
+            set { verbose = value; }
         }
 
         /// <summary>
@@ -168,8 +175,8 @@ namespace NATS.Client
         /// </summary>
         public bool Pedantic
         {
-            get { return this.pedantic; }
-            set { this.pedantic = value; }
+            get { return pedantic; }
+            set { pedantic = value; }
         }
 
         /// <summary>
@@ -177,8 +184,8 @@ namespace NATS.Client
         /// </summary>
         public bool Secure
         {
-            get { return this.secure; }
-            set { this.secure = value; }
+            get { return secure; }
+            set { secure = value; }
         }
 
         /// <summary>
@@ -188,8 +195,8 @@ namespace NATS.Client
         /// </summary>
         public bool AllowReconnect
         {
-            get { return this.allowReconnect; }
-            set { this.allowReconnect = value; }
+            get { return allowReconnect; }
+            set { allowReconnect = value; }
         }
 
         /// <summary>
@@ -198,8 +205,8 @@ namespace NATS.Client
         /// </summary>
         public int MaxReconnect
         {
-            get { return this.maxReconnect; }
-            set { this.maxReconnect = value; }
+            get { return maxReconnect; }
+            set { maxReconnect = value; }
         }
 
         /// <summary>
@@ -208,8 +215,8 @@ namespace NATS.Client
         /// </summary>
         public int ReconnectWait
         {
-            get { return this.reconnectWait; }
-            set { this.reconnectWait = value; }
+            get { return reconnectWait; }
+            set { reconnectWait = value; }
         }
 
         /// <summary>
@@ -218,8 +225,8 @@ namespace NATS.Client
         /// </summary>
         public int PingInterval
         {
-            get { return this.pingInterval; }
-            set { this.pingInterval = value; }
+            get { return pingInterval; }
+            set { pingInterval = value; }
         }
 
         /// <summary>
@@ -227,7 +234,7 @@ namespace NATS.Client
         /// </summary>
         public int Timeout
         {
-            get { return this.timeout; }
+            get { return timeout; }
             set
             {
                 if (value < 0)
@@ -236,7 +243,7 @@ namespace NATS.Client
                         "Timeout must be zero or greater.");
                 }
 
-                this.timeout = value;
+                timeout = value;
             }
         }
 
@@ -246,8 +253,8 @@ namespace NATS.Client
         /// </summary>
         public int MaxPingsOut
         {
-            get { return this.maxPingsOut; }
-            set { this.maxPingsOut = value; }
+            get { return maxPingsOut; }
+            set { maxPingsOut = value; }
         }
 
         /// <summary>
@@ -256,8 +263,37 @@ namespace NATS.Client
         /// </summary>
         public int SubChannelLength
         {
-            get { return this.subChanLen; }
-            set { this.subChanLen = value; }
+            get { return subChanLen; }
+            set { subChanLen = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the user name used when connecting to the NATs server
+        /// when not included directly in the URLs.
+        /// </summary>
+        public string User
+        {
+            get { return user; }
+            set { user = value; }
+        }
+
+        /// <summary>
+        /// Sets the user password used when connecting to the NATs server
+        /// when not included directly in the URLs.
+        /// </summary>
+        public string Password
+        {
+            set { password = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the token used when connecting to the NATs server
+        /// when not included directly in the URLs.
+        /// </summary>
+        public string Token
+        {
+            get { return token; }
+            set { token = value; }
         }
 
         /// <summary>
@@ -324,6 +360,8 @@ namespace NATS.Client
             sb.AppendFormat("PingInterval={0};", PingInterval);
             sb.AppendFormat("ReconnectWait={0};", ReconnectWait);
             sb.AppendFormat("Secure={0};", Secure);
+            sb.AppendFormat("User={0};", User);
+            sb.AppendFormat("Token={0};", Token);
 
             if (Servers == null)
             {

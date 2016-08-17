@@ -77,6 +77,12 @@ namespace NATS.Client
 	    private const int OP_PO            = 29;
 	    private const int OP_PON           = 30;
 	    private const int OP_PONG          = 31;
+        private const int OP_I             = 32;
+        private const int OP_IN            = 33;
+        private const int OP_INF           = 34;
+        private const int OP_INFO          = 35;
+        private const int OP_INFO_SPC      = 36;
+        private const int INFO_ARG         = 37;
 
         private void parseError(byte[] buffer, int position)
         {
@@ -114,6 +120,10 @@ namespace NATS.Client
                                 break;
                             case '-':
                                 state = OP_MINUS;
+                                break;
+                            case 'i':
+                            case 'I':
+                                state = OP_I;
                                 break;
                             default:
                                 parseError(buffer,i);
@@ -424,6 +434,81 @@ namespace NATS.Client
                                 break;
                             default:
                                 parseError(buffer, i);
+                                break;
+                        }
+                        break;
+                    case OP_I:
+                        switch (b)
+                        {
+                            case 'N':
+                            case 'n':
+                                state = OP_IN;
+                                break;
+                            default:
+                                parseError(buffer, i);
+                                break;
+                        }
+                        break;
+                    case OP_IN:
+                        switch (b)
+                        {
+                            case 'F':
+                            case 'f':
+                                state = OP_INF;
+                                break;
+                            default:
+                                parseError(buffer, i);
+                                break;
+                        }
+                        break;
+                    case OP_INF:
+                        switch (b)
+                        {
+                            case 'O':
+                            case 'o':
+                                state = OP_INFO;
+                                break;
+                            default:
+                                parseError(buffer, i);
+                                break;
+                        }
+                        break;
+                    case OP_INFO:
+                        switch (b)
+                        {
+                            case ' ':
+                            case '\t':
+                                state = OP_INFO_SPC;
+                                break;
+                            default:
+                                parseError(buffer, i);
+                                break;
+                        }
+                        break;
+                    case OP_INFO_SPC:
+                        switch (b)
+                        {
+                            case ' ':
+                            case '\t':
+                                break;
+                            default:
+                                argBufStream.Position = 0;
+                                state = INFO_ARG;
+                                i--;
+                                break;
+                        }
+                        break;
+                    case INFO_ARG:
+                        switch (b)
+                        {
+                            case '\r':
+                                break;
+                            case '\n':
+                                conn.processAsyncInfo(argBufBase, (int)argBufStream.Position);
+                                state = OP_START;
+                                break;
+                            default:
+                                argBufStream.WriteByte((byte)b);
                                 break;
                         }
                         break;

@@ -29,6 +29,12 @@ namespace NATS.Client
         string ConnectedId { get; }
 
         /// <summary>
+        /// Servers returns the list of potential servers, including those updated after 
+        /// a connection has been made.
+        /// </summary>
+        string[] Servers { get; }
+
+        /// <summary>
         /// LastError reports the last error encountered via the Connection.
         /// </summary>
         Exception LastError { get; }
