@@ -814,15 +814,16 @@ namespace NATSUnitTests
 
                 using (IAsyncSubscription s = c.SubscribeAsync(subject))
                 {
-                    AutoResetEvent msgReceived = new AutoResetEvent(false);
+                    AutoResetEvent ev = new AutoResetEvent(false);
+                    string recvSubj = null;
+                    string recvReply = null;
 
                     s.MessageHandler += (sender, args) =>
                     {
-                        Assert.Equal(subject, args.Message.Subject);
+                        recvSubj = args.Message.Subject;
+                        recvReply = args.Message.Reply;
 
-                        Assert.Equal(reply, args.Message.Reply);
-
-                        msgReceived.Set();
+                        ev.Set();
                     };
 
                     s.Start();
@@ -830,7 +831,9 @@ namespace NATSUnitTests
                     c.Publish(subject, reply, null);
                     c.Flush();
 
-                    Assert.True(msgReceived.WaitOne(10000));
+                    Assert.True(ev.WaitOne(10000));
+                    Assert.Equal(subject, recvSubj);
+                    Assert.Equal(reply, recvReply);
                 }
             }
         }
