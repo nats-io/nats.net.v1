@@ -12,5 +12,6 @@ var searchData=
   ['natssecureconnwantedexception',['NATSSecureConnWantedException',['../class_n_a_t_s_1_1_client_1_1_n_a_t_s_secure_conn_wanted_exception.html',1,'NATS::Client']]],
   ['natsslowconsumerexception',['NATSSlowConsumerException',['../class_n_a_t_s_1_1_client_1_1_n_a_t_s_slow_consumer_exception.html',1,'NATS::Client']]],
   ['natsstaleconnectionexception',['NATSStaleConnectionException',['../class_n_a_t_s_1_1_client_1_1_n_a_t_s_stale_connection_exception.html',1,'NATS::Client']]],
-  ['natstimeoutexception',['NATSTimeoutException',['../class_n_a_t_s_1_1_client_1_1_n_a_t_s_timeout_exception.html',1,'NATS::Client']]]
+  ['natstimeoutexception',['NATSTimeoutException',['../class_n_a_t_s_1_1_client_1_1_n_a_t_s_timeout_exception.html',1,'NATS::Client']]],
+  ['nuid',['NUID',['../class_n_a_t_s_1_1_client_1_1_n_u_i_d.html',1,'NATS::Client']]]
 ];

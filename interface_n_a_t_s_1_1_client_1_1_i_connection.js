@@ -11,6 +11,10 @@ var interface_n_a_t_s_1_1_client_1_1_i_connection =
     [ "Publish", "interface_n_a_t_s_1_1_client_1_1_i_connection.html#a04229ac32f36b2e9205d365c9946018d", null ],
     [ "Request", "interface_n_a_t_s_1_1_client_1_1_i_connection.html#af505ceaf2a275d19765370ecf0cbdacf", null ],
     [ "Request", "interface_n_a_t_s_1_1_client_1_1_i_connection.html#a4210238627f16c565d8ce88421ada056", null ],
+    [ "RequestAsync", "interface_n_a_t_s_1_1_client_1_1_i_connection.html#a84fab4c5d1d1d85ae69c6a34a80c58ab", null ],
+    [ "RequestAsync", "interface_n_a_t_s_1_1_client_1_1_i_connection.html#a14b2676ce076e6ebcc18de13dac130e0", null ],
+    [ "RequestAsync", "interface_n_a_t_s_1_1_client_1_1_i_connection.html#a782c673b4e7a0b62415c3d31015d2655", null ],
+    [ "RequestAsync", "interface_n_a_t_s_1_1_client_1_1_i_connection.html#ade2a3eb4b6caed97b19c74ebf2f453a7", null ],
     [ "ResetStats", "interface_n_a_t_s_1_1_client_1_1_i_connection.html#aeacf1cd47dffe1a641a4256721c021b6", null ],
     [ "SubscribeAsync", "interface_n_a_t_s_1_1_client_1_1_i_connection.html#a5a608d7829d1739781fd3fc96406f878", null ],
     [ "SubscribeAsync", "interface_n_a_t_s_1_1_client_1_1_i_connection.html#ab063e2130a13a4becad6ca8fe433c42c", null ],
@@ -23,6 +27,7 @@ var interface_n_a_t_s_1_1_client_1_1_i_connection =
     [ "LastError", "interface_n_a_t_s_1_1_client_1_1_i_connection.html#a97322f6714fe27d8ad10a618cc70b9ea", null ],
     [ "MaxPayload", "interface_n_a_t_s_1_1_client_1_1_i_connection.html#adf18200f0d9177ed2d2a65b05e467c69", null ],
     [ "Opts", "interface_n_a_t_s_1_1_client_1_1_i_connection.html#a902a736d0c779192923eb6ec0519153a", null ],
+    [ "Servers", "interface_n_a_t_s_1_1_client_1_1_i_connection.html#a338f1b40cca4abb640ee3e2be0251c70", null ],
     [ "State", "interface_n_a_t_s_1_1_client_1_1_i_connection.html#a41bd10da22b1f95c6389f1141255fca1", null ],
     [ "Stats", "interface_n_a_t_s_1_1_client_1_1_i_connection.html#ab55fbcc44bb4ee7ca3589055ef1e276d", null ]
 ];

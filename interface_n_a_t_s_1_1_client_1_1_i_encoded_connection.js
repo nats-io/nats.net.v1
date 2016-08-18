@@ -20,6 +20,7 @@ var interface_n_a_t_s_1_1_client_1_1_i_encoded_connection =
     [ "OnDeserialize", "interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#aa6d6bc072879cb6c16f8d41c4c88363e", null ],
     [ "OnSerialize", "interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a3e64691276294278de10a0f32565c8bb", null ],
     [ "Opts", "interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a383b84724bf37abfc69bd04065133efb", null ],
+    [ "Servers", "interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#aac4b10c8181f033f2e40b281303513a7", null ],
     [ "State", "interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#aa1e1b756a1896bdc8ee6869b36a28cf6", null ],
     [ "Stats", "interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a16f570fc3c7609fbd46eb67b52799e5f", null ]
 ];

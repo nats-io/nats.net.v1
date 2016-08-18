@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">0.4.0</span>
+   &#160;<span id="projectnumber">0.6.0</span>
    </div>
    <div id="projectbrief">The nats.io .NET C# Client, Supported by Apcera</div>
   </td>
@@ -132,6 +132,14 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:af505ceaf2a275d19765370ecf0cbdacf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4210238627f16c565d8ce88421ada056"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_n_a_t_s_1_1_client_1_1_msg.html">Msg</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a4210238627f16c565d8ce88421ada056">Request</a> (string subject, byte[] data)</td></tr>
 <tr class="separator:a4210238627f16c565d8ce88421ada056"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a84fab4c5d1d1d85ae69c6a34a80c58ab"><td class="memItemLeft" align="right" valign="top">Task&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg.html">Msg</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a84fab4c5d1d1d85ae69c6a34a80c58ab">RequestAsync</a> (string subject, byte[] data, int timeout)</td></tr>
+<tr class="separator:a84fab4c5d1d1d85ae69c6a34a80c58ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a14b2676ce076e6ebcc18de13dac130e0"><td class="memItemLeft" align="right" valign="top">Task&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg.html">Msg</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a14b2676ce076e6ebcc18de13dac130e0">RequestAsync</a> (string subject, byte[] data)</td></tr>
+<tr class="separator:a14b2676ce076e6ebcc18de13dac130e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a782c673b4e7a0b62415c3d31015d2655"><td class="memItemLeft" align="right" valign="top">Task&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg.html">Msg</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a782c673b4e7a0b62415c3d31015d2655">RequestAsync</a> (string subject, byte[] data, int timeout, CancellationToken token)</td></tr>
+<tr class="separator:a782c673b4e7a0b62415c3d31015d2655"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ade2a3eb4b6caed97b19c74ebf2f453a7"><td class="memItemLeft" align="right" valign="top">Task&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg.html">Msg</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#ade2a3eb4b6caed97b19c74ebf2f453a7">RequestAsync</a> (string subject, byte[] data, CancellationToken token)</td></tr>
+<tr class="separator:ade2a3eb4b6caed97b19c74ebf2f453a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaa605bdb14aca0c3cbc7101282c3a056"><td class="memItemLeft" align="right" valign="top">string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#aaa605bdb14aca0c3cbc7101282c3a056">NewInbox</a> ()</td></tr>
 <tr class="separator:aaa605bdb14aca0c3cbc7101282c3a056"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a63156f3482bc997f42f7a873858ab595"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_sync_subscription.html">ISyncSubscription</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a63156f3482bc997f42f7a873858ab595">SubscribeSync</a> (string subject)</td></tr>
@@ -167,6 +175,8 @@ Properties</h2></td></tr>
 <tr class="separator:a342bd3511609afd6d9093d48a3cdcbb2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a39c9277426efd0d0efbe8805b9376650"><td class="memItemLeft" align="right" valign="top">string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a39c9277426efd0d0efbe8805b9376650">ConnectedId</a><code> [get]</code></td></tr>
 <tr class="separator:a39c9277426efd0d0efbe8805b9376650"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a338f1b40cca4abb640ee3e2be0251c70"><td class="memItemLeft" align="right" valign="top">string[]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a338f1b40cca4abb640ee3e2be0251c70">Servers</a><code> [get]</code></td></tr>
+<tr class="separator:a338f1b40cca4abb640ee3e2be0251c70"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a97322f6714fe27d8ad10a618cc70b9ea"><td class="memItemLeft" align="right" valign="top">Exception&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a97322f6714fe27d8ad10a618cc70b9ea">LastError</a><code> [get]</code></td></tr>
 <tr class="separator:a97322f6714fe27d8ad10a618cc70b9ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a41bd10da22b1f95c6389f1141255fca1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespace_n_a_t_s_1_1_client.html#a8144f718a812fe4318c33f202fc53484">ConnState</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a41bd10da22b1f95c6389f1141255fca1">State</a><code> [get]</code></td></tr>
@@ -340,7 +350,7 @@ Properties</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Publishes the <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg.html" title="A NATS message is an object encapsulating a subject, optional reply payload, and subscription informa...">Msg</a> structure, which includes the Subject, an optional Reply and an optional Data field. </p>
+<p>Publishes a <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg.html" title="A NATS message is an object encapsulating a subject, optional reply payload, and subscription informa...">Msg</a> object, which includes the Subject, an optional Reply and an optional Data field. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">msg</td><td>The message to send.</td></tr>
@@ -464,6 +474,176 @@ Properties</h2></td></tr>
   <table class="params">
     <tr><td class="paramname">subject</td><td>Subject to send the request on.</td></tr>
     <tr><td class="paramname">data</td><td>payload of the message</td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a84fab4c5d1d1d85ae69c6a34a80c58ab"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">Task&lt;<a class="el" href="class_n_a_t_s_1_1_client_1_1_msg.html">Msg</a>&gt; NATS.Client.IConnection.RequestAsync </td>
+          <td>(</td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>subject</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">byte[]&#160;</td>
+          <td class="paramname"><em>data</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>timeout</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Asynchronrous method of request will create an Inbox and perform a <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#af505ceaf2a275d19765370ecf0cbdacf" title="Request will create an Inbox and perform a Request() call with the Inbox reply and return the first r...">Request()</a> call with the Inbox reply and return the first reply received. This is optimized for the case of multiple responses. </p>
+<p>A negative timeout blocks forever, zero is not allowed. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">subject</td><td>Subject to send the request on.</td></tr>
+    <tr><td class="paramname">data</td><td>payload of the message</td></tr>
+    <tr><td class="paramname">timeout</td><td>time to block</td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a14b2676ce076e6ebcc18de13dac130e0"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">Task&lt;<a class="el" href="class_n_a_t_s_1_1_client_1_1_msg.html">Msg</a>&gt; NATS.Client.IConnection.RequestAsync </td>
+          <td>(</td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>subject</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">byte[]&#160;</td>
+          <td class="paramname"><em>data</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Asynchronrous method of Request that will create an Inbox and perform a <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#af505ceaf2a275d19765370ecf0cbdacf" title="Request will create an Inbox and perform a Request() call with the Inbox reply and return the first r...">Request()</a> call with the Inbox reply and return the first reply received. This is optimized for the case of multiple responses. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">subject</td><td>Subject to send the request on.</td></tr>
+    <tr><td class="paramname">data</td><td>payload of the message</td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a782c673b4e7a0b62415c3d31015d2655"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">Task&lt;<a class="el" href="class_n_a_t_s_1_1_client_1_1_msg.html">Msg</a>&gt; NATS.Client.IConnection.RequestAsync </td>
+          <td>(</td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>subject</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">byte[]&#160;</td>
+          <td class="paramname"><em>data</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>timeout</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">CancellationToken&#160;</td>
+          <td class="paramname"><em>token</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Asynchronrous method of request will create an Inbox and perform a <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#af505ceaf2a275d19765370ecf0cbdacf" title="Request will create an Inbox and perform a Request() call with the Inbox reply and return the first r...">Request()</a> call with the Inbox reply and return the first reply received. This is optimized for the case of multiple responses. </p>
+<p>A negative timeout blocks forever, zero is not allowed. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">subject</td><td>Subject to send the request on.</td></tr>
+    <tr><td class="paramname">data</td><td>payload of the message</td></tr>
+    <tr><td class="paramname">timeout</td><td>time to block</td></tr>
+    <tr><td class="paramname">token</td><td>cancellation token source</td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="ade2a3eb4b6caed97b19c74ebf2f453a7"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">Task&lt;<a class="el" href="class_n_a_t_s_1_1_client_1_1_msg.html">Msg</a>&gt; NATS.Client.IConnection.RequestAsync </td>
+          <td>(</td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>subject</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">byte[]&#160;</td>
+          <td class="paramname"><em>data</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">CancellationToken&#160;</td>
+          <td class="paramname"><em>token</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Asynchronrous method of Request that will create an Inbox and perform a <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#af505ceaf2a275d19765370ecf0cbdacf" title="Request will create an Inbox and perform a Request() call with the Inbox reply and return the first r...">Request()</a> call with the Inbox reply and return the first reply received. This is optimized for the case of multiple responses. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">subject</td><td>Subject to send the request on.</td></tr>
+    <tr><td class="paramname">data</td><td>payload of the message</td></tr>
+    <tr><td class="paramname">token</td><td>cancellation token</td></tr>
   </table>
   </dd>
 </dl>
@@ -796,6 +976,28 @@ Properties</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Returns the options used to create this connection. </p>
+
+</div>
+</div>
+<a class="anchor" id="a338f1b40cca4abb640ee3e2be0251c70"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">string [] NATS.Client.IConnection.Servers</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">get</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Servers returns the list of known servers, including additional servers discovered after a connection has been established. </p>
 
 </div>
 </div>

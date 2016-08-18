@@ -1,8 +1,9 @@
 var searchData=
 [
   ['secure',['Secure',['../class_n_a_t_s_1_1_client_1_1_options.html#a4550ae7933150999a442519906e58684',1,'NATS::Client::Options']]],
+  ['seq',['Seq',['../class_n_a_t_s_1_1_client_1_1_n_u_i_d.html#a6cc51a6852d96491ae671a3a453fd51d',1,'NATS::Client::NUID']]],
   ['serializer',['Serializer',['../namespace_n_a_t_s_1_1_client.html#a17a0769f7076f1d1d8b105cdf562d79e',1,'NATS::Client']]],
-  ['servers',['Servers',['../class_n_a_t_s_1_1_client_1_1_options.html#a2e0b5fe52ae54b89e42a9e49b47f94e1',1,'NATS::Client::Options']]],
+  ['servers',['Servers',['../interface_n_a_t_s_1_1_client_1_1_i_connection.html#a338f1b40cca4abb640ee3e2be0251c70',1,'NATS.Client.IConnection.Servers()'],['../interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#aac4b10c8181f033f2e40b281303513a7',1,'NATS.Client.IEncodedConnection.Servers()'],['../class_n_a_t_s_1_1_client_1_1_options.html#a2e0b5fe52ae54b89e42a9e49b47f94e1',1,'NATS.Client.Options.Servers()']]],
   ['setpendinglimits',['SetPendingLimits',['../interface_n_a_t_s_1_1_client_1_1_i_subscription.html#acec3df78fc38cac58aeb37c5370000ec',1,'NATS::Client::ISubscription']]],
   ['start',['Start',['../interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html#a5c4c7deef3ffec1ba136f2e51c301e2e',1,'NATS::Client::IAsyncSubscription']]],
   ['state',['State',['../interface_n_a_t_s_1_1_client_1_1_i_connection.html#a41bd10da22b1f95c6389f1141255fca1',1,'NATS.Client.IConnection.State()'],['../interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#aa1e1b756a1896bdc8ee6869b36a28cf6',1,'NATS.Client.IEncodedConnection.State()']]],
