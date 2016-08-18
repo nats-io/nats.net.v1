@@ -13,6 +13,7 @@ var class_n_a_t_s_1_1_client_1_1_options =
     [ "MaxReconnect", "class_n_a_t_s_1_1_client_1_1_options.html#a6879755fbefbc3c119c01eb1e1e7f183", null ],
     [ "Name", "class_n_a_t_s_1_1_client_1_1_options.html#a9828598348a827d5cc2d236bf956d059", null ],
     [ "NoRandomize", "class_n_a_t_s_1_1_client_1_1_options.html#a606ef82badca9078a07ef2bf198e07dc", null ],
+    [ "Password", "class_n_a_t_s_1_1_client_1_1_options.html#a7b529b02f42f29ff4016a5b91138ba5e", null ],
     [ "Pedantic", "class_n_a_t_s_1_1_client_1_1_options.html#a5095fd095d6db679465eb80dfe37fbdf", null ],
     [ "PingInterval", "class_n_a_t_s_1_1_client_1_1_options.html#a5b593b856ab2b9df03637efdffff135c", null ],
     [ "ReconnectWait", "class_n_a_t_s_1_1_client_1_1_options.html#a06448007abc18cdf961a341c9ae1f9ea", null ],
@@ -20,6 +21,8 @@ var class_n_a_t_s_1_1_client_1_1_options =
     [ "Servers", "class_n_a_t_s_1_1_client_1_1_options.html#a2e0b5fe52ae54b89e42a9e49b47f94e1", null ],
     [ "SubChannelLength", "class_n_a_t_s_1_1_client_1_1_options.html#a82c9580a9c7dd0367c53f2c1d309a039", null ],
     [ "Timeout", "class_n_a_t_s_1_1_client_1_1_options.html#a20342f2f3c596083d5989d12ee656155", null ],
+    [ "Token", "class_n_a_t_s_1_1_client_1_1_options.html#ab82e941a962699f7aeca2a3508a7f2d7", null ],
     [ "Url", "class_n_a_t_s_1_1_client_1_1_options.html#a4952cb3e82ca4692896f289d9825682a", null ],
+    [ "User", "class_n_a_t_s_1_1_client_1_1_options.html#a92c60e7ef8aa92144a39dbd9706f4ea9", null ],
     [ "Verbose", "class_n_a_t_s_1_1_client_1_1_options.html#acba4ff882b4a8895ff0a47d9cbcff2d5", null ]
 ];

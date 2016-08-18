@@ -26,5 +26,6 @@ var namespace_n_a_t_s_1_1_client =
     [ "NATSSlowConsumerException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_slow_consumer_exception.html", null ],
     [ "NATSStaleConnectionException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_stale_connection_exception.html", null ],
     [ "NATSTimeoutException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_timeout_exception.html", null ],
+    [ "NUID", "class_n_a_t_s_1_1_client_1_1_n_u_i_d.html", "class_n_a_t_s_1_1_client_1_1_n_u_i_d" ],
     [ "Options", "class_n_a_t_s_1_1_client_1_1_options.html", "class_n_a_t_s_1_1_client_1_1_options" ]
 ];
