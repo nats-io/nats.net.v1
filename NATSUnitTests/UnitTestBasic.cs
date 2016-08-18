@@ -422,6 +422,123 @@ namespace NATSUnitTests
             }
         }
 
+        public async void testRequestAsync()
+        {
+            using (IConnection c = new ConnectionFactory().CreateConnection())
+            {
+                byte[] response = Encoding.UTF8.GetBytes("I will help you.");
+
+                EventHandler<MsgHandlerEventArgs> eh = (sender, args) =>
+                {
+                    c.Publish(args.Message.Reply, response);
+                };
+
+                using (IAsyncSubscription s = c.SubscribeAsync("foo", eh))
+                {
+                    var tasks = new List<Task>();
+                    for (int i = 0; i < 100; i++)
+                    {
+                        tasks.Add(c.RequestAsync("foo", null));
+                    }
+
+                    foreach (Task<Msg> t in tasks)
+                    {
+                        Msg m = await t;
+                        Assert.True(compare(m.Data, response), "Response isn't valid");
+                    }
+                }
+
+                // test timeout, make sure we're close.
+                Stopwatch sw = Stopwatch.StartNew();
+                await Assert.ThrowsAsync<NATSTimeoutException>(() => { return c.RequestAsync("no-replier", null, 250); });
+                sw.Stop();
+                Assert.True(Math.Abs(sw.Elapsed.TotalMilliseconds - 250) < 50);
+
+                await Assert.ThrowsAsync<NATSBadSubscriptionException>(() => { return c.RequestAsync("", null); });
+            }
+        }
+
+        [Fact]
+        public void TestRequestAsync()
+        {
+            testRequestAsync();
+        }
+
+        public async void testRequestAsyncCancellation()
+        {
+            using (IConnection c = new ConnectionFactory().CreateConnection())
+            {
+                int responseDelay = 0;
+
+                byte[] response = Encoding.UTF8.GetBytes("I will help you.");
+
+                EventHandler<MsgHandlerEventArgs> eh = (sender, args) =>
+                {
+                    if (responseDelay > 0)
+                        Thread.Sleep(responseDelay);
+
+                    c.Publish(args.Message.Reply, response);
+                };
+
+                // test cancellation success.
+                var miscToken = new CancellationTokenSource().Token;
+                using (IAsyncSubscription s = c.SubscribeAsync("foo", eh))
+                {
+                    var tasks = new List<Task>();
+                    for (int i = 0; i < 1000; i++)
+                    {
+                        tasks.Add(c.RequestAsync("foo", null, miscToken));
+                    }
+
+                    foreach (Task<Msg> t in tasks)
+                    {
+                        Msg m = await t;
+                        Assert.True(compare(m.Data, response), "Response isn't valid");
+                    }
+
+                }
+
+                // test timeout, make sure we are close.
+                Stopwatch sw = Stopwatch.StartNew();
+                await Assert.ThrowsAsync<NATSTimeoutException>(() => { return c.RequestAsync("no-replier", null, 250, miscToken); });
+                sw.Stop();
+                Assert.True(Math.Abs(sw.Elapsed.TotalMilliseconds - 250) < 50);
+
+                // test early cancellation
+                var cts = new CancellationTokenSource();
+                var ct = cts.Token;
+                cts.Cancel();
+                await Assert.ThrowsAsync<TaskCanceledException>(() => { return c.RequestAsync("foo", null, cts.Token); });
+
+                // test cancellation
+                cts = new CancellationTokenSource();
+                var ocex = Assert.ThrowsAsync<OperationCanceledException>(() => { return c.RequestAsync("foo", null, cts.Token); });
+                Thread.Sleep(250);
+                cts.Cancel();
+                await ocex;
+
+                // now we want to test a slow replier, to make sure wait logic checking 
+                responseDelay = 500;
+                using (IAsyncSubscription s = c.SubscribeAsync("foo", eh))
+                {
+                    await c.RequestAsync("foo", null, miscToken);
+
+                    // test cancellation with a subscriber
+                    cts = new CancellationTokenSource();
+                    ocex = Assert.ThrowsAsync<OperationCanceledException>(() => { return c.RequestAsync("foo", null, cts.Token); });
+                    Thread.Sleep(responseDelay / 2);
+                    cts.Cancel();
+                    await ocex;
+                }
+            }
+        }
+
+        [Fact]
+        public void TestRequestAsyncCancellation()
+        {
+            testRequestAsyncCancellation();
+        }
+
         class TestReplier
         {
             string replySubject;

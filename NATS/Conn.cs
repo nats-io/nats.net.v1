@@ -115,6 +115,8 @@ namespace NATS.Client
 
         byte[] pubProtoBuf = null;
 
+        static readonly int REQ_CANCEL_IVL = 100;
+
         TCPConnection conn = new TCPConnection();
 
         // One could use a task scheduler, but this is simpler and will
@@ -1740,6 +1742,123 @@ namespace NATS.Client
         public Msg Request(string subject, byte[] data)
         {
             return request(subject, data, -1);
+        }
+
+        internal virtual Task<Msg> requestAsync(string subject, byte[] data, int timeout)
+        {
+            // Simple case without a cancellation token.
+            return Task.Factory.StartNew<Msg>(() => { return request(subject, data, timeout); });
+        }
+
+        internal virtual Task<Msg> requestAsync(string subject, byte[] data, int timeout, CancellationToken ct)
+        {
+            // Simple case without a cancellation token.
+            if (ct == null)
+            {
+                return Task.Factory.StartNew<Msg>(() => { return request(subject, data, timeout); });
+            }
+
+            // More complex case, supporting cancellation.
+            return Task.Factory.StartNew<Msg>(() =>
+            {
+                // check if we are already cancelled.
+                ct.ThrowIfCancellationRequested();
+
+                Msg m = null;
+                string inbox = NewInbox();
+
+                // Use synchronous subscriber to minimize overhead.
+                // An async subscriber would be easier, but creates 
+                // yet another task internally.  The cost is it could
+                // take up to CANCEL_IVL ms to cancel.
+                SyncSubscription s = subscribeSync(inbox, null);
+                s.AutoUnsubscribe(1);
+
+                publish(subject, inbox, data);
+                Flush();
+
+                int timeRemaining = timeout;
+
+                while (m == null && ct.IsCancellationRequested == false)
+                {
+                    if (timeout == -1)
+                    {
+                        // continue in a loop until cancellation
+                        // is requested.
+                        try
+                        {
+                            m = s.NextMessage(REQ_CANCEL_IVL);
+                        }
+                        catch (NATSTimeoutException) { /* ignore */ };
+                    }
+                    else
+                    {
+                        int waitTime = timeRemaining < REQ_CANCEL_IVL ?
+                            timeRemaining : REQ_CANCEL_IVL;
+
+                        try
+                        {
+                            m = s.NextMessage(waitTime);
+                        }
+                        catch (NATSTimeoutException e)
+                        {
+                            timeRemaining -= waitTime;
+                            if (timeRemaining <= 0)
+                            {
+                                s.unsubscribe(false);
+                                throw e;
+                            }
+                        }
+                    }
+                }
+
+                // we either have a message or have been cancelled.
+                s.unsubscribe(false);
+
+                // Throw if cancelled.  Note, the cancellation occured
+                // after we've received a message, go ahead and honor 
+                // the cancellation.
+                ct.ThrowIfCancellationRequested();
+
+                return m;
+
+            }, ct);
+        }
+
+        public Task<Msg> RequestAsync(string subject, byte[] data, int timeout)
+        {
+            // a timeout of 0 will never succeed - do not allow it.
+            if (timeout <= 0)
+            {
+                throw new ArgumentException(
+                    "Timeout must be greater that 0.",
+                    "timeout");
+            }
+
+            return requestAsync(subject, data, timeout);
+        }
+
+        public Task<Msg> RequestAsync(string subject, byte[] data)
+        {
+            return requestAsync(subject, data, -1);
+        }
+
+        public Task<Msg> RequestAsync(string subject, byte[] data, int timeout, CancellationToken token)
+        {
+            // a timeout of 0 will never succeed - do not allow it.
+            if (timeout <= 0)
+            {
+                throw new ArgumentException(
+                    "Timeout must be greater that 0.",
+                    "timeout");
+            }
+
+            return requestAsync(subject, data, timeout, token);
+        }
+
+        public Task<Msg> RequestAsync(string subject, byte[] data, CancellationToken token)
+        {
+            return requestAsync(subject, data, -1, token);
         }
 
         public string NewInbox()
