@@ -1,6 +1,8 @@
 ﻿// Copyright 2015 Apcera Inc. All rights reserved.
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace NATS.Client
 {
@@ -82,6 +84,54 @@ namespace NATS.Client
         /// <param name="subject">Subject to send the request on.</param>
         /// <param name="data">payload of the message</param>
         Msg Request(string subject, byte[] data);
+
+        /// <summary>
+        /// Asynchronrous method of request will create an Inbox 
+        /// and perform a Request() call with the Inbox reply and return
+        /// the first reply received.  This is optimized for the case of
+        /// multiple responses.
+        /// </summary>
+        /// <remarks>
+        /// A negative timeout blocks forever, zero is not allowed.
+        /// </remarks>
+        /// <param name="subject">Subject to send the request on.</param>
+        /// <param name="data">payload of the message</param>
+        /// <param name="timeout">time to block</param>
+        Task<Msg> RequestAsync(string subject, byte[] data, int timeout);
+
+        /// <summary>
+        ///  Asynchronrous method of Request that will create an Inbox and perform a Request() call
+        /// with the Inbox reply and return the first reply received.
+        /// This is optimized for the case of multiple responses.
+        /// </summary>
+        /// <param name="subject">Subject to send the request on.</param>
+        /// <param name="data">payload of the message</param>
+        Task<Msg> RequestAsync(string subject, byte[] data);
+
+        /// <summary>
+        /// Asynchronrous method of request will create an Inbox 
+        /// and perform a Request() call with the Inbox reply and return
+        /// the first reply received.  This is optimized for the case of
+        /// multiple responses.
+        /// </summary>
+        /// <remarks>
+        /// A negative timeout blocks forever, zero is not allowed.
+        /// </remarks>
+        /// <param name="subject">Subject to send the request on.</param>
+        /// <param name="data">payload of the message</param>
+        /// <param name="timeout">time to block</param>
+        /// <param name="token">cancellation token source</param>
+        Task<Msg> RequestAsync(string subject, byte[] data, int timeout, CancellationToken token);
+
+        /// <summary>
+        /// Asynchronrous method of Request that will create an Inbox and perform a Request() call
+        /// with the Inbox reply and return the first reply received.
+        /// This is optimized for the case of multiple responses.
+        /// </summary>
+        /// <param name="subject">Subject to send the request on.</param>
+        /// <param name="data">payload of the message</param>
+        /// <param name="token">cancellation token</param>
+        Task<Msg> RequestAsync(string subject, byte[] data, CancellationToken token);
 
         /// <summary>
         /// NewInbox will return an inbox string which can be used for directed replies from

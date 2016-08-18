@@ -73,7 +73,7 @@ NATS .NET C# Client uses interfaces to reference most NATS client objects, and d
 
 First, reference the NATS.Client assembly so you can use it in your code.  Be sure to add a reference in your project or if compiling via command line, compile with the /r:NATS.Client.DLL parameter.  While the NATS client is written in C#, any .NET langage can use it.
 
-Below is some code demonstrating basic API usage.  Note that this is example code, not functional as a whole (e.g. requests will fail without a subscriber to reply). 
+Below is some code demonstrating basic API usage.  Note that this is example code, not functional as a whole (e.g. requests will fail without a subscriber to reply).
 
 ```C#
 using System;
@@ -96,7 +96,7 @@ Here are example snippets of using the API to create a connection, subscribe, pu
             // Creates a live connection to the default
             // NATS Server running locally
             IConnection c = cf.CreateConnection();
-            
+
             // Setup an event handler to process incoming messages.
             // An anonymous delegate function is used for brevity.
             EventHandler<MsgHandlerEventArgs> h = (sender, args) =>
@@ -122,7 +122,7 @@ Here are example snippets of using the API to create a connection, subscribe, pu
             // arriving immediately.
             IAsyncSubscription s = c.SubscribeAsync("foo", h);
 
-            // Alternatively, create an asynchronous subscriber on subject foo, 
+            // Alternatively, create an asynchronous subscriber on subject foo,
             // assign a message handler, then start the subscriber.   When
             // multicasting delegates, this allows all message handlers
             // to be setup before messages start arriving.
@@ -167,7 +167,7 @@ objects can be overridden.
         {
             EventHandler<EncodedMessageEventArgs> eh = (sender, args) =>
             {
-                // Here, obj is an instance of the object published to 
+                // Here, obj is an instance of the object published to
                 // this subscriber.  Retrieve it through the
                 // ReceivedObject property of the arguments.
                 MyObject obj = (MyObject)args.ReceivedObject;
@@ -180,7 +180,7 @@ objects can be overridden.
 
             MyObject obj = new MyObject();
             obj.Company = "Apcera";
-            
+
             // To publish an instance of your object, simply
             // call the IEncodedConnection publish API and pass
             // your object.
@@ -190,9 +190,9 @@ objects can be overridden.
 ```
 
 ### Other Types of Serialization
-Optionally, one can override serialization.  Depending on the level of support or 
+Optionally, one can override serialization.  Depending on the level of support or
 third party packages used, objects can be serialized to JSON, SOAP, or a custom
-scheme.  XML was chosen as the example here as it is natively supported 
+scheme.  XML was chosen as the example here as it is natively supported
 in all versions of .NET.
 
 ```C#
@@ -216,15 +216,15 @@ in all versions of .NET.
             MemoryStream ms = new MemoryStream(data);
             return x.Deserialize(ms);
         }
-        
+
         <...>
-        
+
         // Create an encoded connection and override the OnSerialize and
         // OnDeserialize delegates.
         IEncodedConnection c = new ConnectionFactory().CreateEncodedConnection();
         c.OnDeserialize = deserializeFromXML;
         c.OnSerialize = serializeToXML;
-        
+
         // From here on, the connection will use the custom delegates
         // for serialization.
 ```
@@ -342,7 +342,7 @@ Setup a subscriber to auto-unsubscribe after ten messsages.
         {
            Console.WriteLine("Received: " + args.Message);
         };
-                
+
         s.Start();
         s.AutoUnsubscribe(10);
 ```
@@ -376,7 +376,30 @@ Other events can be assigned delegate methods through the options object.
             IConnection c = new ConnectionFactory().CreateConnection(opts);
 ```
 
+After version 0.5.0, the C# .NET client supports async Requests.
 
+```C#
+public async void MyRequestDataMethod(IConnection c)
+{
+    var m = await c.RequestAsync("foo", null);
+
+    ...
+    m = c.RequestAsync("foo", null);
+    // do some work
+    await m;
+
+    // cancellation tokens are supported.
+    var cts = new CancellationTokenSource();
+
+    var msg = c.RequestAsync("foo", null, cts.Token);
+    // do stuff
+    if (requestIsNowIrrevelant())
+        cts.Cancel();
+
+    await msg;
+    // be sure to handle OperationCancelled Exception.
+}
+```
 
 ## Clustered Usage
 
@@ -391,23 +414,23 @@ Other events can be assigned delegate methods through the options object.
             opts.ReconnectWait = 1000;
             opts.NoRandomize = true;
             opts.Servers = servers;
-            
+
             IConnection c = new ConnectionFactory().CreateConnection(opts);
 ```
 
 ## TLS
 The NATS .NET client supports TLS 1.2.  Set the secure option, add
-the certificate, and connect.  Note that .NET requires both the 
+the certificate, and connect.  Note that .NET requires both the
 private key and certificate to be present in the same certificate file.
 
 ```C#
         Options opts = ConnectionFactory.GetDefaultOptions();
         opts.Secure = true;
-        
-        // .NET requires the private key and cert in the 
+
+        // .NET requires the private key and cert in the
         //  same file. 'client.pfx' is generated from:
         //
-        // openssl pkcs12 -export -out client.pfx 
+        // openssl pkcs12 -export -out client.pfx
         //    -inkey client-key.pem -in client-cert.pem
         X509Certificate2 cert = new X509Certificate2("client.pfx", "password");
 
@@ -415,12 +438,12 @@ private key and certificate to be present in the same certificate file.
 
         IConnection c = new ConnectionFactory().CreateConnection(opts);
 ```
-Many times, it is useful when developing an application (or necessary 
+Many times, it is useful when developing an application (or necessary
 when using self-signed certificates) to override server certificate
 validation.  This is achieved by overriding the remove certificate
 validation callback through the NATS client options.
 ```C#
-        
+
     private bool verifyServerCert(object sender,
         X509Certificate certificate, X509Chain chain,
                 SslPolicyErrors sslPolicyErrors)
@@ -431,14 +454,14 @@ validation callback through the NATS client options.
             // Do what is necessary to achieve the level of
             // security you need given a policy error.
         }        
-        
+
         <...>
-        
+
         Options opts = ConnectionFactory.GetDefaultOptions();
         opts.Secure = true;
         opts.TLSRemoteCertificationValidationCallback = verifyServerCert;
         opts.AddCertificate("client.pfx");
-        
+
         IConnection c = new ConnectionFactory().CreateConnection(opts);
 ```
 The NATS server default cipher suites **may not be supported** by the Microsoft
@@ -476,7 +499,7 @@ start /B /REALTIME benchmark.exe
 
 The benchmarks include:
 
-* PubOnly<size> - publish only 
+* PubOnly<size> - publish only
 * PubSub<size> - publish and subscribe
 * ReqReply<size> - request/reply
 * Lat<size> - latency.
@@ -561,5 +584,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
-
-

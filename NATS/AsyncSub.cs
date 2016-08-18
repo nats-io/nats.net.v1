@@ -61,8 +61,8 @@ namespace NATS.Client
 
                 if (d == max)
                 {
-                    Unsubscribe();
-                    this.conn = null;
+                    unsubscribe(false);
+                    conn = null;
                 }
             }
 
