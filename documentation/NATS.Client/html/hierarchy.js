@@ -29,5 +29,6 @@ var hierarchy =
       [ "NATS.Client.NATSStaleConnectionException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_stale_connection_exception.html", null ],
       [ "NATS.Client.NATSTimeoutException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_timeout_exception.html", null ]
     ] ],
+    [ "NATS.Client.NUID", "class_n_a_t_s_1_1_client_1_1_n_u_i_d.html", null ],
     [ "NATS.Client.Options", "class_n_a_t_s_1_1_client_1_1_options.html", null ]
 ];
