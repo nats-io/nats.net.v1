@@ -7,3 +7,8 @@ before_build:
   - nuget restore
 build:
   project: NATS.sln
+notifications:
+  - provider: GitHubPullRequest
+    auth_token:
+      secure: XI9j+cGG2z/YLFNk+KCnLQ==
+    template: "{{#passed}}:white_check_mark:{{/passed}}{{#failed}}:x:{{/failed}} [Build {{&projectName}} {{buildVersion}} {{status}}]({{buildUrl}}) (commit {{commitUrl}} by @{{&commitAuthorUsername}})”
