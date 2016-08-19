@@ -401,6 +401,8 @@ public async void MyRequestDataMethod(IConnection c)
 }
 ```
 
+The NATS .NET client supports the cluster discovery protocol.  The list of servers known to a connection is automatically updated when a connection is established, and afterword in realtime as cluster changes occur.  A current list of known servers in a cluster can be obtained using the `IConnection.Servers` property; this list will be used if the client needs to reconnect to the cluster.
+
 ## Clustered Usage
 
 ```C#
