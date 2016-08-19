@@ -17,7 +17,7 @@ git clone git@github.com:nats-io/csnats.git .
 
 ### Quick Start
 
-Ensure you have installed the .NET Framework 4.0 or greater.  Set your path to include csc.exe, e.g.
+Ensure you have installed the .NET Framework 4.5.1 or greater.  Set your path to include csc.exe, e.g.
 ```
 set PATH=C:\Windows\Microsoft.NET\Framework64\v4.0.30319;%PATH%
 ```
