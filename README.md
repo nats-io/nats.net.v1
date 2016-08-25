@@ -544,11 +544,17 @@ Lat4k (us)	500 msgs, 291.09 avg, 99.70 min, 43679.10 max, 2047.67 stddev
 Lat8k (us)	500 msgs, 363.56 avg, 131.50 min, 39428.50 max, 1990.81 stddev
 ```
 
+## About the code and contributing
+
+A note:  The NATS C# .NET client was originally developed with the idea in mind that it would support the .NET 4.0 code base for increased adoption, and closely parallel the GO client (internally) for maintenance purposes.  So, some of the nice .NET APIs/features were intentionally left out.  While this has certainly paid off, after consideration, and some maturation of the NATS C# library, the NATS C# code will move toward more idiomatic .NET coding style where it makes sense. 
+
+To that end, with any contributions, certainly feel free to code in a more .NET idiomatic style than what you see.  PRs are always welcome!
+
 ## TODO
 * [ ] Another performance pass - look at stream directly over socket, contention, fastpath optimizations, rw locks.
 * [ ] Expand Unit Tests to test internals (namely Parsing)
 * [ ] WCF bindings
-* [ ] Travis CI
+* [X] Travis CI (Used AppVeyor instead)
 * [ ] Allow configuration for performance tuning (buffer sizes), defaults based on plaform.
 * [ ] [.NET Core](https://github.com/dotnet/core) compatibility, TLS required.
 * [ ] Azure Service Bus Connector
