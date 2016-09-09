@@ -59,9 +59,6 @@ namespace NATS.Client
         // the NoRandomize flag is set.
         internal void Setup(Options opts)
         {
-            if (!string.IsNullOrWhiteSpace(opts.Url))
-                add(opts.Url);
-
             if (opts.Servers != null)
             {
                 Add(opts.Servers);
@@ -69,6 +66,9 @@ namespace NATS.Client
                 if (!opts.NoRandomize)
                     Shuffle();
             }
+
+            if (!string.IsNullOrWhiteSpace(opts.Url))
+                add(opts.Url);
 
             // Place default URL if pool is empty.
             if (isEmpty())
@@ -228,7 +228,22 @@ namespace NATS.Client
 
             lock (poolLock)
             {
-                sList.OrderBy((item) => r.Next());
+                var servers = sList.ToArray();
+                int n = servers.Length;
+                while (n > 1)
+                {
+                    n--;
+                    int k = r.Next(n + 1);
+                    var value = servers[k];
+                    servers[k] = servers[n];
+                    servers[n] = value;
+                }
+
+                sList.Clear();
+                foreach (Srv s in servers)
+                {
+                    sList.AddLast(s);
+                }
             }
         }
 
