@@ -1079,6 +1079,70 @@ namespace NATSUnitTests
             }
         }
 
+        private bool listsEqual(string[] l1, string[] l2)
+        {
+            if (l1.Length != l2.Length)
+                return false;
+
+            for (int i = 0; i < l1.Length; i++)
+            {
+                if (string.Equals(l1[i], l2[i]) == false)
+                    return false;
+            }
+
+            return true;
+        }
+
+        [Fact]
+        public void TestServersRandomize()
+        {
+            var serverList = new string[] {
+                "nats://localhost:4222",
+                "nats://localhost:2",
+                "nats://localhost:3",
+                "nats://localhost:4"
+            };
+
+            var opts = ConnectionFactory.GetDefaultOptions();
+            opts.Servers = serverList;
+            opts.NoRandomize = true;
+
+
+            var c = new ConnectionFactory().CreateConnection(opts);
+            Assert.True(listsEqual(serverList, c.Servers));
+            c.Close();
+
+            bool wasRandom = false;
+            opts.NoRandomize = false;
+            for (int i = 0; i < 5; i++)
+            {
+                c = new ConnectionFactory().CreateConnection(opts);
+                wasRandom = (listsEqual(serverList, c.Servers) == false);
+                c.Close();
+
+                if (wasRandom)
+                    break;
+            }
+
+            Assert.True(wasRandom);
+
+            // Although the original intent was that if Opts.Url is
+            // set, Opts.Servers is not (and vice versa), the behavior
+            // is that Opts.Url is always first, even when randomization
+            // is enabled. So make sure that this is still the case.
+            opts.Url = "nats://127.0.0.1:4222";
+            for (int i = 0; i < 5; i++)
+            {
+                c = new ConnectionFactory().CreateConnection(opts);
+                wasRandom = (listsEqual(serverList, c.Servers) == false);
+                Assert.True(Equals(serverList[0], c.Servers[0]));
+                c.Close();
+
+                if (wasRandom)
+                    break;
+            }
+        }
+
     } // class
 
 } // namespace
