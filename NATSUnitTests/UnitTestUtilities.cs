@@ -11,6 +11,11 @@ namespace NATSUnitTests
 {
     class NATSServer : IDisposable
     {
+#if NET45
+        static readonly string SERVEREXE = "gnatsd.exe";
+#else
+        static readonly string SERVEREXE = "gnatsd";
+#endif
         // Enable this for additional server debugging info.
         static bool debug = false;
         Process p;
@@ -62,8 +67,7 @@ namespace NATSUnitTests
 
         private ProcessStartInfo createProcessStartInfo()
         {
-            string gnatsd = Properties.Settings.Default.gnatsd;
-            ProcessStartInfo psInfo = new ProcessStartInfo(gnatsd);
+            ProcessStartInfo psInfo = new ProcessStartInfo(SERVEREXE);
 
             if (debug)
             {
@@ -71,7 +75,11 @@ namespace NATSUnitTests
             }
             else
             {
+#if NET45
                 psInfo.WindowStyle = ProcessWindowStyle.Hidden;
+#else
+                psInfo.CreateNoWindow = true;
+#endif
             }
 
             psInfo.WorkingDirectory = UnitTestUtilities.GetConfigDir();
@@ -141,9 +149,15 @@ namespace NATSUnitTests
 
         internal static string GetConfigDir()
         {
+#if NET45
             var codeBaseUrl = new Uri(Assembly.GetExecutingAssembly().CodeBase);
             var codeBasePath = Uri.UnescapeDataString(codeBaseUrl.AbsolutePath);
             var runningDirectory = Path.GetDirectoryName(codeBasePath);
+#else
+            var runningDirectory = AppContext.BaseDirectory + 
+                string.Format("{0}..{0}..{0}..{0}",
+                Path.DirectorySeparatorChar);
+#endif
             return Path.Combine(runningDirectory, "config");
         }
 

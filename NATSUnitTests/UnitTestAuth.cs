@@ -116,6 +116,7 @@ namespace NATSUnitTests
             }
         }
 
+#if NET45
         [Fact]
         public void TestReconnectAuthTimeoutLateClose()
         {
@@ -163,5 +164,6 @@ namespace NATSUnitTests
                 obj.wait(20000);
             }
         }
+#endif
     }
 }

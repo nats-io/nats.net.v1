@@ -18,28 +18,46 @@ git clone git@github.com:nats-io/csnats.git .
 
 ### Quick Start
 
-Ensure you have installed the .NET Framework 4.5.1 or greater.  Set your path to include csc.exe, e.g.
+
+Then, build the assembly.  
+
+For both .NET 4.5 and .NET core, there are simple batch files.  These will build the respective NATS.Client.dll and the provided examples with only requiring the  .NET framework SDK/Platform
+
+#### .NET 4.5
+Ensure you have installed the .NET Framework 4.5.1 or greater.
 ```
 set PATH=C:\Windows\Microsoft.NET\Framework64\v4.0.30319;%PATH%
 ```
-Then, build the assembly.  There is a simple batch file, build.bat, that will build the assembly (NATS.Client.dll) and the provided examples with only requriing the  .NET framework SDK.
-
+To build simply call:
 ```
-build.bat
+build45.bat
 ```
 The batch file will create a bin directory, and copy all binary files, including samples, into it.
+#### .NET core
+
+To build .NET core, you will need version 1.0.0-preview2-003121 or higher, found here:
+https://www.microsoft.com/net/core#windows
+
+```
+buildcore.bat
+```
+
+This will build the .NET core (standard1.6) NATS.Client assembly.  To run the examples, ``cd`` into the directory of the example you wish to run, and use the `dotnet run` command.  e.g.
+```
+cd examples\Publish
+dotnet run
+```
 
 ### Visual Studio
 
-The recommended alternative is to load NATS.sln into Visual Studio 2013 Express or better.  Later versions of Visual Studio should automatically upgrade the solution and project files for you.  XML documenation is generated, so code completion, context help, etc, will be available in the editor.
-
+The recommended alternative is to load `NATSnet45.sln` or `NATSCore.sln` into Visual Studio 2015 to build the version you need.  XML documentation is generated, so code completion, context help, etc, will be available in the editor.  If building .NET core, ensure you have the latest .NET core support for Visual Studio.  Information about that can be found [here](https://blogs.msdn.microsoft.com/visualstudio/2016/06/27/visual-studio-2015-update-3-and-net-core-1-0-available-now/).
 
 #### Project files
 
 The NATS Visual Studio Solution contains several projects, listed below.
 
 * NATS - The NATS.Client assembly
-* NATSUnitTests - Visual Studio Unit Tests (ensure you have gnatds.exe in your path for these).
+* NATSUnitTests - Visual Studio Unit Tests (ensure you have gnatds.exe in your path to run these).
 * Publish Subscribe
   * Publish - A sample publisher.
   * Subscribe - A sample subscriber.
@@ -158,10 +176,11 @@ Here are example snippets of using the API to create a connection, subscribe, pu
 ## Basic Encoded Usage
 The .NET NATS client mirrors go encoding through serialization and
 deserialization.  Simply create an encoded connection and publish
-objects, and receive objects through an asyncronous subscription using
-the encoded message event handler.  By default, objects are serialized
-using the BinaryFormatter, but methods used to serialize and deserialize
-objects can be overridden.
+objects, and receive objects through an asynchronous subscription using
+the encoded message event handler.  The .NET 4.5 client has a default formatter
+serializing objects using the BinaryFormatter, but methods used to serialize and deserialize
+objects can be overridden.  The NATS core version does not have serialization
+defaults and they must be specified.
 
 ```C#
         using (IEncodedConnection c = new ConnectionFactory().CreateEncodedConnection())
@@ -193,8 +212,7 @@ objects can be overridden.
 ### Other Types of Serialization
 Optionally, one can override serialization.  Depending on the level of support or
 third party packages used, objects can be serialized to JSON, SOAP, or a custom
-scheme.  XML was chosen as the example here as it is natively supported
-in all versions of .NET.
+scheme.  XML was chosen as the example here as it is natively supported by .NET 4.5.
 
 ```C#
         // Example XML serialization.
@@ -228,6 +246,63 @@ in all versions of .NET.
 
         // From here on, the connection will use the custom delegates
         // for serialization.
+```
+
+One can also use `Data Contract` to serialize objects.  Below are simple example
+ overrides that work with .NET core:
+```C#
+[DataContract]
+public class JsonObject
+{
+    [DataMember]
+    public string Value = "";
+}
+
+internal object jsonDeserializer(byte[] buffer)
+{
+    using (MemoryStream stream = new MemoryStream())
+    {
+        var serializer = new DataContractJsonSerializer(typeof(JsonObject));
+        stream.Write(buffer, 0, buffer.Length);
+        stream.Position = 0;
+        return serializer.ReadObject(stream);
+    }
+}
+
+internal byte[] jsonSerializer(object obj)
+{
+    if (obj == null)
+        return null;
+
+    var serializer = new DataContractJsonSerializer(typeof(JsonObject));
+
+    using (MemoryStream stream = new MemoryStream())
+    {
+        serializer.WriteObject(stream, obj);
+        ArraySegment<byte> buffer;
+        if (stream.TryGetBuffer(out buffer))
+        {
+            var rv = new byte[stream.Position];
+            Array.Copy(buffer.Array, rv, (int)stream.Position);
+            return rv;
+        }
+        else
+        {
+            throw new Exception("Unable to serialize - buffer error");
+        }
+    }
+}
+
+<...>
+
+// Create an encoded connection and override the OnSerialize and
+// OnDeserialize delegates.
+IEncodedConnection c = new ConnectionFactory().CreateEncodedConnection();
+c.OnDeserialize = jsonDeserializer;
+c.OnSerialize = jsonSerializer;
+
+// From here on, the connection will use the custom delegates
+// for serialization.
 ```
 
 ## Wildcard Subscriptions
@@ -547,7 +622,7 @@ Lat8k (us)	500 msgs, 363.56 avg, 131.50 min, 39428.50 max, 1990.81 stddev
 
 ## About the code and contributing
 
-A note:  The NATS C# .NET client was originally developed with the idea in mind that it would support the .NET 4.0 code base for increased adoption, and closely parallel the GO client (internally) for maintenance purposes.  So, some of the nice .NET APIs/features were intentionally left out.  While this has certainly paid off, after consideration, and some maturation of the NATS C# library, the NATS C# code will move toward more idiomatic .NET coding style where it makes sense. 
+A note:  The NATS C# .NET client was originally developed with the idea in mind that it would support the .NET 4.0 code base for increased adoption, and closely parallel the GO client (internally) for maintenance purposes.  So, some of the nice .NET APIs/features were intentionally left out.  While this has certainly paid off, after consideration, and some maturation of the NATS C# library, the NATS C# code will move toward more idiomatic .NET coding style where it makes sense.
 
 To that end, with any contributions, certainly feel free to code in a more .NET idiomatic style than what you see.  PRs are always welcome!
 
