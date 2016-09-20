@@ -632,7 +632,7 @@ To that end, with any contributions, certainly feel free to code in a more .NET 
 * [ ] WCF bindings
 * [X] Travis CI (Used AppVeyor instead)
 * [ ] Allow configuration for performance tuning (buffer sizes), defaults based on plaform.
-* [ ] [.NET Core](https://github.com/dotnet/core) compatibility, TLS required.
+* [X] [.NET Core](https://github.com/dotnet/core) compatibility, TLS required.
 * [ ] Azure Service Bus Connector
 * [ ] Visual Studio [Starter Kit](https://msdn.microsoft.com/en-us/library/ccd9ychb.aspx)
 * [X] Convert unit tests to xunit
