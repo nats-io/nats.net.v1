@@ -269,22 +269,11 @@ namespace NATSUnitTests
             }
         }
 
-        [Serializable]
-        class NumberObj
-        {
-            public  NumberObj(int value)
-            {
-                v = value;
-            }
-
-            public int v;
-        }
-
-        void sendAndCheckMsgs(IEncodedConnection ec, string subject, int numToSend)
+        void sendAndCheckMsgs(IConnection ec, string subject, int numToSend)
         {
             for (int i = 0; i < numToSend; i++)
             {
-                ec.Publish(subject, new NumberObj(i));
+                ec.Publish(subject, Encoding.UTF8.GetBytes(Convert.ToString(i)));
             }
             ec.Flush();
 
@@ -298,7 +287,7 @@ namespace NATSUnitTests
         {
             AutoResetEvent reconnectEvent = new AutoResetEvent(false);
             Options opts = reconnectOptions;
-            IEncodedConnection ec;
+            IConnection c;
 
             string subj = "foo.bar";
             string qgroup = "workers";
@@ -310,11 +299,11 @@ namespace NATSUnitTests
 
             using(NATSServer ns = utils.CreateServerOnPort(22222))
             {
-                ec = new ConnectionFactory().CreateEncodedConnection(opts);
+                c = new ConnectionFactory().CreateConnection(opts);
 
-                EventHandler<EncodedMessageEventArgs> eh = (sender, args) =>
+                EventHandler<MsgHandlerEventArgs> eh = (sender, args) =>
                 {
-                    int seq = ((NumberObj)args.ReceivedObject).v;
+                    int seq = Convert.ToInt32(Encoding.UTF8.GetString(args.Message.Data));
 
                     lock (results)
                     {
@@ -324,12 +313,12 @@ namespace NATSUnitTests
                 };
 
                 // Create Queue Subscribers
-	            ec.SubscribeAsync(subj, qgroup, eh);
-                ec.SubscribeAsync(subj, qgroup, eh);
+	            c.SubscribeAsync(subj, qgroup, eh);
+                c.SubscribeAsync(subj, qgroup, eh);
 
-                ec.Flush();
+                c.Flush();
 
-                sendAndCheckMsgs(ec, subj, 10);
+                sendAndCheckMsgs(c, subj, 10);
             }
             // server should stop...
 
@@ -342,7 +331,7 @@ namespace NATSUnitTests
                 // wait for reconnect
                 Assert.True(reconnectEvent.WaitOne(6000));
 
-                sendAndCheckMsgs(ec, subj, 10);
+                sendAndCheckMsgs(c, subj, 10);
             }
         }
 

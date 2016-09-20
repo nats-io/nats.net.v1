@@ -1,13 +1,12 @@
 ﻿// Copyright 2015 Apcera Inc. All rights reserved.
-
 using System;
 using NATS.Client;
 using System.Threading;
-using System.Text;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Xml.Serialization;
 using System.IO;
 using Xunit;
+using System.Runtime.Serialization.Json;
+using System.Runtime.Serialization;
+using System.Text;
 
 namespace NATSUnitTests
 {
@@ -28,93 +27,8 @@ namespace NATSUnitTests
         {
             utils.StopDefaultServer();
         }
-        
-        [Fact]
-        public void TestEncodedObjectSerization()
-        {
-            using (IEncodedConnection c = new ConnectionFactory().CreateEncodedConnection())
-            {
-                String myStr = "value";
-                Object mu = new Object();
 
-                EventHandler<EncodedMessageEventArgs> eh = (sender, args) =>
-                {
-                    Assert.True(args.ReceivedObject.Equals(myStr));
-                    lock (mu)
-                    {
-                        Monitor.Pulse(mu);
-                    }
-                };
-
-                using (IAsyncSubscription s = c.SubscribeAsync("foo", eh))
-                {
-                    lock (mu)
-                    {
-                        for (int i = 0; i < 10; i++)
-                            c.Publish("foo", myStr);
-
-                        c.Flush();
-
-                        Monitor.Wait(mu, 1000);
-                    }
-                }
-
-                using (IAsyncSubscription s = c.SubscribeAsync("foo", eh))
-                {
-                    lock (mu)
-                    {
-                        c.Publish("foo", "bar", myStr);
-                        c.Flush();
-
-                        Monitor.Wait(mu, 1000);
-                    }
-                }
-            }
-        }
-
-        [Fact]
-        public void TestEncodedInvalidObjectSerialization()
-        {
-            using (IEncodedConnection c = new ConnectionFactory().CreateEncodedConnection())
-            {
-                String myStr = "value";
-                Object mu = new Object();
-
-                bool hitException = false;
-
-                EventHandler<EncodedMessageEventArgs> eh = (sender, args) =>
-                {
-                    // Ensure we blow up in the cast
-                    try
-                    {
-                        Exception invalid = (Exception)args.ReceivedObject;
-                    }
-                    catch (Exception)
-                    {
-                        hitException = true;
-                    }
-
-                    lock (mu)
-                    {
-                        Monitor.Pulse(mu);
-                    }
-                };
-
-                using (IAsyncSubscription s = c.SubscribeAsync("foo", eh))
-                {
-                    lock (mu)
-                    {
-                        c.Publish("foo", myStr);
-                        c.Flush();
-
-                        Monitor.Wait(mu, 1000);
-
-                        Assert.True(hitException);
-                    }
-                }
-            }
-        }
-
+#if NET45
         [Serializable]
         public class SerializationTestObj
         {
@@ -146,7 +60,7 @@ namespace NATSUnitTests
         }
 
         [Fact]
-        public void TestCustomObjectSerialization()
+        public void TestDefaultObjectSerialization()
         {
             using (IEncodedConnection c = new ConnectionFactory().CreateEncodedConnection())
             {
@@ -177,28 +91,161 @@ namespace NATSUnitTests
                 }
             }
         }
-
-        // IF this works, all XML related subclassing should work 
-        // (e.g. JSON, DataContractFormatters, etc, as well as any other
-        // custom formatting.
-        byte[] serializeToXML(Object obj)
+#else
+        [Fact]
+        public void TestDefaultObjectSerialization()
         {
-            MemoryStream  ms = new MemoryStream();
-            XmlSerializer x = new XmlSerializer(((SerializationTestObj)obj).GetType());
+            using (IEncodedConnection c = new ConnectionFactory().CreateEncodedConnection())
+            {
+                Assert.Throws<NATSException>(() => { c.Publish("foo", new Object()); });
+                Assert.Throws<NATSException>(() => { c.SubscribeAsync("foo", (obj, args)=>{}); });
+            }
+        }
+#endif
 
-            x.Serialize(ms, obj);
+        [DataContract]
+        public class JsonObject
+        {
+            [DataMember]
+            public string Value = "";
 
-            byte[] content = new byte[ms.Position];
-            Array.Copy(ms.GetBuffer(), content, ms.Position);
+            public JsonObject() { }
 
-            return content;
+            public JsonObject(string val)
+            {
+                Value = val;
+            }
+
+            public override bool Equals(object obj)
+            {
+                return (((JsonObject)obj).Value == Value);
+            }
+
+            public override int GetHashCode()
+            {
+                return base.GetHashCode();
+            }
         }
 
-        Object deserializeFromXML(byte[] data)
+        [Fact]
+        public void TestEncodedObjectSerization()
         {
-            XmlSerializer x = new XmlSerializer(new SerializationTestObj().GetType());
-            MemoryStream ms = new MemoryStream(data);
-            return x.Deserialize(ms);
+            using (IEncodedConnection c = new ConnectionFactory().CreateEncodedConnection())
+            {
+                c.OnDeserialize = jsonDeserializer;
+                c.OnSerialize = jsonSerializer;
+
+                AutoResetEvent ev = new AutoResetEvent(false);
+                JsonObject jo = new JsonObject("bar");
+
+                EventHandler<EncodedMessageEventArgs> eh = (sender, args) =>
+                {
+                    Assert.True(args.ReceivedObject.Equals(jo));
+                    ev.Set();
+                };
+
+                using (IAsyncSubscription s = c.SubscribeAsync("foo", eh))
+                {
+                     for (int i = 0; i < 10; i++)
+                        c.Publish("foo", jo);
+
+                    c.Flush();
+
+                    Assert.True(ev.WaitOne(1000));
+                }
+
+                ev.Reset();
+                using (IAsyncSubscription s = c.SubscribeAsync("foo", eh))
+                {
+                    c.Publish("foo", "bar", jo);
+                    c.Flush();
+
+                    Assert.True(ev.WaitOne(1000));
+                }
+            }
+        }
+
+        [Fact]
+        public void TestEncodedInvalidObjectSerialization()
+        {
+            using (IEncodedConnection c = new ConnectionFactory().CreateEncodedConnection())
+            {
+                AutoResetEvent ev = new AutoResetEvent(false);
+
+                c.OnSerialize = jsonSerializer;
+                c.OnDeserialize = jsonSerializer;
+
+                bool hitException = false;
+
+                EventHandler<EncodedMessageEventArgs> eh = (sender, args) =>
+                {
+                    // Ensure we blow up in the cast or not implemented in .NET core
+                    try
+                    {
+                        Exception invalid = (Exception)args.ReceivedObject;
+                    }
+                    catch (Exception)
+                    {
+                        hitException = true;
+                    }
+
+                    ev.Set();
+                };
+
+                using (IAsyncSubscription s = c.SubscribeAsync("foo", eh))
+                {
+                    c.Publish("foo", new JsonObject("data"));
+                    c.Flush();
+
+                    ev.WaitOne(1000);
+
+                    Assert.True(hitException);
+                }
+            }
+        }
+
+        internal object jsonDeserializer(byte[] buffer)
+        {
+            using (MemoryStream stream = new MemoryStream())
+            {
+                var serializer = new DataContractJsonSerializer(typeof(JsonObject));
+                stream.Write(buffer, 0, buffer.Length);
+                stream.Position = 0;
+                return serializer.ReadObject(stream);
+            }
+        }
+
+        internal byte[] jsonSerializer(object obj)
+        {
+            if (obj == null)
+                return null;
+
+            var serializer = new DataContractJsonSerializer(typeof(JsonObject));
+
+            using (MemoryStream stream = new MemoryStream())
+            {
+                serializer.WriteObject(stream, obj);
+#if NET45
+                byte[] buffer = stream.GetBuffer();
+                long len = stream.Position;
+                var rv = new byte[len];
+                Array.Copy(buffer, rv, (int)len);
+                return rv;
+#else
+                ArraySegment<byte> buffer;
+                if (stream.TryGetBuffer(out buffer))
+                {
+                    long len = stream.Position;
+                    var rv = new byte[len];
+                    Array.Copy(buffer.Array, rv, (int)len);
+                    return rv;
+                }
+                else
+                {
+                    throw new Exception("Unable to serialize - buffer error");
+                }
+#endif
+            }
         }
 
         [Fact]
@@ -206,33 +253,27 @@ namespace NATSUnitTests
         {
             using (IEncodedConnection c = new ConnectionFactory().CreateEncodedConnection())
             {
-                c.OnDeserialize = deserializeFromXML;
-                c.OnSerialize = serializeToXML;
+                c.OnDeserialize = jsonDeserializer;
+                c.OnSerialize = jsonSerializer;
 
-                Object mu = new Object();
-                SerializationTestObj origObj = new SerializationTestObj();
-                origObj.a = 99;
+                AutoResetEvent ev = new AutoResetEvent(false);
+
+                JsonObject origObj = new JsonObject("bar");
 
                 EventHandler<EncodedMessageEventArgs> eh = (sender, args) =>
                 {
-                    SerializationTestObj so = (SerializationTestObj)args.ReceivedObject;
+                    JsonObject so = (JsonObject)args.ReceivedObject;
                     Assert.True(so.Equals(origObj));
 
-                    lock (mu)
-                    {
-                        Monitor.Pulse(mu);
-                    }
+                    ev.Set();
                 };
 
                 using (IAsyncSubscription s = c.SubscribeAsync("foo", eh))
                 {
-                    lock (mu)
-                    {
-                        c.Publish("foo", origObj);
-                        c.Flush();
+                    c.Publish("foo", origObj);
+                    c.Flush();
 
-                        Monitor.Wait(mu, 1000);
-                    }
+                    ev.WaitOne(1000);
                 }
             }
         }
@@ -242,28 +283,27 @@ namespace NATSUnitTests
         {
             using (IEncodedConnection c = new ConnectionFactory().CreateEncodedConnection())
             {
-                Object mu = new Object();
-                SerializationTestObj origObj = new SerializationTestObj();
+                c.OnDeserialize = jsonDeserializer;
+                c.OnSerialize = jsonSerializer;
+
+                JsonObject origObj = new JsonObject("foo");
 
                 EventHandler<EncodedMessageEventArgs> eh = (sender, args) =>
                 {
-                    SerializationTestObj so = (SerializationTestObj)args.ReceivedObject;
+                    JsonObject so = (JsonObject)args.ReceivedObject;
                     Assert.True(so.Equals(origObj));
-                    String str = "Received";
 
-                    c.Publish(args.Reply, str);
+                    c.Publish(args.Reply, new JsonObject("Received"));
                     c.Flush();
-
-                    lock (mu)
-                    {
-                        Monitor.Pulse(mu);
-                    }
                 };
 
                 using (IAsyncSubscription s = c.SubscribeAsync("foo", eh))
                 {
-                    Assert.True("Received".Equals(c.Request("foo", origObj, 1000)));
-                    Assert.True("Received".Equals(c.Request("foo", origObj)));
+                    var jo = (JsonObject)c.Request("foo", origObj, 1000);
+                    Assert.True("Received".Equals(jo.Value));
+
+                    jo = (JsonObject)c.Request("foo", origObj, 1000);
+                    Assert.True("Received".Equals(jo.Value));
                 }
             }
         }
@@ -271,3 +311,4 @@ namespace NATSUnitTests
     } // class
 
 } // namespace
+

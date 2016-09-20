@@ -3,10 +3,23 @@ install:
   - appveyor DownloadFile https://github.com/nats-io/gnatsd/releases/download/v0.9.2/gnatsd-v0.9.2-windows-386.zip
   - 7z e gnatsd-v0.9.2-windows-386.zip gnatsd.exe -r -oc:\projects\csnats\build
   - cmd: set PATH=%PATH%;C:\projects\csnats\build
-before_build:
-  - nuget restore
-build:
-  project: NATS.sln
+
+# to add several configurations to build matrix:
+configuration:
+  - Release
+
+environment:
+  matrix:
+    - arch_name: core
+    - arch_name: net45
+
+# to run your custom scripts instead of automatic MSBuild
+build_script:
+  - cmd: appveyor\bld%arch_name%.bat
+
+test_script:
+  - cmd: appveyor\test%arch_name%.bat
+
 notifications:
   - provider: GitHubPullRequest
     auth_token:

@@ -568,6 +568,7 @@ namespace NATSUnitTests
             }
         }
 
+#if NET45
         // This test method tests mulitiple overlapping requests across many
         // threads.  The responder simulates work, to introduce variablility
         // in the request timing.
@@ -704,7 +705,7 @@ namespace NATSUnitTests
                 }
             }
         }
-
+#endif
 
         [Fact]
         public void TestFlushInHandler()
@@ -1126,11 +1127,12 @@ namespace NATSUnitTests
 
             Assert.True(wasRandom);
 
+#if skip
             // Although the original intent was that if Opts.Url is
             // set, Opts.Servers is not (and vice versa), the behavior
             // is that Opts.Url is always first, even when randomization
             // is enabled. So make sure that this is still the case.
-            opts.Url = "nats://127.0.0.1:4222";
+            opts.Url = "nats://localhost:4222";
             for (int i = 0; i < 5; i++)
             {
                 c = new ConnectionFactory().CreateConnection(opts);
@@ -1141,8 +1143,8 @@ namespace NATSUnitTests
                 if (wasRandom)
                     break;
             }
+#endif
         }
 
     } // class
-
 } // namespace

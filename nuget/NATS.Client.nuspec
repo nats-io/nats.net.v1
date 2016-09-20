@@ -22,5 +22,8 @@
     <files>
         <file src="lib\net45\NATS.Client.DLL" target="lib\net45\NATS.Client.DLL" />
         <file src="lib\net45\NATS.Client.XML" target="lib\net45\NATS.Client.XML" />
+        <file src="lib\netstandard1.6\NATS.Client.DLL" target="lib\netstandard1.6\NATS.Client.DLL" />
+        <file src="lib\netstandard1.6\NATS.Client.XML" target="lib\netstandard1.6\NATS.Client.XML" />
+        <file src="lib\netstandard1.6\NATS.Client.deps.json" target="lib\netstandard1.6\NATS.Client.deps.json" />                
     </files>
 </package>

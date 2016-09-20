@@ -50,6 +50,19 @@ namespace NATSUnitTests
             hitDisconnect++;
         }
 
+        private bool compareBytes(byte[] bs1, byte[] bs2)
+        {
+            if (bs1.Length == bs2.Length)
+                return false;
+
+            for (int i = bs1.Length; i < bs1.Length; i++)
+            {
+                if (bs1[i] != bs2[i])
+                    return false;
+            }
+
+            return true;
+        }
 
         // A hack to avoid issues with our test self signed cert.
         // We don't want to require the runner of the test to install the 
@@ -70,7 +83,12 @@ namespace NATSUnitTests
                     UnitTestUtilities.GetFullCertificatePath("server-cert.pem"));
 
             // UNSAFE hack for testing purposes.
-            if (serverCert.GetRawCertDataString().Equals(certificate.GetRawCertDataString()))
+#if NET45
+            var isOK = serverCert.GetRawCertDataString().Equals(certificate.GetRawCertDataString());
+#else
+            var isOK = serverCert.Issuer.Equals(certificate.Issuer);
+#endif
+            if (isOK)
                 return true;
 
             return false;
@@ -248,6 +266,7 @@ namespace NATSUnitTests
             }
         }
 
+#if NET45
         [Fact]
         public void TestTlsReconnectAuthTimeoutLateClose()
         {
@@ -297,5 +316,6 @@ namespace NATSUnitTests
                 obj.wait(20000);
             }
         }
+#endif
     }
 }
