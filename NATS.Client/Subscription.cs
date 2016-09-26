@@ -114,11 +114,14 @@ namespace NATS.Client
 
         protected long tallyDeliveredMessage(Msg msg)
         {
-            delivered++;
-            pBytes -= msg.Data.Length;
-            pMsgs--;
+            lock (mu)
+            {
+                delivered++;
+                pBytes -= msg.Data.Length;
+                pMsgs--;
 
-            return delivered;
+                return delivered;
+            }
         }
 
         // returns false if the message could not be added because
