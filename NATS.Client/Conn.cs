@@ -315,11 +315,14 @@ namespace NATS.Client
 
             internal void closeClient(TcpClient c)
             {
+                if (c != null)
+                {
 #if NET45
-                client.Close();
+                    c.Close();
 #else
-                client.Dispose();
+                    c.Dispose();
 #endif
+                }
             }
 
             internal void makeTLS(Options options)
