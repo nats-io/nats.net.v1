@@ -12,7 +12,10 @@ namespace NATS.Client
     public sealed class SyncSubscription : Subscription, ISyncSubscription, ISubscription 
     {
         internal SyncSubscription(Connection conn, string subject, string queue)
-            : base(conn, subject, queue) { }
+            : base(conn, subject, queue)
+        {
+            mch = new Channel<Msg>();
+        }
 
         public Msg NextMessage()
         {
