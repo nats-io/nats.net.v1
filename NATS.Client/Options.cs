@@ -335,7 +335,8 @@ namespace NATS.Client
         /// <summary>
         /// Sets or gets number of long running tasks to deliver messages
         /// to asynchronous subscribers.  The default is 0 indicating each
-        /// subscriber has its own channel and task created to deliver messages.
+        /// asynchronous subscriber has its own channel and task created to 
+        /// deliver messages.
         /// </summary>
         /// <remarks>
         /// The default where each subscriber has a delivery task is very 
@@ -347,7 +348,7 @@ namespace NATS.Client
         /// Delivery order by subscriber is still guaranteed.  The shared message
         /// processing channels are still each bounded by the SubChannelLength 
         /// option.  Note, slow subscriber errors will flag the last subscriber 
-        /// processed in the taks, which may not actually be the slowest subscriber.
+        /// processed in the tasks, which may not actually be the slowest subscriber.
         /// </remarks>
         public int SubscriberDeliveryTaskCount
         {
