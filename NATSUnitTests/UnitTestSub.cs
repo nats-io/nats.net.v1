@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using Xunit;
+using System.Collections.Generic;
 
 namespace NATSUnitTests
 {
@@ -354,7 +355,6 @@ namespace NATSUnitTests
             }
         }
 
-
         [Fact]
         public void TestAsyncSubscribersOnClose()
         {
@@ -620,6 +620,241 @@ namespace NATSUnitTests
             }
         }
 
+        [Fact]
+        public void TestSubDelTaskCountBasic()
+        {
+            var opts = ConnectionFactory.GetDefaultOptions();
+
+            Assert.Throws<ArgumentOutOfRangeException>(
+                () => { opts.SubscriberDeliveryTaskCount = -1; });
+
+            opts.SubscriberDeliveryTaskCount = 2;
+
+            using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+            {
+                int s1Count = 0;
+                int s2Count = 0;
+                int COUNT = 10;
+
+                AutoResetEvent ev1 = new AutoResetEvent(false);
+                AutoResetEvent ev2 = new AutoResetEvent(false);
+
+                IAsyncSubscription s1 = c.SubscribeAsync("foo", (obj, args) =>
+                {
+                    s1Count++;
+                    if (s1Count == COUNT)
+                    {
+                        ev1.Set();
+                    }
+                });
+
+                IAsyncSubscription s2 = c.SubscribeAsync("bar", (obj, args) =>
+                {
+                    s2Count++;
+                    if (s2Count >= COUNT)
+                    {
+                        ev2.Set();
+                    }
+                });
+
+                for (int i = 0; i < 10; i++)
+                {
+                    c.Publish("foo", null);
+                    c.Publish("bar", null);
+                }
+                c.Flush();
+
+                Assert.True(ev1.WaitOne(10000));
+                Assert.True(ev2.WaitOne(10000));
+                s1.Unsubscribe();
+
+                Assert.True(s1Count == COUNT);
+                Assert.True(s2Count == COUNT);
+
+                ev2.Reset();
+
+                c.Publish("bar", null);
+                c.Flush();
+
+                Assert.True(ev2.WaitOne(10000));
+                Assert.True(s2Count == COUNT + 1);
+
+                s2.Unsubscribe();
+            }
+        }
+
+        [Fact]
+        public void TestSubDelTaskCountScaling()
+        {
+            int COUNT = 20000;
+            var opts = ConnectionFactory.GetDefaultOptions();
+            opts.SubscriberDeliveryTaskCount = 20;
+
+            using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+            {
+                long recvCount = 0;
+
+                var subs = new List<IAsyncSubscription>();
+
+                EventHandler<MsgHandlerEventArgs> eh = (obj, args) =>
+                {
+                    Interlocked.Increment(ref recvCount);
+                };
+
+                for (int i = 0; i < COUNT; i++)
+                {
+                    subs.Add(c.SubscribeAsync("foo", eh));
+                }
+
+                c.Publish("foo", null);
+                c.Flush();
+
+                while (Interlocked.Read(ref recvCount) != (COUNT))
+                {
+                    Thread.Sleep(100);
+                }
+
+                // ensure we are not creating a thread per subscriber.
+                Assert.True(Process.GetCurrentProcess().Threads.Count < 500);
+
+                subs.ForEach((s) => { s.Unsubscribe(); });
+            }
+        }
+
+        [Fact]
+        public void TestSubDelTaskCountAutoUnsub()
+        {
+            var opts = ConnectionFactory.GetDefaultOptions();
+            opts.SubscriberDeliveryTaskCount = 2;
+            using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+            {
+                long received = 0;
+                int max = 10;
+                AutoResetEvent ev = new AutoResetEvent(false);
+
+                using (var s = c.SubscribeAsync("foo", (obj, args)=>
+                {
+                    received++;
+                    if (received > max)
+                        ev.Set();
+                }))
+                {
+                    s.AutoUnsubscribe(max);
+
+                    for (int i = 0; i < max * 2; i++)
+                    {
+                        c.Publish("foo", null);
+                    }
+                    c.Flush();
+
+                    // event should never fire.
+                    Assert.False(ev.WaitOne(500));
+
+                    // double check
+                    Assert.True(received == max);
+
+                    Assert.False(s.IsValid);
+                }
+            }
+        }
+
+        [Fact]
+        public void TestSubDelTaskCountReconnect()
+        {
+            bool disconnected = false;
+            AutoResetEvent reconnectEv = new AutoResetEvent(false);
+
+            var opts = ConnectionFactory.GetDefaultOptions();
+            opts.SubscriberDeliveryTaskCount = 2;
+            opts.DisconnectedEventHandler = (obj, args) => { disconnected = true;};
+            opts.ReconnectedEventHandler = (obj, args) => { reconnectEv.Set(); };
+
+            using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+            {
+                long received = 0;
+                int max = 10;
+                AutoResetEvent ev = new AutoResetEvent(false);
+
+                using (var s = c.SubscribeAsync("foo", (obj, args) =>
+                {
+                    received++;
+                    if (received == max)
+                        ev.Set();
+                }))
+                {
+                    for (int i = 0; i < max / 2; i++)
+                    {
+                        c.Publish("foo", null);
+                    }
+                    c.Flush();
+
+                    // bounce the server, we should reconnect, then
+                    // be able to receive messages.
+                    utils.StopDefaultServer();
+                    utils.StartDefaultServer();
+
+                    Assert.True(reconnectEv.WaitOne(20000));
+                    Assert.True(disconnected);
+
+                    for (int i = 0; i < max / 2; i++)
+                    {
+                        c.Publish("foo", null);
+                    }
+                    c.Flush();
+
+                    Assert.True(ev.WaitOne(10000));
+                    Assert.True(received == max);
+                }
+            }
+        }
+
+        [Fact]
+        public void TestSubDelTaskCountSlowConsumer()
+        {
+            AutoResetEvent errorEv = new AutoResetEvent(false);
+
+            var opts = ConnectionFactory.GetDefaultOptions();
+            opts.SubscriberDeliveryTaskCount = 1;
+            opts.SubChannelLength = 10;
+
+            opts.AsyncErrorEventHandler = (obj, args) => { errorEv.Set(); };
+
+            using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+            {
+                AutoResetEvent cbEv = new AutoResetEvent(false);
+
+                using (var s = c.SubscribeAsync("foo", (obj, args) =>
+                {
+                    cbEv.WaitOne();
+                }))
+                {
+                    for (int i = 0; i < opts.SubChannelLength * 2; i++)
+                    {
+                        c.Publish("foo", null);
+                    }
+                    c.Flush();
+
+                    // make sure we hit the error.
+                    Assert.True(errorEv.WaitOne(10000));
+
+                    // unblock the callback.
+                    cbEv.Set();
+                }
+            }
+        }
+
+        [Fact]
+        public void TestSubDelTaskCountWithSyncSub()
+        {
+            var opts = ConnectionFactory.GetDefaultOptions();
+            opts.SubscriberDeliveryTaskCount = 1;
+            using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+            {
+                ISyncSubscription s = c.SubscribeSync("foo");
+                c.Publish("foo", null);
+                s.NextMessage(10000);
+            }
+        }
     }
 }
 

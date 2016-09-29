@@ -2,15 +2,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace NATS.Client
 {
-    // This channel class really a blocking queue, is named the way it is
+    // This channel class, really a blocking queue, is named the way it is
     // so the code more closely reads with GO.  We implement our own channels 
     // to be lightweight and performant - other concurrent classes do the
     // task but are more heavyweight that what we want.

@@ -16,14 +16,16 @@ namespace NATS.Client
         private MsgHandlerEventArgs msgHandlerArgs = new MsgHandlerEventArgs();
         private Task                msgFeeder = null;
 
-        internal AsyncSubscription(Connection conn, string subject, string queue)
-            : base(conn, subject, queue) { }
+        private bool started = false;
 
-        internal AsyncSubscription(Connection conn, string subject, string queue,
-            EventHandler<MsgHandlerEventArgs> messageEventHandler) : base(conn, subject, queue)
+        internal AsyncSubscription(Connection conn, string subject, string queue)
+            : base(conn, subject, queue)
         {
-            MessageHandler = messageEventHandler;
-            Start();
+            mch = conn.getMessageChannel();
+            if ((ownsChannel = (mch == null)))
+            {
+                mch = new Channel<Msg>();
+            }
         }
 
         internal protected override bool processMsg(Msg msg)
@@ -34,11 +36,12 @@ namespace NATS.Client
 
             lock (mu)
             {
-                localConn = this.conn;
-                localHandler = MessageHandler;
-                localMax = this.max;
-                if (this.closed)
+                if (closed)
                     return false;
+
+                localConn = conn;
+                localHandler = MessageHandler;
+                localMax = max;
             }
 
             // the message handler has not been setup yet, drop the 
@@ -71,16 +74,17 @@ namespace NATS.Client
 
         internal bool isStarted()
         {
-            return (msgFeeder != null);
+            return started;
         }
 
         internal void enableAsyncProcessing()
         {
-            if (msgFeeder == null)
+            if (ownsChannel && msgFeeder == null)
             {
                 msgFeeder = new Task(() => { conn.deliverMsgs(mch); });
                 msgFeeder.Start();
             }
+            started = true;
         }
 
         internal void disableAsyncProcessing()
@@ -90,11 +94,12 @@ namespace NATS.Client
                 mch.close();               
                 msgFeeder = null;
             }
+            started = false;
         }
 
         public void Start()
         {
-            if (isStarted())
+            if (started)
                 return;
 
             if (conn == null)
@@ -112,10 +117,13 @@ namespace NATS.Client
 
         public override void AutoUnsubscribe(int max)
         {
-            if (!isStarted())
-                Start();
-
+            Start();
             base.AutoUnsubscribe(max);
+        }
+
+        internal override void close()
+        {
+            close(ownsChannel);
         }
     }
 }

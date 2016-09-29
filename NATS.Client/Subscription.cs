@@ -27,10 +27,11 @@ namespace NATS.Client
         internal bool closed = false;
         internal bool connClosed = false;
 
-        internal Channel<Msg> mch  = new Channel<Msg>();
+        internal Channel<Msg> mch = null;
+        internal bool ownsChannel = true;
 
         // Pending stats, async subscriptions, high-speed etc.
-	    internal long pMsgs = 0;
+        internal long pMsgs = 0;
 	    internal long pBytes = 0;
 	    internal long pMsgsMax = 0;
 	    internal long pBytesMax = 0;
@@ -49,17 +50,25 @@ namespace NATS.Client
             this.queue = queue;
         }
 
-        internal void close()
+        internal virtual void close()
+        {
+            close(true);
+        }
+
+        internal void close(bool closeChannel)
         {
             lock (mu)
             {
-                mch.close();
-                mch = null;
+                if (closeChannel && mch != null)
+                {
+                    mch.close();
+                    mch = null;
+                }
                 closed = true;
                 connClosed = true;
             }
         }
- 
+
         public string Subject
         {
             get { return subject; }
@@ -131,7 +140,7 @@ namespace NATS.Client
         {
             // Subscription internal stats
 	        pMsgs++;
-	        if (pMsgs > pMsgsMax) 
+	        if (pMsgs > pMsgsMax)
             {
 		        pMsgsMax = pMsgs;
             }

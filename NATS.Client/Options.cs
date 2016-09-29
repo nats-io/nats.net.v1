@@ -54,7 +54,8 @@ namespace NATS.Client
 
         internal int maxPingsOut = Defaults.MaxPingOut;
 
-        internal int subChanLen = 40000;
+        internal int subChanLen = 65536;
+        internal int subscriberDeliveryTaskCount = 0;
 
         internal string user;
         internal string password;
@@ -89,6 +90,7 @@ namespace NATS.Client
             password = o.password;
             token = o.token;
             verbose = o.verbose;
+            subscriberDeliveryTaskCount = o.subscriberDeliveryTaskCount;
             
             if (o.servers != null)
             {
@@ -329,6 +331,41 @@ namespace NATS.Client
         /// </remarks>
         public RemoteCertificateValidationCallback TLSRemoteCertificationValidationCallback;
 
+
+        /// <summary>
+        /// Sets or gets number of long running tasks to deliver messages
+        /// to asynchronous subscribers.  The default is 0 indicating each
+        /// asynchronous subscriber has its own channel and task created to 
+        /// deliver messages.
+        /// </summary>
+        /// <remarks>
+        /// The default where each subscriber has a delivery task is very 
+        /// performant, but does not scale well when large numbers of
+        /// subscribers are required in an application.  Setting this value
+        /// will limit the number of subscriber channels to the specified number
+        /// of long running tasks.  These tasks will process messages for ALL
+        /// asynchronous subscribers rather than one task for each subscriber.  
+        /// Delivery order by subscriber is still guaranteed.  The shared message
+        /// processing channels are still each bounded by the SubChannelLength 
+        /// option.  Note, slow subscriber errors will flag the last subscriber 
+        /// processed in the tasks, which may not actually be the slowest subscriber.
+        /// </remarks>
+        public int SubscriberDeliveryTaskCount
+        {
+            get
+            {
+                return subscriberDeliveryTaskCount;
+            }
+            set
+            {
+                if (value < 0)
+                {
+                    throw new ArgumentOutOfRangeException("SubscriberDeliveryTaskCount must be 0 or greater.");
+                }
+                subscriberDeliveryTaskCount = value;
+            }
+        }
+
         private void appendEventHandler(StringBuilder sb, String name, Delegate eh)
         {
             if (eh != null)
@@ -363,6 +400,7 @@ namespace NATS.Client
             sb.AppendFormat("Secure={0};", Secure);
             sb.AppendFormat("User={0};", User);
             sb.AppendFormat("Token={0};", Token);
+            sb.AppendFormat("SubscriberDeliveryTaskCount={0};", SubscriberDeliveryTaskCount);
 
             if (Servers == null)
             {
