@@ -485,10 +485,13 @@ namespace NATSUnitTests
         [Fact]
         public void TestPublishErrorsDuringReconnect()
         {
+            AutoResetEvent connectedEv = new AutoResetEvent(false);
             utils.StartDefaultServer();
 
             Task t = new Task(() =>
             {
+                connectedEv.WaitOne(10000);
+
                 Random r = new Random();
 
                 // increase this count for a longer running test.
@@ -502,6 +505,8 @@ namespace NATSUnitTests
             byte[] payload = Encoding.UTF8.GetBytes("hello");
             using (var c = new ConnectionFactory().CreateConnection())
             {
+                connectedEv.Set();
+
                 while (t.IsCompleted == false)
                 {
                     try
@@ -515,7 +520,6 @@ namespace NATSUnitTests
                     }
                 }
             }
-            
         }
     } // class
 
