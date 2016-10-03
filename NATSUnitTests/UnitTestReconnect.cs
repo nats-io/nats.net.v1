@@ -482,6 +482,41 @@ namespace NATSUnitTests
             }
         }
 
+        [Fact]
+        public void TestPublishErrorsDuringReconnect()
+        {
+            utils.StartDefaultServer();
+
+            Task t = new Task(() =>
+            {
+                Random r = new Random();
+
+                // increase this count for a longer running test.
+                for (int i = 0; i < 10; i++)
+                {
+                    utils.bounceDefaultServer(r.Next(500));
+                }
+            }, TaskCreationOptions.LongRunning);
+            t.Start();
+
+            byte[] payload = Encoding.UTF8.GetBytes("hello");
+            using (var c = new ConnectionFactory().CreateConnection())
+            {
+                while (t.IsCompleted == false)
+                {
+                    try
+                    {
+                        c.Publish("foo", payload);
+                    }
+                    catch (Exception e)
+                    {
+                        Assert.IsNotType<NATSConnectionClosedException>(e);
+                        Assert.False(c.IsClosed());
+                    }
+                }
+            }
+            
+        }
     } // class
 
 } // namespace
