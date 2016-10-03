@@ -20,7 +20,7 @@ namespace NATSUnitTests
         public TestEncoding()
         {
             UnitTestUtilities.CleanupExistingServers();
-            utils.StartDefaultServer();
+            utils.StartDefaultServerAndDelay();
         }
 
         public void Dispose()

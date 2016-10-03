@@ -143,9 +143,10 @@ namespace NATSUnitTests
 
     class UnitTestUtilities
     {
-        Object mu = new Object();
+        object mu = new object();
         static NATSServer defaultServer = null;
         Process authServerProcess = null;
+        static internal readonly int SERVER_WAIT_DELAY = 2000;
 
         internal static string GetConfigDir()
         {
@@ -169,6 +170,18 @@ namespace NATSUnitTests
                 {
                     defaultServer = new NATSServer();
                 }
+            }
+        }
+
+        public void StartDefaultServerAndDelay()
+        {
+            lock (mu)
+            {
+                if (defaultServer == null)
+                {
+                    defaultServer = new NATSServer();
+                }
+                Thread.Sleep(SERVER_WAIT_DELAY);
             }
         }
 
