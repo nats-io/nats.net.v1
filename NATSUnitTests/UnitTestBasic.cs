@@ -21,7 +21,7 @@ namespace NATSUnitTests
         public TestBasic()
         {
             UnitTestUtilities.CleanupExistingServers();
-            utils.StartDefaultServer();
+            utils.StartDefaultServerAndDelay();
         }
 
         public void Dispose()
