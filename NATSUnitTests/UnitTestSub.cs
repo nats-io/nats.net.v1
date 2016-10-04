@@ -22,7 +22,7 @@ namespace NATSUnitTests
         public TestSubscriptions()
         {
             UnitTestUtilities.CleanupExistingServers();
-            utils.StartDefaultServerAndDelay();
+            utils.StartDefaultServerAndVerify();
         }
 
         public void Dispose()

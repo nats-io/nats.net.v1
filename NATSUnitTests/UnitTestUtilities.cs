@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.IO;
 using Xunit;
+using NATS.Client;
 
 namespace NATSUnitTests
 {
@@ -146,7 +147,6 @@ namespace NATSUnitTests
         object mu = new object();
         static NATSServer defaultServer = null;
         Process authServerProcess = null;
-        static internal readonly int SERVER_WAIT_DELAY = 2000;
 
         internal static string GetConfigDir()
         {
@@ -173,15 +173,29 @@ namespace NATSUnitTests
             }
         }
 
-        public void StartDefaultServerAndDelay()
+        // For tests running on slower machines, rather than
+        // delay, keep trying to connect until the server is up
+        // and running.
+        public void StartDefaultServerAndVerify()
         {
             lock (mu)
             {
                 if (defaultServer == null)
                 {
                     defaultServer = new NATSServer();
+                    for (int i = 0; i < 10; i++)
+                    {
+                        try
+                        {
+                            var c = new ConnectionFactory().CreateConnection();
+                            c.Close();
+                            break;
+                        }
+                        catch {
+                            Thread.Sleep(i*250);
+                        }
+                    }
                 }
-                Thread.Sleep(SERVER_WAIT_DELAY);
             }
         }
 
