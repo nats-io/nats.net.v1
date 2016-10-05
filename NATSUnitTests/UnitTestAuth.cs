@@ -85,7 +85,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestReconnectAuthTimeout()
         {
-            ConditionalObj obj = new ConditionalObj();
+            AutoResetEvent ev  = new AutoResetEvent(false);
 
             using (NATSServer s1 = util.CreateServerWithConfig("auth_1222.conf"),
                               s2 = util.CreateServerWithConfig("auth_1223_timeout.conf"),
@@ -102,7 +102,7 @@ namespace NATSUnitTests
 
                 opts.ReconnectedEventHandler += (sender, args) =>
                 {
-                    obj.notify();
+                    ev.Set();
                 };
 
                 IConnection c = new ConnectionFactory().CreateConnection(opts);
@@ -112,7 +112,7 @@ namespace NATSUnitTests
                 // This should fail over to S2 where an authorization timeout occurs
                 // then successfully reconnect to S3.
 
-                obj.wait(20000);
+                Assert.True(ev.WaitOne(20000));
             }
         }
 
@@ -120,7 +120,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestReconnectAuthTimeoutLateClose()
         {
-            ConditionalObj obj = new ConditionalObj();
+            AutoResetEvent ev = new AutoResetEvent(false);
 
             using (NATSServer s1 = util.CreateServerWithConfig("auth_1222.conf"),
                               s2 = util.CreateServerWithConfig("auth_1224.conf"))
@@ -135,7 +135,7 @@ namespace NATSUnitTests
 
                 opts.ReconnectedEventHandler += (sender, args) =>
                 {
-                    obj.notify();
+                    ev.Set();
                 };
 
                 IConnection c = new ConnectionFactory().CreateConnection(opts);
@@ -161,7 +161,7 @@ namespace NATSUnitTests
                 s1.Shutdown();
 
                 // Wait for a reconnect.
-                obj.wait(20000);
+                Assert.True(ev.WaitOne(20000));
             }
         }
 #endif
