@@ -9,65 +9,60 @@ using System.Diagnostics;
 using Xunit;
 using System.Collections.Generic;
 
+
 namespace NATSUnitTests
 {
     /// <summary>
     /// Run these tests with the gnatsd auth.conf configuration file.
     /// </summary>
-    public class TestBasic : IDisposable
+    public class TestBasic
     {
         UnitTestUtilities utils = new UnitTestUtilities();
-
-        public TestBasic()
-        {
-            UnitTestUtilities.CleanupExistingServers();
-            utils.StartDefaultServerAndDelay();
-        }
-
-        public void Dispose()
-        {
-            utils.StopDefaultServer();
-        }
-
 
         [Fact]
         public void TestConnectedServer()
         {
-            IConnection c = new ConnectionFactory().CreateConnection();
+            using (new NATSServer())
+            {
+                IConnection c = utils.DefaultTestConnection;
 
-            string u = c.ConnectedUrl;
+                string u = c.ConnectedUrl;
 
-            Assert.False(string.IsNullOrWhiteSpace(u), string.Format("Invalid connected url {0}.", u));
+                Assert.False(string.IsNullOrWhiteSpace(u), string.Format("Invalid connected url {0}.", u));
 
-            Assert.Equal(Defaults.Url, u);
+                Assert.Equal(Defaults.Url, u);
 
-            c.Close();
-            u = c.ConnectedUrl;
+                c.Close();
+                u = c.ConnectedUrl;
 
-            Assert.Null(u);
+                Assert.Null(u);
+            }
         }
 
         [Fact]
         public void TestMultipleClose()
         {
-            IConnection c = new ConnectionFactory().CreateConnection();
-
-            Task[] tasks = new Task[10];
-
-            for (int i = 0; i < 10; i++)
+            using (new NATSServer())
             {
+                IConnection c = utils.DefaultTestConnection;
 
-                tasks[i] = new Task(() => { c.Close(); });
-                tasks[i].Start();
+                Task[] tasks = new Task[10];
+
+                for (int i = 0; i < 10; i++)
+                {
+
+                    tasks[i] = new Task(() => { c.Close(); });
+                    tasks[i].Start();
+                }
+
+                Task.WaitAll(tasks);
             }
-
-            Task.WaitAll(tasks);
         }
 
         [Fact]
         public void TestBadOptionTimeoutConnect()
         {
-            Options opts = ConnectionFactory.GetDefaultOptions();
+            Options opts = utils.DefaultTestOptions;
 
             Assert.ThrowsAny<Exception>(() => opts.Timeout = -1);
         }
@@ -75,22 +70,26 @@ namespace NATSUnitTests
         [Fact]
         public void TestSimplePublish()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (new NATSServer())
             {
-                c.Publish("foo", Encoding.UTF8.GetBytes("Hello World!"));
+                using (IConnection c = utils.DefaultTestConnection)
+                {
+                    c.Publish("foo", Encoding.UTF8.GetBytes("Hello World!"));
+                }
             }
         }
 
         [Fact]
         public void TestSimplePublishNoData()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (new NATSServer())
             {
-                c.Publish("foo", null);
+                using (IConnection c = utils.DefaultTestConnection)
+                {
+                    c.Publish("foo", null);
+                }
             }
         }
-
-
 
         private bool compare(byte[] p1, byte[] p2)
         {
@@ -136,23 +135,26 @@ namespace NATSUnitTests
         [Fact]
         public void TestAsyncSubscribe()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (new NATSServer())
             {
-                using (IAsyncSubscription s = c.SubscribeAsync("foo"))
+                using (IConnection c = utils.DefaultTestConnection)
                 {
-                    asyncSub = s;
-                    s.MessageHandler += CheckReceivedAndValidHandler;
-                    s.Start();
-
-                    lock (mu)
+                    using (IAsyncSubscription s = c.SubscribeAsync("foo"))
                     {
-                        received = false;
-                        c.Publish("foo", omsg);
-                        c.Flush();
-                        Monitor.Wait(mu, 30000);
-                    }
+                        asyncSub = s;
+                        s.MessageHandler += CheckReceivedAndValidHandler;
+                        s.Start();
 
-                    Assert.True(received, "Did not receive message.");
+                        lock (mu)
+                        {
+                            received = false;
+                            c.Publish("foo", omsg);
+                            c.Flush();
+                            Monitor.Wait(mu, 30000);
+                        }
+
+                        Assert.True(received, "Did not receive message.");
+                    }
                 }
             }
         }
@@ -172,14 +174,17 @@ namespace NATSUnitTests
         [Fact]
         public void TestSyncSubscribe()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (new NATSServer())
             {
-                using (ISyncSubscription s = c.SubscribeSync("foo"))
+                using (IConnection c = utils.DefaultTestConnection)
                 {
-                    c.Publish("foo", omsg);
-                    Msg m = s.NextMessage(1000);
+                    using (ISyncSubscription s = c.SubscribeSync("foo"))
+                    {
+                        c.Publish("foo", omsg);
+                        Msg m = s.NextMessage(1000);
 
-                    Assert.True(compare(omsg, m), "Messages are not equal.");
+                        Assert.True(compare(omsg, m), "Messages are not equal.");
+                    }
                 }
             }
         }
@@ -187,14 +192,17 @@ namespace NATSUnitTests
         [Fact]
         public void TestPubWithReply()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (new NATSServer())
             {
-                using (ISyncSubscription s = c.SubscribeSync("foo"))
+                using (IConnection c = utils.DefaultTestConnection)
                 {
-                    c.Publish("foo", "reply", omsg);
-                    Msg m = s.NextMessage(1000);
+                    using (ISyncSubscription s = c.SubscribeSync("foo"))
+                    {
+                        c.Publish("foo", "reply", omsg);
+                        Msg m = s.NextMessage(1000);
 
-                    Assert.True(compare(omsg, m), "Messages are not equal.");
+                        Assert.True(compare(omsg, m), "Messages are not equal.");
+                    }
                 }
             }
         }
@@ -202,12 +210,15 @@ namespace NATSUnitTests
         [Fact]
         public void TestFlush()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (new NATSServer())
             {
-                using (ISyncSubscription s = c.SubscribeSync("foo"))
+                using (IConnection c = utils.DefaultTestConnection)
                 {
-                    c.Publish("foo", "reply", omsg);
-                    c.Flush();
+                    using (ISyncSubscription s = c.SubscribeSync("foo"))
+                    {
+                        c.Publish("foo", "reply", omsg);
+                        c.Flush();
+                    }
                 }
             }
         }
@@ -215,39 +226,42 @@ namespace NATSUnitTests
         [Fact]
         public void TestQueueSubscriber()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (new NATSServer())
             {
-                using (ISyncSubscription s1 = c.SubscribeSync("foo", "bar"),
-                                         s2 = c.SubscribeSync("foo", "bar"))
+                using (IConnection c = utils.DefaultTestConnection)
                 {
-                    c.Publish("foo", omsg);
-                    c.Flush(1000);
-
-                    Assert.Equal(1, s1.QueuedMessageCount + s2.QueuedMessageCount);
-
-                    // Drain the messages.
-                    try { s1.NextMessage(100); }
-                    catch (NATSTimeoutException) { }
-
-                    try { s2.NextMessage(100); }
-                    catch (NATSTimeoutException) { }
-
-                    int total = 1000;
-
-                    for (int i = 0; i < 1000; i++)
+                    using (ISyncSubscription s1 = c.SubscribeSync("foo", "bar"),
+                                             s2 = c.SubscribeSync("foo", "bar"))
                     {
                         c.Publish("foo", omsg);
+                        c.Flush(1000);
+
+                        Assert.Equal(1, s1.QueuedMessageCount + s2.QueuedMessageCount);
+
+                        // Drain the messages.
+                        try { s1.NextMessage(100); }
+                        catch (NATSTimeoutException) { }
+
+                        try { s2.NextMessage(100); }
+                        catch (NATSTimeoutException) { }
+
+                        int total = 1000;
+
+                        for (int i = 0; i < 1000; i++)
+                        {
+                            c.Publish("foo", omsg);
+                        }
+                        c.Flush(1000);
+
+                        Thread.Sleep(1000);
+
+                        int r1 = s1.QueuedMessageCount;
+                        int r2 = s2.QueuedMessageCount;
+
+                        Assert.Equal(total, r1 + r2);
+
+                        Assert.False(Math.Abs(r1 - r2) > total * .15, string.Format("Too much variance between {0} and {1}", r1, r2));
                     }
-                    c.Flush(1000);
-
-                    Thread.Sleep(1000);
-
-                    int r1 = s1.QueuedMessageCount;
-                    int r2 = s2.QueuedMessageCount;
-
-                    Assert.Equal(total, r1 + r2);
-
-                    Assert.False(Math.Abs(r1 - r2) > total * .15, string.Format("Too much variance between {0} and {1}", r1, r2));
                 }
             }
         }
@@ -255,23 +269,26 @@ namespace NATSUnitTests
         [Fact]
         public void TestReplyArg()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (new NATSServer())
             {
-                using (IAsyncSubscription s = c.SubscribeAsync("foo"))
+                using (IConnection c = utils.DefaultTestConnection)
                 {
-                    s.MessageHandler += ExpectedReplyHandler;
-                    s.Start();
-
-                    lock (mu)
+                    using (IAsyncSubscription s = c.SubscribeAsync("foo"))
                     {
-                        received = false;
-                        c.Publish("foo", "bar", null);
-                        Monitor.Wait(mu, 5000);
+                        s.MessageHandler += ExpectedReplyHandler;
+                        s.Start();
+
+                        lock (mu)
+                        {
+                            received = false;
+                            c.Publish("foo", "bar", null);
+                            Monitor.Wait(mu, 5000);
+                        }
                     }
                 }
-            }
 
-            Assert.True(received);
+                Assert.True(received);
+            }
         }
 
         private void ExpectedReplyHandler(object sender, MsgHandlerEventArgs args)
@@ -288,16 +305,20 @@ namespace NATSUnitTests
         [Fact]
         public void TestSyncReplyArg()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (new NATSServer())
             {
-                using (ISyncSubscription s = c.SubscribeSync("foo"))
+
+                using (IConnection c = utils.DefaultTestConnection)
                 {
-                    c.Publish("foo", "bar", null);
-                    c.Flush(30000);
+                    using (ISyncSubscription s = c.SubscribeSync("foo"))
+                    {
+                        c.Publish("foo", "bar", null);
+                        c.Flush(30000);
 
-                    Msg m = s.NextMessage(1000);
+                        Msg m = s.NextMessage(1000);
 
-                    Assert.Equal("bar", m.Reply);
+                        Assert.Equal("bar", m.Reply);
+                    }
                 }
             }
         }
@@ -308,59 +329,65 @@ namespace NATSUnitTests
             int count = 0;
             int max = 20;
 
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (new NATSServer())
             {
-                using (IAsyncSubscription s = c.SubscribeAsync("foo"))
+                using (IConnection c = utils.DefaultTestConnection)
                 {
-                    Boolean unsubscribed = false;
-                    asyncSub = s;
-                    //s.MessageHandler += UnsubscribeAfterCount;
-                    s.MessageHandler += (sender, args) =>
+                    using (IAsyncSubscription s = c.SubscribeAsync("foo"))
                     {
-                        count++;
-                        if (count == max)
+                        Boolean unsubscribed = false;
+                        asyncSub = s;
+                        //s.MessageHandler += UnsubscribeAfterCount;
+                        s.MessageHandler += (sender, args) =>
                         {
-                            asyncSub.Unsubscribe();
-                            lock (mu)
+                            count++;
+                            if (count == max)
                             {
-                                unsubscribed = true;
-                                Monitor.Pulse(mu);
+                                asyncSub.Unsubscribe();
+                                lock (mu)
+                                {
+                                    unsubscribed = true;
+                                    Monitor.Pulse(mu);
+                                }
+                            }
+                        };
+                        s.Start();
+
+                        max = 20;
+                        for (int i = 0; i < max; i++)
+                        {
+                            c.Publish("foo", null, null);
+                        }
+                        Thread.Sleep(100);
+                        c.Flush();
+
+                        lock (mu)
+                        {
+                            if (!unsubscribed)
+                            {
+                                Monitor.Wait(mu, 5000);
                             }
                         }
-                    };
-                    s.Start();
-
-                    max = 20;
-                    for (int i = 0; i < max; i++)
-                    {
-                        c.Publish("foo", null, null);
                     }
-                    Thread.Sleep(100);
-                    c.Flush();
 
-                    lock (mu)
-                    {
-                        if (!unsubscribed)
-                        {
-                            Monitor.Wait(mu, 5000);
-                        }
-                    }
+                    Assert.Equal(max, count);
                 }
-
-                Assert.Equal(max, count);
             }
         }
 
         [Fact]
         public void TestDoubleUnsubscribe()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (new NATSServer())
             {
-                using (ISyncSubscription s = c.SubscribeSync("foo"))
+                using (IConnection c = utils.DefaultTestConnection)
                 {
-                    s.Unsubscribe();
+                    using (ISyncSubscription s = c.SubscribeSync("foo"))
+                    {
+                        s.Unsubscribe();
 
-                    Assert.ThrowsAny<Exception>(() => s.Unsubscribe());
+                        Assert.ThrowsAny<Exception>(() => s.Unsubscribe());
+                    }
                 }
             }
         }
@@ -368,33 +395,39 @@ namespace NATSUnitTests
         [Fact]
         public void TestRequestTimeout()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (new NATSServer())
             {
-                Assert.ThrowsAny<Exception>(() => c.Request("foo", null, 500));
+                using (IConnection c = utils.DefaultTestConnection)
+                {
+                    Assert.ThrowsAny<Exception>(() => c.Request("foo", null, 500));
+                }
             }
         }
 
         [Fact]
         public void TestRequest()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (new NATSServer())
             {
-                using (IAsyncSubscription s = c.SubscribeAsync("foo"))
+                using (IConnection c = utils.DefaultTestConnection)
                 {
-                    byte[] response = Encoding.UTF8.GetBytes("I will help you.");
-
-                    s.MessageHandler += (sender, args) =>
+                    using (IAsyncSubscription s = c.SubscribeAsync("foo"))
                     {
-                        c.Publish(args.Message.Reply, response);
-                        c.Flush();
-                    };
+                        byte[] response = Encoding.UTF8.GetBytes("I will help you.");
 
-                    s.Start();
+                        s.MessageHandler += (sender, args) =>
+                        {
+                            c.Publish(args.Message.Reply, response);
+                            c.Flush();
+                        };
 
-                    Msg m = c.Request("foo", Encoding.UTF8.GetBytes("help."),
-                        5000);
+                        s.Start();
 
-                    Assert.True(compare(m.Data, response), "Response isn't valid");
+                        Msg m = c.Request("foo", Encoding.UTF8.GetBytes("help."),
+                            5000);
+
+                        Assert.True(compare(m.Data, response), "Response isn't valid");
+                    }
                 }
             }
         }
@@ -402,59 +435,65 @@ namespace NATSUnitTests
         [Fact]
         public void TestRequestNoBody()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (new NATSServer())
             {
-                using (IAsyncSubscription s = c.SubscribeAsync("foo"))
+                using (IConnection c = utils.DefaultTestConnection)
                 {
-                    byte[] response = Encoding.UTF8.GetBytes("I will help you.");
-
-                    s.MessageHandler += (sender, args) =>
+                    using (IAsyncSubscription s = c.SubscribeAsync("foo"))
                     {
-                        c.Publish(args.Message.Reply, response);
-                    };
+                        byte[] response = Encoding.UTF8.GetBytes("I will help you.");
 
-                    s.Start();
+                        s.MessageHandler += (sender, args) =>
+                        {
+                            c.Publish(args.Message.Reply, response);
+                        };
 
-                    Msg m = c.Request("foo", null, 50000);
+                        s.Start();
 
-                    Assert.True(compare(m.Data, response), "Response isn't valid");
+                        Msg m = c.Request("foo", null, 50000);
+
+                        Assert.True(compare(m.Data, response), "Response isn't valid");
+                    }
                 }
             }
         }
 
         public async void testRequestAsync()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (new NATSServer())
             {
-                byte[] response = Encoding.UTF8.GetBytes("I will help you.");
-
-                EventHandler<MsgHandlerEventArgs> eh = (sender, args) =>
+                using (IConnection c = utils.DefaultTestConnection)
                 {
-                    c.Publish(args.Message.Reply, response);
-                };
+                    byte[] response = Encoding.UTF8.GetBytes("I will help you.");
 
-                using (IAsyncSubscription s = c.SubscribeAsync("foo", eh))
-                {
-                    var tasks = new List<Task>();
-                    for (int i = 0; i < 100; i++)
+                    EventHandler<MsgHandlerEventArgs> eh = (sender, args) =>
                     {
-                        tasks.Add(c.RequestAsync("foo", null));
+                        c.Publish(args.Message.Reply, response);
+                    };
+
+                    using (IAsyncSubscription s = c.SubscribeAsync("foo", eh))
+                    {
+                        var tasks = new List<Task>();
+                        for (int i = 0; i < 100; i++)
+                        {
+                            tasks.Add(c.RequestAsync("foo", null));
+                        }
+
+                        foreach (Task<Msg> t in tasks)
+                        {
+                            Msg m = await t;
+                            Assert.True(compare(m.Data, response), "Response isn't valid");
+                        }
                     }
 
-                    foreach (Task<Msg> t in tasks)
-                    {
-                        Msg m = await t;
-                        Assert.True(compare(m.Data, response), "Response isn't valid");
-                    }
+                    // test timeout, make sure we're close.
+                    Stopwatch sw = Stopwatch.StartNew();
+                    await Assert.ThrowsAsync<NATSTimeoutException>(() => { return c.RequestAsync("no-replier", null, 250); });
+                    sw.Stop();
+                    Assert.True(Math.Abs(sw.Elapsed.TotalMilliseconds - 250) < 50);
+
+                    await Assert.ThrowsAsync<NATSBadSubscriptionException>(() => { return c.RequestAsync("", null); });
                 }
-
-                // test timeout, make sure we're close.
-                Stopwatch sw = Stopwatch.StartNew();
-                await Assert.ThrowsAsync<NATSTimeoutException>(() => { return c.RequestAsync("no-replier", null, 250); });
-                sw.Stop();
-                Assert.True(Math.Abs(sw.Elapsed.TotalMilliseconds - 250) < 50);
-
-                await Assert.ThrowsAsync<NATSBadSubscriptionException>(() => { return c.RequestAsync("", null); });
             }
         }
 
@@ -466,69 +505,72 @@ namespace NATSUnitTests
 
         public async void testRequestAsyncCancellation()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (new NATSServer())
             {
-                int responseDelay = 0;
-
-                byte[] response = Encoding.UTF8.GetBytes("I will help you.");
-
-                EventHandler<MsgHandlerEventArgs> eh = (sender, args) =>
+                using (IConnection c = utils.DefaultTestConnection)
                 {
-                    if (responseDelay > 0)
-                        Thread.Sleep(responseDelay);
+                    int responseDelay = 0;
 
-                    c.Publish(args.Message.Reply, response);
-                };
+                    byte[] response = Encoding.UTF8.GetBytes("I will help you.");
 
-                // test cancellation success.
-                var miscToken = new CancellationTokenSource().Token;
-                using (IAsyncSubscription s = c.SubscribeAsync("foo", eh))
-                {
-                    var tasks = new List<Task>();
-                    for (int i = 0; i < 1000; i++)
+                    EventHandler<MsgHandlerEventArgs> eh = (sender, args) =>
                     {
-                        tasks.Add(c.RequestAsync("foo", null, miscToken));
+                        if (responseDelay > 0)
+                            Thread.Sleep(responseDelay);
+
+                        c.Publish(args.Message.Reply, response);
+                    };
+
+                    // test cancellation success.
+                    var miscToken = new CancellationTokenSource().Token;
+                    using (IAsyncSubscription s = c.SubscribeAsync("foo", eh))
+                    {
+                        var tasks = new List<Task>();
+                        for (int i = 0; i < 1000; i++)
+                        {
+                            tasks.Add(c.RequestAsync("foo", null, miscToken));
+                        }
+
+                        foreach (Task<Msg> t in tasks)
+                        {
+                            Msg m = await t;
+                            Assert.True(compare(m.Data, response), "Response isn't valid");
+                        }
+
                     }
 
-                    foreach (Task<Msg> t in tasks)
-                    {
-                        Msg m = await t;
-                        Assert.True(compare(m.Data, response), "Response isn't valid");
-                    }
+                    // test timeout, make sure we are close.
+                    Stopwatch sw = Stopwatch.StartNew();
+                    await Assert.ThrowsAsync<NATSTimeoutException>(() => { return c.RequestAsync("no-replier", null, 250, miscToken); });
+                    sw.Stop();
+                    Assert.True(Math.Abs(sw.Elapsed.TotalMilliseconds - 250) < 50);
 
-                }
+                    // test early cancellation
+                    var cts = new CancellationTokenSource();
+                    var ct = cts.Token;
+                    cts.Cancel();
+                    await Assert.ThrowsAsync<TaskCanceledException>(() => { return c.RequestAsync("foo", null, cts.Token); });
 
-                // test timeout, make sure we are close.
-                Stopwatch sw = Stopwatch.StartNew();
-                await Assert.ThrowsAsync<NATSTimeoutException>(() => { return c.RequestAsync("no-replier", null, 250, miscToken); });
-                sw.Stop();
-                Assert.True(Math.Abs(sw.Elapsed.TotalMilliseconds - 250) < 50);
-
-                // test early cancellation
-                var cts = new CancellationTokenSource();
-                var ct = cts.Token;
-                cts.Cancel();
-                await Assert.ThrowsAsync<TaskCanceledException>(() => { return c.RequestAsync("foo", null, cts.Token); });
-
-                // test cancellation
-                cts = new CancellationTokenSource();
-                var ocex = Assert.ThrowsAsync<OperationCanceledException>(() => { return c.RequestAsync("foo", null, cts.Token); });
-                Thread.Sleep(250);
-                cts.Cancel();
-                await ocex;
-
-                // now we want to test a slow replier, to make sure wait logic checking 
-                responseDelay = 500;
-                using (IAsyncSubscription s = c.SubscribeAsync("foo", eh))
-                {
-                    await c.RequestAsync("foo", null, miscToken);
-
-                    // test cancellation with a subscriber
+                    // test cancellation
                     cts = new CancellationTokenSource();
-                    ocex = Assert.ThrowsAsync<OperationCanceledException>(() => { return c.RequestAsync("foo", null, cts.Token); });
-                    Thread.Sleep(responseDelay / 2);
+                    var ocex = Assert.ThrowsAsync<OperationCanceledException>(() => { return c.RequestAsync("foo", null, cts.Token); });
+                    Thread.Sleep(250);
                     cts.Cancel();
                     await ocex;
+
+                    // now we want to test a slow replier, to make sure wait logic checking 
+                    responseDelay = 500;
+                    using (IAsyncSubscription s = c.SubscribeAsync("foo", eh))
+                    {
+                        await c.RequestAsync("foo", null, miscToken);
+
+                        // test cancellation with a subscriber
+                        cts = new CancellationTokenSource();
+                        ocex = Assert.ThrowsAsync<OperationCanceledException>(() => { return c.RequestAsync("foo", null, cts.Token); });
+                        Thread.Sleep(responseDelay / 2);
+                        cts.Cancel();
+                        await ocex;
+                    }
                 }
             }
         }
@@ -582,58 +624,60 @@ namespace NATSUnitTests
             byte[] response = Encoding.UTF8.GetBytes("reply");
 
             ThreadPool.SetMinThreads(300, 300);
-
-            using (IConnection c1 = new ConnectionFactory().CreateConnection(),
-                               c2 = new ConnectionFactory().CreateConnection())
+            using (new NATSServer())
             {
-                using (IAsyncSubscription s = c1.SubscribeAsync("foo", (sender, args) =>
+                using (IConnection c1 = utils.DefaultTestConnection,
+                               c2 = utils.DefaultTestConnection)
                 {
+                    using (IAsyncSubscription s = c1.SubscribeAsync("foo", (sender, args) =>
+                    {
                     // We cannot block this thread... so copy our data, and spawn a thread
                     // to handle a delay and responding.
                     TestReplier t = new TestReplier(c1, MAX_DELAY,
-                        Encoding.UTF8.GetString(args.Message.Data),
-                        args.Message.Reply,
-                        sw);
-                    new Thread(() => { t.process(); }).Start();
-                }))
-                {
-                    c1.Flush();
-
-                    // use lower level threads over tasks here for predictibility
-                    Thread[] threads = new Thread[TEST_COUNT];
-                    Random r = new Random();
-
-                    for (int i = 0; i < TEST_COUNT; i++)
+                            Encoding.UTF8.GetString(args.Message.Data),
+                            args.Message.Reply,
+                            sw);
+                        new Thread(() => { t.process(); }).Start();
+                    }))
                     {
-                        threads[i] = new Thread((() =>
+                        c1.Flush();
+
+                        // use lower level threads over tasks here for predictibility
+                        Thread[] threads = new Thread[TEST_COUNT];
+                        Random r = new Random();
+
+                        for (int i = 0; i < TEST_COUNT; i++)
                         {
+                            threads[i] = new Thread((() =>
+                            {
                             // randomly delay for a bit to test potential timing issues.
                             Thread.Sleep(r.Next(100, 500));
-                            c2.Request("foo", null, MAX_DELAY * 2);
-                        }));
+                                c2.Request("foo", null, MAX_DELAY * 2);
+                            }));
+                        }
+
+                        // sleep for one second to allow the threads to initialize.
+                        Thread.Sleep(1000);
+
+                        sw.Start();
+
+                        // start all of the threads at the same time.
+                        for (int i = 0; i < TEST_COUNT; i++)
+                        {
+                            threads[i].Start();
+                        }
+
+                        // wait for every thread to stop.
+                        for (int i = 0; i < TEST_COUNT; i++)
+                        {
+                            threads[i].Join();
+                        }
+
+                        sw.Stop();
+
+                        // check that we didn't process the requests consecutively.
+                        Assert.True(sw.ElapsedMilliseconds < (MAX_DELAY * 2));
                     }
-
-                    // sleep for one second to allow the threads to initialize.
-                    Thread.Sleep(1000);
-
-                    sw.Start();
-
-                    // start all of the threads at the same time.
-                    for (int i = 0; i < TEST_COUNT; i++)
-                    {
-                        threads[i].Start();
-                    }
-
-                    // wait for every thread to stop.
-                    for (int i = 0; i < TEST_COUNT; i++)
-                    {
-                        threads[i].Join();
-                    }
-
-                    sw.Stop();
-
-                    // check that we didn't process the requests consecutively.
-                    Assert.True(sw.ElapsedMilliseconds < (MAX_DELAY * 2));
                 }
             }
         }
@@ -654,54 +698,57 @@ namespace NATSUnitTests
             Stopwatch sw = new Stopwatch();
             byte[] response = Encoding.UTF8.GetBytes("reply");
 
-            using (IConnection c1 = new ConnectionFactory().CreateConnection(),
-                               c2 = new ConnectionFactory().CreateConnection())
+            using (new NATSServer())
             {
-                // Try parallel requests and check the performance.
-                using (IAsyncSubscription s = c1.SubscribeAsync("foo", (sender, args) =>
+                using (IConnection c1 = utils.DefaultTestConnection,
+                               c2 = utils.DefaultTestConnection)
                 {
+                    // Try parallel requests and check the performance.
+                    using (IAsyncSubscription s = c1.SubscribeAsync("foo", (sender, args) =>
+                    {
                     // We cannot block this NATS thread... so copy our data, and spawn a thread
                     // to handle a delay and responding.
                     TestReplier t = new TestReplier(c1, MAX_DELAY,
-                        Encoding.UTF8.GetString(args.Message.Data),
-                        args.Message.Reply,
-                        sw);
-                    new Task(() => { t.process(); }).Start();
-                }))
-                {
-                    c1.Flush();
-
-                    // Depending on resources, Tasks can be queueud up for quite while.
-                    Task[] tasks = new Task[TEST_COUNT];
-                    Random r = new Random();
-
-                    for (int i = 0; i < TEST_COUNT; i++)
+                            Encoding.UTF8.GetString(args.Message.Data),
+                            args.Message.Reply,
+                            sw);
+                        new Task(() => { t.process(); }).Start();
+                    }))
                     {
-                        tasks[i] = new Task((() =>
+                        c1.Flush();
+
+                        // Depending on resources, Tasks can be queueud up for quite while.
+                        Task[] tasks = new Task[TEST_COUNT];
+                        Random r = new Random();
+
+                        for (int i = 0; i < TEST_COUNT; i++)
                         {
+                            tasks[i] = new Task((() =>
+                            {
                             // randomly delay for a bit to test potential timing issues.
                             Thread.Sleep(r.Next(100, 500));
-                            c2.Request("foo", null, MAX_DELAY * 2);
-                        }));
+                                c2.Request("foo", null, MAX_DELAY * 2);
+                            }));
+                        }
+
+                        // sleep for one second to allow the tasks to initialize.
+                        Thread.Sleep(1000);
+
+                        sw.Start();
+
+                        // start all of the threads at the same time.
+                        for (int i = 0; i < TEST_COUNT; i++)
+                        {
+                            tasks[i].Start();
+                        }
+
+                        Task.WaitAll(tasks);
+
+                        sw.Stop();
+
+                        // check that we didn't process the requests consecutively.
+                        Assert.True(sw.ElapsedMilliseconds < (MAX_DELAY * 2));
                     }
-
-                    // sleep for one second to allow the tasks to initialize.
-                    Thread.Sleep(1000);
-
-                    sw.Start();
-
-                    // start all of the threads at the same time.
-                    for (int i = 0; i < TEST_COUNT; i++)
-                    {
-                        tasks[i].Start();
-                    }
-
-                    Task.WaitAll(tasks);
-
-                    sw.Stop();
-
-                    // check that we didn't process the requests consecutively.
-                    Assert.True(sw.ElapsedMilliseconds < (MAX_DELAY * 2));
                 }
             }
         }
@@ -710,28 +757,31 @@ namespace NATSUnitTests
         [Fact]
         public void TestFlushInHandler()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (new NATSServer())
             {
-                using (IAsyncSubscription s = c.SubscribeAsync("foo"))
+                using (IConnection c = utils.DefaultTestConnection)
                 {
-                    byte[] response = Encoding.UTF8.GetBytes("I will help you.");
-
-                    s.MessageHandler += (sender, args) =>
+                    using (IAsyncSubscription s = c.SubscribeAsync("foo"))
                     {
-                        c.Flush();
+                        byte[] response = Encoding.UTF8.GetBytes("I will help you.");
+
+                        s.MessageHandler += (sender, args) =>
+                        {
+                            c.Flush();
+
+                            lock (mu)
+                            {
+                                Monitor.Pulse(mu);
+                            }
+                        };
+
+                        s.Start();
 
                         lock (mu)
                         {
-                            Monitor.Pulse(mu);
+                            c.Publish("foo", Encoding.UTF8.GetBytes("Hello"));
+                            Monitor.Wait(mu);
                         }
-                    };
-
-                    s.Start();
-
-                    lock (mu)
-                    {
-                        c.Publish("foo", Encoding.UTF8.GetBytes("Hello"));
-                        Monitor.Wait(mu);
                     }
                 }
             }
@@ -740,143 +790,166 @@ namespace NATSUnitTests
         [Fact]
         public void TestReleaseFlush()
         {
-            IConnection c = new ConnectionFactory().CreateConnection();
-
-            for (int i = 0; i < 1000; i++)
+            using (new NATSServer())
             {
-                c.Publish("foo", Encoding.UTF8.GetBytes("Hello"));
-            }
+                IConnection c = utils.DefaultTestConnection;
 
-            new Task(() => { c.Close(); }).Start();
-            c.Flush();
+                for (int i = 0; i < 1000; i++)
+                {
+                    c.Publish("foo", Encoding.UTF8.GetBytes("Hello"));
+                }
+
+                new Task(() => { c.Close(); }).Start();
+                c.Flush();
+            }
         }
 
         [Fact]
         public void TestCloseAndDispose()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (new NATSServer())
             {
-                c.Close();
+                using (IConnection c = utils.DefaultTestConnection)
+                {
+                    c.Close();
+                }
             }
         }
 
         [Fact]
         public void TestInbox()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (new NATSServer())
             {
-                string inbox = c.NewInbox();
-                Assert.False(string.IsNullOrWhiteSpace(inbox));
-                Assert.True(inbox.StartsWith("_INBOX."));
+                using (IConnection c = utils.DefaultTestConnection)
+                {
+                    string inbox = c.NewInbox();
+                    Assert.False(string.IsNullOrWhiteSpace(inbox));
+                    Assert.True(inbox.StartsWith("_INBOX."));
+                }
             }
         }
 
         [Fact]
         public void TestStats()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (new NATSServer())
             {
-                byte[] data = Encoding.UTF8.GetBytes("The quick brown fox jumped over the lazy dog");
-                int iter = 10;
-
-                for (int i = 0; i < iter; i++)
+                using (IConnection c = utils.DefaultTestConnection)
                 {
-                    c.Publish("foo", data);
+                    byte[] data = Encoding.UTF8.GetBytes("The quick brown fox jumped over the lazy dog");
+                    int iter = 10;
+
+                    for (int i = 0; i < iter; i++)
+                    {
+                        c.Publish("foo", data);
+                    }
+                    c.Flush(1000);
+
+                    IStatistics stats = c.Stats;
+                    Assert.Equal(iter, stats.OutMsgs);
+                    Assert.Equal(iter * data.Length, stats.OutBytes);
+
+                    c.ResetStats();
+
+                    // Test both sync and async versions of subscribe.
+                    IAsyncSubscription s1 = c.SubscribeAsync("foo");
+                    s1.MessageHandler += (sender, arg) => { };
+                    s1.Start();
+
+                    ISyncSubscription s2 = c.SubscribeSync("foo");
+
+                    for (int i = 0; i < iter; i++)
+                    {
+                        c.Publish("foo", data);
+                    }
+                    c.Flush(1000);
+
+                    stats = c.Stats;
+                    Assert.Equal(2 * iter, stats.InMsgs);
+                    Assert.Equal(2 * iter * data.Length, stats.InBytes);
                 }
-                c.Flush(1000);
-
-                IStatistics stats = c.Stats;
-                Assert.Equal(iter, stats.OutMsgs);
-                Assert.Equal(iter * data.Length, stats.OutBytes);
-
-                c.ResetStats();
-
-                // Test both sync and async versions of subscribe.
-                IAsyncSubscription s1 = c.SubscribeAsync("foo");
-                s1.MessageHandler += (sender, arg) => { };
-                s1.Start();
-
-                ISyncSubscription s2 = c.SubscribeSync("foo");
-
-                for (int i = 0; i < iter; i++)
-                {
-                    c.Publish("foo", data);
-                }
-                c.Flush(1000);
-
-                stats = c.Stats;
-                Assert.Equal(2 * iter, stats.InMsgs);
-                Assert.Equal(2 * iter * data.Length, stats.InBytes);
             }
         }
 
         [Fact]
         public void TestRaceSafeStats()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (new NATSServer(false))
             {
-
-                new Task(() => { c.Publish("foo", null); }).Start();
-
                 Thread.Sleep(1000);
 
-                Assert.Equal(1, c.Stats.OutMsgs);
+                using (IConnection c = utils.DefaultTestConnection)
+                {
+
+                    new Task(() => { c.Publish("foo", null); }).Start();
+
+                    Thread.Sleep(1000);
+
+                    Assert.Equal(1, c.Stats.OutMsgs);
+                }
             }
         }
 
         [Fact]
         public void TestBadSubject()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (new NATSServer())
             {
-                bool exThrown = false;
-                try
+                using (IConnection c = utils.DefaultTestConnection)
                 {
-                    c.Publish("", null);
+                    bool exThrown = false;
+                    try
+                    {
+                        c.Publish("", null);
+                    }
+                    catch (Exception e)
+                    {
+                        if (e is NATSBadSubscriptionException)
+                            exThrown = true;
+                    }
+                    Assert.True(exThrown);
                 }
-                catch (Exception e)
-                {
-                    if (e is NATSBadSubscriptionException)
-                        exThrown = true;
-                }
-                Assert.True(exThrown);
             }
         }
 
         [Fact]
         public void TestLargeMessage()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (new NATSServer())
             {
-                int msgSize = 51200;
-                byte[] msg = new byte[msgSize];
-
-                for (int i = 0; i < msgSize; i++)
-                    msg[i] = (byte)'A';
-
-                msg[msgSize - 1] = (byte)'Z';
-
-                using (IAsyncSubscription s = c.SubscribeAsync("foo"))
+                using (IConnection c = utils.DefaultTestConnection)
                 {
-                    Object testLock = new Object();
+                    int msgSize = 51200;
+                    byte[] msg = new byte[msgSize];
 
-                    s.MessageHandler += (sender, args) =>
+                    for (int i = 0; i < msgSize; i++)
+                        msg[i] = (byte)'A';
+
+                    msg[msgSize - 1] = (byte)'Z';
+
+                    using (IAsyncSubscription s = c.SubscribeAsync("foo"))
                     {
+                        Object testLock = new Object();
+
+                        s.MessageHandler += (sender, args) =>
+                        {
+                            lock (testLock)
+                            {
+                                Monitor.Pulse(testLock);
+                            }
+                            Assert.True(compare(msg, args.Message.Data));
+                        };
+
+                        s.Start();
+
+                        c.Publish("foo", msg);
+                        c.Flush(1000);
+
                         lock (testLock)
                         {
-                            Monitor.Pulse(testLock);
+                            Monitor.Wait(testLock, 2000);
                         }
-                        Assert.True(compare(msg, args.Message.Data));
-                    };
-
-                    s.Start();
-
-                    c.Publish("foo", msg);
-                    c.Flush(1000);
-
-                    lock (testLock)
-                    {
-                        Monitor.Wait(testLock, 2000);
                     }
                 }
             }
@@ -885,29 +958,32 @@ namespace NATSUnitTests
         [Fact]
         public void TestSendAndRecv()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (new NATSServer())
             {
-                using (IAsyncSubscription s = c.SubscribeAsync("foo"))
+                using (IConnection c = utils.DefaultTestConnection)
                 {
-                    int received = 0;
-                    int count = 1000;
-
-                    s.MessageHandler += (sender, args) =>
+                    using (IAsyncSubscription s = c.SubscribeAsync("foo"))
                     {
-                        Interlocked.Increment(ref received);
-                    };
+                        int received = 0;
+                        int count = 1000;
 
-                    s.Start();
+                        s.MessageHandler += (sender, args) =>
+                        {
+                            Interlocked.Increment(ref received);
+                        };
 
-                    for (int i = 0; i < count; i++)
-                    {
-                        c.Publish("foo", null);
+                        s.Start();
+
+                        for (int i = 0; i < count; i++)
+                        {
+                            c.Publish("foo", null);
+                        }
+                        c.Flush();
+
+                        Thread.Sleep(500);
+
+                        Assert.Equal(count, received);
                     }
-                    c.Flush();
-
-                    Thread.Sleep(500);
-
-                    Assert.Equal(count, received);
                 }
             }
         }
@@ -916,42 +992,45 @@ namespace NATSUnitTests
         [Fact]
         public void TestLargeSubjectAndReply()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (new NATSServer())
             {
-                String subject = "";
-                for (int i = 0; i < 1024; i++)
+                using (IConnection c = utils.DefaultTestConnection)
                 {
-                    subject += "A";
-                }
-
-                String reply = "";
-                for (int i = 0; i < 1024; i++)
-                {
-                    reply += "A";
-                }
-
-                using (IAsyncSubscription s = c.SubscribeAsync(subject))
-                {
-                    AutoResetEvent ev = new AutoResetEvent(false);
-                    string recvSubj = null;
-                    string recvReply = null;
-
-                    s.MessageHandler += (sender, args) =>
+                    String subject = "";
+                    for (int i = 0; i < 1024; i++)
                     {
-                        recvSubj = args.Message.Subject;
-                        recvReply = args.Message.Reply;
+                        subject += "A";
+                    }
 
-                        ev.Set();
-                    };
+                    String reply = "";
+                    for (int i = 0; i < 1024; i++)
+                    {
+                        reply += "A";
+                    }
 
-                    s.Start();
+                    using (IAsyncSubscription s = c.SubscribeAsync(subject))
+                    {
+                        AutoResetEvent ev = new AutoResetEvent(false);
+                        string recvSubj = null;
+                        string recvReply = null;
 
-                    c.Publish(subject, reply, null);
-                    c.Flush();
+                        s.MessageHandler += (sender, args) =>
+                        {
+                            recvSubj = args.Message.Subject;
+                            recvReply = args.Message.Reply;
 
-                    Assert.True(ev.WaitOne(10000));
-                    Assert.Equal(subject, recvSubj);
-                    Assert.Equal(reply, recvReply);
+                            ev.Set();
+                        };
+
+                        s.Start();
+
+                        c.Publish(subject, reply, null);
+                        c.Flush();
+
+                        Assert.True(ev.WaitOne(10000));
+                        Assert.Equal(subject, recvSubj);
+                        Assert.Equal(reply, recvReply);
+                    }
                 }
             }
         }
@@ -959,30 +1038,33 @@ namespace NATSUnitTests
         [Fact]
         public void TestAsyncSubHandlerAPI()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (new NATSServer())
             {
-                int received = 0;
-
-                EventHandler<MsgHandlerEventArgs> h = (sender, args) =>
+                using (IConnection c = utils.DefaultTestConnection)
                 {
-                    Interlocked.Increment(ref received);
-                };
+                    int received = 0;
 
-                using (IAsyncSubscription s = c.SubscribeAsync("foo", h))
-                {
-                    c.Publish("foo", null);
-                    c.Flush();
-                    Thread.Sleep(500);
+                    EventHandler<MsgHandlerEventArgs> h = (sender, args) =>
+                    {
+                        Interlocked.Increment(ref received);
+                    };
+
+                    using (IAsyncSubscription s = c.SubscribeAsync("foo", h))
+                    {
+                        c.Publish("foo", null);
+                        c.Flush();
+                        Thread.Sleep(500);
+                    }
+
+                    using (IAsyncSubscription s = c.SubscribeAsync("foo", "bar", h))
+                    {
+                        c.Publish("foo", null);
+                        c.Flush();
+                        Thread.Sleep(500);
+                    }
+
+                    Assert.Equal(2, received);
                 }
-
-                using (IAsyncSubscription s = c.SubscribeAsync("foo", "bar", h))
-                {
-                    c.Publish("foo", null);
-                    c.Flush();
-                    Thread.Sleep(500);
-                }
-
-                Assert.Equal(2, received);
             }
         }
 
@@ -994,22 +1076,26 @@ namespace NATSUnitTests
             string url3 = "nats://localhost:4224";
 
             string urls = url1 + "," + url2 + "," + url3;
-            IConnection c = new ConnectionFactory().CreateConnection(urls);
-            Assert.True(c.Opts.Servers[0].Equals(url1));
-            Assert.True(c.Opts.Servers[1].Equals(url2));
-            Assert.True(c.Opts.Servers[2].Equals(url3));
 
-            c.Close();
+            using (new NATSServer())
+            {
+                IConnection c = new ConnectionFactory().CreateConnection(urls);
+                Assert.True(c.Opts.Servers[0].Equals(url1));
+                Assert.True(c.Opts.Servers[1].Equals(url2));
+                Assert.True(c.Opts.Servers[2].Equals(url3));
 
-            urls = url1 + "    , " + url2 + "," + url3;
-            c = new ConnectionFactory().CreateConnection(urls);
-            Assert.True(c.Opts.Servers[0].Equals(url1));
-            Assert.True(c.Opts.Servers[1].Equals(url2));
-            Assert.True(c.Opts.Servers[2].Equals(url3));
-            c.Close();
+                c.Close();
 
-            c = new ConnectionFactory().CreateConnection(url1);
-            c.Close();
+                urls = url1 + "    , " + url2 + "," + url3;
+                c = new ConnectionFactory().CreateConnection(urls);
+                Assert.True(c.Opts.Servers[0].Equals(url1));
+                Assert.True(c.Opts.Servers[1].Equals(url2));
+                Assert.True(c.Opts.Servers[2].Equals(url3));
+                c.Close();
+
+                c = new ConnectionFactory().CreateConnection(url1);
+                c.Close();
+            }
         }
 
         [Fact]
@@ -1021,7 +1107,7 @@ namespace NATSUnitTests
                 // let the server cluster form
                 Thread.Sleep(1000);
 
-                var opts = ConnectionFactory.GetDefaultOptions();
+                var opts = utils.DefaultTestOptions;
                 opts.Url = "nats://127.0.0.1:4223";
 
                 var c = new ConnectionFactory().CreateConnection(opts);
@@ -1037,7 +1123,7 @@ namespace NATSUnitTests
         public void TestAsyncInfoProtocolUpdate()
         {
             AutoResetEvent evReconnect = new AutoResetEvent(false);
-            var opts = ConnectionFactory.GetDefaultOptions();
+            var opts = utils.DefaultTestOptions;
             opts.Url = "nats://127.0.0.1:4223";
             string newUrl = null;
 
@@ -1104,28 +1190,29 @@ namespace NATSUnitTests
                 "nats://localhost:4"
             };
 
-            var opts = ConnectionFactory.GetDefaultOptions();
+            var opts = utils.DefaultTestOptions;
             opts.Servers = serverList;
             opts.NoRandomize = true;
 
-
-            var c = new ConnectionFactory().CreateConnection(opts);
-            Assert.True(listsEqual(serverList, c.Servers));
-            c.Close();
-
-            bool wasRandom = false;
-            opts.NoRandomize = false;
-            for (int i = 0; i < 5; i++)
+            using (new NATSServer())
             {
-                c = new ConnectionFactory().CreateConnection(opts);
-                wasRandom = (listsEqual(serverList, c.Servers) == false);
+                var c = new ConnectionFactory().CreateConnection(opts);
+                Assert.True(listsEqual(serverList, c.Servers));
                 c.Close();
 
-                if (wasRandom)
-                    break;
-            }
+                bool wasRandom = false;
+                opts.NoRandomize = false;
+                for (int i = 0; i < 5; i++)
+                {
+                    c = new ConnectionFactory().CreateConnection(opts);
+                    wasRandom = (listsEqual(serverList, c.Servers) == false);
+                    c.Close();
 
-            Assert.True(wasRandom);
+                    if (wasRandom)
+                        break;
+                }
+
+                Assert.True(wasRandom);
 
 #if skip
             // Although the original intent was that if Opts.Url is
@@ -1144,6 +1231,7 @@ namespace NATSUnitTests
                     break;
             }
 #endif
+            }
         }
 
     } // class

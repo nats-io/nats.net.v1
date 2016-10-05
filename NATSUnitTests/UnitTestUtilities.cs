@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.IO;
 using Xunit;
+using NATS.Client;
 
 namespace NATSUnitTests
 {
@@ -19,6 +20,7 @@ namespace NATSUnitTests
         // Enable this for additional server debugging info.
         static bool debug = false;
         Process p;
+        ProcessStartInfo psInfo;
 
         internal static bool Debug
         {
@@ -26,14 +28,31 @@ namespace NATSUnitTests
             get { return debug; }
         }
 
-        public NATSServer()
+        public NATSServer() : this(true) { }
+
+        public NATSServer(bool verify)
         {
-            ProcessStartInfo psInfo = createProcessStartInfo();
+            createProcessStartInfo();
             p = Process.Start(psInfo);
-            Thread.Sleep(500);
+            if (verify)
+            {
+                for (int i = 0; i < 10; i++)
+                {
+                    try
+                    {
+                        var c = new ConnectionFactory().CreateConnection();
+                        c.Close();
+                        break;
+                    }
+                    catch
+                    {
+                        Thread.Sleep(i * 250);
+                    }
+                }
+            }
         }
 
-        private void addArgument(ProcessStartInfo psInfo, string arg)
+        private void addArgument(string arg)
         {
             if (psInfo.Arguments == null)
             {
@@ -49,9 +68,8 @@ namespace NATSUnitTests
 
         public NATSServer(int port)
         {
-            ProcessStartInfo psInfo = createProcessStartInfo();
-
-            addArgument(psInfo, "-p " + port);
+            createProcessStartInfo();
+            addArgument("-p " + port);
 
             p = Process.Start(psInfo);
             Thread.Sleep(500);
@@ -59,15 +77,15 @@ namespace NATSUnitTests
 
         public NATSServer(string args)
         {
-            ProcessStartInfo psInfo = createProcessStartInfo();
-            addArgument(psInfo, args);
+            createProcessStartInfo();
+            addArgument(args);
             p = Process.Start(psInfo);
             Thread.Sleep(500);
         }
 
-        private ProcessStartInfo createProcessStartInfo()
+        private void createProcessStartInfo()
         {
-            ProcessStartInfo psInfo = new ProcessStartInfo(SERVEREXE);
+            psInfo = new ProcessStartInfo(SERVEREXE);
 
             if (debug)
             {
@@ -83,8 +101,14 @@ namespace NATSUnitTests
             }
 
             psInfo.WorkingDirectory = UnitTestUtilities.GetConfigDir();
+        }
 
-            return psInfo;
+        public void Bounce(int millisDown)
+        {
+            Shutdown();
+            Thread.Sleep(millisDown);
+            p = Process.Start(psInfo);
+            Thread.Sleep(500);
         }
 
         public void Shutdown()
@@ -107,46 +131,12 @@ namespace NATSUnitTests
         }
     }
 
-    class ConditionalObj
-    {
-        Object objLock = new Object();
-        bool completed = false;
-
-        internal void wait(int timeout)
-        {
-            lock (objLock)
-            {
-                if (completed)
-                    return;
-
-                Assert.True(Monitor.Wait(objLock, timeout));
-            }
-        }
-
-        internal void reset()
-        {
-            lock (objLock)
-            {
-                completed = false;
-            }
-        }
-
-        internal void notify()
-        {
-            lock (objLock)
-            {
-                completed = true;
-                Monitor.Pulse(objLock);
-            }
-        }
-    }
-
     class UnitTestUtilities
     {
-        object mu = new object();
-        static NATSServer defaultServer = null;
-        Process authServerProcess = null;
-        static internal readonly int SERVER_WAIT_DELAY = 2000;
+        static UnitTestUtilities()
+        {
+            CleanupExistingServers();
+        }
 
         internal static string GetConfigDir()
         {
@@ -162,55 +152,24 @@ namespace NATSUnitTests
             return Path.Combine(runningDirectory, "config");
         }
 
-        public void StartDefaultServer()
+        public Options DefaultTestOptions
         {
-            lock (mu)
+            get
             {
-                if (defaultServer == null)
-                {
-                    defaultServer = new NATSServer();
-                }
+                var opts = ConnectionFactory.GetDefaultOptions();
+                opts.Timeout = 10000;
+                return opts;
             }
         }
 
-        public void StartDefaultServerAndDelay()
+        public IConnection DefaultTestConnection
         {
-            lock (mu)
+            get
             {
-                if (defaultServer == null)
-                {
-                    defaultServer = new NATSServer();
-                }
-                Thread.Sleep(SERVER_WAIT_DELAY);
+                return new ConnectionFactory().CreateConnection(DefaultTestOptions);
             }
         }
-
-        public void StopDefaultServer()
-        {
-            lock (mu)
-            {
-                try
-                {
-                    defaultServer.Shutdown();
-                }
-                catch (Exception) { }
-
-                defaultServer = null;
-            }
-        }
-
-        public void bounceDefaultServer(int delayMillis)
-        {
-            StopDefaultServer();
-            Thread.Sleep(delayMillis);
-            StartDefaultServer();
-        }
-
-        public void startAuthServer()
-        {
-            authServerProcess = Process.Start("gnatsd -config auth.conf");
-        }
-        
+       
         internal NATSServer CreateServerOnPort(int p)
         {
             return new NATSServer(p);
@@ -233,16 +192,30 @@ namespace NATSUnitTests
 
         internal static void CleanupExistingServers()
         {
-            try
-            {
-                Process[] procs = Process.GetProcessesByName("gnatsd");
+            Process[] procs = Process.GetProcessesByName("gnatsd");
+            if (procs == null)
+                return;
 
-                foreach (Process proc in procs)
+            foreach (Process proc in procs)
+            {
+                try
                 {
                     proc.Kill();
                 }
+                catch (Exception) { } // ignore
             }
-            catch (Exception) { } // ignore
+
+            // Let the OS cleanup.
+            for (int i = 0; i < 10; i++)
+            {
+                procs = Process.GetProcessesByName("gnatsd");
+                if (procs == null || procs.Length == 0)
+                    break;
+
+                Thread.Sleep(i * 250);
+            }
+
+            Thread.Sleep(250);
         }
     }
 }

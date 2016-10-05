@@ -31,16 +31,11 @@ namespace NATSUnitTests
         }
 
         UnitTestUtilities utils = new UnitTestUtilities();
-        
-        public TestReconnect()
-        {
-            UnitTestUtilities.CleanupExistingServers();
-        }
 
         [Fact]
         public void TestReconnectDisallowedFlags()
         {
-            Options opts = ConnectionFactory.GetDefaultOptions();
+            Options opts = utils.DefaultTestOptions;
             opts.Url = "nats://localhost:22222";
             opts.AllowReconnect = false;
 
@@ -70,7 +65,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestReconnectAllowedFlags()
         {
-            Options opts = ConnectionFactory.GetDefaultOptions();
+            Options opts = utils.DefaultTestOptions;
             opts.Url = "nats://localhost:22222";
             opts.MaxReconnect = 2;
             opts.ReconnectWait = 1000;
@@ -104,7 +99,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestBasicReconnectFunctionality()
         {
-            Options opts = ConnectionFactory.GetDefaultOptions();
+            Options opts = utils.DefaultTestOptions;
             opts.Url = "nats://localhost:22222";
             opts.MaxReconnect = 2;
             opts.ReconnectWait = 1000;
@@ -338,7 +333,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestClose()
         {
-            Options opts = ConnectionFactory.GetDefaultOptions();
+            Options opts = utils.DefaultTestOptions;
             opts.Url = "nats://localhost:22222";
             opts.AllowReconnect = true;
             opts.MaxReconnect = 60;
@@ -376,7 +371,7 @@ namespace NATSUnitTests
 
             IConnection c = null;
 
-            Options opts = ConnectionFactory.GetDefaultOptions();
+            Options opts = utils.DefaultTestOptions;
             opts.Url = "nats://localhost:22222";
             opts.AllowReconnect = true;
             opts.MaxReconnect = 10000;
@@ -449,7 +444,7 @@ namespace NATSUnitTests
             Object reconnectLock = new Object();
             bool   reconnected = false;
 
-            Options opts = ConnectionFactory.GetDefaultOptions();
+            Options opts = utils.DefaultTestOptions;
             opts.Verbose = true;
 
             opts.ReconnectedEventHandler += (sender, args) =>
@@ -486,37 +481,39 @@ namespace NATSUnitTests
         public void TestPublishErrorsDuringReconnect()
         {
             AutoResetEvent connectedEv = new AutoResetEvent(false);
-            utils.StartDefaultServer();
-
-            Task t = new Task(() =>
+            using (var server = new NATSServer())
             {
-                connectedEv.WaitOne(10000);
 
-                Random r = new Random();
-
-                // increase this count for a longer running test.
-                for (int i = 0; i < 10; i++)
+                Task t = new Task(() =>
                 {
-                    utils.bounceDefaultServer(r.Next(500));
-                }
-            }, TaskCreationOptions.LongRunning);
-            t.Start();
+                    connectedEv.WaitOne(10000);
 
-            byte[] payload = Encoding.UTF8.GetBytes("hello");
-            using (var c = new ConnectionFactory().CreateConnection())
-            {
-                connectedEv.Set();
+                    Random r = new Random();
 
-                while (t.IsCompleted == false)
-                {
-                    try
+                    // increase this count for a longer running test.
+                    for (int i = 0; i < 10; i++)
                     {
-                        c.Publish("foo", payload);
+                        server.Bounce(r.Next(500));
                     }
-                    catch (Exception e)
+                }, TaskCreationOptions.LongRunning);
+                t.Start();
+
+                byte[] payload = Encoding.UTF8.GetBytes("hello");
+                using (var c = utils.DefaultTestConnection)
+                {
+                    connectedEv.Set();
+
+                    while (t.IsCompleted == false)
                     {
-                        Assert.IsNotType<NATSConnectionClosedException>(e);
-                        Assert.False(c.IsClosed());
+                        try
+                        {
+                            c.Publish("foo", payload);
+                        }
+                        catch (Exception e)
+                        {
+                            Assert.IsNotType<NATSConnectionClosedException>(e);
+                            Assert.False(c.IsClosed());
+                        }
                     }
                 }
             }
