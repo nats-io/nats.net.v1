@@ -248,6 +248,8 @@ namespace NATSUnitTests
         internal static void CleanupExistingServers()
         {
             Process[] procs = Process.GetProcessesByName("gnatsd");
+            if (procs == null)
+                return;
 
             foreach (Process proc in procs)
             {
@@ -261,12 +263,14 @@ namespace NATSUnitTests
             // Let the OS cleanup.
             for (int i = 0; i < 10; i++)
             {
-                if (Process.GetProcessesByName("gnatsd").Length == 0)
-                {
+                procs = Process.GetProcessesByName("gnatsd");
+                if (procs == null || procs.Length == 0)
                     break;
-                }
+
                 Thread.Sleep(i * 250);
             }
+
+            Thread.Sleep(250);
         }
     }
 }

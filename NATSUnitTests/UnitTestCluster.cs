@@ -131,7 +131,7 @@ namespace NATSUnitTests
                 }
             };
 
-            opts.Timeout = 200;
+            opts.Timeout = 1000;
 
             using (NATSServer s1 = utils.CreateServerOnPort(1222),
                               s2 = utils.CreateServerOnPort(1224))
@@ -388,7 +388,7 @@ namespace NATSUnitTests
             opts.NoRandomize = true;
             opts.MaxReconnect = 2;
             opts.ReconnectWait = 25; // millis
-            opts.Timeout = 500;
+            opts.Timeout = 1000;
 
             bool disconnectHandlerCalled = false;
 
