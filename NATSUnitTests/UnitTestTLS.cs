@@ -26,7 +26,7 @@ namespace NATSUnitTests
             try
             {
                 hitDisconnect = 0;
-                Options opts = ConnectionFactory.GetDefaultOptions();
+                Options opts = util.DefaultTestOptions;
                 opts.Url = url;
                 opts.DisconnectedEventHandler += handleDisconnect;
                 IConnection c = null;
@@ -99,7 +99,7 @@ namespace NATSUnitTests
         {
             using (NATSServer srv = util.CreateServerWithConfig("tls_1222_verify.conf"))
             {
-                Options opts = ConnectionFactory.GetDefaultOptions();
+                Options opts = util.DefaultTestOptions;
                 opts.Secure = true;
                 opts.Url = "nats://localhost:1222";
                 opts.TLSRemoteCertificationValidationCallback = verifyServerCert;
@@ -131,7 +131,7 @@ namespace NATSUnitTests
         {
             using (NATSServer srv = util.CreateServerWithConfig("tls_1222_verify.conf"))
             {
-                Options opts = ConnectionFactory.GetDefaultOptions();
+                Options opts = util.DefaultTestOptions;
                 opts.Secure = true;
                 opts.Url = "nats://localhost:1222";
                 opts.TLSRemoteCertificationValidationCallback = verifyServerCert;
@@ -149,7 +149,7 @@ namespace NATSUnitTests
         {
             using (NATSServer srv = util.CreateServerWithConfig("tls_1222_user.conf"))
             {
-                Options opts = ConnectionFactory.GetDefaultOptions();
+                Options opts = util.DefaultTestOptions;
                 opts.Secure = true;
                 opts.Url = "nats://username:BADDPASSOWRD@localhost:1222";
                 opts.TLSRemoteCertificationValidationCallback = verifyServerCert;
@@ -169,7 +169,7 @@ namespace NATSUnitTests
             {
                 // we can't call create secure connection w/ the certs setup as they are
                 // so we'll override the 
-                Options opts = ConnectionFactory.GetDefaultOptions();
+                Options opts = util.DefaultTestOptions;
                 opts.Secure = true;
                 opts.TLSRemoteCertificationValidationCallback = verifyServerCert;
                 opts.Url = "nats://localhost:1222";
@@ -196,7 +196,7 @@ namespace NATSUnitTests
             {
                 Thread.Sleep(1000);
 
-                Options opts = ConnectionFactory.GetDefaultOptions();
+                Options opts = util.DefaultTestOptions;
                 opts.Secure = true;
                 opts.NoRandomize = true;
                 opts.TLSRemoteCertificationValidationCallback = verifyServerCert;
@@ -241,7 +241,7 @@ namespace NATSUnitTests
                               s3 = util.CreateServerWithConfig("auth_tls_1224.conf"))
             {
 
-                Options opts = ConnectionFactory.GetDefaultOptions();
+                Options opts = util.DefaultTestOptions;
                 opts.Secure = true;
                 opts.NoRandomize = true;
                 opts.TLSRemoteCertificationValidationCallback = verifyServerCert;
@@ -276,7 +276,7 @@ namespace NATSUnitTests
                               s2 = util.CreateServerWithConfig("auth_tls_1224.conf"))
             {
 
-                Options opts = ConnectionFactory.GetDefaultOptions();
+                Options opts = util.DefaultTestOptions;
                 opts.Secure = true;
                 opts.NoRandomize = true;
                 opts.TLSRemoteCertificationValidationCallback = verifyServerCert;

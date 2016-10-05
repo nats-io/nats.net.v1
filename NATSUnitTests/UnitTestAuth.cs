@@ -24,7 +24,7 @@ namespace NATSUnitTests
             try
             {
                 hitDisconnect = 0;
-                Options opts = ConnectionFactory.GetDefaultOptions();
+                Options opts = util.DefaultTestOptions;
                 opts.Url = url;
                 opts.DisconnectedEventHandler += handleDisconnect;
                 IConnection c = new ConnectionFactory().CreateConnection(url);
@@ -92,7 +92,7 @@ namespace NATSUnitTests
                               s3 = util.CreateServerWithConfig("auth_1224.conf"))
             {
 
-                Options opts = ConnectionFactory.GetDefaultOptions();
+                Options opts = util.DefaultTestOptions;
 
                 opts.Servers = new string[]{
                     "nats://username:password@localhost:1222",
@@ -126,7 +126,7 @@ namespace NATSUnitTests
                               s2 = util.CreateServerWithConfig("auth_1224.conf"))
             {
 
-                Options opts = ConnectionFactory.GetDefaultOptions();
+                Options opts = util.DefaultTestOptions;
 
                 opts.Servers = new string[]{
                     "nats://username:password@localhost:1222",

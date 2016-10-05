@@ -29,7 +29,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestConnectionStatus()
         {
-            IConnection c = new ConnectionFactory().CreateConnection();
+            IConnection c = utils.DefaultTestConnection;
             Assert.Equal(ConnState.CONNECTED, c.State);
             c.Close();
             Assert.Equal(ConnState.CLOSED, c.State);
@@ -40,7 +40,7 @@ namespace NATSUnitTests
         {
             bool closed = false;
 
-            Options o = ConnectionFactory.GetDefaultOptions();
+            Options o = utils.DefaultTestOptions;
             o.ClosedEventHandler += (sender, args) => { 
                 closed = true; };
             IConnection c = new ConnectionFactory().CreateConnection(o);
@@ -61,7 +61,7 @@ namespace NATSUnitTests
             bool disconnected = false;
             Object mu = new Object();
 
-            Options o = ConnectionFactory.GetDefaultOptions();
+            Options o = utils.DefaultTestOptions;
             o.AllowReconnect = false;
             o.DisconnectedEventHandler += (sender, args) => {
                 lock (mu)
@@ -95,7 +95,7 @@ namespace NATSUnitTests
             bool disconnected = false;
             Object mu = new Object();
 
-            Options o = ConnectionFactory.GetDefaultOptions();
+            Options o = utils.DefaultTestOptions;
             o.AllowReconnect = false;
             o.DisconnectedEventHandler += (sender, args) =>
             {
@@ -119,7 +119,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestClosedConnections()
         {
-            IConnection c = new ConnectionFactory().CreateConnection();
+            IConnection c = utils.DefaultTestConnection;
             ISyncSubscription s = c.SubscribeSync("foo");
 
             c.Close();
@@ -153,7 +153,7 @@ namespace NATSUnitTests
         public void TestConnectVerbose()
         {
 
-            Options o = ConnectionFactory.GetDefaultOptions();
+            Options o = utils.DefaultTestOptions;
             o.Verbose = true;
 
             IConnection c = new ConnectionFactory().CreateConnection(o);
@@ -186,7 +186,7 @@ namespace NATSUnitTests
 
             using (NATSServer s = utils.CreateServerWithConfig("auth_1222.conf"))
             {
-                Options o = ConnectionFactory.GetDefaultOptions();
+                Options o = utils.DefaultTestOptions;
 
                 o.DisconnectedEventHandler += (sender, args) =>
                 {
@@ -236,7 +236,7 @@ namespace NATSUnitTests
                 o.SubChannelLength = 1;
 
                 using (IConnection nc = new ConnectionFactory().CreateConnection(o),
-                       ncp = new ConnectionFactory().CreateConnection())
+                       ncp = utils.DefaultTestConnection)
                 {
                     // On hosted environments, some threads/tasks can start before others
                     // due to resource constraints.  Allow time to start.
@@ -355,7 +355,7 @@ namespace NATSUnitTests
         {
             // test that dispose code works after a connection
             // has been closed and cleaned up.
-            using (var c = new ConnectionFactory().CreateConnection())
+            using (var c = utils.DefaultTestConnection)
             {
                 c.Close();
                 Thread.Sleep(500);
@@ -363,14 +363,14 @@ namespace NATSUnitTests
 
             // attempt to test that dispose works while the connection close
             // has passed off work to cleanup the callback scheduler, etc.
-            using (var c = new ConnectionFactory().CreateConnection())
+            using (var c = utils.DefaultTestConnection)
             {
                 c.Close();
                 Thread.Sleep(500);
             }
 
             // Check that dispose is idempotent.
-            using (var c = new ConnectionFactory().CreateConnection())
+            using (var c = utils.DefaultTestConnection)
             {
                 c.Dispose();
             }
@@ -381,7 +381,7 @@ namespace NATSUnitTests
         {
             using (new NATSServer("-p 4444 --auth foo"))
             {
-                Options opts = ConnectionFactory.GetDefaultOptions();
+                Options opts = utils.DefaultTestOptions;
 
                 opts.Url = "nats://localhost:4444";
                 opts.Token = "foo";
@@ -394,7 +394,7 @@ namespace NATSUnitTests
 
             using (new NATSServer("-p 4444 --user foo --pass b@r"))
             {
-                Options opts = ConnectionFactory.GetDefaultOptions();
+                Options opts = utils.DefaultTestOptions;
 
                 opts.Url = "nats://localhost:4444";
                 opts.User = "foo";

@@ -40,7 +40,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestReconnectDisallowedFlags()
         {
-            Options opts = ConnectionFactory.GetDefaultOptions();
+            Options opts = utils.DefaultTestOptions;
             opts.Url = "nats://localhost:22222";
             opts.AllowReconnect = false;
 
@@ -70,7 +70,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestReconnectAllowedFlags()
         {
-            Options opts = ConnectionFactory.GetDefaultOptions();
+            Options opts = utils.DefaultTestOptions;
             opts.Url = "nats://localhost:22222";
             opts.MaxReconnect = 2;
             opts.ReconnectWait = 1000;
@@ -104,7 +104,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestBasicReconnectFunctionality()
         {
-            Options opts = ConnectionFactory.GetDefaultOptions();
+            Options opts = utils.DefaultTestOptions;
             opts.Url = "nats://localhost:22222";
             opts.MaxReconnect = 2;
             opts.ReconnectWait = 1000;
@@ -338,7 +338,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestClose()
         {
-            Options opts = ConnectionFactory.GetDefaultOptions();
+            Options opts = utils.DefaultTestOptions;
             opts.Url = "nats://localhost:22222";
             opts.AllowReconnect = true;
             opts.MaxReconnect = 60;
@@ -376,7 +376,7 @@ namespace NATSUnitTests
 
             IConnection c = null;
 
-            Options opts = ConnectionFactory.GetDefaultOptions();
+            Options opts = utils.DefaultTestOptions;
             opts.Url = "nats://localhost:22222";
             opts.AllowReconnect = true;
             opts.MaxReconnect = 10000;
@@ -449,7 +449,7 @@ namespace NATSUnitTests
             Object reconnectLock = new Object();
             bool   reconnected = false;
 
-            Options opts = ConnectionFactory.GetDefaultOptions();
+            Options opts = utils.DefaultTestOptions;
             opts.Verbose = true;
 
             opts.ReconnectedEventHandler += (sender, args) =>
@@ -503,7 +503,7 @@ namespace NATSUnitTests
             t.Start();
 
             byte[] payload = Encoding.UTF8.GetBytes("hello");
-            using (var c = new ConnectionFactory().CreateConnection())
+            using (var c = utils.DefaultTestConnection)
             {
                 connectedEv.Set();
 

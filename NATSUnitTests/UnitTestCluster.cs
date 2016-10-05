@@ -36,7 +36,7 @@ namespace NATSUnitTests
         {
             IConnection c = null;
             ConnectionFactory cf = new ConnectionFactory();
-            Options o = ConnectionFactory.GetDefaultOptions();
+            Options o = utils.DefaultTestOptions;
 
             o.NoRandomize = true;
 
@@ -71,7 +71,7 @@ namespace NATSUnitTests
 		        "nats://localhost:1224"
             };
 
-            Options opts = ConnectionFactory.GetDefaultOptions();
+            Options opts = utils.DefaultTestOptions;
             opts.NoRandomize = true;
             opts.Servers = plainServers;
             opts.Timeout = 5000;
@@ -103,7 +103,7 @@ namespace NATSUnitTests
 		        "nats://localhost:1224"
             };
 
-            Options opts = ConnectionFactory.GetDefaultOptions();
+            Options opts = utils.DefaultTestOptions;
             opts.MaxReconnect = 2;
             opts.ReconnectWait = 1000;
             opts.NoRandomize = true;
@@ -216,7 +216,7 @@ namespace NATSUnitTests
             int numClients = 10;
             SimClient[] clients = new SimClient[100];
 
-            Options opts = ConnectionFactory.GetDefaultOptions();
+            Options opts = utils.DefaultTestOptions;
             opts.Servers = testServers;
 
             NATSServer s1 = utils.CreateServerOnPort(1222);
@@ -267,7 +267,7 @@ namespace NATSUnitTests
         public void TestProperReconnectDelay()
         {
             Object mu = new Object();
-            Options opts = ConnectionFactory.GetDefaultOptions();
+            Options opts = utils.DefaultTestOptions;
             opts.Servers = testServers;
             opts.NoRandomize = true;
 
@@ -315,7 +315,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestProperFalloutAfterMaxAttempts()
         {
-            Options opts = ConnectionFactory.GetDefaultOptions();
+            Options opts = utils.DefaultTestOptions;
 
             Object dmu = new Object();
             Object cmu = new Object();
@@ -375,7 +375,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestProperFalloutAfterMaxAttemptsWithAuthMismatch()
         {
-            Options opts = ConnectionFactory.GetDefaultOptions();
+            Options opts = utils.DefaultTestOptions;
 
             Object dmu = new Object();
             Object cmu = new Object();
@@ -442,7 +442,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestTimeoutOnNoServers()
         {
-            Options opts = ConnectionFactory.GetDefaultOptions();
+            Options opts = utils.DefaultTestOptions;
             Object dmu = new Object();
             Object cmu = new Object();
 
@@ -514,7 +514,7 @@ namespace NATSUnitTests
             /// Work in progress
             int RECONNECTS = 4;
 
-            Options opts = ConnectionFactory.GetDefaultOptions();
+            Options opts = utils.DefaultTestOptions;
             Object mu = new Object();
 
             opts.Servers = testServersShortList;

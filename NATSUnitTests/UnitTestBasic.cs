@@ -9,6 +9,7 @@ using System.Diagnostics;
 using Xunit;
 using System.Collections.Generic;
 
+
 namespace NATSUnitTests
 {
     /// <summary>
@@ -33,7 +34,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestConnectedServer()
         {
-            IConnection c = new ConnectionFactory().CreateConnection();
+            IConnection c = utils.DefaultTestConnection;
 
             string u = c.ConnectedUrl;
 
@@ -50,7 +51,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestMultipleClose()
         {
-            IConnection c = new ConnectionFactory().CreateConnection();
+            IConnection c = utils.DefaultTestConnection;
 
             Task[] tasks = new Task[10];
 
@@ -67,7 +68,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestBadOptionTimeoutConnect()
         {
-            Options opts = ConnectionFactory.GetDefaultOptions();
+            Options opts = utils.DefaultTestOptions;
 
             Assert.ThrowsAny<Exception>(() => opts.Timeout = -1);
         }
@@ -75,7 +76,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestSimplePublish()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
                 c.Publish("foo", Encoding.UTF8.GetBytes("Hello World!"));
             }
@@ -84,7 +85,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestSimplePublishNoData()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
                 c.Publish("foo", null);
             }
@@ -136,7 +137,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestAsyncSubscribe()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
                 using (IAsyncSubscription s = c.SubscribeAsync("foo"))
                 {
@@ -172,7 +173,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestSyncSubscribe()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
                 using (ISyncSubscription s = c.SubscribeSync("foo"))
                 {
@@ -187,7 +188,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestPubWithReply()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
                 using (ISyncSubscription s = c.SubscribeSync("foo"))
                 {
@@ -202,7 +203,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestFlush()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
                 using (ISyncSubscription s = c.SubscribeSync("foo"))
                 {
@@ -215,7 +216,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestQueueSubscriber()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
                 using (ISyncSubscription s1 = c.SubscribeSync("foo", "bar"),
                                          s2 = c.SubscribeSync("foo", "bar"))
@@ -255,7 +256,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestReplyArg()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
                 using (IAsyncSubscription s = c.SubscribeAsync("foo"))
                 {
@@ -288,7 +289,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestSyncReplyArg()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
                 using (ISyncSubscription s = c.SubscribeSync("foo"))
                 {
@@ -308,7 +309,7 @@ namespace NATSUnitTests
             int count = 0;
             int max = 20;
 
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
                 using (IAsyncSubscription s = c.SubscribeAsync("foo"))
                 {
@@ -354,7 +355,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestDoubleUnsubscribe()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
                 using (ISyncSubscription s = c.SubscribeSync("foo"))
                 {
@@ -368,7 +369,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestRequestTimeout()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
                 Assert.ThrowsAny<Exception>(() => c.Request("foo", null, 500));
             }
@@ -377,7 +378,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestRequest()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
                 using (IAsyncSubscription s = c.SubscribeAsync("foo"))
                 {
@@ -402,7 +403,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestRequestNoBody()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
                 using (IAsyncSubscription s = c.SubscribeAsync("foo"))
                 {
@@ -424,7 +425,7 @@ namespace NATSUnitTests
 
         public async void testRequestAsync()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
                 byte[] response = Encoding.UTF8.GetBytes("I will help you.");
 
@@ -466,7 +467,7 @@ namespace NATSUnitTests
 
         public async void testRequestAsyncCancellation()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
                 int responseDelay = 0;
 
@@ -583,8 +584,8 @@ namespace NATSUnitTests
 
             ThreadPool.SetMinThreads(300, 300);
 
-            using (IConnection c1 = new ConnectionFactory().CreateConnection(),
-                               c2 = new ConnectionFactory().CreateConnection())
+            using (IConnection c1 = utils.DefaultTestConnection,
+                               c2 = utils.DefaultTestConnection)
             {
                 using (IAsyncSubscription s = c1.SubscribeAsync("foo", (sender, args) =>
                 {
@@ -654,8 +655,8 @@ namespace NATSUnitTests
             Stopwatch sw = new Stopwatch();
             byte[] response = Encoding.UTF8.GetBytes("reply");
 
-            using (IConnection c1 = new ConnectionFactory().CreateConnection(),
-                               c2 = new ConnectionFactory().CreateConnection())
+            using (IConnection c1 = utils.DefaultTestConnection,
+                               c2 = utils.DefaultTestConnection)
             {
                 // Try parallel requests and check the performance.
                 using (IAsyncSubscription s = c1.SubscribeAsync("foo", (sender, args) =>
@@ -710,7 +711,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestFlushInHandler()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
                 using (IAsyncSubscription s = c.SubscribeAsync("foo"))
                 {
@@ -740,7 +741,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestReleaseFlush()
         {
-            IConnection c = new ConnectionFactory().CreateConnection();
+            IConnection c = utils.DefaultTestConnection;
 
             for (int i = 0; i < 1000; i++)
             {
@@ -754,7 +755,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestCloseAndDispose()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
                 c.Close();
             }
@@ -763,7 +764,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestInbox()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
                 string inbox = c.NewInbox();
                 Assert.False(string.IsNullOrWhiteSpace(inbox));
@@ -774,7 +775,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestStats()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
                 byte[] data = Encoding.UTF8.GetBytes("The quick brown fox jumped over the lazy dog");
                 int iter = 10;
@@ -813,7 +814,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestRaceSafeStats()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
 
                 new Task(() => { c.Publish("foo", null); }).Start();
@@ -827,7 +828,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestBadSubject()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
                 bool exThrown = false;
                 try
@@ -846,7 +847,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestLargeMessage()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
                 int msgSize = 51200;
                 byte[] msg = new byte[msgSize];
@@ -885,7 +886,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestSendAndRecv()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
                 using (IAsyncSubscription s = c.SubscribeAsync("foo"))
                 {
@@ -916,7 +917,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestLargeSubjectAndReply()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
                 String subject = "";
                 for (int i = 0; i < 1024; i++)
@@ -959,7 +960,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestAsyncSubHandlerAPI()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
                 int received = 0;
 
@@ -1021,7 +1022,7 @@ namespace NATSUnitTests
                 // let the server cluster form
                 Thread.Sleep(1000);
 
-                var opts = ConnectionFactory.GetDefaultOptions();
+                var opts = utils.DefaultTestOptions;
                 opts.Url = "nats://127.0.0.1:4223";
 
                 var c = new ConnectionFactory().CreateConnection(opts);
@@ -1037,7 +1038,7 @@ namespace NATSUnitTests
         public void TestAsyncInfoProtocolUpdate()
         {
             AutoResetEvent evReconnect = new AutoResetEvent(false);
-            var opts = ConnectionFactory.GetDefaultOptions();
+            var opts = utils.DefaultTestOptions;
             opts.Url = "nats://127.0.0.1:4223";
             string newUrl = null;
 
@@ -1104,7 +1105,7 @@ namespace NATSUnitTests
                 "nats://localhost:4"
             };
 
-            var opts = ConnectionFactory.GetDefaultOptions();
+            var opts = utils.DefaultTestOptions;
             opts.Servers = serverList;
             opts.NoRandomize = true;
 

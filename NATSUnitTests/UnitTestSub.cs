@@ -33,7 +33,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestServerAutoUnsub()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
                 long received = 0;
                 int max = 10;
@@ -66,7 +66,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestClientAutoUnsub()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
                 long received = 0;
                 int max = 10;
@@ -102,7 +102,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestCloseSubRelease()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
                 using (ISyncSubscription s = c.SubscribeSync("foo"))
                 {
@@ -125,7 +125,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestValidSubscriber()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
                 using (ISyncSubscription s = c.SubscribeSync("foo"))
                 {
@@ -149,7 +149,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestSlowSubscriber()
         {
-            Options opts = ConnectionFactory.GetDefaultOptions();
+            Options opts = utils.DefaultTestOptions;
             opts.SubChannelLength = 10;
 
             using (IConnection c = new ConnectionFactory().CreateConnection(opts))
@@ -183,7 +183,7 @@ namespace NATSUnitTests
         {
             ConditionalObj subCond = new ConditionalObj();
 
-            Options opts = ConnectionFactory.GetDefaultOptions();
+            Options opts = utils.DefaultTestOptions;
             opts.SubChannelLength = 100;
 
             using (IConnection c = new ConnectionFactory().CreateConnection(opts))
@@ -243,7 +243,7 @@ namespace NATSUnitTests
             IAsyncSubscription s;
 
 
-            Options opts = ConnectionFactory.GetDefaultOptions();
+            Options opts = utils.DefaultTestOptions;
             opts.SubChannelLength = 10;
 
             bool handledError = false;
@@ -315,7 +315,7 @@ namespace NATSUnitTests
         {
             Object waitCond = new Object();
 
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
                 using (IAsyncSubscription helper = c.SubscribeAsync("helper"),
                                           start = c.SubscribeAsync("start"))
@@ -363,7 +363,7 @@ namespace NATSUnitTests
             Object waitCond = new Object();
             int callbacks = 0;
 
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
                 using (IAsyncSubscription s = c.SubscribeAsync("foo"))
                 {
@@ -402,7 +402,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestNextMessageOnClosedSub()
         {
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
                 ISyncSubscription s = c.SubscribeSync("foo");
                 s.Unsubscribe();
@@ -428,7 +428,7 @@ namespace NATSUnitTests
 
             byte[] data = Encoding.UTF8.GetBytes("0123456789");
 
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
                 ISubscription s = c.SubscribeAsync("foo", (sender, args) =>
                 {
@@ -521,7 +521,7 @@ namespace NATSUnitTests
 
             byte[] data = Encoding.UTF8.GetBytes("0123456789");
 
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
                 ISyncSubscription s = c.SubscribeSync("foo");
 
@@ -567,7 +567,7 @@ namespace NATSUnitTests
 
             byte[] data = Encoding.UTF8.GetBytes("0123456789");
 
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
                 ISubscription s = c.SubscribeAsync("foo", (sender, args) => { });
 
@@ -597,7 +597,7 @@ namespace NATSUnitTests
 
             byte[] data = Encoding.UTF8.GetBytes("0123456789");
 
-            using (IConnection c = new ConnectionFactory().CreateConnection())
+            using (IConnection c = utils.DefaultTestConnection)
             {
                 ISyncSubscription s = c.SubscribeSync("foo");
 
@@ -623,7 +623,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestSubDelTaskCountBasic()
         {
-            var opts = ConnectionFactory.GetDefaultOptions();
+            var opts = utils.DefaultTestOptions;
 
             Assert.Throws<ArgumentOutOfRangeException>(
                 () => { opts.SubscriberDeliveryTaskCount = -1; });
@@ -687,7 +687,7 @@ namespace NATSUnitTests
         public void TestSubDelTaskCountScaling()
         {
             int COUNT = 20000;
-            var opts = ConnectionFactory.GetDefaultOptions();
+            var opts = utils.DefaultTestOptions;
             opts.SubscriberDeliveryTaskCount = 20;
 
             using (IConnection c = new ConnectionFactory().CreateConnection(opts))
@@ -724,7 +724,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestSubDelTaskCountAutoUnsub()
         {
-            var opts = ConnectionFactory.GetDefaultOptions();
+            var opts = utils.DefaultTestOptions;
             opts.SubscriberDeliveryTaskCount = 2;
             using (IConnection c = new ConnectionFactory().CreateConnection(opts))
             {
@@ -764,7 +764,7 @@ namespace NATSUnitTests
             bool disconnected = false;
             AutoResetEvent reconnectEv = new AutoResetEvent(false);
 
-            var opts = ConnectionFactory.GetDefaultOptions();
+            var opts = utils.DefaultTestOptions;
             opts.SubscriberDeliveryTaskCount = 2;
             opts.DisconnectedEventHandler = (obj, args) => { disconnected = true;};
             opts.ReconnectedEventHandler = (obj, args) => { reconnectEv.Set(); };
@@ -813,7 +813,7 @@ namespace NATSUnitTests
         {
             AutoResetEvent errorEv = new AutoResetEvent(false);
 
-            var opts = ConnectionFactory.GetDefaultOptions();
+            var opts = utils.DefaultTestOptions;
             opts.SubscriberDeliveryTaskCount = 1;
             opts.SubChannelLength = 10;
 
@@ -846,7 +846,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestSubDelTaskCountWithSyncSub()
         {
-            var opts = ConnectionFactory.GetDefaultOptions();
+            var opts = utils.DefaultTestOptions;
             opts.SubscriberDeliveryTaskCount = 1;
             using (IConnection c = new ConnectionFactory().CreateConnection(opts))
             {

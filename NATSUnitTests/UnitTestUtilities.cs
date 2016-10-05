@@ -162,6 +162,24 @@ namespace NATSUnitTests
             return Path.Combine(runningDirectory, "config");
         }
 
+        public Options DefaultTestOptions
+        {
+            get
+            {
+                var opts = ConnectionFactory.GetDefaultOptions();
+                opts.Timeout = 10000;
+                return opts;
+            }
+        }
+
+        public IConnection DefaultTestConnection
+        {
+            get
+            {
+                return new ConnectionFactory().CreateConnection(DefaultTestOptions);
+            }
+        }
+
         public void StartDefaultServer()
         {
             lock (mu)

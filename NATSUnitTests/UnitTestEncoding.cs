@@ -28,6 +28,15 @@ namespace NATSUnitTests
             utils.StopDefaultServer();
         }
 
+        public IEncodedConnection DefaultEncodedConnection
+        {
+            get
+            {
+                return new ConnectionFactory().CreateEncodedConnection();
+            }
+        }
+
+
 #if NET45
         [Serializable]
         public class SerializationTestObj
@@ -62,7 +71,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestDefaultObjectSerialization()
         {
-            using (IEncodedConnection c = new ConnectionFactory().CreateEncodedConnection())
+            using (IEncodedConnection c = DefaultEncodedConnection)
             {
                 Object mu = new Object();
                 SerializationTestObj origObj = new SerializationTestObj();
@@ -95,7 +104,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestDefaultObjectSerialization()
         {
-            using (IEncodedConnection c = new ConnectionFactory().CreateEncodedConnection())
+            using (IEncodedConnection c = DefaultEncodedConnection)
             {
                 Assert.Throws<NATSException>(() => { c.Publish("foo", new Object()); });
                 Assert.Throws<NATSException>(() => { c.SubscribeAsync("foo", (obj, args)=>{}); });
@@ -130,7 +139,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestEncodedObjectSerization()
         {
-            using (IEncodedConnection c = new ConnectionFactory().CreateEncodedConnection())
+            using (IEncodedConnection c = DefaultEncodedConnection)
             {
                 c.OnDeserialize = jsonDeserializer;
                 c.OnSerialize = jsonSerializer;
@@ -168,7 +177,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestEncodedInvalidObjectSerialization()
         {
-            using (IEncodedConnection c = new ConnectionFactory().CreateEncodedConnection())
+            using (IEncodedConnection c = DefaultEncodedConnection)
             {
                 AutoResetEvent ev = new AutoResetEvent(false);
 
@@ -251,7 +260,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestEncodedSerizationOverrides()
         {
-            using (IEncodedConnection c = new ConnectionFactory().CreateEncodedConnection())
+            using (IEncodedConnection c = DefaultEncodedConnection)
             {
                 c.OnDeserialize = jsonDeserializer;
                 c.OnSerialize = jsonSerializer;
@@ -281,7 +290,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestEncodedObjectRequestReply()
         {
-            using (IEncodedConnection c = new ConnectionFactory().CreateEncodedConnection())
+            using (IEncodedConnection c = DefaultEncodedConnection)
             {
                 c.OnDeserialize = jsonDeserializer;
                 c.OnSerialize = jsonSerializer;
