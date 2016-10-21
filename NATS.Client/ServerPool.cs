@@ -61,18 +61,18 @@ namespace NATS.Client
         {
             if (opts.Servers != null)
             {
-                Add(opts.Servers);
+                Add(opts.Servers, false);
 
                 if (!opts.NoRandomize)
                     Shuffle();
             }
 
             if (!string.IsNullOrWhiteSpace(opts.Url))
-                add(opts.Url);
+                add(opts.Url, false);
 
             // Place default URL if pool is empty.
             if (isEmpty())
-                add(Defaults.Url);
+                add(Defaults.Url, false);
         }
 
         // Used for initially connecting to a server.
@@ -164,30 +164,36 @@ namespace NATS.Client
         }
 
         // returns a copy of the list to ensure threadsafety.
-        internal string[] GetServerList()
+        internal string[] GetServerList(bool implicitOnly)
         {
             List<Srv> list;
 
             lock (poolLock)
             {
+                if (sList.Count == 0)
+                    return null;
+
                 list = new List<Srv>(sList);
             }
 
             if (list.Count == 0)
                 return null;
 
-            var ary = new string[list.Count];
-            for (int i = 0; i < list.Count; i++)
+            var rv = new List<string>();
+            foreach (Srv s in list)
             {
-                ary[i] = list[i].url.OriginalString;
+                if (implicitOnly && !s.isImplicit)
+                    continue;
+
+                rv.Add(string.Format("{0}://{1}:{2}", s.url.Scheme, s.url.Host, s.url.Port));
             }
 
-            return ary;
+            return rv.ToArray();
         }
 
-        private bool add(string s)
+        private bool add(string s, bool isImplicit)
         {
-            return add(new Srv(s));
+            return add(new Srv(s, isImplicit));
         }
 
         // returns true if it modified the pool, false if
@@ -204,7 +210,7 @@ namespace NATS.Client
             }
         }
 
-        internal bool Add(string[] urls)
+        internal bool Add(string[] urls, bool isImplicit)
         {
             if (urls == null)
                 return false;
@@ -213,7 +219,7 @@ namespace NATS.Client
 
             foreach (string s in urls)
             {
-                if (add(s))
+                if (add(s, isImplicit))
                 {
                     modified = true;
                 }

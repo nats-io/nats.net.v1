@@ -27,10 +27,20 @@ namespace NATS.Client
         string ConnectedId { get; }
 
         /// <summary>
-        /// Servers returns the list of known servers, including additional servers
-        /// discovered after a connection has been established.
+        /// Returns the list of known server urls, including additional
+        /// servers discovered after a connection has been established.  If
+        /// authentication is enabled, Options.User or Options.Token 
+        /// must be used when connecting with these urls.
         /// </summary>
         string[] Servers { get; }
+
+        /// <summary>
+        /// Returns only the server urls that have been discovered
+        /// after a connection has been established. If authentication is 
+        /// enabled, Options.User or Options.Token 
+        /// must be used when connecting with these urls.
+        /// </summary>
+        string[] DiscoveredServers { get; }
 
         /// <summary>
         /// LastError reports the last error encountered via the Connection.
