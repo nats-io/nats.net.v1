@@ -1124,7 +1124,7 @@ namespace NATSUnitTests
         {
             AutoResetEvent evReconnect = new AutoResetEvent(false);
             var opts = utils.DefaultTestOptions;
-            opts.Url = "nats://127.0.0.1:4223";
+            opts.Url = "nats://user:pass@127.0.0.1:4223";
             string newUrl = null;
 
             opts.ReconnectedEventHandler = (obj, args) =>
@@ -1140,7 +1140,8 @@ namespace NATSUnitTests
                 var c = new ConnectionFactory().CreateConnection(opts);
 
                 Assert.True(c.Servers.Length == 1);
-                Assert.True(c.Servers[0].Equals(opts.Url));
+                // check that credentials are stripped.
+                Assert.True(c.Servers[0].Equals("nats://127.0.0.1:4223"));
 
                 using (NATSServer s2 = new NATSServer("-a localhost -p 4224 --cluster nats://127.0.0.1:4666 --routes nats://127.0.0.1:4555"))
                 {
@@ -1158,6 +1159,8 @@ namespace NATSUnitTests
 
                     Assert.True(evReconnect.WaitOne(10000));
                     Assert.True(c.Servers.Length == 2);
+                    Assert.True(c.DiscoveredServers.Length == 1);
+                    Assert.True("nats://localhost:4224".Equals(c.DiscoveredServers[0]));
                     Assert.True(newUrl != null);
                     Assert.False(newUrl.Equals(opts.Url));
                 }

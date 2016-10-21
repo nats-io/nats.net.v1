@@ -11,6 +11,7 @@ namespace NATS.Client
         internal bool didConnect = false;
         internal int reconnects = 0;
         internal DateTime lastAttempt = DateTime.Now;
+        internal bool isImplicit = false;
 
         // never create a srv object without a url.
         private Srv() { }
@@ -22,6 +23,11 @@ namespace NATS.Client
                 urlString = "nats://" + urlString;
 
             url = new Uri(urlString);
+        }
+
+        internal Srv(string urlString, bool isUrlImplicit) : this(urlString)
+        {
+            isImplicit = isUrlImplicit;
         }
 
         internal void updateLastAttempt()

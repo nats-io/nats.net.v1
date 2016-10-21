@@ -806,15 +806,25 @@ namespace NATS.Client
             {
                 lock (mu)
                 {
-                    return srvPool.GetServerList();
+                    return srvPool.GetServerList(false);
+                }
+            }
+        }
+
+        public string[] DiscoveredServers
+        {
+            get
+            {
+                lock (mu)
+                {
+                    return srvPool.GetServerList(true);
                 }
             }
         }
 
         private Queue<Channel<bool>> createPongs()
         {
-            Queue<Channel<bool>> rv = new Queue<Channel<bool>>();
-            return rv;
+            return new Queue<Channel<bool>>();
         }
 
         // Process a connected connection and initialize properly.
@@ -1671,7 +1681,7 @@ namespace NATS.Client
             }
 
             info = ServerInfo.CreateFromJson(json);
-            if (srvPool.Add(info.connectURLs))
+            if (srvPool.Add(info.connectURLs, true))
             {
                 if (opts.NoRandomize == false)
                     srvPool.Shuffle();

@@ -24,6 +24,7 @@ var interface_n_a_t_s_1_1_client_1_1_i_connection =
     [ "SubscribeSync", "interface_n_a_t_s_1_1_client_1_1_i_connection.html#ae2d6c78608ca4e8f0ecb1fe48199f6fb", null ],
     [ "ConnectedId", "interface_n_a_t_s_1_1_client_1_1_i_connection.html#a39c9277426efd0d0efbe8805b9376650", null ],
     [ "ConnectedUrl", "interface_n_a_t_s_1_1_client_1_1_i_connection.html#a342bd3511609afd6d9093d48a3cdcbb2", null ],
+    [ "DiscoveredServers", "interface_n_a_t_s_1_1_client_1_1_i_connection.html#af67e98d92452ead23d62cd51ebc0191a", null ],
     [ "LastError", "interface_n_a_t_s_1_1_client_1_1_i_connection.html#a97322f6714fe27d8ad10a618cc70b9ea", null ],
     [ "MaxPayload", "interface_n_a_t_s_1_1_client_1_1_i_connection.html#adf18200f0d9177ed2d2a65b05e467c69", null ],
     [ "Opts", "interface_n_a_t_s_1_1_client_1_1_i_connection.html#a902a736d0c779192923eb6ec0519153a", null ],
