@@ -279,17 +279,7 @@ internal byte[] jsonSerializer(object obj)
     using (MemoryStream stream = new MemoryStream())
     {
         serializer.WriteObject(stream, obj);
-        ArraySegment<byte> buffer;
-        if (stream.TryGetBuffer(out buffer))
-        {
-            var rv = new byte[stream.Position];
-            Array.Copy(buffer.Array, rv, (int)stream.Position);
-            return rv;
-        }
-        else
-        {
-            throw new Exception("Unable to serialize - buffer error");
-        }
+        return stream.ToArray();
     }
 }
 
