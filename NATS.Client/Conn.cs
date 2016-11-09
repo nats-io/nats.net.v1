@@ -2283,7 +2283,7 @@ namespace NATS.Client
             {
                 removeFlushEntry(ch);
 
-                // Note, don't call processFlushException in a finally block
+                // Note, don't call saveFlushException in a finally clause
                 // because we don't know if the caller will handle the rethrown 
                 // exception.
                 if (e is NATSTimeoutException || e is NATSConnectionClosedException)
