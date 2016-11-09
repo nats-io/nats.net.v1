@@ -2246,10 +2246,14 @@ namespace NATS.Client
             bw.Flush();
         }
 
+        private void saveFlushException(Channel<bool> ch, Exception e)
+        {
+            if (lastEx != null && !(lastEx is NATSSlowConsumerException))
+                lastEx = e;
+        }
+
         public void Flush(int timeout)
         {
-            Exception ex = null;
-
             if (timeout <= 0)
             {
                 throw new ArgumentOutOfRangeException(
@@ -2258,38 +2262,42 @@ namespace NATS.Client
             }
 
             Channel<bool> ch = new Channel<bool>(1);
-            lock (mu)
-            {
-                if (isClosed())
-                    throw new NATSConnectionClosedException();
-
-                sendPing(ch);
-            }
 
             try
             {
+                lock (mu)
+                {
+                    if (isClosed())
+                        throw new NATSConnectionClosedException();
+
+                    sendPing(ch);
+                }
+
                 bool rv = ch.get(timeout);
                 if (!rv)
                 {
-                    ex = new NATSConnectionClosedException();
+                    throw new NATSConnectionClosedException();
                 }
-            }
-            catch (NATSTimeoutException te)
-            {
-                ex = te;
             }
             catch (Exception e)
             {
-                ex = new NATSException("Flush channel error.", e);
-            }
-
-            if (ex != null)
-            {
-                if (lastEx != null && !(lastEx is NATSSlowConsumerException))
-                    lastEx = ex;
-
                 removeFlushEntry(ch);
-                throw ex;
+
+                // Note, don't call processFlushException in a finally block
+                // because we don't know if the caller will handle the rethrown 
+                // exception.
+                if (e is NATSTimeoutException || e is NATSConnectionClosedException)
+                {
+                    saveFlushException(ch, e);
+                    throw;
+                }
+                else
+                {
+                    // wrap other system exceptions
+                    var ex = new NATSException("Flush error.", e);
+                    saveFlushException(ch, ex);
+                    throw ex;
+                }
             }
         }
 
