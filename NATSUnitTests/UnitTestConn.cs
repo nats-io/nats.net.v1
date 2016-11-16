@@ -337,7 +337,7 @@ namespace NATSUnitTests
                 }
 
                 // allow the last dispose to finish.
-                Thread.Sleep(500);
+                Thread.Sleep(2000);
 
                 GC.Collect();
 
@@ -345,7 +345,7 @@ namespace NATSUnitTests
                     ((double)(Process.GetCurrentProcess().PrivateMemorySize64 - memStart))
                         / (double)memStart);
 
-                Assert.True(memGrowthPercent < 20.0);
+                Assert.True(memGrowthPercent < 30.0);
             }
         }
 
