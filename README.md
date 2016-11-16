@@ -618,8 +618,9 @@ To that end, with any contributions, certainly feel free to code in a more .NET 
 
 ## TODO
 * [ ] Another performance pass - look at stream directly over socket, contention, fastpath optimizations, rw locks.
+* [ ] Rx API (unified over NATS Streaming?)
 * [ ] Expand Unit Tests to test internals (namely Parsing)
-* [ ] WCF bindings
+* [ ] WCF bindings (If requested for legacy, or user contributed)
 * [X] Travis CI (Used AppVeyor instead)
 * [ ] Allow configuration for performance tuning (buffer sizes), defaults based on plaform.
 * [X] [.NET Core](https://github.com/dotnet/core) compatibility, TLS required.
@@ -639,7 +640,7 @@ Any suggestions and/or contributions are welcome!
 
 (The MIT License)
 
-Copyright (c) 2012-2015 Apcera Inc.
+Copyright (c) 2012-2016 Apcera Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to
