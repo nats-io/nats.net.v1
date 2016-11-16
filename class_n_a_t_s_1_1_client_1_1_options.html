@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">0.6.0</span>
+   &#160;<span id="projectnumber">0.7.0</span>
    </div>
    <div id="projectbrief">The nats.io .NET C# Client, Supported by Apcera</div>
   </td>
@@ -175,6 +175,8 @@ Properties</h2></td></tr>
 <tr class="separator:a7b529b02f42f29ff4016a5b91138ba5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab82e941a962699f7aeca2a3508a7f2d7"><td class="memItemLeft" align="right" valign="top">string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#ab82e941a962699f7aeca2a3508a7f2d7">Token</a><code> [get, set]</code></td></tr>
 <tr class="separator:ab82e941a962699f7aeca2a3508a7f2d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a030dfa5eac04072735d7529147d5c562"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a030dfa5eac04072735d7529147d5c562">SubscriberDeliveryTaskCount</a><code> [get, set]</code></td></tr>
+<tr class="separator:a030dfa5eac04072735d7529147d5c562"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>This class is used to setup all NATs client options. </p>
@@ -579,6 +581,29 @@ Properties</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Gets or sets the size of the subscriber channel, or number of messages the subscriber will buffer internally. </p>
+
+</div>
+</div>
+<a class="anchor" id="a030dfa5eac04072735d7529147d5c562"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">int NATS.Client.Options.SubscriberDeliveryTaskCount</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">get</span><span class="mlabel">set</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Sets or gets number of long running tasks to deliver messages to asynchronous subscribers. The default is 0 indicating each asynchronous subscriber has its own channel and task created to deliver messages. </p>
+<p>The default where each subscriber has a delivery task is very performant, but does not scale well when large numbers of subscribers are required in an application. Setting this value will limit the number of subscriber channels to the specified number of long running tasks. These tasks will process messages for ALL asynchronous subscribers rather than one task for each subscriber. Delivery order by subscriber is still guaranteed. The shared message processing channels are still each bounded by the SubChannelLength option. Note, slow subscriber errors will flag the last subscriber processed in the tasks, which may not actually be the slowest subscriber. </p>
 
 </div>
 </div>

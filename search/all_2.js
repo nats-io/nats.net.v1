@@ -4,5 +4,6 @@ var searchData=
   ['delivered',['Delivered',['../interface_n_a_t_s_1_1_client_1_1_i_subscription.html#a97e96a370cb01dd6808b7f90cbf4b886',1,'NATS::Client::ISubscription']]],
   ['deserializer',['Deserializer',['../namespace_n_a_t_s_1_1_client.html#ae3d017dda4668698e3b11180925776d1',1,'NATS::Client']]],
   ['disconnectedeventhandler',['DisconnectedEventHandler',['../class_n_a_t_s_1_1_client_1_1_options.html#a6116c0a92a645bbc356bde9533220ea4',1,'NATS::Client::Options']]],
+  ['discoveredservers',['DiscoveredServers',['../interface_n_a_t_s_1_1_client_1_1_i_connection.html#af67e98d92452ead23d62cd51ebc0191a',1,'NATS::Client::IConnection']]],
   ['dropped',['Dropped',['../interface_n_a_t_s_1_1_client_1_1_i_subscription.html#abf4058acb532e468c9283c6498a3bb3b',1,'NATS::Client::ISubscription']]]
 ];

@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">0.6.0</span>
+   &#160;<span id="projectnumber">0.7.0</span>
    </div>
    <div id="projectbrief">The nats.io .NET C# Client, Supported by Apcera</div>
   </td>
@@ -177,6 +177,8 @@ Properties</h2></td></tr>
 <tr class="separator:a39c9277426efd0d0efbe8805b9376650"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a338f1b40cca4abb640ee3e2be0251c70"><td class="memItemLeft" align="right" valign="top">string[]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a338f1b40cca4abb640ee3e2be0251c70">Servers</a><code> [get]</code></td></tr>
 <tr class="separator:a338f1b40cca4abb640ee3e2be0251c70"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af67e98d92452ead23d62cd51ebc0191a"><td class="memItemLeft" align="right" valign="top">string[]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#af67e98d92452ead23d62cd51ebc0191a">DiscoveredServers</a><code> [get]</code></td></tr>
+<tr class="separator:af67e98d92452ead23d62cd51ebc0191a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a97322f6714fe27d8ad10a618cc70b9ea"><td class="memItemLeft" align="right" valign="top">Exception&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a97322f6714fe27d8ad10a618cc70b9ea">LastError</a><code> [get]</code></td></tr>
 <tr class="separator:a97322f6714fe27d8ad10a618cc70b9ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a41bd10da22b1f95c6389f1141255fca1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespace_n_a_t_s_1_1_client.html#a8144f718a812fe4318c33f202fc53484">ConnState</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a41bd10da22b1f95c6389f1141255fca1">State</a><code> [get]</code></td></tr>
@@ -913,6 +915,28 @@ Properties</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="af67e98d92452ead23d62cd51ebc0191a"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">string [] NATS.Client.IConnection.DiscoveredServers</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">get</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Returns only the server urls that have been discovered after a connection has been established. If authentication is enabled, <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a92c60e7ef8aa92144a39dbd9706f4ea9" title="Gets or sets the user name used when connecting to the NATs server when not included directly in the ...">Options.User</a> or <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#ab82e941a962699f7aeca2a3508a7f2d7" title="Gets or sets the token used when connecting to the NATs server when not included directly in the URLs...">Options.Token</a> must be used when connecting with these urls. </p>
+
+</div>
+</div>
 <a class="anchor" id="a97322f6714fe27d8ad10a618cc70b9ea"></a>
 <div class="memitem">
 <div class="memproto">
@@ -997,7 +1021,7 @@ Properties</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Servers returns the list of known servers, including additional servers discovered after a connection has been established. </p>
+<p>Returns the list of known server urls, including additional servers discovered after a connection has been established. If authentication is enabled, <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a92c60e7ef8aa92144a39dbd9706f4ea9" title="Gets or sets the user name used when connecting to the NATs server when not included directly in the ...">Options.User</a> or <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#ab82e941a962699f7aeca2a3508a7f2d7" title="Gets or sets the token used when connecting to the NATs server when not included directly in the URLs...">Options.Token</a> must be used when connecting with these urls. </p>
 
 </div>
 </div>

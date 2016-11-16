@@ -20,6 +20,7 @@ var class_n_a_t_s_1_1_client_1_1_options =
     [ "Secure", "class_n_a_t_s_1_1_client_1_1_options.html#a4550ae7933150999a442519906e58684", null ],
     [ "Servers", "class_n_a_t_s_1_1_client_1_1_options.html#a2e0b5fe52ae54b89e42a9e49b47f94e1", null ],
     [ "SubChannelLength", "class_n_a_t_s_1_1_client_1_1_options.html#a82c9580a9c7dd0367c53f2c1d309a039", null ],
+    [ "SubscriberDeliveryTaskCount", "class_n_a_t_s_1_1_client_1_1_options.html#a030dfa5eac04072735d7529147d5c562", null ],
     [ "Timeout", "class_n_a_t_s_1_1_client_1_1_options.html#a20342f2f3c596083d5989d12ee656155", null ],
     [ "Token", "class_n_a_t_s_1_1_client_1_1_options.html#ab82e941a962699f7aeca2a3508a7f2d7", null ],
     [ "Url", "class_n_a_t_s_1_1_client_1_1_options.html#a4952cb3e82ca4692896f289d9825682a", null ],
