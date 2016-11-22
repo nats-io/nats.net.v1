@@ -13,7 +13,7 @@ This Apcera supported client parallels the [NATS GO Client](https://github.com/n
 
 First, download the source code:
 ```
-git clone git@github.com:nats-io/csharp-nats.git .
+git clone git@github.com:nats-io/csharp-nats.git
 ```
 
 ### Quick Start
