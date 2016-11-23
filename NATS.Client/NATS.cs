@@ -20,7 +20,7 @@ using System.Threading.Tasks;
  * \section install_sec Installation
  * 
  * Instructions to build and install the %NATS .NET C# client can be
- * found at the [NATS .NET C# GitHub page](https://github.com/nats-io/csnats)
+ * found at the [NATS .NET C# GitHub page](https://github.com/nats-io/csharp-nats)
  *
  * \section other_doc_section Other Documentation
  * 
@@ -28,7 +28,7 @@ using System.Threading.Tasks;
  * information, refer to the following:
  * 
  * - [General Documentation for nats.io](http://nats.io/documentation) 
- * - [NATS .NET C# Client found on GitHub](https://github.com/nats-io/csnats) 
+ * - [NATS .NET C# Client found on GitHub](https://github.com/nats-io/csharp-nats) 
  * - [The NATS server (gnatsd) found on GitHub](https://github.com/nats-io/gnatsd)
  */
 

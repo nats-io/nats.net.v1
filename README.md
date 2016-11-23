@@ -6,7 +6,7 @@ This Apcera supported client parallels the [NATS GO Client](https://github.com/n
 
 [![License MIT](https://img.shields.io/npm/l/express.svg)](http://opensource.org/licenses/MIT)
 [![Build status](https://ci.appveyor.com/api/projects/status/9f2jy1g9qngra3b5?svg=true)](https://ci.appveyor.com/project/NATS-CI47222/csnats)
-[![API Documentation](https://img.shields.io/badge/doc-Doxygen-brightgreen.svg?style=flat)](http://nats-io.github.io/csnats)
+[![API Documentation](https://img.shields.io/badge/doc-Doxygen-brightgreen.svg?style=flat)](http://nats-io.github.io/csharp-nats)
 [![NuGet](https://img.shields.io/nuget/v/NATS.Client.svg?maxAge=2592000)](https://www.nuget.org/packages/NATS.Client)
 
 ## Installation
@@ -82,7 +82,7 @@ build_doc.bat
 Doxygen will build the NATS .NET Client API documentation, placing it in the `documentation\NATS.Client\html` directory.
 Doxygen is required to be installed and in the PATH.  Version 1.8 is known to work.
 
-[Current API Documentation](http://nats-io.github.io/csnats)
+[Current API Documentation](http://nats-io.github.io/csharp-nats)
 
 ## Basic Usage
 

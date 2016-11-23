@@ -6,8 +6,8 @@
         <title>NATS .NET Client</title>
         <authors>Apcera,Inc.</authors>
         <owners>Apcera,Inc.</owners>
-        <licenseUrl>https://raw.githubusercontent.com/nats-io/csnats/master/LICENSE</licenseUrl>
-        <projectUrl>https://github.com/nats-io/csnats</projectUrl>
+        <licenseUrl>https://raw.githubusercontent.com/nats-io/csharp-nats/master/LICENSE</licenseUrl>
+        <projectUrl>https://github.com/nats-io/csharp-nats</projectUrl>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
         <description>NATS acts as a central nervous system for distributed systems at scale, such as mobile devices, IoT networks, and cloud native infrastructure.  This is the .NET client API.</description>
         <summary>NATS .NET Client</summary>
