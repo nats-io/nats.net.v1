@@ -81,7 +81,8 @@ namespace NATS.Client
         {
             if (ownsChannel && msgFeeder == null)
             {
-                msgFeeder = new Task(() => { conn.deliverMsgs(mch); });
+                msgFeeder = new Task(() => { conn.deliverMsgs(mch); },
+                    TaskCreationOptions.LongRunning);
                 msgFeeder.Start();
             }
             started = true;
