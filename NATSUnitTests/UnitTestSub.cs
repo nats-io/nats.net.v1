@@ -357,7 +357,7 @@ namespace NATSUnitTests
                         c.Publish("start", Encoding.UTF8.GetBytes("Begin"));
                         c.Flush();
 
-                        Assert.True(ev.WaitOne(2000));
+                        Assert.True(ev.WaitOne(10000));
                     }
                 }
             }

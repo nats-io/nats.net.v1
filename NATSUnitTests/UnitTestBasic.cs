@@ -536,14 +536,13 @@ namespace NATSUnitTests
                             Msg m = await t;
                             Assert.True(compare(m.Data, response), "Response isn't valid");
                         }
-
                     }
 
-                    // test timeout, make sure we are close.
+                    // test timeout, make sure we are somewhat close (for testing on stressed systems).
                     Stopwatch sw = Stopwatch.StartNew();
-                    await Assert.ThrowsAsync<NATSTimeoutException>(() => { return c.RequestAsync("no-replier", null, 250, miscToken); });
+                    await Assert.ThrowsAsync<NATSTimeoutException>(() => { return c.RequestAsync("no-replier", null, 1000, miscToken); });
                     sw.Stop();
-                    Assert.True(Math.Abs(sw.Elapsed.TotalMilliseconds - 250) < 50);
+                    Assert.True(Math.Abs(sw.Elapsed.TotalMilliseconds - 1000) < 250);
 
                     // test early cancellation
                     var cts = new CancellationTokenSource();
@@ -554,7 +553,7 @@ namespace NATSUnitTests
                     // test cancellation
                     cts = new CancellationTokenSource();
                     var ocex = Assert.ThrowsAsync<OperationCanceledException>(() => { return c.RequestAsync("foo", null, cts.Token); });
-                    Thread.Sleep(250);
+                    Thread.Sleep(2000);
                     cts.Cancel();
                     await ocex;
 
@@ -1190,7 +1189,10 @@ namespace NATSUnitTests
                 "nats://localhost:4222",
                 "nats://localhost:2",
                 "nats://localhost:3",
-                "nats://localhost:4"
+                "nats://localhost:4", 
+                "nats://localhsot:5", 
+                "nats://localhost:6", 
+                "nats://localhost:7"
             };
 
             var opts = utils.DefaultTestOptions;
@@ -1205,7 +1207,7 @@ namespace NATSUnitTests
 
                 bool wasRandom = false;
                 opts.NoRandomize = false;
-                for (int i = 0; i < 5; i++)
+                for (int i = 0; i < 10; i++)
                 {
                     c = new ConnectionFactory().CreateConnection(opts);
                     wasRandom = (listsEqual(serverList, c.Servers) == false);
