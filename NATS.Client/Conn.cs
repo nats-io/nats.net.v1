@@ -32,7 +32,7 @@ namespace NATS.Client
     internal enum ClientProtcolVersion
     {
         // clientProtoZero is the original client protocol from 2009.
- 	    // http://nats.io/documentation/internals/nats-protocol/
+        // http://nats.io/documentation/internals/nats-protocol/
         ClientProtoZero = 0,
 
         // ClientProtoInfo signals a client can receive more then the original INFO block.
@@ -51,7 +51,7 @@ namespace NATS.Client
 
         // NOTE: We aren't using Mutex here to support enterprises using
         // .NET 4.0.
-        readonly internal object mu = new Object(); 
+        readonly internal object mu = new Object();
 
         private Random r = null;
 
@@ -65,7 +65,7 @@ namespace NATS.Client
 
         List<Thread> wg = new List<Thread>(2);
 
-        private Uri             url     = null;
+        private Uri url = null;
         private ServerPool srvPool = new ServerPool();
 
         private Dictionary<string, Uri> urls = new Dictionary<string, Uri>();
@@ -74,44 +74,44 @@ namespace NATS.Client
         // This is for both performance, and having to work around
         // interlinked read/writes (supported by the underlying network
         // stream, but not the BufferedStream).
-        private Stream  bw      = null;
-        private Stream  br      = null;
-        private MemoryStream    pending = null;
+        private Stream bw = null;
+        private Stream br = null;
+        private MemoryStream pending = null;
 
-        Object flusherLock     = new Object();
-        bool   flusherKicked = false;
-        bool   flusherDone     = false;
+        Object flusherLock = new Object();
+        bool flusherKicked = false;
+        bool flusherDone = false;
 
-        private ServerInfo     info = null;
-        private Int64          ssid = 0;
+        private ServerInfo info = null;
+        private Int64 ssid = 0;
 
-        private ConcurrentDictionary<Int64, Subscription> subs = 
+        private ConcurrentDictionary<Int64, Subscription> subs =
             new ConcurrentDictionary<Int64, Subscription>();
-        
+
         private Queue<Channel<bool>> pongs = new Queue<Channel<bool>>();
 
-        internal MsgArg   msgArgs = new MsgArg();
+        internal MsgArg msgArgs = new MsgArg();
 
         internal ConnState status = ConnState.CLOSED;
 
         internal Exception lastEx;
 
-        Timer               ptmr = null;
+        Timer ptmr = null;
 
-        int                 pout = 0;
+        int pout = 0;
 
         // Prepare protocol messages for efficiency
         private byte[] PING_P_BYTES = null;
-        private int    PING_P_BYTES_LEN;
+        private int PING_P_BYTES_LEN;
 
         private byte[] PONG_P_BYTES = null;
-        private int    PONG_P_BYTES_LEN;
+        private int PONG_P_BYTES_LEN;
 
         private byte[] PUB_P_BYTES = null;
-        private int    PUB_P_BYTES_LEN = 0;
+        private int PUB_P_BYTES_LEN = 0;
 
         private byte[] CRLF_BYTES = null;
-        private int    CRLF_BYTES_LEN = 0;
+        private int CRLF_BYTES_LEN = 0;
 
         byte[] pubProtoBuf = null;
 
@@ -120,87 +120,6 @@ namespace NATS.Client
         TCPConnection conn = new TCPConnection();
 
         SubChannelPool subChannelPool = null;
-
-        // One could use a task scheduler, but this is simpler and will
-        // likely be easier to port to .NET core.
-        private class CallbackScheduler
-        {
-            Channel<Task> tasks            = new Channel<Task>();
-            Task executorTask = null;
-            Object        runningLock      = new Object();
-            bool          schedulerRunning = false;
-
-            private bool Running
-            {
-                get
-                {
-                    lock (runningLock)
-                    {
-                        return schedulerRunning;
-                    }
-                }
-
-                set
-                {
-                    lock  (runningLock)
-                    {
-                        schedulerRunning = value;
-                    }
-                }
-            }
-
-            private void process()
-            {
-                while (this.Running)
-                {
-                    Task t = tasks.get(-1);
-                    try
-                    {
-                        t.RunSynchronously();
-                    }
-                    catch (Exception) { }
-                }
-            }
-
-            internal void Start()
-            {
-                lock (runningLock)
-                {
-                    schedulerRunning = true;
-                    executorTask = new Task(() => { process(); });
-                    executorTask.Start();
-                }
-            }
-
-            internal void Add(Task t)
-            {
-                lock (runningLock)
-                {
-                    if (schedulerRunning)
-                        tasks.add(t);
-                }
-            }
-
-            internal void ScheduleStop()
-            {
-                Add(new Task(() =>
-                {
-                    this.Running = false;
-                    tasks.close();
-                }));
-            }
-
-            internal void WaitForCompletion()
-            {
-                try
-                {
-                    executorTask.Wait(5000);
-                }
-                catch (Exception) { }
-            }
-        }
-
-        CallbackScheduler callbackScheduler = new CallbackScheduler();
 
         internal class Control
         {
@@ -257,12 +176,12 @@ namespace NATS.Client
             ///          ->NetworkStream/SslStream (srvStream)
             ///              ->TCPClient (srvClient);
             /// 
-            Object        mu        = new Object();
-            TcpClient     client    = null;
-            NetworkStream stream    = null;
-            SslStream     sslStream = null;
+            Object mu = new Object();
+            TcpClient client = null;
+            NetworkStream stream = null;
+            SslStream sslStream = null;
 
-            string        hostName  = null;
+            string hostName = null;
 
             internal void open(Srv s, int timeoutMillis)
             {
@@ -293,8 +212,8 @@ namespace NATS.Client
 
                     client.NoDelay = false;
 
-                    client.ReceiveBufferSize = Defaults.defaultBufSize*2;
-                    client.SendBufferSize    = Defaults.defaultBufSize;
+                    client.ReceiveBufferSize = Defaults.defaultBufSize * 2;
+                    client.SendBufferSize = Defaults.defaultBufSize;
 
                     stream = client.GetStream();
 
@@ -319,11 +238,8 @@ namespace NATS.Client
             {
                 if (c != null)
                 {
-#if NET45
                     c.Close();
-#else
-                    c.Dispose();
-#endif
+                    c = null;
                 }
             }
 
@@ -469,7 +385,8 @@ namespace NATS.Client
                 {
                     connection = c;
 
-                    channelTask = new Task(() => {
+                    channelTask = new Task(() =>
+                    {
                         connection.deliverMsgs(channel);
                     }, TaskCreationOptions.LongRunning);
 
@@ -586,8 +503,6 @@ namespace NATS.Client
 
             // predefine the start of the publish protocol message.
             buildPublishProtocolBuffer(Defaults.scratchSize);
-
-            callbackScheduler.Start();
         }
 
         private void buildPublishProtocolBuffer(int size)
@@ -750,7 +665,8 @@ namespace NATS.Client
             // Ensure threads are started before we continue with
             // ManualResetEvents.
             ManualResetEvent readLoopStartEvent = new ManualResetEvent(false);
-            t = new Thread(() => {
+            t = new Thread(() =>
+            {
                 readLoopStartEvent.Set();
                 readLoop();
             });
@@ -759,7 +675,8 @@ namespace NATS.Client
             wg.Add(t);
 
             ManualResetEvent flusherStartEvent = new ManualResetEvent(false);
-            t = new Thread(() => {
+            t = new Thread(() =>
+            {
                 flusherStartEvent.Set();
                 flusher();
             });
@@ -882,7 +799,8 @@ namespace NATS.Client
 
             setupServerPool();
 
-            srvPool.ConnectToAServer((s) => {
+            srvPool.ConnectToAServer((s) =>
+            {
                 return connect(s, out exToThrow);
             });
 
@@ -1133,22 +1051,11 @@ namespace NATS.Client
         {
             if (pending == null)
                 return;
-
             if (pending.Length > 0)
             {
-#if NET45
                 bw.Write(pending.GetBuffer(), 0, (int)pending.Length);
                 bw.Flush();
-#else
-                ArraySegment<byte> buffer;
-                if (pending.TryGetBuffer(out buffer))
-                {
-                    // TODO:  Buffer.length
-                    bw.Write(buffer.Array, buffer.Offset, (int)buffer.Count);
-                }
-#endif
             }
-
             pending = null;
         }
 
@@ -1170,13 +1077,8 @@ namespace NATS.Client
         {
             if (connEvent == null)
                 return;
-
             // Schedule a reference to the event handler.
-            EventHandler<ConnEventArgs> eh = connEvent;
-            callbackScheduler.Add(
-                new Task(() => { eh(this, new ConnEventArgs(this)); })
-            );
-
+            Task.Factory.StartNew(() => connEvent(this, new ConnEventArgs(this)));
         }
 
         // Try to reconnect using the option parameters.
@@ -1358,7 +1260,7 @@ namespace NATS.Client
             // Stack based buffer.
             byte[] buffer = new byte[Defaults.defaultReadLength];
             Parser parser = new Parser(this);
-            int    len;
+            int len;
 
             while (true)
             {
@@ -1391,7 +1293,7 @@ namespace NATS.Client
                     if (isClosed())
                         return;
                 }
- 
+
                 m = ch.get(-1);
                 if (m == null)
                 {
@@ -1443,7 +1345,7 @@ namespace NATS.Client
 
             for (int i = 0; i < length; i++)
             {
-                buffer[i+offset] = (byte)value[i];
+                buffer[i + offset] = (byte)value[i];
             }
 
             return end;
@@ -1464,15 +1366,15 @@ namespace NATS.Client
             {
                 case 3:
                     msgArgs.subject = args[0];
-                    msgArgs.sid     = Convert.ToInt64(args[1]);
-                    msgArgs.reply   = null;
-                    msgArgs.size    = Convert.ToInt32(args[2]);
+                    msgArgs.sid = Convert.ToInt64(args[1]);
+                    msgArgs.reply = null;
+                    msgArgs.size = Convert.ToInt32(args[2]);
                     break;
                 case 4:
                     msgArgs.subject = args[0];
-                    msgArgs.sid     = Convert.ToInt64(args[1]);
-                    msgArgs.reply   = args[2];
-                    msgArgs.size    = Convert.ToInt32(args[3]);
+                    msgArgs.sid = Convert.ToInt64(args[1]);
+                    msgArgs.reply = args[2];
+                    msgArgs.size = Convert.ToInt32(args[3]);
                     break;
                 default:
                     throw new NATSException("Unable to parse message arguments: " + s);
@@ -1539,10 +1441,7 @@ namespace NATS.Client
             lastEx = new NATSSlowConsumerException();
             if (opts.AsyncErrorEventHandler != null && !s.sc)
             {
-                EventHandler<ErrEventArgs> aseh = opts.AsyncErrorEventHandler;
-                callbackScheduler.Add(
-                    new Task(() => { aseh(this, new ErrEventArgs(this, s, "Slow Consumer")); })
-                );
+                Task.Factory.StartNew(() => opts.AsyncErrorEventHandler(this, new ErrEventArgs(this, s, "Slow Consumer")));
             }
             s.sc = true;
         }
@@ -1861,7 +1760,7 @@ namespace NATS.Client
 
         internal virtual Msg request(string subject, byte[] data, int timeout)
         {
-            Msg    m     = null;
+            Msg m = null;
             string inbox = NewInbox();
 
             SyncSubscription s = subscribeSync(inbox, null);
@@ -2019,7 +1918,7 @@ namespace NATS.Client
 
             r.NextBytes(buf);
 
-            return IC.inboxPrefix + BitConverter.ToString(buf).Replace("-","");
+            return IC.inboxPrefix + BitConverter.ToString(buf).Replace("-", "");
         }
 
         internal void sendSubscriptionMessage(AsyncSubscription s)
@@ -2212,7 +2111,7 @@ namespace NATS.Client
 
             if (pongs.Count == 0)
                 return false;
-            
+
             Channel<bool> start = pongs.Dequeue();
             Channel<bool> c = start;
 
@@ -2413,7 +2312,6 @@ namespace NATS.Client
         public void Close()
         {
             close(ConnState.CLOSED, true);
-            callbackScheduler.ScheduleStop();
             disableSubChannelPooling();
         }
 
@@ -2536,7 +2434,6 @@ namespace NATS.Client
             try
             {
                 Close();
-                callbackScheduler.WaitForCompletion();
             }
             catch (Exception)
             {
