@@ -64,7 +64,7 @@ namespace NATS.Client
                 Add(opts.Servers, false);
 
                 if (!opts.NoRandomize)
-                    Shuffle();
+                    shuffle();
             }
 
             if (!string.IsNullOrWhiteSpace(opts.Url))
@@ -191,44 +191,36 @@ namespace NATS.Client
             return rv.ToArray();
         }
 
-        private bool add(string s, bool isImplicit)
+        private void add(string s, bool isImplicit)
         {
-            return add(new Srv(s, isImplicit));
+            add(new Srv(s, isImplicit));
         }
 
         // returns true if it modified the pool, false if
         // the url already exists.
-        private bool add(Srv s)
+        private void add(Srv s)
         {
             lock (poolLock)
             {
                 if (sList.Contains(s, duplicateSrvCheck))
-                    return false;
+                    return;
 
                 sList.AddLast(s);
-                return true;
             }
         }
 
-        internal bool Add(string[] urls, bool isImplicit)
+        internal void Add(string[] urls, bool isImplicit)
         {
             if (urls == null)
-                return false;
-
-            bool modified = false;
+                return;
 
             foreach (string s in urls)
             {
-                if (add(s, isImplicit))
-                {
-                    modified = true;
-                }
+                add(s, isImplicit);
             }
-
-            return modified;
         }
 
-        internal void Shuffle()
+        private void shuffle()
         {
             Random r = new Random();
 

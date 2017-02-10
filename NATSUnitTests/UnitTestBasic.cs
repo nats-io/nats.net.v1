@@ -1101,19 +1101,63 @@ namespace NATSUnitTests
         public void TestAsyncInfoProtocolConnect()
         {
             using (NATSServer s1 = new NATSServer("-p 4223 --cluster nats://127.0.0.1:4555 --routes nats://127.0.0.1:4666"),
-                              s2 = new NATSServer("-p 4224 --cluster nats://127.0.0.1:4666 --routes nats://127.0.0.1:4555"))
+                              s2 = new NATSServer("-p 4224 --cluster nats://127.0.0.1:4666 --routes nats://127.0.0.1:4555"),
+                              s3 = new NATSServer("-p 4225 --cluster nats://127.0.0.1:4667 --routes nats://127.0.0.1:4555"),
+                              s4 = new NATSServer("-p 4226 --cluster nats://127.0.0.1:4668 --routes nats://127.0.0.1:4555"),
+                              s5 = new NATSServer("-p 4227 --cluster nats://127.0.0.1:4669 --routes nats://127.0.0.1:4555"),
+                              s6 = new NATSServer("-p 4228 --cluster nats://127.0.0.1:4670 --routes nats://127.0.0.1:4555"),
+                              s7 = new NATSServer("-p 4229 --cluster nats://127.0.0.1:4671 --routes nats://127.0.0.1:4555"))
             {
-                // let the server cluster form
-                Thread.Sleep(1000);
-
                 var opts = utils.DefaultTestOptions;
                 opts.Url = "nats://127.0.0.1:4223";
 
                 var c = new ConnectionFactory().CreateConnection(opts);
-                Thread.Sleep(1000);
+                // wait until the servers are routed and the conn has the updated
+                // server list.
+                for (int i = 0; i < 5; i++)
+                {
+                    Thread.Sleep(500 * i);
 
-                Assert.True(c.Servers.Length >= 2);
+                    if (c.Servers.Length == 7)
+                        break;
+                }
 
+                // Create a new connection to start from scratch.
+                c.Close();
+                c = new ConnectionFactory().CreateConnection(opts);
+                Assert.True(c.Servers.Length ==7);
+
+                // Sufficiently test to ensure we don't hit a random false positive
+                // - avoid flappers.
+                bool different = false;
+                for (int i = 0; i < 20; i++)
+                {
+                    var c2 = new ConnectionFactory().CreateConnection(opts);
+                    Assert.True(c2.Servers.Length == 7);
+
+                    // The first urls should be the same.
+                    Assert.True(c.Servers[0].Equals(c2.Servers[0]));
+
+                    // now check the others are different (randomized)
+
+                    for (int j = 1; j < c.Servers.Length; j++)
+                    {
+                        if (!c.Servers[j].Equals(c2.Servers[j]))
+                        {
+                            different = true;
+                            break;
+                        }
+                    }
+
+                    c2.Close();
+
+                    // ensure the two connections are different - that randomization
+                    // occurred.
+                    if (different)
+                        break;
+                }
+
+                Assert.True(different);
                 c.Close();
             }
         }
@@ -1142,6 +1186,7 @@ namespace NATSUnitTests
                 // check that credentials are stripped.
                 Assert.True(c.Servers[0].Equals("nats://127.0.0.1:4223"));
 
+                // build an independent cluster
                 using (NATSServer s2 = new NATSServer("-a localhost -p 4224 --cluster nats://127.0.0.1:4666 --routes nats://127.0.0.1:4555"))
                 {
                     // wait until the servers are routed and the conn has the updated
@@ -1150,16 +1195,20 @@ namespace NATSUnitTests
                     {
                         Thread.Sleep(500 * i);
 
-                        if (c.Servers.Length >= 2)
+                        if (c.Servers.Length == 2)
                             break;
                     }
 
-                    s1.Shutdown();
-
-                    Assert.True(evReconnect.WaitOne(10000));
+                    // Ensure the first server remains in place and has not been
+                    // randomized.
+                    Assert.True(c.Servers[0].Equals("nats://127.0.0.1:4223"));
                     Assert.True(c.Servers.Length == 2);
                     Assert.True(c.DiscoveredServers.Length == 1);
-                    Assert.True("nats://localhost:4224".Equals(c.DiscoveredServers[0]));
+
+
+                    // sanity check to ensure we can connect to another server.
+                    s1.Shutdown();
+                    Assert.True(evReconnect.WaitOne(10000));
                     Assert.True(newUrl != null);
                     Assert.False(newUrl.Equals(opts.Url));
                 }

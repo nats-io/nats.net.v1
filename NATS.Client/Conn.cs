@@ -11,6 +11,7 @@ using System.Net.Sockets;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Authentication;
+using System.Linq;
 
 // disable XML comment warnings
 #pragma warning disable 1591
@@ -1681,10 +1682,20 @@ namespace NATS.Client
             }
 
             info = ServerInfo.CreateFromJson(json);
-            if (srvPool.Add(info.connectURLs, true))
+            var servers = info.connectURLs;
+            if (servers != null)
             {
-                if (opts.NoRandomize == false)
-                    srvPool.Shuffle();
+                if (!opts.NoRandomize && servers.Length > 1)
+                {
+                    // If randomization is allowed, shuffle the received array, 
+                    // not the entire pool. We want to preserve the pool's
+                    // order up to this point (this would otherwise be 
+                    // problematic for the (re)connect loop).
+                    var rnd = new Random();
+                    servers = info.connectURLs.OrderBy
+                        (x => rnd.Next()).ToArray();
+                }
+                srvPool.Add(servers, true);
             }
         }
 
