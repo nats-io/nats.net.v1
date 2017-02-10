@@ -1097,6 +1097,25 @@ namespace NATSUnitTests
             }
         }
 
+        private bool assureClusterFormed(IConnection c, int serverCount)
+        {
+            if (c == null)
+                return false;
+
+            // wait until the servers are routed and the conn has the updated
+            // server list.
+            for (int i = 0; i < 5; i++)
+            {
+                Thread.Sleep(500 * i);
+
+                if (c.Servers.Length == serverCount)
+                    break;
+            }
+
+            return (c.Servers.Length == serverCount);
+
+        }
+
         [Fact]
         public void TestAsyncInfoProtocolConnect()
         {
@@ -1112,27 +1131,12 @@ namespace NATSUnitTests
                 opts.Url = "nats://127.0.0.1:4223";
 
                 var c = new ConnectionFactory().CreateConnection(opts);
-                // wait until the servers are routed and the conn has the updated
-                // server list.
-                for (int i = 0; i < 5; i++)
-                {
-                    Thread.Sleep(500 * i);
-
-                    if (c.Servers.Length == 7)
-                        break;
-                }
+                assureClusterFormed(c, 7);
 
                 // Create a new connection to start from scratch.
                 c.Close();
                 c = new ConnectionFactory().CreateConnection(opts);
-                for (int i = 0; i < 5; i++)
-                {
-                    Thread.Sleep(500 * i);
-
-                    if (c.Servers.Length == 7)
-                        break;
-                }
-                Assert.True(c.Servers.Length ==7, "Server count should be 7, is: " + c.Servers.Length);
+                Assert.True(assureClusterFormed(c, 7));
 
                 // Sufficiently test to ensure we don't hit a random false positive
                 // - avoid flappers.
@@ -1140,7 +1144,7 @@ namespace NATSUnitTests
                 for (int i = 0; i < 20; i++)
                 {
                     var c2 = new ConnectionFactory().CreateConnection(opts);
-                    Assert.True(c2.Servers.Length == 7);
+                    Assert.True(assureClusterFormed(c, 7));
 
                     // The first urls should be the same.
                     Assert.True(c.Servers[0].Equals(c2.Servers[0]));
@@ -1198,13 +1202,7 @@ namespace NATSUnitTests
                 {
                     // wait until the servers are routed and the conn has the updated
                     // server list.
-                    for (int i = 0; i < 5; i++)
-                    {
-                        Thread.Sleep(500 * i);
-
-                        if (c.Servers.Length == 2)
-                            break;
-                    }
+                    assureClusterFormed(c, 2);
 
                     // Ensure the first server remains in place and has not been
                     // randomized.
