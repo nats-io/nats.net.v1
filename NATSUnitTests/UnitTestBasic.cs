@@ -1125,7 +1125,14 @@ namespace NATSUnitTests
                 // Create a new connection to start from scratch.
                 c.Close();
                 c = new ConnectionFactory().CreateConnection(opts);
-                Assert.True(c.Servers.Length ==7);
+                for (int i = 0; i < 5; i++)
+                {
+                    Thread.Sleep(500 * i);
+
+                    if (c.Servers.Length == 7)
+                        break;
+                }
+                Assert.True(c.Servers.Length ==7, "Server count should be 7, is: " + c.Servers.Length);
 
                 // Sufficiently test to ensure we don't hit a random false positive
                 // - avoid flappers.
