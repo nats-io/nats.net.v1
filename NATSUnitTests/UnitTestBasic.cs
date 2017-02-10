@@ -1104,7 +1104,7 @@ namespace NATSUnitTests
 
             // wait until the servers are routed and the conn has the updated
             // server list.
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 10; i++)
             {
                 Thread.Sleep(500 * i);
 
