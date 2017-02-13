@@ -1691,9 +1691,8 @@ namespace NATS.Client
                     // not the entire pool. We want to preserve the pool's
                     // order up to this point (this would otherwise be 
                     // problematic for the (re)connect loop).
-                    var rnd = new Random();
-                    servers = info.connectURLs.OrderBy
-                        (x => rnd.Next()).ToArray();
+                    servers = (string[])info.connectURLs.Clone();
+                    ServerPool.shuffle<string>(servers);
                 }
                 srvPool.Add(servers, true);
             }

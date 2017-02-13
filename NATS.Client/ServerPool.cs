@@ -220,22 +220,34 @@ namespace NATS.Client
             }
         }
 
+        // Convenience method to shuffle a list.  The list passed
+        // is modified.
+        internal static void shuffle<T>(IList<T> list)
+        {
+            if (list == null)
+                return;
+
+            int n = list.Count;
+            if (n == 1)
+                return;
+
+            Random r = new Random();
+            while (n > 1)
+            {
+                n--;
+                int k = r.Next(n + 1);
+                var value = list[k];
+                list[k] = list[n];
+                list[n] = value;
+            }
+        }
+
         private void shuffle()
         {
-            Random r = new Random();
-
             lock (poolLock)
             {
                 var servers = sList.ToArray();
-                int n = servers.Length;
-                while (n > 1)
-                {
-                    n--;
-                    int k = r.Next(n + 1);
-                    var value = servers[k];
-                    servers[k] = servers[n];
-                    servers[n] = value;
-                }
+                shuffle(servers);
 
                 sList.Clear();
                 foreach (Srv s in servers)
