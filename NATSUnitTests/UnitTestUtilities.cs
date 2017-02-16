@@ -3,10 +3,11 @@
 using System;
 using System.Threading;
 using System.Diagnostics;
-using System.Reflection;
 using System.IO;
-using Xunit;
 using NATS.Client;
+#if NET45
+using System.Reflection;
+#endif
 
 namespace NATSUnitTests
 {
