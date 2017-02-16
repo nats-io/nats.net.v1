@@ -1,12 +1,5 @@
 ﻿// Copyright 2015 Apcera Inc. All rights reserved.
 
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Collections.Specialized;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.IO;
      
 namespace NATS.Client
