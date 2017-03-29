@@ -210,16 +210,37 @@ namespace NATSUnitTests
         [Fact]
         public void TestFlush()
         {
-            using (new NATSServer())
+            using (var server = new NATSServer())
             {
-                using (IConnection c = utils.DefaultTestConnection)
+                var cf = new ConnectionFactory();
+                var opts = utils.DefaultTestOptions;
+                opts.AllowReconnect = false;
+
+                var c = cf.CreateConnection(opts);
+
+                using (ISyncSubscription s = c.SubscribeSync("foo"))
                 {
-                    using (ISyncSubscription s = c.SubscribeSync("foo"))
-                    {
-                        c.Publish("foo", "reply", omsg);
-                        c.Flush();
-                    }
+                    c.Publish("foo", "reply", omsg);
+                    c.Flush();
                 }
+
+                // Test a timeout, locally this may actually succeed, 
+                // so allow for that.
+                // TODO: find a way to debug/pause the server to allow
+                // for timeouts.
+                try { c.Flush(1); } catch (NATSTimeoutException) {}
+
+                Assert.Throws<ArgumentOutOfRangeException>(() => { c.Flush(-1); });
+
+                // test a closed connection
+                c.Close();
+                Assert.Throws<NATSConnectionClosedException>(() => { c.Flush(); });
+
+                // test a lost connection
+                c = cf.CreateConnection(opts);
+                server.Shutdown();
+                Thread.Sleep(500);
+                Assert.Throws<NATSConnectionClosedException>(() => { c.Flush(); });
             }
         }
 
@@ -486,12 +507,6 @@ namespace NATSUnitTests
                         }
                     }
 
-                    // test timeout, make sure we're close.
-                    Stopwatch sw = Stopwatch.StartNew();
-                    await Assert.ThrowsAsync<NATSTimeoutException>(() => { return c.RequestAsync("no-replier", null, 250); });
-                    sw.Stop();
-                    Assert.True(Math.Abs(sw.Elapsed.TotalMilliseconds - 250) < 50);
-
                     await Assert.ThrowsAsync<NATSBadSubscriptionException>(() => { return c.RequestAsync("", null); });
                 }
             }
@@ -578,6 +593,49 @@ namespace NATSUnitTests
         public void TestRequestAsyncCancellation()
         {
             testRequestAsyncCancellation();
+        }
+
+        public async void testRequestAsyncTimeout()
+        {
+            using (var server = new NATSServer())
+            {
+                var sw = new Stopwatch();
+
+                var opts = ConnectionFactory.GetDefaultOptions();
+                opts.AllowReconnect = false;
+                var conn = new ConnectionFactory().CreateConnection(opts);
+
+                // success condition
+                var sub = conn.SubscribeAsync("foo", (obj, args) => {
+                    conn.Publish(args.Message.Reply, new byte[0]);
+                });
+
+                sw.Start();
+                await conn.RequestAsync("foo", new byte[0], 5000);
+                sw.Stop();
+                Assert.True(sw.ElapsedMilliseconds < 5000, "Unexpected timeout behavior");
+                sub.Unsubscribe();
+
+                // valid connection, but no response
+                sw.Restart();
+                await Assert.ThrowsAsync<NATSTimeoutException>(() => { return conn.RequestAsync("test", new byte[0], 500); });
+                sw.Stop();
+                long elapsed = sw.ElapsedMilliseconds;
+                Assert.True(elapsed >= 500, string.Format("Unexpected value (should be > 500): {0}", elapsed));
+                long variance = elapsed - 500;
+                Assert.True(variance < 100, string.Format("Invalid timeout variance: {0}", variance));
+
+                // Test an invalid connection
+                server.Shutdown();
+                Thread.Sleep(500);
+                await Assert.ThrowsAsync<NATSConnectionClosedException>(() => { return conn.RequestAsync("test", new byte[0], 1000); });
+            }
+        }
+
+        [Fact]
+        public void TestRequestAsyncTimeout()
+        {
+            testRequestAsyncTimeout();
         }
 
         class TestReplier
@@ -1125,6 +1183,7 @@ namespace NATSUnitTests
                               s7 = new NATSServer("-a localhost -p 4227 --cluster nats://127.0.0.1:4557 --routes nats://127.0.0.1:4551"))
             {
                 var opts = utils.DefaultTestOptions;
+                opts.NoRandomize = false;
                 opts.Url = "nats://127.0.0.1:4223";
 
                 var c = new ConnectionFactory().CreateConnection(opts);
@@ -1141,7 +1200,7 @@ namespace NATSUnitTests
                 // Sufficiently test to ensure we don't hit a random false positive
                 // - avoid flappers.
                 bool different = false;
-                for (int i = 0; i < 10; i++)
+                for (int i = 0; i < 50; i++)
                 {
                     var c2 = new ConnectionFactory().CreateConnection(opts);
                     Assert.True(assureClusterFormed(c, 7),
