@@ -1,6 +1,9 @@
 ﻿// Copyright 2015-2017 Apcera Inc. All rights reserved.
 
+<<<<<<< HEAD
 using System;
+=======
+>>>>>>> master
 using System.IO;
      
 namespace NATS.Client

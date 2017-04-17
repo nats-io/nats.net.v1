@@ -1,6 +1,5 @@
 ﻿// Copyright 2015 Apcera Inc. All rights reserved.
 
-using System;
 
 // disable XML comment warnings
 #pragma warning disable 1591

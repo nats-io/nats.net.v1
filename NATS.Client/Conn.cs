@@ -117,6 +117,9 @@ namespace NATS.Client
 
         static readonly int REQ_CANCEL_IVL = 100;
 
+        // 60 second default flush timeout
+        static readonly int DEFAULT_FLUSH_TIMEOUT = 60000;
+
         TCPConnection conn = new TCPConnection();
 
         SubChannelPool subChannelPool = null;
@@ -1926,7 +1929,7 @@ namespace NATS.Client
             s.AutoUnsubscribe(1);
 
             publish(subject, inbox, data);
-            Flush();
+            Flush(timeout > 0 ? timeout : DEFAULT_FLUSH_TIMEOUT);
             m = s.NextMessage(timeout);
             s.unsubscribe(false);
 
@@ -1982,7 +1985,7 @@ namespace NATS.Client
                 s.AutoUnsubscribe(1);
 
                 publish(subject, inbox, data);
-                Flush();
+                Flush(timeout > 0 ? timeout: DEFAULT_FLUSH_TIMEOUT);
 
                 int timeRemaining = timeout;
 
@@ -2365,8 +2368,7 @@ namespace NATS.Client
         /// </summary>
         public void Flush()
         {
-            // 60 second default.
-            Flush(60000);
+            Flush(DEFAULT_FLUSH_TIMEOUT);
         }
 
         // resendSubscriptions will send our subscription state back to the
