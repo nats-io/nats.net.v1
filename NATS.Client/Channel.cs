@@ -1,4 +1,4 @@
-﻿// Copyright 2015 Apcera Inc. All rights reserved.
+﻿// Copyright 2015-2017 Apcera Inc. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -108,7 +108,6 @@ namespace NATS.Client
 
             finished = true;
             Monitor.Pulse(qLock);
-
             q.Clear();
 
             Monitor.Exit(qLock);

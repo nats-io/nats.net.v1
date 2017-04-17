@@ -1,5 +1,6 @@
-﻿// Copyright 2015 Apcera Inc. All rights reserved.
+﻿// Copyright 2015-2017 Apcera Inc. All rights reserved.
 
+using System;
 using System.IO;
      
 namespace NATS.Client
@@ -12,9 +13,8 @@ namespace NATS.Client
 	    internal int    size;
     }
 
-    internal sealed class Parser
+    internal sealed class Parser : IDisposable
     {
-
         Connection conn;
         byte[] argBufBase = new byte[Defaults.defaultBufSize];
         MemoryStream argBufStream = null;
@@ -512,5 +512,11 @@ namespace NATS.Client
             }  // for
      
         } // parse
+
+        public void Dispose()
+        {
+            argBufStream.Dispose();
+            msgBufStream.Dispose();
+        }
     }
 }
