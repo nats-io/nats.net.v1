@@ -1,4 +1,4 @@
-﻿// Copyright 2015 Apcera Inc. All rights reserved.
+﻿// Copyright 2015-2017 Apcera Inc. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -11,7 +11,6 @@ using System.Net.Sockets;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Authentication;
-using System.Linq;
 
 // disable XML comment warnings
 #pragma warning disable 1591
@@ -124,11 +123,11 @@ namespace NATS.Client
 
         // One could use a task scheduler, but this is simpler and will
         // likely be easier to port to .NET core.
-        private class CallbackScheduler
+        private class CallbackScheduler : IDisposable
         {
             Channel<Task> tasks            = new Channel<Task>();
-            Task executorTask = null;
-            Object        runningLock      = new Object();
+            Task          executorTask     = null;
+            object        runningLock      = new object();
             bool          schedulerRunning = false;
 
             private bool Running
@@ -152,7 +151,7 @@ namespace NATS.Client
 
             private void process()
             {
-                while (this.Running)
+                while (Running)
                 {
                     Task t = tasks.get(-1);
                     try
@@ -186,7 +185,7 @@ namespace NATS.Client
             {
                 Add(new Task(() =>
                 {
-                    this.Running = false;
+                    Running = false;
                     tasks.close();
                 }));
             }
@@ -199,6 +198,28 @@ namespace NATS.Client
                 }
                 catch (Exception) { }
             }
+
+            #region IDisposable Support
+            private bool disposedValue = false; // To detect redundant calls
+
+            protected virtual void Dispose(bool disposing)
+            {
+                if (!disposedValue)
+                {
+#if NET45
+                    if (executorTask != null)
+                        executorTask.Dispose();
+#endif
+
+                    disposedValue = true;
+                }
+            }
+
+            public void Dispose()
+            {
+                Dispose(true);
+            }
+            #endregion
         }
 
         CallbackScheduler callbackScheduler = new CallbackScheduler();
@@ -240,7 +261,7 @@ namespace NATS.Client
         /// Convenience class representing the TCP connection to prevent 
         /// managing two variables throughout the NATs client code.
         /// </summary>
-        private sealed class TCPConnection
+        private sealed class TCPConnection : IDisposable
         {
             /// A note on the use of streams.  .NET provides a BufferedStream
             /// that can sit on top of an IO stream, in this case the network
@@ -258,7 +279,7 @@ namespace NATS.Client
             ///          ->NetworkStream/SslStream (srvStream)
             ///              ->TCPClient (srvClient);
             /// 
-            Object        mu        = new Object();
+            object        mu        = new object();
             TcpClient     client    = null;
             NetworkStream stream    = null;
             SslStream     sslStream = null;
@@ -443,6 +464,30 @@ namespace NATS.Client
                     return stream.DataAvailable;
                 }
             }
+
+            #region IDisposable Support
+            private bool disposedValue = false; // To detect redundant calls
+
+            void Dispose(bool disposing)
+            {
+                if (!disposedValue)
+                {
+                    if (sslStream != null)
+                        sslStream.Dispose();
+                    if (stream != null)
+                        stream.Dispose();
+                    if (client != null)
+                        closeClient(client);
+
+                    disposedValue = true;
+                }
+            }
+
+            public void Dispose()
+            {
+                Dispose(true);
+            }
+            #endregion
         }
 
         /// <summary>
@@ -453,14 +498,14 @@ namespace NATS.Client
         /// Async subscribers use this channel in lieu of their own channel and
         /// message processing task.
         /// </summary>
-        internal class SubChannelPool : IDisposable
+        internal sealed class SubChannelPool : IDisposable
         {
             /// <summary>
             /// SubChannelProcessor creates a channel and a task to process
             /// messages on that channel.
             /// </summary>
             // TODO:  Investigate reuse of this class in async sub.
-            private class SubChannelProcessor : IDisposable
+            private sealed class SubChannelProcessor : IDisposable
             {
                 Channel<Msg> channel = new Channel<Msg>();
                 Connection connection = null;
@@ -489,6 +534,9 @@ namespace NATS.Client
                     // See Connection.deliverMsgs
                     channel.close();
                     channelTask.Wait(500);
+#if NET45
+                    channelTask.Dispose();
+#endif
                     channelTask = null;
                 }
             }
@@ -1959,13 +2007,13 @@ namespace NATS.Client
                         {
                             m = s.NextMessage(waitTime);
                         }
-                        catch (NATSTimeoutException e)
+                        catch (NATSTimeoutException)
                         {
                             timeRemaining -= waitTime;
                             if (timeRemaining <= 0)
                             {
                                 s.unsubscribe(false);
-                                throw e;
+                                throw;
                             }
                         }
                     }
@@ -2376,6 +2424,8 @@ namespace NATS.Client
             {
                 // Clear any queued pongs, e.g. pending flush calls.
                 clearPendingFlushCalls();
+                if (pending != null)
+                    pending.Dispose();
 
                 stopPingTimer();
 
@@ -2406,6 +2456,7 @@ namespace NATS.Client
                             bw.Flush();
                         }
                         catch (Exception) { /* ignore */ }
+                        bw.Dispose();
                     }
 
                     conn.teardown();
@@ -2541,19 +2592,34 @@ namespace NATS.Client
             return sb.ToString();
         }
 
-        void IDisposable.Dispose()
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
+
+        protected virtual void Dispose(bool disposing)
         {
-            try
+            if (!disposedValue)
             {
-                Close();
-                callbackScheduler.WaitForCompletion();
-            }
-            catch (Exception)
-            {
-                // No need to throw an exception here
+                try
+                {
+                    Close();
+                    callbackScheduler.WaitForCompletion();
+                    callbackScheduler.Dispose();
+                    conn.Dispose();
+                }
+                catch (Exception)
+                {
+                    // No need to throw an exception here
+                }
+
+                disposedValue = true;
             }
         }
+
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+        #endregion
+
     } // class Conn
-
-
 }

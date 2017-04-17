@@ -82,12 +82,13 @@ namespace NATS.Client
     /// <summary>
     /// This class subclasses the Connection class to support serialization.
     /// </summary>
-    public class EncodedConnection : Connection, IEncodedConnection, IDisposable
+    public class EncodedConnection : Connection, IEncodedConnection
     {
         private MemoryStream sStream   = new MemoryStream();
         byte[] sBytes = new byte[1024];
 
-        private MemoryStream dStream = new MemoryStream();
+        private MemoryStream dStream     = new MemoryStream();
+        private object       dStreamLock = new object();
 
         private  Serializer   onSerialize = null;
         private  Deserializer onDeserialize = null;
@@ -136,7 +137,7 @@ namespace NATS.Client
             if (data == null)
                 return null;
 
-            lock (dStream)
+            lock (dStreamLock)
             {
                 dStream.Position = 0;
                 dStream.Write(data, 0, data.Length);
@@ -150,7 +151,7 @@ namespace NATS.Client
         Deserializer defaultDeserializer = null;
 #endif
 
-        private void publish(string subject, string reply, object o)
+        private void publishObject(string subject, string reply, object o)
         {
             lock (mu)
             {
@@ -158,18 +159,18 @@ namespace NATS.Client
                     throw new NATSException("IEncodedConnection.OnSerialize must be set (.NET core only).");
 
                 byte[] data = onSerialize(o);
-                base.publish(subject, reply, data);
+                publish(subject, reply, data);
             }
         }
 
         public void Publish(string subject, Object o)
         {
-            publish(subject, null, o);
+            publishObject(subject, null, o);
         }
 
         public void Publish(string subject, string reply, object o)
         {
-            publish(subject, reply, o);
+            publishObject(subject, reply, o);
         }
 
         // Wrapper the handler for keeping a local copy of the event arguments around.
@@ -180,10 +181,10 @@ namespace NATS.Client
 
             EncodedMessageEventArgs ehev = new EncodedMessageEventArgs();
 
-            internal EncodedHandlerWrapper(EncodedConnection c, EventHandler<EncodedMessageEventArgs> handler)
+            internal EncodedHandlerWrapper(EncodedConnection encc, EventHandler<EncodedMessageEventArgs> handler)
             {
-                this.mh = handler;
-                this.c = c;
+                mh = handler;
+                c = encc;
             }
 
             public void msgHandlerToEncoderHandler(Object sender, MsgHandlerEventArgs args)
@@ -249,7 +250,7 @@ namespace NATS.Client
 
         // lower level method to serialize an object, send a request,
         // and deserialize the returning object.
-        private object request(string subject, object obj, int timeout)
+        private object requestObject(string subject, object obj, int timeout)
         {
             byte[] data = onSerialize(obj);
             Msg m = base.request(subject, data, timeout);
@@ -258,12 +259,12 @@ namespace NATS.Client
 
         public object Request(string subject, object obj, int timeout)
         {
-            return request(subject, obj, timeout);
+            return requestObject(subject, obj, timeout);
         }
 
         public object Request(string subject, object obj)
         {
-            return request(subject, obj, -1);
+            return requestObject(subject, obj, -1);
         }
 
         // when our base (Connection) removes a subscriber, clean up
@@ -308,6 +309,13 @@ namespace NATS.Client
                 else
                     onDeserialize = value;
             }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            dStream.Dispose();
+            sStream.Dispose();
+            base.Dispose(disposing);
         }
     }
 }

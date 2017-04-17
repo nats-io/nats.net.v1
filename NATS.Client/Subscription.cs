@@ -1,8 +1,6 @@
-﻿// Copyright 2015 Apcera Inc. All rights reserved.
+﻿// Copyright 2015-2017 Apcera Inc. All rights reserved.
 
 using System;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Text;
 
 // disable XML comment warnings
@@ -12,7 +10,7 @@ namespace NATS.Client
 {
     public class Subscription : ISubscription, IDisposable
     {
-        readonly  internal  Object mu = new Object(); // lock
+        readonly  internal  object mu = new object(); // lock
 
         internal  long           sid = 0; // subscriber ID.
         private   long           msgs;
@@ -231,7 +229,7 @@ namespace NATS.Client
             {
                 lock (mu)
                 {
-                    if (this.conn == null)
+                    if (conn == null)
                         throw new NATSBadSubscriptionException();
 
                     return mch.Count;
@@ -239,18 +237,32 @@ namespace NATS.Client
             }
         }
 
-        void IDisposable.Dispose()
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
+
+        protected virtual void Dispose(bool disposing)
         {
-            try
+            if (!disposedValue)
             {
-                Unsubscribe();
-            }
-            catch (Exception)
-            { 
-                // We we get here with normal usage, for example when
-                // auto unsubscribing, so just this here.
+                try
+                {
+                    Unsubscribe();
+                }
+                catch (Exception)
+                {
+                    // We we get here with normal usage, for example when
+                    // auto unsubscribing, so ignore.
+                }
+
+                disposedValue = true;
             }
         }
+
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+        #endregion
 
         public override string ToString()
         {
