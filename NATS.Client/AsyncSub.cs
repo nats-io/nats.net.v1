@@ -33,26 +33,28 @@ namespace NATS.Client
             Connection localConn;
             EventHandler<MsgHandlerEventArgs> localHandler;
             long localMax;
+            long d;
 
             lock (mu)
             {
                 if (closed)
                     return false;
 
+                // the message handler has not been setup yet, drop the 
+                // message.
+                if (MessageHandler == null)
+                    return true;
+
+                if (conn == null)
+                    return false;
+
+                d = tallyDeliveredMessage(msg);
+
                 localConn = conn;
                 localHandler = MessageHandler;
                 localMax = max;
             }
 
-            // the message handler has not been setup yet, drop the 
-            // message.
-            if (MessageHandler == null)
-                return true;
-
-            if (conn == null)
-                return false;
-
-            long d = tallyDeliveredMessage(msg);
             if (localMax <= 0 || d <= localMax)
             {
                 msgHandlerArgs.msg = msg;

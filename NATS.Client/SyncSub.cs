@@ -70,7 +70,11 @@ namespace NATS.Client
 
             if (msg != null)
             {
-                long d = tallyDeliveredMessage(msg);
+                long d;
+                lock (mu)
+                {
+                    d = tallyDeliveredMessage(msg);
+                }
                 if (d == max)
                 {
                     // Remove subscription if we have reached max.

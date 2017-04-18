@@ -1501,30 +1501,56 @@ namespace NATS.Client
             return end;
         }
 
+
+        // Use a homegrown method to split strings, for performance.
+        // While efficient, string.Split will compile a regex pattern
+        // every call.
+        private static int splitMsgArgs(string value, ref string[] ary)
+        {
+            int count = 0;
+            int si = 0;
+
+            // We only support 4 elements in this protocol version
+            for (int i = 0; i < value.Length && count < 4; i++)
+            {
+                if (value[i] == ' ')
+                {
+                    ary[count] = value.Substring(si, i - si);
+                    count++;
+                    si = i + 1;
+                }
+            }
+
+            ary[count] = value.Substring(si, value.Length - si);
+            count++;
+
+            return count;
+        }
+
         // Here we go ahead and convert the message args into
         // strings, numbers, etc.  The msgArg object is a temporary
         // place to hold them, until we create the message.
         //
         // These strings, once created, are never copied.
-        //
+        string[] msgArgsAry = new string[4];
         internal void processMsgArgs(byte[] buffer, long length)
         {
             string s = convertToString(buffer, length);
-            string[] args = s.Split(' ');
+            int argCount = splitMsgArgs(s, ref msgArgsAry);
 
-            switch (args.Length)
+            switch (argCount)
             {
                 case 3:
-                    msgArgs.subject = args[0];
-                    msgArgs.sid     = Convert.ToInt64(args[1]);
+                    msgArgs.subject = msgArgsAry[0];
+                    msgArgs.sid     = Convert.ToInt64(msgArgsAry[1]);
                     msgArgs.reply   = null;
-                    msgArgs.size    = Convert.ToInt32(args[2]);
+                    msgArgs.size    = Convert.ToInt32(msgArgsAry[2]);
                     break;
                 case 4:
-                    msgArgs.subject = args[0];
-                    msgArgs.sid     = Convert.ToInt64(args[1]);
-                    msgArgs.reply   = args[2];
-                    msgArgs.size    = Convert.ToInt32(args[3]);
+                    msgArgs.subject = msgArgsAry[0];
+                    msgArgs.sid     = Convert.ToInt64(msgArgsAry[1]);
+                    msgArgs.reply   = msgArgsAry[2];
+                    msgArgs.size    = Convert.ToInt32(msgArgsAry[3]);
                     break;
                 default:
                     throw new NATSException("Unable to parse message arguments: " + s);
