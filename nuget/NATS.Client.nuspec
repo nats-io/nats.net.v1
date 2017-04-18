@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
     <metadata>
         <id>NATS.Client</id>
-        <version>0.7.0</version>
+        <version>0.7.1</version>
         <title>NATS .NET Client</title>
         <authors>Apcera,Inc.</authors>
         <owners>Apcera,Inc.</owners>
@@ -11,8 +11,8 @@
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
         <description>NATS acts as a central nervous system for distributed systems at scale, such as mobile devices, IoT networks, and cloud native infrastructure.  This is the .NET client API.</description>
         <summary>NATS .NET Client</summary>
-        <releaseNotes>.NET Core 1.0 support, shared subscriber delivery tasks to support large numbers of asynchronous subscribers, bug fixes.</releaseNotes>
-        <copyright>Copyright 2016 Apcera, Inc.</copyright>
+        <releaseNotes>Performance improvements, bug fixes.</releaseNotes>
+        <copyright>Copyright 2017 Apcera, Inc.</copyright>
         <language />
         <tags>Apcera NATS Messaging Cloud Publish Subscribe PubSub</tags>
         <frameworkAssemblies>
