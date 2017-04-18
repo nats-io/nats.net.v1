@@ -1,8 +1,4 @@
-﻿// Copyright 2015 Apcera Inc. All rights reserved.
-
-using System;
-using System.Threading;
-using System.Threading.Tasks;
+﻿// Copyright 2015-2017 Apcera Inc. All rights reserved.
 
 // disable XM comment warnings
 #pragma warning disable 1591
@@ -70,7 +66,11 @@ namespace NATS.Client
 
             if (msg != null)
             {
-                long d = tallyDeliveredMessage(msg);
+                long d;
+                lock (mu)
+                {
+                    d = tallyDeliveredMessage(msg);
+                }
                 if (d == max)
                 {
                     // Remove subscription if we have reached max.
