@@ -1,7 +1,6 @@
-﻿// Copyright 2015 Apcera Inc. All rights reserved.
+﻿// Copyright 2015-2017 Apcera Inc. All rights reserved.
 
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 
 // disable XML comment warnings

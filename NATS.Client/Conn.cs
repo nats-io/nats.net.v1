@@ -1482,7 +1482,7 @@ namespace NATS.Client
             }
 
             // This is the copy operation for msg arg strings.
-            return new String(convertToStrBuf, 0, (int)length);
+            return new string(convertToStrBuf, 0, (int)length);
         }
 
         // Since we know we don't need to decode the protocol string,
@@ -1504,8 +1504,9 @@ namespace NATS.Client
 
         // Use a homegrown method to split strings, for performance.
         // While efficient, string.Split will compile a regex pattern
-        // every call.
-        private static int splitMsgArgs(string value, ref string[] ary)
+        // every call.  This call sets up the msgArgsAry string array.
+        string[] msgArgsAry = new string[4];
+        private int setMsgArgsAry(string value)
         {
             int count = 0;
             int si = 0;
@@ -1515,13 +1516,13 @@ namespace NATS.Client
             {
                 if (value[i] == ' ')
                 {
-                    ary[count] = value.Substring(si, i - si);
+                    msgArgsAry[count] = value.Substring(si, i - si);
                     count++;
                     si = i + 1;
                 }
             }
 
-            ary[count] = value.Substring(si, value.Length - si);
+            msgArgsAry[count] = value.Substring(si, value.Length - si);
             count++;
 
             return count;
@@ -1532,11 +1533,10 @@ namespace NATS.Client
         // place to hold them, until we create the message.
         //
         // These strings, once created, are never copied.
-        string[] msgArgsAry = new string[4];
         internal void processMsgArgs(byte[] buffer, long length)
         {
             string s = convertToString(buffer, length);
-            int argCount = splitMsgArgs(s, ref msgArgsAry);
+            int argCount = setMsgArgsAry(s);
 
             switch (argCount)
             {
