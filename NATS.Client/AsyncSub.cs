@@ -66,7 +66,10 @@ namespace NATS.Client
                 if (d == max)
                 {
                     unsubscribe(false);
-                    conn = null;
+                    lock (mu)
+                    {
+                        conn = null;
+                    }
                 }
             }
 
