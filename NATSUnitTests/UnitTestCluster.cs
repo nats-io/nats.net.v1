@@ -171,6 +171,47 @@ namespace NATSUnitTests
             }
         }
 
+        [Fact]
+        public void TestServerDiscoveredHandler()
+        {
+            IConnection c = null;
+            ConnectionFactory cf = new ConnectionFactory();
+            Options o = utils.DefaultTestOptions;
+
+            o.NoRandomize = true;
+            o.Servers = testServers;
+
+            bool serverDiscoveredCalled = false;
+            o.ServerDiscoveredEventHandler += (sender, e) =>
+            {
+                serverDiscoveredCalled = true;
+            };
+
+            string seedServerArgs = @"-p 1222 -cluster nats://localhost:1333";
+            string secondClusterMemberArgs = @"-p 1223 -cluster nats://localhost:1334 -routes nats://localhost:1333";
+
+            // create the seed server for a cluster...
+            using (NATSServer ns1 = utils.CreateServerWithArgs(seedServerArgs))
+            {
+                // ...then connect to it...
+                using (c = cf.CreateConnection(o))
+                {
+                    Assert.True(testServers[0].Equals(c.ConnectedUrl));
+
+                    // ...then while connected, start up a second server...
+                    using (NATSServer ns2 = utils.CreateServerWithArgs(secondClusterMemberArgs))
+                    {
+                        // ...waiting 5 seconds for the second server to start...
+                        Thread.Sleep(5000);
+
+                        // ...and by then we should have received notification of
+                        // its awakening.
+                        Assert.True(serverDiscoveredCalled);
+                    }
+                }
+            }
+        }
+
         private class SimClient
         {
             IConnection c;

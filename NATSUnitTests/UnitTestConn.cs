@@ -159,6 +159,27 @@ namespace NATSUnitTests
             }
         }
 
+        [Fact]
+        public void TestServerDiscoveredHandlerNotCalledOnConnect()
+        {
+            using (new NATSServer())
+            {
+                Options o = utils.DefaultTestOptions;
+
+                bool serverDiscoveredCalled = false;
+
+                o.ServerDiscoveredEventHandler += (sender, e) =>
+                {
+                    serverDiscoveredCalled = true;
+                };
+
+                IConnection c = new ConnectionFactory().CreateConnection(o);
+                c.Close();
+
+                Assert.False(serverDiscoveredCalled);
+            }
+        }
+
         //[Fact]
         // This test works locally, but fails in AppVeyor some of the time
         // TODO:  Work to identify why this happens...

@@ -975,6 +975,7 @@ namespace NATS.Client
 
         // processExpectedInfo will look for the expected first INFO message
         // sent when a connection is established. The lock should be held entering.
+        // Caller must lock.
         private void processExpectedInfo()
         {
             Control c;
@@ -999,7 +1000,8 @@ namespace NATS.Client
                 throw new NATSConnectionException("Protocol exception, INFO not received");
             }
 
-            processInfo(c.args);
+            // do not notify listeners of server changes when we process the first INFO message
+            processInfo(c.args, false);
             checkForSecure();
         }
 
@@ -1751,7 +1753,8 @@ namespace NATS.Client
 
         // processInfo is used to parse the info messages sent
         // from the server.
-        internal void processInfo(string json)
+        // Caller must lock.
+        internal void processInfo(string json, bool notifyOnServerAddition)
         {
             if (json == null || IC._EMPTY_.Equals(json))
             {
@@ -1771,7 +1774,12 @@ namespace NATS.Client
                     servers = (string[])info.connectURLs.Clone();
                     ServerPool.shuffle<string>(servers);
                 }
-                srvPool.Add(servers, true);
+
+                var serverAdded = srvPool.Add(servers, true);
+                if (notifyOnServerAddition && serverAdded)
+                {
+                    scheduleConnEvent(opts.ServerDiscoveredEventHandler);
+                }
             }
         }
 
@@ -1779,7 +1787,7 @@ namespace NATS.Client
         {
             lock (mu)
             {
-                processInfo(Encoding.UTF8.GetString(jsonBytes, 0, length));
+                processInfo(Encoding.UTF8.GetString(jsonBytes, 0, length), true);
             }
         }
 
