@@ -53,8 +53,6 @@ namespace NATS.Client
         // .NET 4.0.
         readonly internal object mu = new Object(); 
 
-        private Random r = null;
-
         Options opts = new Options();
 
         // returns the options used to create this connection.
@@ -2099,14 +2097,7 @@ namespace NATS.Client
 
         public string NewInbox()
         {
-            if (r == null)
-                r = new Random();
-
-            byte[] buf = new byte[13];
-
-            r.NextBytes(buf);
-
-            return IC.inboxPrefix + BitConverter.ToString(buf).Replace("-","");
+            return IC.inboxPrefix + Guid.NewGuid().ToString("N").ToUpperInvariant();
         }
 
         internal void sendSubscriptionMessage(AsyncSubscription s)
