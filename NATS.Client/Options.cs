@@ -35,6 +35,12 @@ namespace NATS.Client
         public EventHandler<ConnEventArgs> ClosedEventHandler = null;
 
         /// <summary>
+        /// Represents the method that will handle an event raised
+        /// whenever a new server has joined the cluster.
+        /// </summary>
+        public EventHandler<ConnEventArgs> ServerDiscoveredEventHandler = null;
+
+        /// <summary>
         /// Represents the method that will handle an event raised 
         /// when a connection has been disconnected from a server.
         /// </summary>
@@ -71,6 +77,7 @@ namespace NATS.Client
             allowReconnect = o.allowReconnect;
             AsyncErrorEventHandler = o.AsyncErrorEventHandler;
             ClosedEventHandler = o.ClosedEventHandler;
+            ServerDiscoveredEventHandler = o.ServerDiscoveredEventHandler;
             DisconnectedEventHandler = o.DisconnectedEventHandler;
             maxPingsOut = o.maxPingsOut;
             maxReconnect = o.maxReconnect;

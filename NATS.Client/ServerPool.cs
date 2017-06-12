@@ -189,33 +189,42 @@ namespace NATS.Client
             return rv.ToArray();
         }
 
-        private void add(string s, bool isImplicit)
+        // returns true if it modified the pool, false if
+        // the url already exists.
+        private bool add(string s, bool isImplicit)
         {
-            add(new Srv(s, isImplicit));
+            return add(new Srv(s, isImplicit));
         }
 
         // returns true if it modified the pool, false if
         // the url already exists.
-        private void add(Srv s)
+        private bool add(Srv s)
         {
             lock (poolLock)
             {
                 if (sList.Contains(s, duplicateSrvCheck))
-                    return;
+                    return false;
 
                 sList.AddLast(s);
+
+                return true;
             }
         }
 
-        internal void Add(string[] urls, bool isImplicit)
+        // returns true if any of the urls were added to the pool,
+        // false if they all already existed
+        internal bool Add(string[] urls, bool isImplicit)
         {
             if (urls == null)
-                return;
+                return false;
 
+            bool didAdd = false;
             foreach (string s in urls)
             {
-                add(s, isImplicit);
+                didAdd |= add(s, isImplicit);
             }
+
+            return didAdd;
         }
 
         // Convenience method to shuffle a list.  The list passed

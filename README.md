@@ -427,6 +427,12 @@ Other events can be assigned delegate methods through the options object.
                 Console.WriteLine("   Subject: " + args.Subscription.Subject);
             };
 
+            opts.ServerDiscoveredEventHandler += (sender, args) =>
+            {
+                Console.WriteLine("A new server has joined the cluster:");
+                Console.WriteLine("    " + String.Join(", ", args.Conn.DiscoveredServers));
+            };
+
             opts.ClosedEventHandler += (sender, args) =>
             {
                 Console.WriteLine("Connection Closed: ");
