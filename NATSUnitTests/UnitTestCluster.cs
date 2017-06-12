@@ -201,8 +201,15 @@ namespace NATSUnitTests
                     // ...then while connected, start up a second server...
                     using (NATSServer ns2 = utils.CreateServerWithArgs(secondClusterMemberArgs))
                     {
-                        // ...waiting 5 seconds for the second server to start...
-                        Thread.Sleep(5000);
+                        // ...waiting up to 30 seconds for the second server to start...
+                        for (int ii = 0; ii < 6; ii++)
+                        {
+                            Thread.Sleep(5000);
+
+                            // ...taking an early out if we detected the startup...
+                            if (serverDiscoveredCalled)
+                                break;
+                        }
 
                         // ...and by then we should have received notification of
                         // its awakening.
