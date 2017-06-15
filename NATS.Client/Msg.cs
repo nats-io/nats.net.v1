@@ -12,6 +12,7 @@ namespace NATS.Client
     /// </summary>
     public sealed class Msg
     {
+        private static readonly byte[] Empty = new byte[0];
         private string subject;
         private string reply;
         private byte[] data;
@@ -79,8 +80,13 @@ namespace NATS.Client
             sub     = s;
 
             // make a deep copy of the bytes for this message.
-            data = new byte[length];
-            Array.Copy(payload, data, (int)length);
+            if (length > 0)
+            {
+                data = new byte[length];
+                Array.Copy(payload, 0, data, 0, (int)length);
+            }
+            else
+                data = Empty;
         }
 
         /// <summary>
@@ -123,11 +129,11 @@ namespace NATS.Client
 
                 int len = value.Length;
                 if (len == 0)
-                    this.data = null;
+                    this.data = Empty;
                 else
                 {
                     this.data = new byte[len];
-                    Array.Copy(value, data, len);
+                    Array.Copy(value, 0, data, 0, len);
                 }
             }
         }
