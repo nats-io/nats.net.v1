@@ -88,7 +88,7 @@ namespace NATS.Client
         private ConcurrentDictionary<Int64, Subscription> subs = 
             new ConcurrentDictionary<Int64, Subscription>();
         
-        private Queue<Channel<bool>> pongs = new Queue<Channel<bool>>();
+        private Queue<SingleUseChannel<bool>> pongs = new Queue<SingleUseChannel<bool>>();
 
         internal MsgArg   msgArgs = new MsgArg();
 
@@ -128,7 +128,7 @@ namespace NATS.Client
         // likely be easier to port to .NET core.
         private class CallbackScheduler : IDisposable
         {
-            Channel<Task> tasks            = new Channel<Task>();
+            Channel<Task> tasks            = new Channel<Task>() { Name = "Tasks" };
             Task          executorTask     = null;
             object        runningLock      = new object();
             bool          schedulerRunning = false;
@@ -518,6 +518,8 @@ namespace NATS.Client
                 {
                     connection = c;
 
+                    channel.Name = "SubChannelProcessor " + this.GetHashCode();
+
                     channelTask = new Task(() => {
                         connection.deliverMsgs(channel);
                     }, TaskCreationOptions.LongRunning);
@@ -874,9 +876,9 @@ namespace NATS.Client
             }
         }
 
-        private Queue<Channel<bool>> createPongs()
+        private Queue<SingleUseChannel<bool>> createPongs()
         {
-            return new Queue<Channel<bool>>();
+            return new Queue<SingleUseChannel<bool>>();
         }
 
         // Process a connected connection and initialize properly.
@@ -1436,18 +1438,16 @@ namespace NATS.Client
         // It is used to deliver messages to asynchronous subscribers.
         internal void deliverMsgs(Channel<Msg> ch)
         {
-            Msg m;
+            // dispatch buffer
+            Msg[] mm = new Msg[64];
 
             while (true)
             {
-                lock (mu)
-                {
-                    if (isClosed())
-                        return;
-                }
- 
-                m = ch.get(-1);
-                if (m == null)
+                if (isClosed())
+                    return;
+
+                int delivered = ch.get(-1, mm);
+                if (delivered == 0)
                 {
                     // the channel has been closed, exit silently.
                     return;
@@ -1455,9 +1455,11 @@ namespace NATS.Client
 
                 // Note, this seems odd message having the sub process itself, 
                 // but this is good for performance.
-                if (!m.sub.processMsg(m))
+                for (int ii = 0; ii < delivered; ++ii)
                 {
-                    lock (mu)
+                    Msg m = mm[ii];
+                    mm[ii] = null; // do not hold onto the Msg any longer than we need to
+                    if (!m.sub.processMsg(m))
                     {
                         removeSub(m.sub);
                     }
@@ -1729,18 +1731,18 @@ namespace NATS.Client
         // messages. We use pings for the flush mechanism as well.
         internal void processPong()
         {
-            Channel<bool> ch = null;
+            SingleUseChannel<bool> ch = null;
             lock (mu)
             {
                 if (pongs.Count > 0)
                     ch = pongs.Dequeue();
 
                 pout = 0;
+            }
 
-                if (ch != null)
-                {
-                    ch.add(true);
-                }
+            if (ch != null)
+            {
+                ch.add(true);
             }
         }
 
@@ -2300,21 +2302,22 @@ namespace NATS.Client
         // removeFlushEntry is needed when we need to discard queued up responses
         // for our pings as part of a flush call. This happens when we have a flush
         // call outstanding and we call close.
-        private bool removeFlushEntry(Channel<bool> chan)
+        private bool removeFlushEntry(SingleUseChannel<bool> chan)
         {
             if (pongs == null)
                 return false;
 
             if (pongs.Count == 0)
                 return false;
-            
-            Channel<bool> start = pongs.Dequeue();
-            Channel<bool> c = start;
+
+            SingleUseChannel<bool> start = pongs.Dequeue();
+            SingleUseChannel<bool> c = start;
 
             while (true)
             {
                 if (c == chan)
                 {
+                    SingleUseChannel<bool>.Return(c);
                     return true;
                 }
                 else
@@ -2332,7 +2335,7 @@ namespace NATS.Client
         }
 
         // The caller must lock this method.
-        private void sendPing(Channel<bool> ch)
+        private void sendPing(SingleUseChannel<bool> ch)
         {
             if (ch != null)
                 pongs.Enqueue(ch);
@@ -2341,7 +2344,7 @@ namespace NATS.Client
             bw.Flush();
         }
 
-        private void saveFlushException(Channel<bool> ch, Exception e)
+        private void saveFlushException(Exception e)
         {
             if (lastEx != null && !(lastEx is NATSSlowConsumerException))
                 lastEx = e;
@@ -2356,7 +2359,7 @@ namespace NATS.Client
                     "timeout");
             }
 
-            Channel<bool> ch = new Channel<bool>(1);
+            SingleUseChannel<bool> ch = SingleUseChannel<bool>.GetOrCreate();
 
             try
             {
@@ -2373,6 +2376,8 @@ namespace NATS.Client
                 {
                     throw new NATSConnectionClosedException();
                 }
+
+                SingleUseChannel<bool>.Return(ch);
             }
             catch (Exception e)
             {
@@ -2383,14 +2388,14 @@ namespace NATS.Client
                 // exception.
                 if (e is NATSTimeoutException || e is NATSConnectionClosedException)
                 {
-                    saveFlushException(ch, e);
+                    saveFlushException(e);
                     throw;
                 }
                 else
                 {
                     // wrap other system exceptions
                     var ex = new NATSException("Flush error.", e);
-                    saveFlushException(ch, ex);
+                    saveFlushException(ex);
                     throw ex;
                 }
             }
@@ -2426,7 +2431,7 @@ namespace NATS.Client
         {
 
             // Clear any queued pongs, e.g. pending flush calls.
-            foreach (Channel<bool> ch in pongs)
+            foreach (SingleUseChannel<bool> ch in pongs)
             {
                 if (ch != null)
                     ch.add(true);
