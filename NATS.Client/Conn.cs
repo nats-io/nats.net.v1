@@ -53,7 +53,7 @@ namespace NATS.Client
         // .NET 4.0.
         readonly internal object mu = new Object();
 
-		private Random r = null;
+        private Random r = null;
 
         Options opts = new Options();
 
@@ -2099,14 +2099,14 @@ namespace NATS.Client
 
         public string NewInbox()
         {
-			if (r == null)
-				r = new Random(Guid.NewGuid().GetHashCode());
+            if (r == null)
+                r = new Random(Guid.NewGuid().GetHashCode());
 
-			byte[] buf = new byte[13];
+            byte[] buf = new byte[13];
 
-			r.NextBytes(buf);
+            r.NextBytes(buf);
 
-			return IC.inboxPrefix + BitConverter.ToString(buf).Replace("-", "");
+            return IC.inboxPrefix + BitConverter.ToString(buf).Replace("-", "");
         }
 
         internal void sendSubscriptionMessage(AsyncSubscription s)
