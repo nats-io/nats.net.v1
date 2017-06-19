@@ -650,6 +650,39 @@ namespace NATS.Client
             Buffer.BlockCopy(PUB_P_BYTES, 0, pubProtoBuf, 0, PUB_P_BYTES_LEN);
         }
 
+        // Ensures that pubProtoBuf is appropriately sized for the given
+        // subject and reply.
+        // Caller must lock.
+        private void ensurePublishProtocolBuffer(string subject, string reply)
+        {
+            // Publish protocol buffer sizing:
+            //
+            // PUB_P_BYTES_LEN (includes trailing space)
+            //  + SUBJECT field length
+            //  + SIZE field maximum + 1 (= log(2147483647) + 1 = 11)
+            //  + (optional) REPLY field length + 1
+
+            int pubProtoBufSize = PUB_P_BYTES_LEN
+                                + (1 + subject.Length)
+                                + (11)
+                                + (reply != null ? reply.Length + 1 : 0);
+
+            // only resize if we're increasing the buffer...
+            if (pubProtoBufSize > pubProtoBuf.Length)
+            {
+                // ...and when we increase it up to the next power of 2.
+                pubProtoBufSize--;
+                pubProtoBufSize |= pubProtoBufSize >> 1;
+                pubProtoBufSize |= pubProtoBufSize >> 2;
+                pubProtoBufSize |= pubProtoBufSize >> 4;
+                pubProtoBufSize |= pubProtoBufSize >> 8;
+                pubProtoBufSize |= pubProtoBufSize >> 16;
+                pubProtoBufSize++;
+
+                buildPublishProtocolBuffer(pubProtoBufSize);
+            }
+        }
+
         // Will assign the correct server to the Conn.Url
         private void pickServer()
         {
@@ -1910,25 +1943,10 @@ namespace NATS.Client
                 if (lastEx != null)
                     throw lastEx;
 
-                int pubProtoLen;
+                ensurePublishProtocolBuffer(subject, reply);
+
                 // write our pubProtoBuf buffer to the buffered writer.
-                try
-                {
-                    pubProtoLen = writePublishProto(pubProtoBuf, subject,
-                        reply, msgSize);
-                }
-                catch (IndexOutOfRangeException)
-                {
-                    // We can get here if we have very large subjects.
-                    // Expand with some room to spare.
-                    int resizeAmount = Defaults.scratchSize + subject.Length
-                        + (reply != null ? reply.Length : 0);
-
-                    buildPublishProtocolBuffer(resizeAmount);
-
-                    pubProtoLen = writePublishProto(pubProtoBuf, subject,
-                        reply, msgSize);
-                }
+                int pubProtoLen = writePublishProto(pubProtoBuf, subject, reply, msgSize);
 
                 bw.Write(pubProtoBuf, 0, pubProtoLen);
 
