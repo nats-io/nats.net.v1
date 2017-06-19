@@ -51,7 +51,7 @@ namespace NATS.Client
 
         // NOTE: We aren't using Mutex here to support enterprises using
         // .NET 4.0.
-        readonly internal object mu = new Object(); 
+        readonly internal object mu = new Object();
 
         private Random r = null;
 
@@ -2108,13 +2108,13 @@ namespace NATS.Client
         public string NewInbox()
         {
             if (r == null)
-                r = new Random();
+                r = new Random(Guid.NewGuid().GetHashCode());
 
             byte[] buf = new byte[13];
 
             r.NextBytes(buf);
 
-            return IC.inboxPrefix + BitConverter.ToString(buf).Replace("-","");
+            return IC.inboxPrefix + BitConverter.ToString(buf).Replace("-", "");
         }
 
         internal void sendSubscriptionMessage(AsyncSubscription s)

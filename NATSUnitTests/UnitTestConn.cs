@@ -434,6 +434,24 @@ namespace NATSUnitTests
             }
         }
 
+        [Fact]
+        public void TestGenerateUniqueInboxNames()
+        {
+            using (new NATSServer())
+            {
+                string lastInboxName = null;
+
+                for (var i = 0; i < 1000; i++)
+                {
+                    IConnection c = utils.DefaultTestConnection;
+                    var inboxName = c.NewInbox();
+                    c.Close();
+                    Assert.NotEqual(inboxName, lastInboxName);
+                    lastInboxName = inboxName;
+                }
+            }
+        }
+
         /// NOT IMPLEMENTED:
         /// TestServerSecureConnections
         /// TestErrOnConnectAndDeadlock
