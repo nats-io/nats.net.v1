@@ -1690,29 +1690,32 @@ namespace NATS.Client
             return offset;
         }
 
-        #endregion 
+        #endregion
 
-        // Use a homegrown method to split strings, for performance.
-        // While efficient, string.Split will compile a regex pattern
-        // every call.  This call sets up the msgArgsAry string array.
-        string[] msgArgsAry = new string[4];
-        private int setMsgArgsAry(string value)
+        // Finds the ends of each token in the argument buffer.
+        private int[] argEnds = new int[4];
+        private int setMsgArgsAryOffsets(byte[] buffer, long length)
         {
+            if (convertToStrBuf.Length < length)
+            {
+                convertToStrBuf = new char[length];
+            }
+
             int count = 0;
-            int si = 0;
+            int i = 0;
 
             // We only support 4 elements in this protocol version
-            for (int i = 0; i < value.Length && count < 4; i++)
+            for ( ; i < length && count < 4; i++)
             {
-                if (value[i] == ' ')
+                convertToStrBuf[i] = (char)buffer[i];
+                if (buffer[i] == ' ')
                 {
-                    msgArgsAry[count] = value.Substring(si, i - si);
+                    argEnds[count] = i;
                     count++;
-                    si = i + 1;
                 }
             }
 
-            msgArgsAry[count] = value.Substring(si, value.Length - si);
+            argEnds[count] = i;
             count++;
 
             return count;
@@ -1725,35 +1728,88 @@ namespace NATS.Client
         // These strings, once created, are never copied.
         internal void processMsgArgs(byte[] buffer, long length)
         {
-            string s = convertToString(buffer, length);
-            int argCount = setMsgArgsAry(s);
+            int argCount = setMsgArgsAryOffsets(buffer, length);
 
             switch (argCount)
             {
                 case 3:
-                    msgArgs.subject = msgArgsAry[0];
-                    msgArgs.sid     = Convert.ToInt64(msgArgsAry[1]);
+                    msgArgs.subject = new string(convertToStrBuf, 0, argEnds[0]);
+                    msgArgs.sid     = ToInt64(buffer, argEnds[0] + 1, argEnds[1]);
                     msgArgs.reply   = null;
-                    msgArgs.size    = Convert.ToInt32(msgArgsAry[2]);
+                    msgArgs.size    = (int)ToInt64(buffer, argEnds[1] + 1, argEnds[2]);
                     break;
                 case 4:
-                    msgArgs.subject = msgArgsAry[0];
-                    msgArgs.sid     = Convert.ToInt64(msgArgsAry[1]);
-                    msgArgs.reply   = msgArgsAry[2];
-                    msgArgs.size    = Convert.ToInt32(msgArgsAry[3]);
+                    msgArgs.subject = new string(convertToStrBuf, 0, argEnds[0]);
+                    msgArgs.sid     = ToInt64(buffer, argEnds[0] + 1, argEnds[1]);
+                    msgArgs.reply   = new string(convertToStrBuf, argEnds[1] + 1, argEnds[2] - argEnds[1] - 1);
+                    msgArgs.size    = (int)ToInt64(buffer, argEnds[2] + 1, argEnds[3]);
                     break;
                 default:
-                    throw new NATSException("Unable to parse message arguments: " + s);
+                    throw new NATSException("Unable to parse message arguments: " + Encoding.UTF8.GetString(buffer, 0, (int)length));
             }
 
             if (msgArgs.size < 0)
             {
-                throw new NATSException("Invalid Message - Bad or Missing Size: " + s);
+                throw new NATSException("Invalid Message - Bad or Missing Size: " + Encoding.UTF8.GetString(buffer, 0, (int)length));
             }
             if (msgArgs.sid < 0)
             {
-                throw new NATSException("Invalid Message - Bad or Missing Sid: " + s);
+                throw new NATSException("Invalid Message - Bad or Missing Sid: " + Encoding.UTF8.GetString(buffer, 0, (int)length));
             }
+        }
+
+        // A simple ToInt64.
+        // Assumes: positive integers.
+        static long ToInt64(byte[] buffer, int start, int end)
+        {
+            int length = end - start;
+            switch (length)
+            {
+                case 0:
+                    return 0;
+                case 1:
+                    return buffer[start] - '0';
+                case 2:
+                    return 10 * (buffer[start] - '0') 
+                         + (buffer[start + 1] - '0');
+                case 3:
+                    return 100 * (buffer[start] - '0')
+                         + 10 * (buffer[start + 1] - '0')
+                         + (buffer[start + 2] - '0');
+                case 4:
+                    return 1000 * (buffer[start] - '0')
+                         + 100 * (buffer[start + 1] - '0')
+                         + 10 * (buffer[start + 2] - '0')
+                         + (buffer[start + 3] - '0');
+                case 5:
+                    return 10000 * (buffer[start] - '0')
+                         + 1000 * (buffer[start + 1] - '0')
+                         + 100 * (buffer[start + 2] - '0')
+                         + 10 * (buffer[start + 3] - '0')
+                         + (buffer[start + 4] - '0');
+                case 6:
+                    return 100000 * (buffer[start] - '0')
+                         + 10000 * (buffer[start + 1] - '0')
+                         + 1000 * (buffer[start + 2] - '0')
+                         + 100 * (buffer[start + 3] - '0')
+                         + 10 * (buffer[start + 4] - '0')
+                         + (buffer[start + 5] - '0');
+                default:
+                    if (length < 0)
+                        throw new ArgumentOutOfRangeException(nameof(end));
+                    break;
+            }
+
+            long value = 0L;
+
+            int i = start;
+            while (i < end)
+            {
+                value *= 10L;
+                value += (buffer[i++] - '0');
+            }
+
+            return value;
         }
 
 
