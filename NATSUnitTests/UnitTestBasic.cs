@@ -68,6 +68,16 @@ namespace NATSUnitTests
         }
 
         [Fact]
+        public void TestBadOptionSubscriptionBatchSize()
+        {
+            Options opts = utils.DefaultTestOptions;
+
+            Assert.ThrowsAny<ArgumentException>(() => opts.SubscriptionBatchSize = -1);
+
+            Assert.ThrowsAny<ArgumentException>(() => opts.SubscriptionBatchSize = 0);
+        }
+
+        [Fact]
         public void TestSimplePublish()
         {
             using (new NATSServer())

@@ -63,6 +63,9 @@ namespace NATS.Client
         internal int subChanLen = 65536;
         internal int subscriberDeliveryTaskCount = 0;
 
+        // Must be greater than 0.
+        internal int subscriptionBatchSize = 64;
+
         internal string user;
         internal string password;
         internal string token;
@@ -98,6 +101,7 @@ namespace NATS.Client
             token = o.token;
             verbose = o.verbose;
             subscriberDeliveryTaskCount = o.subscriberDeliveryTaskCount;
+            subscriptionBatchSize = o.subscriptionBatchSize;
             
             if (o.servers != null)
             {
@@ -370,6 +374,30 @@ namespace NATS.Client
                     throw new ArgumentOutOfRangeException("SubscriberDeliveryTaskCount must be 0 or greater.");
                 }
                 subscriberDeliveryTaskCount = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the batch size for calling subscription handlers.
+        /// </summary>
+        /// <remarks>
+        /// When delivering messages to the subscriber, the batch size determines
+        /// how many messages could be retrieved from the internal subscription
+        /// queue at one time. This can allow higher performance from a single
+        /// subscriber by avoiding the locking overhead of one-at-a-time
+        /// retrieval from the queue.
+        /// </remarks>
+        public int SubscriptionBatchSize
+        {
+            get { return subscriptionBatchSize; }
+            set
+            {
+                if (value <= 0)
+                {
+                    throw new ArgumentOutOfRangeException("value", "Subscription batch size must be greater than 0");
+                }
+
+                subscriptionBatchSize = value;
             }
         }
 

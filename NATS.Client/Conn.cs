@@ -1438,8 +1438,14 @@ namespace NATS.Client
         // It is used to deliver messages to asynchronous subscribers.
         internal void deliverMsgs(Channel<Msg> ch)
         {
+            int batchSize;
+            lock (mu)
+            {
+                batchSize = opts.subscriptionBatchSize;
+            }
+
             // dispatch buffer
-            Msg[] mm = new Msg[64];
+            Msg[] mm = new Msg[batchSize];
 
             while (true)
             {
