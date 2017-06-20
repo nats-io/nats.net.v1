@@ -19,6 +19,7 @@ namespace NATS.Client
         string name = null;
         bool verbose = false;
         bool pedantic = false;
+        bool useOldRequestStyle = false;
         bool secure = false;
         bool allowReconnect = true;
         int maxReconnect  = Defaults.MaxReconnect;
@@ -92,6 +93,7 @@ namespace NATS.Client
 
             noRandomize = o.noRandomize;
             pedantic = o.pedantic;
+            useOldRequestStyle = o.useOldRequestStyle;
             pingInterval = o.pingInterval;
             ReconnectedEventHandler = o.ReconnectedEventHandler;
             reconnectWait = o.reconnectWait;
@@ -191,6 +193,23 @@ namespace NATS.Client
         {
             get { return pedantic; }
             set { pedantic = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether or not the old
+        /// request pattern should be used.
+        /// </summary>
+        /// <remarks>
+        /// The old request pattern involved a separate subscription
+        /// per request inbox. The new style (default) involves creating
+        /// a single inbox subscription per connection, upon the first
+        /// request, and mapping outbound requests over that one
+        /// subscription.
+        /// </remarks>
+        public bool UseOldRequestStyle
+        {
+            get { return useOldRequestStyle; }
+            set { useOldRequestStyle = value; }
         }
 
         /// <summary>
@@ -430,6 +449,7 @@ namespace NATS.Client
             sb.AppendFormat("Name={0};", Name == null ? Name : "null");
             sb.AppendFormat("NoRandomize={0};", NoRandomize);
             sb.AppendFormat("Pendantic={0};", Pedantic);
+            sb.AppendFormat("UseOldRequestStyle={0}", UseOldRequestStyle);
             sb.AppendFormat("PingInterval={0};", PingInterval);
             sb.AppendFormat("ReconnectWait={0};", ReconnectWait);
             sb.AppendFormat("Secure={0};", Secure);

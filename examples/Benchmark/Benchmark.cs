@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 using NATS.Client;
 using System.Diagnostics;
@@ -18,13 +19,15 @@ namespace Benchmark
         long count = DEFAULT_COUNT;
         long payloadSize = 0;
         string subject = "s";
+        bool useOldRequestStyle = true;
 
         enum BenchType
         {
             PUB = 0,
             PUBSUB,
             REQREPLY,
-            SUITE
+            SUITE,
+            REQREPLYASYNC,
         };
 
         void setBenchType(string value)
@@ -39,6 +42,9 @@ namespace Benchmark
                     break;
                 case "REQREP":
                     btype = BenchType.REQREPLY;
+                    break;
+                case "REQREPASYNC":
+                    btype = BenchType.REQREPLYASYNC;
                     break;
                 case "SUITE":
                     btype = BenchType.SUITE;
@@ -96,6 +102,7 @@ namespace Benchmark
                 url = getValue(strArgs, "-url", "nats://localhost:4222");
                 count = Convert.ToInt64(getValue(strArgs, "-count", "10000"));
                 payloadSize = Convert.ToInt64(getValue(strArgs, "-size", "0"));
+                useOldRequestStyle = Convert.ToBoolean(getValue(strArgs, "-old", "false"));
 
                 Console.WriteLine("Running NATS Custom benchmark:");
                 Console.WriteLine("    URL:   " + url);
@@ -117,7 +124,7 @@ namespace Benchmark
         {
             int msgRate = (int)(testCount / sw.Elapsed.TotalSeconds);
 
-            System.Console.WriteLine(
+            Console.WriteLine(
                 "{0}\t{1,10}\t{2,10} msgs/s\t{3,8} kb/s",
                 testPrefix, testCount, msgRate, (msgRate*msgSize)/1024);
         }
@@ -171,7 +178,8 @@ namespace Benchmark
             
             o.Url = url;
             o.SubChannelLength = 10000000;
-            o.AsyncErrorEventHandler += (sender, obj) => {
+            o.AsyncErrorEventHandler += (sender, obj) =>
+            {
                 System.Console.WriteLine("Error: " + obj.Error);
             };
 
@@ -306,16 +314,19 @@ namespace Benchmark
 
         void runReqReply(string testName, long testCount, long testSize)
         {
-            Object pubSubLock = new Object();
-
             byte[] payload = generatePayload(testSize);
 
             ConnectionFactory cf = new ConnectionFactory();
 
-            IConnection subConn = cf.CreateConnection(url);
-            IConnection pubConn = cf.CreateConnection(url);
+            var opts = ConnectionFactory.GetDefaultOptions();
+            opts.Url = url;
+            opts.UseOldRequestStyle = useOldRequestStyle;
 
-            Thread t = new Thread(() => {
+            IConnection subConn = cf.CreateConnection(opts);
+            IConnection pubConn = cf.CreateConnection(opts);
+
+            Thread t = new Thread(() =>
+            {
                 ISyncSubscription s = subConn.SubscribeSync(subject);
                 for (int i = 0; i < testCount; i++)
                 {
@@ -328,13 +339,51 @@ namespace Benchmark
 
             Thread.Sleep(1000);
 
-            Stopwatch sw = sw = Stopwatch.StartNew();
-
+            var sw = Stopwatch.StartNew();
             for (int i = 0; i < testCount; i++)
             {
                 pubConn.Request(subject, payload);
             }
+            sw.Stop();
 
+            PrintResults(testName, sw, testCount, testSize);
+
+            pubConn.Close();
+            subConn.Close();
+        }
+
+        async Task runReqReplyAsync(string testName, long testCount, long testSize)
+        {
+            byte[] payload = generatePayload(testSize);
+
+            ConnectionFactory cf = new ConnectionFactory();
+
+            var opts = ConnectionFactory.GetDefaultOptions();
+            opts.Url = url;
+            opts.UseOldRequestStyle = useOldRequestStyle;
+
+            IConnection subConn = cf.CreateConnection(opts);
+            IConnection pubConn = cf.CreateConnection(opts);
+
+            Thread t = new Thread(() =>
+            {
+                ISyncSubscription s = subConn.SubscribeSync(subject);
+            for (int i = 0; i < testCount; i++)
+            {
+                    Msg m = s.NextMessage();
+                    subConn.Publish(m.Reply, payload);
+                    subConn.Flush();
+            }
+            });
+            t.Start();
+
+            Thread.Sleep(1000);
+
+            var sw = Stopwatch.StartNew();
+            for (int i = 0; i < testCount; i++)
+            {
+                await pubConn.RequestAsync(subject, payload).ConfigureAwait(false);
+            }
             sw.Stop();
 
             PrintResults(testName, sw, testCount, testSize);
@@ -374,6 +423,15 @@ namespace Benchmark
             runReqReply("ReqRepl4k", 5000, 1024 * 4);
             runReqReply("ReqRepl8k", 5000, 1024 * 8);
 
+            runReqReplyAsync("ReqReplAsyncNo", 20000, 0).Wait();
+            runReqReplyAsync("ReqReplAsync8b", 10000, 8).Wait();
+            runReqReplyAsync("ReqReplAsync32b", 10000, 32).Wait();
+            runReqReplyAsync("ReqReplAsync256b", 5000, 256).Wait();
+            runReqReplyAsync("ReqReplAsync512b", 5000, 512).Wait();
+            runReqReplyAsync("ReqReplAsync1k", 5000, 1024).Wait();
+            runReqReplyAsync("ReqReplAsync4k", 5000, 1024 * 4).Wait();
+            runReqReplyAsync("ReqReplAsync8k", 5000, 1024 * 8).Wait();
+
             runPubSubLatency("LatNo",   500, 0);
             runPubSubLatency("Lat8b",   500, 8);
             runPubSubLatency("Lat32b",  500, 32);
@@ -402,6 +460,9 @@ namespace Benchmark
                     break;
                 case BenchType.REQREPLY:
                     runReqReply("REQREP", count, payloadSize);
+                    break;
+                case BenchType.REQREPLYASYNC:
+                    runReqReplyAsync("REQREPASYNC", count, payloadSize).Wait();
                     break;
                 default:
                     throw new Exception("Invalid Type.");
