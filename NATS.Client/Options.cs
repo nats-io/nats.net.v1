@@ -436,6 +436,7 @@ namespace NATS.Client
             sb.AppendFormat("User={0};", User);
             sb.AppendFormat("Token={0};", Token);
             sb.AppendFormat("SubscriberDeliveryTaskCount={0};", SubscriberDeliveryTaskCount);
+            sb.AppendFormat("SubscriptionBatchSize={0};", SubscriptionBatchSize);
 
             if (Servers == null)
             {

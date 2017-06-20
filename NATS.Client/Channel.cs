@@ -9,10 +9,20 @@ namespace NATS.Client
 {
     // Provides a Channel<T> implementation that only allows a single call to 'get'
     // Used for ping-pong
+    // Instance methods are not thread safe, however, this class is not intended
+    // to be shared by any more than a single producer and single consumer.
     internal sealed class SingleUseChannel<T>
     {
-        static readonly ConcurrentBag<SingleUseChannel<T>> Channels = new ConcurrentBag<SingleUseChannel<T>>();
+        static readonly ConcurrentBag<SingleUseChannel<T>> Channels 
+            = new ConcurrentBag<SingleUseChannel<T>>();
 
+        readonly ManualResetEventSlim e = new ManualResetEventSlim();
+        volatile bool hasValue = false;
+        T actualValue;
+
+        // Get an existing unused SingleUseChannel from the pool,
+        // or create one if none are available.
+        // Thread safe.
         public static SingleUseChannel<T> GetOrCreate()
         {
             SingleUseChannel<T> item;
@@ -24,15 +34,13 @@ namespace NATS.Client
             return new SingleUseChannel<T>();
         }
 
+        // Return a SingleUseChannel to the internal pool.
+        // Thread safe.
         public static void Return(SingleUseChannel<T> ch)
         {
             ch.reset();
             if (Channels.Count < 1024) Channels.Add(ch);
         }
-
-        bool hasValue = false;
-        T actualValue;
-        readonly ManualResetEventSlim e = new ManualResetEventSlim();
 
         internal T get(int timeout)
         {
@@ -62,8 +70,8 @@ namespace NATS.Client
         internal void reset()
         {
             hasValue = false;
-            e.Reset();
             actualValue = default(T);
+            e.Reset();
         }
     }
 
@@ -81,14 +89,13 @@ namespace NATS.Client
         public string Name { get; set; }
 
         internal Channel()
+            : this(1024)
         {
-            Name = "Unnamed " + this.GetHashCode();
-            q = new Queue<T>(1024);
         }
 
         internal Channel(int initialCapacity)
         {
-            Name = "Unnamed " + this.GetHashCode();
+            Name = "Unnamed channel " + this.GetHashCode();
             q = new Queue<T>(initialCapacity);
         }
 
