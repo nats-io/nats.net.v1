@@ -460,7 +460,8 @@ namespace NATSUnitTests
 
                     int expectedPendingCount = total - 1;
 
-                    Assert.True(s.QueuedMessageCount == expectedPendingCount);
+                    // At least 1 message will be dequeued
+                    Assert.True(s.QueuedMessageCount <= expectedPendingCount);
 
                     Assert.True((s.MaxPendingBytes == (data.Length * total)) ||
                         (s.MaxPendingBytes == (data.Length * expectedPendingCount)));
@@ -516,6 +517,97 @@ namespace NATSUnitTests
                     Assert.ThrowsAny<Exception>(() => s.PendingByteLimit);
 
                     Assert.ThrowsAny<Exception>(() => s.SetPendingLimits(1, 10));
+                }
+            }
+        }
+
+
+        [Fact]
+        public void TestAsyncPendingSubscriptionBatchSizeExactlyOne()
+        {
+            int total = 10;
+            int receivedCount = 0;
+
+            AutoResetEvent evSubDone = new AutoResetEvent(false);
+            ManualResetEvent evStart = new ManualResetEvent(false);
+
+            byte[] data = Encoding.UTF8.GetBytes("0123456789");
+
+            using (new NATSServer())
+            {
+                var opts = utils.DefaultTestOptions;
+                opts.SubscriptionBatchSize = 1;
+
+                using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+                {
+                    ISubscription s = c.SubscribeAsync("foo", (sender, args) =>
+                    {
+                        evStart.WaitOne(60000);
+
+                        receivedCount++;
+                        if (receivedCount == total)
+                        {
+                            evSubDone.Set();
+                        }
+                    });
+
+                    for (int i = 0; i < total; i++)
+                    {
+                        c.Publish("foo", data);
+                    }
+                    c.Flush();
+
+                    Thread.Sleep(1000);
+
+                    int expectedPendingCount = total - 1;
+
+                    // Exactly 1 message will be dequeued
+                    Assert.True(s.QueuedMessageCount == expectedPendingCount);
+
+                    Assert.True((s.MaxPendingBytes == (data.Length * total)) ||
+                        (s.MaxPendingBytes == (data.Length * expectedPendingCount)));
+                    Assert.True((s.MaxPendingMessages == total) ||
+                        (s.MaxPendingMessages == expectedPendingCount));
+                    Assert.True((s.PendingBytes == (data.Length * total)) ||
+                        (s.PendingBytes == (data.Length * expectedPendingCount)));
+
+                    long pendingBytes;
+                    long pendingMsgs;
+
+                    s.GetPending(out pendingBytes, out pendingMsgs);
+                    Assert.True(pendingBytes == s.PendingBytes);
+                    Assert.True(pendingMsgs == s.PendingMessages);
+
+                    long maxPendingBytes;
+                    long maxPendingMsgs;
+                    s.GetMaxPending(out maxPendingBytes, out maxPendingMsgs);
+                    Assert.True(maxPendingBytes == s.MaxPendingBytes);
+                    Assert.True(maxPendingMsgs == s.MaxPendingMessages);
+
+
+                    Assert.True((s.PendingMessages == total) ||
+                        (s.PendingMessages == expectedPendingCount));
+
+                    Assert.True(s.Delivered == 1);
+                    Assert.True(s.Dropped == 0);
+
+                    evStart.Set();
+                    evSubDone.WaitOne(10000);
+
+                    Assert.True(s.QueuedMessageCount == 0);
+
+                    Assert.True((s.MaxPendingBytes == (data.Length * total)) ||
+                        (s.MaxPendingBytes == (data.Length * expectedPendingCount)));
+                    Assert.True((s.MaxPendingMessages == total) ||
+                        (s.MaxPendingMessages == expectedPendingCount));
+
+                    Assert.True(s.PendingMessages == 0);
+                    Assert.True(s.PendingBytes == 0);
+
+                    Assert.True(s.Delivered == total);
+                    Assert.True(s.Dropped == 0);
+
+                    s.Unsubscribe();
                 }
             }
         }

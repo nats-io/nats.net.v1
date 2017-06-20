@@ -23,7 +23,10 @@ namespace NATS.Client
             mch = conn.getMessageChannel();
             if ((ownsChannel = (mch == null)))
             {
-                mch = new Channel<Msg>();
+                mch = new Channel<Msg>()
+                {
+                    Name = subject + (String.IsNullOrWhiteSpace(queue) ? "" : " (queue: " + queue + ")"),
+                };
             }
         }
 

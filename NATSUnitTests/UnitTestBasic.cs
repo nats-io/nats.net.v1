@@ -68,6 +68,16 @@ namespace NATSUnitTests
         }
 
         [Fact]
+        public void TestBadOptionSubscriptionBatchSize()
+        {
+            Options opts = utils.DefaultTestOptions;
+
+            Assert.ThrowsAny<ArgumentException>(() => opts.SubscriptionBatchSize = -1);
+
+            Assert.ThrowsAny<ArgumentException>(() => opts.SubscriptionBatchSize = 0);
+        }
+
+        [Fact]
         public void TestSimplePublish()
         {
             using (new NATSServer())
@@ -563,11 +573,11 @@ namespace NATSUnitTests
                     var cts = new CancellationTokenSource();
                     var ct = cts.Token;
                     cts.Cancel();
-                    await Assert.ThrowsAsync<TaskCanceledException>(() => { return c.RequestAsync("foo", null, cts.Token); });
+                    await Assert.ThrowsAnyAsync<OperationCanceledException>(() => { return c.RequestAsync("foo", null, cts.Token); });
 
                     // test cancellation
                     cts = new CancellationTokenSource();
-                    var ocex = Assert.ThrowsAsync<OperationCanceledException>(() => { return c.RequestAsync("foo", null, cts.Token); });
+                    var ocex = Assert.ThrowsAnyAsync<OperationCanceledException>(() => { return c.RequestAsync("foo", null, cts.Token); });
                     Thread.Sleep(2000);
                     cts.Cancel();
                     await ocex;
@@ -580,7 +590,7 @@ namespace NATSUnitTests
 
                         // test cancellation with a subscriber
                         cts = new CancellationTokenSource();
-                        ocex = Assert.ThrowsAsync<OperationCanceledException>(() => { return c.RequestAsync("foo", null, cts.Token); });
+                        ocex = Assert.ThrowsAnyAsync<OperationCanceledException>(() => { return c.RequestAsync("foo", null, cts.Token); });
                         Thread.Sleep(responseDelay / 2);
                         cts.Cancel();
                         await ocex;
@@ -623,7 +633,11 @@ namespace NATSUnitTests
                 long elapsed = sw.ElapsedMilliseconds;
                 Assert.True(elapsed >= 500, string.Format("Unexpected value (should be > 500): {0}", elapsed));
                 long variance = elapsed - 500;
+#if DEBUG
+                Assert.True(variance < 250, string.Format("Invalid timeout variance: {0}", variance));
+#else
                 Assert.True(variance < 100, string.Format("Invalid timeout variance: {0}", variance));
+#endif
 
                 // Test an invalid connection
                 server.Shutdown();

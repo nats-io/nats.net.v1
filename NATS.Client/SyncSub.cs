@@ -3,6 +3,8 @@
 // disable XM comment warnings
 #pragma warning disable 1591
 
+using System;
+
 namespace NATS.Client
 {
     public sealed class SyncSubscription : Subscription, ISyncSubscription, ISubscription 
@@ -10,7 +12,10 @@ namespace NATS.Client
         internal SyncSubscription(Connection conn, string subject, string queue)
             : base(conn, subject, queue)
         {
-            mch = new Channel<Msg>();
+            mch = new Channel<Msg>()
+            {
+                Name = subject + (String.IsNullOrWhiteSpace(queue) ? "" : " (queue: " + queue + ")"),
+            };
         }
 
         public Msg NextMessage()
