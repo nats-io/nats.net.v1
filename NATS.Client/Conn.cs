@@ -2252,8 +2252,15 @@ namespace NATS.Client
             {
                 var request = requestSync(subject, data, timeout, CancellationToken.None);
 
-                Flush(timeout > 0 ? timeout : DEFAULT_FLUSH_TIMEOUT);
-                request.Waiter.Task.Wait(timeout);
+                try
+                {
+                    Flush(timeout > 0 ? timeout : DEFAULT_FLUSH_TIMEOUT);
+                    request.Waiter.Task.Wait(timeout);
+                }
+                catch (NATSTimeoutException)
+                {
+                    removeTimedoutRequest(request.Id);
+                }
 
                 return request.Waiter.Task.Result;
             }
@@ -2285,6 +2292,8 @@ namespace NATS.Client
 
                 request.Id = (nextRequestId++).ToString(CultureInfo.InvariantCulture);
 
+                request.Token.Register(() => removeTimedoutRequest(request.Id));
+
                 waitingRequests.Add(
                     request.Id,
                     request);
@@ -2306,12 +2315,18 @@ namespace NATS.Client
 
             request.Token.ThrowIfCancellationRequested();
 
-            if (globalRequestSubscription == null)
-                globalRequestSubReady.Task.Wait(timeout, request.Token);
+            try
+            {
+                if (globalRequestSubscription == null)
+                    globalRequestSubReady.Task.Wait(timeout, request.Token);
 
-            token.ThrowIfCancellationRequested();
-
-            publish(subject, globalRequestInbox + "." + request.Id, data);
+                publish(subject, globalRequestInbox + "." + request.Id, data);
+            }
+            catch
+            {
+                removeTimedoutRequest(request.Id);
+                throw;
+            }
 
             return request;
         }
@@ -2325,41 +2340,25 @@ namespace NATS.Client
 
                     request.Token.ThrowIfCancellationRequested();
 
-                    if (globalRequestSubscription == null)
-                        await globalRequestSubReady.Task;
+                    try
+                    {
+                        if (globalRequestSubscription == null)
+                            await globalRequestSubReady.Task;
 
-                    publish(subject, globalRequestInbox + "." + request.Id, data);
+                        publish(subject, globalRequestInbox + "." + request.Id, data);
 
-                    Flush(timeout > 0 ? timeout : DEFAULT_FLUSH_TIMEOUT);
+                        Flush(timeout > 0 ? timeout : DEFAULT_FLUSH_TIMEOUT);
+                    }
+                    catch
+                    {
+                        removeTimedoutRequest(request.Id);
+                        throw;
+                    }
 
                     // InFlightRequest links the token cancellation
                     return await request.Waiter.Task;
                 },
                 token);
-        }
-
-        private static Task WaitOnHandleAsync(WaitHandle handle, int timeout, CancellationToken token)
-        {
-            var tcs = new TaskCompletionSource<object>();
-            var registration = ThreadPool.RegisterWaitForSingleObject(
-                handle,
-                (state, timedOut) =>
-                {
-                    var localTcs = (TaskCompletionSource<object>)state;
-                    if (timedOut || token.IsCancellationRequested)
-                    {
-                        localTcs.TrySetCanceled();
-                    }
-                    else
-                    {
-                        localTcs.TrySetResult(null);
-                    }
-                },
-                tcs,
-                timeout,
-                executeOnlyOnce: true);
-            tcs.Task.ContinueWith((_, state) => ((RegisteredWaitHandle)state).Unregister(null), registration, TaskScheduler.Default);
-            return tcs.Task;
         }
 
         private void requestResponseHandler(object sender, MsgHandlerEventArgs e)
@@ -2394,6 +2393,15 @@ namespace NATS.Client
             else
             {
                 request.Waiter.SetCanceled();
+            }
+        }
+
+        private void removeTimedoutRequest(string requestId)
+        {
+            lock (mu)
+            {
+                // this is fine even if requestId does not exist
+                waitingRequests.Remove(requestId);
             }
         }
 
