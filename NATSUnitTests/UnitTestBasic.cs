@@ -1079,6 +1079,9 @@ namespace NATSUnitTests
                         reply += "A";
                     }
 
+                    // 1 MB
+                    byte[] data = new byte[1 << 20];
+
                     using (IAsyncSubscription s = c.SubscribeAsync(subject))
                     {
                         AutoResetEvent ev = new AutoResetEvent(false);
@@ -1095,7 +1098,7 @@ namespace NATSUnitTests
 
                         s.Start();
 
-                        c.Publish(subject, reply, null);
+                        c.Publish(subject, reply, data);
                         c.Flush();
 
                         Assert.True(ev.WaitOne(10000));
