@@ -1796,7 +1796,7 @@ namespace NATS.Client
                          + (buffer[start + 5] - '0');
                 default:
                     if (length < 0)
-                        throw new ArgumentOutOfRangeException(nameof(end));
+                        throw new ArgumentOutOfRangeException("end");
                     break;
             }
 
