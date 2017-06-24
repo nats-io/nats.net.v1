@@ -153,8 +153,8 @@ namespace NATS.Client
             }
 
             public string Id { get; set; }
-            public CancellationToken Token { get; }
-            public TaskCompletionSource<Msg> Waiter { get; }
+            public CancellationToken Token { get; private set; }
+            public TaskCompletionSource<Msg> Waiter { get; private set; }
         }
 
         // Prepare protocol messages for efficiency
@@ -2260,6 +2260,7 @@ namespace NATS.Client
                 catch (NATSTimeoutException)
                 {
                     removeTimedoutRequest(request.Id);
+                    throw;
                 }
 
                 return request.Waiter.Task.Result;
