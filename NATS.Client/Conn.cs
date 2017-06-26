@@ -11,6 +11,7 @@ using System.Net.Sockets;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Authentication;
+using System.Globalization;
 
 // disable XML comment warnings
 #pragma warning disable 1591
@@ -99,6 +100,62 @@ namespace NATS.Client
         Timer               ptmr = null;
 
         int                 pout = 0;
+
+        private AsyncSubscription globalRequestSubscription;
+        private TaskCompletionSource<object> globalRequestSubReady;
+        private string globalRequestInbox;
+
+        // used to map replies to requests from client (should lock)
+        private long nextRequestId = 0;
+
+        private Dictionary<string, InFlightRequest> waitingRequests = 
+            new Dictionary<string, InFlightRequest>(StringComparer.OrdinalIgnoreCase);
+
+        // Handles in-flight requests when using the new-style request/reply behavior
+        private sealed class InFlightRequest
+        {
+            public InFlightRequest(CancellationToken token, int timeout)
+            {
+                this.Waiter = new TaskCompletionSource<Msg>();
+                if (token != default(CancellationToken))
+                {
+                    token.Register(() => this.Waiter.TrySetCanceled());
+
+                    if (timeout > 0)
+                    {
+                        var timeoutToken = new CancellationTokenSource();
+
+                        var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
+                            timeoutToken.Token, token);
+                        this.Token = linkedTokenSource.Token;
+
+                        timeoutToken.Token.Register(
+                            () => this.Waiter.TrySetException(new NATSTimeoutException()));
+                        timeoutToken.CancelAfter(timeout);
+                    }
+                    else
+                    {
+                        this.Token = token;
+                    }
+                }
+                else
+                {
+                    if (timeout > 0)
+                    {
+                        var timeoutToken = new CancellationTokenSource();
+                        this.Token = timeoutToken.Token;
+
+                        timeoutToken.Token.Register(
+                            () => this.Waiter.TrySetException(new NATSTimeoutException()));
+                        timeoutToken.CancelAfter(timeout);
+                    }
+                }
+            }
+
+            public string Id { get; set; }
+            public CancellationToken Token { get; private set; }
+            public TaskCompletionSource<Msg> Waiter { get; private set; }
+        }
 
         // Prepare protocol messages for efficiency
         private byte[] PING_P_BYTES = null;
@@ -2191,6 +2248,166 @@ namespace NATS.Client
 
         internal virtual Msg request(string subject, byte[] data, int timeout)
         {
+            if (!opts.UseOldRequestStyle)
+            {
+                var request = requestSync(subject, data, timeout, CancellationToken.None);
+
+                try
+                {
+                    Flush(timeout > 0 ? timeout : DEFAULT_FLUSH_TIMEOUT);
+                    request.Waiter.Task.Wait(timeout);
+                }
+                catch (NATSTimeoutException)
+                {
+                    removeTimedoutRequest(request.Id);
+                    throw;
+                }
+
+                return request.Waiter.Task.Result;
+            }
+            else
+            {
+                return oldRequest(subject, data, timeout);
+            }
+        }
+
+        private InFlightRequest setupRequest(int timeout, CancellationToken token)
+        {
+            InFlightRequest request = new InFlightRequest(token, timeout);
+            bool createSub = false;
+            lock (mu)
+            {
+                if (globalRequestSubReady == null)
+                {
+                    globalRequestSubReady = new TaskCompletionSource<object>();
+
+                    globalRequestInbox = NewInbox();
+
+                    createSub = true;
+                }
+
+                if (nextRequestId < 0)
+                {
+                    nextRequestId = 0;
+                }
+
+                request.Id = (nextRequestId++).ToString(CultureInfo.InvariantCulture);
+
+                request.Token.Register(() => removeTimedoutRequest(request.Id));
+
+                waitingRequests.Add(
+                    request.Id,
+                    request);
+            }
+
+            if (createSub)
+            {
+                globalRequestSubscription = subscribeAsync(globalRequestInbox + ".*", null, requestResponseHandler);
+
+                globalRequestSubReady.TrySetResult(null);
+            }
+
+            return request;
+        }
+
+        private InFlightRequest requestSync(string subject, byte[] data, int timeout, CancellationToken token)
+        {
+            InFlightRequest request = setupRequest(timeout, token);
+
+            request.Token.ThrowIfCancellationRequested();
+
+            try
+            {
+                if (globalRequestSubscription == null)
+                    globalRequestSubReady.Task.Wait(timeout, request.Token);
+
+                publish(subject, globalRequestInbox + "." + request.Id, data);
+            }
+            catch
+            {
+                removeTimedoutRequest(request.Id);
+                throw;
+            }
+
+            return request;
+        }
+
+        private Task<Msg> requestAsync(string subject, byte[] data, int timeout, CancellationToken token)
+        {
+            return Task.Run(
+                async () =>
+                {
+                    InFlightRequest request = setupRequest(timeout, token);
+
+                    request.Token.ThrowIfCancellationRequested();
+
+                    try
+                    {
+                        if (globalRequestSubscription == null)
+                            await globalRequestSubReady.Task;
+
+                        publish(subject, globalRequestInbox + "." + request.Id, data);
+
+                        Flush(timeout > 0 ? timeout : DEFAULT_FLUSH_TIMEOUT);
+                    }
+                    catch
+                    {
+                        removeTimedoutRequest(request.Id);
+                        throw;
+                    }
+
+                    // InFlightRequest links the token cancellation
+                    return await request.Waiter.Task;
+                },
+                token);
+        }
+
+        private void requestResponseHandler(object sender, MsgHandlerEventArgs e)
+        {
+            //               \
+            //               \/
+            //  _INBOX.<nuid>.<requestId>
+            string requestId = e.Message.Subject.Substring(globalRequestInbox.Length + 1);
+            if (e.Message == null)
+            {
+                return;
+            }
+
+            bool isClosed;
+            InFlightRequest request;
+            lock (mu)
+            {
+                isClosed = this.isClosed();
+
+                if (!waitingRequests.TryGetValue(requestId, out request))
+                {
+                    return;
+                }
+
+                waitingRequests.Remove(requestId);
+            }
+
+            if (!isClosed)
+            {
+                request.Waiter.SetResult(e.Message);
+            }
+            else
+            {
+                request.Waiter.SetCanceled();
+            }
+        }
+
+        private void removeTimedoutRequest(string requestId)
+        {
+            lock (mu)
+            {
+                // this is fine even if requestId does not exist
+                waitingRequests.Remove(requestId);
+            }
+        }
+
+        private Msg oldRequest(string subject, byte[] data, int timeout)
+        {
             Msg    m     = null;
             string inbox = NewInbox();
 
@@ -2223,18 +2440,18 @@ namespace NATS.Client
             return request(subject, data, -1);
         }
 
-        internal virtual Task<Msg> requestAsync(string subject, byte[] data, int timeout)
+        internal virtual Task<Msg> oldRequestAsync(string subject, byte[] data, int timeout)
         {
             // Simple case without a cancellation token.
-            return Task.Factory.StartNew<Msg>(() => { return request(subject, data, timeout); });
+            return Task.Factory.StartNew<Msg>(() => { return oldRequest(subject, data, timeout); });
         }
 
-        internal virtual Task<Msg> requestAsync(string subject, byte[] data, int timeout, CancellationToken ct)
+        internal virtual Task<Msg> oldRequestAsync(string subject, byte[] data, int timeout, CancellationToken ct)
         {
             // Simple case without a cancellation token.
             if (ct == null)
             {
-                return Task.Factory.StartNew<Msg>(() => { return request(subject, data, timeout); });
+                return Task.Factory.StartNew<Msg>(() => { return oldRequest(subject, data, timeout); });
             }
 
             // More complex case, supporting cancellation.
@@ -2314,12 +2531,26 @@ namespace NATS.Client
                     "timeout");
             }
 
-            return requestAsync(subject, data, timeout);
+            if (!opts.UseOldRequestStyle)
+            {
+                return requestAsync(subject, data, timeout, CancellationToken.None);
+            }
+            else
+            {
+                return oldRequestAsync(subject, data, timeout);
+            }
         }
 
         public Task<Msg> RequestAsync(string subject, byte[] data)
         {
-            return requestAsync(subject, data, -1);
+            if (!opts.UseOldRequestStyle)
+            {
+                return requestAsync(subject, data, -1, CancellationToken.None);
+            }
+            else
+            {
+                return oldRequestAsync(subject, data, -1);
+            }
         }
 
         public Task<Msg> RequestAsync(string subject, byte[] data, int timeout, CancellationToken token)
@@ -2328,28 +2559,49 @@ namespace NATS.Client
             if (timeout <= 0)
             {
                 throw new ArgumentException(
-                    "Timeout must be greater that 0.",
+                    "Timeout must be greater than 0.",
                     "timeout");
             }
 
-            return requestAsync(subject, data, timeout, token);
+            if (!opts.UseOldRequestStyle)
+            {
+                return requestAsync(subject, data, timeout, token);
+            }
+            else
+            {
+                return oldRequestAsync(subject, data, timeout, token);
+            }
         }
 
         public Task<Msg> RequestAsync(string subject, byte[] data, CancellationToken token)
         {
-            return requestAsync(subject, data, -1, token);
+            if (!opts.UseOldRequestStyle)
+            {
+                return requestAsync(subject, data, -1, token);
+            }
+            else
+            {
+                return oldRequestAsync(subject, data, -1, token);
+            }
         }
 
         public string NewInbox()
         {
-            if (r == null)
-                r = new Random(Guid.NewGuid().GetHashCode());
+            if (!opts.UseOldRequestStyle)
+            {
+                return IC.inboxPrefix + Guid.NewGuid().ToString("N");
+            }
+            else
+            {
+                if (r == null)
+                    r = new Random(Guid.NewGuid().GetHashCode());
 
-            byte[] buf = new byte[13];
+                byte[] buf = new byte[13];
 
-            r.NextBytes(buf);
+                r.NextBytes(buf);
 
-            return IC.inboxPrefix + BitConverter.ToString(buf).Replace("-", "");
+                return IC.inboxPrefix + BitConverter.ToString(buf).Replace("-","");
+            }
         }
 
         internal void sendSubscriptionMessage(AsyncSubscription s)
@@ -2673,6 +2925,19 @@ namespace NATS.Client
         }
 
 
+        // Clears any in-flight requests by cancelling them all
+        // Caller must lock
+        private void clearPendingRequestCalls()
+        {
+            foreach (var request in waitingRequests)
+            {
+                request.Value.Waiter.TrySetCanceled();
+            }
+
+            waitingRequests.Clear();
+        }
+
+
         // Low level close call that will do correct cleanup and set
         // desired status. Also controls whether user defined callbacks
         // will be triggered. The lock should not be held entering this
@@ -2700,6 +2965,9 @@ namespace NATS.Client
                 clearPendingFlushCalls();
                 if (pending != null)
                     pending.Dispose();
+
+                // Clear any pending request calls
+                clearPendingRequestCalls();
 
                 stopPingTimer();
 

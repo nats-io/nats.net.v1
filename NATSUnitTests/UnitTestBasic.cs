@@ -489,11 +489,14 @@ namespace NATSUnitTests
             }
         }
 
-        public async void testRequestAsync()
+        public async void testRequestAsync(bool useOldRequestStyle)
         {
             using (new NATSServer())
             {
-                using (IConnection c = utils.DefaultTestConnection)
+                Options opts = utils.DefaultTestOptions;
+                opts.UseOldRequestStyle = useOldRequestStyle;
+
+                using (IConnection c = new ConnectionFactory().CreateConnection(opts))
                 {
                     byte[] response = Encoding.UTF8.GetBytes("I will help you.");
 
@@ -525,14 +528,23 @@ namespace NATSUnitTests
         [Fact]
         public void TestRequestAsync()
         {
-            testRequestAsync();
+            testRequestAsync(useOldRequestStyle: false);
         }
 
-        public async void testRequestAsyncCancellation()
+        [Fact]
+        public void TestRequestAsync_OldRequestStyle()
+        {
+            testRequestAsync(useOldRequestStyle: true);
+        }
+
+        public async void testRequestAsyncCancellation(bool useOldRequestStyle)
         {
             using (new NATSServer())
             {
-                using (IConnection c = utils.DefaultTestConnection)
+                Options opts = utils.DefaultTestOptions;
+                opts.UseOldRequestStyle = useOldRequestStyle;
+
+                using (IConnection c = new ConnectionFactory().CreateConnection(opts))
                 {
                     int responseDelay = 0;
 
@@ -602,10 +614,16 @@ namespace NATSUnitTests
         [Fact]
         public void TestRequestAsyncCancellation()
         {
-            testRequestAsyncCancellation();
+            testRequestAsyncCancellation(useOldRequestStyle: false);
         }
 
-        public async void testRequestAsyncTimeout()
+        [Fact]
+        public void TestRequestAsyncCancellation_OldRequestStyle()
+        {
+            testRequestAsyncCancellation(useOldRequestStyle: true);
+        }
+
+        public async void testRequestAsyncTimeout(bool useOldRequestStyle)
         {
             using (var server = new NATSServer())
             {
@@ -613,6 +631,7 @@ namespace NATSUnitTests
 
                 var opts = ConnectionFactory.GetDefaultOptions();
                 opts.AllowReconnect = false;
+                opts.UseOldRequestStyle = useOldRequestStyle;
                 var conn = new ConnectionFactory().CreateConnection(opts);
 
                 // success condition
@@ -649,7 +668,13 @@ namespace NATSUnitTests
         [Fact]
         public void TestRequestAsyncTimeout()
         {
-            testRequestAsyncTimeout();
+            testRequestAsyncTimeout(useOldRequestStyle: false);
+        }
+
+        [Fact]
+        public void TestRequestAsyncTimeout_OldRequestStyle()
+        {
+            testRequestAsyncTimeout(useOldRequestStyle: true);
         }
 
         class TestReplier
@@ -659,7 +684,7 @@ namespace NATSUnitTests
             int delay;
             private IConnection c;
             private Stopwatch sw;
-            Random r = new Random();
+            Random r;
 
             public TestReplier(IConnection c, int maxDelay, string id, string replySubject, Stopwatch sw)
             {
@@ -669,6 +694,7 @@ namespace NATSUnitTests
                 this.sw = sw;
                 this.id = id;
                 this.replySubject = replySubject;
+                this.r = new Random(this.GetHashCode());
             }
 
             public void process()
@@ -676,6 +702,15 @@ namespace NATSUnitTests
                 // delay the response to simulate a heavy workload and introduce
                 // variability
                 Thread.Sleep(r.Next((delay / 5), delay));
+                c.Publish(replySubject, Encoding.UTF8.GetBytes("reply"));
+                c.Flush();
+            }
+
+            public async Task processAsync()
+            {
+                // delay the response to simulate a heavy workload and introduce
+                // variability
+                await Task.Delay(r.Next((delay / 5), delay));
                 c.Publish(replySubject, Encoding.UTF8.GetBytes("reply"));
                 c.Flush();
             }
@@ -688,6 +723,17 @@ namespace NATSUnitTests
         [Fact]
         public void TestRequestSafetyWithThreads()
         {
+            testRequestSafetyWithThreads(useOldRequestStyle: false);
+        }
+
+        [Fact]
+        public void TestRequestSafetyWithThreads_OldRequestStyle()
+        {
+            testRequestSafetyWithThreads(useOldRequestStyle: true);
+        }
+
+        private void testRequestSafetyWithThreads(bool useOldRequestStyle)
+        {
             int MAX_DELAY = 1000;
             int TEST_COUNT = 300;
 
@@ -697,17 +743,20 @@ namespace NATSUnitTests
             ThreadPool.SetMinThreads(300, 300);
             using (new NATSServer())
             {
-                using (IConnection c1 = utils.DefaultTestConnection,
-                               c2 = utils.DefaultTestConnection)
+                Options opts = utils.DefaultTestOptions;
+                opts.UseOldRequestStyle = useOldRequestStyle;
+
+                using (IConnection c1 = new ConnectionFactory().CreateConnection(opts),
+                               c2 = new ConnectionFactory().CreateConnection(opts))
                 {
                     using (IAsyncSubscription s = c1.SubscribeAsync("foo", (sender, args) =>
                     {
-                    // We cannot block this thread... so copy our data, and spawn a thread
-                    // to handle a delay and responding.
-                    TestReplier t = new TestReplier(c1, MAX_DELAY,
-                            Encoding.UTF8.GetString(args.Message.Data),
-                            args.Message.Reply,
-                            sw);
+                        // We cannot block this thread... so copy our data, and spawn a thread
+                        // to handle a delay and responding.
+                        TestReplier t = new TestReplier(c1, MAX_DELAY,
+                                Encoding.UTF8.GetString(args.Message.Data),
+                                args.Message.Reply,
+                                sw);
                         new Thread(() => { t.process(); }).Start();
                     }))
                     {
@@ -721,8 +770,8 @@ namespace NATSUnitTests
                         {
                             threads[i] = new Thread((() =>
                             {
-                            // randomly delay for a bit to test potential timing issues.
-                            Thread.Sleep(r.Next(100, 500));
+                                // randomly delay for a bit to test potential timing issues.
+                                Thread.Sleep(r.Next(100, 500));
                                 c2.Request("foo", null, MAX_DELAY * 2);
                             }));
                         }
@@ -761,6 +810,22 @@ namespace NATSUnitTests
         //[Fact]
         public void TestRequestSafetyWithTasks()
         {
+            testRequestSafetyWithTasks(useOldRequestStyle: false);
+        }
+
+        // This test is a useful comparison in determining the difference
+        // between threads (above) and tasks and performance.  In some
+        // environments, the NATS client will fail here, but succeed in the 
+        // comparable test using threads.
+        // Do not automatically run, for comparison purposes and future dev.
+        //[Fact]
+        public void TestRequestSafetyWithTasks_OldRequestStyle()
+        {
+            testRequestSafetyWithTasks(useOldRequestStyle: true);
+        }
+
+        private void testRequestSafetyWithTasks(bool useOldRequestStyle)
+        {
             int MAX_DELAY = 1000;
             int TEST_COUNT = 300;
 
@@ -771,19 +836,22 @@ namespace NATSUnitTests
 
             using (new NATSServer())
             {
-                using (IConnection c1 = utils.DefaultTestConnection,
-                               c2 = utils.DefaultTestConnection)
+                Options opts = utils.DefaultTestOptions;
+                opts.UseOldRequestStyle = useOldRequestStyle;
+
+                using (IConnection c1 = new ConnectionFactory().CreateConnection(opts),
+                               c2 = new ConnectionFactory().CreateConnection(opts))
                 {
                     // Try parallel requests and check the performance.
                     using (IAsyncSubscription s = c1.SubscribeAsync("foo", (sender, args) =>
                     {
-                    // We cannot block this NATS thread... so copy our data, and spawn a thread
-                    // to handle a delay and responding.
-                    TestReplier t = new TestReplier(c1, MAX_DELAY,
-                            Encoding.UTF8.GetString(args.Message.Data),
-                            args.Message.Reply,
-                            sw);
-                        new Task(() => { t.process(); }).Start();
+                        // We cannot block this NATS thread... so copy our data, and spawn a thread
+                        // to handle a delay and responding.
+                        TestReplier t = new TestReplier(c1, MAX_DELAY,
+                                Encoding.UTF8.GetString(args.Message.Data),
+                                args.Message.Reply,
+                                sw);
+                        Task.Run(async () => { await t.processAsync(); });
                     }))
                     {
                         c1.Flush();
@@ -794,16 +862,13 @@ namespace NATSUnitTests
 
                         for (int i = 0; i < TEST_COUNT; i++)
                         {
-                            tasks[i] = new Task((() =>
+                            tasks[i] = new Task(async () =>
                             {
-                            // randomly delay for a bit to test potential timing issues.
-                            Thread.Sleep(r.Next(100, 500));
+                                // randomly delay for a bit to test potential timing issues.
+                                await Task.Delay(r.Next(100, 500));
                                 c2.Request("foo", null, MAX_DELAY * 2);
-                            }));
+                            });
                         }
-
-                        // sleep for one second to allow the tasks to initialize.
-                        Thread.Sleep(1000);
 
                         sw.Start();
 
