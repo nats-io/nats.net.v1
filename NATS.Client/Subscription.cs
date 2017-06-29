@@ -148,7 +148,8 @@ namespace NATS.Client
             }
 	
             // Check for a Slow Consumer
-	        if (pMsgs > pMsgsLimit || pBytes > pBytesLimit)
+	        if ((pMsgsLimit > 0 && pMsgs > pMsgsLimit)
+                || (pBytesLimit > 0 && pBytes > pBytesLimit))
             {
                 // slow consumer
                 handleSlowConsumer(msg);
@@ -221,6 +222,11 @@ namespace NATS.Client
             c.unsubscribe(this, max);
         }
 
+        /// <summary>
+        /// Gets the number of messages remaining in the delivery queue.
+        /// </summary>
+        /// <exception cref="NATSBadSubscriptionException">There is no longer an associated <see cref="Connection"/>
+        /// for this <see cref="AsyncSubscription"/>.</exception>
         public int QueuedMessageCount
         {
             get
@@ -286,8 +292,24 @@ namespace NATS.Client
 
         }
 
+        /// <summary>
+        /// Sets the limits for pending messages and bytes for this instance.
+        /// </summary>
+        /// <remarks>Zero (<c>0</c>) is not allowed. Negative values indicate that the
+        /// given metric is not limited.</remarks>
+        /// <param name="messageLimit">The maximum number of pending messages.</param>
+        /// <param name="bytesLimit">The maximum number of pending bytes of payload.</param>
         public void SetPendingLimits(long messageLimit, long bytesLimit)
         {
+            if (messageLimit == 0)
+            {
+                throw new ArgumentOutOfRangeException("messageLimit", "The pending message limit must not be zero");
+            }
+            else if (bytesLimit == 0)
+            {
+                throw new ArgumentOutOfRangeException("bytesLimit", "The pending bytes limit must not be zero");
+            }
+
             lock (mu)
             {
                 checkState();
@@ -297,6 +319,11 @@ namespace NATS.Client
             }
         }
 
+        /// <summary>
+        /// Gets or sets the maximum allowed count of pending bytes.
+        /// </summary>
+        /// <value>The limit must not be zero (<c>0</c>). Negative values indicate there is no
+        /// limit on the number of pending bytes.</value>
         public long PendingByteLimit 
         { 
             get
@@ -309,6 +336,11 @@ namespace NATS.Client
             }
             set
             {
+                if (value == 0)
+                {
+                    throw new ArgumentOutOfRangeException("value", "The pending bytes limit must not be zero");
+                }
+
                 lock (mu)
                 {
                     checkState();
@@ -317,6 +349,11 @@ namespace NATS.Client
             }
         }
 
+        /// <summary>
+        /// Gets or sets the maximum allowed count of pending messages.
+        /// </summary>
+        /// <value>The limit must not be zero (<c>0</c>). Negative values indicate there is no
+        /// limit on the number of pending messages.</value>
         public long PendingMessageLimit
         {
             get
@@ -329,6 +366,11 @@ namespace NATS.Client
             }
             set
             {
+                if (value == 0)
+                {
+                    throw new ArgumentOutOfRangeException("value", "The pending message limit must not be zero");
+                }
+
                 lock (mu)
                 {
                     checkState();
@@ -337,6 +379,13 @@ namespace NATS.Client
             }
         }
 
+        /// <summary>
+        /// Returns the pending byte and message counts.
+        /// </summary>
+        /// <param name="pendingBytes">When this method returns, <paramref name="pendingBytes"/> will
+        /// contain the count of bytes not yet processed on the <see cref="Subscription"/>.</param>
+        /// <param name="pendingMessages">When this method returns, <paramref name="pendingMessages"/> will
+        /// contain the count of messages not yet processed on the <see cref="Subscription"/>.</param>
         public void GetPending(out long pendingBytes, out long pendingMessages)
         {
             lock (mu)
@@ -347,6 +396,9 @@ namespace NATS.Client
             }
         }
 
+        /// <summary>
+        /// Gets the number of bytes not yet processed on this instance.
+        /// </summary>
         public long PendingBytes
         {
             get
@@ -359,6 +411,9 @@ namespace NATS.Client
             }
         }
 
+        /// <summary>
+        /// Gets the number of messages not yet processed on this instance.
+        /// </summary>
         public long PendingMessages
         {
             get
@@ -371,6 +426,13 @@ namespace NATS.Client
             }
         }
 
+        /// <summary>
+        /// Returns the maximum number of pending bytes and messages during the life of the <see cref="Subscription"/>.
+        /// </summary>
+        /// <param name="maxPendingBytes">When this method returns, <paramref name="maxPendingBytes"/>
+        /// will contain the current maximum pending bytes.</param>
+        /// <param name="maxPendingMessages">When this method returns, <paramref name="maxPendingBytes"/>
+        /// will contain the current maximum pending messages.</param>
         public void GetMaxPending(out long maxPendingBytes, out long maxPendingMessages)
         {
             lock (mu)
@@ -381,6 +443,9 @@ namespace NATS.Client
             }
         }
 
+        /// <summary>
+        /// Gets the maximum number of pending bytes seen so far by this instance.
+        /// </summary>
         public long MaxPendingBytes
         {
             get
@@ -393,7 +458,9 @@ namespace NATS.Client
             }
         }
 
-
+        /// <summary>
+        /// Gets the maximum number of messages seen so far by this instance.
+        /// </summary>
         public long MaxPendingMessages
         {
             get
@@ -406,6 +473,9 @@ namespace NATS.Client
             }
         }
 
+        /// <summary>
+        /// Clears the maximum pending bytes and messages statistics.
+        /// </summary>
         public void ClearMaxPending()
         {
             lock (mu)
@@ -414,6 +484,9 @@ namespace NATS.Client
             }
         }
 
+        /// <summary>
+        /// Gets the number of delivered messages for this instance.
+        /// </summary>
         public long Delivered
         {
             get
@@ -425,7 +498,15 @@ namespace NATS.Client
             }
         }
 
-
+        /// <summary>
+        /// Gets the number of known dropped messages for this instance.
+        /// </summary>
+        /// <remarks>
+        /// This will correspond to the messages dropped by violations of
+        /// <see cref="PendingByteLimit"/> and/or <see cref="PendingMessageLimit"/>.
+        /// If the NATS server declares the connection a slow consumer, the count
+        /// may not be accurate.
+        /// </remarks>
         public long Dropped
         {
             get
