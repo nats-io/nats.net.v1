@@ -79,7 +79,7 @@ namespace NATS.Client
         /// <seealso cref="GetDefaultOptions"/>
         public IConnection CreateConnection()
         {
-            return CreateConnection(new Options());
+            return CreateConnection(GetDefaultOptions());
         }
 
         /// <summary>
@@ -111,7 +111,7 @@ namespace NATS.Client
         /// details.</para></exception>
         public IEncodedConnection CreateEncodedConnection()
         {
-            return CreateEncodedConnection(new Options());
+            return CreateEncodedConnection(GetDefaultOptions());
         }
 
         /// <summary>
@@ -132,7 +132,7 @@ namespace NATS.Client
         public IEncodedConnection CreateEncodedConnection(string url)
         {
             Options opts = new Options();
-            opts.Url = url;
+            opts.processUrlString(url);
             return CreateEncodedConnection(opts);
         }
 
