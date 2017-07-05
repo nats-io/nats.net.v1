@@ -85,12 +85,7 @@ namespace NATS.Client
             DisconnectedEventHandler = o.DisconnectedEventHandler;
             maxPingsOut = o.maxPingsOut;
             maxReconnect = o.maxReconnect;
-
-            if (o.name != null)
-            {
-                name = new string(o.name.ToCharArray());
-            }
-
+            name = o.name;
             noRandomize = o.noRandomize;
             pedantic = o.pedantic;
             useOldRequestStyle = o.useOldRequestStyle;
@@ -115,10 +110,7 @@ namespace NATS.Client
             timeout = o.timeout;
             TLSRemoteCertificationValidationCallback = o.TLSRemoteCertificationValidationCallback;
 
-            if (o.url != null)
-            {
-                url = new String(o.url.ToCharArray());
-            }
+            url = o.url;
 
             if (o.certificates != null)
             {
