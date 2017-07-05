@@ -141,9 +141,11 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Gets or sets the url used to connect to the NATs server.  This may
-        /// contain user information.
+        /// Gets or sets the url used to connect to the NATs server.
         /// </summary>
+        /// <remarks>
+        /// This may contain username/password information.
+        /// </remarks>
         public string Url
         {
             get { return url; }
@@ -151,8 +153,11 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Gets or Sets the array of servers that the NATs client will connect to.
+        /// Gets or sets the array of servers that the NATs client will connect to.
         /// </summary>
+        /// <remarks>
+        /// The individual URLs may contain username/password information.
+        /// </remarks>
         public string[] Servers
         {
             get { return servers; }
@@ -160,7 +165,8 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Gets or Sets the randomization of choosing a server to connect to.
+        /// Gets or sets a value indicating whether or not the server chosen for connection
+        /// should not be selected randomly.
         /// </summary>
         public bool NoRandomize
         {
@@ -178,7 +184,7 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Gets or sets the verbosity of logging.
+        /// Gets or sets a value indicating whether or not logging information should be verbose.
         /// </summary>
         public bool Verbose
         {
@@ -187,7 +193,7 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// N/A.
+        /// This option is not used by the NATS Client.
         /// </summary>
         public bool Pedantic
         {
@@ -213,7 +219,8 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Get or sets the secure property.   Not currently implemented.
+        /// Get or sets a value indicating whether or not a secure connection (TLS)
+        /// should be made to NATS servers.
         /// </summary>
         public bool Secure
         {
@@ -222,9 +229,8 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Gets or Sets the allow reconnect flag.  When set to false,
-        /// the NATs client will not attempt to reconnect if a connection
-        /// has been lost.
+        /// Gets or sets a value indicating whether or not an <see cref="IConnection"/> will attempt
+        /// to reconnect to the NATS server if a connection has been lost.
         /// </summary>
         public bool AllowReconnect
         {
@@ -243,8 +249,8 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Gets or Sets the amount of time, in milliseconds, the client will 
-        /// wait during a reconnection.
+        /// Gets or sets the amount of time, in milliseconds, the client will 
+        /// wait before attempting a reconnection.
         /// </summary>
         public int ReconnectWait
         {
@@ -253,9 +259,11 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Gets or sets the interval pings will be sent to the server.
-        /// Take care to coordinate this value with the server's interval.
+        /// Gets or sets the interval, in milliseconds, pings will be sent to the server.
         /// </summary>
+        /// <remarks>
+        /// Take care to coordinate this value with the server's interval.
+        /// </remarks>
         public int PingInterval
         {
             get { return pingInterval; }
@@ -263,7 +271,7 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Gets or sets the timeout when flushing a connection.
+        /// Gets or sets the timeout, in milliseconds, when connecting to a NATS server.
         /// </summary>
         public int Timeout
         {
@@ -301,7 +309,7 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Gets or sets the user name used when connecting to the NATs server
+        /// Gets or sets the user name used when connecting to the NATs server,
         /// when not included directly in the URLs.
         /// </summary>
         public string User
@@ -311,7 +319,7 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Sets the user password used when connecting to the NATs server
+        /// Sets the user password used when connecting to the NATs server,
         /// when not included directly in the URLs.
         /// </summary>
         public string Password
@@ -330,21 +338,39 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Adds a certifcate for use with a secure connection.
+        /// Adds an X.509 certifcate from a file for use with a secure connection.
         /// </summary>
         /// <param name="fileName">Path to the certificate file to add.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="fileName"/> is <see langword="null"/>.</exception>
+        /// <exception cref="System.Security.Cryptography.CryptographicException">An error with the certificate
+        /// ocurred. For example:
+        /// <list>
+        /// <item>The certificate file does not exist.</item>
+        /// <item>The certificate is invalid.</item>
+        /// <item>The certificate's password is incorrect.</item></list></exception>
         public void AddCertificate(string fileName)
         {
+            if (fileName == null)
+                throw new ArgumentNullException("fileName");
             X509Certificate2 cert = new X509Certificate2(fileName);
             AddCertificate(cert);
         }
 
         /// <summary>
-        /// Adds a certificate for use with a secure connection.
+        /// Adds an X.509 certifcate for use with a secure connection.
         /// </summary>
-        /// <param name="certificate">Certificate to add.</param>
+        /// <param name="certificate">An X.509 certificate represented as an <see cref="X509Certificate2"/> object.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="certificate"/> is <see langword="null"/>.</exception>
+        /// <exception cref="System.Security.Cryptography.CryptographicException">An error with the certificate
+        /// ocurred. For example:
+        /// <list>
+        /// <item>The certificate file does not exist.</item>
+        /// <item>The certificate is invalid.</item>
+        /// <item>The certificate's password is incorrect.</item></list></exception>
         public void AddCertificate(X509Certificate2 certificate)
         {
+            if (certificate == null)
+                throw new ArgumentNullException("certificate");
             if (certificates == null)
                 certificates = new X509Certificate2Collection();
 
@@ -356,15 +382,15 @@ namespace NATS.Client
         /// </summary>
         /// <remarks>
         /// The default callback simply checks if there were any protocol
-        /// errors.  Overriding this callback useful during testing, or accepting self
+        /// errors. Overriding this callback is useful during testing, or accepting self
         /// signed certificates.
         /// </remarks>
         public RemoteCertificateValidationCallback TLSRemoteCertificationValidationCallback;
 
 
         /// <summary>
-        /// Sets or gets number of long running tasks to deliver messages
-        /// to asynchronous subscribers.  The default is 0 indicating each
+        /// Gets or sets the number of long running tasks to deliver messages
+        /// to asynchronous subscribers. The default is zero (<c>0</c>) indicating each
         /// asynchronous subscriber has its own channel and task created to 
         /// deliver messages.
         /// </summary>

@@ -8,29 +8,28 @@ using System.Text;
 namespace NATS.Client
 {
     /// <summary>
-    /// An object of this class is an asynchronous subscription representing interest
-    /// in a subject.   The subject can have wildcards (partial:*, full:>).
-    /// Messages will be delivered to the associated MessageHandler event delegates.
-    /// While nothing prevents event handlers from being added or 
-    /// removed while processing messages.  If the subscriber was created without
-    /// providing a handler, no messages will be received until
-    /// Start() has been called.  This allows event handlers to be added
-    /// before message processing begins.
+    /// <see cref="IAsyncSubscription"/> asynchronously delivers messages to listeners of the <see cref="MessageHandler"/>
+    /// event.
     /// </summary>
+    /// <remarks>
+    /// If the <see cref="IAsyncSubscription"/> is created without listening to the <see cref="MessageHandler"/>
+    /// event, no messages will be received until <see cref="Start()"/> has been called.
+    /// </remarks>
     public interface IAsyncSubscription : ISubscription, IDisposable
     {
         /// <summary>
-        /// Adds or removes a message handler for this subscriber.
+        /// Occurs when the <see cref="IAsyncSubscription"/> receives a message from the
+        /// underlying <see cref="ISubscription"/>.
         /// </summary>
         event EventHandler<MsgHandlerEventArgs> MessageHandler;
 
         /// <summary>
-        /// Starts receiving messages.
+        /// Starts delivering received messages to listeners on <see cref="MessageHandler"/>
+        /// from a separate thread.
         /// </summary>
-        /// <remarks>If a message handler was not passed when
-        /// creating the subscriber, the subscriber must assign
-        /// delegates then complete the subscription process
-        /// with this method.
+        /// <remarks>
+        /// If the <see cref="IAsyncSubscription"/> has already started delivering messages, this
+        /// method is a no-op.
         /// </remarks>
         void Start();
     }

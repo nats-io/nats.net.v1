@@ -8,7 +8,7 @@ using System.Text;
 namespace NATS.Client
 {
     /// <summary>
-    /// Tracks various statistics received and sent on this connection.
+    /// Tracks various statistics received and sent on an <see cref="IConnection"/>.
     /// </summary>
     public interface IStatistics
     {

@@ -13,20 +13,38 @@ using System.Security.Cryptography.X509Certificates;
 using System.Security.Authentication;
 using System.Globalization;
 
-// disable XML comment warnings
-#pragma warning disable 1591
-
 namespace NATS.Client
 {
     /// <summary>
-    /// State of the connection.
+    /// State of the <see cref="IConnection"/>.
     /// </summary>
     public enum ConnState
     {
+        /// <summary>
+        /// The <see cref="IConnection"/> is disconnected.
+        /// </summary>
         DISCONNECTED = 0,
+        
+        /// <summary>
+        /// The <see cref="IConnection"/> is connected to a NATS Server.
+        /// </summary>
         CONNECTED,
+
+        /// <summary>
+        /// The <see cref="IConnection"/> has been closed.
+        /// </summary>
         CLOSED,
+
+        /// <summary>
+        /// The <see cref="IConnection"/> is currently reconnecting
+        /// to a NATS Server.
+        /// </summary>
         RECONNECTING,
+
+        /// <summary>
+        /// The <see cref="IConnection"/> is currently connecting
+        /// to a NATS Server.
+        /// </summary>
         CONNECTING
     }
 
@@ -41,6 +59,9 @@ namespace NATS.Client
         ClientProtoInfo
     }
 
+    /// <summary>
+    /// <see cref="Connection"/> represents a bare connection to a NATS server.
+    /// </summary>
     // TODO - for a pure object model, we can create
     // an abstract subclass containing shared code between conn and 
     // encoded conn rather than using this class as
@@ -58,7 +79,9 @@ namespace NATS.Client
 
         Options opts = new Options();
 
-        // returns the options used to create this connection.
+        /// <summary>
+        /// Gets the configuration options for this instance.
+        /// </summary>
         public Options Opts
         {
             get { return opts; }
@@ -678,6 +701,12 @@ namespace NATS.Client
         // Ensure we cannot instanciate a connection this way.
         private Connection() { }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Connection"/> class
+        /// with the specified <see cref="Options"/>.
+        /// </summary>
+        /// <param name="options">The configuration options to use for this 
+        /// <see cref="Connection"/>.</param>
         internal Connection(Options options)
         {
             opts = new Options(options);
@@ -916,6 +945,10 @@ namespace NATS.Client
             readLoopStartEvent.WaitOne(60000);
         }
 
+        /// <summary>
+        /// Gets the URL of the NATS server to which this instance
+        /// is connected, otherwise <see langword="null"/>.
+        /// </summary>
         public string ConnectedUrl
         {
             get
@@ -930,6 +963,10 @@ namespace NATS.Client
             }
         }
 
+        /// <summary>
+        /// Gets the server ID of the NATS server to which this instance
+        /// is connected, otherwise <see langword="null"/>.
+        /// </summary>
         public string ConnectedId
         {
             get
@@ -944,6 +981,14 @@ namespace NATS.Client
             }
         }
 
+        /// <summary>
+        /// Gets an array of known server URLs for this instance.
+        /// </summary>
+        /// <remarks><see cref="Servers"/> also includes any additional
+        /// servers discovered after a connection has been established. If
+        /// authentication is enabled, <see cref="Options.User"/> or
+        /// <see cref="Options.Token"/> must be used when connecting with
+        /// these URLs.</remarks>
         public string[] Servers
         {
             get
@@ -955,6 +1000,13 @@ namespace NATS.Client
             }
         }
 
+        /// <summary>
+        /// Gets an array of server URLs that were discovered after this
+        /// instance connected.
+        /// </summary>
+        /// <remarks>If authentication is enabled, <see cref="Options.User"/> or
+        /// <see cref="Options.Token"/> must be used when connecting with
+        /// these URLs.</remarks>
         public string[] DiscoveredServers
         {
             get
@@ -2092,7 +2144,10 @@ namespace NATS.Client
             }
         }
 
-        // LastError reports the last error encountered via the Connection.
+        /// <summary>
+        /// Gets the last <see cref="Exception"/> encountered by this instance,
+        /// otherwise <see langword="null"/>.
+        /// </summary>
         public Exception LastError
         {
             get
@@ -2231,16 +2286,67 @@ namespace NATS.Client
 
         } // publish
 
+        /// <summary>
+        /// Publishes <paramref name="data"/> to the given <paramref name="subject"/>.
+        /// </summary>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="data">An array of type <see cref="Byte"/> that contains the data to publish
+        /// to the connected NATS server.</param>
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is 
+        /// <see langword="null"/> or entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
+        /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
+        /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call
+        /// while publishing. See <see cref="System.Exception.InnerException"/> for more details.</exception>
+        /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public void Publish(string subject, byte[] data)
         {
             publish(subject, null, data);
         }
 
+        /// <summary>
+        /// Publishes a <see cref="Msg"/> instance, which includes the subject, an optional reply, and an
+        /// optional data field.
+        /// </summary>
+        /// <param name="msg">A <see cref="Msg"/> instance containing the subject, optional reply, and data to publish
+        /// to the NATS server.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="msg"/> is <see langword="null"/>.</exception>
+        /// <exception cref="NATSBadSubscriptionException">The <see cref="Msg.Subject"/> property of
+        /// <paramref name="msg"/> is <see langword="null"/> or entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException">The <see cref="Msg.Data"/> property of <paramref name="msg"/> 
+        /// exceeds the maximum payload size supported by the NATS server.</exception>
+        /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
+        /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call 
+        /// while publishing. See <see cref="System.Exception.InnerException"/> for more details.</exception>
+        /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public void Publish(Msg msg)
         {
+            if (msg == null)
+            {
+                throw new ArgumentNullException("msg");
+            }
+
             publish(msg.Subject, msg.Reply, msg.Data);
         }
 
+        /// <summary>
+        /// Publishes <paramref name="data"/> to the given <paramref name="subject"/>.
+        /// </summary>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="reply">An optional reply subject.</param>
+        /// <param name="data">An array of type <see cref="Byte"/> that contains the data to publish
+        /// to the connected NATS server.</param>
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <see langword="null"/> or
+        /// entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size 
+        /// supported by the NATS server.</exception>
+        /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
+        /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call
+        /// while publishing. See <see cref="System.Exception.InnerException"/> for more details.</exception>
+        /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public void Publish(string subject, string reply, byte[] data)
         {
             publish(subject, reply, data);
@@ -2422,6 +2528,34 @@ namespace NATS.Client
             return m;
         }
 
+        /// <summary>
+        /// Sends a request payload and returns the response <see cref="Msg"/>, or throws
+        /// <see cref="NATSTimeoutException"/> if the <paramref name="timeout"/> expires.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Request(string, byte[])"/> will create an unique inbox for this request, sharing a single
+        /// subscription for all replies to this <see cref="Connection"/> instance. However, if 
+        /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription. 
+        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
+        /// </remarks>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="data">An array of type <see cref="Byte"/> that contains the request data to publish
+        /// to the connected NATS server.</param>
+        /// <param name="timeout">The number of milliseconds to wait.</param>
+        /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="timeout"/> is less than or equal to zero 
+        /// (<c>0</c>).</exception>
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <see langword="null"/> or
+        /// entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size 
+        /// supported by the NATS server.</exception>
+        /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
+        /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the 
+        /// response.</exception>
+        /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call
+        /// while executing the request. See <see cref="System.Exception.InnerException"/> for more details.</exception>
+        /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public Msg Request(string subject, byte[] data, int timeout)
         {
             // a timeout of 0 will never succeed - do not allow it.
@@ -2435,6 +2569,30 @@ namespace NATS.Client
             return request(subject, data, timeout);
         }
 
+        /// <summary>
+        /// Sends a request payload and returns the response <see cref="Msg"/>.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Request(string, byte[])"/> will create an unique inbox for this request, sharing a single
+        /// subscription for all replies to this <see cref="Connection"/> instance. However, if 
+        /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription. 
+        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
+        /// </remarks>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="data">An array of type <see cref="Byte"/> that contains the request data to publish
+        /// to the connected NATS server.</param>
+        /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <see langword="null"/> or 
+        /// entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size 
+        /// supported by the NATS server.</exception>
+        /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
+        /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
+        /// response.</exception>
+        /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call while
+        /// executing the request. See <see cref="System.Exception.InnerException"/> for more details.</exception>
+        /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public Msg Request(string subject, byte[] data)
         {
             return request(subject, data, -1);
@@ -2521,6 +2679,37 @@ namespace NATS.Client
             }, ct);
         }
 
+        /// <summary>
+        /// Asynchronously sends a request payload and returns the response <see cref="Msg"/>, or throws 
+        /// <see cref="NATSTimeoutException"/> if the <paramref name="timeout"/> expires.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="RequestAsync(string, byte[], int)"/> will create an unique inbox for this request, sharing a
+        /// single subscription for all replies to this <see cref="Connection"/> instance. However, if
+        /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription.
+        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
+        /// </remarks>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="data">An array of type <see cref="Byte"/> that contains the request data to publish
+        /// to the connected NATS server.</param>
+        /// <param name="timeout">The number of milliseconds to wait.</param>
+        /// <returns>A task that represents the asynchronous read operation. The value of the <see cref="Task{TResult}.Result"/>
+        /// parameter contains a <see cref="Msg"/> with the response from the NATS server.</returns>
+        /// <exception cref="ArgumentException"><paramref name="timeout"/> is less than or equal to zero 
+        /// (<c>0</c>).</exception>
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <see langword="null"/>
+        /// or entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
+        /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
+        /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
+        /// response.</exception>
+        /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call
+        /// while executing the request. See <see cref="System.Exception.InnerException"/> for more details.</exception>
+        /// <exception cref="OperationCanceledException">The asynchronous operation was cancelled or timed out before
+        /// it could be completed.</exception>
+        /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public Task<Msg> RequestAsync(string subject, byte[] data, int timeout)
         {
             // a timeout of 0 will never succeed - do not allow it.
@@ -2541,6 +2730,34 @@ namespace NATS.Client
             }
         }
 
+        /// <summary>
+        /// Asynchronously sends a request payload and returns the response <see cref="Msg"/>.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="RequestAsync(string, byte[])"/> will create an unique inbox for this request, sharing a single
+        /// subscription for all replies to this <see cref="Connection"/> instance. However, if
+        /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription. 
+        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
+        /// </remarks>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="data">An array of type <see cref="Byte"/> that contains the request data to publish
+        /// to the connected NATS server.</param>
+        /// <returns>A task that represents the asynchronous read operation. The value of the 
+        /// <see cref="Task{TResult}.Result"/> parameter contains a <see cref="Msg"/> with the response from the NATS
+        /// server.</returns>
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <see langword="null"/> or
+        /// entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size 
+        /// supported by the NATS server.</exception>
+        /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
+        /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
+        /// response.</exception>
+        /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call while
+        /// executing the request. See <see cref="System.Exception.InnerException"/> for more details.</exception>
+        /// <exception cref="OperationCanceledException">The asynchronous operation was cancelled or timed out before
+        /// it could be completed.</exception>
+        /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public Task<Msg> RequestAsync(string subject, byte[] data)
         {
             if (!opts.UseOldRequestStyle)
@@ -2553,6 +2770,40 @@ namespace NATS.Client
             }
         }
 
+        /// <summary>
+        /// Asynchronously sends a request payload and returns the response <see cref="Msg"/>, or throws
+        /// <see cref="NATSTimeoutException"/> if the <paramref name="timeout"/> expires, while monitoring for 
+        /// cancellation requests.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="RequestAsync(string, byte[], int, CancellationToken)"/> will create an unique inbox for this
+        /// request, sharing a single subscription for all replies to this <see cref="Connection"/> instance. However,
+        /// if <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription.
+        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
+        /// </remarks>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="data">An array of type <see cref="Byte"/> that contains the request data to publish
+        /// to the connected NATS server.</param>
+        /// <param name="timeout">The number of milliseconds to wait.</param>
+        /// <param name="token">The token to monitor for cancellation requests.</param>
+        /// <returns>A task that represents the asynchronous read operation. The value of the
+        /// <see cref="Task{TResult}.Result"/> parameter contains  a <see cref="Msg"/> with the response from the NATS
+        /// server.</returns>
+        /// <exception cref="ArgumentException"><paramref name="timeout"/> is less than or equal to zero
+        /// (<c>0</c>).</exception>
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <see langword="null"/> or
+        /// entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
+        /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
+        /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
+        /// response.</exception>
+        /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call while
+        /// executing the request. See <see cref="System.Exception.InnerException"/> for more details.</exception>
+        /// <exception cref="OperationCanceledException">The asynchronous operation was cancelled or timed out before
+        /// it could be completed.</exception>
+        /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public Task<Msg> RequestAsync(string subject, byte[] data, int timeout, CancellationToken token)
         {
             // a timeout of 0 will never succeed - do not allow it.
@@ -2573,6 +2824,36 @@ namespace NATS.Client
             }
         }
 
+        /// <summary>
+        /// Asynchronously sends a request payload and returns the response <see cref="Msg"/>, while monitoring for
+        /// cancellation requests.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="RequestAsync(string, byte[], CancellationToken)"/> will create an unique inbox for this request,
+        /// sharing a single subscription for all replies to this <see cref="Connection"/> instance. However, if 
+        /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription.
+        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
+        /// </remarks>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="data">An array of type <see cref="Byte"/> that contains the request data to publish
+        /// to the connected NATS server.</param>
+        /// <param name="token">The token to monitor for cancellation requests.</param>
+        /// <returns>A task that represents the asynchronous read operation. The value of the
+        /// <see cref="Task{TResult}.Result"/> parameter contains a <see cref="Msg"/> with the response from the NATS 
+        /// server.</returns>
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <see langword="null"/>
+        /// or entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size supported
+        /// by the NATS server.</exception>
+        /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
+        /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the 
+        /// response.</exception>
+        /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call while 
+        /// executing the request. See <see cref="System.Exception.InnerException"/> for more details.</exception>
+        /// <exception cref="OperationCanceledException">The asynchronous operation was cancelled or timed out before it
+        /// could be completed.</exception>
+        /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public Task<Msg> RequestAsync(string subject, byte[] data, CancellationToken token)
         {
             if (!opts.UseOldRequestStyle)
@@ -2585,6 +2866,14 @@ namespace NATS.Client
             }
         }
 
+        /// <summary>
+        /// Creates an inbox string which can be used for directed replies from subscribers.
+        /// </summary>
+        /// <remarks>
+        /// The returned inboxes are guaranteed to be unique, but can be shared and subscribed
+        /// to by others.
+        /// </remarks>
+        /// <returns>A unique inbox string.</returns>
         public string NewInbox()
         {
             if (!opts.UseOldRequestStyle)
@@ -2651,6 +2940,11 @@ namespace NATS.Client
         internal AsyncSubscription subscribeAsync(string subject, string queue,
             EventHandler<MsgHandlerEventArgs> handler)
         {
+            if (string.IsNullOrWhiteSpace(subject))
+            {
+                throw new NATSBadSubscriptionException();
+            }
+
             AsyncSubscription s = null;
 
             lock (mu)
@@ -2678,6 +2972,11 @@ namespace NATS.Client
         // function that indicates interest in a subject.
         private SyncSubscription subscribeSync(string subject, string queue)
         {
+            if (string.IsNullOrWhiteSpace(subject))
+            {
+                throw new NATSBadSubscriptionException();
+            }
+
             SyncSubscription s = null;
 
             lock (mu)
@@ -2702,35 +3001,124 @@ namespace NATS.Client
             return s;
         }
 
+        /// <summary>
+        /// Expresses interest in the given <paramref name="subject"/> to the NATS Server.
+        /// </summary>
+        /// <param name="subject">The subject on which to listen for messages.
+        /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).</param>
+        /// <returns>An <see cref="ISyncSubscription"/> to use to read any messages received
+        /// from the NATS Server on the given <paramref name="subject"/>.</returns>
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is
+        /// <see langword="null"/> or entirely whitespace.</exception>
+        /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
+        /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public ISyncSubscription SubscribeSync(string subject)
         {
             return subscribeSync(subject, null);
         }
 
+        /// <summary>
+        /// Expresses interest in the given <paramref name="subject"/> to the NATS Server.
+        /// </summary>
+        /// <remarks>
+        /// The <see cref="IAsyncSubscription"/> returned will not start receiving messages until
+        /// <see cref="IAsyncSubscription.Start"/> is called.
+        /// </remarks>
+        /// <param name="subject">The subject on which to listen for messages. 
+        /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).</param>
+        /// <returns>An <see cref="IAsyncSubscription"/> to use to read any messages received
+        /// from the NATS Server on the given <paramref name="subject"/>.</returns>
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is
+        /// <see langword="null"/> or entirely whitespace.</exception>
+        /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
+        /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public IAsyncSubscription SubscribeAsync(string subject)
         {
             return subscribeAsync(subject, null, null);
         }
 
+        /// <summary>
+        /// Expresses interest in the given <paramref name="subject"/> to the NATS Server, and begins delivering
+        /// messages to the given event handler.
+        /// </summary>
+        /// <remarks>The <see cref="IAsyncSubscription"/> returned will start delivering messages
+        /// to the event handler as soon as they are received. The caller does not have to invoke
+        /// <see cref="IAsyncSubscription.Start"/>.</remarks>
+        /// <param name="subject">The subject on which to listen for messages.
+        /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).</param>
+        /// <param name="handler">The <see cref="EventHandler{TEventArgs}"/> invoked when messages are received 
+        /// on the returned <see cref="IAsyncSubscription"/>.</param>
+        /// <returns>An <see cref="IAsyncSubscription"/> to use to read any messages received
+        /// from the NATS Server on the given <paramref name="subject"/>.</returns>
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is 
+        /// <see langword="null"/> or entirely whitespace.</exception>
+        /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
+        /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public IAsyncSubscription SubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler)
         {
             return subscribeAsync(subject, null, handler);
         }
 
+        /// <summary>
+        /// Creates a synchronous queue subscriber on the given <paramref name="subject"/>.
+        /// </summary>
+        /// <remarks>All subscribers with the same queue name will form the queue group and
+        /// only one member of the group will be selected to receive any given message
+        /// synchronously.</remarks>
+        /// <param name="subject">The subject on which to listen for messages.</param>
+        /// <param name="queue">The name of the queue group in which to participate.</param>
+        /// <returns>An <see cref="ISyncSubscription"/> to use to read any messages received
+        /// from the NATS Server on the given <paramref name="subject"/>, as part of 
+        /// the given queue group.</returns>
         public ISyncSubscription SubscribeSync(string subject, string queue)
         {
             return subscribeSync(subject, queue);
         }
 
+        /// <summary>
+        /// Creates an asynchronous queue subscriber on the given <paramref name="subject"/>.
+        /// </summary>
+        /// <remarks>
+        /// The <see cref="IAsyncSubscription"/> returned will not start receiving messages until
+        /// <see cref="IAsyncSubscription.Start"/> is called.
+        /// </remarks>
+        /// <param name="subject">The subject on which to listen for messages.
+        /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).</param>
+        /// <param name="queue">The name of the queue group in which to participate.</param>
+        /// <returns>An <see cref="IAsyncSubscription"/> to use to read any messages received
+        /// from the NATS Server on the given <paramref name="subject"/>.</returns>
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is 
+        /// <see langword="null"/> or entirely whitespace.</exception>
+        /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
+        /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public IAsyncSubscription SubscribeAsync(string subject, string queue)
         {
             return subscribeAsync(subject, queue, null);
         }
 
+        /// <summary>
+        /// Creates an asynchronous queue subscriber on the given <paramref name="subject"/>, and begins delivering
+        /// messages to the given event handler.
+        /// </summary>
+        /// <remarks>The <see cref="IAsyncSubscription"/> returned will start delivering messages
+        /// to the event handler as soon as they are received. The caller does not have to invoke
+        /// <see cref="IAsyncSubscription.Start"/>.</remarks>
+        /// <param name="subject">The subject on which to listen for messages.
+        /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).</param>
+        /// <param name="queue">The name of the queue group in which to participate.</param>
+        /// <param name="handler">The <see cref="EventHandler{TEventArgs}"/> invoked when messages are received 
+        /// on the returned <see cref="IAsyncSubscription"/>.</param>
+        /// <returns>An <see cref="IAsyncSubscription"/> to use to read any messages received
+        /// from the NATS Server on the given <paramref name="subject"/>.</returns>
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is 
+        /// <see langword="null"/> or entirely whitespace.</exception>
+        /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
+        /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public IAsyncSubscription SubscribeAsync(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler)
         {
             return subscribeAsync(subject, queue, handler);
         }
+
         // unsubscribe performs the low level unsubscribe to the server.
         // Use Subscription.Unsubscribe()
         internal void unsubscribe(Subscription sub, int max)
@@ -2835,13 +3223,24 @@ namespace NATS.Client
                 lastEx = e;
         }
 
+        /// <summary>
+        /// Performs a round trip to the server and returns when it receives the internal reply, or throws
+        /// a <see cref="NATSTimeoutException"/> exception if the NATS Server does not reply in time.
+        /// </summary>
+        /// <param name="timeout">The number of milliseconds to wait.</param>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="timeout"/> is less than or equal to zero (<c>0</c>).</exception>
+        /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
+        /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the response.</exception>
+        /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call while executing the
+        /// request. See <see cref="System.Exception.InnerException"/> for more details.</exception>
+        /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public void Flush(int timeout)
         {
             if (timeout <= 0)
             {
                 throw new ArgumentOutOfRangeException(
-                    "Timeout must be greater than 0",
-                    "timeout");
+                    "timeout",
+                    "Timeout must be greater than 0");
             }
 
             SingleUseChannel<bool> ch = SingleUseChannel<bool>.GetOrCreate();
@@ -2887,9 +3286,13 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Flush will perform a round trip to the server and return when it
-        /// receives the internal reply.
+        /// Performs a round trip to the server and returns when it receives the internal reply.
         /// </summary>
+        /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
+        /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the response.</exception>
+        /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call while executing the
+        /// request. See <see cref="System.Exception.InnerException"/> for more details.</exception>
+        /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public void Flush()
         {
             Flush(DEFAULT_FLUSH_TIMEOUT);
@@ -3013,6 +3416,12 @@ namespace NATS.Client
             }
         }
 
+        /// <summary>
+        /// Closes the <see cref="Connection"/> and all associated
+        /// subscriptions.
+        /// </summary>
+        /// <seealso cref="IsClosed"/>
+        /// <seealso cref="State"/>
         public void Close()
         {
             close(ConnState.CLOSED, true);
@@ -3026,6 +3435,14 @@ namespace NATS.Client
             return (status == ConnState.CLOSED);
         }
 
+        /// <summary>
+        /// Returns a value indicating whether or not the <see cref="Connection"/>
+        /// instance is closed.
+        /// </summary>
+        /// <returns><see langword="true"/> if and only if the <see cref="Connection"/> is
+        /// closed, otherwise <see langword="false"/>.</returns>
+        /// <seealso cref="Close"/>
+        /// <seealso cref="State"/>
         public bool IsClosed()
         {
             lock (mu)
@@ -3034,6 +3451,13 @@ namespace NATS.Client
             }
         }
 
+        /// <summary>
+        /// Returns a value indicating whether or not the <see cref="Connection"/>
+        /// is currently reconnecting.
+        /// </summary>
+        /// <returns><see langword="true"/> if and only if the <see cref="Connection"/> is
+        /// reconnecting, otherwise <see langword="false"/>.</returns>
+        /// <seealso cref="State"/>
         public bool IsReconnecting()
         {
             lock (mu)
@@ -3042,6 +3466,10 @@ namespace NATS.Client
             }
         }
 
+        /// <summary>
+        /// Gets the current state of the <see cref="Connection"/>.
+        /// </summary>
+        /// <seealso cref="ConnState"/>
         public ConnState State
         {
             get
@@ -3067,6 +3495,10 @@ namespace NATS.Client
             return (status == ConnState.CONNECTING || status == ConnState.CONNECTED);
         }
 
+        /// <summary>
+        /// Gets the statistics tracked for the <see cref="Connection"/>.
+        /// </summary>
+        /// <seealso cref="ResetStats"/>
         public IStatistics Stats
         {
             get
@@ -3078,6 +3510,10 @@ namespace NATS.Client
             }
         }
 
+        /// <summary>
+        /// Resets the associated statistics for the <see cref="Connection"/>.
+        /// </summary>
+        /// <seealso cref="Stats"/>
         public void ResetStats()
         {
             lock (mu)
@@ -3086,6 +3522,19 @@ namespace NATS.Client
             }
         }
 
+        /// <summary>
+        /// Gets the maximum size in bytes of a payload sent
+        /// to the connected NATS Server.
+        /// </summary>
+        /// <seealso cref="Publish(Msg)"/>
+        /// <seealso cref="Publish(string, byte[])"/>
+        /// <seealso cref="Publish(string, string, byte[])"/>
+        /// <seealso cref="Request(string, byte[])"/>
+        /// <seealso cref="Request(string, byte[], int)"/>
+        /// <seealso cref="RequestAsync(string, byte[])"/>
+        /// <seealso cref="RequestAsync(string, byte[], CancellationToken)"/>
+        /// <seealso cref="RequestAsync(string, byte[], int)"/>
+        /// <seealso cref="RequestAsync(string, byte[], int, CancellationToken)"/>
         public long MaxPayload
         {
             get
@@ -3099,9 +3548,9 @@ namespace NATS.Client
 
         /// <summary>
         /// Returns a string representation of the
-        /// value of this Connection instance.
+        /// value of this <see cref="Connection"/> instance.
         /// </summary>
-        /// <returns>String value of this instance.</returns>
+        /// <returns>A string that represents the current instance.</returns>
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
@@ -3135,31 +3584,50 @@ namespace NATS.Client
         }
 
         #region IDisposable Support
-        private bool disposedValue = false; // To detect redundant calls
 
+        // To detect redundant calls
+        private bool disposedValue = false; 
+
+        /// <summary>
+        /// Closes the connection and optionally releases the managed resources.
+        /// </summary>
+        /// <remarks>In derived classes, do not override the <see cref="Close"/> method, instead
+        /// put all of the <seealso cref="Connection"/> cleanup logic in your Dispose override.</remarks>
+        /// <param name="disposing"><see langword="true"/> to release both managed
+        /// and unmanaged resources; <see langword="false"/> to release only unmanaged 
+        /// resources.</param>
         protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue)
             {
-                try
-                {
-                    Close();
-                    callbackScheduler.WaitForCompletion();
-                    callbackScheduler.Dispose();
-                    conn.Dispose();
-                }
-                catch (Exception)
-                {
-                    // No need to throw an exception here
-                }
-
                 disposedValue = true;
+
+                if (disposing)
+                {
+                    try
+                    {
+                        Close();
+                        callbackScheduler.WaitForCompletion();
+                        callbackScheduler.Dispose();
+                        conn.Dispose();
+                    }
+                    catch (Exception)
+                    {
+                        // No need to throw an exception here
+                    }
+                }
             }
         }
 
+        /// <summary>
+        /// Releases all resources used by the <see cref="Connection"/>.
+        /// </summary>
+        /// <remarks>This method disposes the connection, by clearing all pending
+        /// operations, and closing the connection to release resources.</remarks>
         public void Dispose()
         {
             Dispose(true);
+            GC.SuppressFinalize(this);
         }
         #endregion
 

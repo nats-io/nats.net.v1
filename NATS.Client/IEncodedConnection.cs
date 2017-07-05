@@ -5,169 +5,219 @@ using System;
 namespace NATS.Client
 {
     /// <summary>
-    /// Represents an encoded connection to the NATS server.
+    /// Represents a connection to a NATS Server which uses a client specified
+    /// encoding scheme.
     /// </summary>
     public interface IEncodedConnection : IDisposable
     {
         /// <summary>
-        /// Returns the options used to create this connection.
+        /// Gets the configuration options for this instance.
         /// </summary>
         Options Opts { get; }
 
         /// <summary>
-        /// Returns the url of the server currently connected, null otherwise.
+        /// Gets the URL of the NATS server to which this instance
+        /// is connected, otherwise <see langword="null"/>.
         /// </summary>
         string ConnectedUrl { get; }
 
         /// <summary>
-        /// Returns the id of the server currently connected.
+        /// Gets the server ID of the NATS server to which this instance
+        /// is connected, otherwise <see langword="null"/>.
         /// </summary>
         string ConnectedId { get; }
 
         /// <summary>
-        /// Servers returns the list of potential servers, including those updated after 
-        /// a connection has been made.
+        /// Gets an array of known server URLs for this instance.
         /// </summary>
+        /// <remarks><see cref="Servers"/> also includes any additional
+        /// servers discovered after a connection has been established. If
+        /// authentication is enabled, <see cref="Options.User"/> or
+        /// <see cref="Options.Token"/> must be used when connecting with
+        /// these URLs.</remarks>
         string[] Servers { get; }
 
         /// <summary>
-        /// LastError reports the last error encountered via the Connection.
+        /// Gets an array of server URLs that were discovered after this
+        /// instance connected.
+        /// </summary>
+        /// <remarks>If authentication is enabled, <see cref="Options.User"/> or
+        /// <see cref="Options.Token"/> must be used when connecting with
+        /// these URLs.</remarks>
+        string[] DiscoveredServers { get; }
+
+        /// <summary>
+        /// Gets the last <see cref="Exception"/> encountered by this instance,
+        /// otherwise <see langword="null"/>.
         /// </summary>
         Exception LastError { get; }
 
         /// <summary>
-        /// Publish serializes and publishes an object to the given subject. The object
-        /// argument is left untouched and needs to be correctly interpreted on
-        /// the receiver.
+        /// Publishes the serialized value of <paramref name="obj"/> to the given <paramref name="subject"/>.
         /// </summary>
-        /// <param name="subject">Subject to publish the message to.</param>
-        /// <param name="obj">The object to send</param>
+        /// <param name="subject">The subject to publish <paramref name="obj"/> to over
+        /// the current connection.</param>
+        /// <param name="obj">The <see cref="Object"/> to serialize and publish to the connected NATS server.</param>
         void Publish(string subject, object obj);
 
         /// <summary>
-        /// Publish will perform a Publish() expecting a response on the
-        /// reply subject. Use Request() for automatically waiting for a response
-        /// inline.
+        /// Publishes the serialized value of <paramref name="obj"/> to the given <paramref name="subject"/>.
         /// </summary>
-        /// <param name="subject">Subject to publish on</param>
-        /// <param name="reply">Subject the receiver will on.</param>
-        /// <param name="obj">The object to send</param>
+        /// <param name="subject">The subject to publish <paramref name="obj"/> to over
+        /// the current connection.</param>
+        /// <param name="reply">An optional reply subject.</param>
+        /// <param name="obj">The <see cref="Object"/> to serialize and publish to the connected NATS server.</param>
         void Publish(string subject, string reply, object obj);
 
         /// <summary>
-        /// Request will create an Inbox and perform a Request() call
-        /// with the Inbox reply and return the first reply received.
-        /// This is optimized for the case of multiple responses.
+        /// Sends a request payload and returns the deserialized response, or throws
+        /// <see cref="NATSTimeoutException"/> if the <paramref name="timeout"/> expires.
         /// </summary>
         /// <remarks>
-        /// A negative timeout blocks forever, zero is not allowed.
+        /// <see cref="Request(string, object, int)"/> will create an unique inbox for this request, sharing a single
+        /// subscription for all replies to this <see cref="IEncodedConnection"/> instance. However, if 
+        /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription. 
+        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
         /// </remarks>
-        /// <param name="subject">Subject to send the request on.</param>
-        /// <param name="obj">The object to send</param>
-        /// <param name="timeout">time to block</param>
-        /// <returns>An object from the replier.</returns>
+        /// <param name="subject">The subject to publish <paramref name="obj"/> to over
+        /// the current connection.</param>
+        /// <param name="obj">The <see cref="Object"/> to serialize and publish to the connected NATS server.</param>
+        /// <param name="timeout">The number of milliseconds to wait.</param>
+        /// <returns>A <see cref="Object"/> with the deserialized response from the NATS server.</returns>
         object Request(string subject, object obj, int timeout);
 
         /// <summary>
-        /// Request will create an Inbox and perform a Request() call
-        /// with the Inbox reply and return the first reply received.
-        /// This is optimized for the case of multiple responses.
+        /// Sends a request payload and returns the deserialized response.
         /// </summary>
-        /// <param name="subject">Subject to send the request on.</param>
-        /// <param name="obj">The object to send</param>
-        /// <returns>An object from the replier.</returns>
+        /// <remarks>
+        /// <see cref="Request(string, object)"/> will create an unique inbox for this request, sharing a single
+        /// subscription for all replies to this <see cref="IEncodedConnection"/> instance. However, if 
+        /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription. 
+        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
+        /// </remarks>
+        /// <param name="subject">The subject to publish <paramref name="obj"/> to over
+        /// the current connection.</param>
+        /// <param name="obj">The <see cref="Object"/> to serialize and publish to the connected NATS server.</param>
+        /// <returns>A <see cref="Object"/> with the deserialized response from the NATS server.</returns>
         object Request(string subject, object obj);
 
         /// <summary>
-        /// NewInbox will return an inbox string which can be used for directed replies from
-        /// subscribers. These are guaranteed to be unique, but can be shared and subscribed
-        /// to by others.
+        /// Creates an inbox string which can be used for directed replies from subscribers.
         /// </summary>
-        /// <returns>A string representing an inbox.</returns>
+        /// <remarks>
+        /// The returned inboxes are guaranteed to be unique, but can be shared and subscribed
+        /// to by others.
+        /// </remarks>
+        /// <returns>A unique inbox string.</returns>
         string NewInbox();
 
         /// <summary>
-        /// SubscribeAsync will create an AsyncSubscriber with
-        /// interest in a given subject, assign the handler, and immediately
-        /// start receiving messages.
+        /// Expresses interest in the given <paramref name="subject"/> to the NATS Server, and begins delivering
+        /// messages to the given event handler.
         /// </summary>
-        /// <param name="subject">Subject of interest.</param>
-        /// <param name="handler">An encoded message handler delegate.</param>
-        /// <returns>A new Subscription</returns>
+        /// <remarks>The <see cref="IAsyncSubscription"/> returned will start delivering messages
+        /// to the event handler as soon as they are received. The caller does not have to invoke
+        /// <see cref="IAsyncSubscription.Start"/>.</remarks>
+        /// <param name="subject">The subject on which to listen for messages.
+        /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).</param>
+        /// <param name="handler">The <see cref="EventHandler{TEventArgs}"/> invoked when messages are received 
+        /// on the returned <see cref="IAsyncSubscription"/>.</param>
+        /// <returns>An <see cref="IAsyncSubscription"/> to use to read any messages received
+        /// from the NATS Server on the given <paramref name="subject"/>.</returns>
         IAsyncSubscription SubscribeAsync(string subject, EventHandler<EncodedMessageEventArgs> handler);
 
         /// <summary>
-        /// This method creates an asynchronous queue subscriber on the given subject.
-        /// All subscribers with the same queue name will form the queue group and
-        /// only one member of the group will be selected to receive any given
-        /// message asynchronously. Start() must be called to 
-        /// begin receiving messages.
+        /// Creates an asynchronous queue subscriber on the given <paramref name="subject"/>, and begins delivering
+        /// messages to the given event handler.
         /// </summary>
-        /// <param name="subject">Subject of interest</param>
-        /// <param name="queue">Name of the queue group</param>
-        /// <param name="handler">A message handler to initialize the MessageHandler event with.</param>
-        /// <returns>A new Subscription</returns>
+        /// <remarks>The <see cref="IAsyncSubscription"/> returned will start delivering messages
+        /// to the event handler as soon as they are received. The caller does not have to invoke
+        /// <see cref="IAsyncSubscription.Start"/>.</remarks>
+        /// <param name="subject">The subject on which to listen for messages.
+        /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).</param>
+        /// <param name="queue">The name of the queue group in which to participate.</param>
+        /// <param name="handler">The <see cref="EventHandler{TEventArgs}"/> invoked when messages are received 
+        /// on the returned <see cref="IAsyncSubscription"/>.</param>
+        /// <returns>An <see cref="IAsyncSubscription"/> to use to read any messages received
+        /// from the NATS Server on the given <paramref name="subject"/>.</returns>
         IAsyncSubscription SubscribeAsync(string subject, string queue, EventHandler<EncodedMessageEventArgs> handler);
 
         /// <summary>
-        /// Flush will perform a round trip to the server and return when it
-        /// receives the internal reply.
+        /// Performs a round trip to the server and returns when it receives the internal reply, or throws
+        /// a <see cref="NATSTimeoutException"/> exception if the NATS Server does not reply in time.
         /// </summary>
-        /// <param name="timeout">The timeout in milliseconds.</param>
+        /// <param name="timeout">The number of milliseconds to wait.</param>
         void Flush(int timeout);
 
         /// <summary>
-        /// Flush will perform a round trip to the server and return when it
-        /// receives the internal reply.
+        /// Performs a round trip to the server and returns when it receives the internal reply.
         /// </summary>
         void Flush();
 
         /// <summary>
-        /// Close will close the connection to the server. This call will release
-        /// all blocking calls, such as Flush() and NextMsg().
+        /// Closes the <see cref="IConnection"/> and all associated
+        /// subscriptions.
         /// </summary>
+        /// <seealso cref="IsClosed"/>
+        /// <seealso cref="State"/>
         void Close();
 
         /// <summary>
-        /// Test if this connection has been closed.
+        /// Returns a value indicating whether or not the <see cref="IConnection"/>
+        /// instance is closed.
         /// </summary>
-        /// <returns>true if closed, false otherwise.</returns>
+        /// <returns><see langword="true"/> if and only if the <see cref="IConnection"/> is
+        /// closed, otherwise <see langword="false"/>.</returns>
+        /// <seealso cref="Close"/>
+        /// <seealso cref="State"/>
         bool IsClosed();
 
         /// <summary>
-        /// Test if this connection is reconnecting.
+        /// Returns a value indicating whether or not the <see cref="IConnection"/>
+        /// is currently reconnecting.
         /// </summary>
-        /// <returns>true if reconnecting, false otherwise.</returns>
+        /// <returns><see langword="true"/> if and only if the <see cref="IConnection"/> is
+        /// reconnecting, otherwise <see langword="false"/>.</returns>
+        /// <seealso cref="State"/>
         bool IsReconnecting();
 
         /// <summary>
-        /// Gets the current state of the connection.
+        /// Gets the current state of the <see cref="IConnection"/>.
         /// </summary>
+        /// <seealso cref="ConnState"/>
         ConnState State { get; }
 
-        // Stats will return a race safe copy of connection statistics.
         /// <summary>
-        /// Returns a race safe copy of connection statistics.
+        /// Gets the statistics tracked for the <see cref="IConnection"/>.
         /// </summary>
+        /// <seealso cref="ResetStats"/>
         IStatistics Stats { get; }
 
         /// <summary>
-        /// Resets connection statistics.
+        /// Resets the associated statistics for the <see cref="IConnection"/>.
         /// </summary>
+        /// <seealso cref="Stats"/>
         void ResetStats();
 
         /// <summary>
-        /// Returns the server defined size limit that a message payload can have.
+        /// Gets the maximum size in bytes of any payload sent
+        /// to the connected NATS Server.
         /// </summary>
+        /// <seealso cref="Publish(string, object)"/>
+        /// <seealso cref="Publish(string, string, object)"/>
+        /// <seealso cref="Request(string, object)"/>
+        /// <seealso cref="Request(string, object, int)"/>
         long MaxPayload { get; }
 
         /// <summary>
-        /// Overrides the default serialization.
+        /// Gets or sets the method which is called to serialize
+        /// objects sent as a message payload.
         /// </summary>
         Serializer OnSerialize { get; set; }
 
         /// <summary>
-        /// Overrides the default deserialization.
+        /// Gets or sets the method which is called to deserialize
+        /// objects from a message payload.
         /// </summary>
         Deserializer OnDeserialize { get; set; }
     }

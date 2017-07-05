@@ -3,13 +3,22 @@
 using System;
 using System.Threading.Tasks;
 
-// disable XML comment warnings
-#pragma warning disable 1591
-
 namespace NATS.Client
 {
+    /// <summary>
+    /// <see cref="AsyncSubscription"/> asynchronously delivers messages to listeners of the <see cref="MessageHandler"/>
+    /// event.
+    /// </summary>
+    /// <remarks>
+    /// If the <see cref="AsyncSubscription"/> is created without listening to the <see cref="MessageHandler"/>
+    /// event, no messages will be received until <see cref="Start()"/> has been called.
+    /// </remarks>
     public sealed class AsyncSubscription : Subscription, IAsyncSubscription, ISubscription
     {
+        /// <summary>
+        /// Occurs when the <see cref="AsyncSubscription"/> receives a message from the
+        /// underlying <see cref="Subscription"/>.
+        /// </summary>
         public event EventHandler<MsgHandlerEventArgs> MessageHandler;
 
         private MsgHandlerEventArgs msgHandlerArgs = new MsgHandlerEventArgs();
@@ -105,6 +114,16 @@ namespace NATS.Client
             started = false;
         }
 
+        /// <summary>
+        /// Starts delivering received messages to listeners on <see cref="MessageHandler"/>
+        /// from a separate thread.
+        /// </summary>
+        /// <remarks>
+        /// If the <see cref="IAsyncSubscription"/> has already started delivering messages, this
+        /// method is a no-op.
+        /// </remarks>
+        /// <exception cref="NATSBadSubscriptionException">There is no longer an associated <see cref="Connection"/>
+        /// for this <see cref="AsyncSubscription"/>.</exception>
         public void Start()
         {
             if (started)
@@ -117,12 +136,28 @@ namespace NATS.Client
             enableAsyncProcessing();
         }
 
-        override public void Unsubscribe()
+        /// <summary>
+        /// Removes interest in the given subject.
+        /// </summary>
+        /// <exception cref="NATSBadSubscriptionException">There is no longer an associated <see cref="Connection"/>
+        /// for this <see cref="AsyncSubscription"/>.</exception>
+        public override void Unsubscribe()
         {
             disableAsyncProcessing();
             base.Unsubscribe();
         }
 
+        /// <summary>
+        /// Issues an automatic call to <see cref="Unsubscribe"/> when <paramref name="max"/> messages have been
+        /// received.
+        /// </summary>
+        /// <remarks><para>This can be useful when sending a request to an unknown number of subscribers.
+        /// <see cref="Connection"/>'s Request methods use this functionality.</para>
+        /// <para>Calling this method will invoke <see cref="Start"/> if it has not already been called.</para></remarks>
+        /// <param name="max">The maximum number of messages to receive on the subscription before calling
+        /// <see cref="Unsubscribe"/>. Values less than or equal to zero (<c>0</c>) unsubscribe immediately.</param>
+        /// <exception cref="NATSBadSubscriptionException">There is no longer an associated <see cref="Connection"/>
+        /// for this <see cref="AsyncSubscription"/>.</exception>
         public override void AutoUnsubscribe(int max)
         {
             Start();

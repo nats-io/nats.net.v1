@@ -5,29 +5,25 @@ using System;
 namespace NATS.Client
 {
     /// <summary>
-    /// A Syncronous Subscripion will express interest in a given subject.
-    /// The subject can have wildcards (partial:*, full:>).
-    /// Messages arriving are retrieved via NextMsg()
+    /// <see cref="ISyncSubscription"/> provides messages for a subject through calls
+    /// to <see cref="NextMessage()"/> and <see cref="NextMessage(int)"/>.
     /// </summary>
     public interface ISyncSubscription : ISubscription, IDisposable
     {
         /// <summary>
-        /// This method will return the next message available to a synchronous subscriber
-        /// or block until one is available.
+        /// Returns the next <see cref="Msg"/> available to a synchronous
+        /// subscriber, blocking until one is available.
         /// </summary>
-        /// <returns>a NATS message</returns>
+        /// <returns>The next <see cref="Msg"/> available to a subscriber.</returns>
         Msg NextMessage();
 
         /// <summary>
-        /// This method will return the next message available to a synchronous subscriber
-        /// or block until one is available. A timeout can be used to return when no
-        /// message has been delivered.
+        /// Returns the next <see cref="Msg"/> available to a synchronous
+        /// subscriber, or block up to a given timeout until the next one is available.
         /// </summary>
-        /// <remarks>
-        /// A timeout of 0 will return null immediately if there are no messages.
-        /// </remarks>
-        /// <param name="timeout">Timeout value</param>
-        /// <returns>a NATS message</returns>
+        /// <param name="timeout">The amount of time, in milliseconds, to wait for
+        /// the next message.</param>
+        /// <returns>The next <see cref="Msg"/> available to a subscriber.</returns>
         Msg NextMessage(int timeout);
     }
 }

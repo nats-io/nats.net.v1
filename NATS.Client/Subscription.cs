@@ -3,11 +3,11 @@
 using System;
 using System.Text;
 
-// disable XML comment warnings
-#pragma warning disable 1591
-
 namespace NATS.Client
 {
+    /// <summary>
+    /// Represents interest in a NATS topic.
+    /// </summary>
     public class Subscription : ISubscription, IDisposable
     {
         readonly  internal  object mu = new object(); // lock
@@ -67,6 +67,9 @@ namespace NATS.Client
             }
         }
 
+        /// <summary>
+        /// Gets the subject for this subscription.
+        /// </summary>
         public string Subject
         {
             get { return subject; }
@@ -77,11 +80,21 @@ namespace NATS.Client
         // only be processed by one member of the group.
         string queue;
 
+        /// <summary>
+        /// Gets the optional queue group name.
+        /// </summary>
+        /// <remarks>
+        /// If present, all subscriptions with the same name will form a distributed queue, and each message will only
+        /// be processed by one member of the group.
+        /// </remarks>
         public string Queue
         {
             get { return queue; }
         }
 
+        /// <summary>
+        /// Gets the <see cref="Connection"/> associated with this instance.
+        /// </summary>
         public Connection Connection
         {
             get
@@ -105,7 +118,6 @@ namespace NATS.Client
             return false;
         }
 
-
         protected internal virtual bool processMsg(Msg msg)
         {
             return true;
@@ -119,7 +131,14 @@ namespace NATS.Client
             pBytes -= msg.Data.Length;
         }
 
-        // caller must lock
+        /// <summary>
+        /// Implementors should call this method when <paramref name="msg"/> has been
+        /// delivered to an <see cref="ISubscription"/>.
+        /// </summary>
+        /// <remarks>Caller must lock on <see cref="mu"/>.</remarks>
+        /// <param name="msg">The <see cref="Msg"/> object delivered to a
+        /// <see cref="ISubscription"/>.</param>
+        /// <returns>The total number of delivered messages.</returns>
         protected long tallyDeliveredMessage(Msg msg)
         {
             delivered++;
@@ -172,6 +191,9 @@ namespace NATS.Client
             return true;
         }
 
+        /// <summary>
+        /// Gets a value indicating whether or not the <see cref="Subscription"/> is still valid.
+        /// </summary>
         public bool IsValid
         {
             get
@@ -202,11 +224,26 @@ namespace NATS.Client
             c.unsubscribe(this, 0);
         }
 
+        /// <summary>
+        /// Removes interest in the <see cref="Subject"/>.
+        /// </summary>
+        /// <exception cref="NATSBadSubscriptionException">There is no longer an associated <see cref="Connection"/>
+        /// for this <see cref="ISubscription"/>.</exception>
         public virtual void Unsubscribe()
         {
             unsubscribe(true);
         }
 
+        /// <summary>
+        /// Issues an automatic call to <see cref="Unsubscribe"/> when <paramref name="max"/> messages have been
+        /// received.
+        /// </summary>
+        /// <remarks>This can be useful when sending a request to an unknown number of subscribers.
+        /// <see cref="Connection"/>'s Request methods use this functionality.</remarks>
+        /// <param name="max">The maximum number of messages to receive on the subscription before calling
+        /// <see cref="Unsubscribe"/>. Values less than or equal to zero (<c>0</c>) unsubscribe immediately.</param>
+        /// <exception cref="NATSBadSubscriptionException">There is no longer an associated <see cref="Connection"/>
+        /// for this <see cref="ISubscription"/>.</exception>
         public virtual void AutoUnsubscribe(int max)
         {
             Connection c = null;
@@ -226,7 +263,7 @@ namespace NATS.Client
         /// Gets the number of messages remaining in the delivery queue.
         /// </summary>
         /// <exception cref="NATSBadSubscriptionException">There is no longer an associated <see cref="Connection"/>
-        /// for this <see cref="AsyncSubscription"/>.</exception>
+        /// for this <see cref="ISubscription"/>.</exception>
         public int QueuedMessageCount
         {
             get
@@ -244,6 +281,12 @@ namespace NATS.Client
         #region IDisposable Support
         private bool disposedValue = false; // To detect redundant calls
 
+        /// <summary>
+        /// Unsubscribes the subscription and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing"><see langword="true"/> to release both managed
+        /// and unmanaged resources; <see langword="false"/> to release only unmanaged 
+        /// resources.</param>
         protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue)
@@ -262,12 +305,21 @@ namespace NATS.Client
             }
         }
 
+        /// <summary>
+        /// Releases all resources used by the <see cref="Subscription"/>.
+        /// </summary>
+        /// <remarks>This method unsubscribes from the subject, to release resources.</remarks>
         public void Dispose()
         {
             Dispose(true);
+            GC.SuppressFinalize(this);
         }
         #endregion
 
+        /// <summary>
+        /// Returns a string that represents the current instance.
+        /// </summary>
+        /// <returns>A string that represents the current <see cref="Subscription"/>.</returns>
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
@@ -383,9 +435,9 @@ namespace NATS.Client
         /// Returns the pending byte and message counts.
         /// </summary>
         /// <param name="pendingBytes">When this method returns, <paramref name="pendingBytes"/> will
-        /// contain the count of bytes not yet processed on the <see cref="Subscription"/>.</param>
+        /// contain the count of bytes not yet processed on the <see cref="ISubscription"/>.</param>
         /// <param name="pendingMessages">When this method returns, <paramref name="pendingMessages"/> will
-        /// contain the count of messages not yet processed on the <see cref="Subscription"/>.</param>
+        /// contain the count of messages not yet processed on the <see cref="ISubscription"/>.</param>
         public void GetPending(out long pendingBytes, out long pendingMessages)
         {
             lock (mu)
