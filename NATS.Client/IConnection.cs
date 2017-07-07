@@ -56,6 +56,15 @@ namespace NATS.Client
         /// <summary>
         /// Publishes <paramref name="data"/> to the given <paramref name="subject"/>.
         /// </summary>
+        /// <remarks>
+        /// <para>NATS implements a publish-subscribe message distribution model. NATS publish subscribe is a
+        /// one-to-many communication. A publisher sends a message on a subject. Any active subscriber listening
+        /// on that subject receives the message. Subscribers can register interest in wildcard subjects.</para>
+        /// <para>In the basic NATS platfrom, if a subscriber is not listening on the subject (no subject match),
+        /// or is not acive when the message is sent, the message is not recieved. NATS is a fire-and-forget
+        /// messaging system. If you need higher levels of service, you can either use NATS Streaming, or build the
+        /// additional reliability into your client(s) yourself.</para>
+        /// </remarks>
         /// <param name="subject">The subject to publish <paramref name="data"/> to over
         /// the current connection.</param>
         /// <param name="data">An array of type <see cref="Byte"/> that contains the data to publish
@@ -68,6 +77,7 @@ namespace NATS.Client
         /// </summary>
         /// <param name="msg">A <see cref="Msg"/> instance containing the subject, optional reply, and data to publish
         /// to the NATS server.</param>
+        /// <seealso cref="IConnection.Publish(string, byte[])"/>
         void Publish(Msg msg);
 
         /// <summary>
@@ -78,6 +88,7 @@ namespace NATS.Client
         /// <param name="reply">An optional reply subject.</param>
         /// <param name="data">An array of type <see cref="Byte"/> that contains the data to publish
         /// to the connected NATS server.</param>
+        /// <seealso cref="IConnection.Publish(string, byte[])"/>
         void Publish(string subject, string reply, byte[] data);
 
         /// <summary>
@@ -96,16 +107,22 @@ namespace NATS.Client
         /// to the connected NATS server.</param>
         /// <param name="timeout">The number of milliseconds to wait.</param>
         /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
+        /// <seealso cref="IConnection.Request(string, byte[])"/>
         Msg Request(string subject, byte[] data, int timeout);
 
         /// <summary>
         /// Sends a request payload and returns the response <see cref="Msg"/>.
         /// </summary>
         /// <remarks>
-        /// <see cref="Request(string, byte[])"/> will create an unique inbox for this request, sharing a single
+        /// <para>NATS supports two flavors of request-reply messaging: point-to-point or one-to-many. Point-to-point
+        /// involves the fastest or first to respond. In a one-to-many exchange, you set a limit on the number of 
+        /// responses the requestor may receive and instead must use a subscription (<see cref="ISubscription.AutoUnsubscribe(int)"/>).
+        /// In a request-response exchange, publish request operation publishes a message with a reply subject expecting
+        /// a response on that reply subject.</para>
+        /// <para><see cref="Request(string, byte[])"/> will create an unique inbox for this request, sharing a single
         /// subscription for all replies to this <see cref="Connection"/> instance. However, if 
         /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription. 
-        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
+        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.</para>
         /// </remarks>
         /// <param name="subject">The subject to publish <paramref name="data"/> to over
         /// the current connection.</param>
@@ -131,6 +148,7 @@ namespace NATS.Client
         /// <param name="timeout">The number of milliseconds to wait.</param>
         /// <returns>A task that represents the asynchronous read operation. The value of the <see cref="Task{TResult}.Result"/>
         /// parameter contains a <see cref="Msg"/> with the response from the NATS server.</returns>
+        /// <seealso cref="IConnection.Request(string, byte[])"/>
         Task<Msg> RequestAsync(string subject, byte[] data, int timeout);
 
         /// <summary>
@@ -149,6 +167,7 @@ namespace NATS.Client
         /// <returns>A task that represents the asynchronous read operation. The value of the 
         /// <see cref="Task{TResult}.Result"/> parameter contains a <see cref="Msg"/> with the response from the NATS
         /// server.</returns>
+        /// <seealso cref="IConnection.Request(string, byte[])"/>
         Task<Msg> RequestAsync(string subject, byte[] data);
 
         /// <summary>
@@ -171,6 +190,7 @@ namespace NATS.Client
         /// <returns>A task that represents the asynchronous read operation. The value of the
         /// <see cref="Task{TResult}.Result"/> parameter contains  a <see cref="Msg"/> with the response from the NATS
         /// server.</returns>
+        /// <seealso cref="IConnection.Request(string, byte[])"/>
         Task<Msg> RequestAsync(string subject, byte[] data, int timeout, CancellationToken token);
 
         /// <summary>
@@ -191,6 +211,7 @@ namespace NATS.Client
         /// <returns>A task that represents the asynchronous read operation. The value of the
         /// <see cref="Task{TResult}.Result"/> parameter contains a <see cref="Msg"/> with the response from the NATS 
         /// server.</returns>
+        /// <seealso cref="IConnection.Request(string, byte[])"/>
         Task<Msg> RequestAsync(string subject, byte[] data, CancellationToken token);
 
         /// <summary>
@@ -210,6 +231,7 @@ namespace NATS.Client
         /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).</param>
         /// <returns>An <see cref="ISyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
+        /// <seealso cref="ISubscription.Subject"/>
         ISyncSubscription SubscribeSync(string subject);
 
         /// <summary>
@@ -223,6 +245,7 @@ namespace NATS.Client
         /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).</param>
         /// <returns>An <see cref="IAsyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
+        /// <seealso cref="ISubscription.Subject"/>
         IAsyncSubscription SubscribeAsync(string subject);
 
         /// <summary>
@@ -238,6 +261,7 @@ namespace NATS.Client
         /// on the returned <see cref="IAsyncSubscription"/>.</param>
         /// <returns>An <see cref="IAsyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
+        /// <seealso cref="ISubscription.Subject"/>
         IAsyncSubscription SubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler);
 
         /// <summary>
@@ -251,36 +275,48 @@ namespace NATS.Client
         /// <returns>An <see cref="ISyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>, as part of 
         /// the given queue group.</returns>
+        /// <seealso cref="ISubscription.Subject"/>
+        /// <seealso cref="ISubscription.Queue"/>
         ISyncSubscription SubscribeSync(string subject, string queue);
 
         /// <summary>
         /// Creates an asynchronous queue subscriber on the given <paramref name="subject"/>.
         /// </summary>
         /// <remarks>
-        /// The <see cref="IAsyncSubscription"/> returned will not start receiving messages until
-        /// <see cref="IAsyncSubscription.Start"/> is called.
+        /// <para>All subscribers with the same queue name will form the queue group and
+        /// only one member of the group will be selected to receive any given message.</para>
+        /// <para>The <see cref="IAsyncSubscription"/> returned will not start receiving messages until
+        /// <see cref="IAsyncSubscription.Start"/> is called.</para>
         /// </remarks>
         /// <param name="subject">The subject on which to listen for messages.
         /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).</param>
         /// <param name="queue">The name of the queue group in which to participate.</param>
         /// <returns>An <see cref="IAsyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
+        /// <seealso cref="ISubscription.Subject"/>
+        /// <seealso cref="ISubscription.Queue"/>
         IAsyncSubscription SubscribeAsync(string subject, string queue);
 
         /// <summary>
         /// Creates an asynchronous queue subscriber on the given <paramref name="subject"/>, and begins delivering
         /// messages to the given event handler.
         /// </summary>
-        /// <remarks>The <see cref="IAsyncSubscription"/> returned will start delivering messages
+        /// <remarks>
+        /// <para>All subscribers with the same queue name will form the queue group and
+        /// only one member of the group will be selected to receive any given message.</para>
+        /// <para>The <see cref="IAsyncSubscription"/> returned will start delivering messages
         /// to the event handler as soon as they are received. The caller does not have to invoke
-        /// <see cref="IAsyncSubscription.Start"/>.</remarks>
+        /// <see cref="IAsyncSubscription.Start"/>.</para>
+        /// </remarks>
         /// <param name="subject">The subject on which to listen for messages.
         /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).</param>
         /// <param name="queue">The name of the queue group in which to participate.</param>
-        /// <param name="handler">The <see cref="EventHandler{TEventArgs}"/> invoked when messages are received 
+        /// <param name="handler">The <see cref="EventHandler{MsgHandlerEventArgs}"/> invoked when messages are received 
         /// on the returned <see cref="IAsyncSubscription"/>.</param>
         /// <returns>An <see cref="IAsyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
+        /// <seealso cref="ISubscription.Subject"/>
+        /// <seealso cref="ISubscription.Queue"/>
         IAsyncSubscription SubscribeAsync(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler);
 
         /// <summary>

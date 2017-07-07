@@ -5,24 +5,51 @@ namespace NATS.Client
     /// <summary>
     /// Represents interest in a NATS topic.
     /// </summary>
+    /// <remarks>
+    /// <para>Subscriptions represent interest in a topic on a NATS Server or cluster of
+    /// NATS Servers. Subscriptions can be exact or include wildcards. A subscriber can
+    /// process a NATS message synchronously (<see cref="ISyncSubscription"/>) or asynchronously
+    /// (<see cref="IAsyncSubscription"/>).</para>
+    /// </remarks>
+    /// <seealso cref="ISyncSubscription"/>
+    /// <seealso cref="IAsyncSubscription"/>
     public interface ISubscription
     {
         /// <summary>
         /// Gets the subject for this subscription.
         /// </summary>
+        /// <remarks><para>Subject names, including reply subject (INBOX) names, are case-sensitive
+        /// and must be non-empty alphanumeric strings with no embedded whitespace, and optionally
+        /// token-delimited using the dot character (<c>.</c>), e.g.: <c>FOO</c>, <c>BAR</c>,
+        /// <c>foo.BAR</c>, <c>FOO.BAR</c>, and <c>FOO.BAR.BAZ</c> are all valid subject names, while:
+        /// <c>FOO. BAR</c>, <c>foo. .bar</c> and <c>foo..bar</c> are <em>not</em> valid subject names.</para>
+        /// <para>NATS supports the use of wildcards in subject subscriptions.</para>
+        /// <list>
+        /// <item>The asterisk character (<c>*</c>) matches any token at any level of the subject.</item>
+        /// <item>The greater than symbol (<c>&gt;</c>), also known as the <em>full wildcard</em>, matches
+        /// one or more tokens at the tail of a subject, and must be the last token. The wildcard subject
+        /// <c>foo.&gt;</c> will match <c>foo.bar</c> or <c>foo.bar.baz.1</c>, but not <c>foo</c>.</item>
+        /// <item>Wildcards must be separate tokens (<c>foo.*.bar</c> or <c>foo.&gt;</c> are syntactically
+        /// valid; <c>foo*.bar</c>, <c>f*o.b*r</c> and <c>foo&gt;</c> are not).</item>
+        /// </list>
+        /// <para>For example, the wildcard subscrpitions <c>foo.*.quux</c> and <c>foo.&gt;</c> both match
+        /// <c>foo.bar.quux</c>, but only the latter matches <c>foo.bar.baz</c>. With the full wildcard,
+        /// it is also possible to express interest in every subject that may exist in NATS (<c>&gt;</c>).</para>
+        /// </remarks>
         string Subject { get; }
 
         /// <summary>
         /// Gets the optional queue group name.
         /// </summary>
         /// <remarks>
-        /// If present, all subscriptions with the same name will form a distributed queue, and each message will only
-        /// be processed by one member of the group.
+        /// <para>If present, all subscriptions with the same name will form a distributed queue, and each message will only
+        /// be processed by one member of the group. Although queue groups have multiple subscribers,
+        /// each message is consumed by only one.</para>
         /// </remarks>
         string Queue { get; }
 
         /// <summary>
-        /// Gets the <see cref="Connection"/> associated with this instance.
+        /// Gets the <see cref="NATS.Client.Connection"/> associated with this instance.
         /// </summary>
         Connection Connection { get; }
 

@@ -58,6 +58,7 @@ namespace NATS.Client
         /// <param name="subject">The subject to publish <paramref name="obj"/> to over
         /// the current connection.</param>
         /// <param name="obj">The <see cref="Object"/> to serialize and publish to the connected NATS server.</param>
+        /// <seealso cref="IConnection.Publish(string, byte[])"/>
         void Publish(string subject, object obj);
 
         /// <summary>
@@ -67,6 +68,7 @@ namespace NATS.Client
         /// the current connection.</param>
         /// <param name="reply">An optional reply subject.</param>
         /// <param name="obj">The <see cref="Object"/> to serialize and publish to the connected NATS server.</param>
+        /// <seealso cref="IConnection.Publish(string, byte[])"/>
         void Publish(string subject, string reply, object obj);
 
         /// <summary>
@@ -84,6 +86,7 @@ namespace NATS.Client
         /// <param name="obj">The <see cref="Object"/> to serialize and publish to the connected NATS server.</param>
         /// <param name="timeout">The number of milliseconds to wait.</param>
         /// <returns>A <see cref="Object"/> with the deserialized response from the NATS server.</returns>
+        /// <seealso cref="IConnection.Request(string, byte[])"/>
         object Request(string subject, object obj, int timeout);
 
         /// <summary>
@@ -99,6 +102,7 @@ namespace NATS.Client
         /// the current connection.</param>
         /// <param name="obj">The <see cref="Object"/> to serialize and publish to the connected NATS server.</param>
         /// <returns>A <see cref="Object"/> with the deserialized response from the NATS server.</returns>
+        /// <seealso cref="IConnection.Request(string, byte[])"/>
         object Request(string subject, object obj);
 
         /// <summary>
@@ -124,6 +128,7 @@ namespace NATS.Client
         /// on the returned <see cref="IAsyncSubscription"/>.</param>
         /// <returns>An <see cref="IAsyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
+        /// <seealso cref="ISubscription.Subject"/>
         IAsyncSubscription SubscribeAsync(string subject, EventHandler<EncodedMessageEventArgs> handler);
 
         /// <summary>
@@ -140,6 +145,8 @@ namespace NATS.Client
         /// on the returned <see cref="IAsyncSubscription"/>.</param>
         /// <returns>An <see cref="IAsyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
+        /// <seealso cref="ISubscription.Subject"/>
+        /// <seealso cref="ISubscription.Queue"/>
         IAsyncSubscription SubscribeAsync(string subject, string queue, EventHandler<EncodedMessageEventArgs> handler);
 
         /// <summary>
