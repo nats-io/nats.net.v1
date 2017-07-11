@@ -6,7 +6,8 @@ using System.Text;
 namespace NATS.Client
 {
     /// <summary>
-    /// Represents interest in a NATS topic.
+    /// Represents interest in a NATS topic. This class should
+    /// not be used directly.
     /// </summary>
     public class Subscription : ISubscription, IDisposable
     {
@@ -284,8 +285,8 @@ namespace NATS.Client
         /// <summary>
         /// Unsubscribes the subscription and optionally releases the managed resources.
         /// </summary>
-        /// <param name="disposing"><see langword="true"/> to release both managed
-        /// and unmanaged resources; <see langword="false"/> to release only unmanaged 
+        /// <param name="disposing"><c>true</c> to release both managed
+        /// and unmanaged resources; <c>false</c> to release only unmanaged 
         /// resources.</param>
         protected virtual void Dispose(bool disposing)
         {

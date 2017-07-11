@@ -18,13 +18,13 @@ namespace NATS.Client
 
         /// <summary>
         /// Gets the URL of the NATS server to which this instance
-        /// is connected, otherwise <see langword="null"/>.
+        /// is connected, otherwise <c>null</c>.
         /// </summary>
         string ConnectedUrl { get; }
 
         /// <summary>
         /// Gets the server ID of the NATS server to which this instance
-        /// is connected, otherwise <see langword="null"/>.
+        /// is connected, otherwise <c>null</c>.
         /// </summary>
         string ConnectedId { get; }
 
@@ -49,7 +49,7 @@ namespace NATS.Client
 
         /// <summary>
         /// Gets the last <see cref="Exception"/> encountered by this instance,
-        /// otherwise <see langword="null"/>.
+        /// otherwise <c>null</c>.
         /// </summary>
         Exception LastError { get; }
 
@@ -343,8 +343,8 @@ namespace NATS.Client
         /// Returns a value indicating whether or not the <see cref="IConnection"/>
         /// instance is closed.
         /// </summary>
-        /// <returns><see langword="true"/> if and only if the <see cref="IConnection"/> is
-        /// closed, otherwise <see langword="false"/>.</returns>
+        /// <returns><c>true</c> if and only if the <see cref="IConnection"/> is
+        /// closed, otherwise <c>false</c>.</returns>
         /// <seealso cref="Close"/>
         /// <seealso cref="State"/>
         bool IsClosed();
@@ -353,8 +353,8 @@ namespace NATS.Client
         /// Returns a value indicating whether or not the <see cref="IConnection"/>
         /// is currently reconnecting.
         /// </summary>
-        /// <returns><see langword="true"/> if and only if the <see cref="IConnection"/> is
-        /// reconnecting, otherwise <see langword="false"/>.</returns>
+        /// <returns><c>true</c> if and only if the <see cref="IConnection"/> is
+        /// reconnecting, otherwise <c>false</c>.</returns>
         /// <seealso cref="State"/>
         bool IsReconnecting();
 

@@ -6,7 +6,8 @@ namespace NATS.Client
 {
     /// <summary>
     /// <see cref="SyncSubscription"/> provides messages for a subject through calls
-    /// to <see cref="NextMessage()"/> and <see cref="NextMessage(int)"/>.
+    /// to <see cref="NextMessage()"/> and <see cref="NextMessage(int)"/>. This class should
+    /// not be used directly.
     /// </summary>
     public sealed class SyncSubscription : Subscription, ISyncSubscription, ISubscription 
     {

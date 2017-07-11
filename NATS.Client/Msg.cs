@@ -34,7 +34,7 @@ namespace NATS.Client
         /// Initializes a new instance of the <see cref="Msg"/> class with a subject, reply, and data.
         /// </summary>
         /// <param name="subject">Subject of the message.</param>
-        /// <param name="reply">A reply subject, or <see langword="null"/>.</param>
+        /// <param name="reply">A reply subject, or <c>null</c>.</param>
         /// <param name="data">A byte array containing the message payload.</param>
         public Msg(string subject, string reply, byte[] data)
         {

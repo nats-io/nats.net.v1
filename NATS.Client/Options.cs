@@ -333,7 +333,7 @@ namespace NATS.Client
         /// Adds an X.509 certifcate from a file for use with a secure connection.
         /// </summary>
         /// <param name="fileName">Path to the certificate file to add.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="fileName"/> is <see langword="null"/>.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="fileName"/> is <c>null</c>.</exception>
         /// <exception cref="System.Security.Cryptography.CryptographicException">An error with the certificate
         /// ocurred. For example:
         /// <list>
@@ -352,7 +352,7 @@ namespace NATS.Client
         /// Adds an X.509 certifcate for use with a secure connection.
         /// </summary>
         /// <param name="certificate">An X.509 certificate represented as an <see cref="X509Certificate2"/> object.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="certificate"/> is <see langword="null"/>.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="certificate"/> is <c>null</c>.</exception>
         /// <exception cref="System.Security.Cryptography.CryptographicException">An error with the certificate
         /// ocurred. For example:
         /// <list>

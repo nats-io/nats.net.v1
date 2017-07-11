@@ -7,7 +7,7 @@ namespace NATS.Client
 {
     /// <summary>
     /// <see cref="AsyncSubscription"/> asynchronously delivers messages to listeners of the <see cref="MessageHandler"/>
-    /// event.
+    /// event. This class should not be used directly.
     /// </summary>
     /// <remarks>
     /// If the <see cref="AsyncSubscription"/> is created without listening to the <see cref="MessageHandler"/>

@@ -61,6 +61,8 @@ namespace NATS.Client
 
     /// <summary>
     /// <see cref="Connection"/> represents a bare connection to a NATS server.
+    /// Users should create an <see cref="IConnection"/> instance using
+    /// <see cref="ConnectionFactory"/> rather than directly using this class.
     /// </summary>
     // TODO - for a pure object model, we can create
     // an abstract subclass containing shared code between conn and 
@@ -947,7 +949,7 @@ namespace NATS.Client
 
         /// <summary>
         /// Gets the URL of the NATS server to which this instance
-        /// is connected, otherwise <see langword="null"/>.
+        /// is connected, otherwise <c>null</c>.
         /// </summary>
         public string ConnectedUrl
         {
@@ -965,7 +967,7 @@ namespace NATS.Client
 
         /// <summary>
         /// Gets the server ID of the NATS server to which this instance
-        /// is connected, otherwise <see langword="null"/>.
+        /// is connected, otherwise <c>null</c>.
         /// </summary>
         public string ConnectedId
         {
@@ -2146,7 +2148,7 @@ namespace NATS.Client
 
         /// <summary>
         /// Gets the last <see cref="Exception"/> encountered by this instance,
-        /// otherwise <see langword="null"/>.
+        /// otherwise <c>null</c>.
         /// </summary>
         public Exception LastError
         {
@@ -2294,7 +2296,7 @@ namespace NATS.Client
         /// <param name="data">An array of type <see cref="Byte"/> that contains the data to publish
         /// to the connected NATS server.</param>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is 
-        /// <see langword="null"/> or entirely whitespace.</exception>
+        /// <c>null</c> or entirely whitespace.</exception>
         /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
         /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
@@ -2312,9 +2314,9 @@ namespace NATS.Client
         /// </summary>
         /// <param name="msg">A <see cref="Msg"/> instance containing the subject, optional reply, and data to publish
         /// to the NATS server.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="msg"/> is <see langword="null"/>.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="msg"/> is <c>null</c>.</exception>
         /// <exception cref="NATSBadSubscriptionException">The <see cref="Msg.Subject"/> property of
-        /// <paramref name="msg"/> is <see langword="null"/> or entirely whitespace.</exception>
+        /// <paramref name="msg"/> is <c>null</c> or entirely whitespace.</exception>
         /// <exception cref="NATSMaxPayloadException">The <see cref="Msg.Data"/> property of <paramref name="msg"/> 
         /// exceeds the maximum payload size supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
@@ -2339,7 +2341,7 @@ namespace NATS.Client
         /// <param name="reply">An optional reply subject.</param>
         /// <param name="data">An array of type <see cref="Byte"/> that contains the data to publish
         /// to the connected NATS server.</param>
-        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <see langword="null"/> or
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or
         /// entirely whitespace.</exception>
         /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size 
         /// supported by the NATS server.</exception>
@@ -2546,7 +2548,7 @@ namespace NATS.Client
         /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="timeout"/> is less than or equal to zero 
         /// (<c>0</c>).</exception>
-        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <see langword="null"/> or
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or
         /// entirely whitespace.</exception>
         /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size 
         /// supported by the NATS server.</exception>
@@ -2583,7 +2585,7 @@ namespace NATS.Client
         /// <param name="data">An array of type <see cref="Byte"/> that contains the request data to publish
         /// to the connected NATS server.</param>
         /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
-        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <see langword="null"/> or 
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or 
         /// entirely whitespace.</exception>
         /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size 
         /// supported by the NATS server.</exception>
@@ -2698,7 +2700,7 @@ namespace NATS.Client
         /// parameter contains a <see cref="Msg"/> with the response from the NATS server.</returns>
         /// <exception cref="ArgumentException"><paramref name="timeout"/> is less than or equal to zero 
         /// (<c>0</c>).</exception>
-        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <see langword="null"/>
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c>
         /// or entirely whitespace.</exception>
         /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
         /// supported by the NATS server.</exception>
@@ -2746,7 +2748,7 @@ namespace NATS.Client
         /// <returns>A task that represents the asynchronous read operation. The value of the 
         /// <see cref="Task{TResult}.Result"/> parameter contains a <see cref="Msg"/> with the response from the NATS
         /// server.</returns>
-        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <see langword="null"/> or
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or
         /// entirely whitespace.</exception>
         /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size 
         /// supported by the NATS server.</exception>
@@ -2792,7 +2794,7 @@ namespace NATS.Client
         /// server.</returns>
         /// <exception cref="ArgumentException"><paramref name="timeout"/> is less than or equal to zero
         /// (<c>0</c>).</exception>
-        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <see langword="null"/> or
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or
         /// entirely whitespace.</exception>
         /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
         /// supported by the NATS server.</exception>
@@ -2842,7 +2844,7 @@ namespace NATS.Client
         /// <returns>A task that represents the asynchronous read operation. The value of the
         /// <see cref="Task{TResult}.Result"/> parameter contains a <see cref="Msg"/> with the response from the NATS 
         /// server.</returns>
-        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <see langword="null"/>
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c>
         /// or entirely whitespace.</exception>
         /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size supported
         /// by the NATS server.</exception>
@@ -3009,7 +3011,7 @@ namespace NATS.Client
         /// <returns>An <see cref="ISyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is
-        /// <see langword="null"/> or entirely whitespace.</exception>
+        /// <c>null</c> or entirely whitespace.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public ISyncSubscription SubscribeSync(string subject)
@@ -3029,7 +3031,7 @@ namespace NATS.Client
         /// <returns>An <see cref="IAsyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is
-        /// <see langword="null"/> or entirely whitespace.</exception>
+        /// <c>null</c> or entirely whitespace.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public IAsyncSubscription SubscribeAsync(string subject)
@@ -3051,7 +3053,7 @@ namespace NATS.Client
         /// <returns>An <see cref="IAsyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is 
-        /// <see langword="null"/> or entirely whitespace.</exception>
+        /// <c>null</c> or entirely whitespace.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public IAsyncSubscription SubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler)
@@ -3088,7 +3090,7 @@ namespace NATS.Client
         /// <returns>An <see cref="IAsyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is 
-        /// <see langword="null"/> or entirely whitespace.</exception>
+        /// <c>null</c> or entirely whitespace.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public IAsyncSubscription SubscribeAsync(string subject, string queue)
@@ -3111,7 +3113,7 @@ namespace NATS.Client
         /// <returns>An <see cref="IAsyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is 
-        /// <see langword="null"/> or entirely whitespace.</exception>
+        /// <c>null</c> or entirely whitespace.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public IAsyncSubscription SubscribeAsync(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler)
@@ -3439,8 +3441,8 @@ namespace NATS.Client
         /// Returns a value indicating whether or not the <see cref="Connection"/>
         /// instance is closed.
         /// </summary>
-        /// <returns><see langword="true"/> if and only if the <see cref="Connection"/> is
-        /// closed, otherwise <see langword="false"/>.</returns>
+        /// <returns><c>true</c> if and only if the <see cref="Connection"/> is
+        /// closed, otherwise <c>false</c>.</returns>
         /// <seealso cref="Close"/>
         /// <seealso cref="State"/>
         public bool IsClosed()
@@ -3455,8 +3457,8 @@ namespace NATS.Client
         /// Returns a value indicating whether or not the <see cref="Connection"/>
         /// is currently reconnecting.
         /// </summary>
-        /// <returns><see langword="true"/> if and only if the <see cref="Connection"/> is
-        /// reconnecting, otherwise <see langword="false"/>.</returns>
+        /// <returns><c>true</c> if and only if the <see cref="Connection"/> is
+        /// reconnecting, otherwise <c>false</c>.</returns>
         /// <seealso cref="State"/>
         public bool IsReconnecting()
         {
@@ -3593,8 +3595,8 @@ namespace NATS.Client
         /// </summary>
         /// <remarks>In derived classes, do not override the <see cref="Close"/> method, instead
         /// put all of the <seealso cref="Connection"/> cleanup logic in your Dispose override.</remarks>
-        /// <param name="disposing"><see langword="true"/> to release both managed
-        /// and unmanaged resources; <see langword="false"/> to release only unmanaged 
+        /// <param name="disposing"><c>true</c> to release both managed
+        /// and unmanaged resources; <c>false</c> to release only unmanaged 
         /// resources.</param>
         protected virtual void Dispose(bool disposing)
         {

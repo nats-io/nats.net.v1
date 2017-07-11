@@ -169,11 +169,11 @@ namespace NATS.Client
         /// the current connection.</param>
         /// <param name="obj">The <see cref="Object"/> to serialize and publish to the connected NATS server.</param>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is 
-        /// <see langword="null"/> or entirely whitespace.</exception>
+        /// <c>null</c> or entirely whitespace.</exception>
         /// <exception cref="NATSMaxPayloadException">The serialzed form of <paramref name="obj"/> exceeds the maximum payload size 
         /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
-        /// <exception cref="NATSException"><para><see cref="OnSerialize"/> is <see langword="null"/>.</para>
+        /// <exception cref="NATSException"><para><see cref="OnSerialize"/> is <c>null</c>.</para>
         /// <para>-or-</para>
         /// <para>There was an unexpected exception performing an internal NATS call
         /// while publishing. See <see cref="System.Exception.InnerException"/> for more details.</para></exception>
@@ -190,12 +190,12 @@ namespace NATS.Client
         /// the current connection.</param>
         /// <param name="reply">An optional reply subject.</param>
         /// <param name="obj">The <see cref="Object"/> to serialize and publish to the connected NATS server.</param>
-        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <see langword="null"/> or
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or
         /// entirely whitespace.</exception>
         /// <exception cref="NATSMaxPayloadException">The serialzed form of <paramref name="obj"/> exceeds the maximum payload size 
         /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
-        /// <exception cref="NATSException"><para><see cref="OnSerialize"/> is <see langword="null"/>.</para>
+        /// <exception cref="NATSException"><para><see cref="OnSerialize"/> is <c>null</c>.</para>
         /// <para>-or-</para>
         /// <para>There was an unexpected exception performing an internal NATS call
         /// while publishing. See <see cref="System.Exception.InnerException"/> for more details.</para></exception>
@@ -283,10 +283,10 @@ namespace NATS.Client
         /// on the returned <see cref="IAsyncSubscription"/>.</param>
         /// <returns>An <see cref="IAsyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="handler"/> is <see langword="null"/>.</exception>
-        /// <exception cref="NATSException"><see cref="OnDeserialize"/> is <see langword="null"/>.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="handler"/> is <c>null</c>.</exception>
+        /// <exception cref="NATSException"><see cref="OnDeserialize"/> is <c>null</c>.</exception>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is 
-        /// <see langword="null"/> or entirely whitespace.</exception>
+        /// <c>null</c> or entirely whitespace.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public IAsyncSubscription SubscribeAsync(string subject, EventHandler<EncodedMessageEventArgs> handler)
@@ -308,10 +308,10 @@ namespace NATS.Client
         /// on the returned <see cref="IAsyncSubscription"/>.</param>
         /// <returns>An <see cref="IAsyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="handler"/> is <see langword="null"/>.</exception>
-        /// <exception cref="NATSException"><see cref="OnDeserialize"/> is <see langword="null"/>.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="handler"/> is <c>null</c>.</exception>
+        /// <exception cref="NATSException"><see cref="OnDeserialize"/> is <c>null</c>.</exception>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is 
-        /// <see langword="null"/> or entirely whitespace.</exception>
+        /// <c>null</c> or entirely whitespace.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public IAsyncSubscription SubscribeAsync(string subject, string queue, EventHandler<EncodedMessageEventArgs> handler)
@@ -345,7 +345,7 @@ namespace NATS.Client
         /// <returns>A <see cref="Object"/> with the deserialized response from the NATS server.</returns>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="timeout"/> is less than or equal to zero 
         /// (<c>0</c>).</exception>
-        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <see langword="null"/> or
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or
         /// entirely whitespace.</exception>
         /// <exception cref="NATSMaxPayloadException">The serialzed form of <paramref name="obj"/> exceeds the maximum payload size 
         /// supported by the NATS server.</exception>
@@ -373,7 +373,7 @@ namespace NATS.Client
         /// the current connection.</param>
         /// <param name="obj">The <see cref="Object"/> to serialize and publish to the connected NATS server.</param>
         /// <returns>A <see cref="Object"/> with the deserialized response from the NATS server.</returns>
-        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <see langword="null"/> or 
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or 
         /// entirely whitespace.</exception>
         /// <exception cref="NATSMaxPayloadException">The serialzed form of <paramref name="obj"/> exceeds the maximum payload size 
         /// supported by the NATS server.</exception>
@@ -406,7 +406,7 @@ namespace NATS.Client
         /// Gets or sets the method which is called to serialize
         /// objects sent as a message payload.
         /// </summary>
-        /// <remarks>If <see langword="null"/> is given then the
+        /// <remarks>If <c>null</c> is given then the
         /// default serialization method for the platform is used, if one exists.</remarks>
         public Serializer OnSerialize
         {
@@ -427,7 +427,7 @@ namespace NATS.Client
         /// Gets or sets the method which is called to deserialize
         /// objects from a message payload.
         /// </summary>
-        /// <remarks>If <see langword="null"/> is given then the
+        /// <remarks>If <c>null</c> is given then the
         /// default deserialization method for the platform is used, if one exists.</remarks>
         public Deserializer OnDeserialize
         {
@@ -447,8 +447,8 @@ namespace NATS.Client
         /// <summary>
         /// Closes the <see cref="EncodedConnection"/> and optionally releases the managed resources.
         /// </summary>
-        /// <param name="disposing"><see langword="true"/> to release both managed
-        /// and unmanaged resources; <see langword="false"/> to release only unmanaged 
+        /// <param name="disposing"><c>true</c> to release both managed
+        /// and unmanaged resources; <c>false</c> to release only unmanaged 
         /// resources.</param>
         protected override void Dispose(bool disposing)
         {
