@@ -104,7 +104,7 @@ namespace NATS.Client
                 {
                     d = tallyDeliveredMessage(msg);
                 }
-                if (d == max)
+                if (d == localMax)
                 {
                     // Remove subscription if we have reached max.
                     localConn.removeSub(this);

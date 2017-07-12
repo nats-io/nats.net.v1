@@ -42,7 +42,7 @@ namespace NATS.Client
             }
         }
 
-        internal protected override bool processMsg(Msg msg)
+        internal override bool processMsg(Msg msg)
         {
             Connection localConn;
             EventHandler<MsgHandlerEventArgs> localHandler;

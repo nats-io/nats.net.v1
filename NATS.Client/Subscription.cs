@@ -18,9 +18,9 @@ namespace NATS.Client
 
         internal  long           sid = 0; // subscriber ID.
         private   long           msgs;
-        internal  protected long delivered;
+        internal  long           delivered;
         private   long           bytes;
-        internal  protected long max = -1;
+        internal  long           max = -1;
 
         // slow consumer
         internal bool       sc   = false;
@@ -122,7 +122,16 @@ namespace NATS.Client
             return false;
         }
 
-        protected internal virtual bool processMsg(Msg msg)
+        /// <summary>
+        /// Called by <see cref="NATS.Client.Connection"/> when a <see cref="Msg"/> is received, returning
+        /// a value indicating if the <see cref="NATS.Client.Connection"/> should keep the subscription
+        /// after processing.
+        /// </summary>
+        /// <param name="msg">A <see cref="Msg"/> received by the <see cref="Subscription"/>.</param>
+        /// <returns><c>true</c> if-and-only-if the <see cref="Subscription"/> should remain active;
+        /// otherwise <c>false</c> if the <see cref="NATS.Client.Connection"/> should remove this
+        /// instance.</returns>
+        internal virtual bool processMsg(Msg msg)
         {
             return true;
         }
