@@ -7,7 +7,7 @@ namespace NATS.Client
 {
     /// <summary>
     /// A NATS message is an object encapsulating a subject, optional reply
-    /// payload, and subscription information, sent or received by teh client
+    /// payload, and subscription information, sent or received by the client
     /// application.
     /// </summary>
     public sealed class Msg
@@ -19,7 +19,8 @@ namespace NATS.Client
         internal Subscription sub;
 
         /// <summary>
-        /// Creates an empty message.
+        /// Initializes a new instance of the <see cref="Msg"/> class without any
+        /// subject, reply, or data.
         /// </summary>
         public Msg()
         {
@@ -29,7 +30,13 @@ namespace NATS.Client
             sub     = null;
         }
 
-        private void init(string subject, string reply, byte[] data)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Msg"/> class with a subject, reply, and data.
+        /// </summary>
+        /// <param name="subject">Subject of the message.</param>
+        /// <param name="reply">A reply subject, or <c>null</c>.</param>
+        /// <param name="data">A byte array containing the message payload.</param>
+        public Msg(string subject, string reply, byte[] data)
         {
             if (string.IsNullOrWhiteSpace(subject))
             {
@@ -44,33 +51,22 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Creates a message with a subject, reply, and data.
+        /// Initializes a new instance of the <see cref="Msg"/> class with a subject and data.
         /// </summary>
-        /// <param name="subject">Subject of the message, required.</param>
-        /// <param name="reply">Reply subject, can be null.</param>
-        /// <param name="data">Message payload</param>
-        public Msg(string subject, string reply, byte[] data)
-        {
-            init(subject, reply, data);
-        }
-
-        /// <summary>
-        /// Creates a message with a subject and data.
-        /// </summary>
-        /// <param name="subject">Subject of the message, required.</param>
-        /// <param name="data">Message payload</param>
+        /// <param name="subject">Subject of the message.</param>
+        /// <param name="data">A byte array containing the message payload.</param>
         public Msg(string subject, byte[] data)
+            : this(subject, null, data)
         {
-            init(subject, null, data);
         }
 
         /// <summary>
-        /// Creates a message with a subject and no payload.
+        /// Initializes a new instance of the <see cref="Msg"/> class with a subject and no data.
         /// </summary>
-        /// <param name="subject">Subject of the message, required.</param>
+        /// <param name="subject">Subject of the message.</param>
         public Msg(string subject)
+            : this(subject, null, null)
         {
-            init(subject, null, null);
         }
 
         internal Msg(MsgArg arg, Subscription s, byte[] payload, long length)
@@ -108,13 +104,12 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Sets data in the message.  This copies application data into the message.
+        /// Gets or sets the payload of the message.
         /// </summary>
         /// <remarks>
-        /// See <see cref="AssignData">AssignData</see> to directly pass the bytes
-        /// buffer.
+        /// This copies application data into the message. See <see cref="AssignData" /> to directly pass the bytes buffer.
         /// </remarks>
-        /// <see cref="AssignData"/>
+        /// <seealso cref="AssignData"/>
         public byte[] Data
         {
             get { return data; }
@@ -139,12 +134,13 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Assigns the data of the message.  This is a direct assignment,
-        /// to avoid expensive copy operations.  A change to the passed
-        /// byte array will be changed in the message.
+        /// Assigns the data of the message.
         /// </summary>
         /// <remarks>
-        /// The application is responsible for the data integrity in the message.
+        /// <para>This is a direct assignment,
+        /// to avoid expensive copy operations.  A change to the passed
+        /// byte array will be changed in the message.</para>
+        /// <para>The calling application is responsible for the data integrity in the message.</para>
         /// </remarks>
         /// <param name="data">a bytes buffer of data.</param>
         public void AssignData(byte[] data)
@@ -153,7 +149,7 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Gets the subscription assigned to the messages.
+        /// Gets the <see cref="ISubscription"/> which received the message.
         /// </summary>
         public ISubscription ArrivalSubcription
         {

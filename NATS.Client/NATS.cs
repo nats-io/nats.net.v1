@@ -142,7 +142,8 @@ namespace NATS.Client
     }
 
     /// <summary>
-    /// Event arguments for the ConnEventHandler type delegate.
+    /// Provides the details when the state of a <see cref="Connection"/>
+    /// changes.
     /// </summary>
     public class ConnEventArgs : EventArgs
     {
@@ -154,7 +155,7 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Gets the connection associated with the event.
+        /// Gets the <see cref="Connection"/> associated with the event.
         /// </summary>
         public Connection Conn
         {
@@ -163,7 +164,8 @@ namespace NATS.Client
     }
 
     /// <summary>
-    /// Event arguments for the ErrorEventHandler type delegate.
+    /// Provides details for an error encountered asynchronously
+    /// by an <see cref="IConnection"/>.
     /// </summary>
     public class ErrEventArgs : EventArgs
     {
@@ -179,7 +181,7 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Gets the connection associated with the event.
+        /// Gets the <see cref="Connection"/> associated with the event.
         /// </summary>
         public Connection Conn
         {
@@ -187,7 +189,7 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Gets the Subscription associated wit the event.
+        /// Gets the <see cref="NATS.Client.Subscription"/> associated with the event.
         /// </summary>
         public Subscription Subscription
         {
@@ -195,7 +197,7 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Gets the error associated with the event.
+        /// Gets the error message associated with the event.
         /// </summary>
         public string Error
         {
@@ -237,8 +239,7 @@ namespace NATS.Client
     }
 
     /// <summary>
-    /// This class is passed into the MsgHandler delegate, providing the
-    /// message received.
+    /// Provides the message received by an <see cref="IAsyncSubscription"/>.
     /// </summary>
     public class MsgHandlerEventArgs : EventArgs
     {

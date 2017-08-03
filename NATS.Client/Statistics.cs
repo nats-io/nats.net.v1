@@ -1,12 +1,10 @@
 ﻿// Copyright 2015 Apcera Inc. All rights reserved.
 
-
-// disable XML comment warnings
-#pragma warning disable 1591
-
 namespace NATS.Client
 {
-
+    /// <summary>
+    /// Tracks various statistics received and sent on an <see cref="IConnection"/>.
+    /// </summary>
     public class Statistics : IStatistics
     {
         internal Statistics() { }
