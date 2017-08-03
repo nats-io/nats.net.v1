@@ -3,6 +3,9 @@
 using System;
 using System.Threading.Tasks;
 
+// disable XML comment warnings
+#pragma warning disable 1591
+
 namespace NATS.Client
 {
     /// <summary>
