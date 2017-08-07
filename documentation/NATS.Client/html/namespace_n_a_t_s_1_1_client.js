@@ -1,5 +1,7 @@
 var namespace_n_a_t_s_1_1_client =
 [
+    [ "AsyncSubscription", "class_n_a_t_s_1_1_client_1_1_async_subscription.html", "class_n_a_t_s_1_1_client_1_1_async_subscription" ],
+    [ "Connection", "class_n_a_t_s_1_1_client_1_1_connection.html", "class_n_a_t_s_1_1_client_1_1_connection" ],
     [ "ConnectionFactory", "class_n_a_t_s_1_1_client_1_1_connection_factory.html", "class_n_a_t_s_1_1_client_1_1_connection_factory" ],
     [ "ConnEventArgs", "class_n_a_t_s_1_1_client_1_1_conn_event_args.html", "class_n_a_t_s_1_1_client_1_1_conn_event_args" ],
     [ "EncodedConnection", "class_n_a_t_s_1_1_client_1_1_encoded_connection.html", "class_n_a_t_s_1_1_client_1_1_encoded_connection" ],
@@ -27,5 +29,8 @@ var namespace_n_a_t_s_1_1_client =
     [ "NATSStaleConnectionException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_stale_connection_exception.html", null ],
     [ "NATSTimeoutException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_timeout_exception.html", null ],
     [ "NUID", "class_n_a_t_s_1_1_client_1_1_n_u_i_d.html", "class_n_a_t_s_1_1_client_1_1_n_u_i_d" ],
-    [ "Options", "class_n_a_t_s_1_1_client_1_1_options.html", "class_n_a_t_s_1_1_client_1_1_options" ]
+    [ "Options", "class_n_a_t_s_1_1_client_1_1_options.html", "class_n_a_t_s_1_1_client_1_1_options" ],
+    [ "Statistics", "class_n_a_t_s_1_1_client_1_1_statistics.html", "class_n_a_t_s_1_1_client_1_1_statistics" ],
+    [ "Subscription", "class_n_a_t_s_1_1_client_1_1_subscription.html", "class_n_a_t_s_1_1_client_1_1_subscription" ],
+    [ "SyncSubscription", "class_n_a_t_s_1_1_client_1_1_sync_subscription.html", "class_n_a_t_s_1_1_client_1_1_sync_subscription" ]
 ];

@@ -7,6 +7,7 @@ var class_n_a_t_s_1_1_client_1_1_options =
     [ "ClosedEventHandler", "class_n_a_t_s_1_1_client_1_1_options.html#a910d4dcebe9046e2ab1772f2007dce0e", null ],
     [ "DisconnectedEventHandler", "class_n_a_t_s_1_1_client_1_1_options.html#a6116c0a92a645bbc356bde9533220ea4", null ],
     [ "ReconnectedEventHandler", "class_n_a_t_s_1_1_client_1_1_options.html#ad39b3eec90490ebaa53276fc01668d9a", null ],
+    [ "ServerDiscoveredEventHandler", "class_n_a_t_s_1_1_client_1_1_options.html#a01dd0d8f7f5cabdc5d2d68c08dff3561", null ],
     [ "TLSRemoteCertificationValidationCallback", "class_n_a_t_s_1_1_client_1_1_options.html#a3ee9fbb7b3cfbc49a9b3a314f883904d", null ],
     [ "AllowReconnect", "class_n_a_t_s_1_1_client_1_1_options.html#aca0e26d763c9b7920eeb2506bfffc59b", null ],
     [ "MaxPingsOut", "class_n_a_t_s_1_1_client_1_1_options.html#af72a56c42d59f70432c80f8526edda6e", null ],
@@ -21,9 +22,11 @@ var class_n_a_t_s_1_1_client_1_1_options =
     [ "Servers", "class_n_a_t_s_1_1_client_1_1_options.html#a2e0b5fe52ae54b89e42a9e49b47f94e1", null ],
     [ "SubChannelLength", "class_n_a_t_s_1_1_client_1_1_options.html#a82c9580a9c7dd0367c53f2c1d309a039", null ],
     [ "SubscriberDeliveryTaskCount", "class_n_a_t_s_1_1_client_1_1_options.html#a030dfa5eac04072735d7529147d5c562", null ],
+    [ "SubscriptionBatchSize", "class_n_a_t_s_1_1_client_1_1_options.html#a4525f2afa6970381335c5dd3fc28a581", null ],
     [ "Timeout", "class_n_a_t_s_1_1_client_1_1_options.html#a20342f2f3c596083d5989d12ee656155", null ],
     [ "Token", "class_n_a_t_s_1_1_client_1_1_options.html#ab82e941a962699f7aeca2a3508a7f2d7", null ],
     [ "Url", "class_n_a_t_s_1_1_client_1_1_options.html#a4952cb3e82ca4692896f289d9825682a", null ],
+    [ "UseOldRequestStyle", "class_n_a_t_s_1_1_client_1_1_options.html#a0dd67697b2487a4fbb5abf0f4fd06509", null ],
     [ "User", "class_n_a_t_s_1_1_client_1_1_options.html#a92c60e7ef8aa92144a39dbd9706f4ea9", null ],
     [ "Verbose", "class_n_a_t_s_1_1_client_1_1_options.html#acba4ff882b4a8895ff0a47d9cbcff2d5", null ]
 ];

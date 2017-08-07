@@ -15,6 +15,7 @@ var interface_n_a_t_s_1_1_client_1_1_i_encoded_connection =
     [ "SubscribeAsync", "interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#af63b9bed0ed48f01497d980f20b55a87", null ],
     [ "ConnectedId", "interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a24ec8238329233da2223fba3385d81a5", null ],
     [ "ConnectedUrl", "interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a0d8fbf3e166b26cae8f8de95e901cbad", null ],
+    [ "DiscoveredServers", "interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#abce06b5b3d539eedd4f7be924851b15a", null ],
     [ "LastError", "interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a68d8dc5bb51d31ccf178e5b4612924ab", null ],
     [ "MaxPayload", "interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a003a364e409ee49a25e22b9144504c04", null ],
     [ "OnDeserialize", "interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#aa6d6bc072879cb6c16f8d41c4c88363e", null ],

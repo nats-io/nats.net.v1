@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">0.7.0</span>
+   &#160;<span id="projectnumber">0.8.0</span>
    </div>
    <div id="projectbrief">The nats.io .NET C# Client, Supported by Apcera</div>
   </td>
@@ -129,7 +129,7 @@ Properties</h2></td></tr>
 <tr class="separator:addeff0383437b18da543e4feb616f591"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Event arguments for the <a class="el" href="class_n_a_t_s_1_1_client_1_1_encoded_connection.html" title="This class subclasses the Connection class to support serialization. ">EncodedConnection</a> Asynchronous Subscriber delegate. </p>
+<div class="textblock"><p>Provides decoded messages received by subscriptions or requests. </p>
 </div><h2 class="groupheader">Property Documentation</h2>
 <a class="anchor" id="addeff0383437b18da543e4feb616f591"></a>
 <div class="memitem">
@@ -149,7 +149,7 @@ Properties</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Gets the original message this object was deserialized from. </p>
+<p>Gets the original <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg.html" title="A NATS message is an object encapsulating a subject, optional reply payload, and subscription informa...">Msg</a> that <a class="el" href="class_n_a_t_s_1_1_client_1_1_encoded_message_event_args.html#a06e10df22a57ef596cb5f7fb411a684a" title="Gets the object decoded (deserialized) from the incoming message. ">ReceivedObject</a> was deserialized from. </p>
 
 </div>
 </div>
@@ -193,7 +193,7 @@ Properties</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Gets the reply </p>
+<p>Gets the reply topic for the received <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg.html" title="A NATS message is an object encapsulating a subject, optional reply payload, and subscription informa...">Msg</a>. </p>
 
 </div>
 </div>
@@ -215,7 +215,7 @@ Properties</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Gets the subject this object was received on. </p>
+<p>Gets the subject for the received <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg.html" title="A NATS message is an object encapsulating a subject, optional reply payload, and subscription informa...">Msg</a>. </p>
 
 </div>
 </div>
