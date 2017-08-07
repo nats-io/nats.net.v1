@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">0.7.0</span>
+   &#160;<span id="projectnumber">0.8.0</span>
    </div>
    <div id="projectbrief">The nats.io .NET C# Client, Supported by Apcera</div>
   </td>
@@ -141,7 +141,7 @@ Static Public Member Functions</h2></td></tr>
 <tr class="separator:aead806fcd34d9edbbc2fcaa3ada6b7c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Creates a connection to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server. </p>
+<div class="textblock"><p>Provides factory methods to create connections to <a class="el" href="namespace_n_a_t_s.html">NATS</a> Servers. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a class="anchor" id="a6f7ef62999c7810f3619e866ca3ed5a3"></a>
 <div class="memitem">
@@ -156,7 +156,7 @@ Static Public Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Creates a connection factory to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server. </p>
+<p>Initializes a new instance of the <a class="el" href="class_n_a_t_s_1_1_client_1_1_connection_factory.html" title="Provides factory methods to create connections to NATS Servers. ">ConnectionFactory</a> class, providing factory methods to create connections to <a class="el" href="namespace_n_a_t_s.html">NATS</a> Servers. </p>
 
 </div>
 </div>
@@ -175,14 +175,22 @@ Static Public Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>CreateConnection will attempt to connect to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server. The url can contain username/password semantics. Comma seperated arrays are also supported, e.g. urlA, urlB. </p>
+<p>Attempt to connect to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server referenced by <em>url</em> . </p>
+<p><em>url</em>  can contain username/password semantics. Comma seperated arrays are also supported, e.g. <code>&quot;urlA, urlB&quot;</code>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">url</td><td>The url</td></tr>
+    <tr><td class="paramname">url</td><td>A string containing the URL (or URLs) to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server. See the Remarks section for more information.</td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>A new connection to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>An <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html" title="Represents a connection to the NATS server. ">IConnection</a> object connected to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server.</dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_no_servers_exception.html" title="The exception that is thrown when a connection cannot be made to any server. ">NATSNoServersException</a></td><td>No connection to a <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server could be established.</td></tr>
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_connection_exception.html" title="The exception that is thrown when there is a connection error. ">NATSConnectionException</a></td><td>A timeout occurred connecting to a <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server.-or-An exception was encountered while connecting to a <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server. See System.Exception.InnerException for more details.</td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -199,8 +207,16 @@ Static Public Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Create a connection to the NATs server using default options. </p>
-<dl class="section return"><dt>Returns</dt><dd>A new connection to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server</dd></dl>
+<p>Create a connection to the NATs server using the default options. </p>
+<dl class="section return"><dt>Returns</dt><dd>An <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html" title="Represents a connection to the NATS server. ">IConnection</a> object connected to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server.</dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_no_servers_exception.html" title="The exception that is thrown when a connection cannot be made to any server. ">NATSNoServersException</a></td><td>No connection to a <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server could be established.</td></tr>
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_connection_exception.html" title="The exception that is thrown when there is a connection error. ">NATSConnectionException</a></td><td>A timeout occurred connecting to a <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server.-or-An exception was encountered while connecting to a <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server. See System.Exception.InnerException for more details.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection_factory.html#aead806fcd34d9edbbc2fcaa3ada6b7c3" title="Retrieves the default set of client options. ">GetDefaultOptions</a></dd></dl>
 
 </div>
 </div>
@@ -218,14 +234,21 @@ Static Public Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>CreateConnection to the NATs server using the provided options. </p>
+<p>Create a connection to a <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server defined by the given options. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">opts</td><td>NATs client options</td></tr>
+    <tr><td class="paramname">opts</td><td>The <a class="el" href="namespace_n_a_t_s.html">NATS</a> client options to use for this connection.</td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>A new connection to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>An <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html" title="Represents a connection to the NATS server. ">IConnection</a> object connected to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server.</dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_no_servers_exception.html" title="The exception that is thrown when a connection cannot be made to any server. ">NATSNoServersException</a></td><td>No connection to a <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server could be established.</td></tr>
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_connection_exception.html" title="The exception that is thrown when there is a connection error. ">NATSConnectionException</a></td><td>A timeout occurred connecting to a <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server.-or-An exception was encountered while connecting to a <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server. See System.Exception.InnerException for more details.</td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -242,8 +265,16 @@ Static Public Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Create an encoded connection to the NATs server using default options. </p>
-<dl class="section return"><dt>Returns</dt><dd>A new connection to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server</dd></dl>
+<p>Attempt to connect to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server, with an encoded connection, using the default options. </p>
+<dl class="section return"><dt>Returns</dt><dd>An <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html" title="Represents a connection to a NATS Server which uses a client specified encoding scheme. ">IEncodedConnection</a> object connected to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server.</dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection_factory.html#aead806fcd34d9edbbc2fcaa3ada6b7c3" title="Retrieves the default set of client options. ">GetDefaultOptions</a></dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_no_servers_exception.html" title="The exception that is thrown when a connection cannot be made to any server. ">NATSNoServersException</a></td><td>No connection to a <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server could be established.</td></tr>
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_connection_exception.html" title="The exception that is thrown when there is a connection error. ">NATSConnectionException</a></td><td>A timeout occurred connecting to a <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server.-or-An exception was encountered while connecting to a <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server. See System.Exception.InnerException for more details.</td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -261,14 +292,22 @@ Static Public Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>CreateEncodeedConnection will attempt to connect to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server. The url can contain username/password semantics. </p>
+<p>Attempt to connect to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server, with an encoded connection, referenced by <em>url</em> . </p>
+<p><em>url</em>  can contain username/password semantics. Comma seperated arrays are also supported, e.g. urlA, urlB.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">url</td><td>The url</td></tr>
+    <tr><td class="paramname">url</td><td>A string containing the URL (or URLs) to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server. See the Remarks section for more information.</td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>A new connection to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>An <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html" title="Represents a connection to a NATS Server which uses a client specified encoding scheme. ">IEncodedConnection</a> object connected to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server.</dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_no_servers_exception.html" title="The exception that is thrown when a connection cannot be made to any server. ">NATSNoServersException</a></td><td>No connection to a <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server could be established.</td></tr>
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_connection_exception.html" title="The exception that is thrown when there is a connection error. ">NATSConnectionException</a></td><td>A timeout occurred connecting to a <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server.-or-An exception was encountered while connecting to a <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server. See System.Exception.InnerException for more details.</td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -286,14 +325,21 @@ Static Public Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>CreateEncodedConnection to the NATs server using the provided options. </p>
+<p>Attempt to connect to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server, with an encoded connection, using the given options. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">opts</td><td>NATs client options</td></tr>
+    <tr><td class="paramname">opts</td><td>The <a class="el" href="namespace_n_a_t_s.html">NATS</a> client options to use for this connection.</td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>A new connection to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>An <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html" title="Represents a connection to a NATS Server which uses a client specified encoding scheme. ">IEncodedConnection</a> object connected to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server.</dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_no_servers_exception.html" title="The exception that is thrown when a connection cannot be made to any server. ">NATSNoServersException</a></td><td>No connection to a <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server could be established.</td></tr>
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_connection_exception.html" title="The exception that is thrown when there is a connection error. ">NATSConnectionException</a></td><td>A timeout occurred connecting to a <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server.-or-An exception was encountered while connecting to a <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server. See System.Exception.InnerException for more details.</td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -311,14 +357,22 @@ Static Public Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>CreateSecureConnection will attempt to connect to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server using TLS. The url can contain username/password semantics. </p>
+<p>Attempt to connect to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server using TLS referenced by <em>url</em> . </p>
+<p><em>url</em>  can contain username/password semantics. Comma seperated arrays are also supported, e.g. urlA, urlB.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">url</td><td>connect url</td></tr>
+    <tr><td class="paramname">url</td><td>A string containing the URL (or URLs) to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server. See the Remarks section for more information.</td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>A new connection to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>An <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html" title="Represents a connection to the NATS server. ">IConnection</a> object connected to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server.</dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_no_servers_exception.html" title="The exception that is thrown when a connection cannot be made to any server. ">NATSNoServersException</a></td><td>No connection to a <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server could be established.</td></tr>
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_connection_exception.html" title="The exception that is thrown when there is a connection error. ">NATSConnectionException</a></td><td>A timeout occurred connecting to a <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server.-or-An exception was encountered while connecting to a <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server. See System.Exception.InnerException for more details.</td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -343,7 +397,8 @@ Static Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Retrieves the default set ot client options. </p>
+<p>Retrieves the default set of client options. </p>
+<dl class="section return"><dt>Returns</dt><dd>The default <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html" title="This class is used to setup all NATs client options. ">Options</a> object for the <a class="el" href="namespace_n_a_t_s.html">NATS</a> client.</dd></dl>
 
 </div>
 </div>

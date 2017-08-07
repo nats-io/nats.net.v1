@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">0.7.0</span>
+   &#160;<span id="projectnumber">0.8.0</span>
    </div>
    <div id="projectbrief">The nats.io .NET C# Client, Supported by Apcera</div>
   </td>
@@ -121,6 +121,7 @@ Inheritance diagram for NATS.Client.ISyncSubscription:</div>
   <img src="interface_n_a_t_s_1_1_client_1_1_i_sync_subscription.png" usemap="#NATS.Client.ISyncSubscription_map" alt=""/>
   <map id="NATS.Client.ISyncSubscription_map" name="NATS.Client.ISyncSubscription_map">
 <area href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html" title="Represents interest in a NATS topic. " alt="NATS.Client.ISubscription" shape="rect" coords="0,0,187,24"/>
+<area href="class_n_a_t_s_1_1_client_1_1_sync_subscription.html" title="SyncSubscription provides messages for a subject through calls to NextMessage() and NextMessage(int)..." alt="NATS.Client.SyncSubscription" shape="rect" coords="0,112,187,136"/>
 </map>
  </div></div>
 <table class="memberdecls">
@@ -151,7 +152,7 @@ Additional Inherited Members</h2></td></tr>
 <tr class="separator:a3b28cf4ce3738917a420a65747d532eb inherit properties_interface_n_a_t_s_1_1_client_1_1_i_subscription"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3e505b346b8dc6339e84059441d9b1f4 inherit properties_interface_n_a_t_s_1_1_client_1_1_i_subscription"><td class="memItemLeft" align="right" valign="top">string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#a3e505b346b8dc6339e84059441d9b1f4">Queue</a><code> [get]</code></td></tr>
 <tr class="separator:a3e505b346b8dc6339e84059441d9b1f4 inherit properties_interface_n_a_t_s_1_1_client_1_1_i_subscription"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2e56e23d07a9d3f57fb2c79e649d8e67 inherit properties_interface_n_a_t_s_1_1_client_1_1_i_subscription"><td class="memItemLeft" align="right" valign="top">Connection&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#a2e56e23d07a9d3f57fb2c79e649d8e67">Connection</a><code> [get]</code></td></tr>
+<tr class="memitem:a2e56e23d07a9d3f57fb2c79e649d8e67 inherit properties_interface_n_a_t_s_1_1_client_1_1_i_subscription"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html">Connection</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#a2e56e23d07a9d3f57fb2c79e649d8e67">Connection</a><code> [get]</code></td></tr>
 <tr class="separator:a2e56e23d07a9d3f57fb2c79e649d8e67 inherit properties_interface_n_a_t_s_1_1_client_1_1_i_subscription"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a91c05cbdf2710acf1388bfe998107e86 inherit properties_interface_n_a_t_s_1_1_client_1_1_i_subscription"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#a91c05cbdf2710acf1388bfe998107e86">IsValid</a><code> [get]</code></td></tr>
 <tr class="separator:a91c05cbdf2710acf1388bfe998107e86 inherit properties_interface_n_a_t_s_1_1_client_1_1_i_subscription"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -175,7 +176,7 @@ Additional Inherited Members</h2></td></tr>
 <tr class="separator:abf4058acb532e468c9283c6498a3bb3b inherit properties_interface_n_a_t_s_1_1_client_1_1_i_subscription"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>A Syncronous Subscripion will express interest in a given subject. The subject can have wildcards (partial:*, full:&gt;). Messages arriving are retrieved via NextMsg() </p>
+<div class="textblock"><p><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_sync_subscription.html" title="ISyncSubscription provides messages for a subject through calls to NextMessage() and NextMessage(int)...">ISyncSubscription</a> provides messages for a subject through calls to <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_sync_subscription.html#abff4071c0c522ca556f57ad899baa353" title="Returns the next Msg available to a synchronous subscriber, blocking until one is available...">NextMessage()</a> and <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_sync_subscription.html#a29d8865c23b821cc03aba53c700e4794" title="Returns the next Msg available to a synchronous subscriber, or block up to a given timeout until the ...">NextMessage(int)</a>. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a class="anchor" id="abff4071c0c522ca556f57ad899baa353"></a>
 <div class="memitem">
@@ -190,8 +191,10 @@ Additional Inherited Members</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>This method will return the next message available to a synchronous subscriber or block until one is available. </p>
-<dl class="section return"><dt>Returns</dt><dd>a <a class="el" href="namespace_n_a_t_s.html">NATS</a> message</dd></dl>
+<p>Returns the next <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg.html" title="A NATS message is an object encapsulating a subject, optional reply payload, and subscription informa...">Msg</a> available to a synchronous subscriber, blocking until one is available. </p>
+<dl class="section return"><dt>Returns</dt><dd>The next <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg.html" title="A NATS message is an object encapsulating a subject, optional reply payload, and subscription informa...">Msg</a> available to a subscriber.</dd></dl>
+
+<p>Implemented in <a class="el" href="class_n_a_t_s_1_1_client_1_1_sync_subscription.html#acc4f7d714e2bc1c37d6a7e2f033d2443">NATS.Client.SyncSubscription</a>.</p>
 
 </div>
 </div>
@@ -209,15 +212,16 @@ Additional Inherited Members</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>This method will return the next message available to a synchronous subscriber or block until one is available. A timeout can be used to return when no message has been delivered. </p>
-<p>A timeout of 0 will return null immediately if there are no messages. </p>
+<p>Returns the next <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg.html" title="A NATS message is an object encapsulating a subject, optional reply payload, and subscription informa...">Msg</a> available to a synchronous subscriber, or block up to a given timeout until the next one is available. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">timeout</td><td>Timeout value</td></tr>
+    <tr><td class="paramname">timeout</td><td>The amount of time, in milliseconds, to wait for the next message.</td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>a <a class="el" href="namespace_n_a_t_s.html">NATS</a> message</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>The next <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg.html" title="A NATS message is an object encapsulating a subject, optional reply payload, and subscription informa...">Msg</a> available to a subscriber.</dd></dl>
+
+<p>Implemented in <a class="el" href="class_n_a_t_s_1_1_client_1_1_sync_subscription.html#a9289d58d9671fa0d49ec40b498f3fa13">NATS.Client.SyncSubscription</a>.</p>
 
 </div>
 </div>
