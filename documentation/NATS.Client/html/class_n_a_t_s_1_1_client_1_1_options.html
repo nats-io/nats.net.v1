@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">0.7.0</span>
+   &#160;<span id="projectnumber">0.8.0</span>
    </div>
    <div id="projectbrief">The nats.io .NET C# Client, Supported by Apcera</div>
   </td>
@@ -130,6 +130,8 @@ Public Member Functions</h2></td></tr>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a910d4dcebe9046e2ab1772f2007dce0e"><td class="memItemLeft" align="right" valign="top">EventHandler&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_conn_event_args.html">ConnEventArgs</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a910d4dcebe9046e2ab1772f2007dce0e">ClosedEventHandler</a> = null</td></tr>
 <tr class="separator:a910d4dcebe9046e2ab1772f2007dce0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a01dd0d8f7f5cabdc5d2d68c08dff3561"><td class="memItemLeft" align="right" valign="top">EventHandler&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_conn_event_args.html">ConnEventArgs</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a01dd0d8f7f5cabdc5d2d68c08dff3561">ServerDiscoveredEventHandler</a> = null</td></tr>
+<tr class="separator:a01dd0d8f7f5cabdc5d2d68c08dff3561"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6116c0a92a645bbc356bde9533220ea4"><td class="memItemLeft" align="right" valign="top">EventHandler&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_conn_event_args.html">ConnEventArgs</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a6116c0a92a645bbc356bde9533220ea4">DisconnectedEventHandler</a> = null</td></tr>
 <tr class="separator:a6116c0a92a645bbc356bde9533220ea4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad39b3eec90490ebaa53276fc01668d9a"><td class="memItemLeft" align="right" valign="top">EventHandler&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_conn_event_args.html">ConnEventArgs</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#ad39b3eec90490ebaa53276fc01668d9a">ReconnectedEventHandler</a> = null</td></tr>
@@ -153,6 +155,8 @@ Properties</h2></td></tr>
 <tr class="separator:acba4ff882b4a8895ff0a47d9cbcff2d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5095fd095d6db679465eb80dfe37fbdf"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a5095fd095d6db679465eb80dfe37fbdf">Pedantic</a><code> [get, set]</code></td></tr>
 <tr class="separator:a5095fd095d6db679465eb80dfe37fbdf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0dd67697b2487a4fbb5abf0f4fd06509"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a0dd67697b2487a4fbb5abf0f4fd06509">UseOldRequestStyle</a><code> [get, set]</code></td></tr>
+<tr class="separator:a0dd67697b2487a4fbb5abf0f4fd06509"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4550ae7933150999a442519906e58684"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a4550ae7933150999a442519906e58684">Secure</a><code> [get, set]</code></td></tr>
 <tr class="separator:a4550ae7933150999a442519906e58684"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aca0e26d763c9b7920eeb2506bfffc59b"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#aca0e26d763c9b7920eeb2506bfffc59b">AllowReconnect</a><code> [get, set]</code></td></tr>
@@ -177,6 +181,8 @@ Properties</h2></td></tr>
 <tr class="separator:ab82e941a962699f7aeca2a3508a7f2d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a030dfa5eac04072735d7529147d5c562"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a030dfa5eac04072735d7529147d5c562">SubscriberDeliveryTaskCount</a><code> [get, set]</code></td></tr>
 <tr class="separator:a030dfa5eac04072735d7529147d5c562"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4525f2afa6970381335c5dd3fc28a581"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a4525f2afa6970381335c5dd3fc28a581">SubscriptionBatchSize</a><code> [get, set]</code></td></tr>
+<tr class="separator:a4525f2afa6970381335c5dd3fc28a581"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>This class is used to setup all NATs client options. </p>
@@ -195,10 +201,25 @@ Properties</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Adds a certifcate for use with a secure connection. </p>
+<p>Adds an X.509 certifcate from a file for use with a secure connection. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">fileName</td><td>Path to the certificate file to add.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">ArgumentNullException</td><td><em>fileName</em>  is <code>null</code>.</td></tr>
+    <tr><td class="paramname">System.Security.Cryptography.CryptographicException</td><td>An error with the certificate ocurred. For example: <ul>
+<li>
+The certificate file does not exist. </li>
+<li>
+The certificate is invalid. </li>
+<li>
+The certificate's password is incorrect.</li>
+</ul>
+</td></tr>
   </table>
   </dd>
 </dl>
@@ -219,10 +240,25 @@ Properties</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Adds a certificate for use with a secure connection. </p>
+<p>Adds an X.509 certifcate for use with a secure connection. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">certificate</td><td>Certificate to add.</td></tr>
+    <tr><td class="paramname">certificate</td><td>An X.509 certificate represented as an X509Certificate2 object.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">ArgumentNullException</td><td><em>certificate</em>  is <code>null</code>.</td></tr>
+    <tr><td class="paramname">System.Security.Cryptography.CryptographicException</td><td>An error with the certificate ocurred. For example: <ul>
+<li>
+The certificate file does not exist. </li>
+<li>
+The certificate is invalid. </li>
+<li>
+The certificate's password is incorrect.</li>
+</ul>
+</td></tr>
   </table>
   </dd>
 </dl>
@@ -304,6 +340,20 @@ Properties</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="a01dd0d8f7f5cabdc5d2d68c08dff3561"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">EventHandler&lt;<a class="el" href="class_n_a_t_s_1_1_client_1_1_conn_event_args.html">ConnEventArgs</a>&gt; NATS.Client.Options.ServerDiscoveredEventHandler = null</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Represents the method that will handle an event raised whenever a new server has joined the cluster. </p>
+
+</div>
+</div>
 <a class="anchor" id="a3ee9fbb7b3cfbc49a9b3a314f883904d"></a>
 <div class="memitem">
 <div class="memproto">
@@ -315,7 +365,7 @@ Properties</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Overrides the default <a class="el" href="namespace_n_a_t_s.html">NATS</a> RemoteCertificationValidationCallback. </p>
-<p>The default callback simply checks if there were any protocol errors. Overriding this callback useful during testing, or accepting self signed certificates. </p>
+<p>The default callback simply checks if there were any protocol errors. Overriding this callback is useful during testing, or accepting self signed certificates. </p>
 
 </div>
 </div>
@@ -338,7 +388,7 @@ Properties</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Gets or Sets the allow reconnect flag. When set to false, the NATs client will not attempt to reconnect if a connection has been lost. </p>
+<p>Gets or sets a value indicating whether or not an <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html" title="Represents a connection to the NATS server. ">IConnection</a> will attempt to reconnect to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server if a connection has been lost. </p>
 
 </div>
 </div>
@@ -426,7 +476,7 @@ Properties</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Gets or Sets the randomization of choosing a server to connect to. </p>
+<p>Gets or sets a value indicating whether or not the server chosen for connection should not be selected randomly. </p>
 
 </div>
 </div>
@@ -448,7 +498,7 @@ Properties</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Sets the user password used when connecting to the NATs server when not included directly in the URLs. </p>
+<p>Sets the user password used when connecting to the NATs server, when not included directly in the URLs. </p>
 
 </div>
 </div>
@@ -470,7 +520,7 @@ Properties</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>N/A. </p>
+<p>This option is not used by the <a class="el" href="namespace_n_a_t_s.html">NATS</a> <a class="el" href="namespace_n_a_t_s_1_1_client.html">Client</a>. </p>
 
 </div>
 </div>
@@ -492,7 +542,8 @@ Properties</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Gets or sets the interval pings will be sent to the server. Take care to coordinate this value with the server's interval. </p>
+<p>Gets or sets the interval, in milliseconds, pings will be sent to the server. </p>
+<p>Take care to coordinate this value with the server's interval. </p>
 
 </div>
 </div>
@@ -514,7 +565,7 @@ Properties</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Gets or Sets the amount of time, in milliseconds, the client will wait during a reconnection. </p>
+<p>Gets or sets the amount of time, in milliseconds, the client will wait before attempting a reconnection. </p>
 
 </div>
 </div>
@@ -536,7 +587,7 @@ Properties</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Get or sets the secure property. Not currently implemented. </p>
+<p>Get or sets a value indicating whether or not a secure connection (TLS) should be made to <a class="el" href="namespace_n_a_t_s.html">NATS</a> servers. </p>
 
 </div>
 </div>
@@ -558,7 +609,8 @@ Properties</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Gets or Sets the array of servers that the NATs client will connect to. </p>
+<p>Gets or sets the array of servers that the NATs client will connect to. </p>
+<p>The individual URLs may contain username/password information. </p>
 
 </div>
 </div>
@@ -602,8 +654,31 @@ Properties</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Sets or gets number of long running tasks to deliver messages to asynchronous subscribers. The default is 0 indicating each asynchronous subscriber has its own channel and task created to deliver messages. </p>
+<p>Gets or sets the number of long running tasks to deliver messages to asynchronous subscribers. The default is zero (<code>0</code>) indicating each asynchronous subscriber has its own channel and task created to deliver messages. </p>
 <p>The default where each subscriber has a delivery task is very performant, but does not scale well when large numbers of subscribers are required in an application. Setting this value will limit the number of subscriber channels to the specified number of long running tasks. These tasks will process messages for ALL asynchronous subscribers rather than one task for each subscriber. Delivery order by subscriber is still guaranteed. The shared message processing channels are still each bounded by the SubChannelLength option. Note, slow subscriber errors will flag the last subscriber processed in the tasks, which may not actually be the slowest subscriber. </p>
+
+</div>
+</div>
+<a class="anchor" id="a4525f2afa6970381335c5dd3fc28a581"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">int NATS.Client.Options.SubscriptionBatchSize</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">get</span><span class="mlabel">set</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Gets or sets the batch size for calling subscription handlers. </p>
+<p>When delivering messages to the subscriber, the batch size determines how many messages could be retrieved from the internal subscription queue at one time. This can allow higher performance from a single subscriber by avoiding the locking overhead of one-at-a-time retrieval from the queue. </p>
 
 </div>
 </div>
@@ -625,7 +700,7 @@ Properties</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Gets or sets the timeout when flushing a connection. </p>
+<p>Gets or sets the timeout, in milliseconds, when connecting to a <a class="el" href="namespace_n_a_t_s.html">NATS</a> server. </p>
 
 </div>
 </div>
@@ -669,7 +744,31 @@ Properties</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Gets or sets the url used to connect to the NATs server. This may contain user information. </p>
+<p>Gets or sets the url used to connect to the NATs server. </p>
+<p>This may contain username/password information. </p>
+
+</div>
+</div>
+<a class="anchor" id="a0dd67697b2487a4fbb5abf0f4fd06509"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool NATS.Client.Options.UseOldRequestStyle</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">get</span><span class="mlabel">set</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Gets or sets a value indicating whether or not the old request pattern should be used. </p>
+<p>The old request pattern involved a separate subscription per request inbox. The new style (default) involves creating a single inbox subscription per connection, upon the first request, and mapping outbound requests over that one subscription. </p>
 
 </div>
 </div>
@@ -691,7 +790,7 @@ Properties</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Gets or sets the user name used when connecting to the NATs server when not included directly in the URLs. </p>
+<p>Gets or sets the user name used when connecting to the NATs server, when not included directly in the URLs. </p>
 
 </div>
 </div>
@@ -713,7 +812,7 @@ Properties</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Gets or sets the verbosity of logging. </p>
+<p>Gets or sets a value indicating whether or not logging information should be verbose. </p>
 
 </div>
 </div>

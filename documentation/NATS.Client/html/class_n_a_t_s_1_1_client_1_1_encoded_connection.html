@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">0.7.0</span>
+   &#160;<span id="projectnumber">0.8.0</span>
    </div>
    <div id="projectbrief">The nats.io .NET C# Client, Supported by Apcera</div>
   </td>
@@ -109,6 +109,8 @@ $(document).ready(function(){initNavTree('class_n_a_t_s_1_1_client_1_1_encoded_c
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pro-methods">Protected Member Functions</a> &#124;
+<a href="#properties">Properties</a> &#124;
 <a href="class_n_a_t_s_1_1_client_1_1_encoded_connection-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">NATS.Client.EncodedConnection Class Reference</div>  </div>
@@ -120,14 +122,18 @@ Inheritance diagram for NATS.Client.EncodedConnection:</div>
  <div class="center">
   <img src="class_n_a_t_s_1_1_client_1_1_encoded_connection.png" usemap="#NATS.Client.EncodedConnection_map" alt=""/>
   <map id="NATS.Client.EncodedConnection_map" name="NATS.Client.EncodedConnection_map">
-<area href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html" title="Represents an encoded connection to the NATS server. " alt="NATS.Client.IEncodedConnection" shape="rect" coords="0,0,202,24"/>
+<area href="class_n_a_t_s_1_1_client_1_1_connection.html" title="Connection represents a bare connection to a NATS server. Users should create an IConnection instance..." alt="NATS.Client.Connection" shape="rect" coords="0,56,202,80"/>
+<area href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html" title="Represents a connection to a NATS Server which uses a client specified encoding scheme. " alt="NATS.Client.IEncodedConnection" shape="rect" coords="212,56,414,80"/>
+<area href="interface_n_a_t_s_1_1_client_1_1_i_connection.html" title="Represents a connection to the NATS server. " alt="NATS.Client.IConnection" shape="rect" coords="0,0,202,24"/>
 </map>
  </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:af1b767c999738ac932822362bae2da22"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_encoded_connection.html#af1b767c999738ac932822362bae2da22">Publish</a> (string subject, string reply, object o)</td></tr>
-<tr class="separator:af1b767c999738ac932822362bae2da22"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a255cff4252e6087bde156c17ad4dd421"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_encoded_connection.html#a255cff4252e6087bde156c17ad4dd421">Publish</a> (string subject, Object obj)</td></tr>
+<tr class="separator:a255cff4252e6087bde156c17ad4dd421"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a686b39648df8113b2476a3ebd38900cd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_encoded_connection.html#a686b39648df8113b2476a3ebd38900cd">Publish</a> (string subject, string reply, object obj)</td></tr>
+<tr class="separator:a686b39648df8113b2476a3ebd38900cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac2696b9c9f2a6878e589ce7b5b8dd21f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html">IAsyncSubscription</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_encoded_connection.html#ac2696b9c9f2a6878e589ce7b5b8dd21f">SubscribeAsync</a> (string subject, EventHandler&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_encoded_message_event_args.html">EncodedMessageEventArgs</a> &gt; handler)</td></tr>
 <tr class="separator:ac2696b9c9f2a6878e589ce7b5b8dd21f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaaac96c480fdddde27c05cf57bb372ec"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html">IAsyncSubscription</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_encoded_connection.html#aaaac96c480fdddde27c05cf57bb372ec">SubscribeAsync</a> (string subject, string queue, EventHandler&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_encoded_message_event_args.html">EncodedMessageEventArgs</a> &gt; handler)</td></tr>
@@ -136,6 +142,55 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a8aa9c9203fdbfa4d6d97ab10b2de480e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3ea2e3dab362f1b2a1bc9642b84f2018"><td class="memItemLeft" align="right" valign="top">object&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_encoded_connection.html#a3ea2e3dab362f1b2a1bc9642b84f2018">Request</a> (string subject, object obj)</td></tr>
 <tr class="separator:a3ea2e3dab362f1b2a1bc9642b84f2018"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_class_n_a_t_s_1_1_client_1_1_connection')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html">NATS.Client.Connection</a></td></tr>
+<tr class="memitem:a26f31f03e9c61ad7db39dda563b1a9f6 inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#a26f31f03e9c61ad7db39dda563b1a9f6">Publish</a> (string subject, byte[] data)</td></tr>
+<tr class="separator:a26f31f03e9c61ad7db39dda563b1a9f6 inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a656a28b19b9857b34f711447d8ea370d inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#a656a28b19b9857b34f711447d8ea370d">Publish</a> (<a class="el" href="class_n_a_t_s_1_1_client_1_1_msg.html">Msg</a> msg)</td></tr>
+<tr class="separator:a656a28b19b9857b34f711447d8ea370d inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5671f273bd18e1ca8e421d8869a86fe8 inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#a5671f273bd18e1ca8e421d8869a86fe8">Publish</a> (string subject, string reply, byte[] data)</td></tr>
+<tr class="separator:a5671f273bd18e1ca8e421d8869a86fe8 inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae668510e9f46d304b661d4e433646049 inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_n_a_t_s_1_1_client_1_1_msg.html">Msg</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#ae668510e9f46d304b661d4e433646049">Request</a> (string subject, byte[] data, int timeout)</td></tr>
+<tr class="separator:ae668510e9f46d304b661d4e433646049 inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7584bac414a977fb982810cc4347e1c1 inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_n_a_t_s_1_1_client_1_1_msg.html">Msg</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#a7584bac414a977fb982810cc4347e1c1">Request</a> (string subject, byte[] data)</td></tr>
+<tr class="separator:a7584bac414a977fb982810cc4347e1c1 inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a67e9ed5914701df012f8a6a87897d0a7 inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memItemLeft" align="right" valign="top">Task&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg.html">Msg</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#a67e9ed5914701df012f8a6a87897d0a7">RequestAsync</a> (string subject, byte[] data, int timeout)</td></tr>
+<tr class="separator:a67e9ed5914701df012f8a6a87897d0a7 inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afd3be3e6428de201de682c88d16af67f inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memItemLeft" align="right" valign="top">Task&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg.html">Msg</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#afd3be3e6428de201de682c88d16af67f">RequestAsync</a> (string subject, byte[] data)</td></tr>
+<tr class="separator:afd3be3e6428de201de682c88d16af67f inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa81df5d14153f8dc698ceff0f603e04c inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memItemLeft" align="right" valign="top">Task&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg.html">Msg</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#aa81df5d14153f8dc698ceff0f603e04c">RequestAsync</a> (string subject, byte[] data, int timeout, CancellationToken token)</td></tr>
+<tr class="separator:aa81df5d14153f8dc698ceff0f603e04c inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad32ddd2e4fe92ea5f2b672dd68e0aa44 inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memItemLeft" align="right" valign="top">Task&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg.html">Msg</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#ad32ddd2e4fe92ea5f2b672dd68e0aa44">RequestAsync</a> (string subject, byte[] data, CancellationToken token)</td></tr>
+<tr class="separator:ad32ddd2e4fe92ea5f2b672dd68e0aa44 inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4cd43a9a76fba369ea5c61210ce0910d inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memItemLeft" align="right" valign="top">string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#a4cd43a9a76fba369ea5c61210ce0910d">NewInbox</a> ()</td></tr>
+<tr class="separator:a4cd43a9a76fba369ea5c61210ce0910d inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaf9c63512559a46898cf7e5f0bb2d04d inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_sync_subscription.html">ISyncSubscription</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#aaf9c63512559a46898cf7e5f0bb2d04d">SubscribeSync</a> (string subject)</td></tr>
+<tr class="separator:aaf9c63512559a46898cf7e5f0bb2d04d inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afbe804d241c3b8a7606a0cdaaaa6f671 inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html">IAsyncSubscription</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#afbe804d241c3b8a7606a0cdaaaa6f671">SubscribeAsync</a> (string subject)</td></tr>
+<tr class="separator:afbe804d241c3b8a7606a0cdaaaa6f671 inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acb027e1d94597e3584ce143d25a41edd inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html">IAsyncSubscription</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#acb027e1d94597e3584ce143d25a41edd">SubscribeAsync</a> (string subject, EventHandler&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg_handler_event_args.html">MsgHandlerEventArgs</a> &gt; handler)</td></tr>
+<tr class="separator:acb027e1d94597e3584ce143d25a41edd inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a691ba59c1c15324090eb1a894a38c0c9 inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_sync_subscription.html">ISyncSubscription</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#a691ba59c1c15324090eb1a894a38c0c9">SubscribeSync</a> (string subject, string queue)</td></tr>
+<tr class="separator:a691ba59c1c15324090eb1a894a38c0c9 inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac05552c22b24dc348723be8552fce881 inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html">IAsyncSubscription</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#ac05552c22b24dc348723be8552fce881">SubscribeAsync</a> (string subject, string queue)</td></tr>
+<tr class="separator:ac05552c22b24dc348723be8552fce881 inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3da679e0068590c085f401c1b6f5cb88 inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html">IAsyncSubscription</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#a3da679e0068590c085f401c1b6f5cb88">SubscribeAsync</a> (string subject, string queue, EventHandler&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg_handler_event_args.html">MsgHandlerEventArgs</a> &gt; handler)</td></tr>
+<tr class="separator:a3da679e0068590c085f401c1b6f5cb88 inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a214097e46ec425f84d53ff9279bd78a3 inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#a214097e46ec425f84d53ff9279bd78a3">Flush</a> (int timeout)</td></tr>
+<tr class="separator:a214097e46ec425f84d53ff9279bd78a3 inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae53767cc25d366166a7981a3d952a8cf inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#ae53767cc25d366166a7981a3d952a8cf">Flush</a> ()</td></tr>
+<tr class="separator:ae53767cc25d366166a7981a3d952a8cf inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1f4e7da68d58ff8ea02a6ca4a1df89f5 inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#a1f4e7da68d58ff8ea02a6ca4a1df89f5">Close</a> ()</td></tr>
+<tr class="separator:a1f4e7da68d58ff8ea02a6ca4a1df89f5 inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a82c6a5418690cd31523488593f443914 inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#a82c6a5418690cd31523488593f443914">IsClosed</a> ()</td></tr>
+<tr class="separator:a82c6a5418690cd31523488593f443914 inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2cbd1e9a0f4826bae4881f8a39bcbb53 inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#a2cbd1e9a0f4826bae4881f8a39bcbb53">IsReconnecting</a> ()</td></tr>
+<tr class="separator:a2cbd1e9a0f4826bae4881f8a39bcbb53 inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3e9d06d2b9fd56b38866ef64186c4836 inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#a3e9d06d2b9fd56b38866ef64186c4836">ResetStats</a> ()</td></tr>
+<tr class="separator:a3e9d06d2b9fd56b38866ef64186c4836 inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a34224ab966c267101b87030459895fcb inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memItemLeft" align="right" valign="top">override string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#a34224ab966c267101b87030459895fcb">ToString</a> ()</td></tr>
+<tr class="separator:a34224ab966c267101b87030459895fcb inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adf7e7a90a13e426ccdd1a970254a3bb8 inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#adf7e7a90a13e426ccdd1a970254a3bb8">Dispose</a> ()</td></tr>
+<tr class="separator:adf7e7a90a13e426ccdd1a970254a3bb8 inherit pub_methods_class_n_a_t_s_1_1_client_1_1_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_interface_n_a_t_s_1_1_client_1_1_i_encoded_connection"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_interface_n_a_t_s_1_1_client_1_1_i_encoded_connection')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html">NATS.Client.IEncodedConnection</a></td></tr>
 <tr class="memitem:a06acc0aed53fa927ccd7ecac2db4e875 inherit pub_methods_interface_n_a_t_s_1_1_client_1_1_i_encoded_connection"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a06acc0aed53fa927ccd7ecac2db4e875">Publish</a> (string subject, object obj)</td></tr>
 <tr class="separator:a06acc0aed53fa927ccd7ecac2db4e875 inherit pub_methods_interface_n_a_t_s_1_1_client_1_1_i_encoded_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -154,8 +209,55 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a5dbc97a8fa4aacd99e1252da54f28f15 inherit pub_methods_interface_n_a_t_s_1_1_client_1_1_i_encoded_connection"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a5dbc97a8fa4aacd99e1252da54f28f15">ResetStats</a> ()</td></tr>
 <tr class="separator:a5dbc97a8fa4aacd99e1252da54f28f15 inherit pub_methods_interface_n_a_t_s_1_1_client_1_1_i_encoded_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
-Additional Inherited Members</h2></td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
+Protected Member Functions</h2></td></tr>
+<tr class="memitem:a206eb6c9ca9fd8500f6f3ea0d8d5afbf"><td class="memItemLeft" align="right" valign="top">override void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_encoded_connection.html#a206eb6c9ca9fd8500f6f3ea0d8d5afbf">Dispose</a> (bool disposing)</td></tr>
+<tr class="separator:a206eb6c9ca9fd8500f6f3ea0d8d5afbf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="properties"></a>
+Properties</h2></td></tr>
+<tr class="memitem:a86cc212cdb89b9fbfab6b508815a0f6f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespace_n_a_t_s_1_1_client.html#a17a0769f7076f1d1d8b105cdf562d79e">Serializer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_encoded_connection.html#a86cc212cdb89b9fbfab6b508815a0f6f">OnSerialize</a><code> [get, set]</code></td></tr>
+<tr class="separator:a86cc212cdb89b9fbfab6b508815a0f6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6f128fa28130fc52f739739fed3674c0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespace_n_a_t_s_1_1_client.html#ae3d017dda4668698e3b11180925776d1">Deserializer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_encoded_connection.html#a6f128fa28130fc52f739739fed3674c0">OnDeserialize</a><code> [get, set]</code></td></tr>
+<tr class="separator:a6f128fa28130fc52f739739fed3674c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header properties_class_n_a_t_s_1_1_client_1_1_connection"><td colspan="2" onclick="javascript:toggleInherit('properties_class_n_a_t_s_1_1_client_1_1_connection')"><img src="closed.png" alt="-"/>&#160;Properties inherited from <a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html">NATS.Client.Connection</a></td></tr>
+<tr class="memitem:a4295576ae98eb4762b02256dd51f0bcd inherit properties_class_n_a_t_s_1_1_client_1_1_connection"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html">Options</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#a4295576ae98eb4762b02256dd51f0bcd">Opts</a><code> [get]</code></td></tr>
+<tr class="separator:a4295576ae98eb4762b02256dd51f0bcd inherit properties_class_n_a_t_s_1_1_client_1_1_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adcb94e744db265b9ac282c317d79c160 inherit properties_class_n_a_t_s_1_1_client_1_1_connection"><td class="memItemLeft" align="right" valign="top">string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#adcb94e744db265b9ac282c317d79c160">ConnectedUrl</a><code> [get]</code></td></tr>
+<tr class="separator:adcb94e744db265b9ac282c317d79c160 inherit properties_class_n_a_t_s_1_1_client_1_1_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a88bdc1c217c785dbb5bab5e9f0faed39 inherit properties_class_n_a_t_s_1_1_client_1_1_connection"><td class="memItemLeft" align="right" valign="top">string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#a88bdc1c217c785dbb5bab5e9f0faed39">ConnectedId</a><code> [get]</code></td></tr>
+<tr class="separator:a88bdc1c217c785dbb5bab5e9f0faed39 inherit properties_class_n_a_t_s_1_1_client_1_1_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a824b4adda3420fcd70b78df203e35442 inherit properties_class_n_a_t_s_1_1_client_1_1_connection"><td class="memItemLeft" align="right" valign="top">string[]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#a824b4adda3420fcd70b78df203e35442">Servers</a><code> [get]</code></td></tr>
+<tr class="separator:a824b4adda3420fcd70b78df203e35442 inherit properties_class_n_a_t_s_1_1_client_1_1_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a457bf749c7e6046a8080e3feabdaa79e inherit properties_class_n_a_t_s_1_1_client_1_1_connection"><td class="memItemLeft" align="right" valign="top">string[]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#a457bf749c7e6046a8080e3feabdaa79e">DiscoveredServers</a><code> [get]</code></td></tr>
+<tr class="separator:a457bf749c7e6046a8080e3feabdaa79e inherit properties_class_n_a_t_s_1_1_client_1_1_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a65d51efdae179e6b5e06ae2a476cb632 inherit properties_class_n_a_t_s_1_1_client_1_1_connection"><td class="memItemLeft" align="right" valign="top">Exception&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#a65d51efdae179e6b5e06ae2a476cb632">LastError</a><code> [get]</code></td></tr>
+<tr class="separator:a65d51efdae179e6b5e06ae2a476cb632 inherit properties_class_n_a_t_s_1_1_client_1_1_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2bbada2c5631ffc88fbd2847cbe92ed6 inherit properties_class_n_a_t_s_1_1_client_1_1_connection"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespace_n_a_t_s_1_1_client.html#a8144f718a812fe4318c33f202fc53484">ConnState</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#a2bbada2c5631ffc88fbd2847cbe92ed6">State</a><code> [get]</code></td></tr>
+<tr class="separator:a2bbada2c5631ffc88fbd2847cbe92ed6 inherit properties_class_n_a_t_s_1_1_client_1_1_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0d2fe82f0638a485a966bf606eb39af3 inherit properties_class_n_a_t_s_1_1_client_1_1_connection"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_statistics.html">IStatistics</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#a0d2fe82f0638a485a966bf606eb39af3">Stats</a><code> [get]</code></td></tr>
+<tr class="separator:a0d2fe82f0638a485a966bf606eb39af3 inherit properties_class_n_a_t_s_1_1_client_1_1_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa24c56612d2ba797c743870d30d909ce inherit properties_class_n_a_t_s_1_1_client_1_1_connection"><td class="memItemLeft" align="right" valign="top">long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#aa24c56612d2ba797c743870d30d909ce">MaxPayload</a><code> [get]</code></td></tr>
+<tr class="separator:aa24c56612d2ba797c743870d30d909ce inherit properties_class_n_a_t_s_1_1_client_1_1_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header properties_interface_n_a_t_s_1_1_client_1_1_i_connection"><td colspan="2" onclick="javascript:toggleInherit('properties_interface_n_a_t_s_1_1_client_1_1_i_connection')"><img src="closed.png" alt="-"/>&#160;Properties inherited from <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html">NATS.Client.IConnection</a></td></tr>
+<tr class="memitem:a902a736d0c779192923eb6ec0519153a inherit properties_interface_n_a_t_s_1_1_client_1_1_i_connection"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html">Options</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a902a736d0c779192923eb6ec0519153a">Opts</a><code> [get]</code></td></tr>
+<tr class="separator:a902a736d0c779192923eb6ec0519153a inherit properties_interface_n_a_t_s_1_1_client_1_1_i_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a342bd3511609afd6d9093d48a3cdcbb2 inherit properties_interface_n_a_t_s_1_1_client_1_1_i_connection"><td class="memItemLeft" align="right" valign="top">string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a342bd3511609afd6d9093d48a3cdcbb2">ConnectedUrl</a><code> [get]</code></td></tr>
+<tr class="separator:a342bd3511609afd6d9093d48a3cdcbb2 inherit properties_interface_n_a_t_s_1_1_client_1_1_i_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a39c9277426efd0d0efbe8805b9376650 inherit properties_interface_n_a_t_s_1_1_client_1_1_i_connection"><td class="memItemLeft" align="right" valign="top">string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a39c9277426efd0d0efbe8805b9376650">ConnectedId</a><code> [get]</code></td></tr>
+<tr class="separator:a39c9277426efd0d0efbe8805b9376650 inherit properties_interface_n_a_t_s_1_1_client_1_1_i_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a338f1b40cca4abb640ee3e2be0251c70 inherit properties_interface_n_a_t_s_1_1_client_1_1_i_connection"><td class="memItemLeft" align="right" valign="top">string[]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a338f1b40cca4abb640ee3e2be0251c70">Servers</a><code> [get]</code></td></tr>
+<tr class="separator:a338f1b40cca4abb640ee3e2be0251c70 inherit properties_interface_n_a_t_s_1_1_client_1_1_i_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af67e98d92452ead23d62cd51ebc0191a inherit properties_interface_n_a_t_s_1_1_client_1_1_i_connection"><td class="memItemLeft" align="right" valign="top">string[]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#af67e98d92452ead23d62cd51ebc0191a">DiscoveredServers</a><code> [get]</code></td></tr>
+<tr class="separator:af67e98d92452ead23d62cd51ebc0191a inherit properties_interface_n_a_t_s_1_1_client_1_1_i_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a97322f6714fe27d8ad10a618cc70b9ea inherit properties_interface_n_a_t_s_1_1_client_1_1_i_connection"><td class="memItemLeft" align="right" valign="top">Exception&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a97322f6714fe27d8ad10a618cc70b9ea">LastError</a><code> [get]</code></td></tr>
+<tr class="separator:a97322f6714fe27d8ad10a618cc70b9ea inherit properties_interface_n_a_t_s_1_1_client_1_1_i_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a41bd10da22b1f95c6389f1141255fca1 inherit properties_interface_n_a_t_s_1_1_client_1_1_i_connection"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespace_n_a_t_s_1_1_client.html#a8144f718a812fe4318c33f202fc53484">ConnState</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a41bd10da22b1f95c6389f1141255fca1">State</a><code> [get]</code></td></tr>
+<tr class="separator:a41bd10da22b1f95c6389f1141255fca1 inherit properties_interface_n_a_t_s_1_1_client_1_1_i_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab55fbcc44bb4ee7ca3589055ef1e276d inherit properties_interface_n_a_t_s_1_1_client_1_1_i_connection"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_statistics.html">IStatistics</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#ab55fbcc44bb4ee7ca3589055ef1e276d">Stats</a><code> [get]</code></td></tr>
+<tr class="separator:ab55fbcc44bb4ee7ca3589055ef1e276d inherit properties_interface_n_a_t_s_1_1_client_1_1_i_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adf18200f0d9177ed2d2a65b05e467c69 inherit properties_interface_n_a_t_s_1_1_client_1_1_i_connection"><td class="memItemLeft" align="right" valign="top">long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#adf18200f0d9177ed2d2a65b05e467c69">MaxPayload</a><code> [get]</code></td></tr>
+<tr class="separator:adf18200f0d9177ed2d2a65b05e467c69 inherit properties_interface_n_a_t_s_1_1_client_1_1_i_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header properties_interface_n_a_t_s_1_1_client_1_1_i_encoded_connection"><td colspan="2" onclick="javascript:toggleInherit('properties_interface_n_a_t_s_1_1_client_1_1_i_encoded_connection')"><img src="closed.png" alt="-"/>&#160;Properties inherited from <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html">NATS.Client.IEncodedConnection</a></td></tr>
 <tr class="memitem:a383b84724bf37abfc69bd04065133efb inherit properties_interface_n_a_t_s_1_1_client_1_1_i_encoded_connection"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html">Options</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a383b84724bf37abfc69bd04065133efb">Opts</a><code> [get]</code></td></tr>
 <tr class="separator:a383b84724bf37abfc69bd04065133efb inherit properties_interface_n_a_t_s_1_1_client_1_1_i_encoded_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -165,6 +267,8 @@ Additional Inherited Members</h2></td></tr>
 <tr class="separator:a24ec8238329233da2223fba3385d81a5 inherit properties_interface_n_a_t_s_1_1_client_1_1_i_encoded_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aac4b10c8181f033f2e40b281303513a7 inherit properties_interface_n_a_t_s_1_1_client_1_1_i_encoded_connection"><td class="memItemLeft" align="right" valign="top">string[]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#aac4b10c8181f033f2e40b281303513a7">Servers</a><code> [get]</code></td></tr>
 <tr class="separator:aac4b10c8181f033f2e40b281303513a7 inherit properties_interface_n_a_t_s_1_1_client_1_1_i_encoded_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abce06b5b3d539eedd4f7be924851b15a inherit properties_interface_n_a_t_s_1_1_client_1_1_i_encoded_connection"><td class="memItemLeft" align="right" valign="top">string[]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#abce06b5b3d539eedd4f7be924851b15a">DiscoveredServers</a><code> [get]</code></td></tr>
+<tr class="separator:abce06b5b3d539eedd4f7be924851b15a inherit properties_interface_n_a_t_s_1_1_client_1_1_i_encoded_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a68d8dc5bb51d31ccf178e5b4612924ab inherit properties_interface_n_a_t_s_1_1_client_1_1_i_encoded_connection"><td class="memItemLeft" align="right" valign="top">Exception&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a68d8dc5bb51d31ccf178e5b4612924ab">LastError</a><code> [get]</code></td></tr>
 <tr class="separator:a68d8dc5bb51d31ccf178e5b4612924ab inherit properties_interface_n_a_t_s_1_1_client_1_1_i_encoded_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa1e1b756a1896bdc8ee6869b36a28cf6 inherit properties_interface_n_a_t_s_1_1_client_1_1_i_encoded_connection"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespace_n_a_t_s_1_1_client.html#a8144f718a812fe4318c33f202fc53484">ConnState</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#aa1e1b756a1896bdc8ee6869b36a28cf6">State</a><code> [get]</code></td></tr>
@@ -179,9 +283,88 @@ Additional Inherited Members</h2></td></tr>
 <tr class="separator:aa6d6bc072879cb6c16f8d41c4c88363e inherit properties_interface_n_a_t_s_1_1_client_1_1_i_encoded_connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>This class subclasses the Connection class to support serialization. </p>
+<div class="textblock"><p>Represents an <a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html" title="Connection represents a bare connection to a NATS server. Users should create an IConnection instance...">Connection</a> which uses a client specified encoding scheme. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="af1b767c999738ac932822362bae2da22"></a>
+<a class="anchor" id="a206eb6c9ca9fd8500f6f3ea0d8d5afbf"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">override void NATS.Client.EncodedConnection.Dispose </td>
+          <td>(</td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>disposing</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Closes the <a class="el" href="class_n_a_t_s_1_1_client_1_1_encoded_connection.html" title="Represents an Connection which uses a client specified encoding scheme. ">EncodedConnection</a> and optionally releases the managed resources. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">disposing</td><td><code>true</code> to release both managed and unmanaged resources; <code>false</code> to release only unmanaged resources.</td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p>Reimplemented from <a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#a017dfe347437eeeb2d91ccba1a91e91a">NATS.Client.Connection</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="a255cff4252e6087bde156c17ad4dd421"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void NATS.Client.EncodedConnection.Publish </td>
+          <td>(</td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>subject</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Object&#160;</td>
+          <td class="paramname"><em>obj</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Publishes the serialized value of <em>obj</em>  to the given <em>subject</em> . </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">subject</td><td>The subject to publish <em>obj</em>  to over the current connection.</td></tr>
+    <tr><td class="paramname">obj</td><td>The Object to serialize and publish to the connected <a class="el" href="namespace_n_a_t_s.html">NATS</a> server.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_bad_subscription_exception.html" title="The exception that is thrown when a subscriber operation is performed on an invalid subscriber...">NATSBadSubscriptionException</a></td><td><em>subject</em>  is <code>null</code> or entirely whitespace.</td></tr>
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_max_payload_exception.html" title="The exception that is thrown when a message payload exceeds what the maximum configured. ">NATSMaxPayloadException</a></td><td>The serialzed form of <em>obj</em>  exceeds the maximum payload size supported by the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server.</td></tr>
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_connection_closed_exception.html" title="The exception that is thrown when a an operation is performed on a connection that is closed...">NATSConnectionClosedException</a></td><td>The <a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html" title="Connection represents a bare connection to a NATS server. Users should create an IConnection instance...">Connection</a> is closed.</td></tr>
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_exception.html" title="The exception that is thrown when there is a NATS error condition. All NATS exception inherit from th...">NATSException</a></td><td><a class="el" href="class_n_a_t_s_1_1_client_1_1_encoded_connection.html#a86cc212cdb89b9fbfab6b508815a0f6f" title="Gets or sets the method which is called to serialize objects sent as a message payload. ">OnSerialize</a> is <code>null</code>.-or-There was an unexpected exception performing an internal <a class="el" href="namespace_n_a_t_s.html">NATS</a> call while publishing. See System.Exception.InnerException for more details.</td></tr>
+    <tr><td class="paramname">IOException</td><td>There was a failure while writing to the network.</td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a686b39648df8113b2476a3ebd38900cd"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -211,12 +394,22 @@ Additional Inherited Members</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Publish will perform a Publish() expecting a response on the reply subject. Use <a class="el" href="class_n_a_t_s_1_1_client_1_1_encoded_connection.html#a8aa9c9203fdbfa4d6d97ab10b2de480e" title="Request will create an Inbox and perform a Request() call with the Inbox reply and return the first r...">Request()</a> for automatically waiting for a response inline. </p>
+<p>Publishes the serialized value of <em>obj</em>  to the given <em>subject</em> . </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">subject</td><td>Subject to publish on</td></tr>
-    <tr><td class="paramname">reply</td><td>Subject the receiver will on.</td></tr>
-    <tr><td class="paramname">obj</td><td>The object to send</td></tr>
+    <tr><td class="paramname">subject</td><td>The subject to publish <em>obj</em>  to over the current connection.</td></tr>
+    <tr><td class="paramname">reply</td><td>An optional reply subject.</td></tr>
+    <tr><td class="paramname">obj</td><td>The Object to serialize and publish to the connected <a class="el" href="namespace_n_a_t_s.html">NATS</a> server.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_bad_subscription_exception.html" title="The exception that is thrown when a subscriber operation is performed on an invalid subscriber...">NATSBadSubscriptionException</a></td><td><em>subject</em>  is <code>null</code> or entirely whitespace.</td></tr>
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_max_payload_exception.html" title="The exception that is thrown when a message payload exceeds what the maximum configured. ">NATSMaxPayloadException</a></td><td>The serialzed form of <em>obj</em>  exceeds the maximum payload size supported by the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server.</td></tr>
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_connection_closed_exception.html" title="The exception that is thrown when a an operation is performed on a connection that is closed...">NATSConnectionClosedException</a></td><td>The <a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html" title="Connection represents a bare connection to a NATS server. Users should create an IConnection instance...">Connection</a> is closed.</td></tr>
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_exception.html" title="The exception that is thrown when there is a NATS error condition. All NATS exception inherit from th...">NATSException</a></td><td><a class="el" href="class_n_a_t_s_1_1_client_1_1_encoded_connection.html#a86cc212cdb89b9fbfab6b508815a0f6f" title="Gets or sets the method which is called to serialize objects sent as a message payload. ">OnSerialize</a> is <code>null</code>.-or-There was an unexpected exception performing an internal <a class="el" href="namespace_n_a_t_s.html">NATS</a> call while publishing. See System.Exception.InnerException for more details.</td></tr>
+    <tr><td class="paramname">IOException</td><td>There was a failure while writing to the network.</td></tr>
   </table>
   </dd>
 </dl>
@@ -255,17 +448,29 @@ Additional Inherited Members</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Request will create an Inbox and perform a <a class="el" href="class_n_a_t_s_1_1_client_1_1_encoded_connection.html#a8aa9c9203fdbfa4d6d97ab10b2de480e" title="Request will create an Inbox and perform a Request() call with the Inbox reply and return the first r...">Request()</a> call with the Inbox reply and return the first reply received. This is optimized for the case of multiple responses. </p>
-<p>A negative timeout blocks forever, zero is not allowed. </p>
+<p>Sends a request payload and returns the deserialized response, or throws <a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_timeout_exception.html" title="The exception that is thrown when a NATS operation times out. ">NATSTimeoutException</a> if the <em>timeout</em>  expires. </p>
+<p><a class="el" href="class_n_a_t_s_1_1_client_1_1_encoded_connection.html#a8aa9c9203fdbfa4d6d97ab10b2de480e" title="Sends a request payload and returns the deserialized response, or throws NATSTimeoutException if the ...">Request(string, object, int)</a> will create an unique inbox for this request, sharing a single subscription for all replies to this <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html" title="Represents a connection to a NATS Server which uses a client specified encoding scheme. ">IEncodedConnection</a> instance. However, if <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a0dd67697b2487a4fbb5abf0f4fd06509" title="Gets or sets a value indicating whether or not the old request pattern should be used. ">Options.UseOldRequestStyle</a> is set, each request will have its own underlying subscription. The old behavior is not recommended as it may cause unnecessary overhead on connected <a class="el" href="namespace_n_a_t_s.html">NATS</a> servers. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">subject</td><td>Subject to send the request on.</td></tr>
-    <tr><td class="paramname">obj</td><td>The object to send</td></tr>
-    <tr><td class="paramname">timeout</td><td>time to block</td></tr>
+    <tr><td class="paramname">subject</td><td>The subject to publish <em>obj</em>  to over the current connection.</td></tr>
+    <tr><td class="paramname">obj</td><td>The Object to serialize and publish to the connected <a class="el" href="namespace_n_a_t_s.html">NATS</a> server.</td></tr>
+    <tr><td class="paramname">timeout</td><td>The number of milliseconds to wait.</td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>An object from the replier.</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>A Object with the deserialized response from the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server.</dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">ArgumentOutOfRangeException</td><td><em>timeout</em>  is less than or equal to zero (<code>0</code>).</td></tr>
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_bad_subscription_exception.html" title="The exception that is thrown when a subscriber operation is performed on an invalid subscriber...">NATSBadSubscriptionException</a></td><td><em>subject</em>  is <code>null</code> or entirely whitespace.</td></tr>
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_max_payload_exception.html" title="The exception that is thrown when a message payload exceeds what the maximum configured. ">NATSMaxPayloadException</a></td><td>The serialzed form of <em>obj</em>  exceeds the maximum payload size supported by the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server.</td></tr>
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_connection_closed_exception.html" title="The exception that is thrown when a an operation is performed on a connection that is closed...">NATSConnectionClosedException</a></td><td>The <a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html" title="Connection represents a bare connection to a NATS server. Users should create an IConnection instance...">Connection</a> is closed.</td></tr>
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_timeout_exception.html" title="The exception that is thrown when a NATS operation times out. ">NATSTimeoutException</a></td><td>A timeout occurred while sending the request or receiving the response.</td></tr>
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_exception.html" title="The exception that is thrown when there is a NATS error condition. All NATS exception inherit from th...">NATSException</a></td><td>There was an unexpected exception performing an internal <a class="el" href="namespace_n_a_t_s.html">NATS</a> call while executing the request. See System.Exception.InnerException for more details.</td></tr>
+    <tr><td class="paramname">IOException</td><td>There was a failure while writing to the network.</td></tr>
+  </table>
+  </dd>
+</dl>
 
 <p>Implements <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a3cd59e9f8c96da8fcb6565f92527b37e">NATS.Client.IEncodedConnection</a>.</p>
 
@@ -295,15 +500,27 @@ Additional Inherited Members</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Request will create an Inbox and perform a <a class="el" href="class_n_a_t_s_1_1_client_1_1_encoded_connection.html#a8aa9c9203fdbfa4d6d97ab10b2de480e" title="Request will create an Inbox and perform a Request() call with the Inbox reply and return the first r...">Request()</a> call with the Inbox reply and return the first reply received. This is optimized for the case of multiple responses. </p>
+<p>Sends a request payload and returns the deserialized response. </p>
+<p><a class="el" href="class_n_a_t_s_1_1_client_1_1_encoded_connection.html#a3ea2e3dab362f1b2a1bc9642b84f2018" title="Sends a request payload and returns the deserialized response. ">Request(string, object)</a> will create an unique inbox for this request, sharing a single subscription for all replies to this <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html" title="Represents a connection to a NATS Server which uses a client specified encoding scheme. ">IEncodedConnection</a> instance. However, if <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a0dd67697b2487a4fbb5abf0f4fd06509" title="Gets or sets a value indicating whether or not the old request pattern should be used. ">Options.UseOldRequestStyle</a> is set, each request will have its own underlying subscription. The old behavior is not recommended as it may cause unnecessary overhead on connected <a class="el" href="namespace_n_a_t_s.html">NATS</a> servers. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">subject</td><td>Subject to send the request on.</td></tr>
-    <tr><td class="paramname">obj</td><td>The object to send</td></tr>
+    <tr><td class="paramname">subject</td><td>The subject to publish <em>obj</em>  to over the current connection.</td></tr>
+    <tr><td class="paramname">obj</td><td>The Object to serialize and publish to the connected <a class="el" href="namespace_n_a_t_s.html">NATS</a> server.</td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>An object from the replier.</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>A Object with the deserialized response from the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server.</dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_bad_subscription_exception.html" title="The exception that is thrown when a subscriber operation is performed on an invalid subscriber...">NATSBadSubscriptionException</a></td><td><em>subject</em>  is <code>null</code> or entirely whitespace.</td></tr>
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_max_payload_exception.html" title="The exception that is thrown when a message payload exceeds what the maximum configured. ">NATSMaxPayloadException</a></td><td>The serialzed form of <em>obj</em>  exceeds the maximum payload size supported by the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server.</td></tr>
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_connection_closed_exception.html" title="The exception that is thrown when a an operation is performed on a connection that is closed...">NATSConnectionClosedException</a></td><td>The <a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html" title="Connection represents a bare connection to a NATS server. Users should create an IConnection instance...">Connection</a> is closed.</td></tr>
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_timeout_exception.html" title="The exception that is thrown when a NATS operation times out. ">NATSTimeoutException</a></td><td>A timeout occurred while sending the request or receiving the response.</td></tr>
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_exception.html" title="The exception that is thrown when there is a NATS error condition. All NATS exception inherit from th...">NATSException</a></td><td>There was an unexpected exception performing an internal <a class="el" href="namespace_n_a_t_s.html">NATS</a> call while executing the request. See System.Exception.InnerException for more details.</td></tr>
+    <tr><td class="paramname">IOException</td><td>There was a failure while writing to the network.</td></tr>
+  </table>
+  </dd>
+</dl>
 
 <p>Implements <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a43c0c4feae4ac2a1405d08fbbf3cdf74">NATS.Client.IEncodedConnection</a>.</p>
 
@@ -333,15 +550,26 @@ Additional Inherited Members</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>SubscribeAsync will create an AsyncSubscriber with interest in a given subject, assign the handler, and immediately start receiving messages. </p>
+<p>Expresses interest in the given <em>subject</em>  to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server, and begins delivering messages to the given event handler. </p>
+<p>The <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html" title="IAsyncSubscription asynchronously delivers messages to listeners of the MessageHandler event...">IAsyncSubscription</a> returned will start delivering messages to the event handler as soon as they are received. The caller does not have to invoke <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html#a5c4c7deef3ffec1ba136f2e51c301e2e" title="Starts delivering received messages to listeners on MessageHandler from a separate thread...">IAsyncSubscription.Start</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">subject</td><td>Subject of interest.</td></tr>
-    <tr><td class="paramname">handler</td><td>An encoded message handler delegate.</td></tr>
+    <tr><td class="paramname">subject</td><td>The subject on which to listen for messages. The subject can have wildcards (partial: <code>*</code>, full: <code>&gt;</code>).</td></tr>
+    <tr><td class="paramname">handler</td><td>The EventHandler&lt;TEventArgs&gt; invoked when messages are received on the returned <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html" title="IAsyncSubscription asynchronously delivers messages to listeners of the MessageHandler event...">IAsyncSubscription</a>.</td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>A new Subscription</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>An <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html" title="IAsyncSubscription asynchronously delivers messages to listeners of the MessageHandler event...">IAsyncSubscription</a> to use to read any messages received from the <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server on the given <em>subject</em> .</dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">ArgumentNullException</td><td><em>handler</em>  is <code>null</code>.</td></tr>
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_exception.html" title="The exception that is thrown when there is a NATS error condition. All NATS exception inherit from th...">NATSException</a></td><td><a class="el" href="class_n_a_t_s_1_1_client_1_1_encoded_connection.html#a6f128fa28130fc52f739739fed3674c0" title="Gets or sets the method which is called to deserialize objects from a message payload. ">OnDeserialize</a> is <code>null</code>.</td></tr>
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_bad_subscription_exception.html" title="The exception that is thrown when a subscriber operation is performed on an invalid subscriber...">NATSBadSubscriptionException</a></td><td><em>subject</em>  is <code>null</code> or entirely whitespace.</td></tr>
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_connection_closed_exception.html" title="The exception that is thrown when a an operation is performed on a connection that is closed...">NATSConnectionClosedException</a></td><td>The <a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html" title="Connection represents a bare connection to a NATS server. Users should create an IConnection instance...">Connection</a> is closed.</td></tr>
+    <tr><td class="paramname">IOException</td><td>There was a failure while writing to the network.</td></tr>
+  </table>
+  </dd>
+</dl>
 
 <p>Implements <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a1480632dd9df61d4d04f4d6f011dd6a1">NATS.Client.IEncodedConnection</a>.</p>
 
@@ -377,18 +605,76 @@ Additional Inherited Members</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>This method creates an asynchronous queue subscriber on the given subject. All subscribers with the same queue name will form the queue group and only one member of the group will be selected to receive any given message asynchronously. Start() must be called to begin receiving messages. </p>
+<p>Creates an asynchronous queue subscriber on the given <em>subject</em> , and begins delivering messages to the given event handler. </p>
+<p>The <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html" title="IAsyncSubscription asynchronously delivers messages to listeners of the MessageHandler event...">IAsyncSubscription</a> returned will start delivering messages to the event handler as soon as they are received. The caller does not have to invoke <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html#a5c4c7deef3ffec1ba136f2e51c301e2e" title="Starts delivering received messages to listeners on MessageHandler from a separate thread...">IAsyncSubscription.Start</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">subject</td><td>Subject of interest</td></tr>
-    <tr><td class="paramname">queue</td><td>Name of the queue group</td></tr>
-    <tr><td class="paramname">handler</td><td>A message handler to initialize the MessageHandler event with.</td></tr>
+    <tr><td class="paramname">subject</td><td>The subject on which to listen for messages. The subject can have wildcards (partial: <code>*</code>, full: <code>&gt;</code>).</td></tr>
+    <tr><td class="paramname">queue</td><td>The name of the queue group in which to participate.</td></tr>
+    <tr><td class="paramname">handler</td><td>The EventHandler&lt;TEventArgs&gt; invoked when messages are received on the returned <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html" title="IAsyncSubscription asynchronously delivers messages to listeners of the MessageHandler event...">IAsyncSubscription</a>.</td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>A new Subscription</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>An <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html" title="IAsyncSubscription asynchronously delivers messages to listeners of the MessageHandler event...">IAsyncSubscription</a> to use to read any messages received from the <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server on the given <em>subject</em> .</dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">ArgumentNullException</td><td><em>handler</em>  is <code>null</code>.</td></tr>
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_exception.html" title="The exception that is thrown when there is a NATS error condition. All NATS exception inherit from th...">NATSException</a></td><td><a class="el" href="class_n_a_t_s_1_1_client_1_1_encoded_connection.html#a6f128fa28130fc52f739739fed3674c0" title="Gets or sets the method which is called to deserialize objects from a message payload. ">OnDeserialize</a> is <code>null</code>.</td></tr>
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_bad_subscription_exception.html" title="The exception that is thrown when a subscriber operation is performed on an invalid subscriber...">NATSBadSubscriptionException</a></td><td><em>subject</em>  is <code>null</code> or entirely whitespace.</td></tr>
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_connection_closed_exception.html" title="The exception that is thrown when a an operation is performed on a connection that is closed...">NATSConnectionClosedException</a></td><td>The <a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html" title="Connection represents a bare connection to a NATS server. Users should create an IConnection instance...">Connection</a> is closed.</td></tr>
+    <tr><td class="paramname">IOException</td><td>There was a failure while writing to the network.</td></tr>
+  </table>
+  </dd>
+</dl>
 
 <p>Implements <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#af63b9bed0ed48f01497d980f20b55a87">NATS.Client.IEncodedConnection</a>.</p>
+
+</div>
+</div>
+<h2 class="groupheader">Property Documentation</h2>
+<a class="anchor" id="a6f128fa28130fc52f739739fed3674c0"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="namespace_n_a_t_s_1_1_client.html#ae3d017dda4668698e3b11180925776d1">Deserializer</a> NATS.Client.EncodedConnection.OnDeserialize</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">get</span><span class="mlabel">set</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Gets or sets the method which is called to deserialize objects from a message payload. </p>
+<p>If <code>null</code> is given then the default deserialization method for the platform is used, if one exists.</p>
+
+</div>
+</div>
+<a class="anchor" id="a86cc212cdb89b9fbfab6b508815a0f6f"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="namespace_n_a_t_s_1_1_client.html#a17a0769f7076f1d1d8b105cdf562d79e">Serializer</a> NATS.Client.EncodedConnection.OnSerialize</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">get</span><span class="mlabel">set</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Gets or sets the method which is called to serialize objects sent as a message payload. </p>
+<p>If <code>null</code> is given then the default serialization method for the platform is used, if one exists.</p>
 
 </div>
 </div>

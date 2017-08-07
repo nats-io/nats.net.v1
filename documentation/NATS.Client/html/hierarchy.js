@@ -4,14 +4,30 @@ var hierarchy =
     [ "NATS.Client.ConnEventArgs", "class_n_a_t_s_1_1_client_1_1_conn_event_args.html", null ],
     [ "NATS.Client.EncodedMessageEventArgs", "class_n_a_t_s_1_1_client_1_1_encoded_message_event_args.html", null ],
     [ "NATS.Client.ErrEventArgs", "class_n_a_t_s_1_1_client_1_1_err_event_args.html", null ],
-    [ "NATS.Client.IConnection", "interface_n_a_t_s_1_1_client_1_1_i_connection.html", null ],
+    [ "NATS.Client.IConnection", "interface_n_a_t_s_1_1_client_1_1_i_connection.html", [
+      [ "NATS.Client.Connection", "class_n_a_t_s_1_1_client_1_1_connection.html", [
+        [ "NATS.Client.EncodedConnection", "class_n_a_t_s_1_1_client_1_1_encoded_connection.html", null ]
+      ] ]
+    ] ],
     [ "NATS.Client.IEncodedConnection", "interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html", [
       [ "NATS.Client.EncodedConnection", "class_n_a_t_s_1_1_client_1_1_encoded_connection.html", null ]
     ] ],
-    [ "NATS.Client.IStatistics", "interface_n_a_t_s_1_1_client_1_1_i_statistics.html", null ],
+    [ "NATS.Client.IStatistics", "interface_n_a_t_s_1_1_client_1_1_i_statistics.html", [
+      [ "NATS.Client.Statistics", "class_n_a_t_s_1_1_client_1_1_statistics.html", null ]
+    ] ],
     [ "NATS.Client.ISubscription", "interface_n_a_t_s_1_1_client_1_1_i_subscription.html", [
-      [ "NATS.Client.IAsyncSubscription", "interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html", null ],
-      [ "NATS.Client.ISyncSubscription", "interface_n_a_t_s_1_1_client_1_1_i_sync_subscription.html", null ]
+      [ "NATS.Client.AsyncSubscription", "class_n_a_t_s_1_1_client_1_1_async_subscription.html", null ],
+      [ "NATS.Client.IAsyncSubscription", "interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html", [
+        [ "NATS.Client.AsyncSubscription", "class_n_a_t_s_1_1_client_1_1_async_subscription.html", null ]
+      ] ],
+      [ "NATS.Client.ISyncSubscription", "interface_n_a_t_s_1_1_client_1_1_i_sync_subscription.html", [
+        [ "NATS.Client.SyncSubscription", "class_n_a_t_s_1_1_client_1_1_sync_subscription.html", null ]
+      ] ],
+      [ "NATS.Client.Subscription", "class_n_a_t_s_1_1_client_1_1_subscription.html", [
+        [ "NATS.Client.AsyncSubscription", "class_n_a_t_s_1_1_client_1_1_async_subscription.html", null ],
+        [ "NATS.Client.SyncSubscription", "class_n_a_t_s_1_1_client_1_1_sync_subscription.html", null ]
+      ] ],
+      [ "NATS.Client.SyncSubscription", "class_n_a_t_s_1_1_client_1_1_sync_subscription.html", null ]
     ] ],
     [ "NATS.Client.Msg", "class_n_a_t_s_1_1_client_1_1_msg.html", null ],
     [ "NATS.Client.MsgHandlerEventArgs", "class_n_a_t_s_1_1_client_1_1_msg_handler_event_args.html", null ],

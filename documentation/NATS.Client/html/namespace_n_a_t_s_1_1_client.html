@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">0.7.0</span>
+   &#160;<span id="projectnumber">0.8.0</span>
    </div>
    <div id="projectbrief">The nats.io .NET C# Client, Supported by Apcera</div>
   </td>
@@ -116,6 +116,10 @@ $(document).ready(function(){initNavTree('namespace_n_a_t_s_1_1_client.html','')
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_async_subscription.html">AsyncSubscription</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html">Connection</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection_factory.html">ConnectionFactory</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_conn_event_args.html">ConnEventArgs</a></td></tr>
@@ -172,10 +176,24 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html">Options</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_statistics.html">Statistics</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_subscription.html">Subscription</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_sync_subscription.html">SyncSubscription</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
 Enumerations</h2></td></tr>
-<tr class="memitem:a8144f718a812fe4318c33f202fc53484"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_n_a_t_s_1_1_client.html#a8144f718a812fe4318c33f202fc53484">ConnState</a> <tr class="separator:a8144f718a812fe4318c33f202fc53484"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8144f718a812fe4318c33f202fc53484"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_n_a_t_s_1_1_client.html#a8144f718a812fe4318c33f202fc53484">ConnState</a> { <br />
+&#160;&#160;<a class="el" href="namespace_n_a_t_s_1_1_client.html#a8144f718a812fe4318c33f202fc53484a99c8ce56e7ab246445d3b134724428f3">ConnState.DISCONNECTED</a> = 0, 
+<a class="el" href="namespace_n_a_t_s_1_1_client.html#a8144f718a812fe4318c33f202fc53484aa5afd6edd5336d91316964e493936858">ConnState.CONNECTED</a>, 
+<a class="el" href="namespace_n_a_t_s_1_1_client.html#a8144f718a812fe4318c33f202fc53484a110ccf2f5d2ff4eda1fd1a494293467d">ConnState.CLOSED</a>, 
+<a class="el" href="namespace_n_a_t_s_1_1_client.html#a8144f718a812fe4318c33f202fc53484adb972eb9aae14fd469f2a622acb2148d">ConnState.RECONNECTING</a>, 
+<br />
+&#160;&#160;<a class="el" href="namespace_n_a_t_s_1_1_client.html#a8144f718a812fe4318c33f202fc53484a9a14f95e151eec641316e7c784ce832d">ConnState.CONNECTING</a>
+<br />
+ }<tr class="separator:a8144f718a812fe4318c33f202fc53484"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
@@ -204,7 +222,24 @@ Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>State of the connection. </p>
+<p>State of the <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html" title="Represents a connection to the NATS server. ">IConnection</a>. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a class="anchor" id="a8144f718a812fe4318c33f202fc53484a99c8ce56e7ab246445d3b134724428f3"></a>DISCONNECTED&#160;</td><td class="fielddoc">
+<p>The <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html" title="Represents a connection to the NATS server. ">IConnection</a> is disconnected. </p>
+</td></tr>
+<tr><td class="fieldname"><a class="anchor" id="a8144f718a812fe4318c33f202fc53484aa5afd6edd5336d91316964e493936858"></a>CONNECTED&#160;</td><td class="fielddoc">
+<p>The <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html" title="Represents a connection to the NATS server. ">IConnection</a> is connected to a <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server. </p>
+</td></tr>
+<tr><td class="fieldname"><a class="anchor" id="a8144f718a812fe4318c33f202fc53484a110ccf2f5d2ff4eda1fd1a494293467d"></a>CLOSED&#160;</td><td class="fielddoc">
+<p>The <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html" title="Represents a connection to the NATS server. ">IConnection</a> has been closed. </p>
+</td></tr>
+<tr><td class="fieldname"><a class="anchor" id="a8144f718a812fe4318c33f202fc53484adb972eb9aae14fd469f2a622acb2148d"></a>RECONNECTING&#160;</td><td class="fielddoc">
+<p>The <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html" title="Represents a connection to the NATS server. ">IConnection</a> is currently reconnecting to a <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server. </p>
+</td></tr>
+<tr><td class="fieldname"><a class="anchor" id="a8144f718a812fe4318c33f202fc53484a9a14f95e151eec641316e7c784ce832d"></a>CONNECTING&#160;</td><td class="fielddoc">
+<p>The <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html" title="Represents a connection to the NATS server. ">IConnection</a> is currently connecting to a <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server. </p>
+</td></tr>
+</table>
 
 </div>
 </div>
@@ -223,14 +258,14 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Overrides the default binary deserialization. </p>
+<p>Represents a method that will handle deserialization of a byte array into an Object. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">data</td><td>Data from the mesasge payload</td></tr>
+    <tr><td class="paramname">data</td><td>The byte array in a <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg.html" title="A NATS message is an object encapsulating a subject, optional reply payload, and subscription informa...">Msg</a> payload that contains the Object to deserialize.</td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>The deserialized object.</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>The Object being deserialized.</dd></dl>
 
 </div>
 </div>
@@ -248,10 +283,10 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Overrides default binary serialization. </p>
+<p>Represents the method that will handle serialization of <em>obj</em>  to a byte array. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">obj</td><td>The object to serialize</td></tr>
+    <tr><td class="paramname">obj</td><td>The Object to serialize.</td></tr>
   </table>
   </dd>
 </dl>
