@@ -345,22 +345,70 @@ namespace NATSUnitTests
         {
             using (new NATSServer())
             {
-                ConnectionFactory cf = new ConnectionFactory();
-                var sw = Stopwatch.StartNew();
+                var sw = new Stopwatch();
 
-                GC.Collect();
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true);
+                sw.Start();
+
+                ConnectionFactory cf = new ConnectionFactory();
+
+                long memStart = Process.GetCurrentProcess().PrivateMemorySize64;
+
+                int count = 0;
+                while (sw.ElapsedMilliseconds < 10000 || count < 2000)
+                {
+                    count++;
+                    using (IConnection conn = cf.CreateConnection()) { }
+                }
+
+                cf = null;
+
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true);
+
+                double memGrowthPercent = 100 * (
+                    ((double)(Process.GetCurrentProcess().PrivateMemorySize64 - memStart))
+                        / (double)memStart);
+
+                Assert.True(memGrowthPercent < 30.0);
+            }
+        }
+
+        [Fact]
+        public void TestConnectionSubscriberMemoryLeak()
+        {
+            using (new NATSServer())
+            {
+                var sw = new Stopwatch();
+
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true);
+                sw.Start();
+
+                ConnectionFactory cf = new ConnectionFactory();
 
                 long memStart = Process.GetCurrentProcess().PrivateMemorySize64;
 
                 while (sw.ElapsedMilliseconds < 10000)
                 {
-                    using (IConnection conn = cf.CreateConnection()) { }
+                    using (IConnection conn = cf.CreateConnection()) {
+                        conn.SubscribeAsync("foo", (obj, args) =>
+                        {
+                            // NOOP
+                        });
+
+                        var sub = conn.SubscribeAsync("foo");
+                        sub.MessageHandler += (obj, args) =>
+                        {
+                            // NOOP
+                        };
+                        sub.Start();
+
+                        conn.SubscribeSync("foo");
+                    }
                 }
 
-                // allow the last dispose to finish.
-                Thread.Sleep(2000);
+                cf = null;
 
-                GC.Collect();
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true);
 
                 double memGrowthPercent = 100 * (
                     ((double)(Process.GetCurrentProcess().PrivateMemorySize64 - memStart))
