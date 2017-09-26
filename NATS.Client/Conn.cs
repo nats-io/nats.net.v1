@@ -1239,7 +1239,7 @@ namespace NATS.Client
             StreamReader sr = null;
             try
             {
-                // we need the underlying BufferedStream, so leave it open.
+                // we need the underlying stream, so leave it open.
                 sr = new StreamReader(br, Encoding.UTF8, false, 512, true);
                 result = sr.ReadLine();
 
@@ -1289,7 +1289,7 @@ namespace NATS.Client
             // info string.  If this becomes part of the fastpath, read
             // the string directly using the buffered reader.
             //
-            // Keep the underlying bufferedStream open.
+            // Keep the underlying stream open.
             using (StreamReader sr = new StreamReader(br, Encoding.ASCII, false, 1024, true))
             {
                 return new Control(sr.ReadLine());
