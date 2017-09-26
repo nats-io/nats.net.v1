@@ -2079,7 +2079,6 @@ namespace NATS.Client
             sendProto(PONG_P_BYTES, PONG_P_BYTES_LEN);
         }
 
-
         // processPong is used to process responses to the client's ping
         // messages. We use pings for the flush mechanism as well.
         internal void processPong()
@@ -2406,23 +2405,12 @@ namespace NATS.Client
             {
                 throw new NATSBadSubscriptionException();
             }
-            else if (offset < 0)
-            {
-                throw new ArgumentOutOfRangeException("offset");
-            }
-            else if (count < 0)
-            {
-                throw new ArgumentOutOfRangeException("count");
-            }
-            else if (data != null && data.Length - offset < count)
-            {
-                throw new ArgumentException("Invalid offset and count for supplied data");
-            }
             else if (timeout == 0)
             {
                 // a timeout of 0 will never succeed - do not allow it.
                 throw new ArgumentException("Timeout must not be 0.", "timeout");
             }
+            // offset/count checking covered by publish
 
             if (!opts.UseOldRequestStyle)
             {
@@ -2514,23 +2502,12 @@ namespace NATS.Client
             {
                 throw new NATSBadSubscriptionException();
             }
-            else if (offset < 0)
-            {
-                throw new ArgumentOutOfRangeException("offset");
-            }
-            else if (count < 0)
-            {
-                throw new ArgumentOutOfRangeException("count");
-            }
-            else if (data != null && data.Length - offset < count)
-            {
-                throw new ArgumentException("Invalid offset and count for supplied data");
-            }
             else if (timeout == 0)
             {
                 // a timeout of 0 will never succeed - do not allow it.
                 throw new ArgumentException("Timeout must not be 0.", "timeout");
             }
+            // offset/count checking covered by publish
 
             if (!opts.UseOldRequestStyle)
             {
@@ -2683,7 +2660,6 @@ namespace NATS.Client
         /// <seealso cref="IConnection.Request(string, byte[])"/>
         public Msg Request(string subject, byte[] data, int offset, int count, int timeout)
         {
-
             return request(subject, data, offset, count, timeout);
         }
 
