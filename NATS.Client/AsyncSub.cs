@@ -114,6 +114,7 @@ namespace NATS.Client
                 mch.close();               
                 msgFeeder = null;
             }
+            MessageHandler = null;
             started = false;
         }
 
@@ -169,6 +170,7 @@ namespace NATS.Client
 
         internal override void close()
         {
+            disableAsyncProcessing();
             close(ownsChannel);
         }
     }

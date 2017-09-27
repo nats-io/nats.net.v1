@@ -1236,24 +1236,27 @@ namespace NATS.Client
             }
 
             string result = null;
+            StreamReader sr = null;
             try
             {
-                StreamReader sr = new StreamReader(br);
+                // we need the underlying stream, so leave it open.
+                sr = new StreamReader(br, Encoding.UTF8, false, 512, true);
                 result = sr.ReadLine();
-
 
                 // If opts.verbose is set, handle +OK.
                 if (opts.Verbose == true && IC.okProtoNoCRLF.Equals(result))
                 {
                     result = sr.ReadLine();
                 }
-
-                // Do not close or dispose the stream reader; 
-                // we need the underlying BufferedStream.
             }
             catch (Exception ex)
             {
                 throw new NATSConnectionException("Connect read error", ex);
+            }
+            finally
+            {
+                if (sr != null)
+                    sr.Dispose();
             }
 
             if (IC.pongProtoNoCRLF.Equals(result))
@@ -1286,10 +1289,11 @@ namespace NATS.Client
             // info string.  If this becomes part of the fastpath, read
             // the string directly using the buffered reader.
             //
-            // Do not close or dispose the stream reader - we need the underlying
-            // BufferedStream.
-            StreamReader sr = new StreamReader(br);
-            return new Control(sr.ReadLine());
+            // Keep the underlying stream open.
+            using (StreamReader sr = new StreamReader(br, Encoding.ASCII, false, 1024, true))
+            {
+                return new Control(sr.ReadLine());
+            }
         }
 
         private void processDisconnect()
