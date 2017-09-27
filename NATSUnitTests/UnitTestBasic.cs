@@ -96,7 +96,48 @@ namespace NATSUnitTests
             {
                 using (IConnection c = utils.DefaultTestConnection)
                 {
+                    // Null data should succeed
                     c.Publish("foo", null);
+
+                    // Null data with 0 offset and count should succeed
+                    c.Publish("foo", null, 0, 0);
+
+                    // Empty data with 0 offset and count should succeed
+                    byte[] empty = new byte[0];
+                    c.Publish("foo", empty, 0, 0);
+
+                    // Non-empty data with 0 offset and count should succeed
+                    byte[] data = new byte[10];
+                    c.Publish("foo", data, 0, 0);
+                }
+            }
+        }
+
+        [Fact]
+        public void TestPublishDataWithOffsets()
+        {
+            using (new NATSServer())
+            {
+                using (IConnection c = utils.DefaultTestConnection)
+                {
+                    byte[] data = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };
+                    c.Publish("foo", data);                     // Should succeed.
+                    c.Publish("foo", data, 0, 1);               // Should succeed.
+                    c.Publish("foo", data, 4, 3);               // Should succeed.
+                    c.Publish("foo", data, data.Length - 1, 1); // Should succeed.
+
+                    // Negative offsets fail
+                    Assert.ThrowsAny<ArgumentException>(() => c.Publish("foo", data, -1, 0));
+                    Assert.ThrowsAny<ArgumentException>(() => c.Publish("foo", data, -10, 0));
+
+                    // Negative counts fail
+                    Assert.ThrowsAny<ArgumentException>(() => c.Publish("foo", data, 0, -1));
+                    Assert.ThrowsAny<ArgumentException>(() => c.Publish("foo", data, 0, -100));
+
+                    // Offset + Count should fail if they are out of bounds
+                    Assert.ThrowsAny<ArgumentException>(() => c.Publish("foo", data, 0, data.Length + 10)); // good offset, bad count
+                    Assert.ThrowsAny<ArgumentException>(() => c.Publish("foo", data, 4, data.Length + 10)); // good offset, bad count
+                    Assert.ThrowsAny<ArgumentException>(() => c.Publish("foo", data, data.Length, 1)); // bad offset, bad count
                 }
             }
         }
@@ -122,6 +163,30 @@ namespace NATSUnitTests
         private bool compare(byte[] payload, Msg m)
         {
             return compare(payload, m.Data);
+        }
+
+        // Compares a subset of expected (offset to count) against all of actual
+        private bool compare(byte[] expected, int offset, byte[] actual, int count)
+        {
+            // null case
+            if (expected == actual)
+                return true;
+
+            if (count != actual.Length)
+                return false;
+
+            for (int i = 0; i < actual.Length; i++)
+            {
+                if (expected[offset + i] != actual[i])
+                    return false;
+            }
+
+            return true;
+        }
+
+        private bool compare(byte[] expected, int offset, Msg received, int count)
+        {
+            return compare(expected, offset, received.Data, count);
         }
 
         private bool compare(Msg a, Msg b)
@@ -194,6 +259,16 @@ namespace NATSUnitTests
                         Msg m = s.NextMessage(1000);
 
                         Assert.True(compare(omsg, m), "Messages are not equal.");
+
+                        c.Publish("foo", omsg, 0, omsg.Length);
+                        m = s.NextMessage(1000);
+
+                        Assert.True(compare(omsg, m), "Messages are not equal.");
+
+                        c.Publish("foo", omsg, 2, 3);
+                        m = s.NextMessage(1000);
+
+                        Assert.True(compare(omsg, 2, m, 3), "Messages are not equal.");
                     }
                 }
             }
@@ -212,6 +287,16 @@ namespace NATSUnitTests
                         Msg m = s.NextMessage(1000);
 
                         Assert.True(compare(omsg, m), "Messages are not equal.");
+
+                        c.Publish("foo", "reply", omsg, 0, omsg.Length);
+                        m = s.NextMessage(1000);
+
+                        Assert.True(compare(omsg, m), "Messages are not equal.");
+
+                        c.Publish("foo", "reply", omsg, 1, 5);
+                        m = s.NextMessage(1000);
+
+                        Assert.True(compare(omsg, 1, m, 5), "Messages are not equal.");
                     }
                 }
             }
@@ -454,10 +539,9 @@ namespace NATSUnitTests
 
                         s.Start();
 
-                        Msg m = c.Request("foo", Encoding.UTF8.GetBytes("help."),
-                            5000);
+                        Msg m = c.Request("foo", Encoding.UTF8.GetBytes("help."), 5000);
 
-                        Assert.True(compare(m.Data, response), "Response isn't valid");
+                        Assert.True(compare(response, m.Data), "Response isn't valid");
                     }
                 }
             }
@@ -483,7 +567,38 @@ namespace NATSUnitTests
 
                         Msg m = c.Request("foo", null, 50000);
 
-                        Assert.True(compare(m.Data, response), "Response isn't valid");
+                        Assert.True(compare(response, m.Data), "Response isn't valid");
+                    }
+                }
+            }
+        }
+
+
+        [Fact]
+        public void TestRequestWithOffset()
+        {
+            using (new NATSServer())
+            {
+                using (IConnection c = utils.DefaultTestConnection)
+                {
+                    using (IAsyncSubscription s = c.SubscribeAsync("foo"))
+                    {
+                        byte[] request = Encoding.UTF8.GetBytes("well hello there");
+                        byte[] response = Encoding.UTF8.GetBytes("Around the world in eighty days");
+
+                        s.MessageHandler += (sender, args) =>
+                        {
+                            Assert.True(compare(request, 5, args.Message, 5));
+
+                            c.Publish(args.Message.Reply, response, 11, 5);
+                            c.Flush();
+                        };
+
+                        s.Start();
+
+                        Msg m = c.Request("foo", request, 5, 5, 5000);
+
+                        Assert.True(compare(response, 11, m.Data, 5), "Response isn't valid");
                     }
                 }
             }
@@ -525,6 +640,45 @@ namespace NATSUnitTests
             }
         }
 
+        public async void testRequestAsyncWithOffsets(bool useOldRequestStyle)
+        {
+            using (new NATSServer())
+            {
+                Options opts = utils.DefaultTestOptions;
+                opts.UseOldRequestStyle = useOldRequestStyle;
+
+                using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+                {
+                    byte[] request = Encoding.UTF8.GetBytes("well hello there");
+                    byte[] response = Encoding.UTF8.GetBytes("Around the world in eighty days");
+
+                    EventHandler<MsgHandlerEventArgs> eh = (sender, args) =>
+                    {
+                        Assert.True(compare(request, 5, args.Message, 5));
+
+                        c.Publish(args.Message.Reply, response, 11, 5);
+                    };
+
+                    using (IAsyncSubscription s = c.SubscribeAsync("foo", eh))
+                    {
+                        var tasks = new List<Task>();
+                        for (int i = 0; i < 100; i++)
+                        {
+                            tasks.Add(c.RequestAsync("foo", request, 5, 5));
+                        }
+
+                        foreach (Task<Msg> t in tasks)
+                        {
+                            Msg m = await t;
+                            Assert.True(compare(response, 11, m.Data, 5), "Response isn't valid");
+                        }
+                    }
+
+                    await Assert.ThrowsAsync<NATSBadSubscriptionException>(() => { return c.RequestAsync("", null); });
+                }
+            }
+        }
+
         [Fact]
         public void TestRequestAsync()
         {
@@ -535,6 +689,18 @@ namespace NATSUnitTests
         public void TestRequestAsync_OldRequestStyle()
         {
             testRequestAsync(useOldRequestStyle: true);
+        }
+
+        [Fact]
+        public void TestRequestAsyncWithOffsets()
+        {
+            testRequestAsyncWithOffsets(useOldRequestStyle: false);
+        }
+
+        [Fact]
+        public void TestRequestAsyncWithOffsets_OldRequestStyle()
+        {
+            testRequestAsyncWithOffsets(useOldRequestStyle: true);
         }
 
         public async void testRequestAsyncCancellation(bool useOldRequestStyle)

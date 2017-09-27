@@ -158,7 +158,8 @@ namespace NATS.Client
                     throw new NATSException("IEncodedConnection.OnSerialize must be set (.NET core only).");
 
                 byte[] data = onSerialize(o);
-                publish(subject, reply, data);
+                int count = data != null ? data.Length : 0;
+                publish(subject, reply, data, 0, count);
             }
         }
 
@@ -324,7 +325,8 @@ namespace NATS.Client
         private object requestObject(string subject, object obj, int timeout)
         {
             byte[] data = onSerialize(obj);
-            Msg m = base.request(subject, data, timeout);
+            int count = data != null ? data.Length : 0;
+            Msg m = base.request(subject, data, 0, count, timeout);
             return onDeserialize(m.Data);
         }
 
