@@ -388,15 +388,12 @@ namespace NATS.Client
                         sslStream = null;
                     }
 
-#if NET45
-                    client = new TcpClient(s.url.Host, s.url.Port);
-#else
                     client = new TcpClient();
                     if (!client.ConnectAsync(s.url.Host, s.url.Port).Wait(TimeSpan.FromMilliseconds(timeoutMillis)))
                     {
+                        client = null;
                         throw new NATSConnectionException("timeout");
                     }
-#endif
 
                     client.NoDelay = false;
 
