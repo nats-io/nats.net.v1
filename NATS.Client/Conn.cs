@@ -877,6 +877,11 @@ namespace NATS.Client
                     sendPing(null);
                 }
                 catch (Exception) { }
+                //trigger timer again
+                if (ptmr != null)
+                {
+                    ptmr.Change(Opts.PingInterval, Timeout.Infinite);
+                }
             }
         }
 
@@ -901,7 +906,7 @@ namespace NATS.Client
             {
                 ptmr = new Timer(pingTimerCallback, null,
                     opts.PingInterval,
-                    opts.PingInterval);
+                    Timeout.Infinite); // do not trigger timer automatically : risk of having too many threads spawn during reconnect
             }
         }
 
