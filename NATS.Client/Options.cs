@@ -22,6 +22,7 @@ namespace NATS.Client
         bool useOldRequestStyle = false;
         bool secure = false;
         bool allowReconnect = true;
+        bool alwaysReconnect = false;
         int maxReconnect  = Defaults.MaxReconnect;
         int reconnectWait = Defaults.ReconnectWait;
         int pingInterval  = Defaults.PingInterval;
@@ -327,6 +328,16 @@ namespace NATS.Client
         {
             get { return token; }
             set { token = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the flag to control whether we always reconnect
+        /// on a new server entering the mesh
+        /// </summary>
+        public bool AlwaysReconnect
+        {
+            get { return alwaysReconnect; }
+            set { alwaysReconnect = value; }
         }
 
         /// <summary>

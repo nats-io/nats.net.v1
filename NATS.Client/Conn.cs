@@ -1057,6 +1057,8 @@ namespace NATS.Client
                     {
                         processConnectInit();
                         exToThrow = null;
+
+                        Console.WriteLine("Connected to: {0}", s.url);
                         return true;
                     }
                 }
@@ -1147,7 +1149,7 @@ namespace NATS.Client
             }
 
             // do not notify listeners of server changes when we process the first INFO message
-            processInfo(c.args, false);
+            processInfo(c.args, false, false);
             checkForSecure();
         }
 
@@ -1512,6 +1514,8 @@ namespace NATS.Client
                 }
                 catch (Exception) { }
 
+                Console.WriteLine("Successfully Reconnected to: {0}", cur.url);
+
                 return;
             }
 
@@ -1569,6 +1573,17 @@ namespace NATS.Client
                 try
                 {
                     len = br.Read(buffer, 0, Defaults.defaultReadLength);
+
+                    if ( len == 0 )
+                    {
+                        Console.WriteLine("Zero length message encountered");
+                        throw new NATSException("Invalid Message length");
+                        // continue;
+                    }
+
+                    Console.WriteLine("=======================================");
+                    Console.WriteLine("IN ({0}): {1}", len, Encoding.Default.GetString(buffer, 0, len));
+
                     parser.parse(buffer, len);
                 }
                 catch (Exception e)
@@ -2112,7 +2127,7 @@ namespace NATS.Client
         // processInfo is used to parse the info messages sent
         // from the server.
         // Caller must lock.
-        internal void processInfo(string json, bool notifyOnServerAddition)
+        internal void processInfo(string json, bool notifyOnServerAddition, bool forced)
         {
             if (json == null || IC._EMPTY_.Equals(json))
             {
@@ -2134,7 +2149,7 @@ namespace NATS.Client
                 }
 
                 var serverAdded = srvPool.Add(servers, true);
-                if (notifyOnServerAddition && serverAdded)
+                if (notifyOnServerAddition && (serverAdded || forced))
                 {
                     scheduleConnEvent(opts.ServerDiscoveredEventHandler);
                 }
@@ -2145,7 +2160,7 @@ namespace NATS.Client
         {
             lock (mu)
             {
-                processInfo(Encoding.UTF8.GetString(jsonBytes, 0, length), true);
+                processInfo(Encoding.UTF8.GetString(jsonBytes, 0, length), true, opts.AlwaysReconnect);
             }
         }
 
