@@ -331,8 +331,9 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Gets or sets the flag to control whether we always reconnect
-        /// on a new server entering the mesh
+        /// Gets or sets the flag to control whether to always allow
+        /// the ServerDiscoveredEventHandler to run if the notifyOnServerAddition
+        /// flag is set.
         /// </summary>
         public bool AlwaysReconnect
         {

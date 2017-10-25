@@ -1058,7 +1058,6 @@ namespace NATS.Client
                         processConnectInit();
                         exToThrow = null;
 
-                        Console.WriteLine("Connected to: {0}", s.url);
                         return true;
                     }
                 }
@@ -1514,8 +1513,6 @@ namespace NATS.Client
                 }
                 catch (Exception) { }
 
-                Console.WriteLine("Successfully Reconnected to: {0}", cur.url);
-
                 return;
             }
 
@@ -1580,9 +1577,6 @@ namespace NATS.Client
                         throw new NATSException("Invalid Message length");
                         // continue;
                     }
-
-                    Console.WriteLine("=======================================");
-                    Console.WriteLine("IN ({0}): {1}", len, Encoding.Default.GetString(buffer, 0, len));
 
                     parser.parse(buffer, len);
                 }
@@ -2127,7 +2121,7 @@ namespace NATS.Client
         // processInfo is used to parse the info messages sent
         // from the server.
         // Caller must lock.
-        internal void processInfo(string json, bool notifyOnServerAddition, bool forced)
+        internal void processInfo(string json, bool notifyOnServerAddition, bool notifyOnServerReconnects)
         {
             if (json == null || IC._EMPTY_.Equals(json))
             {
@@ -2149,7 +2143,7 @@ namespace NATS.Client
                 }
 
                 var serverAdded = srvPool.Add(servers, true);
-                if (notifyOnServerAddition && (serverAdded || forced))
+                if (notifyOnServerAddition && (serverAdded || notifyOnServerReconnects))
                 {
                     scheduleConnEvent(opts.ServerDiscoveredEventHandler);
                 }
