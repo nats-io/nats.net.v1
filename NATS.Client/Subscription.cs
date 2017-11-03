@@ -109,15 +109,11 @@ namespace NATS.Client
  
         internal bool tallyMessage(long bytes)
         {
-            lock (mu)
-            {
-                if (max > 0 && msgs > max)
-                    return true;
+            if (max > 0 && msgs > max)
+                return true;
 
-                this.msgs++;
-                this.bytes += bytes;
-
-            }
+            this.msgs++;
+            this.bytes += bytes;
 
             return false;
         }
