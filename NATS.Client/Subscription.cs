@@ -107,6 +107,7 @@ namespace NATS.Client
             }
         }
  
+        //caller must lock
         internal bool tallyMessage(long bytes)
         {
             if (max > 0 && msgs > max)
