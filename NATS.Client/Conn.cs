@@ -457,14 +457,6 @@ namespace NATS.Client
                 }
             }
 
-            internal int ConnectTimeout
-            {
-                set
-                {
-                    ConnectTimeout = value;
-                }
-            }
-
             internal int SendTimeout
             {
                 set
