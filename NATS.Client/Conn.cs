@@ -389,7 +389,7 @@ namespace NATS.Client
                     }
 
                     client = new TcpClient();
-                    if (!client.ConnectAsync(s.url.Host, s.url.Port).Wait(TimeSpan.FromMilliseconds(timeoutMillis)))
+                    if (!client.Connect(s.url.Host, s.url.Port, timeoutMillis))
                     {
                         client = null;
                         throw new NATSConnectionException("timeout");
@@ -1558,7 +1558,7 @@ namespace NATS.Client
             Parser parser = new Parser(this);
             int    len;
 
-            while (true)
+            while (State != ConnState.CLOSED)
             {
                 try
                 {
@@ -3784,4 +3784,68 @@ namespace NATS.Client
         #endregion
 
     } // class Conn
+
+    internal static class TCPClientExtensions
+    {
+        private class ConnectionTimeoutManager : IDisposable
+        {
+            private WeakReference<TcpClient> _client;
+            private Timer _timer;
+
+            public ConnectionTimeoutManager(TcpClient client, int timeoutInMs)
+            {
+                _client = new WeakReference<TcpClient>(client);
+                _timer = new System.Threading.Timer(TimeoutExceed, null, timeoutInMs, Timeout.Infinite);
+            }
+
+            public void Dispose()
+            {
+                _client.SetTarget(null);
+                _client = null;
+                _timer.Change(Timeout.Infinite, Timeout.Infinite);
+                _timer.Dispose();
+                _timer = null;
+            }
+
+            private void TimeoutExceed(object state)
+            {
+                try
+                {
+                    if (_client == null)
+                    {
+                        return;
+                    }
+
+                    TcpClient client;
+                    if (_client.TryGetTarget(out client))
+                    {
+                        if (!client.Connected)
+                        {
+                            client.Close();
+                        }
+                    }
+                }
+                catch
+                {
+                    // Do nothing
+                }
+            }
+        }
+        public static bool Connect(this TcpClient client, string host, int port, int timeoutInMs = 0)
+        {
+            try
+            {
+                using (new ConnectionTimeoutManager(client, timeoutInMs))
+                {
+                    client.Connect(host, port);
+                    return client.Connected;
+                }
+            }
+            catch(Exception e)
+            {
+                System.Diagnostics.Trace.TraceError(e.ToString());
+                return false;
+            }
+        }
+    }
 }
