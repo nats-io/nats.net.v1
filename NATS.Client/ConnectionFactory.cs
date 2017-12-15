@@ -95,7 +95,15 @@ namespace NATS.Client
         public IConnection CreateConnection(Options opts)
         {
             Connection nc = new Connection(opts);
-            nc.connect();
+            try
+            {
+                nc.connect();
+            }
+            catch (System.Exception)
+            {
+                nc.Dispose();
+                throw;
+            }
             return nc;
         }
 
@@ -149,7 +157,15 @@ namespace NATS.Client
         public IEncodedConnection CreateEncodedConnection(Options opts)
         {
             EncodedConnection nc = new EncodedConnection(opts);
-            nc.connect();
+            try
+            {
+                nc.connect();
+            }
+            catch (System.Exception)
+            {
+                nc.Dispose();
+                throw;
+            }
             return nc;
         }
     }
