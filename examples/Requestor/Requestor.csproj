@@ -4,7 +4,7 @@
     <Description>NATS Requestor Example</Description>
     <Copyright>Copyright © Apcera 2016</Copyright>
     <AssemblyTitle>NATS Requestor</AssemblyTitle>
-    <TargetFramework>netcoreapp1.0</TargetFramework>
+    <TargetFrameworks>netstandard1.6;net45</TargetFrameworks>
     <AssemblyName>Requestor</AssemblyName>
     <OutputType>Exe</OutputType>
     <PackageId>Requestor</PackageId>
