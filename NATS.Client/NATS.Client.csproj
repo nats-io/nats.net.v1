@@ -19,6 +19,10 @@
     <GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+    <Authors>Apcera,Inc.</Authors>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/nats-io/csharp-nats/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/nats-io/csharp-nats</PackageProjectUrl>
+    <PackageTags>Apcera NATS Messaging Cloud Publish Subscribe PubSub</PackageTags>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard1.6'">
