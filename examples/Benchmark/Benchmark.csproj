@@ -4,7 +4,7 @@
     <Description>NATS Benchmarking Application</Description>
     <Copyright>Copyright � Apcera 2016</Copyright>
     <AssemblyTitle>NATS Benchmark</AssemblyTitle>
-    <TargetFramework>netcoreapp1.0</TargetFramework>
+    <TargetFrameworks>netcoreapp1.0;net45</TargetFrameworks>
     <AssemblyName>Benchmark</AssemblyName>
     <OutputType>Exe</OutputType>
     <PackageId>Benchmark</PackageId>
@@ -18,10 +18,15 @@
     <GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+    <Authors />
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\NATS.Client\NATS.Client.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\" />
   </ItemGroup>
 
 </Project>

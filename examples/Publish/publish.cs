@@ -7,7 +7,6 @@ using System.Threading;
 using System.Collections.Generic;
 using NATS.Client;
 
-
 namespace NATSExamples
 {
     class Publisher
