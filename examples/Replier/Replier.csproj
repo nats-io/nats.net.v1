@@ -4,7 +4,7 @@
     <Description>NATS Replier Example</Description>
     <Copyright>Copyright © Apcera 2016</Copyright>
     <AssemblyTitle>NATS Replier</AssemblyTitle>
-    <TargetFramework>netcoreapp1.0</TargetFramework>
+    <TargetFrameworks>netstandard1.6;net45</TargetFrameworks>
     <AssemblyName>Replier</AssemblyName>
     <OutputType>Exe</OutputType>
     <PackageId>Replier</PackageId>
@@ -18,10 +18,15 @@
     <GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+    <Authors />
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\NATS.Client\NATS.Client.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\" />
   </ItemGroup>
 
 </Project>

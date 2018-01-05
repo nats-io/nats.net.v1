@@ -34,7 +34,7 @@ namespace NATSUnitTests
             }
             catch (Exception e)
             {
-                Assert.True(e.Message.Contains("Authorization"));
+                Assert.Contains("Authorization", e.Message);
             }
             finally
             {

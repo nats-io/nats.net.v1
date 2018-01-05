@@ -604,7 +604,7 @@ namespace NATSUnitTests
             }
         }
 
-        public async void testRequestAsync(bool useOldRequestStyle)
+        private async void testRequestAsync(bool useOldRequestStyle)
         {
             using (new NATSServer())
             {
@@ -640,7 +640,7 @@ namespace NATSUnitTests
             }
         }
 
-        public async void testRequestAsyncWithOffsets(bool useOldRequestStyle)
+        private async void testRequestAsyncWithOffsets(bool useOldRequestStyle)
         {
             using (new NATSServer())
             {
@@ -703,7 +703,7 @@ namespace NATSUnitTests
             testRequestAsyncWithOffsets(useOldRequestStyle: true);
         }
 
-        public async void testRequestAsyncCancellation(bool useOldRequestStyle)
+        private async void testRequestAsyncCancellation(bool useOldRequestStyle)
         {
             using (new NATSServer())
             {
@@ -789,7 +789,7 @@ namespace NATSUnitTests
             testRequestAsyncCancellation(useOldRequestStyle: true);
         }
 
-        public async void testRequestAsyncTimeout(bool useOldRequestStyle)
+        private async void testRequestAsyncTimeout(bool useOldRequestStyle)
         {
             using (var server = new NATSServer())
             {
@@ -973,7 +973,7 @@ namespace NATSUnitTests
         // environments, the NATS client will fail here, but succeed in the 
         // comparable test using threads.
         // Do not automatically run, for comparison purposes and future dev.
-        //[Fact]
+        [Fact(Skip ="For comparison purposes and future dev")]
         public void TestRequestSafetyWithTasks()
         {
             testRequestSafetyWithTasks(useOldRequestStyle: false);
@@ -984,7 +984,7 @@ namespace NATSUnitTests
         // environments, the NATS client will fail here, but succeed in the 
         // comparable test using threads.
         // Do not automatically run, for comparison purposes and future dev.
-        //[Fact]
+        [Fact(Skip = "For comparison purposes and future dev")]
         public void TestRequestSafetyWithTasks_OldRequestStyle()
         {
             testRequestSafetyWithTasks(useOldRequestStyle: true);
@@ -1127,7 +1127,7 @@ namespace NATSUnitTests
                 {
                     string inbox = c.NewInbox();
                     Assert.False(string.IsNullOrWhiteSpace(inbox));
-                    Assert.True(inbox.StartsWith("_INBOX."));
+                    Assert.StartsWith("_INBOX.", inbox);
                 }
             }
         }
@@ -1385,17 +1385,17 @@ namespace NATSUnitTests
             using (new NATSServer())
             {
                 IConnection c = new ConnectionFactory().CreateConnection(urls);
-                Assert.True(c.Opts.Servers[0].Equals(url1));
-                Assert.True(c.Opts.Servers[1].Equals(url2));
-                Assert.True(c.Opts.Servers[2].Equals(url3));
+                Assert.Equal(c.Opts.Servers[0], url1);
+                Assert.Equal(c.Opts.Servers[1], url2);
+                Assert.Equal(c.Opts.Servers[2], url3);
 
                 c.Close();
 
                 urls = url1 + "    , " + url2 + "," + url3;
                 c = new ConnectionFactory().CreateConnection(urls);
-                Assert.True(c.Opts.Servers[0].Equals(url1));
-                Assert.True(c.Opts.Servers[1].Equals(url2));
-                Assert.True(c.Opts.Servers[2].Equals(url3));
+                Assert.Equal(c.Opts.Servers[0], url1);
+                Assert.Equal(c.Opts.Servers[1], url2);
+                Assert.Equal(c.Opts.Servers[2], url3);
                 c.Close();
 
                 c = new ConnectionFactory().CreateConnection(url1);
@@ -1455,7 +1455,7 @@ namespace NATSUnitTests
                         "Incomplete cluster with server count: " + c.Servers.Length);
 
                     // The first urls should be the same.
-                    Assert.True(c.Servers[0].Equals(c2.Servers[0]));
+                    Assert.Equal(c.Servers[0], c2.Servers[0]);
 
                     // now check the others are different (randomized)
                     for (int j = 1; j < c.Servers.Length; j++)
@@ -1502,7 +1502,7 @@ namespace NATSUnitTests
 
                 Assert.True(c.Servers.Length == 1);
                 // check that credentials are stripped.
-                Assert.True(c.Servers[0].Equals("nats://127.0.0.1:4223"));
+                Assert.Equal("nats://127.0.0.1:4223", c.Servers[0]);
 
                 // build an independent cluster
                 using (NATSServer s2 = new NATSServer("-a localhost -p 4224 --cluster nats://127.0.0.1:4666 --routes nats://127.0.0.1:4555"))
@@ -1513,7 +1513,7 @@ namespace NATSUnitTests
 
                     // Ensure the first server remains in place and has not been
                     // randomized.
-                    Assert.True(c.Servers[0].Equals("nats://127.0.0.1:4223"));
+                    Assert.Equal("nats://127.0.0.1:4223", c.Servers[0]);
                     Assert.True(c.Servers.Length == 2);
                     Assert.True(c.DiscoveredServers.Length == 1);
 
@@ -1522,7 +1522,7 @@ namespace NATSUnitTests
                     s1.Shutdown();
                     Assert.True(evReconnect.WaitOne(10000));
                     Assert.True(newUrl != null);
-                    Assert.False(newUrl.Equals(opts.Url));
+                    Assert.NotEqual(opts.Url, newUrl);
                 }
 
                 c.Close();

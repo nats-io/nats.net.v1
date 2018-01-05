@@ -5,7 +5,7 @@
     <Copyright>Copyright © Apcera 2017</Copyright>
     <AssemblyTitle>NATS Client</AssemblyTitle>
     <VersionPrefix>0.8.1</VersionPrefix>
-    <TargetFramework>netstandard1.6</TargetFramework>
+    <TargetFrameworks>netstandard1.6;net45</TargetFrameworks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <AssemblyName>NATS.Client</AssemblyName>
     <PackageId>NATS.Client</PackageId>
@@ -19,15 +19,23 @@
     <GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+    <Authors>Apcera,Inc.</Authors>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/nats-io/csharp-nats/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/nats-io/csharp-nats</PackageProjectUrl>
+    <PackageTags>Apcera NATS Messaging Cloud Publish Subscribe PubSub</PackageTags>
   </PropertyGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard1.6'">
     <PackageReference Include="System.Net.Security" Version="4.0.0" />
     <PackageReference Include="System.Reflection.Extensions" Version="4.0.1" />
     <PackageReference Include="System.Runtime" Version="4.1.0" />
     <PackageReference Include="System.Runtime.Serialization.Json" Version="4.0.2" />
     <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.1.1" />
     <PackageReference Include="System.Threading.Thread" Version="4.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\" />
   </ItemGroup>
 
 </Project>

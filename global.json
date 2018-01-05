@@ -1,1 +1,11 @@
-{"projects":["NATS.Client","NATSUnitTests","examples/Benchmark"]}
+{
+  "projects": [
+    "NATS.Client",
+    "NATSUnitTests",
+    "examples/Benchmark",
+    "examples/QueueGroup",
+    "examples/Requestor",
+    "examples/Subscribe",
+    "examples/Replier"
+  ] 
+}

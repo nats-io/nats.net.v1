@@ -4,7 +4,7 @@
     <Description>NATS QueueGroup Example</Description>
     <Copyright>Copyright © Apcera 2016</Copyright>
     <AssemblyTitle>NATS QueueGroup</AssemblyTitle>
-    <TargetFramework>netcoreapp1.0</TargetFramework>
+    <TargetFrameworks>netstandard1.6;net45</TargetFrameworks>
     <AssemblyName>QueueGroup</AssemblyName>
     <OutputType>Exe</OutputType>
     <PackageId>QueueGroup</PackageId>
@@ -18,10 +18,15 @@
     <GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+    <Authors />
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\NATS.Client\NATS.Client.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\" />
   </ItemGroup>
 
 </Project>
