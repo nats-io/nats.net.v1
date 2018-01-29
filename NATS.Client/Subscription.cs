@@ -136,10 +136,10 @@ namespace NATS.Client
             return true;
         }
 
-        private void handleSlowConsumer(Msg msg)
+        private void handleSlowConsumer(Msg msg, string reason = null)
         {
             dropped++;
-            conn.processSlowConsumer(this);
+            conn.processSlowConsumer(this, reason);
             pMsgs--;
             pBytes -= msg.Data.Length;
         }
@@ -184,7 +184,7 @@ namespace NATS.Client
                 || (pBytesLimit > 0 && pBytes > pBytesLimit))
             {
                 // slow consumer
-                handleSlowConsumer(msg);
+                handleSlowConsumer(msg, string.Format("Msg queued : {0}/{1}, Bytes queued : {2}/{3}", pMsgs, pMsgsLimit, pBytes, pBytesLimit));
                 return false;
             }
 
@@ -192,7 +192,7 @@ namespace NATS.Client
             {
                 if (mch.Count >= maxCount)
                 {
-                    handleSlowConsumer(msg);
+                    handleSlowConsumer(msg, string.Format("Msg channel count limit exeeded : {0},{1}", mch.Count, maxCount));
                     return false;
                 }
                 else
