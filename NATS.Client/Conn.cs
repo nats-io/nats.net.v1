@@ -819,6 +819,10 @@ namespace NATS.Client
             {
                 return false;
             }
+            finally
+            {
+                s.updateLastAttempt();
+            }
 
             return true;
         }
@@ -1309,6 +1313,10 @@ namespace NATS.Client
         // The lock should not be held on entering this function.
         private void processReconnect()
         {
+            // Skip lock if state is already updated to RECONNECTING
+            if (isReconnecting())
+                return;
+
             lock (mu)
             {
                 // If we are already in the proper state, just return.
@@ -1323,6 +1331,9 @@ namespace NATS.Client
                 {
                     conn.teardown();
                 }
+
+                pending = new MemoryStream();
+                bw = new BufferedStream(pending);
 
                 Thread t = new Thread(() =>
                 {
@@ -1406,9 +1417,6 @@ namespace NATS.Client
             // clear any queued pongs, e..g. pending flush calls.
             clearPendingFlushCalls();
 
-            pending = new MemoryStream();
-            bw = new BufferedStream(pending);
-
             // Clear any errors.
             lastEx = null;
 
@@ -1452,12 +1460,8 @@ namespace NATS.Client
 
                 cur.reconnects++;
 
-                try
-                {
-                    // try to create a new connection
-                    createConn(cur);
-                }
-                catch (Exception)
+                // try to create a new connection
+                if (!createConn(cur))
                 {
                     // not yet connected, retry and hold
                     // the lock.
@@ -1975,14 +1979,14 @@ namespace NATS.Client
 
         // processSlowConsumer will set SlowConsumer state and fire the
         // async error handler if registered.
-        internal void processSlowConsumer(Subscription s)
+        internal void processSlowConsumer(Subscription s, string reason = null)
         {
             lastEx = new NATSSlowConsumerException();
             if (opts.AsyncErrorEventHandler != null && !s.sc)
             {
                 EventHandler<ErrEventArgs> aseh = opts.AsyncErrorEventHandler;
                 callbackScheduler.Add(
-                    new Task(() => { aseh(this, new ErrEventArgs(this, s, "Slow Consumer")); })
+                    new Task(() => { aseh(this, new ErrEventArgs(this, s, string.Format("Slow Consumer : {0}", reason))); })
                 );
             }
             s.sc = true;
