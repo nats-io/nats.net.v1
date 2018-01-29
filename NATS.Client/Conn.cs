@@ -1538,6 +1538,11 @@ namespace NATS.Client
         {
             bool disconnected = false;
 
+            if (isConnecting() || isClosed() || isReconnecting())
+            {
+                return;
+            }
+
             lock (mu)
             {
                 if (isConnecting() || isClosed() || isReconnecting())
@@ -2250,7 +2255,7 @@ namespace NATS.Client
         // publish is the internal function to publish messages to a nats-server.
         // Sends a protocol data message by queueing into the bufio writer
         // and kicking the flush go routine. These writes should be protected.
-        internal void publish(string subject, string reply, byte[] data, int offset, int count)
+        internal void publish(string subject, string reply, byte[] data, int offset, int count, bool isRecursiveCall = false)
         {
             if (string.IsNullOrWhiteSpace(subject))
             {
@@ -2268,39 +2273,52 @@ namespace NATS.Client
             {
                 throw new ArgumentException("Invalid offset and count for supplied data");
             }
+            // Proactively reject payloads over the threshold set by server.
+            else if (count > info.maxPayload)
+                throw new NATSMaxPayloadException();
 
-            lock (mu)
+            try
             {
-                // Proactively reject payloads over the threshold set by server.
-                if (count > info.maxPayload)
-                    throw new NATSMaxPayloadException();
-
-                if (isClosed())
-                    throw new NATSConnectionClosedException();
-
-                if (lastEx != null)
-                    throw lastEx;
-
-                ensurePublishProtocolBuffer(subject, reply);
-
-                // write our pubProtoBuf buffer to the buffered writer.
-                int pubProtoLen = writePublishProto(pubProtoBuf, subject, reply, count);
-
-                bw.Write(pubProtoBuf, 0, pubProtoLen);
-
-                if (count > 0)
+                lock (mu)
                 {
-                    bw.Write(data, offset, count);
+                    if (isClosed())
+                        throw new NATSConnectionClosedException();
+
+                    if (lastEx != null)
+                        throw lastEx;
+
+                    ensurePublishProtocolBuffer(subject, reply);
+
+                    // write our pubProtoBuf buffer to the buffered writer.
+                    int pubProtoLen = writePublishProto(pubProtoBuf, subject, reply, count);
+
+                    bw.Write(pubProtoBuf, 0, pubProtoLen);
+
+                    if (count > 0)
+                    {
+                        bw.Write(data, offset, count);
+                    }
+
+                    bw.Write(CRLF_BYTES, 0, CRLF_BYTES_LEN);
+
+                    stats.outMsgs++;
+                    stats.outBytes += count;
+
+                    kickFlusher();
                 }
-
-                bw.Write(CRLF_BYTES, 0, CRLF_BYTES_LEN);
-
-                stats.outMsgs++;
-                stats.outBytes += count;
-
-                kickFlusher();
             }
-
+            catch (Exception e)
+            {
+                Trace.TraceWarning("Publication failed. Retrying. The error was " + e);
+                if (!isRecursiveCall)
+                {
+                    processOpError(e);
+                    if (!isClosed())
+                    {
+                        publish(subject, reply, data, offset, count, isRecursiveCall: true);
+                    }
+                }
+            }
         } // publish
 
         /// <summary>
