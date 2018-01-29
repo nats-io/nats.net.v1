@@ -1943,35 +1943,31 @@ namespace NATS.Client
             bool maxReached = false;
             Subscription s;
 
-            lock (mu)
+            Interlocked.Increment(ref stats.inMsgs);
+            Interlocked.Add(ref stats.inBytes, length);
+
+            // In regular message processing, the key should be present,
+            // so optimize by using an an exception to handle a missing key.
+            // (as opposed to checking with Contains or TryGetValue)
+            try
             {
-                stats.inMsgs++;
-                stats.inBytes += length;
+                s = subs[msgArgs.sid];
+            }
+            catch (Exception)
+            {
+                // this can happen when a subscriber is unsubscribing.
+                return;
+            }
 
-                // In regular message processing, the key should be present,
-                // so optimize by using an an exception to handle a missing key.
-                // (as opposed to checking with Contains or TryGetValue)
-                try
+            lock (s.mu)
+            {
+                maxReached = s.tallyMessage(length);
+                if (maxReached == false)
                 {
-                    s = subs[msgArgs.sid];
-                }
-                catch (Exception)
-                {
-                    // this can happen when a subscriber is unsubscribing.
-                    return;
-                }
+                    s.addMessage(new Msg(msgArgs, s, msg, length), opts.subChanLen);
+                } // maxreached == false
 
-                lock (s.mu)
-                {
-                    maxReached = s.tallyMessage(length);
-                    if (maxReached == false)
-                    {
-                        s.addMessage(new Msg(msgArgs, s, msg, length), opts.subChanLen);
-                    } // maxreached == false
-
-                } // lock s.mu
-
-            } // lock conn.mu
+            } // lock s.mu
 
             if (maxReached)
                 removeSub(s);
