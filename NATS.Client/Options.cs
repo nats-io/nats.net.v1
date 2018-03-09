@@ -464,7 +464,7 @@ namespace NATS.Client
 
             sb.AppendFormat("MaxPingsOut={0};", MaxPingsOut);
             sb.AppendFormat("MaxReconnect={0};", MaxReconnect);
-            sb.AppendFormat("Name={0};", Name == null ? Name : "null");
+            sb.AppendFormat("Name={0};", Name != null ? Name : "null");
             sb.AppendFormat("NoRandomize={0};", NoRandomize);
             sb.AppendFormat("Pendantic={0};", Pedantic);
             sb.AppendFormat("UseOldRequestStyle={0}", UseOldRequestStyle);
