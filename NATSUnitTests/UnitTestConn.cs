@@ -180,9 +180,9 @@ namespace NATSUnitTests
             }
         }
 
-        //[Fact]
         // This test works locally, but fails in AppVeyor some of the time
         // TODO:  Work to identify why this happens...
+        [Fact(Skip = "Currently failing in AppVeyor")]
         public void TestCallbacksOrder()
         {
             bool firstDisconnect = true;

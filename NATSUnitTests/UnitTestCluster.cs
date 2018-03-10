@@ -50,7 +50,7 @@ namespace NATSUnitTests
             using (NATSServer ns = utils.CreateServerOnPort(1222))
             {
                 c = cf.CreateConnection(o);
-                Assert.True(testServers[0].Equals(c.ConnectedUrl));
+                Assert.Equal(c.ConnectedUrl, testServers[0]);
                 c.Close();
             }
 
@@ -58,7 +58,7 @@ namespace NATSUnitTests
             using (NATSServer ns = utils.CreateServerOnPort(1227))
             {
                 c = cf.CreateConnection(o);
-                Assert.True(testServers[5].Equals(c.ConnectedUrl));
+                Assert.Equal(c.ConnectedUrl, testServers[5]);
                 c.Close();
             }
         }
@@ -153,7 +153,7 @@ namespace NATSUnitTests
                         Assert.True(Monitor.Wait(reconnectLock, 20000));
                     }
 
-                    Assert.True(c.ConnectedUrl.Equals(testServers[2]));
+                    Assert.Equal(c.ConnectedUrl, testServers[2]);
 
                     reconnectSw.Stop();
 
@@ -187,8 +187,8 @@ namespace NATSUnitTests
                 serverDiscoveredCalled = true;
             };
 
-            string seedServerArgs = @"-p 1222 -cluster nats://localhost:1333";
-            string secondClusterMemberArgs = @"-p 1223 -cluster nats://localhost:1334 -routes nats://localhost:1333";
+            string seedServerArgs = @"-p 1222 -cluster nats://127.0.0.1:1333";
+            string secondClusterMemberArgs = @"-p 1223 -cluster nats://127.0.0.1:1334 -routes nats://127.0.0.1:1333";
 
             // create the seed server for a cluster...
             using (NATSServer ns1 = utils.CreateServerWithArgs(seedServerArgs))
@@ -196,7 +196,7 @@ namespace NATSUnitTests
                 // ...then connect to it...
                 using (c = cf.CreateConnection(o))
                 {
-                    Assert.True(testServers[0].Equals(c.ConnectedUrl));
+                    Assert.Equal(c.ConnectedUrl, testServers[0]);
 
                     // ...then while connected, start up a second server...
                     using (NATSServer ns2 = utils.CreateServerWithArgs(secondClusterMemberArgs))
@@ -258,7 +258,8 @@ namespace NATSUnitTests
         }
 
 
-        // TODO:  Create smaller variant [Fact]
+        // TODO:  Create smaller variant
+        [Fact(Skip = "Need to create a smaller variant")]
         public void TestHotSpotReconnect()
         {
             int numClients = 10;
@@ -556,7 +557,7 @@ namespace NATSUnitTests
             }
         }
 
-        //[Fact]
+        [Fact(Skip = "Unknown reason")]
         public void TestPingReconnect()
         {
             /// Work in progress
