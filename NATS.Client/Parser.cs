@@ -498,6 +498,7 @@ namespace NATS.Client
                                 break;
                             case '\n':
                                 conn.processAsyncInfo(argBufBase, (int)argBufStream.Position);
+								argBufStream.Position = 0;
                                 state = OP_START;
                                 break;
                             default:
