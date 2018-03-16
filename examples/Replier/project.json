@@ -1,6 +1,6 @@
 {
   "title": "NATS Replier",
-  "copyright": "Copyright © Apcera 2016",
+  "copyright": "Copyright © The NATS Authors 2016-2018",
   "description": "NATS Replier Example",
   "version": "1.0.0-*",
   "buildOptions": {

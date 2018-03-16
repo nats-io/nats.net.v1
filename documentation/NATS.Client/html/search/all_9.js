@@ -21,6 +21,5 @@ var searchData=
   ['nextglobal',['NextGlobal',['../class_n_a_t_s_1_1_client_1_1_n_u_i_d.html#af923e99850b0892ad3791c01aaea0895',1,'NATS::Client::NUID']]],
   ['nextmessage',['NextMessage',['../interface_n_a_t_s_1_1_client_1_1_i_sync_subscription.html#abff4071c0c522ca556f57ad899baa353',1,'NATS.Client.ISyncSubscription.NextMessage()'],['../interface_n_a_t_s_1_1_client_1_1_i_sync_subscription.html#a29d8865c23b821cc03aba53c700e4794',1,'NATS.Client.ISyncSubscription.NextMessage(int timeout)'],['../class_n_a_t_s_1_1_client_1_1_sync_subscription.html#acc4f7d714e2bc1c37d6a7e2f033d2443',1,'NATS.Client.SyncSubscription.NextMessage()'],['../class_n_a_t_s_1_1_client_1_1_sync_subscription.html#a9289d58d9671fa0d49ec40b498f3fa13',1,'NATS.Client.SyncSubscription.NextMessage(int timeout)']]],
   ['norandomize',['NoRandomize',['../class_n_a_t_s_1_1_client_1_1_options.html#a606ef82badca9078a07ef2bf198e07dc',1,'NATS::Client::Options']]],
-  ['nuid',['NUID',['../class_n_a_t_s_1_1_client_1_1_n_u_i_d.html',1,'NATS::Client']]],
-  ['nuid',['NUID',['../class_n_a_t_s_1_1_client_1_1_n_u_i_d.html#a64a36fc8ce4db7a9ba0172823cec5135',1,'NATS::Client::NUID']]]
+  ['nuid',['NUID',['../class_n_a_t_s_1_1_client_1_1_n_u_i_d.html',1,'NATS.Client.NUID'],['../class_n_a_t_s_1_1_client_1_1_n_u_i_d.html#a64a36fc8ce4db7a9ba0172823cec5135',1,'NATS.Client.NUID.NUID()']]]
 ];
