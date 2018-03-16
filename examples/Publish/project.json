@@ -1,6 +1,6 @@
 {
   "title": "NATS Publisher",
-  "copyright": "Copyright © Apcera 2016",
+  "copyright": "Copyright ï¿½ The NATS Authors 2016-2018",
   "description": "NATS Publisher Example",
   "version": "1.0.0-*",
   "buildOptions": {

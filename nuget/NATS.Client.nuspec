@@ -4,17 +4,17 @@
         <id>NATS.Client</id>
         <version>0.8.1</version>
         <title>NATS .NET Client</title>
-        <authors>Apcera,Inc.</authors>
-        <owners>Apcera,Inc.</owners>
+        <authors>The NATS Authors</authors>
+        <owners>The NATS Authors</owners>
         <licenseUrl>https://raw.githubusercontent.com/nats-io/csharp-nats/master/LICENSE</licenseUrl>
         <projectUrl>https://github.com/nats-io/csharp-nats</projectUrl>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
         <description>NATS acts as a central nervous system for distributed systems at scale, such as mobile devices, IoT networks, and cloud native infrastructure.  This is the .NET client API.</description>
         <summary>NATS .NET Client</summary>
         <releaseNotes>Performance improvements, added event handler for discovered servers, expanded documentation, bug fixes.</releaseNotes>
-        <copyright>Copyright 2017 Apcera, Inc.</copyright>
+        <copyright>Copyright 2016-2018 The NATS Authors</copyright>
         <language />
-        <tags>Apcera NATS Messaging Cloud Publish Subscribe PubSub</tags>
+        <tags>CNCF NATS Messaging Cloud Publish Subscribe PubSub</tags>
         <frameworkAssemblies>
             <frameworkAssembly assemblyName="System.Runtime.Serialization" targetFramework="net45"/>
         </frameworkAssemblies>

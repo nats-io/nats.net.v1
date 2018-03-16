@@ -2,7 +2,7 @@
 @echo off
 
 REM This builds the NATS .NET Client NuGet package, and is 
-REM intended for use by Apcera to create NuGet Packages.
+REM intended for use by NATS Maintainers to create NuGet Packages.
 
 nuget >nul 2>&1
 if errorlevel 9009 if not errorlevel 9010 (
