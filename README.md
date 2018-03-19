@@ -4,7 +4,8 @@ A [C# .NET](https://msdn.microsoft.com/en-us/vstudio/aa496123.aspx) client for t
 
 This Synadia supported client parallels the [NATS GO Client](https://github.com/nats-io/nats).
 
-[![License MIT](https://img.shields.io/badge/License-MIT-blue.svg)](http://opensource.org/licenses/MIT)
+
+[![License Apache 2.0](https://img.shields.io/badge/License-Apache2-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![API Documentation](https://img.shields.io/badge/doc-Doxygen-brightgreen.svg?style=flat)](http://nats-io.github.io/csharp-nats)
 [![NuGet](https://img.shields.io/nuget/v/NATS.Client.svg?maxAge=2592000)](https://www.nuget.org/packages/NATS.Client)
 
