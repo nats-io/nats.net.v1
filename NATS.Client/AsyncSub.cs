@@ -35,7 +35,6 @@ namespace NATS.Client
         /// </summary>
         public event EventHandler<MsgHandlerEventArgs> MessageHandler;
 
-        private MsgHandlerEventArgs msgHandlerArgs = new MsgHandlerEventArgs();
         private Task                msgFeeder = null;
 
         private bool started = false;
@@ -82,10 +81,15 @@ namespace NATS.Client
 
             if (localMax <= 0 || d <= localMax)
             {
-                msgHandlerArgs.msg = msg;
                 try
                 {
-                    localHandler(this, msgHandlerArgs);
+                    if (localHandler != null)
+                    {
+                        var msgHandlerEventArgs = new MsgHandlerEventArgs();
+                        msgHandlerEventArgs.msg = msg;
+
+                        localHandler(this, msgHandlerEventArgs);
+                    }
                 }
                 catch (Exception) { }
 
