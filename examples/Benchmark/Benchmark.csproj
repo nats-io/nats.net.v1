@@ -4,12 +4,10 @@
     <Description>NATS Benchmarking Application</Description>
     <Copyright>Copyright The NATS Authors 2018</Copyright>
     <AssemblyTitle>NATS Benchmark</AssemblyTitle>
-    <TargetFramework>netcoreapp1.0</TargetFramework>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
     <AssemblyName>Benchmark</AssemblyName>
     <OutputType>Exe</OutputType>
     <PackageId>Benchmark</PackageId>
-    <RuntimeFrameworkVersion>1.0.4</RuntimeFrameworkVersion>
-    <PackageTargetFallback>$(PackageTargetFallback);dnxcore50</PackageTargetFallback>
     <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
     <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>

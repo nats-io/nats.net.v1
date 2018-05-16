@@ -4,12 +4,10 @@
     <Description>NATS Subscriber Example</Description>
     <Copyright>Copyright © Apcera 2016</Copyright>
     <AssemblyTitle>NATS Subscriber</AssemblyTitle>
-    <TargetFramework>netcoreapp1.0</TargetFramework>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
     <AssemblyName>Subscribe</AssemblyName>
     <OutputType>Exe</OutputType>
     <PackageId>Subscribe</PackageId>
-    <RuntimeFrameworkVersion>1.0.4</RuntimeFrameworkVersion>
-    <PackageTargetFallback>$(PackageTargetFallback);dnxcore50</PackageTargetFallback>
     <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
     <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>

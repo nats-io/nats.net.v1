@@ -11,9 +11,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{99FA97B4-8971-4B53-9479-DAD8F8447D4F}"
-	ProjectSection(SolutionItems) = preProject
-		examples\Benchmark\Benchmark.csproj = examples\Benchmark\Benchmark.csproj
-	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmark", "examples\Benchmark\Benchmark.csproj", "{66410A19-ADE1-4709-B085-23526B87B787}"
 EndProject
