@@ -198,8 +198,8 @@ namespace NATSUnitTests
                 serverDiscoveredCalled = true;
             };
 
-            string seedServerArgs = @"-p 1222 -cluster nats://localhost:1333";
-            string secondClusterMemberArgs = @"-p 1223 -cluster nats://localhost:1334 -routes nats://localhost:1333";
+            string seedServerArgs = @"-p 1222 -cluster nats://127.0.0.1:1333";
+            string secondClusterMemberArgs = @"-p 1223 -cluster nats://127.0.0.1:1334 -routes nats://127.0.0.1:1333";
 
             // create the seed server for a cluster...
             using (NATSServer ns1 = utils.CreateServerWithArgs(seedServerArgs))
