@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2020
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NATS.Client", "net45\NATS.Client\NATS.Client.csproj", "{68EE71D4-9532-470E-B5CA-ECAA79936B1F}"
 EndProject
@@ -18,6 +18,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmark", "net45\examples\Benchmark\Benchmark.csproj", "{98F344E4-B714-4C23-96AF-D6F6F0420944}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NATSUnitTests", "net45\NATSUnitTests\NATSUnitTests.csproj", "{83937CFE-167C-4913-8489-95CC196EE728}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{5B63CEB8-9857-4AD3-AACB-271C1A7C69C0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -60,5 +62,16 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A434BE66-EC4D-4FA4-89C7-9097A22319FF} = {5B63CEB8-9857-4AD3-AACB-271C1A7C69C0}
+		{0D44FEE5-87D7-4DC5-956C-B03C3A5B286F} = {5B63CEB8-9857-4AD3-AACB-271C1A7C69C0}
+		{E8AECF76-0A83-4128-B2AA-27CBDA9CCA50} = {5B63CEB8-9857-4AD3-AACB-271C1A7C69C0}
+		{6C2C965C-D1F9-4E5E-863C-EE5C51937866} = {5B63CEB8-9857-4AD3-AACB-271C1A7C69C0}
+		{BEC6E07B-3DFC-493F-82E6-35A32D52ED2D} = {5B63CEB8-9857-4AD3-AACB-271C1A7C69C0}
+		{98F344E4-B714-4C23-96AF-D6F6F0420944} = {5B63CEB8-9857-4AD3-AACB-271C1A7C69C0}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {CBF68498-525D-43AC-8605-A87FD84E317C}
 	EndGlobalSection
 EndGlobal

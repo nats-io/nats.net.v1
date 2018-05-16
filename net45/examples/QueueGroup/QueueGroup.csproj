@@ -51,7 +51,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\NATS.Client\NATS.Client.csproj">
       <Project>{68ee71d4-9532-470e-b5ca-ecaa79936b1f}</Project>
-      <Name>NATS</Name>
+      <Name>NATS.Client</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

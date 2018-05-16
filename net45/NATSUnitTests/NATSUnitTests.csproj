@@ -140,7 +140,7 @@
   <ItemGroup>
     <ProjectReference Include="..\NATS.Client\NATS.Client.csproj">
       <Project>{68EE71D4-9532-470E-B5CA-ECAA79936B1F}</Project>
-      <Name>NATS</Name>
+      <Name>NATS.Client</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
