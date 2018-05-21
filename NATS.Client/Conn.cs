@@ -3565,12 +3565,11 @@ namespace NATS.Client
                         }
                         catch (Exception) { /* ignore */ }
 
-						try
-						{
-							bw.Dispose();
-						}
-						catch (Exception) { /* ignore */ }
-						
+                        try
+                        {
+                            bw.Dispose();
+                        }
+                        catch (Exception) { /* ignore */ }
                     }
 
                     conn.teardown();
