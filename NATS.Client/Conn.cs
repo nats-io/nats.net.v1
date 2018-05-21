@@ -3564,7 +3564,12 @@ namespace NATS.Client
                             bw.Flush();
                         }
                         catch (Exception) { /* ignore */ }
-                        bw.Dispose();
+
+                        try
+                        {
+                            bw.Dispose();
+                        }
+                        catch (Exception) { /* ignore */ }
                     }
 
                     conn.teardown();

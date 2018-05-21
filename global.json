@@ -1,6 +1,1 @@
-﻿{
-  "projects": [ "NATS.Client", "NATSUnitTests", "examples/Benchmark" ],
-  "sdk": {
-    "version": "1.0.0-preview2-003121"
-  }
-}
+{"projects":["NATS.Client","NATSUnitTests","examples/Benchmark"]}

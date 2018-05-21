@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>NATS Benchmarking Application</Description>
+    <Copyright>Copyright The NATS Authors 2018</Copyright>
+    <AssemblyTitle>NATS Benchmark</AssemblyTitle>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <AssemblyName>Benchmark</AssemblyName>
+    <OutputType>Exe</OutputType>
+    <PackageId>Benchmark</PackageId>
+    <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
+    <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+    <GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>
+    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
+    <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\NATS.Client\NATS.Client.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>NATS QueueGroup Example</Description>
+    <Copyright>Copyright The NATS Authors 2016-2018</Copyright>
+    <AssemblyTitle>NATS QueueGroup</AssemblyTitle>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <AssemblyName>QueueGroup</AssemblyName>
+    <OutputType>Exe</OutputType>
+    <PackageId>QueueGroup</PackageId>
+    <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
+    <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+    <GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>
+    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
+    <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\NATS.Client\NATS.Client.csproj" />
+  </ItemGroup>
+
+</Project>

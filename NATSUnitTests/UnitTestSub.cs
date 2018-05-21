@@ -960,14 +960,14 @@ namespace NATSUnitTests
                         cbEv.WaitOne();
                     }))
                     {
-                        for (int i = 0; i < opts.SubChannelLength * 2; i++)
+                        for (int i = 0; i < opts.SubChannelLength * 3; i++)
                         {
                             c.Publish("foo", null);
                         }
                         c.Flush();
 
                         // make sure we hit the error.
-                        Assert.True(errorEv.WaitOne(10000));
+                        Assert.True(errorEv.WaitOne(30000));
 
                         // unblock the callback.
                         cbEv.Set();
