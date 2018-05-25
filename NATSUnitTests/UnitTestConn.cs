@@ -194,7 +194,7 @@ namespace NATSUnitTests
         //[Fact]
         // This test works locally, but fails in AppVeyor some of the time
         // TODO:  Work to identify why this happens...
-        public void TestCallbacksOrder()
+        private void TestCallbacksOrder()
         {
             bool firstDisconnect = true;
 

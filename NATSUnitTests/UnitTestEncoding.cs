@@ -327,10 +327,10 @@ namespace NATSUnitTests
                     using (IAsyncSubscription s = c.SubscribeAsync("foo", eh))
                     {
                         var jo = (JsonObject)c.Request("foo", origObj, 1000);
-                        Assert.True("Received".Equals(jo.Value));
+                        Assert.Equal("Received",jo.Value);
 
                         jo = (JsonObject)c.Request("foo", origObj, 1000);
-                        Assert.True("Received".Equals(jo.Value));
+                        Assert.Equal("Received",jo.Value);
                     }
                 }
             }

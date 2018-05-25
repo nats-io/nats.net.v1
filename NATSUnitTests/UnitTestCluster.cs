@@ -61,7 +61,7 @@ namespace NATSUnitTests
             using (NATSServer ns = utils.CreateServerOnPort(1222))
             {
                 c = cf.CreateConnection(o);
-                Assert.True(testServers[0].Equals(c.ConnectedUrl));
+                Assert.Equal(testServers[0], c.ConnectedUrl);
                 c.Close();
             }
 
@@ -69,7 +69,7 @@ namespace NATSUnitTests
             using (NATSServer ns = utils.CreateServerOnPort(1227))
             {
                 c = cf.CreateConnection(o);
-                Assert.True(testServers[5].Equals(c.ConnectedUrl));
+                Assert.Equal(testServers[5], c.ConnectedUrl);
                 c.Close();
             }
         }
@@ -164,7 +164,7 @@ namespace NATSUnitTests
                         Assert.True(Monitor.Wait(reconnectLock, 20000));
                     }
 
-                    Assert.True(c.ConnectedUrl.Equals(testServers[2]));
+                    Assert.Equal(c.ConnectedUrl,testServers[2]);
 
                     reconnectSw.Stop();
 
@@ -207,7 +207,7 @@ namespace NATSUnitTests
                 // ...then connect to it...
                 using (c = cf.CreateConnection(o))
                 {
-                    Assert.True(testServers[0].Equals(c.ConnectedUrl));
+                    Assert.Equal(testServers[0],c.ConnectedUrl);
 
                     // ...then while connected, start up a second server...
                     using (NATSServer ns2 = utils.CreateServerWithArgs(secondClusterMemberArgs))
@@ -270,7 +270,7 @@ namespace NATSUnitTests
 
 
         // TODO:  Create smaller variant [Fact]
-        public void TestHotSpotReconnect()
+        private void TestHotSpotReconnect()
         {
             int numClients = 10;
             SimClient[] clients = new SimClient[100];
@@ -568,7 +568,7 @@ namespace NATSUnitTests
         }
 
         //[Fact]
-        public void TestPingReconnect()
+        private void TestPingReconnect()
         {
             /// Work in progress
             int RECONNECTS = 4;

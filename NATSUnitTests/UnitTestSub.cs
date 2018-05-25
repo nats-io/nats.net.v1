@@ -280,7 +280,7 @@ namespace NATSUnitTests
                                 handledError = true;
 
                                 Assert.True(args.Subscription == s);
-                                Assert.True(args.Error.Contains("Slow"));
+                                Assert.Contains(args.Error, "Slow");
 
                             // release the subscriber
                             Monitor.Pulse(subLock);
@@ -992,6 +992,6 @@ namespace NATSUnitTests
                 }
             }
         }
-    }
+	}
 }
 
