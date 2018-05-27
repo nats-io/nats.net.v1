@@ -1138,7 +1138,7 @@ namespace NATSUnitTests
                 {
                     string inbox = c.NewInbox();
                     Assert.False(string.IsNullOrWhiteSpace(inbox));
-                    Assert.StartsWith(inbox, "_INBOX.");
+                    Assert.StartsWith("_INBOX.", inbox);
                 }
             }
         }
@@ -1533,7 +1533,7 @@ namespace NATSUnitTests
                     s1.Shutdown();
                     Assert.True(evReconnect.WaitOne(10000));
                     Assert.True(newUrl != null);
-                    Assert.Equal(newUrl, opts.Url);
+                    Assert.Contains("4224", c.ConnectedUrl);
                 }
 
                 c.Close();
