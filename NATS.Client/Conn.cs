@@ -2410,6 +2410,8 @@ namespace NATS.Client
 
         internal virtual Msg request(string subject, byte[] data, int offset, int count, int timeout)
         {
+            Msg result = null;
+
             if (string.IsNullOrWhiteSpace(subject))
             {
                 throw new NATSBadSubscriptionException();
@@ -2429,14 +2431,28 @@ namespace NATS.Client
                 {
                     Flush(timeout > 0 ? timeout : DEFAULT_FLUSH_TIMEOUT);
                     request.Waiter.Task.Wait(timeout);
+                    result = request.Waiter.Task.Result;
                 }
-                catch (NATSTimeoutException)
+                catch (AggregateException ae)
                 {
-                    removeTimedoutRequest(request.Id);
+                    foreach (var e in ae.Flatten().InnerExceptions)
+                    {
+                        // we *should* only have one, and it should be
+                        // a NATS timeout exception.
+                        throw e;
+                    }
+                }
+                catch
+                {
+                    // Could be a timeout or exception from the flush.
                     throw;
                 }
+                finally
+                {
+                    removeOutstandingRequest(request.Id);
+                }
 
-                return request.Waiter.Task.Result;
+                return result;
             }
             else
             {
@@ -2466,7 +2482,7 @@ namespace NATS.Client
 
                 request.Id = (nextRequestId++).ToString(CultureInfo.InvariantCulture);
 
-                request.Token.Register(() => removeTimedoutRequest(request.Id));
+                request.Token.Register(() => removeOutstandingRequest(request.Id));
 
                 waitingRequests.Add(
                     request.Id,
@@ -2498,7 +2514,7 @@ namespace NATS.Client
             }
             catch
             {
-                removeTimedoutRequest(request.Id);
+                removeOutstandingRequest(request.Id);
                 throw;
             }
 
@@ -2538,7 +2554,7 @@ namespace NATS.Client
                         }
                         catch
                         {
-                            removeTimedoutRequest(request.Id);
+                            removeOutstandingRequest(request.Id);
                             throw;
                         }
 
@@ -2588,7 +2604,7 @@ namespace NATS.Client
             }
         }
 
-        private void removeTimedoutRequest(string requestId)
+        private void removeOutstandingRequest(string requestId)
         {
             lock (mu)
             {

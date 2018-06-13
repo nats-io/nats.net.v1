@@ -526,8 +526,17 @@ namespace NATSUnitTests
             {
                 using (IConnection c = utils.DefaultTestConnection)
                 {
-                    Assert.ThrowsAny<Exception>(() => c.Request("foo", null, 500));
+                    Assert.Throws<NATSTimeoutException>(() => c.Request("foo", null, 50));  
                 }
+
+                Options opts = utils.DefaultTestOptions;
+                opts.UseOldRequestStyle = true;
+
+                using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+                {
+                    Assert.Throws<NATSTimeoutException>(() => c.Request("foo", null, 50));
+                }
+
             }
         }
 
