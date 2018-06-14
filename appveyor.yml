@@ -1,7 +1,7 @@
 install:
   - appveyor DownloadFile https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
-  - appveyor DownloadFile https://github.com/nats-io/gnatsd/releases/download/v0.9.6/gnatsd-v0.9.6-windows-386.zip
-  - 7z e gnatsd-v0.9.6-windows-386.zip gnatsd.exe -r -oc:\projects\csharp-nats\build
+  - appveyor DownloadFile https://github.com/nats-io/gnatsd/releases/download/v1.1.0/gnatsd-v1.1.0-windows-amd64.zip
+  - 7z e gnatsd-v1.1.0-windows-amd64.zip gnatsd.exe -r -oc:\projects\csharp-nats\build
   - cmd: set PATH=%PATH%;C:\projects\csharp-nats\build
 
 # to add several configurations to build matrix:
