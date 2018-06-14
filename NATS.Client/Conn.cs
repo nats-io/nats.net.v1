@@ -2125,20 +2125,19 @@ namespace NATS.Client
             }
 
             info = ServerInfo.CreateFromJson(json);
-            var servers = info.connectURLs;
-            if (servers != null)
+            var discoveredUrls = info.connectURLs;
+ 
+            // Note about pool randomization: when the pool was first created,
+            // it was randomized (if allowed). We keep the order the same (removing
+            // implicit servers that are no longer sent to us). New URLs are sent
+            // to us in no specific order so don't need extra randomization.
+            if (discoveredUrls != null && discoveredUrls.Length > 0)
             {
-                if (!opts.NoRandomize && servers.Length > 1)
-                {
-                    // If randomization is allowed, shuffle the received array, 
-                    // not the entire pool. We want to preserve the pool's
-                    // order up to this point (this would otherwise be 
-                    // problematic for the (re)connect loop).
-                    servers = (string[])info.connectURLs.Clone();
-                    ServerPool.shuffle<string>(servers);
-                }
-
-                var serverAdded = srvPool.Add(servers, true);
+                // Prune out implicit servers no longer needed.  
+                // The Add in srvPool is idempotent, so just add
+                // the entire list.
+                srvPool.PruneOutdatedServers(discoveredUrls);
+                var serverAdded = srvPool.Add(discoveredUrls, true);
                 if (notifyOnServerAddition && serverAdded)
                 {
                     scheduleConnEvent(opts.ServerDiscoveredEventHandler);

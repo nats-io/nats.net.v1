@@ -220,6 +220,33 @@ namespace NATS.Client
             }
         }
 
+        // removes implict servers NOT found in the provided list. 
+        internal void PruneOutdatedServers(string[] newUrls)
+        {
+            LinkedList<string> ulist = new LinkedList<string>(newUrls);
+
+            lock (poolLock)
+            {
+                var tmp = new Srv[sList.Count];
+                sList.CopyTo(tmp, 0);
+
+                // if a server is implicit and cannot be found in the url
+                // list the remove it unless we are connected to it.
+                foreach (Srv s in tmp)
+                {
+                    // The server returns "<host>:<port>".  We can't compare
+                    // againts Uri.Authority becase that API may strip out 
+                    // ports.
+                    string hp = string.Format("{0}:{1}", s.url.Host, s.url.Port);
+                    if (s.isImplicit && !ulist.Contains(hp) &&
+                        s != currentServer)
+                    {
+                        sList.Remove(s);
+                    }
+                }
+            }
+        }
+
         // returns true if any of the urls were added to the pool,
         // false if they all already existed
         internal bool Add(string[] urls, bool isImplicit)
