@@ -156,19 +156,15 @@ namespace NATS.Client
                 // remove the current server.
                 sList.Remove(s);
 
-                if (maxReconnect > 0 && s.reconnects < maxReconnect)
+                if (maxReconnect == Options.ReconnectForever || 
+                   (maxReconnect > 0 && s.reconnects < maxReconnect))
                 {
                     // if we haven't surpassed max reconnects, add it
                     // to try again.
                     sList.AddLast(s);
                 }
 
-                if (isEmpty())
-                {
-                    return null;
-                }
-
-                currentServer = sList.First();
+                currentServer = isEmpty() ? null : sList.First();
 
                 return currentServer;
             }
