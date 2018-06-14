@@ -241,9 +241,17 @@ namespace NATS.Client
             set { allowReconnect = value; }
         }
 
+
+        /// <summary>
+        /// Set <see cref="Options.MaxReconnect"/> to this value for the client to attempt to
+        /// connect indefinitely. 
+        /// </summary>
+        public static int ReconnectForever = -1;
+
         /// <summary>
         /// Gets or sets the maxmimum number of times a connection will
-        /// attempt to reconnect.
+        /// attempt to reconnect.  To reconnect indefinitely set this value to
+        /// <see cref="Options.ReconnectForever"/>
         /// </summary>
         public int MaxReconnect
         {

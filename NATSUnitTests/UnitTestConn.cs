@@ -511,6 +511,61 @@ namespace NATSUnitTests
             }
         }
 
+        [Fact]
+        public void TestInfineReconnect()
+        {
+            var reconnectEv = new AutoResetEvent(false);
+            var closedEv = new AutoResetEvent(false);
+            
+            var opts = ConnectionFactory.GetDefaultOptions();
+
+            opts.Timeout = 500;
+            opts.ReconnectWait = 10;
+            opts.ReconnectedEventHandler = (obj, args) =>
+            {
+                reconnectEv.Set();
+            };
+            opts.ClosedEventHandler = (obj, args) =>
+            {
+                closedEv.Set();
+            };
+
+            using (var s = new NATSServer())
+            {
+                // first test a reconnect failure...
+                opts.MaxReconnect = 1;
+                using (var c = new ConnectionFactory().CreateConnection(opts))
+                {
+                    // we should just close - our one reconnect attempt failed.
+                    s.Bounce(opts.Timeout * (opts.MaxReconnect + 1) + 500);
+
+                    // we are closed, and not reconnected.
+                    Assert.True(closedEv.WaitOne(10000));
+                    Assert.False(reconnectEv.WaitOne(100));
+                }
+            }
+
+            closedEv.Reset();
+            reconnectEv.Reset();
+
+            using (var s = new NATSServer())
+            {
+                // reconnect forever...
+                opts.MaxReconnect = Options.ReconnectForever;
+                using (var c = new ConnectionFactory().CreateConnection(opts))
+                {
+                    // with a timeout of 10ms, and a reconnectWait of 10 ms, we should have many
+                    // reconnect attempts.
+                    s.Bounce(20000);
+
+                    // Assert that we reconnected and are not closed.
+                    Assert.True(reconnectEv.WaitOne(10000));
+                    Assert.False(closedEv.WaitOne(100));
+                }
+            }
+        }
+
+
         /// NOT IMPLEMENTED:
         /// TestServerSecureConnections
         /// TestErrOnConnectAndDeadlock
