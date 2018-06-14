@@ -1465,9 +1465,6 @@ namespace NATSUnitTests
                 Assert.True(assureClusterFormed(c, 7),
                     "Incomplete cluster with server count: " + c.Servers.Length);
 
-                // Sufficiently test to ensure we don't hit a random false positive
-                // - avoid flappers.
-                bool different = false;
                 for (int i = 0; i < 50; i++)
                 {
                     var c2 = new ConnectionFactory().CreateConnection(opts);
@@ -1477,25 +1474,9 @@ namespace NATSUnitTests
                     // The first urls should be the same.
                     Assert.Equal(c.Servers[0],c2.Servers[0]);
 
-                    // now check the others are different (randomized)
-                    for (int j = 1; j < c.Servers.Length; j++)
-                    {
-                        if (!c.Servers[j].Equals(c2.Servers[j]))
-                        {
-                            different = true;
-                            break;
-                        }
-                    }
-
                     c2.Close();
-
-                    // ensure the two connections are different - that randomization
-                    // occurred.
-                    if (different)
-                        break;
                 }
 
-                Assert.True(different, "Connection urls may not be randomized");
                 c.Close();
             }
         }
@@ -1545,6 +1526,61 @@ namespace NATSUnitTests
                     Assert.Contains("4224", c.ConnectedUrl);
                 }
 
+                c.Close();
+            }
+        }
+
+        [Fact]
+        public void TestAsyncInfoProtocolPrune()
+        {
+            var opts = utils.DefaultTestOptions;
+            opts.Url = "nats://127.0.0.1:4221";
+
+            AutoResetEvent evDS = new AutoResetEvent(false);
+            opts.ServerDiscoveredEventHandler = (o, a) =>{evDS.Set();};
+
+            AutoResetEvent evRC = new AutoResetEvent(false);
+            opts.ReconnectedEventHandler = (o, a) => { evRC.Set(); };
+            // Create a cluster of 3 nodes, then take one implicit server away
+            // and add another.  The server removed should no longer be in the
+            // discovered servers list.
+            using (NATSServer s1 = new NATSServer("-a 127.0.0.1 -p 4221 --cluster nats://127.0.0.1:4551 --routes nats://127.0.0.1:4552"),
+                              s2 = new NATSServer("-a 127.0.0.1 -p 4222 --cluster nats://127.0.0.1:4552 --routes nats://127.0.0.1:4551"),
+                              s3 = new NATSServer("-a 127.0.0.1 -p 4223 --cluster nats://127.0.0.1:4553 --routes nats://127.0.0.1:4551"))
+            {
+
+
+                var c = new ConnectionFactory().CreateConnection(opts);
+                Assert.True(assureClusterFormed(c, 3),
+                    "Incomplete cluster with server count: " + c.Servers.Length);
+
+                // shutdown server 2
+                s2.Shutdown();
+
+                using (NATSServer s4 = new NATSServer("-a 127.0.0.1 -p 4224 --cluster nats://127.0.0.1:4554 --routes nats://127.0.0.1:4551"))
+                {
+                    // wait for the update with new server to check.
+                    Assert.True(evDS.WaitOne(10000));
+
+                    // The server on port 4223 should be pruned out.
+                    //
+                    // Discovered servers should contain:
+                    // ["nats://127.0.0.1:4222",
+                    //  "nats://127.0.0.1:4224"]
+                    //
+                    LinkedList<string> discoveredServers = new LinkedList<string>(c.DiscoveredServers);
+                    Assert.True(discoveredServers.Count == 2);
+                    Assert.True(discoveredServers.Contains("nats://127.0.0.1:4223"));
+                    Assert.True(discoveredServers.Contains("nats://127.0.0.1:4224"));
+
+                    // shutdown server 1 and wait for reconnect.
+                    s1.Shutdown();
+                    Assert.True(evRC.WaitOne(10000));
+                    // Make sure we did NOT delete our expclitly configured server.
+                    LinkedList<string> servers = new LinkedList<string>(c.Servers);
+                    Assert.True(servers.Count == 3); // explicit server is still there.
+                    Assert.True(servers.Contains("nats://127.0.0.1:4221"));
+                }
                 c.Close();
             }
         }
