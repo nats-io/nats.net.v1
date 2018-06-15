@@ -3,6 +3,7 @@ var searchData=
   ['randomizeprefix',['RandomizePrefix',['../class_n_a_t_s_1_1_client_1_1_n_u_i_d.html#acadfcaba9b6c68016c7bc39a01b6fd84',1,'NATS::Client::NUID']]],
   ['receivedobject',['ReceivedObject',['../class_n_a_t_s_1_1_client_1_1_encoded_message_event_args.html#a06e10df22a57ef596cb5f7fb411a684a',1,'NATS::Client::EncodedMessageEventArgs']]],
   ['reconnectedeventhandler',['ReconnectedEventHandler',['../class_n_a_t_s_1_1_client_1_1_options.html#ad39b3eec90490ebaa53276fc01668d9a',1,'NATS::Client::Options']]],
+  ['reconnectforever',['ReconnectForever',['../class_n_a_t_s_1_1_client_1_1_options.html#a3db33f1a9202060929cf2cac1b63f3a4',1,'NATS::Client::Options']]],
   ['reconnecting',['RECONNECTING',['../namespace_n_a_t_s_1_1_client.html#a8144f718a812fe4318c33f202fc53484adb972eb9aae14fd469f2a622acb2148d',1,'NATS::Client']]],
   ['reconnects',['Reconnects',['../interface_n_a_t_s_1_1_client_1_1_i_statistics.html#a347a34f400e29b902bb46de856e3f0ff',1,'NATS.Client.IStatistics.Reconnects()'],['../class_n_a_t_s_1_1_client_1_1_statistics.html#ac2ef96188900a4921e5a4f1f8980ca32',1,'NATS.Client.Statistics.Reconnects()']]],
   ['reconnectwait',['ReconnectWait',['../class_n_a_t_s_1_1_client_1_1_options.html#a06448007abc18cdf961a341c9ae1f9ea',1,'NATS::Client::Options']]],
