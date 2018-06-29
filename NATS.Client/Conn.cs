@@ -400,7 +400,8 @@ namespace NATS.Client
                     }
 
                     client = new TcpClient();
-                    if (!client.ConnectAsync(s.url.Host, s.url.Port).Wait(TimeSpan.FromMilliseconds(timeoutMillis)))
+                    var task = client.ConnectAsync(s.url.Host, s.url.Port).ContinueWith(t => t.Exception);
+                    if (!task.Wait(TimeSpan.FromMilliseconds(timeoutMillis)))
                     {
                         client = null;
                         throw new NATSConnectionException("timeout");
