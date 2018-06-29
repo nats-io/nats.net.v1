@@ -532,10 +532,11 @@ namespace NATS.Client
             {
                 get
                 {
-                    if (client == null)
+                    var tmp = client;
+                    if (tmp == null)
                         return false;
 
-                    return client.Connected;
+                    return tmp.Connected;
                 }
             }
 
@@ -543,10 +544,11 @@ namespace NATS.Client
             {
                 get
                 {
-                    if (stream == null)
+                    var tmp = stream;
+                    if (tmp == null)
                         return false;
 
-                    return stream.DataAvailable;
+                    return tmp.DataAvailable;
                 }
             }
 
