@@ -2465,6 +2465,7 @@ namespace NATS.Client
         private InFlightRequest setupRequest(int timeout, CancellationToken token)
         {
             InFlightRequest request = new InFlightRequest(token, timeout);
+            request.Waiter.Task.ContinueWith(t => t.Exception);
             bool createSub = false;
             lock (mu)
             {
