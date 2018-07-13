@@ -400,7 +400,8 @@ namespace NATS.Client
                     }
 
                     client = new TcpClient();
-                    if (!client.ConnectAsync(s.url.Host, s.url.Port).Wait(TimeSpan.FromMilliseconds(timeoutMillis)))
+                    var task = client.ConnectAsync(s.url.Host, s.url.Port).ContinueWith(t => t.Exception);
+                    if (!task.Wait(TimeSpan.FromMilliseconds(timeoutMillis)))
                     {
                         client = null;
                         throw new NATSConnectionException("timeout");
@@ -532,10 +533,11 @@ namespace NATS.Client
             {
                 get
                 {
-                    if (client == null)
+                    var tmp = client;
+                    if (tmp == null)
                         return false;
 
-                    return client.Connected;
+                    return tmp.Connected;
                 }
             }
 
@@ -543,10 +545,11 @@ namespace NATS.Client
             {
                 get
                 {
-                    if (stream == null)
+                    var tmp = stream;
+                    if (tmp == null)
                         return false;
 
-                    return stream.DataAvailable;
+                    return tmp.DataAvailable;
                 }
             }
 
@@ -2462,6 +2465,7 @@ namespace NATS.Client
         private InFlightRequest setupRequest(int timeout, CancellationToken token)
         {
             InFlightRequest request = new InFlightRequest(token, timeout);
+            request.Waiter.Task.ContinueWith(t => t.Exception);
             bool createSub = false;
             lock (mu)
             {
