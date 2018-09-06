@@ -31,8 +31,19 @@ namespace NATS.Client
         {
             try {
                 url = new Uri(urlString);
+            } catch (UriFormatException e) {
+                var baseUrl = new Uri("nats://localhost");
+                try {
+                    url = new Uri(baseUrl, "//" + urlString);
+                } catch (Exception e) {
+                    throw new ArgumentException("Bad server URL: " + urlString, e);
+                }                
             } catch (Exception e) {
                 throw new ArgumentException("Bad server URL: " + urlString, e);
+            }
+            
+            if (url.Port == -1) {
+                url.Port = 4222;
             }
         }
 
