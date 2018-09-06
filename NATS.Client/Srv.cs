@@ -29,11 +29,11 @@ namespace NATS.Client
 
         internal Srv(string urlString)
         {
-            // allow for host:port, without the prefix.
-            if (urlString.ToLower().StartsWith("nats://") == false)
-                urlString = "nats://" + urlString;
-
-            url = new Uri(urlString);
+            try {
+                url = new Uri(urlString);
+            } catch (Exception e) {
+                throw new ArgumentException("Bad server URL: " + urlString, e);
+            }
         }
 
         internal Srv(string urlString, bool isUrlImplicit) : this(urlString)
