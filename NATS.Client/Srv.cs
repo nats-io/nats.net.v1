@@ -1,4 +1,4 @@
-﻿// Copyright 2015-2018 The NATS Authors
+// Copyright 2015-2018 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,6 +18,9 @@ namespace NATS.Client
     // Tracks individual backend servers.
     internal class Srv
     {
+        private const string defaultScheme = "nats://";
+        private const int defaultPort = 4222;
+        private const int noPortSpecified = -1;
         internal Uri url = null;
         internal bool didConnect = false;
         internal int reconnects = 0;
@@ -29,22 +32,12 @@ namespace NATS.Client
 
         internal Srv(string urlString)
         {
-            try {
-                url = new Uri(urlString);
-            } catch (UriFormatException e) {
-                var baseUrl = new Uri("nats://localhost");
-                try {
-                    url = new Uri(baseUrl, "//" + urlString);
-                } catch (Exception e) {
-                    throw new ArgumentException("Bad server URL: " + urlString, e);
-                }                
-            } catch (Exception e) {
-                throw new ArgumentException("Bad server URL: " + urlString, e);
-            }
-            
-            if (url.Port == -1) {
-                url.Port = 4222;
-            }
+            Uri uri;
+            if (!Uri.TryCreate(urlString, UriKind.Absolute, out uri) &&
+                !Uri.TryCreate(defaultScheme + urlString, UriKind.Absolute, out uri)) throw new UriFormatException();
+            var builder = new UriBuilder(uri);
+            builder.Port = builder.Port == noPortSpecified ? defaultPort : builder.Port;
+            url = builder.Uri;
         }
 
         internal Srv(string urlString, bool isUrlImplicit) : this(urlString)
