@@ -32,12 +32,14 @@ namespace NATS.Client
 
         internal Srv(string urlString)
         {
-            Uri uri;
-            if (!Uri.TryCreate(urlString, UriKind.Absolute, out uri) &&
-                !Uri.TryCreate(defaultScheme + urlString, UriKind.Absolute, out uri)) throw new UriFormatException();
-            var builder = new UriBuilder(uri);
-            builder.Port = builder.Port == noPortSpecified ? defaultPort : builder.Port;
-            url = builder.Uri;
+            if (!urlString.Contains("://"))
+            {
+                urlString = defaultScheme + urlString;
+            }
+
+            var uri = new Uri(urlString);
+
+            url = uri.Port == noPortSpecified ? new UriBuilder(uri) {Port = defaultPort}.Uri : uri;
         }
 
         internal Srv(string urlString, bool isUrlImplicit) : this(urlString)
