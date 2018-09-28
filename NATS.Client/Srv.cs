@@ -1,4 +1,4 @@
-﻿// Copyright 2015-2018 The NATS Authors
+// Copyright 2015-2018 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,6 +18,9 @@ namespace NATS.Client
     // Tracks individual backend servers.
     internal class Srv
     {
+        private const string defaultScheme = "nats://";
+        private const int defaultPort = 4222;
+        private const int noPortSpecified = -1;
         internal Uri url = null;
         internal bool didConnect = false;
         internal int reconnects = 0;
@@ -29,11 +32,14 @@ namespace NATS.Client
 
         internal Srv(string urlString)
         {
-            // allow for host:port, without the prefix.
-            if (urlString.ToLower().StartsWith("nats://") == false)
-                urlString = "nats://" + urlString;
+            if (!urlString.Contains("://"))
+            {
+                urlString = defaultScheme + urlString;
+            }
 
-            url = new Uri(urlString);
+            var uri = new Uri(urlString);
+
+            url = uri.Port == noPortSpecified ? new UriBuilder(uri) {Port = defaultPort}.Uri : uri;
         }
 
         internal Srv(string urlString, bool isUrlImplicit) : this(urlString)
