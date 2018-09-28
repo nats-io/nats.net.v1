@@ -1577,6 +1577,13 @@ namespace NATS.Client
                 try
                 {
                     len = br.Read(buffer, 0, Defaults.defaultReadLength);
+
+                    // Socket has been closed gracefully by host
+                    if (len == 0)
+                    {
+                        break;
+                    }
+
                     parser.parse(buffer, len);
                 }
                 catch (Exception e)
