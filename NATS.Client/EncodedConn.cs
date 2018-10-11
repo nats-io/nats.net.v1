@@ -117,7 +117,7 @@ namespace NATS.Client
         // byte array in the connection, we are still threadsafe.
         internal byte[] defaultSerializer(Object obj)
         {
-            byte[] rv;
+            byte[] rv = null;
 
             if (obj == null)
                 return null;
@@ -226,8 +226,6 @@ namespace NATS.Client
             EventHandler<EncodedMessageEventArgs> mh;
             EncodedConnection c;
 
-            EncodedMessageEventArgs ehev = new EncodedMessageEventArgs();
-
             internal EncodedHandlerWrapper(EncodedConnection encc, EventHandler<EncodedMessageEventArgs> handler)
             {
                 mh = handler;
@@ -236,6 +234,7 @@ namespace NATS.Client
 
             public void msgHandlerToEncoderHandler(Object sender, MsgHandlerEventArgs args)
             {
+                EncodedMessageEventArgs ehev = new EncodedMessageEventArgs();
                 try
                 {
                     byte[] data = args.msg != null ? args.msg.Data : null;
