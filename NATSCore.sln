@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27130.2020
@@ -27,6 +27,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Subscribe", "examples\Subscribe\Subscribe.csproj", "{1DE0E1B8-E8F0-4290-8B2C-2A0787BC91CC}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Publish", "examples\Publish\Publish.csproj", "{E4BBB7EA-0A5C-4867-835C-F3C213E3AC0E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NATS.Client.Rx", "NATS.Client.Rx\NATS.Client.Rx.csproj", "{B193143C-CB56-4F6A-8B5F-040017DF7820}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -66,6 +68,10 @@ Global
 		{E4BBB7EA-0A5C-4867-835C-F3C213E3AC0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E4BBB7EA-0A5C-4867-835C-F3C213E3AC0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E4BBB7EA-0A5C-4867-835C-F3C213E3AC0E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B193143C-CB56-4F6A-8B5F-040017DF7820}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B193143C-CB56-4F6A-8B5F-040017DF7820}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B193143C-CB56-4F6A-8B5F-040017DF7820}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B193143C-CB56-4F6A-8B5F-040017DF7820}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
