@@ -16,6 +16,8 @@ using NATS.Client;
 using System.Threading;
 using Xunit;
 using System.Diagnostics;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace NATSUnitTests
 {
@@ -561,6 +563,61 @@ namespace NATSUnitTests
                     // Assert that we reconnected and are not closed.
                     Assert.True(reconnectEv.WaitOne(10000));
                     Assert.False(closedEv.WaitOne(100));
+                }
+            }
+        }
+
+        [Fact]
+        public void TestMemoryLeakRequestReplyAsync()
+        {
+            using (new NATSServer())
+            {
+                using (var c = new ConnectionFactory().CreateConnection("nats://127.0.0.1:4222"))
+                {
+                    var data = new byte[102400];
+                    var subject = "subject";
+
+                    var startMem = GC.GetTotalMemory(true);
+
+                    c.SubscribeAsync(subject, (sender, args) =>
+                    {
+                        c.Publish(args.Message.Reply, data);
+                        c.Flush();
+                    });
+
+                    for (int i = 0; i < 100; i++)
+                    {
+                        var msg = c.Request(subject, data, int.MaxValue);
+                    }
+                    GC.Collect();
+                    Thread.Sleep(1000);
+
+                    double memGrowthPercent = 100 * (((double)(GC.GetTotalMemory(false) - startMem)) / (double)startMem);
+                    Assert.True(memGrowthPercent < 30.0);
+
+                    startMem = GC.GetTotalMemory(true);
+                    for (int i = 0; i < 100; i++)
+                    {
+                        c.Request(subject, data);
+                    }
+                    GC.Collect();
+                    Thread.Sleep(1000);
+
+                    memGrowthPercent = 100 * (((double)(GC.GetTotalMemory(false) - startMem)) / (double)startMem);
+                    Assert.True(memGrowthPercent < 30.0);
+
+                    startMem = GC.GetTotalMemory(true);
+                    var token = new CancellationToken();
+                    for (int i = 0; i < 100; i++)
+                    {
+                        var t = c.RequestAsync(subject, data, int.MaxValue, token);
+                        t.Wait();
+                    }
+                    GC.Collect();
+                    Thread.Sleep(2000);
+
+                    memGrowthPercent = 100 * (((double)(GC.GetTotalMemory(false) - startMem)) / (double)startMem);
+                    Assert.True(memGrowthPercent < 30.0);
                 }
             }
         }
