@@ -165,7 +165,7 @@ namespace NATS.Client
                             timeoutToken.Token, token);
                         this.Token = linkedTokenSource.Token;
 
-                        this.TimeoutTokenRegistration = timeoutToken.Token.Register(
+                        this.timeoutTokenRegistration = timeoutToken.Token.Register(
                             () => this.Waiter.TrySetException(new NATSTimeoutException()));
                         timeoutToken.CancelAfter(timeout);
                     }
@@ -180,7 +180,7 @@ namespace NATS.Client
                     {
                         var timeoutToken = new CancellationTokenSource();
                         this.Token = timeoutToken.Token;
-                        this.TimeoutTokenRegistration = timeoutToken.Token.Register(
+                        this.timeoutTokenRegistration = timeoutToken.Token.Register(
                             () => this.Waiter.TrySetException(new NATSTimeoutException()));
                         timeoutToken.CancelAfter(timeout);
                     }
@@ -189,12 +189,20 @@ namespace NATS.Client
 
             public string Id { get; set; }
             public CancellationToken Token { get; private set; }
-            public CancellationTokenRegistration TimeoutTokenRegistration { get; private set; }
             public TaskCompletionSource<Msg> Waiter { get; private set; }
+
+            private CancellationTokenRegistration tokenRegistration;
+            private CancellationTokenRegistration timeoutTokenRegistration;
+
+            public void Register(Action action)
+            {
+                tokenRegistration = Token.Register(action);
+            }
 
             public void Dispose()
             {
-                this.TimeoutTokenRegistration.Dispose();
+                this.timeoutTokenRegistration.Dispose();
+                this.tokenRegistration.Dispose();
             }
         }
 
@@ -2496,6 +2504,7 @@ namespace NATS.Client
                 }
 
                 request.Id = (nextRequestId++).ToString(CultureInfo.InvariantCulture);
+                request.Register(() => removeOutstandingRequest(request.Id));
 
                 waitingRequests.Add(
                     request.Id,
