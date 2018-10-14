@@ -2,7 +2,7 @@ using System;
 
 namespace NATS.Client
 {
-    internal sealed class Disposable: IDisposable
+    internal sealed class Disposable : IDisposable
     {
         private bool _isDisposed;
         private readonly Action _dispose;
@@ -15,7 +15,7 @@ namespace NATS.Client
         public void Dispose()
         {
             if (_isDisposed) return;
-            
+
             _dispose();
             _isDisposed = true;
         }

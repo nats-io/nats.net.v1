@@ -8,7 +8,7 @@ using NATS.Client;
 
 namespace NATSExamples
 {
-    class Observable
+    internal class Observable
     {
         public static void Main(string[] args)
         {
@@ -23,11 +23,10 @@ namespace NATSExamples
             }
         }
 
-        int count = 1000000;
-        string url = Defaults.Url;
-        string subject = "foo";
-        int received;
-        bool verbose;
+        private int _count = 1000000;
+        private string _url = Defaults.Url;
+        private string _subject = "foo";
+        private bool _verbose;
 
         public async Task Run(string[] args)
         {
@@ -35,14 +34,14 @@ namespace NATSExamples
             Banner();
             
             var opts = ConnectionFactory.GetDefaultOptions();
-            opts.Url = url;
+            opts.Url = _url;
 
             using (var c = new ConnectionFactory().CreateConnection(opts))
             {
                 var elapsed = await ReceiveObservable(c);
 
-                Console.Write("Received {0} msgs in {1} seconds ", received, elapsed.TotalSeconds);
-                Console.WriteLine("({0} msgs/second).", (int)(received / elapsed.TotalSeconds));
+                Console.Write("Received {0} msgs in {1} seconds ", _count, elapsed.TotalSeconds);
+                Console.WriteLine("({0} msgs/second).", (int)(_count / elapsed.TotalSeconds));
                 PrintStats(c);
             }
         }
@@ -51,16 +50,14 @@ namespace NATSExamples
         {
             var sw = new Stopwatch();
 
-            await c.ToObservable(subject)
-                .Take(count)
+            await c.ToObservable(_subject)
+                .Take(_count)
                 .Do(args =>
                 {
-                    if (received == 0)
+                    if (!sw.IsRunning)
                         sw.Start();
 
-                    received++;
-
-                    if (verbose)
+                    if (_verbose)
                         Console.WriteLine("Received: " + args.Message);
                 })
                 .Finally(sw.Stop)
@@ -74,12 +71,11 @@ namespace NATSExamples
             if (args == null)
                 return;
             
-            Dictionary<string, string> parsedArgs = new Dictionary<string, string>();
+            var parsedArgs = new Dictionary<string, string>();
 
-            for (int i = 0; i < args.Length; i++)
+            for (var i = 0; i < args.Length; i++)
             {
-                if (args[i].Equals("-sync") ||
-                    args[i].Equals("-verbose"))
+                if (args[i].Equals("-verbose"))
                 {
                     parsedArgs.Add(args[i], "true");
                 }
@@ -95,29 +91,29 @@ namespace NATSExamples
             }
 
             if (parsedArgs.ContainsKey("-count"))
-                count = Convert.ToInt32(parsedArgs["-count"]);
+                _count = Convert.ToInt32(parsedArgs["-count"]);
 
             if (parsedArgs.ContainsKey("-url"))
-                url = parsedArgs["-url"];
+                _url = parsedArgs["-url"];
 
             if (parsedArgs.ContainsKey("-subject"))
-                subject = parsedArgs["-subject"];
+                _subject = parsedArgs["-subject"];
 
             if (parsedArgs.ContainsKey("-verbose"))
-                verbose = true;
+                _verbose = true;
         }
 
         private void Banner()
         {
-            Console.WriteLine("Receiving {0} messages on subject {1}", count, subject);
-            Console.WriteLine("  Url: {0}", url);
+            Console.WriteLine("Receiving {0} messages on subject {1}", _count, _subject);
+            Console.WriteLine("  Url: {0}", _url);
         }
 
         private static void Usage()
         {
             Console.Error.WriteLine(
                 "Usage:  Observable [-url url] [-subject subject] " +
-                "-count [count] [-verbose]");
+                "[-count count] [-verbose]");
 
             Environment.Exit(-1);
         }

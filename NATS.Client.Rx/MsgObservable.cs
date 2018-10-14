@@ -2,7 +2,7 @@ using System;
 
 namespace NATS.Client
 {
-    internal sealed class MsgObservable<T> : IObservable<T> where T: EventArgs
+    internal sealed class MsgObservable<T> : IObservable<T> where T : EventArgs
     {
         private readonly Func<EventHandler<T>, IAsyncSubscription> _subscriptionFactory;
 

@@ -28,7 +28,7 @@ namespace NATS.Client
         {
             return new MsgObservable<MsgHandlerEventArgs>(h => connection.SubscribeAsync(subject, queue, h));
         }
-        
+
         /// <summary>
         /// Returns an observable sequence that signals when a new message on <paramref name="subject"/> is received.
         /// </summary>

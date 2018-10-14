@@ -19,7 +19,7 @@ namespace NATSUnitTests
             connection.Setup(c => c.SubscribeAsync(SUBJECT, QUEUE, It.IsAny<EventHandler<MsgHandlerEventArgs>>()))
                 .Returns((string _, string __, EventHandler<MsgHandlerEventArgs> h) =>
                 {
-                     handler = h;
+                    handler = h;
                     return subscription.Object;
                 });
             var observer = new Mock<IObserver<MsgHandlerEventArgs>>();
@@ -38,7 +38,7 @@ namespace NATSUnitTests
             var eventArgs = new MsgHandlerEventArgs();
             handler(null, eventArgs);
             observer.Verify(o => o.OnNext(eventArgs));
-            
+
             disposable.Dispose();
             subscription.Verify(s => s.Dispose());
             observer.Verify(o => o.OnCompleted());
@@ -71,7 +71,7 @@ namespace NATSUnitTests
             );
             handler(null, null);
             observer.Verify(o => o.OnNext(null));
-            
+
             disposable.Dispose();
             subscription.Verify(s => s.Dispose());
             observer.Verify(o => o.OnCompleted());
