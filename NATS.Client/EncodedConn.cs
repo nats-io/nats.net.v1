@@ -95,7 +95,7 @@ namespace NATS.Client
     public class EncodedConnection : Connection, IEncodedConnection
     {
         private MemoryStream sStream   = new MemoryStream();
-        byte[] sBytes = new byte[1024];
+        private object       sStreamLock = new object();
 
         private MemoryStream dStream     = new MemoryStream();
         private object       dStreamLock = new object();
@@ -117,22 +117,25 @@ namespace NATS.Client
         // byte array in the connection, we are still threadsafe.
         internal byte[] defaultSerializer(Object obj)
         {
+            byte[] rv = null;
+
             if (obj == null)
                 return null;
 
-            sStream.Position = 0;
-            f.Serialize(sStream, obj);
+            lock (sStreamLock)
+            {
+                sStream.Position = 0;
+                f.Serialize(sStream, obj);
 
-            long len = sStream.Position;
-            if (sBytes.Length < len)
-                sBytes = new byte[len];
+                long len = sStream.Position;
+                rv = new byte[len];
 
-            // Could be more efficient, but w/o passing a length all the way
-            // through publish, we have to do this.   No such thing as slices
-            // in .NET
-            Array.Copy(sStream.GetBuffer(), sBytes, len);
-
-            return sBytes;
+                // Could be more efficient, but w/o passing a length all the way
+                // through publish, we have to do this.   No such thing as slices
+                // in .NET
+                Array.Copy(sStream.GetBuffer(), rv, len);
+            }
+            return rv;
         }
 
 
@@ -223,8 +226,6 @@ namespace NATS.Client
             EventHandler<EncodedMessageEventArgs> mh;
             EncodedConnection c;
 
-            EncodedMessageEventArgs ehev = new EncodedMessageEventArgs();
-
             internal EncodedHandlerWrapper(EncodedConnection encc, EventHandler<EncodedMessageEventArgs> handler)
             {
                 mh = handler;
@@ -233,6 +234,7 @@ namespace NATS.Client
 
             public void msgHandlerToEncoderHandler(Object sender, MsgHandlerEventArgs args)
             {
+                EncodedMessageEventArgs ehev = new EncodedMessageEventArgs();
                 try
                 {
                     byte[] data = args.msg != null ? args.msg.Data : null;

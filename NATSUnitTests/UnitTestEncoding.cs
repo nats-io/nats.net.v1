@@ -104,6 +104,68 @@ namespace NATSUnitTests
                 }
             }
         }
+
+        [Serializable]
+        public class BasicObj
+        {
+            public BasicObj(int value)
+            {
+                A = value;
+            }
+
+            public int A { get; set; }
+
+            public override int GetHashCode() { return base.GetHashCode(); }
+
+            public override bool Equals(Object o)
+            {
+                if (o.GetType() != GetType())
+                    return false;
+
+                BasicObj to = (BasicObj)o;
+
+                return (A == ((BasicObj)to).A);
+            }
+        }
+
+        [Fact]
+        public void TestEncodedDefaultRequestReplyThreadSafety()
+        {
+            using (new NATSServer())
+            {
+                using (IEncodedConnection c = DefaultEncodedConnection)
+                {
+                    c.SubscribeAsync("replier", (obj, args) => {
+                        try
+                        {
+                            c.Publish(args.Reply, new BasicObj(((BasicObj)args.ReceivedObject).A));
+                        }
+                        catch (Exception ex)
+                        {
+                            Assert.True(false, "Replier Exception: " + ex.Message);
+                        }
+                        c.Flush();
+                    });
+                    c.Flush();
+
+                    using (IEncodedConnection c2 = DefaultEncodedConnection)
+                    {
+                        System.Threading.Tasks.Parallel.For(0, 20, i =>
+                        {
+                            try
+                            {
+                                var bo = new BasicObj(i);
+                                Assert.True(bo.Equals(c2.Request("replier", bo, 30000)), "Objects did not equal");
+                            }
+                            catch (Exception ex)
+                            {
+                                Assert.True(false, "Exception: " + ex.Message);
+                            }
+                        });
+                    }
+                }
+            }
+        }
 #else
         [Fact]
         public void TestDefaultObjectSerialization()
@@ -335,7 +397,6 @@ namespace NATSUnitTests
                 }
             }
         }
-
     } // class
 
 } // namespace
