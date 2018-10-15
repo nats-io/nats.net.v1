@@ -148,7 +148,7 @@ namespace NATS.Client
             new Dictionary<string, InFlightRequest>(StringComparer.OrdinalIgnoreCase);
 
         // Handles in-flight requests when using the new-style request/reply behavior
-        private sealed class InFlightRequest
+        private sealed class InFlightRequest : IDisposable
         {
             public InFlightRequest(CancellationToken token, int timeout)
             {
@@ -165,7 +165,7 @@ namespace NATS.Client
                             timeoutToken.Token, token);
                         this.Token = linkedTokenSource.Token;
 
-                        timeoutToken.Token.Register(
+                        this.timeoutTokenRegistration = timeoutToken.Token.Register(
                             () => this.Waiter.TrySetException(new NATSTimeoutException()));
                         timeoutToken.CancelAfter(timeout);
                     }
@@ -180,8 +180,7 @@ namespace NATS.Client
                     {
                         var timeoutToken = new CancellationTokenSource();
                         this.Token = timeoutToken.Token;
-
-                        timeoutToken.Token.Register(
+                        this.timeoutTokenRegistration = timeoutToken.Token.Register(
                             () => this.Waiter.TrySetException(new NATSTimeoutException()));
                         timeoutToken.CancelAfter(timeout);
                     }
@@ -191,6 +190,20 @@ namespace NATS.Client
             public string Id { get; set; }
             public CancellationToken Token { get; private set; }
             public TaskCompletionSource<Msg> Waiter { get; private set; }
+
+            private CancellationTokenRegistration tokenRegistration;
+            private CancellationTokenRegistration timeoutTokenRegistration;
+
+            public void Register(Action action)
+            {
+                tokenRegistration = Token.Register(action);
+            }
+
+            public void Dispose()
+            {
+                this.timeoutTokenRegistration.Dispose();
+                this.tokenRegistration.Dispose();
+            }
         }
 
         // Prepare protocol messages for efficiency
@@ -2491,8 +2504,7 @@ namespace NATS.Client
                 }
 
                 request.Id = (nextRequestId++).ToString(CultureInfo.InvariantCulture);
-
-                request.Token.Register(() => removeOutstandingRequest(request.Id));
+                request.Register(() => removeOutstandingRequest(request.Id));
 
                 waitingRequests.Add(
                     request.Id,
@@ -2612,6 +2624,7 @@ namespace NATS.Client
             {
                 request.Waiter.SetCanceled();
             }
+            request.Dispose();
         }
 
         private void removeOutstandingRequest(string requestId)
