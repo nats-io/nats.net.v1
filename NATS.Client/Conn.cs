@@ -1320,8 +1320,6 @@ namespace NATS.Client
         private void processDisconnect()
         {
             status = ConnState.DISCONNECTED;
-            if (lastEx == null)
-                return;
         }
 
         // This will process a disconnect when reconnect is allowed.
@@ -1955,7 +1953,6 @@ namespace NATS.Client
             return value;
         }
 
-
         // processMsg is called by parse and will place the msg on the
         // appropriate channel for processing. All subscribers have their
         // their own channel. If the channel is full, the connection is
@@ -2003,7 +2000,6 @@ namespace NATS.Client
         // async error handler if registered.
         internal void processSlowConsumer(Subscription s)
         {
-            lastEx = new NATSSlowConsumerException();
             if (opts.AsyncErrorEventHandler != null && !s.sc)
             {
                 EventHandler<ErrEventArgs> aseh = opts.AsyncErrorEventHandler;
