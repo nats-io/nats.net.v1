@@ -134,7 +134,7 @@ namespace NATSExamples
         private void usage()
         {
             System.Console.Error.WriteLine(
-                "Usage:  Publish [-url url] [-subject subject] " +
+                "Usage:  Subscribe [-url url] [-subject subject] " +
                 "-count [count] [-sync] [-verbose]");
 
             System.Environment.Exit(-1);
