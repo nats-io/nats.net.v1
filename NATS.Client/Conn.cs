@@ -413,7 +413,8 @@ namespace NATS.Client
                     }
 
                     client = new TcpClient();
-                    var task = client.ConnectAsync(s.url.Host, s.url.Port).ContinueWith(t => t.Exception);
+                    var task = client.ConnectAsync(s.url.Host, s.url.Port);
+                    task.ContinueWith(t => t.Exception);
                     if (!task.Wait(TimeSpan.FromMilliseconds(timeoutMillis)))
                     {
                         client = null;
