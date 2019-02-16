@@ -86,7 +86,7 @@ namespace NATS.Client
 
         // NOTE: We aren't using Mutex here to support enterprises using
         // .NET 4.0.
-        readonly internal object mu = new Object();
+        readonly private object mu = new Object();
 
         private Random r = null;
 
