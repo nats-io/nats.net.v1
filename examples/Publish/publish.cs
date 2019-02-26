@@ -109,6 +109,8 @@ namespace NATSExamples
             System.Console.WriteLine("Publishing {0} messages on subject {1}",
                 count, subject);
             System.Console.WriteLine("  Url: {0}", url);
+            System.Console.WriteLine("  Subject: {0}", subject);
+            System.Console.WriteLine("  Count: {0}", count);
             System.Console.WriteLine("  Payload is {0} bytes.",
                 payload != null ? payload.Length : 0);
         }

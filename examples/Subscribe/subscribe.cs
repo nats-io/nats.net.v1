@@ -184,6 +184,7 @@ namespace NATSExamples
             System.Console.WriteLine("Receiving {0} messages on subject {1}",
                 count, subject);
             System.Console.WriteLine("  Url: {0}", url);
+            System.Console.WriteLine("  Subject: {0}", subject);
             System.Console.WriteLine("  Receiving: {0}",
                 sync ? "Synchronously" : "Asynchronously");
         }
