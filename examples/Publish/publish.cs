@@ -25,7 +25,7 @@ namespace NATSExamples
     {
         Dictionary<string, string> parsedArgs = new Dictionary<string, string>();
 
-        int count = 2000000;
+        int count = 1;
         string url = Defaults.Url;
         string subject = "foo";
         byte[] payload = null;
