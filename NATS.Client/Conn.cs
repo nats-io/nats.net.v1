@@ -414,7 +414,8 @@ namespace NATS.Client
 
                     client = new TcpClient();
                     var task = client.ConnectAsync(s.url.Host, s.url.Port);
-                    task.ContinueWith(t => t.Exception);
+                    // avoid raising TaskScheduler.UnobservedTaskException if the timeout occurs first
+                    task.ContinueWith(t => GC.KeepAlive(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
                     if (!task.Wait(TimeSpan.FromMilliseconds(timeoutMillis)))
                     {
                         client = null;
@@ -2486,7 +2487,8 @@ namespace NATS.Client
         private InFlightRequest setupRequest(int timeout, CancellationToken token)
         {
             InFlightRequest request = new InFlightRequest(token, timeout);
-            request.Waiter.Task.ContinueWith(t => t.Exception);
+            // avoid raising TaskScheduler.UnobservedTaskException if the timeout occurs first
+            request.Waiter.Task.ContinueWith(t => GC.KeepAlive(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
             bool createSub = false;
             lock (mu)
             {
