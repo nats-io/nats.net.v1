@@ -166,15 +166,12 @@ namespace NATS.Client
 
         private void publishObject(string subject, string reply, object o)
         {
-            lock (mu)
-            {
-                if (onSerialize == null)
-                    throw new NATSException("IEncodedConnection.OnSerialize must be set (.NET core only).");
+            if (onSerialize == null)
+                throw new NATSException("IEncodedConnection.OnSerialize must be set (.NET core only).");
 
-                byte[] data = onSerialize(o);
-                int count = data != null ? data.Length : 0;
-                publish(subject, reply, data, 0, count);
-            }
+            byte[] data = onSerialize(o);
+            int count = data != null ? data.Length : 0;
+            publish(subject, reply, data, 0, count);
         }
 
         /// <summary>

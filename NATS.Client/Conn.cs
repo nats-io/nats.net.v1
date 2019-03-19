@@ -86,7 +86,7 @@ namespace NATS.Client
 
         // NOTE: We aren't using Mutex here to support enterprises using
         // .NET 4.0.
-        readonly internal object mu = new Object();
+        readonly private object mu = new Object();
 
         private Random r = null;
 
@@ -413,7 +413,9 @@ namespace NATS.Client
                     }
 
                     client = new TcpClient();
-                    var task = client.ConnectAsync(s.url.Host, s.url.Port).ContinueWith(t => t.Exception);
+                    var task = client.ConnectAsync(s.url.Host, s.url.Port);
+                    // avoid raising TaskScheduler.UnobservedTaskException if the timeout occurs first
+                    task.ContinueWith(t => GC.KeepAlive(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
                     if (!task.Wait(TimeSpan.FromMilliseconds(timeoutMillis)))
                     {
                         client = null;
@@ -2485,7 +2487,8 @@ namespace NATS.Client
         private InFlightRequest setupRequest(int timeout, CancellationToken token)
         {
             InFlightRequest request = new InFlightRequest(token, timeout);
-            request.Waiter.Task.ContinueWith(t => t.Exception);
+            // avoid raising TaskScheduler.UnobservedTaskException if the timeout occurs first
+            request.Waiter.Task.ContinueWith(t => GC.KeepAlive(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
             bool createSub = false;
             lock (mu)
             {
