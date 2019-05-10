@@ -6,7 +6,7 @@ This Synadia supported client parallels the [NATS GO Client](https://github.com/
 
 
 [![License Apache 2.0](https://img.shields.io/badge/License-Apache2-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
-[![API Documentation](https://img.shields.io/badge/doc-Doxygen-brightgreen.svg?style=flat)](http://nats-io.github.io/csharp-nats)
+[![API Documentation](https://img.shields.io/badge/doc-Doxygen-brightgreen.svg?style=flat)](http://nats-io.github.io/nats.net)
 [![NuGet](https://img.shields.io/nuget/v/NATS.Client.svg?maxAge=2592000)](https://www.nuget.org/packages/NATS.Client)
 
 ## Installation
