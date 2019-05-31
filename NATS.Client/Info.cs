@@ -30,6 +30,7 @@ namespace NATS.Client
         internal bool tlsRequired;
         internal long maxPayload;
         internal string[] connectURLs;
+        internal string serverNonce;
 
         [DataMember]
         public string server_id
@@ -87,6 +88,13 @@ namespace NATS.Client
             set { connectURLs = value; }
         }
 
+        [DataMember]
+        public string nonce
+        {
+            get { return serverNonce; }
+            set { serverNonce = value; }
+        }
+
         public static ServerInfo CreateFromJson(string json)
         {
             using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(json)))
@@ -103,6 +111,9 @@ namespace NATS.Client
     {
         bool isVerbose;
         bool isPedantic;
+        string userJWT;
+        string userNkey;
+        string signature;
         string clientUser;
         string clientPass;
         bool sslRequired;
@@ -113,80 +124,52 @@ namespace NATS.Client
         string authToken = null;
 
         [DataMember]
-        public bool verbose
-        {
-            get { return isVerbose; }
-            set { isVerbose = value; }
-        }
+        public bool verbose { get => isVerbose; set => isVerbose = value; }
 
         [DataMember]
-        public bool pedantic
-        {
-            get { return isPedantic; }
-            set { isPedantic = value; }
-        }
+        public bool pedantic { get => isPedantic; set => isPedantic = value; }
 
         [DataMember]
-        public string user
-        {
-            get { return clientUser; }
-            set { clientUser = value; }
-        }
+        public string user { get => clientUser; set => clientUser = value; }
 
         [DataMember]
-        public string pass
-        {
-            get { return clientPass; }
-            set { clientPass = value; }
-        }
+        public string pass { get => clientPass; set => clientPass = value; }
 
         [DataMember]
-        public bool ssl_required
-        {
-            get { return sslRequired; }
-            set { sslRequired = value; }
-        }
+        public bool ssl_required { get => sslRequired; set => sslRequired = value; }
 
         [DataMember]
-        public string name
-        {
-            get { return clientName; }
-            set { clientName = value; }
-        }
+        public string name { get => clientName; set => clientName = value; }
 
         [DataMember]
-        public string auth_token
-        {
-            get { return authToken; }
-            set { authToken = value; }
-        }
+        public string auth_token{ get => authToken; set => authToken = value; }
 
         [DataMember]
-        public string lang
-        {
-            get { return clientLang; }
-            set { clientLang = value; }
-        }
+        public string lang { get => clientLang; set => clientLang = value; }
 
         [DataMember]
-        public string version
-        {
-            get { return clientVersion; }
-            set { clientVersion = value; }
-        }
+        public string version { get => clientVersion; set => clientVersion = value; }
 
         [DataMember]
-        public int protocol
-        {
-            get { return protocolVersion; }
-            set { protocolVersion = value; }
-        }
+        public int protocol { get => protocolVersion; set => protocolVersion = value; }
 
-        internal ConnectInfo(bool verbose, bool pedantic, string user, string pass,
-            string token, bool secure, string name)
+        [DataMember]
+        public string jwt { get => userJWT; set => userJWT = value; }
+
+        [DataMember]
+        public string nkey { get => userNkey; set => userNkey = value; }
+
+        [DataMember]
+        public string sig { get => signature; set => signature = value; }
+
+        internal ConnectInfo(bool verbose, bool pedantic, string ujwt, string nkey, string sig, 
+            string user, string pass, string token, bool secure, string name)
         {
             isVerbose = verbose;
             isPedantic = pedantic;
+            userJWT = ujwt;
+            userNkey = nkey;
+            signature = sig;
             clientUser = user;
             clientPass = pass;
             sslRequired = secure;

@@ -1206,6 +1206,8 @@ namespace NATS.Client
             string user = null;
             string pass = null;
             string token = null;
+            string nkey = null;
+            string sig = null;
 
             if (!string.IsNullOrEmpty(u))
             {
@@ -1231,9 +1233,58 @@ namespace NATS.Client
                 user = opts.user;
                 pass = opts.password;
                 token = opts.token;
+                nkey = opts.nkey;
             }
 
-            ConnectInfo info = new ConnectInfo(opts.Verbose, opts.Pedantic, user,
+            // Look for user jwt
+            string userJWT = null;
+            if (opts.UserJWTEventHandler != null)
+            {
+                if (nkey != null)
+                    throw new NATSConnectionException("User event handler and Nkey has been defined.");
+
+                var args = new UserJWTEventArgs();
+                try
+                {
+                    opts.UserJWTEventHandler(this, args);
+                }
+                catch (Exception ex)
+                {
+                    throw new NATSConnectionException("Exception from UserJWTEvent Handler.", ex);
+                }
+                userJWT = args.JWT;
+                if (userJWT == null)
+                    throw new NATSConnectionException("User JWT Event Handler did not set the JWT.");
+
+            }
+
+            if (userJWT != null || nkey != null)
+            {
+                if (opts.UserSignatureEventHandler == null)
+                {
+                    if (userJWT == null) {
+                        throw new NATSConnectionException("Nkey defined without a user signature event handler");
+                    }
+                    throw new NATSConnectionException("User signature event handle has not been been defined.");
+                }
+
+                var args = new UserSignatureEventArgs(Encoding.ASCII.GetBytes(this.info.nonce));
+                try
+                {
+                    opts.UserSignatureEventHandler(this, args);
+                }
+                catch (Exception ex)
+                {
+                    throw new NATSConnectionException("Exception from UserSignatureEvent Handler.", ex);
+                }
+
+                if (args.SignedNonce == null)
+                    throw new NATSConnectionException("Signature Event Handler did not set the SignedNonce.");
+
+                sig = NaCl.CryptoBytes.ToBase64String(args.SignedNonce);               
+            }
+
+            ConnectInfo info = new ConnectInfo(opts.Verbose, opts.Pedantic, userJWT, nkey, sig, user,
                 pass, token, opts.Secure, opts.Name);
 
             StringBuilder sb = new StringBuilder();
@@ -1246,9 +1297,10 @@ namespace NATS.Client
         // caller must lock.
         private void sendConnect()
         {
+            string protocolMsg = connectProto();
             try
             {
-                writeString(connectProto());
+                writeString(protocolMsg);
                 bw.Write(PING_P_BYTES, 0, PING_P_BYTES_LEN);
                 bw.Flush();
             }
@@ -2343,7 +2395,7 @@ namespace NATS.Client
         /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call
-        /// while publishing. See <see cref="System.Exception.InnerException"/> for more details.</exception>
+        /// while publishing. See <see cref="Exception.InnerException"/> for more details.</exception>
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public void Publish(string subject, byte[] data)
         {
@@ -2380,7 +2432,7 @@ namespace NATS.Client
         /// exceeds the maximum payload size supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call 
-        /// while publishing. See <see cref="System.Exception.InnerException"/> for more details.</exception>
+        /// while publishing. See <see cref="Exception.InnerException"/> for more details.</exception>
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public void Publish(Msg msg)
         {
@@ -2407,7 +2459,7 @@ namespace NATS.Client
         /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call
-        /// while publishing. See <see cref="System.Exception.InnerException"/> for more details.</exception>
+        /// while publishing. See <see cref="Exception.InnerException"/> for more details.</exception>
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public void Publish(string subject, string reply, byte[] data)
         {
@@ -2681,7 +2733,7 @@ namespace NATS.Client
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the 
         /// response.</exception>
         /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call
-        /// while executing the request. See <see cref="System.Exception.InnerException"/> for more details.</exception>
+        /// while executing the request. See <see cref="Exception.InnerException"/> for more details.</exception>
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public Msg Request(string subject, byte[] data, int timeout)
         {
@@ -2736,7 +2788,7 @@ namespace NATS.Client
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
         /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call while
-        /// executing the request. See <see cref="System.Exception.InnerException"/> for more details.</exception>
+        /// executing the request. See <see cref="Exception.InnerException"/> for more details.</exception>
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public Msg Request(string subject, byte[] data)
         {
@@ -2873,7 +2925,7 @@ namespace NATS.Client
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
         /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call
-        /// while executing the request. See <see cref="System.Exception.InnerException"/> for more details.</exception>
+        /// while executing the request. See <see cref="Exception.InnerException"/> for more details.</exception>
         /// <exception cref="OperationCanceledException">The asynchronous operation was cancelled or timed out before
         /// it could be completed.</exception>
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
@@ -2933,7 +2985,7 @@ namespace NATS.Client
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
         /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call while
-        /// executing the request. See <see cref="System.Exception.InnerException"/> for more details.</exception>
+        /// executing the request. See <see cref="Exception.InnerException"/> for more details.</exception>
         /// <exception cref="OperationCanceledException">The asynchronous operation was cancelled or timed out before
         /// it could be completed.</exception>
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
@@ -2998,7 +3050,7 @@ namespace NATS.Client
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
         /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call while
-        /// executing the request. See <see cref="System.Exception.InnerException"/> for more details.</exception>
+        /// executing the request. See <see cref="Exception.InnerException"/> for more details.</exception>
         /// <exception cref="OperationCanceledException">The asynchronous operation was cancelled or timed out before
         /// it could be completed.</exception>
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
@@ -3034,7 +3086,7 @@ namespace NATS.Client
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the 
         /// response.</exception>
         /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call while 
-        /// executing the request. See <see cref="System.Exception.InnerException"/> for more details.</exception>
+        /// executing the request. See <see cref="Exception.InnerException"/> for more details.</exception>
         /// <exception cref="OperationCanceledException">The asynchronous operation was cancelled or timed out before it
         /// could be completed.</exception>
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
@@ -3437,7 +3489,7 @@ namespace NATS.Client
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the response.</exception>
         /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call while executing the
-        /// request. See <see cref="System.Exception.InnerException"/> for more details.</exception>
+        /// request. See <see cref="Exception.InnerException"/> for more details.</exception>
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public void Flush(int timeout)
         {
@@ -3496,7 +3548,7 @@ namespace NATS.Client
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the response.</exception>
         /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call while executing the
-        /// request. See <see cref="System.Exception.InnerException"/> for more details.</exception>
+        /// request. See <see cref="Exception.InnerException"/> for more details.</exception>
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public void Flush()
         {

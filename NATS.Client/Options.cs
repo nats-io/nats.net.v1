@@ -70,6 +70,110 @@ namespace NATS.Client
         /// </summary>
         public EventHandler<ErrEventArgs> AsyncErrorEventHandler = null;
 
+        /// <summary>
+        /// Represents the optional method that is used to fetch and
+        /// return the account signed JWT for this user.  Exceptions thrown
+        /// here will be passed up to the caller when creating a connection.
+        /// </summary>
+        internal EventHandler<UserJWTEventArgs> UserJWTEventHandler = null;
+
+        /// <summary>
+        /// Represents the optional method that is used to sign a nonce
+        /// from the server while authenticating with nkeys. The user
+        /// should sign the nonce and set the base64 encoded signature.
+        /// Exceptions thrown here will be passed up to the caller when 
+        /// creating a connection.
+        /// </summary>
+        internal EventHandler<UserSignatureEventArgs> UserSignatureEventHandler = null;
+
+        /// <summary>
+        /// Sets user credentials using the NATS 2.0 security scheme.
+        /// </summary>
+        /// <param name="credentials">A user JWT, e.g user.jwt</param>
+        /// <param name="keyfile">Private Key file</param>
+        public void SetUserCredentials(string credentials, string keyfile)
+        {
+            if (string.IsNullOrWhiteSpace(credentials))
+                throw new ArgumentException("Invalid credentials path", "credentials");
+            if (string.IsNullOrWhiteSpace(keyfile))
+                throw new ArgumentException("Invalid keyfile path", "keyfile");
+
+            var handler = new DefaultUserJWTHandler(credentials, keyfile);
+            UserJWTEventHandler = handler.DefaultUserJWTEventHandler;
+            UserSignatureEventHandler = handler.DefaultUserSignatureHandler;
+        }
+
+        /// <summary>
+        /// Sets user credentials using the NATS 2.0 security scheme.
+        /// </summary>
+        /// <param name="credentials">A chained credentials file, e.g user.cred</param>
+        public void SetUserCredentials(string credentials)
+        {
+            if (string.IsNullOrWhiteSpace(credentials))
+                throw new ArgumentException("Invalid credentials path", "credentials");
+            var handler = new DefaultUserJWTHandler(credentials, credentials);
+            UserJWTEventHandler = handler.DefaultUserJWTEventHandler;
+            UserSignatureEventHandler = handler.DefaultUserSignatureHandler;
+        }
+
+        /// <summary>
+        /// SetUserJWT will set the callbacks to retrieve the user's JWT and
+        /// the signature callback to sign the server nonce. This an the Nkey
+        /// option are mutually exclusive.
+        /// </summary>
+        /// <param name="userJWTEventHandler">A User JWT Event Handler</param>
+        /// <param name="userSignatureEventHandler">A User signature Event Handler</param>
+        public void SetUserCredentialHandlers(EventHandler<UserJWTEventArgs> userJWTEventHandler,
+            EventHandler<UserSignatureEventArgs> userSignatureEventHandler)
+        {
+            UserJWTEventHandler = userJWTEventHandler ?? throw new ArgumentNullException("userJWTEventHandler");
+            UserSignatureEventHandler = userSignatureEventHandler ?? throw new ArgumentNullException("userSignatureEventHandler");
+        }
+
+        /// <summary>
+        /// SetNkey will set the public Nkey and the signature callback to
+        /// sign the server nonce.
+        /// </summary>
+        /// <param name="publicNkey">The User's public Nkey</param>
+        /// <param name="userSignatureEventHandler">A User signature Event Handler to sign the server nonce.</param>
+        public void SetNkey(string publicNkey, EventHandler<UserSignatureEventArgs> userSignatureEventHandler)
+        {
+            if (string.IsNullOrWhiteSpace(publicNkey))
+                throw new ArgumentException("Invalid Nkey", "publicNkey");
+
+            UserSignatureEventHandler = userSignatureEventHandler ?? throw new ArgumentNullException("userSignatureEventHandler");
+            nkey = publicNkey;
+        }
+
+        /// <summary>
+        /// SetNkey will set the public Nkey and the signature callback to
+        /// sign the server nonce.
+        /// </summary>
+        /// <param name="publicNkey">The User's public Nkey</param>
+        /// <param name="filePath">A path to a file contianing the private Nkey.</param>
+        public void SetNkey(string publicNkey, string filePath)
+        {
+            if (string.IsNullOrWhiteSpace(publicNkey)) throw new ArgumentException("Invalid publicNkey", "publicNkey");
+            if (string.IsNullOrWhiteSpace(filePath)) throw new ArgumentException("Invalid filePath", "filePath");
+
+            nkey = publicNkey;
+            UserSignatureEventHandler = (obj, args) =>
+            {
+                DefaultUserJWTHandler.SignNonceFromFile(filePath, args);
+            };
+        }
+
+        /// <summary>
+        /// Sets a custom JWT Event Handler and Signature handler.
+        /// </summary>
+        /// <param name="JWTEventHandler"></param>
+        /// <param name="SignatureEventHandler"></param>
+        public void SetJWTEventHandlers(EventHandler<UserJWTEventArgs> JWTEventHandler, EventHandler<UserSignatureEventArgs> SignatureEventHandler)
+        {
+            UserJWTEventHandler = JWTEventHandler ?? throw new ArgumentNullException("JWTEventHandler");
+            UserSignatureEventHandler = SignatureEventHandler ?? throw new ArgumentNullException("SignatureEventHandler");
+        }
+
         internal int maxPingsOut = Defaults.MaxPingOut;
 
         internal int subChanLen = 65536;
@@ -81,6 +185,7 @@ namespace NATS.Client
         internal string user;
         internal string password;
         internal string token;
+        internal string nkey;
 
         // Options can only be publicly created through 
         // ConnectionFactory.GetDefaultOptions();
@@ -94,6 +199,8 @@ namespace NATS.Client
             ClosedEventHandler = o.ClosedEventHandler;
             ServerDiscoveredEventHandler = o.ServerDiscoveredEventHandler;
             DisconnectedEventHandler = o.DisconnectedEventHandler;
+            UserJWTEventHandler = o.UserJWTEventHandler;
+            UserSignatureEventHandler = o.UserSignatureEventHandler;
             maxPingsOut = o.maxPingsOut;
             maxReconnect = o.maxReconnect;
             name = o.name;
@@ -107,6 +214,7 @@ namespace NATS.Client
             user = o.user;
             password = o.password;
             token = o.token;
+            nkey = o.nkey;
             verbose = o.verbose;
             subscriberDeliveryTaskCount = o.subscriberDeliveryTaskCount;
             subscriptionBatchSize = o.subscriptionBatchSize;

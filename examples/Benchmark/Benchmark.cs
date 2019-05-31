@@ -31,6 +31,7 @@ namespace Benchmark
         long payloadSize = 0;
         string subject = "s";
         bool useOldRequestStyle = true;
+        string creds = null;
 
         enum BenchType
         {
@@ -71,7 +72,7 @@ namespace Benchmark
 
         void usage()
         {
-            Console.WriteLine("benchmark [-h] -type <PUB|PUBSUB|REQREP> -url <server url> -count <test count> -size <payload size (bytes)>");
+            Console.WriteLine("benchmark [-h] -type <PUB|PUBSUB|REQREP|REQREPASYNC|SUITE> -url <server url> -count <test count> -creds <creds file> -size <payload size (bytes)>");
         }
 
         string getValue(IDictionary<string, string> values, string key, string defaultValue)
@@ -114,6 +115,7 @@ namespace Benchmark
                 count = Convert.ToInt64(getValue(strArgs, "-count", "10000"));
                 payloadSize = Convert.ToInt64(getValue(strArgs, "-size", "0"));
                 useOldRequestStyle = Convert.ToBoolean(getValue(strArgs, "-old", "false"));
+                creds = getValue(strArgs, "-creds", null);
 
                 Console.WriteLine("Running NATS Custom benchmark:");
                 Console.WriteLine("    URL:   " + url);
@@ -160,7 +162,14 @@ namespace Benchmark
         {
             byte[] payload = generatePayload(testSize);
 
-            using (IConnection c = new ConnectionFactory().CreateConnection(url))
+            var opts = ConnectionFactory.GetDefaultOptions();
+            opts.Url = url;
+            if (creds != null)
+            {
+                opts.SetUserCredentials(creds);
+            }
+
+            using (IConnection c = new ConnectionFactory().CreateConnection(opts))
             {
                 Stopwatch sw = sw = Stopwatch.StartNew();
 
@@ -189,13 +198,17 @@ namespace Benchmark
             
             o.Url = url;
             o.SubChannelLength = 10000000;
+            if (creds != null)
+            {
+                o.SetUserCredentials(creds);
+            }
             o.AsyncErrorEventHandler += (sender, obj) =>
             {
-                System.Console.WriteLine("Error: " + obj.Error);
+                Console.WriteLine("Error: " + obj.Error);
             };
 
             IConnection subConn = cf.CreateConnection(o);
-            IConnection pubConn = cf.CreateConnection(url);
+            IConnection pubConn = cf.CreateConnection(o);
 
             IAsyncSubscription s = subConn.SubscribeAsync(subject, (sender, args) =>
             {
@@ -256,9 +269,15 @@ namespace Benchmark
             byte[] payload = generatePayload(testSize);
 
             ConnectionFactory cf = new ConnectionFactory();
+            var opts = ConnectionFactory.GetDefaultOptions();
+            opts.Url = url;
+            if (creds != null)
+            {
+                opts.SetUserCredentials(creds);
+            }
 
-            IConnection subConn = cf.CreateConnection(url);
-            IConnection pubConn = cf.CreateConnection(url);
+            IConnection subConn = cf.CreateConnection(opts);
+            IConnection pubConn = cf.CreateConnection(opts);
 
             Stopwatch sw = new Stopwatch();
 
@@ -310,7 +329,7 @@ namespace Benchmark
             );
 
             // TODO:  fix accuracy - trim out outliers, etc.
-            System.Console.WriteLine(
+            Console.WriteLine(
                 "{0} (us)\t{1} msgs, {2:F2} avg, {3:F2} min, {4:F2} max, {5:F2} stddev",
                 testName,
                 testCount,
@@ -332,6 +351,10 @@ namespace Benchmark
             var opts = ConnectionFactory.GetDefaultOptions();
             opts.Url = url;
             opts.UseOldRequestStyle = useOldRequestStyle;
+            if (creds != null)
+            {
+                opts.SetUserCredentials(creds);
+            }
 
             IConnection subConn = cf.CreateConnection(opts);
             IConnection pubConn = cf.CreateConnection(opts);
@@ -372,6 +395,10 @@ namespace Benchmark
             var opts = ConnectionFactory.GetDefaultOptions();
             opts.Url = url;
             opts.UseOldRequestStyle = useOldRequestStyle;
+            if (creds != null)
+            {
+                opts.SetUserCredentials(creds);
+            }
 
             IConnection subConn = cf.CreateConnection(opts);
             IConnection pubConn = cf.CreateConnection(opts);

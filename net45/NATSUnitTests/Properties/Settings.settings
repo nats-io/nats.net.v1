@@ -2,7 +2,7 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="NATSUnitTests.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
-    <Setting Name="gnatsd" Type="System.String" Scope="Application">
+    <Setting Name="gnatsd" Type="String" Scope="Application">
       <Value Profile="(Default)">gnatsd.exe</Value>
     </Setting>
   </Settings>

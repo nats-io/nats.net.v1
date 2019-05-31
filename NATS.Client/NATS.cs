@@ -12,13 +12,14 @@
 // limitations under the License.
 
 using System;
+using System.Text;
 
 /*! \mainpage %NATS .NET client.
  *
  * \section intro_sec Introduction
  *
  * The %NATS .NET Client is part of %NATS an open-source, cloud-native 
- * messaging system.
+ * messaging 
  * This client, written in C#, follows the go client closely, but
  * diverges in places to follow the common design semantics of a .NET API.
  *
@@ -175,6 +176,74 @@ namespace NATS.Client
     }
 
     /// <summary>
+    /// Provides details when a user JWT is read during a connection.  The
+    /// JWT must be set or a <see cref="NATSConnectionException"/> will
+    /// be thrown.
+    /// </summary>
+    public class UserJWTEventArgs : EventArgs
+    {
+        private string jwt = null;
+
+        /// <Summary>
+        /// Sets the JWT read by the event handler.   This MUST be set in the event handler.
+        /// </Summary>
+        public string JWT 
+        {
+            set { jwt = value; }
+            internal get
+            {
+                if (jwt == null) {
+                    throw new NATSConnectionException("JWT was not set in the UserJWT event hander.");
+                }
+                return jwt;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Provides details when a user signature is read during a connection.
+    /// The User Signature event signs the ServerNonce and sets the 
+    /// SignedNonce with the result.
+    /// The SignedNonce must be set or a <see cref="NATSConnectionException"/>
+    /// will be thrown.
+    /// </summary>
+    public class UserSignatureEventArgs : EventArgs
+    {
+        private byte[] signedNonce = null;
+        private byte[] serverNonce = null;
+
+
+        internal UserSignatureEventArgs(byte[] nonce)
+        {
+            serverNonce = nonce;
+        }
+
+        /// <summary>
+        /// Gets the nonce sent from the server.
+        /// </summary>
+        public byte[] ServerNonce
+        {
+            get { return serverNonce; }
+        }
+
+        /// <Summary>
+        /// Sets the signed nonce to be returned to the server.  This MUST be set.
+        /// </Summary>
+        public byte[] SignedNonce
+        {
+            set { signedNonce = value; }
+            internal get
+            {
+                if (signedNonce == null)
+                {
+                    throw new NATSConnectionException("SignedNonce was not set by the UserSignature event hander.");
+                }
+                return signedNonce;
+            }
+        }
+    }
+
+    /// <summary>
     /// Provides details for an error encountered asynchronously
     /// by an <see cref="IConnection"/>.
     /// </summary>
@@ -262,6 +331,115 @@ namespace NATS.Client
         public Msg Message
         {
             get { return msg; }
+        }
+    }
+
+    // Borrowed from:  https://stackoverflow.com/a/7135008
+    internal class Base32
+    {
+        public static byte[] Decode(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+            {
+                throw new ArgumentNullException("input");
+            }
+
+            input = input.TrimEnd('='); //remove padding characters
+            int byteCount = input.Length * 5 / 8; //this must be TRUNCATED
+            byte[] returnArray = new byte[byteCount];
+
+            byte curByte = 0, bitsRemaining = 8;
+            int mask = 0, arrayIndex = 0;
+
+            foreach (char c in input)
+            {
+                int cValue = CharToValue(c);
+
+                if (bitsRemaining > 5)
+                {
+                    mask = cValue << (bitsRemaining - 5);
+                    curByte = (byte)(curByte | mask);
+                    bitsRemaining -= 5;
+                }
+                else
+                {
+                    mask = cValue >> (5 - bitsRemaining);
+                    curByte = (byte)(curByte | mask);
+                    returnArray[arrayIndex++] = curByte;
+                    curByte = (byte)(cValue << (3 + bitsRemaining));
+                    bitsRemaining += 3;
+                }
+            }
+
+            //if we didn't end with a full byte
+            if (arrayIndex != byteCount)
+            {
+                returnArray[arrayIndex] = curByte;
+            }
+
+            return returnArray;
+        }
+
+        public static string Encode(byte[] input)
+        {
+            if (input == null || input.Length == 0)
+            {
+                throw new ArgumentNullException("input");
+            }
+
+            int charCount = (int)Math.Ceiling(input.Length / 5d) * 8;
+            char[] returnArray = new char[charCount];
+
+            byte nextChar = 0, bitsRemaining = 5;
+            int arrayIndex = 0;
+
+            foreach (byte b in input)
+            {
+                nextChar = (byte)(nextChar | (b >> (8 - bitsRemaining)));
+                returnArray[arrayIndex++] = ValueToChar(nextChar);
+
+                if (bitsRemaining < 4)
+                {
+                    nextChar = (byte)((b >> (3 - bitsRemaining)) & 31);
+                    returnArray[arrayIndex++] = ValueToChar(nextChar);
+                    bitsRemaining += 5;
+                }
+
+                bitsRemaining -= 3;
+                nextChar = (byte)((b << bitsRemaining) & 31);
+            }
+
+            //if we didn't end with a full char
+            if (arrayIndex != charCount)
+            {
+                returnArray[arrayIndex++] = ValueToChar(nextChar);
+                while (arrayIndex != charCount) returnArray[arrayIndex++] = '='; //padding
+            }
+
+            return new string(returnArray);
+        }
+
+        private static int CharToValue(char c)
+        {
+            int value = (int)c;
+
+            //65-90 == uppercase letters
+            if (value < 91 && value > 64) return value - 65;
+
+            //50-55 == numbers 2-7
+            if (value < 56 && value > 49) return value - 24;
+
+            //97-122 == lowercase letters
+            if (value < 123 && value > 96) return value - 97;
+
+            throw new ArgumentException("Character is not a Base32 character.", "c");
+        }
+
+        private static char ValueToChar(byte b)
+        {
+            if (b < 26) return (char)(b + 65);
+            if (b < 32) return (char)(b + 24);
+            throw new ArgumentException("Byte is not a value Base32 value.", "b");
         }
     }
 }

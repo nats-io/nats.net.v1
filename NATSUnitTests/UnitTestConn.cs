@@ -16,8 +16,6 @@ using NATS.Client;
 using System.Threading;
 using Xunit;
 using System.Diagnostics;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace NATSUnitTests
 {
@@ -192,6 +190,177 @@ namespace NATSUnitTests
                 Assert.False(serverDiscoveredCalled);
             }
         }
+
+
+        [Fact]
+        public void TestNKey()
+        {
+            using (utils.CreateServerWithConfig("nkey.conf"))
+            {
+                Options opts = ConnectionFactory.GetDefaultOptions();
+
+                // See nkey.conf
+                opts.SetNkey("UCKKTOZV72L3NITTGNOCRDZUI5H632XCT4ZWPJBC2X3VEY72KJUWEZ2Z", "./config/certs/user.nk");
+                new ConnectionFactory().CreateConnection(opts).Close();
+            }
+        }
+
+        [Fact]
+        public void TestInvalidNKey()
+        {
+            using (utils.CreateServerWithConfig("nkey.conf"))
+            {
+                Options opts = ConnectionFactory.GetDefaultOptions();
+
+                opts.SetNkey("XXKKTOZV72L3NITTGNOCRDZUI5H632XCT4ZWPJBC2X3VEY72KJUWEZ2Z", "./config/certs/user.nk");
+                Assert.Throws<NATSConnectionException>(()=> new ConnectionFactory().CreateConnection(opts).Close());
+
+                
+                Assert.Throws<ArgumentException>(() => opts.SetNkey("", "./config/certs/user.nk"));
+                Assert.Throws<ArgumentException>(() => opts.SetNkey("UCKKTOZV72L3NITTGNOCRDZUI5H632XCT4ZWPJBC2X3VEY72KJUWEZ2Z", ""));
+            }
+        }
+
+        [Fact]
+        public void Test20Security()
+        {
+            IConnection c = null;
+            AutoResetEvent ev = new AutoResetEvent(false);
+            using (utils.CreateServerWithConfig("operator.conf"))
+            {
+                Options opts = ConnectionFactory.GetDefaultOptions();
+                opts.ReconnectedEventHandler += (obj, args) => {
+                    ev.Set();
+                };
+                opts.SetUserCredentials("./config/certs/test.creds");
+                c = new ConnectionFactory().CreateConnection(opts);
+            }
+
+            // effectively bounce the server
+            using (utils.CreateServerWithConfig("operator.conf"))
+            {
+                // wait for reconnect.
+                Assert.True(ev.WaitOne(60000));
+            }
+        }
+
+        [Fact]
+        public void Test20SecurityFactoryAPI()
+        {
+            using (utils.CreateServerWithConfig("operator.conf"))
+            {
+                new ConnectionFactory().CreateConnection("nats://127.0.0.1",
+                    "./config/certs/test.creds").Close();
+                new ConnectionFactory().CreateConnection("nats://127.0.0.1",
+                    "./config/certs/test.creds", "./config/certs/test.creds").Close();
+
+                Assert.Throws<ArgumentException>(() => new ConnectionFactory().CreateConnection("nats://127.0.0.1", ""));
+                Assert.Throws<ArgumentException>(() => new ConnectionFactory().CreateConnection("nats://127.0.0.1", null));
+                Assert.Throws<ArgumentException>(() => new ConnectionFactory().CreateConnection("nats://127.0.0.1", "my.creds", ""));
+                Assert.Throws<ArgumentException>(() => new ConnectionFactory().CreateConnection("nats://127.0.0.1", "my.creds", null));
+            }
+        }
+
+        [Fact]
+        public void Test20SecurityHandlerExceptions()
+        {
+            bool userThrown = false;
+            bool sigThrown = false;
+            using (utils.CreateServerWithConfig("operator.conf"))
+            {
+                EventHandler<UserJWTEventArgs> jwtEh = (sender, args) =>
+                {
+                    if (!userThrown)
+                    {
+                        userThrown = true;
+                        throw new Exception("Exception from the user JWT handler.");
+                    }
+                    args.JWT = "somejwt";
+                };
+
+                EventHandler<UserSignatureEventArgs> sigEh = (sender, args) =>
+                {
+                    sigThrown = true;
+                    throw new Exception("Exception from the sig handler.");     
+                };
+                Options opts = ConnectionFactory.GetDefaultOptions();
+                opts.SetUserCredentialHandlers(jwtEh, sigEh);
+
+                Assert.Throws<NATSConnectionException>(() => new ConnectionFactory().CreateConnection(opts));
+                Assert.Throws<NATSConnectionException>(() => new ConnectionFactory().CreateConnection(opts));
+                Assert.True(userThrown);
+                Assert.True(sigThrown);
+            }
+        }
+
+        [Fact]
+        public void Test20SecurityHandlerNoJWTSet()
+        {
+            using (utils.CreateServerWithConfig("operator.conf"))
+            {
+                var opts = ConnectionFactory.GetDefaultOptions();
+                opts.SetUserCredentialHandlers((sender, args) =>{}, (sender, args) => { });
+                Assert.Throws<NATSConnectionException>(() => new ConnectionFactory().CreateConnection(opts));
+            }
+        }
+
+        [Fact]
+        public void Test20SecurityHandlerNoSigSet()
+        {
+            using (utils.CreateServerWithConfig("operator.conf"))
+            {
+                var opts = ConnectionFactory.GetDefaultOptions();
+                opts.SetUserCredentialHandlers((sender, args) => { args.JWT = "somejwt"; }, (sender, args) => { });
+                Assert.Throws<NATSConnectionException>(() => new ConnectionFactory().CreateConnection(opts));
+            }
+        }
+
+        [Fact]
+        public void Test20SecurityHandlers()
+        {
+            string userJWT = "eyJ0eXAiOiJqd3QiLCJhbGciOiJlZDI1NTE5In0.e" +
+                "yJqdGkiOiJFU1VQS1NSNFhGR0pLN0FHUk5ZRjc0STVQNTZHMkFGWER" + 
+                "YQ01CUUdHSklKUEVNUVhMSDJBIiwiaWF0IjoxNTQ0MjE3NzU3LCJpc" +
+                "3MiOiJBQ1pTV0JKNFNZSUxLN1FWREVMTzY0VlgzRUZXQjZDWENQTUV" + 
+                "CVUtBMzZNSkpRUlBYR0VFUTJXSiIsInN1YiI6IlVBSDQyVUc2UFY1N" +
+                "TJQNVNXTFdUQlAzSDNTNUJIQVZDTzJJRUtFWFVBTkpYUjc1SjYzUlE" +
+                "1V002IiwidHlwZSI6InVzZXIiLCJuYXRzIjp7InB1YiI6e30sInN1Y" +
+                "iI6e319fQ.kCR9Erm9zzux4G6M-V2bp7wKMKgnSNqMBACX05nwePRW" +
+                "Qa37aO_yObbhcJWFGYjo1Ix-oepOkoyVLxOJeuD8Bw";
+
+            string userSeed = "SUAIBDPBAUTWCWBKIO6XHQNINK5FWJW4OHLXC3HQ" +
+                "2KFE4PEJUA44CNHTC4";
+
+            using (utils.CreateServerWithConfig("operator.conf"))
+            {
+                EventHandler<UserJWTEventArgs> jwtEh = (sender, args) =>
+                {
+                    //just return a jwt
+                    args.JWT = userJWT;
+                };
+
+                EventHandler<UserSignatureEventArgs> sigEh = (sender, args) =>
+                {
+                    // generate a nats key pair from a private key.
+                    // NEVER EVER handle a real private key/seed like this.
+                    var kp = Nkeys.FromSeed(userSeed);
+                    args.SignedNonce = kp.Sign(args.ServerNonce);
+                };
+                Options opts = ConnectionFactory.GetDefaultOptions();
+                opts.SetUserCredentialHandlers(jwtEh, sigEh);
+                new ConnectionFactory().CreateConnection(opts).Close();
+            }
+        }
+
+        [Fact]
+        public void TestJWTFunctionality()
+        {
+            using (new NATSServer())
+            {
+
+            }
+        }
+
 
         //[Fact]
         // This test works locally, but fails in AppVeyor some of the time
