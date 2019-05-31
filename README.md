@@ -727,3 +727,4 @@ To that end, with any contributions, certainly feel free to code in a more .NET 
 * [X] Strong name the assembly
 
 Any suggestions and/or contributions are welcome!
+
