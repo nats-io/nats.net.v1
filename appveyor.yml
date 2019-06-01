@@ -3,6 +3,8 @@ install:
   - appveyor DownloadFile https://github.com/nats-io/nats-server/releases/download/v2.0.0-RC14/nats-server-v2.0.0-RC14-windows-amd64.zip
   - 7z e  nats-server-v2.0.0-RC14-windows-amd64.zip nats-server.exe -r -oc:\projects\csharp-nats\build
   - cmd: set PATH=%PATH%;C:\projects\csharp-nats\build
+i
+image: Visual Studio 2017
 
 # to add several configurations to build matrix:
 configuration:
