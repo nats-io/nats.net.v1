@@ -759,10 +759,10 @@ namespace NATSUnitTests
                         var msg = c.Request(subject, data, int.MaxValue);
                     }
                     GC.Collect();
-                    Thread.Sleep(1000);
+                    Thread.Sleep(5000);
 
                     double memGrowthPercent = 100 * (((double)(GC.GetTotalMemory(false) - startMem)) / (double)startMem);
-                    Assert.True(memGrowthPercent < 30.0);
+                    Assert.True(memGrowthPercent < 30.0, string.Format("Memory grew {0} percent.", memGrowthPercent));
 
                     startMem = GC.GetTotalMemory(true);
                     for (int i = 0; i < 100; i++)
@@ -770,10 +770,10 @@ namespace NATSUnitTests
                         c.Request(subject, data);
                     }
                     GC.Collect();
-                    Thread.Sleep(1000);
+                    Thread.Sleep(5000);
 
                     memGrowthPercent = 100 * (((double)(GC.GetTotalMemory(false) - startMem)) / (double)startMem);
-                    Assert.True(memGrowthPercent < 30.0);
+                    Assert.True(memGrowthPercent < 30.0, string.Format("Memory grew {0} percent.", memGrowthPercent));
 
                     startMem = GC.GetTotalMemory(true);
                     var token = new CancellationToken();
@@ -783,10 +783,10 @@ namespace NATSUnitTests
                         t.Wait();
                     }
                     GC.Collect();
-                    Thread.Sleep(2000);
+                    Thread.Sleep(5000);
 
                     memGrowthPercent = 100 * (((double)(GC.GetTotalMemory(false) - startMem)) / (double)startMem);
-                    Assert.True(memGrowthPercent < 30.0);
+                    Assert.True(memGrowthPercent < 30.0, string.Format("Memory grew {0} percent.", memGrowthPercent));
                 }
             }
         }
