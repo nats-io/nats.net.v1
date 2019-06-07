@@ -9,4 +9,5 @@ dotnet build -c Release examples/Subscribe
 dotnet build -c Release examples/Requestor
 dotnet build -c Release examples/Replier
 
+nuget restore NATScore.sln
 msbuild NATScore.sln /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
