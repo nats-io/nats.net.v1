@@ -58,21 +58,21 @@ namespace NATS.Client
         /// </remarks>
         /// <param name="url">A string containing the URL (or URLs) to the NATS Server. See the Remarks
         /// section for more information.</param>
-        /// <param name="credentials">The full path to a chained credentials file.</param>
+        /// <param name="credentialsPath">The full path to a chained credentials file.</param>
         /// <returns>An <see cref="IConnection"/> object connected to the NATS server.</returns>
         /// <exception cref="NATSNoServersException">No connection to a NATS Server could be established.</exception>
         /// <exception cref="NATSConnectionException"><para>A timeout occurred connecting to a NATS Server.</para>
         /// <para>-or-</para>
         /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
         /// details.</para></exception>
-        public IConnection CreateConnection(string url, string credentials)
+        public IConnection CreateConnection(string url, string credentialsPath)
         {
-            if (string.IsNullOrWhiteSpace(credentials))
+            if (string.IsNullOrWhiteSpace(credentialsPath))
                 throw new ArgumentException("Invalid credentials path", "credentials");
 
             Options opts = new Options();
             opts.processUrlString(url);
-            opts.SetUserCredentials(credentials);
+            opts.SetUserCredentials(credentialsPath);
             return CreateConnection(opts);
         }
 

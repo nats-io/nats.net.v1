@@ -30,12 +30,12 @@ namespace NATS.Client
         /// <summary>
         /// Gets the JWT file.
         /// </summary>
-        public string JwtFile { get => jwtFile; }
+        public string JwtFile => jwtFile;
 
         /// <summary>
         /// Gets the credentials files.
         /// </summary>
-        public string CredsFile { get => credsFile; }
+        public string CredsFile => credsFile;
 
         /// <summary>
         /// Creates the default user jwt handler.
@@ -52,16 +52,16 @@ namespace NATS.Client
         /// <summary>
         /// Gets a user JWT from a user JWT or chained credentials file.
         /// </summary>
-        /// <param name="filePath">Full path to the JWT or cred file.</param>
+        /// <param name="path">Full path to the JWT or cred file.</param>
         /// <returns>The encoded JWT</returns>
-        public string UserFromFile(string filePath)
+        public static string LoadUserFromFile(string path)
         {
             string text = null;
             string line = null;
             StringReader reader = null;
             try
             {
-                text = File.ReadAllText(filePath).Trim();
+                text = File.ReadAllText(path).Trim();
                 if (string.IsNullOrEmpty(text)) throw new NATSException("Credentials file is empty");
 
                 reader = new StringReader(text);
@@ -87,9 +87,9 @@ namespace NATS.Client
         /// Generates a NATS Ed25519 keypair, used to sign server nonces, from a 
         /// private credentials file.
         /// </summary>
-        /// <param name="filePath">The credentials file, could be a "*.nk" or "*.creds" file.</param>
+        /// <param name="path">The credentials file, could be a "*.nk" or "*.creds" file.</param>
         /// <returns>A NATS Ed25519 KeyPair</returns>
-        public static NkeyPair NkeyPairFromSeedFile(string filePath)
+        public static NkeyPair LoadNkeyPairFromSeedFile(string path)
         {
             NkeyPair kp = null;
             string text = null;
@@ -99,7 +99,7 @@ namespace NATS.Client
 
             try
             {
-                text = File.ReadAllText(filePath).Trim();
+                text = File.ReadAllText(path).Trim();
                 if (string.IsNullOrEmpty(text)) throw new NATSException("Credentials file is empty");
 
                 // if it's a nk file, it only has the nkey
@@ -143,7 +143,7 @@ namespace NATS.Client
         /// <param name="args">Arguments</param>
         public void DefaultUserJWTEventHandler(object sender, UserJWTEventArgs args)
         {
-            args.JWT = UserFromFile(jwtFile);
+            args.JWT = LoadUserFromFile(jwtFile);
         }
 
         /// <summary>
@@ -154,7 +154,7 @@ namespace NATS.Client
         /// <param name="args">Arguments</param>
         public static void SignNonceFromFile(string credsFile, UserSignatureEventArgs args)
         {
-            var kp = NkeyPairFromSeedFile(credsFile);
+            var kp = LoadNkeyPairFromSeedFile(credsFile);
             args.SignedNonce = kp.Sign(args.ServerNonce);
             kp.Wipe();
         }

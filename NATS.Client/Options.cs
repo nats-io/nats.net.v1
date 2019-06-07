@@ -89,16 +89,16 @@ namespace NATS.Client
         /// <summary>
         /// Sets user credentials using the NATS 2.0 security scheme.
         /// </summary>
-        /// <param name="credentials">A user JWT, e.g user.jwt</param>
-        /// <param name="keyfile">Private Key file</param>
-        public void SetUserCredentials(string credentials, string keyfile)
+        /// <param name="credentialsPath">A user JWT, e.g user.jwt</param>
+        /// <param name="privateKeyPath">Private Key file</param>
+        public void SetUserCredentials(string credentialsPath, string privateKeyPath)
         {
-            if (string.IsNullOrWhiteSpace(credentials))
-                throw new ArgumentException("Invalid credentials path", "credentials");
-            if (string.IsNullOrWhiteSpace(keyfile))
-                throw new ArgumentException("Invalid keyfile path", "keyfile");
+            if (string.IsNullOrWhiteSpace(credentialsPath))
+                throw new ArgumentException("Invalid credentials path", nameof(credentialsPath));
+            if (string.IsNullOrWhiteSpace(privateKeyPath))
+                throw new ArgumentException("Invalid keyfile path", nameof(privateKeyPath));
 
-            var handler = new DefaultUserJWTHandler(credentials, keyfile);
+            var handler = new DefaultUserJWTHandler(credentialsPath, privateKeyPath);
             UserJWTEventHandler = handler.DefaultUserJWTEventHandler;
             UserSignatureEventHandler = handler.DefaultUserSignatureHandler;
         }
@@ -106,12 +106,12 @@ namespace NATS.Client
         /// <summary>
         /// Sets user credentials using the NATS 2.0 security scheme.
         /// </summary>
-        /// <param name="credentials">A chained credentials file, e.g user.cred</param>
-        public void SetUserCredentials(string credentials)
+        /// <param name="credentialsPath">A chained credentials file, e.g user.cred</param>
+        public void SetUserCredentials(string credentialsPath)
         {
-            if (string.IsNullOrWhiteSpace(credentials))
-                throw new ArgumentException("Invalid credentials path", "credentials");
-            var handler = new DefaultUserJWTHandler(credentials, credentials);
+            if (string.IsNullOrWhiteSpace(credentialsPath))
+                throw new ArgumentException("Invalid credentials path", nameof(credentialsPath));
+            var handler = new DefaultUserJWTHandler(credentialsPath, credentialsPath);
             UserJWTEventHandler = handler.DefaultUserJWTEventHandler;
             UserSignatureEventHandler = handler.DefaultUserSignatureHandler;
         }
@@ -126,8 +126,8 @@ namespace NATS.Client
         public void SetUserCredentialHandlers(EventHandler<UserJWTEventArgs> userJWTEventHandler,
             EventHandler<UserSignatureEventArgs> userSignatureEventHandler)
         {
-            UserJWTEventHandler = userJWTEventHandler ?? throw new ArgumentNullException("userJWTEventHandler");
-            UserSignatureEventHandler = userSignatureEventHandler ?? throw new ArgumentNullException("userSignatureEventHandler");
+            UserJWTEventHandler = userJWTEventHandler ?? throw new ArgumentNullException(nameof(userJWTEventHandler));
+            UserSignatureEventHandler = userSignatureEventHandler ?? throw new ArgumentNullException(nameof(userSignatureEventHandler));
         }
 
         /// <summary>
@@ -141,7 +141,7 @@ namespace NATS.Client
             if (string.IsNullOrWhiteSpace(publicNkey))
                 throw new ArgumentException("Invalid Nkey", "publicNkey");
 
-            UserSignatureEventHandler = userSignatureEventHandler ?? throw new ArgumentNullException("userSignatureEventHandler");
+            UserSignatureEventHandler = userSignatureEventHandler ?? throw new ArgumentNullException(nameof(userSignatureEventHandler));
             nkey = publicNkey;
         }
 
@@ -150,16 +150,16 @@ namespace NATS.Client
         /// sign the server nonce.
         /// </summary>
         /// <param name="publicNkey">The User's public Nkey</param>
-        /// <param name="filePath">A path to a file contianing the private Nkey.</param>
-        public void SetNkey(string publicNkey, string filePath)
+        /// <param name="privateKeyPath">A path to a file contianing the private Nkey.</param>
+        public void SetNkey(string publicNkey, string privateKeyPath)
         {
-            if (string.IsNullOrWhiteSpace(publicNkey)) throw new ArgumentException("Invalid publicNkey", "publicNkey");
-            if (string.IsNullOrWhiteSpace(filePath)) throw new ArgumentException("Invalid filePath", "filePath");
+            if (string.IsNullOrWhiteSpace(publicNkey)) throw new ArgumentException("Invalid publicNkey", nameof(publicNkey));
+            if (string.IsNullOrWhiteSpace(privateKeyPath)) throw new ArgumentException("Invalid filePath", nameof(privateKeyPath));
 
             nkey = publicNkey;
             UserSignatureEventHandler = (obj, args) =>
             {
-                DefaultUserJWTHandler.SignNonceFromFile(filePath, args);
+                DefaultUserJWTHandler.SignNonceFromFile(privateKeyPath, args);
             };
         }
 

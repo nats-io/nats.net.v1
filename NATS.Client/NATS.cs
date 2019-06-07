@@ -12,14 +12,13 @@
 // limitations under the License.
 
 using System;
-using System.Text;
 
 /*! \mainpage %NATS .NET client.
  *
  * \section intro_sec Introduction
  *
  * The %NATS .NET Client is part of %NATS an open-source, cloud-native 
- * messaging 
+ * messaging system.
  * This client, written in C#, follows the go client closely, but
  * diverges in places to follow the common design semantics of a .NET API.
  *
