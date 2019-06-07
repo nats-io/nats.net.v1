@@ -11,6 +11,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+
 namespace NATS.Client
 {
     /// <summary>
@@ -37,12 +39,70 @@ namespace NATS.Client
         /// <exception cref="NATSNoServersException">No connection to a NATS Server could be established.</exception>
         /// <exception cref="NATSConnectionException"><para>A timeout occurred connecting to a NATS Server.</para>
         /// <para>-or-</para>
-        /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="System.Exception.InnerException"/> for more
+        /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
         /// details.</para></exception>
         public IConnection CreateConnection(string url)
         {
             Options opts = new Options();
             opts.processUrlString(url);
+            return CreateConnection(opts);
+        }
+
+
+        /// <summary>
+        /// Attempt to connect to the NATS server referenced by <paramref name="url"/> with NATS 2.0 credentials.
+        /// </summary>
+        /// <remarks>
+        /// <para><paramref name="url"/>
+        /// Comma seperated arrays are also supported, e.g. <c>&quot;urlA, urlB&quot;</c>.</para>
+        /// </remarks>
+        /// <param name="url">A string containing the URL (or URLs) to the NATS Server. See the Remarks
+        /// section for more information.</param>
+        /// <param name="credentialsPath">The full path to a chained credentials file.</param>
+        /// <returns>An <see cref="IConnection"/> object connected to the NATS server.</returns>
+        /// <exception cref="NATSNoServersException">No connection to a NATS Server could be established.</exception>
+        /// <exception cref="NATSConnectionException"><para>A timeout occurred connecting to a NATS Server.</para>
+        /// <para>-or-</para>
+        /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
+        /// details.</para></exception>
+        public IConnection CreateConnection(string url, string credentialsPath)
+        {
+            if (string.IsNullOrWhiteSpace(credentialsPath))
+                throw new ArgumentException("Invalid credentials path", "credentials");
+
+            Options opts = new Options();
+            opts.processUrlString(url);
+            opts.SetUserCredentials(credentialsPath);
+            return CreateConnection(opts);
+        }
+
+        /// <summary>
+        /// Attempt to connect to the NATS server referenced by <paramref name="url"/> with NATS 2.0 credentials.
+        /// </summary>
+        /// <remarks>
+        /// <para><paramref name="url"/>
+        /// Comma seperated arrays are also supported, e.g. <c>&quot;urlA, urlB&quot;</c>.</para>
+        /// </remarks>
+        /// <param name="url">A string containing the URL (or URLs) to the NATS Server. See the Remarks
+        /// section for more information.</param>
+        /// <param name="jwt">The path to a user's public JWT credentials.</param>
+        /// <param name="privateNkey">The path to a file for user user's private Nkey seed.</param>
+        /// <returns>An <see cref="IConnection"/> object connected to the NATS server.</returns>
+        /// <exception cref="NATSNoServersException">No connection to a NATS Server could be established.</exception>
+        /// <exception cref="NATSConnectionException"><para>A timeout occurred connecting to a NATS Server.</para>
+        /// <para>-or-</para>
+        /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
+        /// details.</para></exception>
+        public IConnection CreateConnection(string url, string jwt, string privateNkey)
+        {
+            if (string.IsNullOrWhiteSpace(jwt))
+                throw new ArgumentException("Invalid jwt path", "jwt");
+            if (string.IsNullOrWhiteSpace(privateNkey))
+                throw new ArgumentException("Invalid nkey path", "privateNkey");
+
+            Options opts = new Options();
+            opts.processUrlString(url);
+            opts.SetUserCredentials(jwt, privateNkey);
             return CreateConnection(opts);
         }
 
@@ -68,7 +128,7 @@ namespace NATS.Client
         /// <exception cref="NATSNoServersException">No connection to a NATS Server could be established.</exception>
         /// <exception cref="NATSConnectionException"><para>A timeout occurred connecting to a NATS Server.</para>
         /// <para>-or-</para>
-        /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="System.Exception.InnerException"/> for more
+        /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
         /// details.</para></exception>
         public IConnection CreateSecureConnection(string url)
         {
@@ -85,7 +145,7 @@ namespace NATS.Client
         /// <exception cref="NATSNoServersException">No connection to a NATS Server could be established.</exception>
         /// <exception cref="NATSConnectionException"><para>A timeout occurred connecting to a NATS Server.</para>
         /// <para>-or-</para>
-        /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="System.Exception.InnerException"/> for more
+        /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
         /// details.</para></exception>
         /// <seealso cref="GetDefaultOptions"/>
         public IConnection CreateConnection()
@@ -101,7 +161,7 @@ namespace NATS.Client
         /// <exception cref="NATSNoServersException">No connection to a NATS Server could be established.</exception>
         /// <exception cref="NATSConnectionException"><para>A timeout occurred connecting to a NATS Server.</para>
         /// <para>-or-</para>
-        /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="System.Exception.InnerException"/> for more
+        /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
         /// details.</para></exception>
         public IConnection CreateConnection(Options opts)
         {
@@ -110,7 +170,7 @@ namespace NATS.Client
             {
                 nc.connect();
             }
-            catch (System.Exception)
+            catch (Exception)
             {
                 nc.Dispose();
                 throw;
@@ -126,7 +186,7 @@ namespace NATS.Client
         /// <exception cref="NATSNoServersException">No connection to a NATS Server could be established.</exception>
         /// <exception cref="NATSConnectionException"><para>A timeout occurred connecting to a NATS Server.</para>
         /// <para>-or-</para>
-        /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="System.Exception.InnerException"/> for more
+        /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
         /// details.</para></exception>
         public IEncodedConnection CreateEncodedConnection()
         {
@@ -146,7 +206,7 @@ namespace NATS.Client
         /// <exception cref="NATSNoServersException">No connection to a NATS Server could be established.</exception>
         /// <exception cref="NATSConnectionException"><para>A timeout occurred connecting to a NATS Server.</para>
         /// <para>-or-</para>
-        /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="System.Exception.InnerException"/> for more
+        /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
         /// details.</para></exception>
         public IEncodedConnection CreateEncodedConnection(string url)
         {
@@ -163,7 +223,7 @@ namespace NATS.Client
         /// <exception cref="NATSNoServersException">No connection to a NATS Server could be established.</exception>
         /// <exception cref="NATSConnectionException"><para>A timeout occurred connecting to a NATS Server.</para>
         /// <para>-or-</para>
-        /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="System.Exception.InnerException"/> for more
+        /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
         /// details.</para></exception>
         public IEncodedConnection CreateEncodedConnection(Options opts)
         {
@@ -172,7 +232,7 @@ namespace NATS.Client
             {
                 nc.connect();
             }
-            catch (System.Exception)
+            catch (Exception)
             {
                 nc.Dispose();
                 throw;

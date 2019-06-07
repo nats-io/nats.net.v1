@@ -25,20 +25,25 @@ namespace NATSUnitTests
     class NATSServer : IDisposable
     {
 #if NET45
-        static readonly string SERVEREXE = "gnatsd.exe";
+        static readonly string SERVEREXE = "nats-server.exe";
 #else
-        static readonly string SERVEREXE = "gnatsd";
+        static readonly string SERVEREXE = "nats-server";
 #endif
         // Enable this for additional server debugging info.
         static bool debug = false;
+        static bool hideWindow = true;
+        static bool leaveRunning = false;
         Process p;
         ProcessStartInfo psInfo;
 
-        internal static bool Debug
-        {
-            set { debug = value; }
-            get { return debug; }
-        }
+        // enables debug/trace on the server
+        internal static bool Debug { set => debug = value; get => debug; }
+
+        // hides the NATS server window.  Default is true;
+        internal static bool HideWindow { set => hideWindow = value; get => hideWindow; }
+
+        // leaves the server running after dispose for debugging.
+        internal static bool LeaveRunning { set => leaveRunning = value; get => leaveRunning; }
 
         public NATSServer() : this(true) { }
 
@@ -105,11 +110,14 @@ namespace NATSUnitTests
             }
             else
             {
+                if (hideWindow)
+                {
 #if NET45
-                psInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                    psInfo.WindowStyle = ProcessWindowStyle.Hidden;
 #else
-                psInfo.CreateNoWindow = true;
+                    psInfo.CreateNoWindow = true;
 #endif
+                }
             }
 
             psInfo.WorkingDirectory = UnitTestUtilities.GetConfigDir();
@@ -139,6 +147,9 @@ namespace NATSUnitTests
 
         void IDisposable.Dispose()
         {
+            if (leaveRunning)
+                return;
+
             Shutdown();
         }
     }
@@ -204,7 +215,7 @@ namespace NATSUnitTests
 
         internal static void CleanupExistingServers()
         {
-            Process[] procs = Process.GetProcessesByName("gnatsd");
+            Process[] procs = Process.GetProcessesByName("nats-server");
             if (procs == null)
                 return;
 
@@ -220,7 +231,7 @@ namespace NATSUnitTests
             // Let the OS cleanup.
             for (int i = 0; i < 10; i++)
             {
-                procs = Process.GetProcessesByName("gnatsd");
+                procs = Process.GetProcessesByName("nats-server");
                 if (procs == null || procs.Length == 0)
                     break;
 

@@ -1565,13 +1565,13 @@ namespace NATSUnitTests
                     // The server on port 4223 should be pruned out.
                     //
                     // Discovered servers should contain:
-                    // ["nats://127.0.0.1:4222",
+                    // ["nats://127.0.0.1:4223",
                     //  "nats://127.0.0.1:4224"]
                     //
                     LinkedList<string> discoveredServers = new LinkedList<string>(c.DiscoveredServers);
                     Assert.True(discoveredServers.Count == 2);
-                    Assert.True(discoveredServers.Contains("nats://127.0.0.1:4223"));
-                    Assert.True(discoveredServers.Contains("nats://127.0.0.1:4224"));
+                    Assert.Contains("nats://127.0.0.1:4223", discoveredServers);
+                    Assert.Contains("nats://127.0.0.1:4224", discoveredServers);
 
                     // shutdown server 1 and wait for reconnect.
                     s1.Shutdown();
@@ -1579,7 +1579,7 @@ namespace NATSUnitTests
                     // Make sure we did NOT delete our expclitly configured server.
                     LinkedList<string> servers = new LinkedList<string>(c.Servers);
                     Assert.True(servers.Count == 3); // explicit server is still there.
-                    Assert.True(servers.Contains("nats://127.0.0.1:4221"));
+                    Assert.Contains("nats://127.0.0.1:4221", servers);
                 }
                 c.Close();
             }

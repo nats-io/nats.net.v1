@@ -14,7 +14,6 @@
 using System;
 using System.Diagnostics;
 using System.Text;
-using System.Threading;
 using System.Collections.Generic;
 using NATS.Client;
 
@@ -29,6 +28,7 @@ namespace NATSExamples
         string url = Defaults.Url;
         string subject = "foo";
         byte[] payload = null;
+        string creds = null;
 
         public void Run(string[] args)
         {
@@ -39,6 +39,10 @@ namespace NATSExamples
 
             Options opts = ConnectionFactory.GetDefaultOptions();
             opts.Url = url;
+            if (creds != null)
+            {
+                opts.SetUserCredentials(creds);
+            }
 
             using (IConnection c = new ConnectionFactory().CreateConnection(opts))
             {
@@ -52,8 +56,8 @@ namespace NATSExamples
 
                 sw.Stop();
 
-                System.Console.Write("Published {0} msgs in {1} seconds ", count, sw.Elapsed.TotalSeconds);
-                System.Console.WriteLine("({0} msgs/second).",
+                Console.Write("Published {0} msgs in {1} seconds ", count, sw.Elapsed.TotalSeconds);
+                Console.WriteLine("({0} msgs/second).",
                     (int)(count / sw.Elapsed.TotalSeconds));
                 printStats(c);
 
@@ -63,18 +67,18 @@ namespace NATSExamples
         private void printStats(IConnection c)
         {
             IStatistics s = c.Stats;
-            System.Console.WriteLine("Statistics:  ");
-            System.Console.WriteLine("   Outgoing Payload Bytes: {0}", s.OutBytes);
-            System.Console.WriteLine("   Outgoing Messages: {0}", s.OutMsgs);
+            Console.WriteLine("Statistics:  ");
+            Console.WriteLine("   Outgoing Payload Bytes: {0}", s.OutBytes);
+            Console.WriteLine("   Outgoing Messages: {0}", s.OutMsgs);
         }
 
         private void usage()
         {
-            System.Console.Error.WriteLine(
+            Console.Error.WriteLine(
                 "Usage:  Publish [-url url] [-subject subject] " +
-                "-count [count] [-payload payload]");
+                "-count [count] -creds [file] [-payload payload]");
 
-            System.Environment.Exit(-1);
+            Environment.Exit(-1);
         }
 
         private void parseArgs(string[] args)
@@ -102,16 +106,19 @@ namespace NATSExamples
 
             if (parsedArgs.ContainsKey("-payload"))
                 payload = Encoding.UTF8.GetBytes(parsedArgs["-payload"]);
+
+            if (parsedArgs.ContainsKey("-creds"))
+                creds = parsedArgs["-creds"];
         }
 
         private void banner()
         {
-            System.Console.WriteLine("Publishing {0} messages on subject {1}",
+            Console.WriteLine("Publishing {0} messages on subject {1}",
                 count, subject);
-            System.Console.WriteLine("  Url: {0}", url);
-            System.Console.WriteLine("  Subject: {0}", subject);
-            System.Console.WriteLine("  Count: {0}", count);
-            System.Console.WriteLine("  Payload is {0} bytes.",
+            Console.WriteLine("  Url: {0}", url);
+            Console.WriteLine("  Subject: {0}", subject);
+            Console.WriteLine("  Count: {0}", count);
+            Console.WriteLine("  Payload is {0} bytes.",
                 payload != null ? payload.Length : 0);
         }
 
@@ -123,8 +130,8 @@ namespace NATSExamples
             }
             catch (Exception ex)
             {
-                System.Console.Error.WriteLine("Exception: " + ex.Message);
-                System.Console.Error.WriteLine(ex);
+                Console.Error.WriteLine("Exception: " + ex.Message);
+                Console.Error.WriteLine(ex);
             }
 
         }

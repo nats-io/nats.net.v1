@@ -13,7 +13,6 @@
 
 using System;
 using System.Diagnostics;
-using System.Text;
 using System.Threading;
 using System.Collections.Generic;
 using NATS.Client;
@@ -31,6 +30,7 @@ namespace NATSExamples
         bool sync = false;
         int received = 0;
         bool verbose = false;
+        string creds = null;
 
         public void Run(string[] args)
         {
@@ -39,6 +39,10 @@ namespace NATSExamples
 
             Options opts = ConnectionFactory.GetDefaultOptions();
             opts.Url = url;
+            if (creds != null)
+            {
+                opts.SetUserCredentials(creds);
+            }
 
             using (IConnection c = new ConnectionFactory().CreateConnection(opts))
             {
@@ -53,8 +57,8 @@ namespace NATSExamples
                     elapsed = receiveAsyncSubscriber(c);
                 }
 
-                System.Console.Write("Received {0} msgs in {1} seconds ", received, elapsed.TotalSeconds);
-                System.Console.WriteLine("({0} msgs/second).",
+                Console.Write("Received {0} msgs in {1} seconds ", received, elapsed.TotalSeconds);
+                Console.WriteLine("({0} msgs/second).",
                     (int)(received / elapsed.TotalSeconds));
                 printStats(c);
 
@@ -64,9 +68,9 @@ namespace NATSExamples
         private void printStats(IConnection c)
         {
             IStatistics s = c.Stats;
-            System.Console.WriteLine("Statistics:  ");
-            System.Console.WriteLine("   Incoming Payload Bytes: {0}", s.InBytes);
-            System.Console.WriteLine("   Incoming Messages: {0}", s.InMsgs);
+            Console.WriteLine("Statistics:  ");
+            Console.WriteLine("   Incoming Payload Bytes: {0}", s.InBytes);
+            Console.WriteLine("   Incoming Messages: {0}", s.InMsgs);
         }
 
         private TimeSpan receiveAsyncSubscriber(IConnection c)
@@ -133,11 +137,11 @@ namespace NATSExamples
 
         private void usage()
         {
-            System.Console.Error.WriteLine(
+            Console.Error.WriteLine(
                 "Usage:  Subscribe [-url url] [-subject subject] " +
-                "-count [count] [-sync] [-verbose]");
+                "[-count count] [-creds file] [-sync] [-verbose]");
 
-            System.Environment.Exit(-1);
+            Environment.Exit(-1);
         }
 
         private void parseArgs(string[] args)
@@ -177,15 +181,18 @@ namespace NATSExamples
 
             if (parsedArgs.ContainsKey("-verbose"))
                 verbose = true;
+
+            if (parsedArgs.ContainsKey("-creds"))
+                creds = parsedArgs["-creds"];
         }
 
         private void banner()
         {
-            System.Console.WriteLine("Receiving {0} messages on subject {1}",
+            Console.WriteLine("Receiving {0} messages on subject {1}",
                 count, subject);
-            System.Console.WriteLine("  Url: {0}", url);
-            System.Console.WriteLine("  Subject: {0}", subject);
-            System.Console.WriteLine("  Receiving: {0}",
+            Console.WriteLine("  Url: {0}", url);
+            Console.WriteLine("  Subject: {0}", subject);
+            Console.WriteLine("  Receiving: {0}",
                 sync ? "Synchronously" : "Asynchronously");
         }
 
@@ -197,8 +204,8 @@ namespace NATSExamples
             }
             catch (Exception ex)
             {
-                System.Console.Error.WriteLine("Exception: " + ex.Message);
-                System.Console.Error.WriteLine(ex);
+                Console.Error.WriteLine("Exception: " + ex.Message);
+                Console.Error.WriteLine(ex);
             }
         }
     }

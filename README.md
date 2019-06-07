@@ -1,9 +1,9 @@
 
 # NATS - .NET C# Client
+
 A [C# .NET](https://msdn.microsoft.com/en-us/vstudio/aa496123.aspx) client for the [NATS messaging system](https://nats.io).
 
-This Synadia supported client parallels the [NATS GO Client](https://github.com/nats-io/nats).
-
+This NATS Maintainer supported client parallels the [NATS GO Client](https://github.com/nats-io/nats).
 
 [![License Apache 2.0](https://img.shields.io/badge/License-Apache2-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![API Documentation](https://img.shields.io/badge/doc-Doxygen-brightgreen.svg?style=flat)](http://nats-io.github.io/nats.net)
@@ -12,38 +12,45 @@ This Synadia supported client parallels the [NATS GO Client](https://github.com/
 ## Installation
 
 First, download the source code:
-```
+
+```text
 git clone git@github.com:nats-io/csharp-nats.git
 ```
 
 ### Quick Start
-
 
 Then, build the assembly.  
 
 For both .NET 4.5 and .NET core, there are simple batch files.  These will build the respective NATS.Client.dll and the provided examples with only requiring the  .NET framework SDK/Platform
 
 #### .NET 4.5
+
 Ensure you have installed the .NET Framework 4.5.1 or greater.
-```
+
+```text
 set PATH=C:\Windows\Microsoft.NET\Framework64\v4.0.30319;%PATH%
 ```
+
 To build simply call:
-```
+
+```text
 build45.bat
 ```
+
 The batch file will create a bin directory, and copy all binary files, including samples, into it.
+
 #### .NET core
 
 To build .NET core, you will need version 1.0.0-preview2-003121 or higher, found here:
 https://www.microsoft.com/net/core#windows
 
-```
+```text
 buildcore.bat
 ```
 
 This will build the .NET core (standard1.6) NATS.Client assembly.  To run the examples, ``cd`` into the directory of the example you wish to run, and use the `dotnet run` command.  e.g.
-```
+
+```text
 cd examples\Publish
 dotnet run
 ```
@@ -73,9 +80,10 @@ All examples provide statistics for benchmarking.
 The NATS .NET Client can be found in the NuGet Gallery.  It can be found as the [NATS.Client Package](https://www.nuget.org/packages/NATS.Client).
 
 ### Building the API Documentation
+
 Doxygen is used for building the API documentation.  To build the API documentation, change directories to `documentation` and run the following command:
 
-```
+```text
 build_doc.bat
 ```
 
@@ -173,6 +181,7 @@ Here are example snippets of using the API to create a connection, subscribe, pu
             // Closing a connection
             c.Close();
 ```
+
 ## Basic Encoded Usage
 The .NET NATS client mirrors go encoding through serialization and
 deserialization.  Simply create an encoded connection and publish
@@ -250,6 +259,7 @@ scheme.  XML was chosen as the example here as it is natively supported by .NET 
 
 One can also use `Data Contract` to serialize objects.  Below are simple example
  overrides that work with .NET core:
+
 ```C#
 [DataContract]
 public class JsonObject
@@ -493,6 +503,7 @@ The NATS .NET client supports the cluster discovery protocol.  The list of serve
 ```
 
 ## TLS
+
 The NATS .NET client supports TLS 1.2.  Set the secure option, add
 the certificate, and connect.  Note that .NET requires both the
 private key and certificate to be present in the same certificate file.
@@ -512,10 +523,12 @@ private key and certificate to be present in the same certificate file.
 
         IConnection c = new ConnectionFactory().CreateConnection(opts);
 ```
+
 Many times, it is useful when developing an application (or necessary
 when using self-signed certificates) to override server certificate
 validation.  This is achieved by overriding the remove certificate
 validation callback through the NATS client options.
+
 ```C#
 
     private bool verifyServerCert(object sender,
@@ -538,10 +551,83 @@ validation callback through the NATS client options.
 
         IConnection c = new ConnectionFactory().CreateConnection(opts);
 ```
+
 The NATS server default cipher suites **may not be supported** by the Microsoft
 .NET framework.  Please refer to **gnatsd --help_tls** usage and configure
 the  NATS server to include the most secure cipher suites supported by the
 .NET framework.
+
+## New Authentication (Nkeys and User Credentials)
+
+This requires server with version >= 2.0.0
+
+NATS servers have a new security and authentication mechanism to authenticate with user credentials and Nkeys. The simplest form is to use the helper method UserCredentials(credsFilepath).
+
+```C#
+IConnection c = new ConnectionFactory().CreateConnection("nats://127.0.0.1", "user.creds")
+```
+
+The helper methods creates two callback handlers to present the user JWT and sign the nonce
+challenge from the server. The core client library never has direct access to your private
+key and simply performs the callback for signing the server challenge. The helper will load
+and wipe and erase memory it uses for each connect or reconnect.
+
+The helper also can take two entries, one for the JWT and one for the NKey seed file.
+
+```C#
+IConnection c = new ConnectionFactory().CreateConnection("nats://127.0.0.1", "user.creds", "user.nk"
+```
+
+You can also set the event handlers directly and manage challenge signing directly.
+
+```C#
+EventHandler<UserJWTEventArgs> jwtEh = (sender, args) =>
+{
+    // Obtain a user JWT...
+    string jwt = getMyUserJWT();
+
+    // You must set the JWT in the args to hand off
+    // to the client library.
+    args.JWT = jwt;
+};
+
+EventHandler<UserSignatureEventArgs> sigEh = (sender, args) =>
+{
+    // get a private key seed from your environment.
+    string seed = getMyUserSeed();
+
+    // Generate a NkeyPair
+    NkeyPair kp = NKeys.FromSeed(seed);
+
+    // Sign the nonce and return the result in the SignedNonce
+    // args property.  This must be set.
+    args.SignedNonce = kp.Sign(args.ServerNonce)
+};
+Options opts = ConnectionFactory.GetDefaultOptions();
+opts.SetUserCredentialHandlers(jwtEh, sigEh);
+
+IConnection c = new ConnectionFactory().CreateConnection(opts));
+```
+
+Bare Nkeys are also supported. The nkey seed should be in a read only file, e.g. seed.txt
+
+```bash
+> cat seed.txt
+SUAGMJH5XLGZKQQWAWKRZJIGMOU4HPFUYLXJMXOO5NLFEO2OOQJ5LPRDPM
+```
+
+This is a helper function which will load and decode and do the proper signing for the
+server nonce.  It will clear memory in between invocations. You can choose to use the
+low level option and provide the public key and a signature callback on your own.
+
+```C#
+Options opts = ConnectionFactory.GetDefaultOptions();
+opts.SetNkey("UCKKTOZV72L3NITTGNOCRDZUI5H632XCT4ZWPJBC2X3VEY72KJUWEZ2Z",
+"./config/certs/user.nk");
+
+// Direct
+IConnection c = new ConnectionFactory().CreateConnection(opts));
+```
 
 ## Exceptions
 
@@ -623,10 +709,10 @@ A note:  The NATS C# .NET client was originally developed with the idea in mind 
 To that end, with any contributions, certainly feel free to code in a more .NET idiomatic style than what you see.  PRs are always welcome!
 
 ## TODO
+
 * [ ] Another performance pass - look at stream directly over socket, contention, fastpath optimizations, rw locks.
 * [ ] Rx API (unified over NATS Streaming?)
 * [ ] Expand Unit Tests to test internals (namely Parsing)
-* [ ] WCF bindings (If requested for legacy, or user contributed)
 * [X] Travis CI (Used AppVeyor instead)
 * [ ] Allow configuration for performance tuning (buffer sizes), defaults based on plaform.
 * [X] [.NET Core](https://github.com/dotnet/core) compatibility, TLS required.
@@ -641,3 +727,4 @@ To that end, with any contributions, certainly feel free to code in a more .NET 
 * [X] Strong name the assembly
 
 Any suggestions and/or contributions are welcome!
+

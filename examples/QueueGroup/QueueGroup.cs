@@ -33,6 +33,7 @@ namespace NATSExamples
         string qgroup = "worker";
         bool sync = false;
         int received = 0;
+        string creds = null;
 
         public void Run(string[] args)
         {
@@ -41,6 +42,10 @@ namespace NATSExamples
 
             Options opts = ConnectionFactory.GetDefaultOptions();
             opts.Url = url;
+            if (creds != null)
+            {
+                opts.SetUserCredentials(creds);
+            }
 
             using (IConnection c = new ConnectionFactory().CreateConnection(opts))
             {
@@ -55,8 +60,8 @@ namespace NATSExamples
                     elapsed = receiveAsyncSubscriber(c);
                 }
 
-                System.Console.Write("Received {0} msgs in {1} seconds ", count, elapsed.TotalSeconds);
-                System.Console.WriteLine("({0} msgs/second).",
+                Console.Write("Received {0} msgs in {1} seconds ", count, elapsed.TotalSeconds);
+                Console.WriteLine("({0} msgs/second).",
                     (int)(count / elapsed.TotalSeconds));
                 printStats(c);
 
@@ -66,11 +71,11 @@ namespace NATSExamples
         private void printStats(IConnection c)
         {
             IStatistics s = c.Stats;
-            System.Console.WriteLine("Statistics:  ");
-            System.Console.WriteLine("   Incoming Payload Bytes: {0}", s.InBytes);
-            System.Console.WriteLine("   Incoming Messages: {0}", s.InMsgs);
-            System.Console.WriteLine("   Outgoing Payload Bytes: {0}", s.OutBytes);
-            System.Console.WriteLine("   Outgoing Messages: {0}", s.OutMsgs);
+            Console.WriteLine("Statistics:  ");
+            Console.WriteLine("   Incoming Payload Bytes: {0}", s.InBytes);
+            Console.WriteLine("   Incoming Messages: {0}", s.InMsgs);
+            Console.WriteLine("   Outgoing Payload Bytes: {0}", s.OutBytes);
+            Console.WriteLine("   Outgoing Messages: {0}", s.OutMsgs);
         }
 
         private TimeSpan receiveAsyncSubscriber(IConnection c)
@@ -135,11 +140,11 @@ namespace NATSExamples
 
         private void usage()
         {
-            System.Console.Error.WriteLine(
-                "Usage:  Publish [-url url] [-subject subject] " +
-                "[-count count] [-queuegroup group] [-sync] [-verbose]");
+            Console.Error.WriteLine(
+                "Usage:  Queuegroup [-url url] [-subject subject] " +
+                "[-count count] [-creds chain file] [-queuegroup group] [-sync] [-verbose]");
 
-            System.Environment.Exit(-1);
+            Environment.Exit(-1);
         }
 
         private void parseArgs(string[] args)
@@ -168,6 +173,9 @@ namespace NATSExamples
             if (parsedArgs.ContainsKey("-count"))
                 count = Convert.ToInt32(parsedArgs["-count"]);
 
+            if (parsedArgs.ContainsKey("-creds"))
+                creds = parsedArgs["-creds"];
+
             if (parsedArgs.ContainsKey("-url"))
                 url = parsedArgs["-url"];
 
@@ -186,11 +194,11 @@ namespace NATSExamples
 
         private void banner()
         {
-            System.Console.WriteLine("Receiving {0} messages on subject {1}",
+            Console.WriteLine("Receiving {0} messages on subject {1}",
                 count, subject);
-            System.Console.WriteLine("  Url: {0}", url);
-            System.Console.WriteLine("  Queue Group: {0}", qgroup);
-            System.Console.WriteLine("  Receiving: {0}",
+            Console.WriteLine("  Url: {0}", url);
+            Console.WriteLine("  Queue Group: {0}", qgroup);
+            Console.WriteLine("  Receiving: {0}",
                 sync ? "Synchronously" : "Asynchronously");
         }
 
@@ -202,8 +210,8 @@ namespace NATSExamples
             }
             catch (Exception ex)
             {
-                System.Console.Error.WriteLine("Exception: " + ex.Message);
-                System.Console.Error.WriteLine(ex);
+                Console.Error.WriteLine("Exception: " + ex.Message);
+                Console.Error.WriteLine(ex);
             }
         }
     }
