@@ -131,5 +131,14 @@ namespace NATS.Client
     public class NATSTimeoutException : NATSException
     {
         internal NATSTimeoutException() : base("Timeout occurred.") { }
+        internal NATSTimeoutException(String s) : base(s) { }
+    }
+
+    /// <summary>
+    /// The exception that is thrown when a NATS operation is performed on a draining connection.
+    /// </summary>
+    public class NATSConnectionDrainingException : NATSConnectionException
+    {
+        internal NATSConnectionDrainingException() : base("Connection is draining.") { }
     }
 }

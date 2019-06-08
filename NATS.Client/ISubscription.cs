@@ -11,6 +11,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Threading.Tasks;
+
 namespace NATS.Client
 {
     /// <summary>
@@ -170,5 +172,42 @@ namespace NATS.Client
         /// may not be accurate.
         /// </remarks>
         long Dropped { get; }
+
+        /// <summary>
+        /// Drains a subscription for gracefully unsubscribing.
+        /// </summary>
+        /// <remarks>
+        /// This method unsubscribes the subscriber and drains all
+        /// remaining messages.
+        /// </remarks>
+        /// <seealso cref="Unsubscribe()"/>
+        void Drain();
+
+        /// <summary>
+        /// Drains a subscription for gracefully unsubscribing.
+        /// </summary>
+        /// <param name="timeout">The duration in milliseconds to wait while draining.</param>    
+        /// /// <seealso cref="Unsubscribe()"/>
+        void Drain(int timeout);
+
+        /// <summary>
+        /// Drains a subscription for gracefully unsubscribing.
+        /// </summary>
+        /// <remarks>
+        /// This method unsubscribes the subscriber and drains all
+        /// remaining messages.
+        /// </remarks>
+        /// <seealso cref="Unsubscribe()"/>
+        /// <returns>A task that represents the asynchronous drain operation.</returns>
+        Task DrainAsync();
+
+        /// <summary>
+        /// Drains a subscription for gracefully unsubscribing.
+        /// </summary>
+        /// <param name="timeout">The duration in milliseconds to wait while draining.</param>    
+        /// /// <seealso cref="Unsubscribe()"/>
+        /// <returns>A task that represents the asynchronous drain operation.</returns>
+        Task DrainAsync(int timeout);
     }
+
 }

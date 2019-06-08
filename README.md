@@ -178,6 +178,9 @@ Here are example snippets of using the API to create a connection, subscribe, pu
             // This call will wait for the reply for up to 1000 milliseconds (1 second).
             m = c.Request("foo", Encoding.UTF8.GetBytes("help"), 1000);
 
+            // Draining and closing a connection
+            c.Drain();
+
             // Closing a connection
             c.Close();
 ```
