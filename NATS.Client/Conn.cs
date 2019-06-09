@@ -1297,11 +1297,15 @@ namespace NATS.Client
             }
 
             ConnectInfo info = new ConnectInfo(opts.Verbose, opts.Pedantic, userJWT, nkey, sig, user,
-                pass, token, opts.Secure, opts.Name);
+                pass, token, opts.Secure, opts.Name, !opts.NoEcho);
 
             StringBuilder sb = new StringBuilder();
 
             sb.AppendFormat(IC.conProto, info.ToJson());
+
+            if (opts.NoEcho && info.protocol < 1)
+                throw new NATSProtocolException("Echo is not supported by the server.");
+
             return sb.ToString();
         }
 

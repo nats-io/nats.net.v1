@@ -1,4 +1,4 @@
-﻿// Copyright 2015-2019 The NATS Authors
+﻿// Copyright 2015-2018 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -1686,6 +1686,33 @@ namespace NATSUnitTests
                 o.Url = null;
                 o.Servers = new string[] { "127.0.0.1", "localhost" };
                 new ConnectionFactory().CreateConnection(o).Close();
+            }
+        }
+
+        [Fact]
+        public void TestNoEcho()
+        {
+            using (new NATSServer())
+            {
+                long received = 0;
+                var o = ConnectionFactory.GetDefaultOptions();
+                o.NoEcho = true;
+
+                var c = new ConnectionFactory().CreateConnection(o);
+
+                c.SubscribeAsync("foo", (obj, args) =>
+                {
+                    Interlocked.Increment(ref received);
+                });
+
+                c.Publish("foo", null);
+                c.Flush();
+
+                // hate sleeping, but with slow CI's, we need to give time to
+                //make sure that message never arrives.
+                Thread.Sleep(1000);
+
+                Assert.True(Interlocked.Read(ref received) == 0);
             }
         }
 
