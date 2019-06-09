@@ -30,7 +30,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">0.8.1</span>
+   &#160;<span id="projectnumber">0.9.0</span>
    </div>
    <div id="projectbrief">The nats.io .NET C# Client</div>
   </td>
@@ -126,6 +126,14 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a57771f325ac0b1f2a09c85dc7d42dfb1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8c1a898e991553b6ef7dcece6fe85b5b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_subscription.html#a8c1a898e991553b6ef7dcece6fe85b5b">ClearMaxPending</a> ()</td></tr>
 <tr class="separator:a8c1a898e991553b6ef7dcece6fe85b5b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a96dd4506ddf74e464dc4925666119fdb"><td class="memItemLeft" align="right" valign="top">Task&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_subscription.html#a96dd4506ddf74e464dc4925666119fdb">DrainAsync</a> ()</td></tr>
+<tr class="separator:a96dd4506ddf74e464dc4925666119fdb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9679f2902de656b3b1f1a6113182d1c9"><td class="memItemLeft" align="right" valign="top">Task&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_subscription.html#a9679f2902de656b3b1f1a6113182d1c9">DrainAsync</a> (int timeout)</td></tr>
+<tr class="separator:a9679f2902de656b3b1f1a6113182d1c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a92255288f701d2b8cc3e5867cb9dcc9b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_subscription.html#a92255288f701d2b8cc3e5867cb9dcc9b">Drain</a> ()</td></tr>
+<tr class="separator:a92255288f701d2b8cc3e5867cb9dcc9b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afa7c5db9d71465a3365df6dca47ccb69"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_subscription.html#afa7c5db9d71465a3365df6dca47ccb69">Drain</a> (int timeout)</td></tr>
+<tr class="separator:afa7c5db9d71465a3365df6dca47ccb69"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
@@ -310,6 +318,114 @@ Properties</h2></td></tr>
 
 <p>Releases all resources used by the <a class="el" href="class_n_a_t_s_1_1_client_1_1_subscription.html" title="Represents interest in a NATS topic. This class should not be used directly. ">Subscription</a>. </p>
 <p>This method unsubscribes from the subject, to release resources.</p>
+
+</div>
+</div>
+<a id="a92255288f701d2b8cc3e5867cb9dcc9b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a92255288f701d2b8cc3e5867cb9dcc9b">&#9670;&nbsp;</a></span>Drain() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void NATS.Client.Subscription.Drain </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Drains a subscription for gracefully unsubscribing. </p>
+<p>This method unsubscribes the subscriber and drains all remaining messages. </p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="class_n_a_t_s_1_1_client_1_1_subscription.html#a542989445c672c6ac24f29a40f52b6a3" title="Removes interest in the Subject. ">Unsubscribe()</a></dd></dl>
+
+<p>Implements <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#a62643077a8d82a89629d7c68f10b9b47">NATS.Client.ISubscription</a>.</p>
+
+</div>
+</div>
+<a id="afa7c5db9d71465a3365df6dca47ccb69"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afa7c5db9d71465a3365df6dca47ccb69">&#9670;&nbsp;</a></span>Drain() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void NATS.Client.Subscription.Drain </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>timeout</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Drains a subscription for gracefully unsubscribing. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">timeout</td><td>The duration in milliseconds to wait while draining.</td></tr>
+  </table>
+  </dd>
+</dl>
+<p><br />
+/// </p><dl class="section see"><dt>See also</dt><dd><a class="el" href="class_n_a_t_s_1_1_client_1_1_subscription.html#a542989445c672c6ac24f29a40f52b6a3" title="Removes interest in the Subject. ">Unsubscribe()</a></dd></dl>
+
+<p>Implements <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#ab612996f3e304157eb4b6d9bad33ed60">NATS.Client.ISubscription</a>.</p>
+
+</div>
+</div>
+<a id="a96dd4506ddf74e464dc4925666119fdb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a96dd4506ddf74e464dc4925666119fdb">&#9670;&nbsp;</a></span>DrainAsync() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">Task NATS.Client.Subscription.DrainAsync </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Drains a subscription for gracefully unsubscribing. </p>
+<p>This method unsubscribes the subscriber and drains all remaining messages. </p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="class_n_a_t_s_1_1_client_1_1_subscription.html#a542989445c672c6ac24f29a40f52b6a3" title="Removes interest in the Subject. ">Unsubscribe()</a></dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>A task that represents the asynchronous drain operation.</dd></dl>
+
+<p>Implements <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#ad440ffe33ef0152d90d8f68b99c48505">NATS.Client.ISubscription</a>.</p>
+
+</div>
+</div>
+<a id="a9679f2902de656b3b1f1a6113182d1c9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9679f2902de656b3b1f1a6113182d1c9">&#9670;&nbsp;</a></span>DrainAsync() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">Task NATS.Client.Subscription.DrainAsync </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>timeout</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Drains a subscription for gracefully unsubscribing. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">timeout</td><td>The duration in milliseconds to wait while draining.</td></tr>
+  </table>
+  </dd>
+</dl>
+<p><br />
+/// </p><dl class="section see"><dt>See also</dt><dd><a class="el" href="class_n_a_t_s_1_1_client_1_1_subscription.html#a542989445c672c6ac24f29a40f52b6a3" title="Removes interest in the Subject. ">Unsubscribe()</a></dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>A task that represents the asynchronous drain operation.</dd></dl>
+
+<p>Implements <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#a822e2e4d9a15910bc424e44cbb70d5e3">NATS.Client.ISubscription</a>.</p>
 
 </div>
 </div>
@@ -513,7 +629,8 @@ Properties</h2></td></tr>
 <p>Removes interest in the <a class="el" href="class_n_a_t_s_1_1_client_1_1_subscription.html#a4728f8f2ba13db85387a80c1e224d9b1" title="Gets the subject for this subscription. ">Subject</a>. </p>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
-    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_bad_subscription_exception.html" title="The exception that is thrown when a subscriber operation is performed on an invalid subscriber...">NATSBadSubscriptionException</a></td><td>There is no longer an associated <a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html" title="Connection represents a bare connection to a NATS server. Users should create an IConnection instance...">Connection</a> for this <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html" title="Represents interest in a NATS topic. ">ISubscription</a>.</td></tr>
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_bad_subscription_exception.html" title="The exception that is thrown when a subscriber operation is performed on an invalid subscriber...">NATSBadSubscriptionException</a></td><td>There is no longer an associated <a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html" title="Connection represents a bare connection to a NATS server. Users should create an IConnection instance...">Connection</a></td></tr>
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_connection_draining_exception.html" title="The exception that is thrown when a NATS operation is performed on a draining connection. ">NATSConnectionDrainingException</a></td><td>The <a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html" title="Connection represents a bare connection to a NATS server. Users should create an IConnection instance...">Connection</a> is draining. for this <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html" title="Represents interest in a NATS topic. ">ISubscription</a>.</td></tr>
   </table>
   </dd>
 </dl>

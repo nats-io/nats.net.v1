@@ -4,6 +4,7 @@ var namespace_n_a_t_s_1_1_client =
     [ "Connection", "class_n_a_t_s_1_1_client_1_1_connection.html", "class_n_a_t_s_1_1_client_1_1_connection" ],
     [ "ConnectionFactory", "class_n_a_t_s_1_1_client_1_1_connection_factory.html", "class_n_a_t_s_1_1_client_1_1_connection_factory" ],
     [ "ConnEventArgs", "class_n_a_t_s_1_1_client_1_1_conn_event_args.html", "class_n_a_t_s_1_1_client_1_1_conn_event_args" ],
+    [ "DefaultUserJWTHandler", "class_n_a_t_s_1_1_client_1_1_default_user_j_w_t_handler.html", "class_n_a_t_s_1_1_client_1_1_default_user_j_w_t_handler" ],
     [ "EncodedConnection", "class_n_a_t_s_1_1_client_1_1_encoded_connection.html", "class_n_a_t_s_1_1_client_1_1_encoded_connection" ],
     [ "EncodedMessageEventArgs", "class_n_a_t_s_1_1_client_1_1_encoded_message_event_args.html", "class_n_a_t_s_1_1_client_1_1_encoded_message_event_args" ],
     [ "ErrEventArgs", "class_n_a_t_s_1_1_client_1_1_err_event_args.html", "class_n_a_t_s_1_1_client_1_1_err_event_args" ],
@@ -17,6 +18,7 @@ var namespace_n_a_t_s_1_1_client =
     [ "MsgHandlerEventArgs", "class_n_a_t_s_1_1_client_1_1_msg_handler_event_args.html", "class_n_a_t_s_1_1_client_1_1_msg_handler_event_args" ],
     [ "NATSBadSubscriptionException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_bad_subscription_exception.html", null ],
     [ "NATSConnectionClosedException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_connection_closed_exception.html", null ],
+    [ "NATSConnectionDrainingException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_connection_draining_exception.html", null ],
     [ "NATSConnectionException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_connection_exception.html", null ],
     [ "NATSException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_exception.html", null ],
     [ "NATSMaxMessagesException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_max_messages_exception.html", null ],
@@ -28,9 +30,13 @@ var namespace_n_a_t_s_1_1_client =
     [ "NATSSlowConsumerException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_slow_consumer_exception.html", null ],
     [ "NATSStaleConnectionException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_stale_connection_exception.html", null ],
     [ "NATSTimeoutException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_timeout_exception.html", null ],
+    [ "NkeyPair", "class_n_a_t_s_1_1_client_1_1_nkey_pair.html", "class_n_a_t_s_1_1_client_1_1_nkey_pair" ],
+    [ "Nkeys", "class_n_a_t_s_1_1_client_1_1_nkeys.html", null ],
     [ "NUID", "class_n_a_t_s_1_1_client_1_1_n_u_i_d.html", "class_n_a_t_s_1_1_client_1_1_n_u_i_d" ],
     [ "Options", "class_n_a_t_s_1_1_client_1_1_options.html", "class_n_a_t_s_1_1_client_1_1_options" ],
     [ "Statistics", "class_n_a_t_s_1_1_client_1_1_statistics.html", "class_n_a_t_s_1_1_client_1_1_statistics" ],
     [ "Subscription", "class_n_a_t_s_1_1_client_1_1_subscription.html", "class_n_a_t_s_1_1_client_1_1_subscription" ],
-    [ "SyncSubscription", "class_n_a_t_s_1_1_client_1_1_sync_subscription.html", "class_n_a_t_s_1_1_client_1_1_sync_subscription" ]
+    [ "SyncSubscription", "class_n_a_t_s_1_1_client_1_1_sync_subscription.html", "class_n_a_t_s_1_1_client_1_1_sync_subscription" ],
+    [ "UserJWTEventArgs", "class_n_a_t_s_1_1_client_1_1_user_j_w_t_event_args.html", "class_n_a_t_s_1_1_client_1_1_user_j_w_t_event_args" ],
+    [ "UserSignatureEventArgs", "class_n_a_t_s_1_1_client_1_1_user_signature_event_args.html", "class_n_a_t_s_1_1_client_1_1_user_signature_event_args" ]
 ];

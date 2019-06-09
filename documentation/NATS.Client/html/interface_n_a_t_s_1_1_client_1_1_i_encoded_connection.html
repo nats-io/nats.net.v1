@@ -30,7 +30,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">0.8.1</span>
+   &#160;<span id="projectnumber">0.9.0</span>
    </div>
    <div id="projectbrief">The nats.io .NET C# Client</div>
   </td>
@@ -133,6 +133,16 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a54788b57a510ed37103c61d956c0ce18"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5dbc97a8fa4aacd99e1252da54f28f15"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a5dbc97a8fa4aacd99e1252da54f28f15">ResetStats</a> ()</td></tr>
 <tr class="separator:a5dbc97a8fa4aacd99e1252da54f28f15"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a01810098b7d5a1e2f80ee1cf3de7b938"><td class="memItemLeft" align="right" valign="top">Task&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a01810098b7d5a1e2f80ee1cf3de7b938">DrainAsync</a> ()</td></tr>
+<tr class="separator:a01810098b7d5a1e2f80ee1cf3de7b938"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a49310713fcd24756ebaa2153e2f56485"><td class="memItemLeft" align="right" valign="top">Task&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a49310713fcd24756ebaa2153e2f56485">DrainAsync</a> (int timeout)</td></tr>
+<tr class="separator:a49310713fcd24756ebaa2153e2f56485"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a665659d40388ecb92efb66ab15fa0e65"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a665659d40388ecb92efb66ab15fa0e65">Drain</a> ()</td></tr>
+<tr class="separator:a665659d40388ecb92efb66ab15fa0e65"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af93a67f87dfddb045c3e8ffbb5c70ba3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#af93a67f87dfddb045c3e8ffbb5c70ba3">Drain</a> (int timeout)</td></tr>
+<tr class="separator:af93a67f87dfddb045c3e8ffbb5c70ba3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a66e26ffe9344a89337de274500cc3147"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a66e26ffe9344a89337de274500cc3147">IsDraining</a> ()</td></tr>
+<tr class="separator:a66e26ffe9344a89337de274500cc3147"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="properties"></a>
 Properties</h2></td></tr>
@@ -158,6 +168,8 @@ Properties</h2></td></tr>
 <tr class="separator:a3e64691276294278de10a0f32565c8bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa6d6bc072879cb6c16f8d41c4c88363e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespace_n_a_t_s_1_1_client.html#ae3d017dda4668698e3b11180925776d1">Deserializer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#aa6d6bc072879cb6c16f8d41c4c88363e">OnDeserialize</a><code> [get, set]</code></td></tr>
 <tr class="separator:aa6d6bc072879cb6c16f8d41c4c88363e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aed54b0d9d75b12eaceafec7ffa787930"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#aed54b0d9d75b12eaceafec7ffa787930">SubscriptionCount</a><code> [get]</code></td></tr>
+<tr class="separator:aed54b0d9d75b12eaceafec7ffa787930"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Represents a connection to a <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server which uses a client specified encoding scheme. </p>
@@ -179,6 +191,106 @@ Properties</h2></td></tr>
 
 <p>Closes the <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html" title="Represents a connection to the NATS server. ">IConnection</a> and all associated subscriptions. </p>
 <dl class="section see"><dt>See also</dt><dd><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a27ee1b7405f0e47b1cf55fbc00cbdd0c" title="Returns a value indicating whether or not the IConnection instance is closed. ">IsClosed</a>, <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#aa1e1b756a1896bdc8ee6869b36a28cf6" title="Gets the current state of the IConnection. ">State</a></dd></dl>
+
+</div>
+</div>
+<a id="a665659d40388ecb92efb66ab15fa0e65"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a665659d40388ecb92efb66ab15fa0e65">&#9670;&nbsp;</a></span>Drain() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void NATS.Client.IEncodedConnection.Drain </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Drains a connection for graceful shutdown. </p>
+<p>Drain will put a connection into a drain state. All subscriptions will immediately be put into a drain state. Upon completion, the publishers will be drained and can not publish any additional messages. Upon draining of the publishers, the connection will be closed. Use the <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a910d4dcebe9046e2ab1772f2007dce0e" title="Represents the method that will handle an event raised when a connection is closed. ">Options.ClosedEventHandler</a> option to know when the connection has moved from draining to closed. </p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a166c840eb8f42cf2b022e3fe8f72fc75" title="Closes the IConnection and all associated subscriptions. ">Close()</a></dd></dl>
+
+</div>
+</div>
+<a id="af93a67f87dfddb045c3e8ffbb5c70ba3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af93a67f87dfddb045c3e8ffbb5c70ba3">&#9670;&nbsp;</a></span>Drain() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void NATS.Client.IEncodedConnection.Drain </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>timeout</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Drains a connection for graceful shutdown. </p>
+<p>Drain will put a connection into a drain state. All subscriptions will immediately be put into a drain state. Upon completion, the publishers will be drained and can not publish any additional messages. Upon draining of the publishers, the connection will be closed. Use the <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a910d4dcebe9046e2ab1772f2007dce0e" title="Represents the method that will handle an event raised when a connection is closed. ">Options.ClosedEventHandler</a> option to know when the connection has moved from draining to closed. </p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a166c840eb8f42cf2b022e3fe8f72fc75" title="Closes the IConnection and all associated subscriptions. ">Close()</a></dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">timeout</td><td>The duration to wait before draining.</td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a01810098b7d5a1e2f80ee1cf3de7b938"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a01810098b7d5a1e2f80ee1cf3de7b938">&#9670;&nbsp;</a></span>DrainAsync() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">Task NATS.Client.IEncodedConnection.DrainAsync </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Drains a connection for graceful shutdown. </p>
+<p>Drain will put a connection into a drain state. All subscriptions will immediately be put into a drain state. Upon completion, the publishers will be drained and can not publish any additional messages. Upon draining of the publishers, the connection will be closed. Use the <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a910d4dcebe9046e2ab1772f2007dce0e" title="Represents the method that will handle an event raised when a connection is closed. ">Options.ClosedEventHandler</a> option to know when the connection has moved from draining to closed. </p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a166c840eb8f42cf2b022e3fe8f72fc75" title="Closes the IConnection and all associated subscriptions. ">Close()</a></dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>A task that represents the asynchronous drain operation.</dd></dl>
+
+</div>
+</div>
+<a id="a49310713fcd24756ebaa2153e2f56485"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a49310713fcd24756ebaa2153e2f56485">&#9670;&nbsp;</a></span>DrainAsync() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">Task NATS.Client.IEncodedConnection.DrainAsync </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>timeout</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Drains a connection for graceful shutdown. </p>
+<p>Drain will put a connection into a drain state. All subscriptions will immediately be put into a drain state. Upon completion, the publishers will be drained and can not publish any additional messages. Upon draining of the publishers, the connection will be closed. Use the <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a910d4dcebe9046e2ab1772f2007dce0e" title="Represents the method that will handle an event raised when a connection is closed. ">Options.ClosedEventHandler</a> option to know when the connection has moved from draining to closed. </p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a166c840eb8f42cf2b022e3fe8f72fc75" title="Closes the IConnection and all associated subscriptions. ">Close()</a></dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">timeout</td><td>The duration to wait before draining.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>A task that represents the asynchronous drain operation.</dd></dl>
 
 </div>
 </div>
@@ -243,6 +355,27 @@ Properties</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Returns a value indicating whether or not the <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html" title="Represents a connection to the NATS server. ">IConnection</a> instance is closed. </p>
+<dl class="section return"><dt>Returns</dt><dd><code>true</code> if and only if the <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html" title="Represents a connection to the NATS server. ">IConnection</a> is closed, otherwise <code>false</code>.</dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a166c840eb8f42cf2b022e3fe8f72fc75" title="Closes the IConnection and all associated subscriptions. ">Close</a>, <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#aa1e1b756a1896bdc8ee6869b36a28cf6" title="Gets the current state of the IConnection. ">State</a></dd></dl>
+
+</div>
+</div>
+<a id="a66e26ffe9344a89337de274500cc3147"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a66e26ffe9344a89337de274500cc3147">&#9670;&nbsp;</a></span>IsDraining()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool NATS.Client.IEncodedConnection.IsDraining </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns a value indicating whether or not the <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html" title="Represents a connection to the NATS server. ">IConnection</a> connection is draining. </p>
 <dl class="section return"><dt>Returns</dt><dd><code>true</code> if and only if the <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html" title="Represents a connection to the NATS server. ">IConnection</a> is closed, otherwise <code>false</code>.</dd></dl>
 <dl class="section see"><dt>See also</dt><dd><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a166c840eb8f42cf2b022e3fe8f72fc75" title="Closes the IConnection and all associated subscriptions. ">Close</a>, <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#aa1e1b756a1896bdc8ee6869b36a28cf6" title="Gets the current state of the IConnection. ">State</a></dd></dl>
 
@@ -844,6 +977,30 @@ Properties</h2></td></tr>
 
 <p>Gets the statistics tracked for the <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html" title="Represents a connection to the NATS server. ">IConnection</a>. </p>
 <dl class="section see"><dt>See also</dt><dd><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a5dbc97a8fa4aacd99e1252da54f28f15" title="Resets the associated statistics for the IConnection. ">ResetStats</a></dd></dl>
+
+</div>
+</div>
+<a id="aed54b0d9d75b12eaceafec7ffa787930"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aed54b0d9d75b12eaceafec7ffa787930">&#9670;&nbsp;</a></span>SubscriptionCount</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">int NATS.Client.IEncodedConnection.SubscriptionCount</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">get</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Get the number of active subscriptions. </p>
 
 </div>
 </div>
