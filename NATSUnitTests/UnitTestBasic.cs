@@ -1,4 +1,4 @@
-﻿// Copyright 2015-2018 The NATS Authors
+﻿// Copyright 2015-2019 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -1653,6 +1653,39 @@ namespace NATSUnitTests
                     break;
             }
 #endif
+            }
+        }
+
+        [Fact]
+        public void TestSimpleUrlArgument()
+        {
+            using (new NATSServer())
+            {
+                var o = ConnectionFactory.GetDefaultOptions();
+
+                // simple url connect
+                new ConnectionFactory().CreateConnection("127.0.0.1").Close();
+
+                // simple url
+                o.Url = "127.0.0.1";
+                new ConnectionFactory().CreateConnection(o);
+
+                // servers with a simple hostname
+                o.Url = null;
+                o.Servers = new string[] { "127.0.0.1" };
+                new ConnectionFactory().CreateConnection(o).Close();
+
+                // simple url connect
+                new ConnectionFactory().CreateConnection("127.0.0.1, localhost").Close();
+
+                //  url with multiple hosts
+                o.Url = "127.0.0.1,localhost";
+                new ConnectionFactory().CreateConnection(o);
+
+                // servers with multiple hosts
+                o.Url = null;
+                o.Servers = new string[] { "127.0.0.1", "localhost" };
+                new ConnectionFactory().CreateConnection(o).Close();
             }
         }
 

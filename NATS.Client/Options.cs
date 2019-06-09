@@ -218,6 +218,11 @@ namespace NATS.Client
             verbose = o.verbose;
             subscriberDeliveryTaskCount = o.subscriberDeliveryTaskCount;
             subscriptionBatchSize = o.subscriptionBatchSize;
+
+            if (o.url != null)
+            {
+                processUrlString(o.url);
+            }
             
             if (o.servers != null)
             {
@@ -228,8 +233,6 @@ namespace NATS.Client
             subChanLen = o.subChanLen;
             timeout = o.timeout;
             TLSRemoteCertificationValidationCallback = o.TLSRemoteCertificationValidationCallback;
-
-            url = o.url;
 
             if (o.certificates != null)
             {
