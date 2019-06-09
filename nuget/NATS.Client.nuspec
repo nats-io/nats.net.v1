@@ -14,7 +14,7 @@
         <releaseNotes>See https://github.com/nats-io/nats.net/releases/v0.9.0</releaseNotes>
         <copyright>Copyright 2016-2019 The NATS Authors</copyright>
         <language />
-        <repository type="git" url="https://github.com/nats-io/nats.go" />
+        <repository type="git" url="https://github.com/nats-io/nats.net" />
         <iconUrl>https://github.com/cncf/artwork/blob/master/nats/icon/color/nats-icon-color.png?raw=true</iconUrl>
         <tags>CNCF NATS Messaging Cloud Publish Subscribe PubSub</tags>
         <frameworkAssemblies>
