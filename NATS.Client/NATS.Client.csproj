@@ -4,7 +4,7 @@
     <Description>NATS Client API</Description>
     <Copyright>Copyright The NATS Authors 2017-2018</Copyright>
     <AssemblyTitle>NATS Client</AssemblyTitle>
-    <VersionPrefix>0.8.2</VersionPrefix>
+    <VersionPrefix>0.9.0</VersionPrefix>
     <TargetFramework>netstandard1.6</TargetFramework>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <AssemblyName>NATS.Client</AssemblyName>

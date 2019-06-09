@@ -10,14 +10,14 @@ if errorlevel 9009 if not errorlevel 9010 (
     goto End
 )
 
-if NOT EXIST ..\bin\net45\NATS.Client.DLL (
-    echo Cannot find ..\bin\net45\NATS.Client.DLL
+if NOT EXIST ..\net45\NATS.Client\bin\Release\NATS.Client.DLL (
+    echo Cannot find ..\net45\NATS.Client\bin\Release\\NATS.Client.DLL
     goto End
 )
+dir ..\net45\NATS.Client\bin\Release\NATS.Client.DLL
 
-
-if NOT EXIST ..\bin\net45\NATS.Client.XML (
-    echo Cannot find ..\bin\net45\NATS.Client.DLL
+if NOT EXIST ..\net45\NATS.Client\bin\Release\NATS.Client.XML (
+    echo Cannot find ..\net45\NATS.Client\bin\Release\NATS.Client.XML
     goto End
 )
 
@@ -25,14 +25,15 @@ if NOT EXIST ..\NATS.Client\bin\Release\netstandard1.6 (
     echo Cannot find .NET core build.
     goto End
 )
+dir ..\NATS.Client\bin\Release\netstandard1.6
 
 mkdir tmp 2>NUL
 mkdir tmp\lib 2>NUL
 mkdir tmp\lib\net45 2>NUL
 mkdir tmp\lib\netstandard1.6 2>NUL
 
-copy ..\bin\net45\NATS.Client.DLL tmp\lib\net45 1>NUL
-copy ..\bin\net45\NATS.Client.XML tmp\lib\net45 1>NUL
+copy ..\net45\NATS.Client\bin\Release\NATS.Client.DLL tmp\lib\net45 1>NUL
+copy ..\net45\NATS.Client\bin\Release\NATS.Client.XML tmp\lib\net45 1>NUL
 
 REM .NET core
 copy ..\NATS.Client\bin\Release\netstandard1.6\* tmp\lib\netstandard1.6 1>NUL
