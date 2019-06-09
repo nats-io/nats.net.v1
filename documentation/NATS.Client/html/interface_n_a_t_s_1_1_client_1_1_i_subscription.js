@@ -2,6 +2,10 @@ var interface_n_a_t_s_1_1_client_1_1_i_subscription =
 [
     [ "AutoUnsubscribe", "interface_n_a_t_s_1_1_client_1_1_i_subscription.html#af60510f6e75bc2fe6c31768f9b1e6e94", null ],
     [ "ClearMaxPending", "interface_n_a_t_s_1_1_client_1_1_i_subscription.html#aa941089ff64ccd48f530698cd460190b", null ],
+    [ "Drain", "interface_n_a_t_s_1_1_client_1_1_i_subscription.html#a62643077a8d82a89629d7c68f10b9b47", null ],
+    [ "Drain", "interface_n_a_t_s_1_1_client_1_1_i_subscription.html#ab612996f3e304157eb4b6d9bad33ed60", null ],
+    [ "DrainAsync", "interface_n_a_t_s_1_1_client_1_1_i_subscription.html#ad440ffe33ef0152d90d8f68b99c48505", null ],
+    [ "DrainAsync", "interface_n_a_t_s_1_1_client_1_1_i_subscription.html#a822e2e4d9a15910bc424e44cbb70d5e3", null ],
     [ "GetMaxPending", "interface_n_a_t_s_1_1_client_1_1_i_subscription.html#adcd1652be7ee61b34ceb4e009cc1b67c", null ],
     [ "GetPending", "interface_n_a_t_s_1_1_client_1_1_i_subscription.html#aedf741af5c64fcdf2897f101608b5a52", null ],
     [ "SetPendingLimits", "interface_n_a_t_s_1_1_client_1_1_i_subscription.html#acec3df78fc38cac58aeb37c5370000ec", null ],
