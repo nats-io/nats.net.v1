@@ -2,17 +2,17 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
     <metadata>
         <id>NATS.Client</id>
-        <version>0.8.2</version>
+        <version>0.9.0</version>
         <title>NATS .NET Client</title>
         <authors>The NATS Authors</authors>
-        <owners>The NATS Authors</owners>
-        <licenseUrl>https://raw.githubusercontent.com/nats-io/csharp-nats/master/LICENSE</licenseUrl>
-        <projectUrl>https://github.com/nats-io/csharp-nats</projectUrl>
+        <owners>CNCF</owners>
+        <license type="expression">Apache-2.0</license>
+        <projectUrl>https://nats.io</projectUrl>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
-        <description>NATS acts as a central nervous system for distributed systems at scale, such as mobile devices, IoT networks, and cloud native infrastructure.  This is the .NET client API.</description>
+        <description>NATS acts as a central nervous system for distributed systems at scale for IoT, edge computing, and cloud native and on-premise applications.  This is the .NET client API.</description>
         <summary>NATS .NET Client</summary>
-        <releaseNotes>Performance improvements, infinite reconnect, bug fixes</releaseNotes>
-        <copyright>Copyright 2016-2018 The NATS Authors</copyright>
+        <releaseNotes>See See https://github.com/nats-io/nats.net/releases/v0.9.0</releaseNotes>
+        <copyright>Copyright 2016-2019 The NATS Authors</copyright>
         <language />
         <tags>CNCF NATS Messaging Cloud Publish Subscribe PubSub</tags>
         <frameworkAssemblies>
