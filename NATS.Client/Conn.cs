@@ -23,6 +23,7 @@ using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Authentication;
 using System.Globalization;
+using System.Diagnostics;
 
 namespace NATS.Client
 {
@@ -56,7 +57,18 @@ namespace NATS.Client
         /// The <see cref="IConnection"/> is currently connecting
         /// to a NATS Server.
         /// </summary>
-        CONNECTING
+        CONNECTING,
+
+        /// <summary>
+        /// The <see cref="IConnection"/> is currently draining subscriptions.
+        /// </summary>
+        DRAINING_SUBS,
+
+        /// <summary>
+        /// The <see cref="IConnection"/> is currently connecting draining
+        /// publishers.
+        /// </summary>
+        DRAINING_PUBS
     }
 
     internal enum ClientProtcolVersion
@@ -2350,12 +2362,15 @@ namespace NATS.Client
 
             lock (mu)
             {
+                if (isClosed())
+                    throw new NATSConnectionClosedException();
+
+                if (isDrainingPubs())
+                    throw new NATSConnectionDrainingException();
+
                 // Proactively reject payloads over the threshold set by server.
                 if (count > info.maxPayload)
                     throw new NATSMaxPayloadException();
-
-                if (isClosed())
-                    throw new NATSConnectionClosedException();
 
                 if (lastEx != null)
                     throw lastEx;
@@ -3208,6 +3223,8 @@ namespace NATS.Client
             {
                 if (isClosed())
                     throw new NATSConnectionClosedException();
+                if (IsDraining())
+                    throw new NATSConnectionDrainingException();
 
                 enableSubChannelPooling();
 
@@ -3240,6 +3257,8 @@ namespace NATS.Client
             {
                 if (isClosed())
                     throw new NATSConnectionClosedException();
+                if (IsDraining())
+                    throw new NATSConnectionDrainingException();
 
                 s = new SyncSubscription(this, subject, queue);
 
@@ -3378,8 +3397,9 @@ namespace NATS.Client
 
         // unsubscribe performs the low level unsubscribe to the server.
         // Use Subscription.Unsubscribe()
-        internal void unsubscribe(Subscription sub, int max)
+        internal Task unsubscribe(Subscription sub, int max, bool drain, int timeout)
         {
+            Task task = null;
             lock (mu)
             {
                 if (isClosed())
@@ -3389,16 +3409,24 @@ namespace NATS.Client
                 if (s == null)
                 {
                     // already unsubscribed
-                    return;
+                    return null;
                 }
 
                 if (max > 0)
                 {
                     s.max = max;
                 }
-                else
+                else if (drain == false)
                 {
                     removeSub(s);
+                }
+
+                if (drain)
+                {
+                    task = new Task(() => {
+                        checkDrained(s, timeout);
+                    }, TaskCreationOptions.PreferFairness);
+                    task.Start();
                 }
 
                 // We will send all subscriptions when reconnecting
@@ -3409,6 +3437,8 @@ namespace NATS.Client
             }
 
             kickFlusher();
+
+            return task;
         }
 
         internal virtual void removeSub(Subscription s)
@@ -3713,6 +3743,251 @@ namespace NATS.Client
             }
         }
 
+        // This allows us to know that whatever we have in the client pending
+        // is correct and the server will not send additional information.
+        private void checkDrained(Subscription s, int timeout)
+        {
+            if (isClosed() || s == null)
+                return;
+
+            // This allows us to know that whatever we have in the client pending
+            // is correct and the server will not send additional information.
+            Flush();
+
+            // Once we are here we just wait for Pending to reach 0 or
+            // any other state to exit this go routine.
+            var sw = Stopwatch.StartNew();
+            while (true)
+            {
+                if (IsClosed())
+                    return;
+
+                Connection c;
+                bool closed;
+                long pMsgs;
+
+                // check our subscription state
+                lock (s.mu)
+                {
+                    c = s.conn;
+                    closed = s.closed;
+                    pMsgs = s.pMsgs;
+                }
+
+                if (c == null || closed || pMsgs == 0)
+                {
+                    lock (mu)
+                    {
+                        removeSub(s);
+                        return;
+                    }
+                }
+
+                Thread.Sleep(100);
+                if (sw.ElapsedMilliseconds > timeout)
+                {
+                    var ex = new NATSTimeoutException("Drain timed out.");
+                    pushDrainException(s, ex);
+                    throw ex;
+                }
+            }
+
+        }
+
+        // processSlowConsumer will set SlowConsumer state and fire the
+        // async error handler if registered.
+        internal void pushDrainException(Subscription s, Exception ex)
+        {
+            if (opts.AsyncErrorEventHandler != null)
+            {
+                EventHandler<ErrEventArgs> aseh = opts.AsyncErrorEventHandler;
+                callbackScheduler.Add(
+                    new Task(() => { aseh(s, new ErrEventArgs(this, s, ex.Message)); })
+                );
+            }
+        }
+
+        private void drain(int timeout)
+        {
+            ICollection<Subscription> lsubs = null;
+            bool timedOut = false;
+
+            lock (mu)
+            {
+                lsubs = subs.Values;
+                status = ConnState.DRAINING_SUBS;
+            }
+
+            Task[] tasks = new Task[lsubs.Count];
+            int i = 0;
+            foreach (var s in lsubs)
+            {
+                try
+                {
+                    tasks[i] = s.InternalDrain(timeout);
+                    i++;
+                }
+                catch (Exception)
+                {
+                    timedOut = true;
+                    // Internal drain will push the exception.
+                }
+            }
+
+            if (Task.WaitAll(tasks, timeout) == false || SubscriptionCount > 0)
+            {
+                timedOut = true;
+                pushDrainException(null, new NATSTimeoutException("Drain timeout."));
+            }
+
+            // flip state
+            lock (mu)
+            {
+                status = ConnState.DRAINING_PUBS;
+            }
+
+            try
+            {
+                Flush();
+            }
+            catch (Exception ex)
+            {
+                timedOut = true;
+                pushDrainException(null, ex);
+            }
+
+            // Move to the closed state.
+            Close();
+
+            if (timedOut)
+                throw new NATSTimeoutException("Drain timeout.");
+        }
+
+        /// <summary>
+        /// Drains a connection for graceful shutdown.
+        /// </summary>
+        /// <remarks>
+        /// Drain will put a connection into a drain state. All subscriptions will
+        /// immediately be put into a drain state. Upon completion, the publishers
+        /// will be drained and can not publish any additional messages. Upon draining
+        /// of the publishers, the connection will be closed. Use the 
+        /// <see cref="Options.ClosedEventHandler"/> option to know when the connection
+        /// has moved from draining to closed.
+        /// </remarks>
+        /// <seealso cref="Close()"/>
+        public void Drain()
+        {
+            var t = DrainAsync();
+            try
+            {
+                t.Wait();
+            }
+            catch (AggregateException)
+            {
+                throw new NATSTimeoutException();
+            }
+        }
+
+        /// <summary>
+        /// Drains a connection for graceful shutdown.
+        /// </summary>
+        /// <remarks>
+        /// Drain will put a connection into a drain state. All subscriptions will
+        /// immediately be put into a drain state. Upon completion, the publishers
+        /// will be drained and can not publish any additional messages. Upon draining
+        /// of the publishers, the connection will be closed. Use the 
+        /// <see cref="Options.ClosedEventHandler"/> option to know when the connection
+        /// has moved from draining to closed.
+        /// </remarks>
+        /// <seealso cref="Close()"/>
+        /// <param name="timeout">The duration to wait before draining.</param> 
+        public void Drain(int timeout)
+        {
+            var t = DrainAsync(timeout);
+            try
+            {
+                t.Wait();
+            }
+            catch (AggregateException)
+            {
+                throw new NATSTimeoutException();
+            }
+        }
+
+        /// <summary>
+        /// Drains a connection for graceful shutdown.
+        /// </summary>
+        /// <remarks>
+        /// Drain will put a connection into a drain state. All subscriptions will
+        /// immediately be put into a drain state. Upon completion, the publishers
+        /// will be drained and can not publish any additional messages. Upon draining
+        /// of the publishers, the connection will be closed. Use the 
+        /// <see cref="Options.ClosedEventHandler"/> option to know when the connection
+        /// has moved from draining to closed.
+        /// </remarks>
+        /// <seealso cref="Close()"/>
+        /// <returns>A task that represents the asynchronous drain operation.</returns>
+        public Task DrainAsync()
+        {
+            return DrainAsync(Defaults.DefaultDrainTimeout);
+        }
+
+        /// <summary>
+        /// Drains a connection for graceful shutdown.
+        /// </summary>
+        /// <remarks>
+        /// Drain will put a connection into a drain state. All subscriptions will
+        /// immediately be put into a drain state. Upon completion, the publishers
+        /// will be drained and can not publish any additional messages. Upon draining
+        /// of the publishers, the connection will be closed. Use the 
+        /// <see cref="Options.ClosedEventHandler"/> option to know when the connection
+        /// has moved from draining to closed.
+        /// </remarks>
+        /// <seealso cref="Close()"/>
+        /// <param name="timeout">The duration to wait before draining.</param> 
+        /// <returns>A task that represents the asynchronous drain operation.</returns>
+        public Task DrainAsync(int timeout)
+        {
+            if (timeout <= 0)
+                throw new ArgumentOutOfRangeException(nameof(timeout), "Timeout must be greater than zero.");
+
+            lock (mu)
+            {
+                status = ConnState.DRAINING_SUBS;
+            }
+            var task = new Task(() => drain(timeout), TaskCreationOptions.PreferFairness);
+            task.Start();
+            return task;
+        }
+
+        // assume the lock is held.
+        private bool isDrainingPubs()
+        {
+            return (status == ConnState.DRAINING_PUBS);
+        }
+
+        // assume the lock is held.
+        private bool isDrainingSubs()
+        {
+            return (status == ConnState.DRAINING_SUBS);
+        }
+
+        /// <summary>
+        /// Returns a value indicating whether or not the <see cref="Connection"/>
+        /// instance is draining.
+        /// </summary>
+        /// <returns><c>true</c> if and only if the <see cref="Connection"/> is
+        /// draining, otherwise <c>false</c>.</returns>
+        /// <seealso cref="IConnection.Drain()"/>
+        /// <seealso cref="State"/>
+        public bool IsDraining()
+        {
+            lock (mu)
+            {
+                return (status == ConnState.DRAINING_SUBS || status == ConnState.DRAINING_PUBS);
+            }
+        }
+
         /// <summary>
         /// Returns a value indicating whether or not the <see cref="Connection"/>
         /// is currently reconnecting.
@@ -3742,6 +4017,11 @@ namespace NATS.Client
                 }
             }
         }
+
+        /// <summary>
+        /// Get the number of active subscriptions.
+        /// </summary>
+        public int SubscriptionCount => subs.Count;
 
         private bool isReconnecting()
         {
@@ -3780,7 +4060,7 @@ namespace NATS.Client
         {
             lock (mu)
             {
-                this.stats.clear();
+                stats.clear();
             }
         }
 
@@ -3891,7 +4171,7 @@ namespace NATS.Client
             Dispose(true);
             GC.SuppressFinalize(this);
         }
-        #endregion
 
+        #endregion
     } // class Conn
 }

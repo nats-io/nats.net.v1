@@ -132,6 +132,11 @@ namespace NATS.Client
         /// </summary>
         public const long SubPendingBytesLimit = 65536 * 1024;
 
+        /// <summary>
+        /// Default Drain Timeout in milliseconds.
+        /// </summary>
+        public const int DefaultDrainTimeout = 30000;
+
         /*
          * Namespace level defaults
          */

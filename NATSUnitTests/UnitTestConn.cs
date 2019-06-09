@@ -736,6 +736,7 @@ namespace NATSUnitTests
             }
         }
 
+#if memcheck
         [Fact]
         public void TestMemoryLeakRequestReplyAsync()
         {
@@ -790,7 +791,307 @@ namespace NATSUnitTests
                 }
             }
         }
+#endif 
 
+        [Fact]
+        public void TestDrain()
+        {
+            using (new NATSServer())
+            {
+                var c = utils.DefaultTestConnection;
+
+                AutoResetEvent done = new AutoResetEvent(false);
+                int received = 0;
+                int expected = 10;
+
+                var s = c.SubscribeAsync("foo", (obj, args) =>
+                {
+                    // allow messages to back up
+                    Thread.Sleep(100);
+
+                    int count = Interlocked.Increment(ref received);
+                    if (count == expected)
+                    {
+                        done.Set();
+                    }
+                });
+
+                for (int i = 0; i < expected; i++)
+                {
+                    c.Publish("foo", null);
+                }
+                c.Drain();
+
+                done.WaitOne(5000);
+                Assert.True(received == expected, string.Format("recieved {0} of {1}", received, expected));
+            }
+        }
+
+        [Fact]
+        public void TestDrainAsync()
+        {
+            using (new NATSServer())
+            {
+                var c = utils.DefaultTestConnection;
+
+                AutoResetEvent done = new AutoResetEvent(false);
+                int received = 0;
+                int expected = 10;
+
+                var s = c.SubscribeAsync("foo", (obj, args) =>
+                {
+                    // allow messages to back up
+                    Thread.Sleep(250);
+
+                    int count = Interlocked.Increment(ref received);
+                    if (count == expected)
+                    {
+                        done.Set();
+                    }
+                });
+
+                for (int i = 0; i < expected; i++)
+                {
+                    c.Publish("foo", null);
+                }
+                var sw = Stopwatch.StartNew();
+                var t = c.DrainAsync();
+                sw.Stop();
+
+                // are we really async?
+                Assert.True(sw.ElapsedMilliseconds < 2500);
+                t.Wait();
+
+                done.WaitOne(5000);
+                Assert.True(received == expected, string.Format("recieved {0} of {1}", received, expected));
+            }
+        }
+
+        [Fact]
+        public void TestDrainSub()
+        {
+            using (new NATSServer())
+            {
+                var c = utils.DefaultTestConnection;
+
+                AutoResetEvent done = new AutoResetEvent(false);
+                int received = 0;
+                int expected = 10;
+
+                var s = c.SubscribeAsync("foo", (obj, args) =>
+                {
+                    // allow messages to back up
+                    Thread.Sleep(100);
+
+                    int count = Interlocked.Increment(ref received);
+                    if (count == expected)
+                    {
+                        done.Set();
+                    }
+                });
+
+                for (int i = 0; i < expected; i++)
+                {
+                    c.Publish("foo", null);
+                }
+                s.Drain();
+
+                done.WaitOne(5000);
+                Assert.True(received == expected, string.Format("recieved {0} of {1}", received, expected));
+            }
+        }
+
+        [Fact]
+        public void TestDrainSubAsync()
+        {
+            using (new NATSServer())
+            {
+                var c = utils.DefaultTestConnection;
+
+                AutoResetEvent done = new AutoResetEvent(false);
+                int received = 0;
+                int expected = 10;
+
+                var s = c.SubscribeAsync("foo", (obj, args) =>
+                {
+                    // allow messages to back up
+                    Thread.Sleep(100);
+
+                    int count = Interlocked.Increment(ref received);
+                    if (count == expected)
+                    {
+                        done.Set();
+                    }
+                });
+
+                for (int i = 0; i < expected; i++)
+                {
+                    c.Publish("foo", null);
+                }
+                var sw = Stopwatch.StartNew();
+                var t = s.DrainAsync();
+                sw.Stop();
+
+                // are we really async?
+                Assert.True(sw.ElapsedMilliseconds < 1000);
+                t.Wait();
+
+                done.WaitOne(5000);
+                Assert.True(received == expected, string.Format("recieved {0} of {1}", received, expected));
+            }
+        }
+
+        [Fact]
+        public void TestDrainBadParams()
+        {
+            using (new NATSServer())
+            {
+                var c = utils.DefaultTestConnection;
+                var s = c.SubscribeAsync("foo");
+                Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => c.DrainAsync(-1));
+                Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => c.DrainAsync(0));
+                Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => s.DrainAsync(-1));
+                Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => s.DrainAsync(0));
+                Assert.Throws<ArgumentOutOfRangeException>(() => c.Drain(-1));
+                Assert.Throws<ArgumentOutOfRangeException>(() => c.Drain(0));
+                Assert.Throws<ArgumentOutOfRangeException>(() => s.Drain(-1));
+                Assert.Throws<ArgumentOutOfRangeException>(() => s.Drain(0));
+            }
+        }
+
+        [Fact]
+        public void TestDrainTimeoutAsync()
+        {
+            using (new NATSServer())
+            {
+                var c = utils.DefaultTestConnection;
+                var s = c.SubscribeAsync("foo", (obj, args) =>
+                {
+                    // allow about 30s of messages to back up
+                    Thread.Sleep(1000);
+                });
+
+                for (int i = 0; i < 30; i++)
+                {
+                    c.Publish("foo", null);
+                }
+                Stopwatch sw = Stopwatch.StartNew();
+                var t = c.DrainAsync(1000);
+                try
+                {
+                    t.Wait();
+                }
+                catch (Exception)
+                {
+                    // timed out.
+                }
+                sw.Stop();
+
+
+                // add slack for slow CI.
+                Assert.True(sw.ElapsedMilliseconds >= 1000);
+            }
+        }
+
+        [Fact]
+        public void TestDrainBlocking()
+        {
+            using (new NATSServer())
+            {
+                var c = utils.DefaultTestConnection;
+                var s = c.SubscribeAsync("foo", (obj, args) =>
+                {
+                    // allow about 30s of messages to back up
+                    Thread.Sleep(100);
+                });
+
+                for (int i = 0; i < 30; i++)
+                {
+                    c.Publish("foo", null);
+                }
+                Stopwatch sw = Stopwatch.StartNew();
+                Assert.Throws<NATSTimeoutException>(() => c.Drain(500));
+                sw.Stop();
+
+                // add slack for slow CI.
+                Assert.True(sw.ElapsedMilliseconds >= 500);
+            }
+        }
+
+        [Fact]
+        public void TestSubDrainBlockingTimeout()
+        {
+            using (new NATSServer())
+            {
+                bool aehHit = false;
+                AutoResetEvent ev = new AutoResetEvent(false);
+
+                var opts = ConnectionFactory.GetDefaultOptions();
+                opts.AsyncErrorEventHandler = (obj, args) =>
+                {
+                    aehHit = args.Error.Contains("Drain");
+                    ev.Set();
+                };
+
+                var c = new ConnectionFactory().CreateConnection(opts);
+                var s = c.SubscribeAsync("foo", (obj, args) =>
+                {
+                    // allow about 30s of messages to back up
+                    Thread.Sleep(1000);
+                });
+
+                for (int i = 0; i < 30; i++)
+                {
+                    c.Publish("foo", null);
+                }
+                Stopwatch sw = Stopwatch.StartNew();
+                Assert.Throws<NATSTimeoutException>(()=> s.Drain(500));
+                sw.Stop();
+
+                // add slack for slow CI.
+                Assert.True(sw.ElapsedMilliseconds >= 500);
+                Assert.True(ev.WaitOne(4000));
+                Assert.True(aehHit);
+            }
+        }
+
+
+        [Fact]
+        public void TestDrainStateBehavior()
+        {
+            using (new NATSServer())
+            {
+                AutoResetEvent closed = new AutoResetEvent(false);
+
+                var opts = ConnectionFactory.GetDefaultOptions();
+                opts.ClosedEventHandler = (obj, args) =>
+                {
+                    closed.Set(); 
+                };
+                var c = new ConnectionFactory().CreateConnection(opts);
+                var s = c.SubscribeAsync("foo", (obj, args) =>
+                {
+                    // allow about 5s of messages to back up
+                    Thread.Sleep(500);
+                });
+
+                for (int i = 0; i < 10; i++)
+                {
+                    c.Publish("foo", null);
+                }
+                // give us a long timeout to run our test.
+                c.DrainAsync(10000);
+
+                Assert.True(c.State == ConnState.DRAINING_SUBS);
+                Assert.True(c.IsDraining());
+
+                Assert.Throws<NATSConnectionDrainingException>(() => c.SubscribeAsync("foo"));
+                Assert.Throws<NATSConnectionDrainingException>(() => c.SubscribeSync("foo"));
+
+                // Make sure we hit connection closed.
+                Assert.True(closed.WaitOne(10000));
+            }
+        }
 
         /// NOT IMPLEMENTED:
         /// TestServerSecureConnections

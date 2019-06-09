@@ -13,6 +13,7 @@
 
 using System;
 using System.Text;
+using System.Threading.Tasks;
 
 // disable XML comment warnings
 #pragma warning disable 1591
@@ -242,13 +243,22 @@ namespace NATS.Client
                 return;
             }
 
-            c.unsubscribe(this, 0);
+            if (c.IsDraining())
+            {
+                if (throwEx)
+                    throw new NATSConnectionDrainingException();
+
+                return;
+            }
+
+            c.unsubscribe(this, 0, false, 0);
         }
 
         /// <summary>
         /// Removes interest in the <see cref="Subject"/>.
         /// </summary>
-        /// <exception cref="NATSBadSubscriptionException">There is no longer an associated <see cref="Connection"/>
+        /// <exception cref="NATSBadSubscriptionException">There is no longer an associated <see cref="Connection"/></exception>
+        /// <exception cref="NATSConnectionDrainingException">The <see cref="Connection"/> is draining.
         /// for this <see cref="ISubscription"/>.</exception>
         public virtual void Unsubscribe()
         {
@@ -277,7 +287,7 @@ namespace NATS.Client
                 c = conn;
             }
 
-            c.unsubscribe(this, max);
+            c.unsubscribe(this, max, false, 0);
         }
 
         /// <summary>
@@ -554,6 +564,53 @@ namespace NATS.Client
             lock (mu)
             {
                 pMsgsMax = pBytesMax = 0;
+            }
+        }
+
+        internal Task InternalDrain(int timeout)
+        {
+            Connection c = null;
+
+            lock (mu)
+            {
+                if (conn == null)
+                    throw new NATSBadSubscriptionException();
+
+                c = conn;
+            }
+
+            return c.unsubscribe(this, 0, true, timeout);
+        }
+
+        public Task DrainAsync()
+        {
+            return DrainAsync(Defaults.DefaultDrainTimeout);
+        }
+
+        public Task DrainAsync(int timeout)
+        {
+            if (timeout <= 0)
+                throw new ArgumentOutOfRangeException(nameof(timeout), "Timeout must be greater than zero.");
+
+            return InternalDrain(timeout);
+        }
+
+
+        public void Drain()
+        {
+           Drain(Defaults.DefaultDrainTimeout);
+        }
+
+        public void Drain(int timeout)
+        {
+            var t = DrainAsync(timeout);
+            try
+            {
+                t.Wait();
+            }
+            catch (AggregateException)
+            {
+                throw new NATSTimeoutException();
             }
         }
 

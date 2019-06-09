@@ -543,5 +543,81 @@ namespace NATS.Client
         /// <seealso cref="RequestAsync(string, byte[], int)"/>
         /// <seealso cref="RequestAsync(string, byte[], int, CancellationToken)"/>
         long MaxPayload { get; }
+
+        /// <summary>
+        /// Drains a connection for graceful shutdown.
+        /// </summary>
+        /// <remarks>
+        /// Drain will put a connection into a drain state. All subscriptions will
+        /// immediately be put into a drain state. Upon completion, the publishers
+        /// will be drained and can not publish any additional messages. Upon draining
+        /// of the publishers, the connection will be closed. Use the 
+        /// <see cref="Options.ClosedEventHandler"/> option to know when the connection
+        /// has moved from draining to closed.
+        /// </remarks>
+        /// <seealso cref="Close()"/>
+        /// <returns>A task that represents the asynchronous drain operation.</returns>
+        Task DrainAsync();
+
+        /// <summary>
+        /// Drains a connection for graceful shutdown.
+        /// </summary>
+        /// <remarks>
+        /// Drain will put a connection into a drain state. All subscriptions will
+        /// immediately be put into a drain state. Upon completion, the publishers
+        /// will be drained and can not publish any additional messages. Upon draining
+        /// of the publishers, the connection will be closed. Use the 
+        /// <see cref="Options.ClosedEventHandler"/> option to know when the connection
+        /// has moved from draining to closed.
+        /// </remarks>
+        /// <seealso cref="Close()"/>
+        /// <param name="timeout">The duration to wait before draining.</param> 
+        /// <returns>A task that represents the asynchronous drain operation.</returns>
+        Task DrainAsync(int timeout);
+
+        /// <summary>
+        /// Drains a connection for graceful shutdown.
+        /// </summary>
+        /// <remarks>
+        /// Drain will put a connection into a drain state. All subscriptions will
+        /// immediately be put into a drain state. Upon completion, the publishers
+        /// will be drained and can not publish any additional messages. Upon draining
+        /// of the publishers, the connection will be closed. Use the 
+        /// <see cref="Options.ClosedEventHandler"/> option to know when the connection
+        /// has moved from draining to closed.
+        /// </remarks>
+        /// <seealso cref="Close()"/>
+        void Drain();
+
+        /// <summary>
+        /// Drains a connection for graceful shutdown.
+        /// </summary>
+        /// <remarks>
+        /// Drain will put a connection into a drain state. All subscriptions will
+        /// immediately be put into a drain state. Upon completion, the publishers
+        /// will be drained and can not publish any additional messages. Upon draining
+        /// of the publishers, the connection will be closed. Use the 
+        /// <see cref="Options.ClosedEventHandler"/> option to know when the connection
+        /// has moved from draining to closed.
+        /// </remarks>
+        /// <seealso cref="Close()"/>
+        /// <param name="timeout">The duration to wait before draining.</param> 
+        void Drain(int timeout);
+
+        /// <summary>
+        /// Returns a value indicating whether or not the <see cref="IConnection"/>
+        /// connection is draining.
+        /// </summary>
+        /// <returns><c>true</c> if and only if the <see cref="IConnection"/> is
+        /// closed, otherwise <c>false</c>.</returns>
+        /// <seealso cref="Close"/>
+        /// <seealso cref="State"/>
+        bool IsDraining();
+
+        /// <summary>
+        /// Get the number of active subscriptions.
+        /// </summary>
+        int SubscriptionCount { get; }
+
     }
 }
