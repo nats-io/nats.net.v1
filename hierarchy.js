@@ -2,6 +2,7 @@ var hierarchy =
 [
     [ "NATS.Client.ConnectionFactory", "class_n_a_t_s_1_1_client_1_1_connection_factory.html", null ],
     [ "NATS.Client.ConnEventArgs", "class_n_a_t_s_1_1_client_1_1_conn_event_args.html", null ],
+    [ "NATS.Client.DefaultUserJWTHandler", "class_n_a_t_s_1_1_client_1_1_default_user_j_w_t_handler.html", null ],
     [ "NATS.Client.EncodedMessageEventArgs", "class_n_a_t_s_1_1_client_1_1_encoded_message_event_args.html", null ],
     [ "NATS.Client.ErrEventArgs", "class_n_a_t_s_1_1_client_1_1_err_event_args.html", null ],
     [ "NATS.Client.IConnection", "interface_n_a_t_s_1_1_client_1_1_i_connection.html", [
@@ -34,7 +35,9 @@ var hierarchy =
     [ "NATS.Client.NATSException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_exception.html", [
       [ "NATS.Client.NATSBadSubscriptionException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_bad_subscription_exception.html", null ],
       [ "NATS.Client.NATSConnectionClosedException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_connection_closed_exception.html", null ],
-      [ "NATS.Client.NATSConnectionException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_connection_exception.html", null ],
+      [ "NATS.Client.NATSConnectionException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_connection_exception.html", [
+        [ "NATS.Client.NATSConnectionDrainingException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_connection_draining_exception.html", null ]
+      ] ],
       [ "NATS.Client.NATSMaxMessagesException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_max_messages_exception.html", null ],
       [ "NATS.Client.NATSMaxPayloadException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_max_payload_exception.html", null ],
       [ "NATS.Client.NATSNoServersException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_no_servers_exception.html", null ],
@@ -45,6 +48,10 @@ var hierarchy =
       [ "NATS.Client.NATSStaleConnectionException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_stale_connection_exception.html", null ],
       [ "NATS.Client.NATSTimeoutException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_timeout_exception.html", null ]
     ] ],
+    [ "NATS.Client.NkeyPair", "class_n_a_t_s_1_1_client_1_1_nkey_pair.html", null ],
+    [ "NATS.Client.Nkeys", "class_n_a_t_s_1_1_client_1_1_nkeys.html", null ],
     [ "NATS.Client.NUID", "class_n_a_t_s_1_1_client_1_1_n_u_i_d.html", null ],
-    [ "NATS.Client.Options", "class_n_a_t_s_1_1_client_1_1_options.html", null ]
+    [ "NATS.Client.Options", "class_n_a_t_s_1_1_client_1_1_options.html", null ],
+    [ "NATS.Client.UserJWTEventArgs", "class_n_a_t_s_1_1_client_1_1_user_j_w_t_event_args.html", null ],
+    [ "NATS.Client.UserSignatureEventArgs", "class_n_a_t_s_1_1_client_1_1_user_signature_event_args.html", null ]
 ];
