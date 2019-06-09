@@ -33,6 +33,7 @@ namespace NATS.Client
         bool useOldRequestStyle = false;
         bool secure = false;
         bool allowReconnect = true;
+        bool noEcho = false;
         int maxReconnect  = Defaults.MaxReconnect;
         int reconnectWait = Defaults.ReconnectWait;
         int pingInterval  = Defaults.PingInterval;
@@ -205,6 +206,7 @@ namespace NATS.Client
             maxReconnect = o.maxReconnect;
             name = o.name;
             noRandomize = o.noRandomize;
+            noEcho = o.noEcho;
             pedantic = o.pedantic;
             useOldRequestStyle = o.useOldRequestStyle;
             pingInterval = o.pingInterval;
@@ -568,6 +570,13 @@ namespace NATS.Client
             }
         }
 
+        /// <summary>
+        /// NoEcho configures whether the server will echo back messages
+        /// that are sent on this connection if we also have matching subscriptions.
+        /// Note this is supported on servers >= version 1.2. Proto 1 or greater.
+        /// </summary>
+        public bool NoEcho { get => noEcho; set => noEcho = value; }
+
         private void appendEventHandler(StringBuilder sb, String name, Delegate eh)
         {
             if (eh != null)
@@ -596,6 +605,7 @@ namespace NATS.Client
             sb.AppendFormat("MaxReconnect={0};", MaxReconnect);
             sb.AppendFormat("Name={0};", Name != null ? Name : "null");
             sb.AppendFormat("NoRandomize={0};", NoRandomize);
+            sb.AppendFormat("NoEcho={0};", NoEcho);
             sb.AppendFormat("Pendantic={0};", Pedantic);
             sb.AppendFormat("UseOldRequestStyle={0}", UseOldRequestStyle);
             sb.AppendFormat("PingInterval={0};", PingInterval);

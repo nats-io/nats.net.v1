@@ -31,6 +31,7 @@ namespace NATS.Client
         internal long maxPayload;
         internal string[] connectURLs;
         internal string serverNonce;
+        internal int serverProto;
 
         [DataMember]
         public string server_id
@@ -95,6 +96,9 @@ namespace NATS.Client
             set { serverNonce = value; }
         }
 
+        [DataMember]
+        internal int proto { get => serverProto; set => serverProto = value; }
+
         public static ServerInfo CreateFromJson(string json)
         {
             using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(json)))
@@ -121,6 +125,7 @@ namespace NATS.Client
         string clientLang = Defaults.LangString;
         string clientVersion = Defaults.Version;
         int protocolVersion = (int)ClientProtcolVersion.ClientProtoInfo;
+        bool clientEcho;
         string authToken = null;
 
         [DataMember]
@@ -162,8 +167,11 @@ namespace NATS.Client
         [DataMember]
         public string sig { get => signature; set => signature = value; }
 
+        [DataMember]
+        public bool echo { get => clientEcho; set => clientEcho = value; }
+
         internal ConnectInfo(bool verbose, bool pedantic, string ujwt, string nkey, string sig, 
-            string user, string pass, string token, bool secure, string name)
+            string user, string pass, string token, bool secure, string name, bool echo)
         {
             isVerbose = verbose;
             isPedantic = pedantic;
@@ -175,6 +183,7 @@ namespace NATS.Client
             sslRequired = secure;
             clientName = name;
             authToken = token;
+            clientEcho = echo;
         }
 
         internal string ToJson()
