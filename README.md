@@ -14,7 +14,7 @@ This NATS Maintainer supported client parallels the [NATS GO Client](https://git
 First, download the source code:
 
 ```text
-git clone git@github.com:nats-io/csharp-nats.git
+git clone git@github.com:nats-io/nats.net.git
 ```
 
 ### Quick Start
@@ -90,7 +90,7 @@ build_doc.bat
 Doxygen will build the NATS .NET Client API documentation, placing it in the `documentation\NATS.Client\html` directory.
 Doxygen is required to be installed and in the PATH.  Version 1.8 is known to work.
 
-[Current API Documentation](http://nats-io.github.io/csharp-nats)
+[Current API Documentation](http://nats-io.github.io/nats.net)
 
 ## Basic Usage
 
@@ -556,7 +556,7 @@ validation callback through the NATS client options.
 ```
 
 The NATS server default cipher suites **may not be supported** by the Microsoft
-.NET framework.  Please refer to **gnatsd --help_tls** usage and configure
+.NET framework.  Please refer to **nats-server --help_tls** usage and configure
 the  NATS server to include the most secure cipher suites supported by the
 .NET framework.
 
@@ -653,7 +653,7 @@ The NATS .NET client can throw the following exceptions:
 Benchmarking the NATS .NET Client is simple - run the benchmark application with a default NATS server running.  Tests can be customized, run benchmark -h for more details.  In order to get the best out of your test, update the priority of the benchmark application and the NATS server:
 
 ```
-start /B /REALTIME gnatsd.exe
+start /B /REALTIME nats-server.exe
 ```
 And the benchmark:
 ```
