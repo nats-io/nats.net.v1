@@ -14,7 +14,7 @@ This NATS Maintainer supported client parallels the [NATS GO Client](https://git
 First, download the source code:
 
 ```text
-git clone git@github.com:nats-io/csharp-nats.git
+git clone git@github.com:nats-io/nats.net.git
 ```
 
 ### Quick Start
