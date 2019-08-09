@@ -650,8 +650,6 @@ namespace NATS.Client
                         CancellationToken.None,
                         TaskCreationOptions.LongRunning | TaskCreationOptions.DenyChildAttach,
                         TaskScheduler.Default);
-
-                    channelTask.Start();
                 }
 
                 internal Channel<Msg> Channel { get; }
