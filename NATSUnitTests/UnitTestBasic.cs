@@ -62,8 +62,7 @@ namespace NATSUnitTests
                 for (int i = 0; i < 10; i++)
                 {
 
-                    tasks[i] = new Task(() => { c.Close(); });
-                    tasks[i].Start();
+                    tasks[i] = Task.Run(() => c.Close());
                 }
 
                 Task.WaitAll(tasks);
@@ -1121,8 +1120,9 @@ namespace NATSUnitTests
                     c.Publish("foo", Encoding.UTF8.GetBytes("Hello"));
                 }
 
-                new Task(() => { c.Close(); }).Start();
                 c.Flush();
+
+                Task.Run(() => c.Close());
             }
         }
 
@@ -1203,8 +1203,7 @@ namespace NATSUnitTests
 
                 using (IConnection c = utils.DefaultTestConnection)
                 {
-
-                    new Task(() => { c.Publish("foo", null); }).Start();
+                    Task.Run(() => c.Publish("foo", null));
 
                     Thread.Sleep(1000);
 
