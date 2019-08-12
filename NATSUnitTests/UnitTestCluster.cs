@@ -285,12 +285,10 @@ namespace NATSUnitTests
             for (int i = 0; i < numClients; i++)
             {
                 clients[i] = new SimClient();
-                Task t = new Task(() => {
-                    clients[i].Connect(testServers); 
+                waitgroup[i] = Task.Run(() => {
+                    clients[i].Connect(testServers);
                     clients[i].waitForReconnect();
                 });
-                t.Start();
-                waitgroup[i] = t;
             }
 
 

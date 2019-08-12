@@ -117,7 +117,7 @@ namespace NATSUnitTests
                         sw.Start();
                         try
                         {
-                            new Task(() => { Thread.Sleep(100); c.Close(); }).Start();
+                            Task.Run(() => { Thread.Sleep(100); c.Close(); });
                             s.NextMessage(10000);
                         }
                         catch (Exception) { /* ignore */ }

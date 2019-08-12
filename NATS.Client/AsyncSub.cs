@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 // disable XML comment warnings
@@ -35,7 +36,7 @@ namespace NATS.Client
         /// </summary>
         public event EventHandler<MsgHandlerEventArgs> MessageHandler;
 
-        private Task                msgFeeder = null;
+        private Task msgFeeder = null;
 
         private bool started = false;
 
@@ -115,12 +116,18 @@ namespace NATS.Client
         {
             if (ownsChannel && msgFeeder == null)
             {
-                msgFeeder = new Task(() => { conn.deliverMsgs(mch); },
-                    TaskCreationOptions.LongRunning);
-                msgFeeder.Start();
+                // Use the default task scheduler and do not let child tasks launched
+                // when delivering messages to attach to this task (Issue #273)
+                msgFeeder = Task.Factory.StartNew(
+                    doAsyncProcessing,
+                    CancellationToken.None,
+                    TaskCreationOptions.LongRunning | TaskCreationOptions.DenyChildAttach,
+                    TaskScheduler.Default);
             }
             started = true;
         }
+
+        private void doAsyncProcessing() => conn.deliverMsgs(mch);
 
         internal void disableAsyncProcessing()
         {

@@ -495,19 +495,21 @@ namespace NATSUnitTests
             using (var server = new NATSServer())
             {
 
-                Task t = new Task(() =>
-                {
-                    connectedEv.WaitOne(10000);
-
-                    Random r = new Random();
-
-                    // increase this count for a longer running test.
-                    for (int i = 0; i < 10; i++)
+                Task t = Task.Factory.StartNew(() =>
                     {
-                        server.Bounce(r.Next(500));
-                    }
-                }, TaskCreationOptions.LongRunning);
-                t.Start();
+                        connectedEv.WaitOne(10000);
+
+                        Random r = new Random();
+
+                        // increase this count for a longer running test.
+                        for (int i = 0; i < 10; i++)
+                        {
+                            server.Bounce(r.Next(500));
+                        }
+                    },
+                    CancellationToken.None,
+                    TaskCreationOptions.LongRunning | TaskCreationOptions.DenyChildAttach,
+                    TaskScheduler.Default);
 
                 byte[] payload = Encoding.UTF8.GetBytes("hello");
                 using (var c = utils.DefaultTestConnection)

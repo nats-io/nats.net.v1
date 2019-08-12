@@ -246,10 +246,11 @@ namespace NATS.Client
         // likely be easier to port to .NET core.
         private class CallbackScheduler : IDisposable
         {
-            Channel<Task> tasks            = new Channel<Task>() { Name = "Tasks" };
-            Task          executorTask     = null;
-            object        runningLock      = new object();
-            bool          schedulerRunning = false;
+            private readonly object runningLock = new object();
+            private readonly Channel<Action> tasks = new Channel<Action>() { Name = "Tasks" };
+
+            private Task executorTask     = null;
+            private bool schedulerRunning = false;
 
             private bool Running
             {
@@ -274,10 +275,10 @@ namespace NATS.Client
             {
                 while (Running)
                 {
-                    Task t = tasks.get(-1);
+                    Action action = tasks.get(-1);
                     try
                     {
-                        t.RunSynchronously();
+                        action();
                     }
                     catch (Exception) { }
                 }
@@ -288,27 +289,35 @@ namespace NATS.Client
                 lock (runningLock)
                 {
                     schedulerRunning = true;
-                    executorTask = new Task(() => { process(); });
-                    executorTask.Start();
+
+                    // Use the default task scheduler and do not let child tasks launched
+                    // when running actions to attach to this task (Issue #273)
+                    executorTask = Task.Factory.StartNew(
+                        process, 
+                        CancellationToken.None,
+                        TaskCreationOptions.LongRunning | TaskCreationOptions.DenyChildAttach,
+                        TaskScheduler.Default);
                 }
             }
 
-            internal void Add(Task t)
+            internal void Add(Action action)
             {
                 lock (runningLock)
                 {
                     if (schedulerRunning)
-                        tasks.add(t);
+                        tasks.add(action);
                 }
             }
 
             internal void ScheduleStop()
             {
-                Add(new Task(() =>
-                {
-                    Running = false;
-                    tasks.close();
-                }));
+                Add(StopInternal);
+            }
+
+            private void StopInternal()
+            {
+                Running = false;
+                tasks.close();
             }
 
             internal void WaitForCompletion()
@@ -622,34 +631,37 @@ namespace NATS.Client
             // TODO:  Investigate reuse of this class in async sub.
             private sealed class SubChannelProcessor : IDisposable
             {
-                Channel<Msg> channel = new Channel<Msg>();
-                Connection connection = null;
-                Task channelTask = null;
+                private readonly Connection connection;
+                private Task channelTask = null;
 
                 internal SubChannelProcessor(Connection c)
                 {
                     connection = c;
 
-                    channel.Name = "SubChannelProcessor " + this.GetHashCode();
+                    Channel = new Channel<Msg>()
+                    {
+                        Name = "SubChannelProcessor " + this.GetHashCode(),
+                    };
 
-                    channelTask = new Task(() => {
-                        connection.deliverMsgs(channel);
-                    }, TaskCreationOptions.LongRunning);
-
-                    channelTask.Start();
+                    // Use the default task scheduler and do not let child tasks launched
+                    // when delivering messages to attach to this task (Issue #273)
+                    channelTask = Task.Factory.StartNew(
+                        DeliverMessages, 
+                        CancellationToken.None,
+                        TaskCreationOptions.LongRunning | TaskCreationOptions.DenyChildAttach,
+                        TaskScheduler.Default);
                 }
 
-                internal Channel<Msg> Channel
-                {
-                    get { return channel; }
-                }
+                internal Channel<Msg> Channel { get; }
+
+                private void DeliverMessages() => connection.deliverMsgs(Channel);
 
                 public void Dispose()
                 {
                     // closing the channel will end the task, but cap the
                     // wait just in case things are slow.  
                     // See Connection.deliverMsgs
-                    channel.close();
+                    Channel.close();
                     channelTask.Wait(500);
 #if NET45
                     channelTask.Dispose();
@@ -1077,7 +1089,11 @@ namespace NATS.Client
             // ping timer which can create a memory leak.
             startPingTimer();
 
-            new Task(() => { spinUpSocketWatchers(); }).Start();
+            Task.Factory.StartNew(
+                spinUpSocketWatchers,
+                CancellationToken.None,
+                TaskCreationOptions.LongRunning | TaskCreationOptions.DenyChildAttach,
+                TaskScheduler.Default);
         }
 
         internal bool connect(Srv s, out Exception exToThrow)
@@ -1463,15 +1479,14 @@ namespace NATS.Client
         // Caller must lock.
         private void scheduleConnEvent(EventHandler<ConnEventArgs> connEvent)
         {
-            if (connEvent == null)
-                return;
-
             // Schedule a reference to the event handler.
             EventHandler<ConnEventArgs> eh = connEvent;
-            callbackScheduler.Add(
-                new Task(() => { eh(this, new ConnEventArgs(this)); })
-            );
-
+            if (eh != null)
+            {
+                callbackScheduler.Add(
+                    () => { eh(this, new ConnEventArgs(this)); }
+                );
+            }
         }
 
         // Try to reconnect using the option parameters.
@@ -2074,12 +2089,15 @@ namespace NATS.Client
         internal void processSlowConsumer(Subscription s)
         {
             lastEx = new NATSSlowConsumerException();
-            if (opts.AsyncErrorEventHandler != null && !s.sc)
+            if (!s.sc)
             {
                 EventHandler<ErrEventArgs> aseh = opts.AsyncErrorEventHandler;
-                callbackScheduler.Add(
-                    new Task(() => { aseh(this, new ErrEventArgs(this, s, "Slow Consumer")); })
-                );
+                if (aseh != null)
+                {
+                    callbackScheduler.Add(
+                        () => { aseh(this, new ErrEventArgs(this, s, "Slow Consumer")); }
+                    );
+                }
             }
             s.sc = true;
         }
@@ -2847,11 +2865,11 @@ namespace NATS.Client
             // Simple case without a cancellation token.
             if (ct == null)
             {
-                return Task.Factory.StartNew<Msg>(() => { return oldRequest(subject, data, offset, count, timeout); });
+                return Task.Run(() => oldRequest(subject, data, offset, count, timeout));
             }
 
             // More complex case, supporting cancellation.
-            return Task.Factory.StartNew<Msg>(() =>
+            return Task.Run(() =>
             {
                 // check if we are already cancelled.
                 ct.ThrowIfCancellationRequested();
@@ -3427,10 +3445,7 @@ namespace NATS.Client
 
                 if (drain)
                 {
-                    task = new Task(() => {
-                        checkDrained(s, timeout);
-                    }, TaskCreationOptions.PreferFairness);
-                    task.Start();
+                    task = Task.Run(() => checkDrained(s, timeout));
                 }
 
                 // We will send all subscriptions when reconnecting
@@ -3802,11 +3817,11 @@ namespace NATS.Client
         // async error handler if registered.
         internal void pushDrainException(Subscription s, Exception ex)
         {
-            if (opts.AsyncErrorEventHandler != null)
+            EventHandler<ErrEventArgs> aseh = opts.AsyncErrorEventHandler;
+            if (aseh != null)
             {
-                EventHandler<ErrEventArgs> aseh = opts.AsyncErrorEventHandler;
                 callbackScheduler.Add(
-                    new Task(() => { aseh(s, new ErrEventArgs(this, s, ex.Message)); })
+                    () => { aseh(s, new ErrEventArgs(this, s, ex.Message)); }
                 );
             }
         }
@@ -3959,9 +3974,8 @@ namespace NATS.Client
             {
                 status = ConnState.DRAINING_SUBS;
             }
-            var task = new Task(() => drain(timeout), TaskCreationOptions.PreferFairness);
-            task.Start();
-            return task;
+
+            return Task.Run(() => drain(timeout));
         }
 
         // assume the lock is held.
