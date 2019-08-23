@@ -501,6 +501,7 @@ namespace NATS.Client
                 }
                 catch (Exception ex)
                 {
+                    sslStream.Dispose();
                     close(client);
                     throw new NATSConnectionException("TLS Authentication error", ex);
                 }

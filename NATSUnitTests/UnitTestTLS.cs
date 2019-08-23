@@ -155,6 +155,33 @@ namespace NATSUnitTests
             }
         }
 
+        // Test verfier to fail on the server cert.
+        //
+        private bool verifyCertAlwaysFail(object sender,
+            X509Certificate certificate, X509Chain chain,
+            SslPolicyErrors sslPolicyErrors)
+        {
+            return false;
+        }
+
+        [Fact]
+        public void TestTlsFailWithInvalidServerCert()
+        {
+            using (NATSServer srv = util.CreateServerWithConfig("tls_1222_verify.conf"))
+            {
+                Options opts = util.DefaultTestOptions;
+                opts.Secure = true;
+                opts.Url = "nats://localhost:1222";
+                opts.TLSRemoteCertificationValidationCallback = verifyCertAlwaysFail;
+
+                // this will fail, because it's not complete - missing the private
+                // key.
+                opts.AddCertificate(UnitTestUtilities.GetFullCertificatePath("client-cert.pem"));
+
+                Assert.ThrowsAny<NATSException>(() => new ConnectionFactory().CreateConnection(opts));
+            }
+        }
+
         [Fact]
         public void TestTlsFailWithBadAuth()
         {
