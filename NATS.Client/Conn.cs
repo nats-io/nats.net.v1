@@ -439,6 +439,7 @@ namespace NATS.Client
                     task.ContinueWith(t => GC.KeepAlive(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
                     if (!task.Wait(TimeSpan.FromMilliseconds(timeoutMillis)))
                     {
+                        close(client);
                         client = null;
                         throw new NATSConnectionException("timeout");
                     }
@@ -467,7 +468,7 @@ namespace NATS.Client
                 return false;
             }
 
-            internal void closeClient(TcpClient c)
+            internal static void close(TcpClient c)
             {
                 if (c != null)
                 {
@@ -500,7 +501,10 @@ namespace NATS.Client
                 }
                 catch (Exception ex)
                 {
-                    closeClient(client);
+                    sslStream.Dispose();
+                    sslStream = null;
+
+                    close(client);
                     throw new NATSConnectionException("TLS Authentication error", ex);
                 }
             }
@@ -540,7 +544,7 @@ namespace NATS.Client
                         s.Dispose();
 
                     if (c != null)
-                        closeClient(c);
+                        close(c);
                 }
                 catch (Exception) { }
             }
@@ -601,7 +605,7 @@ namespace NATS.Client
                     if (stream != null)
                         stream.Dispose();
                     if (client != null)
-                        closeClient(client);
+                        close(client);
 
                     disposedValue = true;
                 }
