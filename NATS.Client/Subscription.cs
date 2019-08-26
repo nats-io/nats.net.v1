@@ -652,9 +652,9 @@ namespace NATS.Client
 
         static private readonly char[] invalidSubjectChars = { '\r', '\n', '\t', ' '};
 
-        private static bool IsValidTokenOrQName(string value)
+        private static bool ContainsInvalidChars(string value)
         {
-            return (!string.IsNullOrEmpty(value) && value.LastIndexOfAny(invalidSubjectChars) < 0);
+            return string.IsNullOrEmpty(value) || value.IndexOfAny(invalidSubjectChars) >= 0;
         }
 
         /// <summary>
@@ -662,20 +662,17 @@ namespace NATS.Client
         /// </summary>
         /// <param name="subject">The subject to check</param>
         /// <returns>true if valid, false otherwise.</returns>
-        static public bool IsValidSubject(string subject)
+        public static bool IsValidSubject(string subject)
         {
-            if (!IsValidTokenOrQName(subject))
+            if (ContainsInvalidChars(subject))
             {
                 return false;
             }
 
-            string[] tokens = subject.Split('.');
-            foreach (string t in tokens)
+            // Avoid split for performance, in case this is ever called in the fastpath.
+            if (subject.StartsWith(".") || subject.EndsWith(".") || subject.Contains(".."))
             {
-                if (t.Length == 0)
-                {
-                    return false;
-                }
+                return false;
             }
             return true;
         }
@@ -685,9 +682,9 @@ namespace NATS.Client
         /// </summary>
         /// <param name="queueGroup"></param>
         /// <returns>true is the queue group name is valid, false otherwise.</returns>
-        static public bool IsValidQueueGroupName(string queueGroup)
+        public static bool IsValidQueueGroupName(string queueGroup)
         {
-            return IsValidTokenOrQName(queueGroup);
+            return ContainsInvalidChars(queueGroup) == false;
         }
 
         #endregion
