@@ -122,7 +122,8 @@ namespace NATS.Client
     /// </summary>
     public class NATSBadSubscriptionException : NATSException
     {
-        internal NATSBadSubscriptionException() : base("Subcription is not valid.") { }
+        internal NATSBadSubscriptionException() : base("Subscription is not valid.") { }
+        internal NATSBadSubscriptionException(string s) : base("s") { }
     }
 
     /// <summary>

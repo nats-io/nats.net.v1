@@ -182,8 +182,8 @@ namespace NATSUnitTests
                             }
                             catch (Exception)
                             {
-                            // ignore
-                        }
+                                // ignore
+                            }
 
                             s.NextMessage();
                         });
@@ -282,12 +282,12 @@ namespace NATSUnitTests
                                 Assert.True(args.Subscription == s);
                                 Assert.Contains("Slow", args.Error);
 
-                            // release the subscriber
-                            Monitor.Pulse(subLock);
+                                // release the subscriber
+                                Monitor.Pulse(subLock);
                             }
 
-                        // release the test
-                        lock (testLock) { Monitor.Pulse(testLock); }
+                            // release the test
+                            lock (testLock) { Monitor.Pulse(testLock); }
                         };
 
                         bool blockedOnSubscriber = false;
@@ -332,7 +332,7 @@ namespace NATSUnitTests
         [Fact]
         public void TestAsyncSubscriberStarvation()
         {
-           AutoResetEvent ev = new AutoResetEvent(false);
+            AutoResetEvent ev = new AutoResetEvent(false);
 
             using (new NATSServer())
             {
@@ -894,7 +894,7 @@ namespace NATSUnitTests
 
             var opts = utils.DefaultTestOptions;
             opts.SubscriberDeliveryTaskCount = 2;
-            opts.DisconnectedEventHandler = (obj, args) => { disconnected = true;};
+            opts.DisconnectedEventHandler = (obj, args) => { disconnected = true; };
             opts.ReconnectedEventHandler = (obj, args) => { reconnectEv.Set(); };
 
             using (var server = new NATSServer())
@@ -992,6 +992,54 @@ namespace NATSUnitTests
                 }
             }
         }
-	}
+
+        static readonly string[] invalidSubjects = { "foo bar", "foo..bar", ".foo", "bar.baz.", "baz\t.foo" };
+        static readonly string[] invalidQNames = { "foo group", "group\t1", "g1\r\n2" };
+
+        [Fact]
+        public void TestSubscriptionValidationAPI()
+        {
+            Assert.True(Subscription.IsValidSubject("foo"));
+            Assert.True(Subscription.IsValidSubject("foo.bar"));
+
+            foreach (string s in invalidSubjects)
+            {
+                Assert.False(Subscription.IsValidSubject(s));
+            }
+
+            foreach (string s in invalidQNames)
+            {
+                Assert.False(Subscription.IsValidQueueGroupName(s));
+            }
+        }
+
+        [Fact]
+        public void TestInvalidSubjects()
+        {
+            EventHandler<MsgHandlerEventArgs> mh = (obj, args) => { /* NOOP */ };
+            using (new NATSServer())
+            {
+                var c = utils.DefaultTestConnection;
+
+                foreach (string s in invalidSubjects)
+                {
+                    Assert.Throws<NATSBadSubscriptionException>(() => c.SubscribeSync(s));
+                    Assert.Throws<NATSBadSubscriptionException>(() => c.SubscribeSync(s, "qgroup"));
+                    Assert.Throws<NATSBadSubscriptionException>(() => c.SubscribeAsync(s));
+                    Assert.Throws<NATSBadSubscriptionException>(() => c.SubscribeAsync(s, mh));
+                    Assert.Throws<NATSBadSubscriptionException>(() => c.SubscribeAsync(s, "qgroup"));
+                    Assert.Throws<NATSBadSubscriptionException>(() => c.SubscribeAsync(s, "qgroup", mh));
+                }
+
+                foreach (string s in invalidQNames)
+                {
+                    Assert.Throws<NATSBadSubscriptionException>(() => c.SubscribeSync("subject", s));
+
+                    Assert.Throws<NATSBadSubscriptionException>(() => c.SubscribeAsync("subject", s));
+                    Assert.Throws<NATSBadSubscriptionException>(() => c.SubscribeAsync("subject", s, mh));
+                }
+            }
+        }
+    }
 }
 

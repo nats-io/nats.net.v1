@@ -648,6 +648,50 @@ namespace NATS.Client
             }
         }
 
+        #region validation
+
+        static private readonly char[] invalidSubjectChars = { '\r', '\n', '\t', ' '};
+
+        private static bool IsValidTokenOrQName(string value)
+        {
+            return (!string.IsNullOrEmpty(value) && value.LastIndexOfAny(invalidSubjectChars) < 0);
+        }
+
+        /// <summary>
+        /// Checks if a subject is valid.
+        /// </summary>
+        /// <param name="subject">The subject to check</param>
+        /// <returns>true if valid, false otherwise.</returns>
+        static public bool IsValidSubject(string subject)
+        {
+            if (!IsValidTokenOrQName(subject))
+            {
+                return false;
+            }
+
+            string[] tokens = subject.Split('.');
+            foreach (string t in tokens)
+            {
+                if (t.Length == 0)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Checks if the queue group name is valid.
+        /// </summary>
+        /// <param name="queueGroup"></param>
+        /// <returns>true is the queue group name is valid, false otherwise.</returns>
+        static public bool IsValidQueueGroupName(string queueGroup)
+        {
+            return IsValidTokenOrQName(queueGroup);
+        }
+
+        #endregion
+
     }  // Subscription
 
 }
