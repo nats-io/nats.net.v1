@@ -648,6 +648,47 @@ namespace NATS.Client
             }
         }
 
+        #region validation
+
+        static private readonly char[] invalidSubjectChars = { '\r', '\n', '\t', ' '};
+
+        private static bool ContainsInvalidChars(string value)
+        {
+            return string.IsNullOrEmpty(value) || value.IndexOfAny(invalidSubjectChars) >= 0;
+        }
+
+        /// <summary>
+        /// Checks if a subject is valid.
+        /// </summary>
+        /// <param name="subject">The subject to check</param>
+        /// <returns>true if valid, false otherwise.</returns>
+        public static bool IsValidSubject(string subject)
+        {
+            if (ContainsInvalidChars(subject))
+            {
+                return false;
+            }
+
+            // Avoid split for performance, in case this is ever called in the fastpath.
+            if (subject.StartsWith(".") || subject.EndsWith(".") || subject.Contains(".."))
+            {
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Checks if the queue group name is valid.
+        /// </summary>
+        /// <param name="queueGroup"></param>
+        /// <returns>true is the queue group name is valid, false otherwise.</returns>
+        public static bool IsValidQueueGroupName(string queueGroup)
+        {
+            return ContainsInvalidChars(queueGroup) == false;
+        }
+
+        #endregion
+
     }  // Subscription
 
 }

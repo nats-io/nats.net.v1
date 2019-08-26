@@ -3238,9 +3238,13 @@ namespace NATS.Client
         internal AsyncSubscription subscribeAsync(string subject, string queue,
             EventHandler<MsgHandlerEventArgs> handler)
         {
-            if (string.IsNullOrWhiteSpace(subject))
+            if (!Subscription.IsValidSubject(subject))
             {
-                throw new NATSBadSubscriptionException();
+                throw new NATSBadSubscriptionException("Invalid subject.");
+            }
+            if (queue != null && !Subscription.IsValidQueueGroupName(queue))
+            {
+                throw new NATSBadSubscriptionException("Invalid queue group name.");
             }
 
             AsyncSubscription s = null;
@@ -3272,9 +3276,13 @@ namespace NATS.Client
         // function that indicates interest in a subject.
         private SyncSubscription subscribeSync(string subject, string queue)
         {
-            if (string.IsNullOrWhiteSpace(subject))
+            if (!Subscription.IsValidSubject(subject))
             {
-                throw new NATSBadSubscriptionException();
+                throw new NATSBadSubscriptionException("Invalid subject.");
+            }
+            if (queue != null && !Subscription.IsValidQueueGroupName(queue))
+            {
+                throw new NATSBadSubscriptionException("Invalid queue group name.");
             }
 
             SyncSubscription s = null;
