@@ -532,7 +532,6 @@ namespace NATSUnitTests
             }
         }
 
-
         [Fact]
         public void TestAsyncPendingSubscriptionBatchSizeExactlyOne()
         {
@@ -1037,6 +1036,70 @@ namespace NATSUnitTests
 
                     Assert.Throws<NATSBadSubscriptionException>(() => c.SubscribeAsync("subject", s));
                     Assert.Throws<NATSBadSubscriptionException>(() => c.SubscribeAsync("subject", s, mh));
+                }
+            }
+        }
+
+        [Fact]
+        public void TestRespond()
+        {
+            using (new NATSServer())
+            {
+                using (IConnection c = utils.DefaultTestConnection)
+                {
+                    ISyncSubscription s = c.SubscribeSync("foo");
+
+                    string replyTo = c.NewInbox();
+                    ISyncSubscription r = c.SubscribeSync(replyTo);
+
+                    c.Publish("foo", replyTo, Encoding.UTF8.GetBytes("message"));
+
+                    Msg m = s.NextMessage(1000);
+                    Assert.NotNull(m);
+                    Assert.Equal(replyTo, m.Reply);
+
+                    byte[] reply = Encoding.UTF8.GetBytes("reply");
+                    m.Respond(reply);
+
+                    m = r.NextMessage(1000);
+                    Assert.NotNull(m);
+                    Assert.Equal(replyTo, m.Subject);
+                    Assert.Equal(reply, m.Data);
+
+                    s.Unsubscribe();
+                    r.Unsubscribe();
+                }
+            }
+        }
+
+        [Fact]
+        public void TestRespondWithAutoUnsubscribe()
+        {
+            using (new NATSServer())
+            {
+                using (IConnection c = utils.DefaultTestConnection)
+                {
+                    ISyncSubscription s = c.SubscribeSync("foo");
+                    s.AutoUnsubscribe(1);
+
+                    string replyTo = c.NewInbox();
+                    ISyncSubscription r = c.SubscribeSync(replyTo);
+
+                    c.Publish("foo", replyTo, Encoding.UTF8.GetBytes("message"));
+
+                    Msg m = s.NextMessage(1000);
+                    Assert.NotNull(m);
+                    Assert.Equal(replyTo, m.Reply);
+
+                    byte[] reply = Encoding.UTF8.GetBytes("reply");
+                    m.Respond(reply);
+
+                    m = r.NextMessage(1000);
+                    Assert.NotNull(m);
+                    Assert.Equal(replyTo, m.Subject);
+                    Assert.Equal(reply, m.Data);
+
+                    r.Unsubscribe();
                 }
             }
         }

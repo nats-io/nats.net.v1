@@ -131,13 +131,16 @@ namespace NATS.Client
 
         internal void disableAsyncProcessing()
         {
-            if (msgFeeder != null)
+            lock (mu)
             {
-                mch.close();               
-                msgFeeder = null;
+                if (msgFeeder != null)
+                {
+                    mch.close();
+                    msgFeeder = null;
+                }
+                MessageHandler = null;
+                started = false;
             }
-            MessageHandler = null;
-            started = false;
         }
 
         /// <summary>
@@ -155,11 +158,14 @@ namespace NATS.Client
             if (started)
                 return;
 
-            if (conn == null)
-                throw new NATSBadSubscriptionException();
+            lock (mu)
+            {
+                if (conn == null)
+                    throw new NATSBadSubscriptionException();
 
-            conn.sendSubscriptionMessage(this);
-            enableAsyncProcessing();
+                conn.sendSubscriptionMessage(this);
+                enableAsyncProcessing();
+            }
         }
 
         /// <summary>

@@ -168,6 +168,31 @@ namespace NATS.Client
         }
 
         /// <summary>
+        /// Send a response to the message on the arrival subscription.
+        /// </summary>
+        /// <param name="data">The response payload to send.</param>
+        /// <exception cref="NATSException">
+        /// <para><see cref="Reply"/> is null or empty.</para>
+        /// <para>-or-</para>
+        /// <para><see cref="ArrivalSubcription"/> is null.</para>
+        /// </exception>
+        public void Respond(byte[] data)
+        {
+            if (String.IsNullOrEmpty(Reply))
+            {
+                throw new NATSException("No Reply subject");
+            }
+
+            Connection conn = ArrivalSubcription?.Connection;
+            if (conn == null)
+            {
+                throw new NATSException("Message is not bound to a subscription");
+            }
+
+            conn.Publish(this.Reply, data);
+        }
+
+        /// <summary>
         /// Generates a string representation of the messages.
         /// </summary>
         /// <returns>A string representation of the messages.</returns>

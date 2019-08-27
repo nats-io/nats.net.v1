@@ -3485,7 +3485,6 @@ namespace NATS.Client
                 s.mch = null;
             }
 
-            s.conn = null;
             s.closed = true;
         }
 
