@@ -1046,28 +1046,28 @@ namespace NATSUnitTests
             using (new NATSServer())
             {
                 using (IConnection c = utils.DefaultTestConnection)
+                using (ISyncSubscription s = c.SubscribeSync("foo"))
                 {
-                    ISyncSubscription s = c.SubscribeSync("foo");
-
                     string replyTo = c.NewInbox();
-                    ISyncSubscription r = c.SubscribeSync(replyTo);
+                    using (ISyncSubscription r = c.SubscribeSync(replyTo))
+                    {
+                        c.Publish("foo", replyTo, Encoding.UTF8.GetBytes("message"));
 
-                    c.Publish("foo", replyTo, Encoding.UTF8.GetBytes("message"));
+                        Msg m = s.NextMessage(1000);
+                        Assert.NotNull(m);
+                        Assert.Equal(replyTo, m.Reply);
 
-                    Msg m = s.NextMessage(1000);
-                    Assert.NotNull(m);
-                    Assert.Equal(replyTo, m.Reply);
+                        byte[] reply = Encoding.UTF8.GetBytes("reply");
+                        m.Respond(reply);
 
-                    byte[] reply = Encoding.UTF8.GetBytes("reply");
-                    m.Respond(reply);
+                        m = r.NextMessage(1000);
+                        Assert.NotNull(m);
+                        Assert.Equal(replyTo, m.Subject);
+                        Assert.Equal(reply, m.Data);
 
-                    m = r.NextMessage(1000);
-                    Assert.NotNull(m);
-                    Assert.Equal(replyTo, m.Subject);
-                    Assert.Equal(reply, m.Data);
-
-                    s.Unsubscribe();
-                    r.Unsubscribe();
+                        s.Unsubscribe();
+                        r.Unsubscribe();
+                    }
                 }
             }
         }
@@ -1078,29 +1078,96 @@ namespace NATSUnitTests
             using (new NATSServer())
             {
                 using (IConnection c = utils.DefaultTestConnection)
+                using (ISyncSubscription s = c.SubscribeSync("foo"))
                 {
-                    ISyncSubscription s = c.SubscribeSync("foo");
                     s.AutoUnsubscribe(1);
 
                     string replyTo = c.NewInbox();
-                    ISyncSubscription r = c.SubscribeSync(replyTo);
+                    using (ISyncSubscription r = c.SubscribeSync(replyTo))
+                    {
+                        c.Publish("foo", replyTo, Encoding.UTF8.GetBytes("message"));
 
+                        Msg m = s.NextMessage(1000);
+                        Assert.NotNull(m);
+                        Assert.Equal(replyTo, m.Reply);
+
+                        byte[] reply = Encoding.UTF8.GetBytes("reply");
+                        m.Respond(reply);
+
+                        m = r.NextMessage(1000);
+                        Assert.NotNull(m);
+                        Assert.Equal(replyTo, m.Subject);
+                        Assert.Equal(reply, m.Data);
+
+                        r.Unsubscribe();
+                    }
+                }
+            }
+        }
+
+        [Fact]
+        public void TestRespondFailsWithClosedConnection()
+        {
+            using (new NATSServer())
+            {
+                using (IConnection c = utils.DefaultTestConnection)
+                {
+                    ISyncSubscription s = c.SubscribeSync("foo");
+
+                    string replyTo = c.NewInbox();
                     c.Publish("foo", replyTo, Encoding.UTF8.GetBytes("message"));
 
                     Msg m = s.NextMessage(1000);
                     Assert.NotNull(m);
                     Assert.Equal(replyTo, m.Reply);
 
+                    c.Close();
+
                     byte[] reply = Encoding.UTF8.GetBytes("reply");
-                    m.Respond(reply);
+                    Assert.ThrowsAny<NATSConnectionClosedException>(() => m.Respond(reply));
 
-                    m = r.NextMessage(1000);
-                    Assert.NotNull(m);
-                    Assert.Equal(replyTo, m.Subject);
-                    Assert.Equal(reply, m.Data);
-
-                    r.Unsubscribe();
+                    s.Dispose();
                 }
+            }
+        }
+
+        [Fact]
+        public void TestRespondFailsWithServerClosed()
+        {
+            IConnection c = null;
+            ISyncSubscription s = null;
+            try
+            {
+                Msg m;
+                using (NATSServer ns = new NATSServer())
+                {
+                    Options options = utils.DefaultTestOptions;
+                    options.AllowReconnect = false;
+
+                    c = new ConnectionFactory().CreateConnection(options);
+                    s = c.SubscribeSync("foo");
+
+                    string replyTo = c.NewInbox();
+
+                    c.Publish("foo", replyTo, Encoding.UTF8.GetBytes("message"));
+
+                    m = s.NextMessage(1000);
+                    Assert.NotNull(m);
+                    Assert.Equal(replyTo, m.Reply);
+
+                    ns.Shutdown();
+                }
+
+                // Give the server time to close
+                Thread.Sleep(2000);
+
+                byte[] reply = Encoding.UTF8.GetBytes("reply");
+                Assert.ThrowsAny<NATSConnectionClosedException>(() => m.Respond(reply));
+            }
+            finally
+            {
+                c?.Dispose();
+                s?.Dispose();
             }
         }
     }
