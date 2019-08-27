@@ -237,12 +237,24 @@ namespace NATS.Client
                 isClosed = this.closed;
             }
 
-            if (c == null || closed)
+            if (c == null)
             {
                 if (throwEx)
                     throw new NATSBadSubscriptionException();
 
                 return;
+            }
+
+            if (c.IsClosed())
+            {
+                if (throwEx)
+                    throw new NATSConnectionClosedException();
+            }
+
+            if (isClosed)
+            {
+                if (throwEx)
+                    throw new NATSBadSubscriptionException();
             }
 
             if (c.IsDraining())
@@ -283,7 +295,13 @@ namespace NATS.Client
 
             lock (mu)
             {
-                if (conn == null || closed)
+                if (conn == null)
+                    throw new NATSBadSubscriptionException();
+
+                if (conn.IsClosed())
+                    throw new NATSConnectionClosedException();
+
+                if (closed)
                     throw new NATSBadSubscriptionException();
 
                 c = conn;
