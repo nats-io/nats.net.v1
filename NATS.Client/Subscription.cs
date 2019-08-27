@@ -222,7 +222,7 @@ namespace NATS.Client
             {
                 lock (mu)
                 {
-                    return (conn != null);
+                    return (conn != null) && !closed;
                 }
             }
         }
@@ -230,9 +230,11 @@ namespace NATS.Client
         internal void unsubscribe(bool throwEx)
         {
             Connection c;
+            bool isClosed;
             lock (mu)
             {
                 c = this.conn;
+                isClosed = this.closed;
             }
 
             if (c == null)
@@ -241,6 +243,18 @@ namespace NATS.Client
                     throw new NATSBadSubscriptionException();
 
                 return;
+            }
+
+            if (c.IsClosed())
+            {
+                if (throwEx)
+                    throw new NATSConnectionClosedException();
+            }
+
+            if (isClosed)
+            {
+                if (throwEx)
+                    throw new NATSBadSubscriptionException();
             }
 
             if (c.IsDraining())
@@ -284,6 +298,12 @@ namespace NATS.Client
                 if (conn == null)
                     throw new NATSBadSubscriptionException();
 
+                if (conn.IsClosed())
+                    throw new NATSConnectionClosedException();
+
+                if (closed)
+                    throw new NATSBadSubscriptionException();
+
                 c = conn;
             }
 
@@ -301,7 +321,7 @@ namespace NATS.Client
             {
                 lock (mu)
                 {
-                    if (conn == null)
+                    if (conn == null || closed)
                         throw new NATSBadSubscriptionException();
 
                     return mch.Count;
@@ -331,6 +351,9 @@ namespace NATS.Client
                     // We we get here with normal usage, for example when
                     // auto unsubscribing, so ignore.
                 }
+
+                conn = null;
+                closed = true;
 
                 disposedValue = true;
             }
@@ -370,9 +393,8 @@ namespace NATS.Client
 
         private void checkState()
         {
-            if (conn == null)
+            if (conn == null || closed)
                 throw new NATSBadSubscriptionException();
-
         }
 
         /// <summary>
@@ -573,7 +595,7 @@ namespace NATS.Client
 
             lock (mu)
             {
-                if (conn == null)
+                if (conn == null || closed)
                     throw new NATSBadSubscriptionException();
 
                 c = conn;
@@ -594,7 +616,6 @@ namespace NATS.Client
 
             return InternalDrain(timeout);
         }
-
 
         public void Drain()
         {

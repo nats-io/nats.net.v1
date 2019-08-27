@@ -3439,8 +3439,9 @@ namespace NATS.Client
                 if (isClosed())
                     throw new NATSConnectionClosedException();
 
-                Subscription s = subs[sub.sid];
-                if (s == null)
+                Subscription s;
+                if (!subs.TryGetValue(sub.sid, out s)
+                    || s == null)
                 {
                     // already unsubscribed
                     return null;
@@ -3485,7 +3486,6 @@ namespace NATS.Client
                 s.mch = null;
             }
 
-            s.conn = null;
             s.closed = true;
         }
 
