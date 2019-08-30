@@ -1094,8 +1094,6 @@ namespace NATSUnitTests
         }
 
         /// NOT IMPLEMENTED:
-        /// TestServerSecureConnections
-        /// TestErrOnConnectAndDeadlock
         /// TestErrOnMaxPayloadLimit
 
     } // class

@@ -80,6 +80,10 @@ namespace NATS.Client
         /// the current connection.</param>
         /// <param name="data">An array of type <see cref="Byte"/> that contains the data to publish
         /// to the connected NATS server.</param>
+        /// <exception cref="NATSReconnectBufferException"> is thrown when
+        /// publishing while reconnecting and the internal reconnect buffer
+        /// has been disabled or exceeded.</exception>
+        /// <seealso cref="Option.ReconnectBufferSize"></seealso>
         void Publish(string subject, byte[] data);
 
         /// <summary>

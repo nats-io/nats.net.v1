@@ -2406,6 +2406,28 @@ namespace NATS.Client
                 // write our pubProtoBuf buffer to the buffered writer.
                 int pubProtoLen = writePublishProto(pubProtoBuf, subject, reply, count);
 
+                // Check if we are reconnecting, and if so check if
+                // we have exceeded our reconnect outbound buffer limits.
+                // Don't use IsReconnecting to avoid locking.
+                if (status == ConnState.RECONNECTING)
+                {
+                    int rbsize = opts.ReconnectBufferSize;
+                    if (rbsize != 0)
+                    {
+                        if (opts.ReconnectBufferSize == -1)
+                        {
+                            throw new NATSReconnectBufferException("Reconnect buffering has been disabled.");
+                        }
+
+                        bw.Flush();
+
+                        if (pending.Position + count + pubProtoLen > rbsize)
+                        {
+                            throw new NATSReconnectBufferException("Reconnect buffer exceed.");
+                        }
+                    }
+                }
+
                 bw.Write(pubProtoBuf, 0, pubProtoLen);
 
                 if (count > 0)
