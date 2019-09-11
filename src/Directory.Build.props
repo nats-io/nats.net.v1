@@ -1,0 +1,11 @@
+<Project>
+  <PropertyGroup>
+    <Version>0.0.0</Version>
+    <Company>CNCF</Company>
+    <Authors>The NATS Authors</Authors>
+    <Copyright>Copyright © The NATS Authors 2016-2019</Copyright>
+    <RepositoryUrl>https://github.com/nats-io/nats.net</RepositoryUrl>
+    <RepositoryType>Git</RepositoryType>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+</Project>
