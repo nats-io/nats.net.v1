@@ -70,7 +70,7 @@ namespace NATS.Client
             get {  return reconnects; }
         }
 
-        // deep copy contructor
+        // deep copy constructor
         internal Statistics(Statistics obj)
         {
             this.inMsgs = obj.inMsgs;

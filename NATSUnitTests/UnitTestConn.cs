@@ -823,7 +823,7 @@ namespace NATSUnitTests
                 c.Drain();
 
                 done.WaitOne(5000);
-                Assert.True(received == expected, string.Format("recieved {0} of {1}", received, expected));
+                Assert.True(received == expected, string.Format("received {0} of {1}", received, expected));
             }
         }
 
@@ -863,7 +863,7 @@ namespace NATSUnitTests
                 t.Wait();
 
                 done.WaitOne(5000);
-                Assert.True(received == expected, string.Format("recieved {0} of {1}", received, expected));
+                Assert.True(received == expected, string.Format("received {0} of {1}", received, expected));
             }
         }
 
@@ -897,7 +897,7 @@ namespace NATSUnitTests
                 s.Drain();
 
                 done.WaitOne(5000);
-                Assert.True(received == expected, string.Format("recieved {0} of {1}", received, expected));
+                Assert.True(received == expected, string.Format("received {0} of {1}", received, expected));
             }
         }
 
@@ -937,7 +937,7 @@ namespace NATSUnitTests
                 t.Wait();
 
                 done.WaitOne(5000);
-                Assert.True(received == expected, string.Format("recieved {0} of {1}", received, expected));
+                Assert.True(received == expected, string.Format("received {0} of {1}", received, expected));
             }
         }
 

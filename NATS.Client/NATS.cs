@@ -240,7 +240,7 @@ namespace NATS.Client
             {
                 if (signedNonce == null)
                 {
-                    throw new NATSConnectionException("SignedNonce was not set by the UserSignature event hander.");
+                    throw new NATSConnectionException("SignedNonce was not set by the UserSignature event handler.");
                 }
                 return signedNonce;
             }
