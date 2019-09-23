@@ -247,7 +247,7 @@ namespace NATSUnitTests
         private void CheckReceivedAndValidHandler(object sender, MsgHandlerEventArgs args)
         {
             Assert.True(compare(args.Message.Data, omsg), "Messages are not equal.");
-            Assert.Equal(asyncSub, args.Message.ArrivalSubcription);
+            Assert.Equal(asyncSub, args.Message.ArrivalSubscription);
 
             lock (mu)
             {
