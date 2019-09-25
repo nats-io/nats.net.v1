@@ -159,10 +159,19 @@ namespace NATS.Client
             this.data = data;
         }
 
-        /// <summary>
-        /// Gets the <see cref="ISubscription"/> which received the message.
-        /// </summary>
-        public ISubscription ArrivalSubscription
+		/// <summary>
+		/// Gets the <see cref="ISubscription"/> which received the message.
+		/// </summary>
+		[ObsoleteAttribute("This property will soon be deprecated. Use ArrivalSubscription instead.")]
+		public ISubscription ArrivalSubcription
+		{
+			get { return sub; }
+		}
+
+		/// <summary>
+		/// Gets the <see cref="ISubscription"/> which received the message.
+		/// </summary>
+		public ISubscription ArrivalSubscription
         {
             get { return sub; }
         }
