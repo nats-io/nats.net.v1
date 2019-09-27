@@ -32,9 +32,9 @@ using System;
  * This documentation focuses on the %NATS .NET C# Client API; for additional
  * information, refer to the following:
  * 
- * - [General Documentation for nats.io](http://nats.io/documentation) 
- * - [NATS .NET C# Client found on GitHub](https://github.com/nats-io/csharp-nats) 
- * - [The NATS server (gnatsd) found on GitHub](https://github.com/nats-io/gnatsd)
+ * - [General Documentation for nats.io](https://nats-io.github.io/docs/)
+ * - [NATS .NET C# Client found on GitHub](https://github.com/nats-io/nats.net)
+ * - [The NATS server found on GitHub](https://github.com/nats-io/nats-server)
  */
 
 // Notes on the NATS .NET client.
