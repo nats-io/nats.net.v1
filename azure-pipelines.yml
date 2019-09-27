@@ -90,6 +90,12 @@ jobs:
       projects: 'src/*.sln'
       arguments: '-c $(BuildConfiguration) --no-build -o $(Build.ArtifactStagingDirectory) -p:Version=$(SemVer) -p:AssemblyVersion=$(BuildVer) -p:FileVersion=$(BuildVer) -p:InformationalVersion=$(BuildVer)'
 
+  - task: PublishPipelineArtifact@1
+    displayName: 'Publish Pipeline Artifacts'
+    inputs:
+      targetPath: '$(Build.ArtifactStagingDirectory)'
+      artifact: Artifacts
+
   - task: NuGetCommand@2
     displayName: 'Push Nupkg to AZ Artifacts'
     enabled: false
