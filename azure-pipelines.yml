@@ -47,7 +47,7 @@ jobs:
   - task: DownloadGitHubRelease@0
     displayName: 'Download latest Win64 NATS-Server'
     inputs:
-      connection: 'ghub_oa'
+      connection: 'NATS-CI'
       userRepository: 'nats-io/nats-server'
       itemPattern: 'nats-server-**-windows-amd64.zip'
       downloadPath: 'nats-server'
@@ -92,6 +92,7 @@ jobs:
 
   - task: NuGetCommand@2
     displayName: 'Push Nupkg to AZ Artifacts'
+    enabled: false
     inputs:
       command: push
       packagesToPush: '$(Build.ArtifactStagingDirectory)/*.nupkg;!$(Build.ArtifactStagingDirectory)/*.symbols.nupkg'
