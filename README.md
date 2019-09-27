@@ -7,6 +7,7 @@ This NATS Maintainer supported client parallels the [NATS GO Client](https://git
 
 [![License Apache 2.0](https://img.shields.io/badge/License-Apache2-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![API Documentation](https://img.shields.io/badge/doc-Doxygen-brightgreen.svg?style=flat)](http://nats-io.github.io/nats.net)
+[![Build Status](https://dev.azure.com/NATS-CI/NATS-CI/_apis/build/status/nats-io.nats.net?branchName=master)](https://dev.azure.com/NATS-CI/NATS-CI/_build/latest?definitionId=2&branchName=master)
 [![NuGet](https://img.shields.io/nuget/v/NATS.Client.svg?maxAge=2592000)](https://www.nuget.org/packages/NATS.Client)
 
 ## Getting started
