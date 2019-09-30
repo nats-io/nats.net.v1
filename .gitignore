@@ -139,9 +139,6 @@ DocProject/Help/*.hhp
 DocProject/Help/Html2
 DocProject/Help/html
 
-# Click-Once directory
-publish/
-
 # Publish Web Output
 *.[Pp]ublish.xml
 *.azurePubxml
@@ -254,3 +251,10 @@ paket-files/
 # JetBrains Rider
 .idea/
 *.sln.iml
+
+# Tools
+tools/**
+!tools/packages.config
+
+# Settings
+.env

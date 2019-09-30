@@ -1,90 +1,69 @@
 
 # NATS - .NET C# Client
 
-A [C# .NET](https://msdn.microsoft.com/en-us/vstudio/aa496123.aspx) client for the [NATS messaging system](https://nats.io).
+A [C# .NET](https://msdn.microsoft.com/en-us/vstudio/aa496123.aspx) client for the [NATS messaging system](https://nats.io) multi targetting `.NET4.5+` and `.NETStandard1.6`.
 
 This NATS Maintainer supported client parallels the [NATS GO Client](https://github.com/nats-io/nats).
 
 [![License Apache 2.0](https://img.shields.io/badge/License-Apache2-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![API Documentation](https://img.shields.io/badge/doc-Doxygen-brightgreen.svg?style=flat)](http://nats-io.github.io/nats.net)
+[![Build Status](https://dev.azure.com/NATS-CI/NATS-CI/_apis/build/status/nats-io.nats.net?branchName=master)](https://dev.azure.com/NATS-CI/NATS-CI/_build/latest?definitionId=2&branchName=master)
 [![NuGet](https://img.shields.io/nuget/v/NATS.Client.svg?maxAge=2592000)](https://www.nuget.org/packages/NATS.Client)
 
-## Installation
+## Getting started
+The easiest and recommended way to start using NATS in you .NET projects, is to use the [NuGet package]((https://www.nuget.org/packages/NATS.Client)). For examples on how to use the client, see below or in any of the included sample projects.
 
+## Get up and running with the source code
 First, download the source code:
 
 ```text
 git clone git@github.com:nats-io/nats.net.git
 ```
 
-### Quick Start
+### Project files
 
-Then, build the assembly.  
-
-For both .NET 4.5 and .NET core, there are simple batch files.  These will build the respective NATS.Client.dll and the provided examples with only requiring the  .NET framework SDK/Platform
-
-#### .NET 4.5
-
-Ensure you have installed the .NET Framework 4.5.1 or greater.
-
-```text
-set PATH=C:\Windows\Microsoft.NET\Framework64\v4.0.30319;%PATH%
-```
-
-To build simply call:
-
-```text
-build45.bat
-```
-
-The batch file will create a bin directory, and copy all binary files, including samples, into it.
-
-#### .NET core
-
-To build .NET core, you will need version 1.0.0-preview2-003121 or higher, found here:
-https://www.microsoft.com/net/core#windows
-
-```text
-buildcore.bat
-```
-
-This will build the .NET core (standard1.6) NATS.Client assembly.  To run the examples, ``cd`` into the directory of the example you wish to run, and use the `dotnet run` command.  e.g.
-
-```text
-cd examples\Publish
-dotnet run
-```
-
-### Visual Studio
-
-The recommended alternative is to load `NATSnet45.sln` or `NATSCore.sln` into Visual Studio 2015 to build the version you need.  XML documentation is generated, so code completion, context help, etc, will be available in the editor.  If building .NET core, ensure you have the latest .NET core support for Visual Studio.  Information about that can be found [here](https://blogs.msdn.microsoft.com/visualstudio/2016/06/27/visual-studio-2015-update-3-and-net-core-1-0-available-now/).
-
-#### Project files
-
-The NATS Visual Studio Solution contains several projects, listed below.
+The repository contains several projects, all located under `src\`
 
 * NATS - The NATS.Client assembly
-* NATSUnitTests - Visual Studio Unit Tests (ensure you have gnatds.exe in your path to run these).
-* Publish Subscribe
-  * Publish - A sample publisher.
-  * Subscribe - A sample subscriber.
-* QueueGroup - An example queue group subscriber.
-* Request Reply
-  * Requestor - A requestor sample.
-  * Replier - A sample replier for the Requestor application.
+* Tests
+    * IntegrationTests - XUnit tests, verifying the client integration with `nats-server.exe` (ensure you have `nats-server.exe` in your path to run these).
+    * UnitTests - XUnit tests that requires no dependencies
+* Samples
+    * Publish Subscribe
+        * Publish - A sample publisher.
+        * Subscribe - A sample subscriber.
+    * QueueGroup - An example queue group subscriber.
+    * Request Reply
+        * Requestor - A requestor sample.
+        * Replier - A sample replier for the Requestor application.
 
 All examples provide statistics for benchmarking.
 
-### NuGet
+### .NET Core SDK
+.NET Core SDK style projects are used, so ensure your environment (command line, VSCode, Visual Studio, etc) supports the targetted .NET Core SDK in `src\global.json` as well as .NET Framework 4.5.1 or greater.
 
-The NATS .NET Client can be found in the NuGet Gallery.  It can be found as the [NATS.Client Package](https://www.nuget.org/packages/NATS.Client).
+### Visual Studio
+The recommendation is to load `src\NATS.sln` into Visual Studio 2019 (Visual Studio 2017 works as well). .NET Core SDK style projects are used to multitarget different frameworks, so when working with the source code (debugging, running tets etc) you might need to mind the "context" of the current framework.
+
+ XML documentation is generated (in `Release`), so code completion, context help, etc, will be available in the editor.
+
+### Command line
+Since .NET Core SDK style projects are used, you can use the .NET SDK to build, run tests, pack etc.
+
+E.g. to [build](https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-build):
+
+```text
+dotnet build src\NATS.sln -c Release
+```
+
+This will build the respective NATS.Client.dll, examples etc in Release mode, with only requiring the .NET Core SDK and the .NET Platform.
 
 ### Building the API Documentation
 
 Doxygen is used for building the API documentation.  To build the API documentation, change directories to `documentation` and run the following command:
 
 ```text
-build_doc.bat
+documentation\build_doc.bat
 ```
 
 Doxygen will build the NATS .NET Client API documentation, placing it in the `documentation\NATS.Client\html` directory.
