@@ -26,55 +26,9 @@ namespace IntegrationTests
     /// <summary>
     /// Run these tests with the gnatsd auth.conf configuration file.
     /// </summary>
-    [Collection(TestCollections.Default)]
-    public class TestTLS
+    public class TestTls : TestSuite<TlsSuiteContext>
     {
-        int hitDisconnect;
-
-        UnitTestUtilities util = new UnitTestUtilities();
-
-        private void connectAndFail(String url)
-        {
-            try
-            {
-                hitDisconnect = 0;
-                Options opts = util.DefaultTestOptions;
-                opts.Url = url;
-                opts.DisconnectedEventHandler += handleDisconnect;
-                IConnection c = null;
-
-                Assert.ThrowsAny<Exception>(() => c = new ConnectionFactory().CreateConnection(url));
-                
-                c.Close();
-            }
-            catch (Exception e)
-            {
-                Assert.Contains(e.Message, "Authorization");
-            }
-            finally
-            {
-                Assert.False(hitDisconnect > 0, "The disconnect event handler was incorrectly invoked.");
-            }
-        }
-
-        private void handleDisconnect(object sender, ConnEventArgs e)
-        {
-            hitDisconnect++;
-        }
-
-        private bool compareBytes(byte[] bs1, byte[] bs2)
-        {
-            if (bs1.Length == bs2.Length)
-                return false;
-
-            for (int i = bs1.Length; i < bs1.Length; i++)
-            {
-                if (bs1[i] != bs2[i])
-                    return false;
-            }
-
-            return true;
-        }
+        public TestTls(TlsSuiteContext context) : base(context) { }
 
         // A hack to avoid issues with our test self signed cert.
         // We don't want to require the runner of the test to install the 
@@ -109,11 +63,10 @@ namespace IntegrationTests
         [Fact]
         public void TestTlsSuccessWithCert()
         {
-            using (NATSServer srv = util.CreateServerWithConfig("tls_1222_verify.conf"))
+            using (NATSServer srv = NATSServer.CreateWithConfig(Context.Server1.Port, "tls_verify.conf"))
             {
-                Options opts = util.DefaultTestOptions;
+                Options opts = Context.GetTestOptions(Context.Server1.Port);
                 opts.Secure = true;
-                opts.Url = "nats://localhost:1222";
                 opts.TLSRemoteCertificationValidationCallback = verifyServerCert;
 
                 // .NET requires the private key and cert in the 
@@ -126,7 +79,7 @@ namespace IntegrationTests
 
                 opts.AddCertificate(cert);
 
-                using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+                using (IConnection c = Context.ConnectionFactory.CreateConnection(opts))
                 {
                     using (ISyncSubscription s = c.SubscribeSync("foo"))
                     {
@@ -141,18 +94,17 @@ namespace IntegrationTests
         [Fact]
         public void TestTlsFailWithCert()
         {
-            using (NATSServer srv = util.CreateServerWithConfig("tls_1222_verify.conf"))
+            using (NATSServer srv = NATSServer.CreateWithConfig(Context.Server1.Port, "tls_verify.conf"))
             {
-                Options opts = util.DefaultTestOptions;
+                Options opts = Context.GetTestOptions(Context.Server1.Port);
                 opts.Secure = true;
-                opts.Url = "nats://localhost:1222";
                 opts.TLSRemoteCertificationValidationCallback = verifyServerCert;
 
                 // this will fail, because it's not complete - missing the private
                 // key.
                 opts.AddCertificate(UnitTestUtilities.GetFullCertificatePath("client-cert.pem"));
 
-                Assert.ThrowsAny<NATSException>(() => new ConnectionFactory().CreateConnection(opts));
+                Assert.ThrowsAny<NATSException>(() => Context.ConnectionFactory.CreateConnection(opts));
             }
         }
 
@@ -168,52 +120,50 @@ namespace IntegrationTests
         [Fact]
         public void TestTlsFailWithInvalidServerCert()
         {
-            using (NATSServer srv = util.CreateServerWithConfig("tls_1222_verify.conf"))
+            using (NATSServer srv = NATSServer.CreateWithConfig(Context.Server1.Port, "tls_verify.conf"))
             {
-                Options opts = util.DefaultTestOptions;
+                Options opts = Context.GetTestOptions(Context.Server1.Port);
                 opts.Secure = true;
-                opts.Url = "nats://localhost:1222";
                 opts.TLSRemoteCertificationValidationCallback = verifyCertAlwaysFail;
 
                 // this will fail, because it's not complete - missing the private
                 // key.
                 opts.AddCertificate(UnitTestUtilities.GetFullCertificatePath("client-cert.pem"));
 
-                Assert.ThrowsAny<NATSException>(() => new ConnectionFactory().CreateConnection(opts));
+                Assert.ThrowsAny<NATSException>(() => Context.ConnectionFactory.CreateConnection(opts));
             }
         }
 
         [Fact]
         public void TestTlsFailWithBadAuth()
         {
-            using (NATSServer srv = util.CreateServerWithConfig("tls_1222_user.conf"))
+            using (NATSServer srv = NATSServer.CreateWithConfig(Context.Server1.Port, "tls_user.conf"))
             {
-                Options opts = util.DefaultTestOptions;
+                Options opts = Context.GetTestOptions(Context.Server1.Port);
                 opts.Secure = true;
-                opts.Url = "nats://username:BADDPASSOWRD@localhost:1222";
+                opts.Url = $"nats://username:BADDPASSOWRD@localhost:{Context.Server1.Port}";
                 opts.TLSRemoteCertificationValidationCallback = verifyServerCert;
 
                 // this will fail, because it's not complete - missing the private
                 // key.
                 opts.AddCertificate(UnitTestUtilities.GetFullCertificatePath("client-cert.pem"));
 
-                Assert.ThrowsAny<NATSException>(() => new ConnectionFactory().CreateConnection(opts));
+                Assert.ThrowsAny<NATSException>(() => Context.ConnectionFactory.CreateConnection(opts));
             }
         }
 
         [Fact]
         public void TestTlsSuccessSecureConnect()
         {
-            using (NATSServer srv = util.CreateServerWithConfig("tls_1222.conf"))
+            using (NATSServer srv = NATSServer.CreateWithConfig(Context.Server1.Port, "tls.conf"))
             {
                 // we can't call create secure connection w/ the certs setup as they are
                 // so we'll override the 
-                Options opts = util.DefaultTestOptions;
+                Options opts = Context.GetTestOptions(Context.Server1.Port);
                 opts.Secure = true;
                 opts.TLSRemoteCertificationValidationCallback = verifyServerCert;
-                opts.Url = "nats://localhost:1222";
 
-                using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+                using (IConnection c = Context.ConnectionFactory.CreateConnection(opts))
                 {
                     using (ISyncSubscription s = c.SubscribeSync("foo"))
                     {
@@ -230,22 +180,23 @@ namespace IntegrationTests
         {
             AutoResetEvent ev = new AutoResetEvent(false);
 
-            using (NATSServer srv = util.CreateServerWithConfig("tls_1222.conf"),
-                   srv2 = util.CreateServerWithConfig("tls_1224.conf"))
+            using (NATSServer
+                srv = NATSServer.CreateWithConfig(Context.Server1.Port, "tls.conf"),
+                srv2 = NATSServer.CreateWithConfig(Context.Server2.Port, "tls.conf"))
             {
                 Thread.Sleep(1000);
 
-                Options opts = util.DefaultTestOptions;
+                Options opts = Context.GetTestOptions();
                 opts.Secure = true;
                 opts.NoRandomize = true;
                 opts.TLSRemoteCertificationValidationCallback = verifyServerCert;
-                opts.Servers = new string[]{ "nats://localhost:1222" , "nats://localhost:1224" };
+                opts.Servers = new[]{ Context.Server1.Url, Context.Server2.Url };
                 opts.ReconnectedEventHandler += (sender, obj) =>
                 {
                     ev.Set();
                 };
 
-                using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+                using (IConnection c = Context.ConnectionFactory.CreateConnection(opts))
                 {
                     // send a message to be sure.
                     using (ISyncSubscription s = c.SubscribeSync("foo"))
@@ -275,27 +226,27 @@ namespace IntegrationTests
         {
             AutoResetEvent ev = new AutoResetEvent(false);
 
-            using (NATSServer s1 = util.CreateServerWithConfig("auth_tls_1222.conf"),
-                              s2 = util.CreateServerWithConfig("auth_tls_1223_timeout.conf"),
-                              s3 = util.CreateServerWithConfig("auth_tls_1224.conf"))
+            using (NATSServer s1 = NATSServer.CreateWithConfig(Context.Server1.Port, "auth_tls.conf"),
+                              s2 = NATSServer.CreateWithConfig(Context.Server2.Port, "auth_tls_timeout.conf"),
+                              s3 = NATSServer.CreateWithConfig(Context.Server3.Port, "auth_tls.conf"))
             {
 
-                Options opts = util.DefaultTestOptions;
+                Options opts = Context.GetTestOptions();
                 opts.Secure = true;
                 opts.NoRandomize = true;
                 opts.TLSRemoteCertificationValidationCallback = verifyServerCert;
 
-                opts.Servers = new string[]{
-                    "nats://username:password@localhost:1222",
-                    "nats://username:password@localhost:1223", 
-                    "nats://username:password@localhost:1224" };
+                opts.Servers = new[]{
+                    $"nats://username:password@localhost:{Context.Server1.Port}",
+                    $"nats://username:password@localhost:{Context.Server2.Port}", 
+                    $"nats://username:password@localhost:{Context.Server3.Port}" };
 
                 opts.ReconnectedEventHandler += (sender, args) =>
                 {
                     ev.Set();
                 };
 
-                IConnection c = new ConnectionFactory().CreateConnection(opts);
+                IConnection c = Context.ConnectionFactory.CreateConnection(opts);
                 s1.Shutdown();
 
                 // This should fail over to S2 where an authorization timeout occurs
@@ -311,25 +262,25 @@ namespace IntegrationTests
         {
             AutoResetEvent ev = new AutoResetEvent(false);
 
-            using (NATSServer s1 = util.CreateServerWithConfig("auth_tls_1222.conf"),
-                              s2 = util.CreateServerWithConfig("auth_tls_1224.conf"))
+            using (NATSServer s1 = NATSServer.CreateWithConfig(Context.Server1.Port, "auth_tls.conf"),
+                              s2 = NATSServer.CreateWithConfig(Context.Server2.Port, "auth_tls.conf"))
             {
 
-                Options opts = util.DefaultTestOptions;
+                Options opts = Context.GetTestOptions();
                 opts.Secure = true;
                 opts.NoRandomize = true;
                 opts.TLSRemoteCertificationValidationCallback = verifyServerCert;
 
                 opts.Servers = new string[]{
-                    "nats://username:password@localhost:1222",
-                    "nats://username:password@localhost:1224" };
+                    $"nats://username:password@localhost:{Context.Server1.Port}",
+                    $"nats://username:password@localhost:{Context.Server2.Port}" };
 
                 opts.ReconnectedEventHandler += (sender, args) =>
                 {
                     ev.Set();
                 };
 
-                IConnection c = new ConnectionFactory().CreateConnection(opts);
+                IConnection c = Context.ConnectionFactory.CreateConnection(opts);
 
                 // inject an authorization timeout, as if it were processed by an incoming server message.
                 // this is done at the parser level so that parsing is also tested,

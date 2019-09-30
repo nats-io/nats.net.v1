@@ -16,6 +16,7 @@ using NATS.Client;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using System.Linq;
 using Xunit;
 
 namespace IntegrationTests
@@ -23,54 +24,34 @@ namespace IntegrationTests
     /// <summary>
     /// Run these tests with the gnatsd auth.conf configuration file.
     /// </summary>
-    [Collection(TestCollections.Default)]
-    public class TestCluster
+    public class TestCluster : TestSuite<ClusterSuiteContext>
     {
-        string[] testServers = new string[] {
-            "nats://localhost:1222",
-            "nats://localhost:1223",
-            "nats://localhost:1224",
-            "nats://localhost:1225",
-            "nats://localhost:1226",
-            "nats://localhost:1227",
-            "nats://localhost:1228" 
-        };
-
-        string[] testServersShortList = new string[] {
-            "nats://localhost:1222",
-            "nats://localhost:1223"
-        };
-
-        UnitTestUtilities utils = new UnitTestUtilities();
+        public TestCluster(ClusterSuiteContext context) : base(context) { }
 
         [Fact]
         public void TestServersOption()
         {
             IConnection c = null;
-            ConnectionFactory cf = new ConnectionFactory();
-            Options o = utils.DefaultTestOptions;
-
+            ConnectionFactory cf = Context.ConnectionFactory;
+            Options o = Context.GetTestOptions();
             o.NoRandomize = true;
-
-            Assert.ThrowsAny<NATSNoServersException>(() => cf.CreateConnection());
-
-            o.Servers = testServers;
+            o.Servers = Context.GetTestServersUrls();
 
             Assert.ThrowsAny<NATSNoServersException>(() => cf.CreateConnection(o));
             
             // Make sure we can connect to first server if running
-            using (NATSServer ns = utils.CreateServerOnPort(1222))
+            using (NATSServer ns = NATSServer.Create(Context.Server1.Port))
             {
                 c = cf.CreateConnection(o);
-                Assert.Equal(testServers[0], c.ConnectedUrl);
+                Assert.Equal(Context.Server1.Url, c.ConnectedUrl);
                 c.Close();
             }
 
             // make sure we can connect to a non-first server.
-            using (NATSServer ns = utils.CreateServerOnPort(1227))
+            using (NATSServer ns = NATSServer.Create(Context.Server6.Port))
             {
                 c = cf.CreateConnection(o);
-                Assert.Equal(testServers[5], c.ConnectedUrl);
+                Assert.Equal(Context.Server6.Url, c.ConnectedUrl);
                 c.Close();
             }
         }
@@ -78,29 +59,24 @@ namespace IntegrationTests
         [Fact]
         public void TestAuthServers()
         {
-            string[] plainServers = new string[] {
-                "nats://localhost:1222",
-		        "nats://localhost:1224"
-            };
-
-            Options opts = utils.DefaultTestOptions;
+            Options opts = Context.GetTestOptions();
             opts.NoRandomize = true;
-            opts.Servers = plainServers;
+            opts.Servers = new [] { Context.Server1.Url, Context.Server3.Url };
             opts.Timeout = 5000;
 
-            using (NATSServer as1 = utils.CreateServerWithConfig("auth_1222.conf"),
-                              as2 = utils.CreateServerWithConfig("auth_1224.conf"))
+            using (NATSServer as1 = NATSServer.CreateWithConfig(Context.Server1.Port, "auth.conf"),
+                              as2 = NATSServer.CreateWithConfig(Context.Server3.Port, "auth.conf"))
             {
-                Assert.ThrowsAny<NATSException>(() => new ConnectionFactory().CreateConnection(opts));
+                Assert.ThrowsAny<NATSException>(() => Context.ConnectionFactory.CreateConnection(opts));
 
                 // Test that we can connect to a subsequent correct server.
-                string[] authServers = new string[] {
-                    "nats://localhost:1222",
-		            "nats://username:password@localhost:1224"};
+                var authServers = new[] {
+                    Context.Server1.Url,
+		            $"nats://username:password@localhost:{Context.Server3.Port}"};
 
                 opts.Servers = authServers;
 
-                using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+                using (IConnection c = Context.ConnectionFactory.CreateConnection(opts))
                 {
                     Assert.Equal(authServers[1], c.ConnectedUrl);
                 }
@@ -110,16 +86,11 @@ namespace IntegrationTests
         [Fact]
         public void TestBasicClusterReconnect()
         {
-            string[] plainServers = new string[] {
-                "nats://localhost:1222",
-		        "nats://localhost:1224"
-            };
-
-            Options opts = utils.DefaultTestOptions;
+            Options opts = Context.GetTestOptions();
             opts.MaxReconnect = 2;
             opts.ReconnectWait = 1000;
             opts.NoRandomize = true;
-            opts.Servers = plainServers;
+            opts.Servers = new [] { Context.Server1.Url, Context.Server3.Url };
 
             Object disconnectLock = new Object();
             opts.DisconnectedEventHandler += (sender, args) =>
@@ -145,10 +116,10 @@ namespace IntegrationTests
 
             opts.Timeout = 1000;
 
-            using (NATSServer s1 = utils.CreateServerOnPort(1222),
-                              s2 = utils.CreateServerOnPort(1224))
+            using (NATSServer s1 = NATSServer.Create(Context.Server1.Port),
+                              s2 = NATSServer.Create(Context.Server3.Port))
             {
-                using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+                using (IConnection c = Context.ConnectionFactory.CreateConnection(opts))
                 {
                     Stopwatch reconnectSw = new Stopwatch();
 
@@ -165,7 +136,7 @@ namespace IntegrationTests
                         Assert.True(Monitor.Wait(reconnectLock, 20000));
                     }
 
-                    Assert.Equal(c.ConnectedUrl,testServers[2]);
+                    Assert.Equal(c.ConnectedUrl, Context.Server3.Url);
 
                     reconnectSw.Stop();
 
@@ -187,11 +158,11 @@ namespace IntegrationTests
         public void TestServerDiscoveredHandler()
         {
             IConnection c = null;
-            ConnectionFactory cf = new ConnectionFactory();
-            Options o = utils.DefaultTestOptions;
+            ConnectionFactory cf = Context.ConnectionFactory;
+            Options o = Context.GetTestOptions();
 
             o.NoRandomize = true;
-            o.Servers = testServers;
+            o.Servers = Context.GetTestServersUrls();
 
             bool serverDiscoveredCalled = false;
             o.ServerDiscoveredEventHandler += (sender, e) =>
@@ -199,19 +170,19 @@ namespace IntegrationTests
                 serverDiscoveredCalled = true;
             };
 
-            string seedServerArgs = @"-p 1222 -cluster nats://127.0.0.1:1333";
-            string secondClusterMemberArgs = @"-p 1223 -cluster nats://127.0.0.1:1334 -routes nats://127.0.0.1:1333";
+            string seedServerArgs = $@"-p {Context.Server1.Port} -cluster {Context.ClusterServer1.Url}";
+            string secondClusterMemberArgs = $@"-p {Context.Server2.Port} -cluster {Context.ClusterServer2.Url} -routes {Context.ClusterServer1.Url}";
 
             // create the seed server for a cluster...
-            using (NATSServer ns1 = utils.CreateServerWithArgs(seedServerArgs))
+            using (NATSServer ns1 = NATSServer.Create(seedServerArgs))
             {
                 // ...then connect to it...
                 using (c = cf.CreateConnection(o))
                 {
-                    Assert.Equal(testServers[0],c.ConnectedUrl);
+                    Assert.Equal(Context.Server1.Url,c.ConnectedUrl);
 
                     // ...then while connected, start up a second server...
-                    using (NATSServer ns2 = utils.CreateServerWithArgs(secondClusterMemberArgs))
+                    using (NATSServer ns2 = NATSServer.Create(secondClusterMemberArgs))
                     {
                         // ...waiting up to 30 seconds for the second server to start...
                         for (int ii = 0; ii < 6; ii++)
@@ -270,16 +241,16 @@ namespace IntegrationTests
         }
 
 
-        // TODO:  Create smaller variant [Fact]
-        private void TestHotSpotReconnect()
+        [Fact(Skip = "WorkInProgress")]
+        public void TestHotSpotReconnect()
         {
             int numClients = 10;
             SimClient[] clients = new SimClient[100];
 
-            Options opts = utils.DefaultTestOptions;
-            opts.Servers = testServers;
+            Options opts = Context.GetTestOptions();
+            opts.Servers = Context.GetTestServersUrls();
 
-            NATSServer s1 = utils.CreateServerOnPort(1222);
+            NATSServer s1 = NATSServer.Create(Context.Server1.Port);
             Task[] waitgroup = new Task[numClients];
 
 
@@ -287,34 +258,34 @@ namespace IntegrationTests
             {
                 clients[i] = new SimClient();
                 waitgroup[i] = Task.Run(() => {
-                    clients[i].Connect(testServers);
+                    clients[i].Connect(Context.GetTestServersUrls());
                     clients[i].waitForReconnect();
                 });
             }
 
 
-            NATSServer s2 = utils.CreateServerOnPort(1224);
-            NATSServer s3 = utils.CreateServerOnPort(1226);
+            NATSServer s3 = NATSServer.Create(Context.Server3.Port);
+            NATSServer s5 = NATSServer.Create(Context.Server5.Port);
 
             s1.Shutdown();
             Task.WaitAll(waitgroup);
 
-            int s2Count = 0;
             int s3Count = 0;
+            int s5Count = 0;
             int unknown = 0;
 
             for (int i = 0; i < numClients; i++)
             {
-                if (testServers[3].Equals(clients[i].ConnectedUrl))
-                    s2Count++;
-                else if (testServers[5].Equals(clients[i].ConnectedUrl))
+                if (Context.Server3.Url.Equals(clients[i].ConnectedUrl))
                     s3Count++;
+                else if (Context.Server5.Url.Equals(clients[i].ConnectedUrl))
+                    s5Count++;
                 else
                     unknown++;
             }
 
             Assert.True(unknown == 0);
-            int delta = Math.Abs(s2Count - s3Count);
+            int delta = Math.Abs(s3Count - s5Count);
             int range = numClients / 30;
 
             Assert.False(delta > range, string.Format("Connected clients to servers out of range: {0}/{0}", delta, range));
@@ -325,8 +296,8 @@ namespace IntegrationTests
         public void TestProperReconnectDelay()
         {
             Object mu = new Object();
-            Options opts = utils.DefaultTestOptions;
-            opts.Servers = testServers;
+            Options opts = Context.GetTestOptions();
+            opts.Servers = Context.GetTestServersUrls();
             opts.NoRandomize = true;
 
             bool disconnectHandlerCalled = false;
@@ -347,9 +318,9 @@ namespace IntegrationTests
                 closedCbCalled = true;
             };
 
-            using (NATSServer s1 = utils.CreateServerOnPort(1222))
+            using (NATSServer s1 = NATSServer.Create(Context.Server1.Port))
             {
-                IConnection c = new ConnectionFactory().CreateConnection(opts);
+                IConnection c = Context.ConnectionFactory.CreateConnection(opts);
 
                 lock (mu)
                 {
@@ -373,12 +344,12 @@ namespace IntegrationTests
         [Fact]
         public void TestProperFalloutAfterMaxAttempts()
         {
-            Options opts = utils.DefaultTestOptions;
+            Options opts = Context.GetTestOptions();
 
             Object dmu = new Object();
             Object cmu = new Object();
 
-            opts.Servers = this.testServersShortList;
+            opts.Servers = Context.GetTestServersShortListUrls();
             opts.NoRandomize = true;
             opts.MaxReconnect = 2;
             opts.ReconnectWait = 25; // millis
@@ -405,9 +376,9 @@ namespace IntegrationTests
                 }
             };
 
-            using (NATSServer s1 = utils.CreateServerOnPort(1222))
+            using (NATSServer s1 = NATSServer.Create(Context.TestServersShortList[0].Port))
             {
-                using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+                using (IConnection c = Context.ConnectionFactory.CreateConnection(opts))
                 {
                     s1.Shutdown();
 
@@ -433,14 +404,14 @@ namespace IntegrationTests
         [Fact]
         public void TestProperFalloutAfterMaxAttemptsWithAuthMismatch()
         {
-            Options opts = utils.DefaultTestOptions;
+            Options opts = Context.GetTestOptions();
 
             Object dmu = new Object();
             Object cmu = new Object();
 
-            opts.Servers = new string[] {
-                "nats://localhost:1220",
-                "nats://localhost:1222"
+            opts.Servers = new [] {
+                Context.Server8.Url,
+                Context.Server1.Url
             };
 
             opts.NoRandomize = true;
@@ -469,10 +440,11 @@ namespace IntegrationTests
                 }
             };
 
-            using (NATSServer s1 = utils.CreateServerOnPort(1220),
-                   s2 = utils.CreateServerWithConfig("tls_1222_verify.conf"))
+            using (NATSServer
+                   s1 = NATSServer.Create(Context.Server8.Port),
+                   s2 = NATSServer.CreateWithConfig(Context.Server1.Port, "tls_verify.conf"))
             {
-                using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+                using (IConnection c = Context.ConnectionFactory.CreateConnection(opts))
                 {
                     s1.Shutdown();
 
@@ -500,11 +472,11 @@ namespace IntegrationTests
         [Fact]
         public void TestTimeoutOnNoServers()
         {
-            Options opts = utils.DefaultTestOptions;
+            Options opts = Context.GetTestOptions();
             Object dmu = new Object();
             Object cmu = new Object();
 
-            opts.Servers = testServersShortList;
+            opts.Servers = Context.GetTestServersShortListUrls();
             opts.NoRandomize = true;
             opts.MaxReconnect = 2;
             opts.ReconnectWait = 100; // millis
@@ -530,9 +502,9 @@ namespace IntegrationTests
                 }
             };
 
-            using (NATSServer s1 = utils.CreateServerOnPort(1222))
+            using (NATSServer s1 = NATSServer.Create(Context.TestServersShortList[0].Port))
             {
-                using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+                using (IConnection c = Context.ConnectionFactory.CreateConnection(opts))
                 {
                     s1.Shutdown();
 
@@ -572,10 +544,10 @@ namespace IntegrationTests
             /// Work in progress
             int RECONNECTS = 4;
 
-            Options opts = utils.DefaultTestOptions;
+            Options opts = Context.GetTestOptions();
             Object mu = new Object();
 
-            opts.Servers = testServersShortList;
+            opts.Servers = Context.GetTestServersShortListUrls();
             opts.NoRandomize = true;
             opts.ReconnectWait = 200;
             opts.PingInterval = 50;
@@ -601,9 +573,9 @@ namespace IntegrationTests
                 }
             };
 
-            using (NATSServer s1 = utils.CreateServerOnPort(1222))
+            using (NATSServer s1 = NATSServer.Create(Context.TestServersShortList[0].Port))
             {
-                using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+                using (IConnection c = Context.ConnectionFactory.CreateConnection(opts))
                 {
                     s1.Shutdown();
                     for (int i = 0; i < RECONNECTS; i++)

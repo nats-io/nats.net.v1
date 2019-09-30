@@ -17,7 +17,6 @@ using System.Threading;
 using System.Reflection;
 using System.IO;
 using System.Linq;
-using IntegrationTests;
 using Xunit;
 
 namespace IntegrationTests
@@ -25,22 +24,21 @@ namespace IntegrationTests
     /// <summary>
     /// Run these tests with the gnatsd auth.conf configuration file.
     /// </summary>
-    [Collection(TestCollections.Default)]
-    public class TestAuthorization
+    public class TestAuthorization : TestSuite<AuthorizationSuiteContext>
     {
+        public TestAuthorization(AuthorizationSuiteContext context) : base(context) { }
+
         int hitDisconnect;
 
-        UnitTestUtilities util = new UnitTestUtilities();
-
-        private void connectAndFail(String url)
+        private void connectAndFail(string url)
         {
             try
             {
                 hitDisconnect = 0;
-                Options opts = util.DefaultTestOptions;
+                Options opts = Context.GetTestOptions();
                 opts.Url = url;
                 opts.DisconnectedEventHandler += handleDisconnect;
-                IConnection c = new ConnectionFactory().CreateConnection(url);
+                IConnection c = Context.ConnectionFactory.CreateConnection(opts);
                 Assert.True(false, "Expected a failure; did not receive one");
 
                 c.Close();
@@ -63,9 +61,9 @@ namespace IntegrationTests
         [Fact]
         public void TestAuthSuccess()
         {
-            using (NATSServer s = util.CreateServerWithConfig("auth_1222.conf"))
+            using (NATSServer s = NATSServer.CreateWithConfig(Context.Server1.Port, "auth.conf"))
             {
-                IConnection c = new ConnectionFactory().CreateConnection("nats://username:password@localhost:1222");
+                IConnection c = Context.ConnectionFactory.CreateConnection($"nats://username:password@localhost:{Context.Server1.Port}");
                 c.Close();
             }
         }
@@ -73,24 +71,24 @@ namespace IntegrationTests
         [Fact]
         public void TestAuthFailure()
         {
-            using (NATSServer s = util.CreateServerWithConfig("auth_1222.conf"))
+            using (NATSServer s = NATSServer.CreateWithConfig(Context.Server1.Port, "auth.conf"))
             {
-                connectAndFail("nats://username@localhost:1222");
-                connectAndFail("nats://username:badpass@localhost:1222");
-                connectAndFail("nats://localhost:1222");
-                connectAndFail("nats://badname:password@localhost:1222");
+                connectAndFail($"nats://username@localhost:{Context.Server1.Port}");
+                connectAndFail($"nats://username:badpass@localhost:{Context.Server1.Port}");
+                connectAndFail(Context.Server1.Url);
+                connectAndFail($"nats://badname:password@localhost:{Context.Server1.Port}");
             }
         }
 
         [Fact]
         public void TestAuthToken()
         {
-            using (NATSServer s = util.CreateServerWithArgs("-auth S3Cr3T0k3n!"))
+            using (NATSServer s = NATSServer.Create(Context.Server1.Port, "-auth S3Cr3T0k3n!"))
             {
-                connectAndFail("nats://localhost:4222");
-                connectAndFail("nats://invalid_token@localhost:4222");
+                connectAndFail(Context.Server1.Url);
+                connectAndFail($"nats://invalid_token@localhost:{Context.Server1.Port}");
 
-                new ConnectionFactory().CreateConnection("nats://S3Cr3T0k3n!@localhost:4222").Close();
+                Context.ConnectionFactory.CreateConnection($"nats://S3Cr3T0k3n!@localhost:{Context.Server1.Port}").Close();
             }
         }
 
@@ -100,17 +98,17 @@ namespace IntegrationTests
         {
             AutoResetEvent ev  = new AutoResetEvent(false);
 
-            using (NATSServer s1 = util.CreateServerWithConfig("auth_1222.conf"),
-                              s2 = util.CreateServerWithConfig("auth_1223_timeout.conf"),
-                              s3 = util.CreateServerWithConfig("auth_1224.conf"))
+            using (NATSServer s1 = NATSServer.CreateWithConfig(Context.Server1.Port, "auth.conf"),
+                              s2 = NATSServer.CreateWithConfig(Context.Server2.Port, "auth_timeout.conf"),
+                              s3 = NATSServer.CreateWithConfig(Context.Server3.Port, "auth.conf"))
             {
 
-                Options opts = util.DefaultTestOptions;
+                Options opts = Context.GetTestOptions();
 
-                opts.Servers = new string[]{
-                    "nats://username:password@localhost:1222",
-                    "nats://username:password@localhost:1223",
-                    "nats://username:password@localhost:1224" };
+                opts.Servers = new []{
+                    $"nats://username:password@localhost:{Context.Server1.Port}",
+                    $"nats://username:password@localhost:{Context.Server2.Port}",
+                    $"nats://username:password@localhost:{Context.Server3.Port}" };
                 opts.NoRandomize = true;
 
                 opts.ReconnectedEventHandler += (sender, args) =>
@@ -118,7 +116,7 @@ namespace IntegrationTests
                     ev.Set();
                 };
 
-                IConnection c = new ConnectionFactory().CreateConnection(opts);
+                IConnection c = Context.ConnectionFactory.CreateConnection(opts);
 
                 s1.Shutdown();
 
@@ -135,15 +133,15 @@ namespace IntegrationTests
         {
             AutoResetEvent ev = new AutoResetEvent(false);
 
-            using (NATSServer s1 = util.CreateServerWithConfig("auth_1222.conf"),
-                              s2 = util.CreateServerWithConfig("auth_1224.conf"))
+            using (NATSServer s1 = NATSServer.CreateWithConfig(Context.Server1.Port, "auth.conf"),
+                              s2 = NATSServer.CreateWithConfig(Context.Server3.Port, "auth.conf"))
             {
 
-                Options opts = util.DefaultTestOptions;
+                Options opts = Context.GetTestOptions();
 
                 opts.Servers = new string[]{
-                    "nats://username:password@localhost:1222",
-                    "nats://username:password@localhost:1224" };
+                    $"nats://username:password@localhost:{Context.Server1.Port}",
+                    $"nats://username:password@localhost:{Context.Server3.Port}" };
                 opts.NoRandomize = true;
 
                 opts.ReconnectedEventHandler += (sender, args) =>
@@ -151,7 +149,7 @@ namespace IntegrationTests
                     ev.Set();
                 };
 
-                IConnection c = new ConnectionFactory().CreateConnection(opts);
+                IConnection c = Context.ConnectionFactory.CreateConnection(opts);
 
                 // inject an authorization timeout, as if it were processed by an incoming server message.
                 // this is done at the parser level so that parsing is also tested,
