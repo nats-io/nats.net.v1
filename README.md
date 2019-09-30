@@ -26,7 +26,7 @@ The repository contains several projects, all located under `src\`
 
 * NATS - The NATS.Client assembly
 * Tests
-    * IntegrationTests - XUnit tests, verifying the client integration with `nats-server.exe` (ensure you have `nast-server.exe` in your path to run these).
+    * IntegrationTests - XUnit tests, verifying the client integration with `nats-server.exe` (ensure you have `nats-server.exe` in your path to run these).
     * UnitTests - XUnit tests that requires no dependencies
 * Samples
     * Publish Subscribe

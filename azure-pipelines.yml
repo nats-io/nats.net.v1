@@ -53,7 +53,7 @@ jobs:
       downloadPath: 'nats-server'
   
   - task: ExtractFiles@1
-    displayName: 'Extract NAST-Server files '
+    displayName: 'Extract NATS-Server files '
     inputs:
       archiveFilePatterns: 'nats-server\nats-server*.zip'
       destinationFolder: 'nats-server'
