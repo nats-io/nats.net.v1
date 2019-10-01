@@ -56,23 +56,25 @@ jobs:
         $win64asset = $response.assets.where({$_.name -like 'nats-server-*-windows-amd64.zip'})
         $assetUrl = $win64asset.browser_download_url
         $name = $win64asset.name
-        $outputFile = "$PSScriptRoot\$name"
+        $outputFile = "$(Build.StagingDirectory)\nats-server\$name"
         Write-Host "Downloading asset $name to $outputFile from $assetUrl"
         (New-Object System.Net.WebClient).DownloadFile($assetUrl, $outputFile)
   
   - task: ExtractFiles@1
     displayName: 'Extract NATS-Server files '
     inputs:
-      archiveFilePatterns: 'nats-server\nats-server*.zip'
+      archiveFilePatterns: '$(Build.StagingDirectory)\nats-server\nats-server*.zip'
       destinationFolder: 'nats-server'
       cleanDestinationFolder: false
-  
-  - powershell: |
-     $natsServerDir = Get-ChildItem -Directory -Path .\nats-server\nats-server-* | Select -Expand FullName
-     Write-Host "Found nats-server path: $natsServerDir"
-     Write-Host "##vso[task.setvariable variable=PATH;]${env:PATH};$natsServerDir";
-     
+
+  - task: PowerShell@2
     displayName: 'Include NATS-Server in path'
+    inputs:
+      targetType: 'inline'
+      script: |
+        $natsServerDir = Get-ChildItem -Directory -Path "$(Build.StagingDirectory)\nats-server\nats-server-*" | Select -Expand FullName
+        Write-Host "Found nats-server path: $natsServerDir"
+        Write-Host "##vso[task.setvariable variable=PATH;]${env:PATH};$natsServerDir"
 
   - task: DotNetCoreCLI@2
     displayName: 'IntegrationTests .NetCoreApp2.2'
