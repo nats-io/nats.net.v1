@@ -45,13 +45,23 @@ jobs:
       arguments: '-c $(BuildConfiguration) -f net452 --no-build'
       testRunTitle: 'UnitTests .Net4.5.2'
 
-  - task: DownloadGitHubRelease@0
+  - task: PowerShell@2
     displayName: 'Download latest Win64 NATS-Server'
     inputs:
-      connection: 'NATS-CI'
-      userRepository: 'nats-io/nats-server'
-      itemPattern: 'nats-server-**-windows-amd64.zip'
-      downloadPath: 'nats-server'
+      targetType: 'inline'
+      script: |
+        $releaseUri = "https://api.github.com/repos/nats-io/nats-server/releases/latest"
+
+        Write-Host "Getting latest release $uri"
+        $response = Invoke-RestMethod Get -Uri $uri -UseBasicParsing
+
+        $win64asset = $response.assets.where({$_.name -like 'nats-server-*-windows-amd64.zip'})
+        $assetUrl = $win64asset.browser_download_url
+        $name = $win64asset.name
+        $outputFile = "$PSScriptRoot\$name"
+
+        Write-Host "Downloading asset $name to $outputFile from $assetUrl"
+        (New-Object System.Net.WebClient).DownloadFile($assetUrl, $outputFile)
   
   - task: ExtractFiles@1
     displayName: 'Extract NATS-Server files '
