@@ -4,9 +4,10 @@ variables:
   Ver: '0.9.0'
   BuildRev: $[counter(variables.Ver, 1)]
   BuildVer: $[ format('{0}.{1}', variables.Ver, variables.BuildRev) ]
-  SemVer: $[ format('{0}-pre{1}', variables.Ver, variables.BuildRev) ]
-  ${{ if eq( variables.Build.SourceBranchName, 'master' ) }}:
-    SemVer: ${{$(Ver)}}
+  ${{ if eq( variables['Build.SourceBranchName'], 'master' ) }}:
+    SemVer: $[ variables.Ver ]
+  ${{ if ne( variables['Build.SourceBranchName'], 'master' ) }}:
+    SemVer: $[ format('{0}-pre{1}', variables.Ver, variables.BuildRev) ]
 
 trigger:
 - master
