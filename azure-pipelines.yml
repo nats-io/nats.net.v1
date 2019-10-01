@@ -52,7 +52,7 @@ jobs:
       script: |
         $releaseUri = "https://api.github.com/repos/nats-io/nats-server/releases/latest"
         Write-Host "Getting latest release $releaseUri"
-        $response = Invoke-RestMethod Get -Uri $releaseUri -UseBasicParsing
+        $response = Invoke-RestMethod -Uri $releaseUri -UseBasicParsing
         $win64asset = $response.assets.where({$_.name -like 'nats-server-*-windows-amd64.zip'})
         $assetUrl = $win64asset.browser_download_url
         $name = $win64asset.name
