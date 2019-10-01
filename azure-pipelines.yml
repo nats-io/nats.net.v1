@@ -57,17 +57,17 @@ jobs:
         $win64asset = $response.assets.where({$_.name -like 'nats-server-*-windows-amd64.zip'})
         $assetUrl = $win64asset.browser_download_url
         $name = $win64asset.name
-        $outputFile = "$(Build.StagingDirectory)\nats-server\$name"
+        $outputFile = "$(Agent.TempDirectory)\nats-server\$name"
 
         Write-Host "Downloading asset $name to $outputFile from $assetUrl"
-        New-Item -ItemType Directory -Force -Path $(Build.StagingDirectory)\nats-server
+        New-Item -ItemType Directory -Force -Path $(Agent.TempDirectory)\nats-server
         (New-Object System.Net.WebClient).DownloadFile($assetUrl, $outputFile)
   
   - task: ExtractFiles@1
     displayName: 'Extract NATS-Server files '
     inputs:
-      archiveFilePatterns: '$(Build.StagingDirectory)\nats-server\nats-server*.zip'
-      destinationFolder: 'nats-server'
+      archiveFilePatterns: '$(Agent.TempDirectory)\nats-server\nats-server*.zip'
+      destinationFolder: '$(Agent.TempDirectory)\nats-server'
       cleanDestinationFolder: false
 
   - task: PowerShell@2
@@ -75,7 +75,7 @@ jobs:
     inputs:
       targetType: 'inline'
       script: |
-        $natsServerDir = Get-ChildItem -Directory -Path "$(Build.StagingDirectory)\nats-server\nats-server-*" | Select -Expand FullName
+        $natsServerDir = Get-ChildItem -Directory -Path "$(Agent.TempDirectory)\nats-server\nats-server-*" | Select -Expand FullName
         Write-Host "Found nats-server path: $natsServerDir"
         Write-Host "##vso[task.setvariable variable=PATH;]${env:PATH};$natsServerDir"
 
