@@ -50,14 +50,17 @@ jobs:
     inputs:
       targetType: 'inline'
       script: |
-        $releaseUri = "https://api.github.com/repos/nats-io/nats-server/releases/latest"
         Write-Host "Getting latest release $releaseUri"
+        $releaseUri = "https://api.github.com/repos/nats-io/nats-server/releases/latest"
         $response = Invoke-RestMethod -Uri $releaseUri -UseBasicParsing
+
         $win64asset = $response.assets.where({$_.name -like 'nats-server-*-windows-amd64.zip'})
         $assetUrl = $win64asset.browser_download_url
         $name = $win64asset.name
         $outputFile = "$(Build.StagingDirectory)\nats-server\$name"
+
         Write-Host "Downloading asset $name to $outputFile from $assetUrl"
+        New-Item -ItemType Directory -Force -Path $(Build.StagingDirectory)\nats-server
         (New-Object System.Net.WebClient).DownloadFile($assetUrl, $outputFile)
   
   - task: ExtractFiles@1
