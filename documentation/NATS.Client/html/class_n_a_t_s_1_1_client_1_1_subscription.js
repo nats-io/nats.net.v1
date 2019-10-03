@@ -2,8 +2,8 @@ var class_n_a_t_s_1_1_client_1_1_subscription =
 [
     [ "AutoUnsubscribe", "class_n_a_t_s_1_1_client_1_1_subscription.html#a35a56185285d2cf186265ed1602dcfab", null ],
     [ "ClearMaxPending", "class_n_a_t_s_1_1_client_1_1_subscription.html#a8c1a898e991553b6ef7dcece6fe85b5b", null ],
-    [ "Dispose", "class_n_a_t_s_1_1_client_1_1_subscription.html#a9c905859f28f78a85ba2fe321a25bd7c", null ],
     [ "Dispose", "class_n_a_t_s_1_1_client_1_1_subscription.html#aa8ae08752d15abb02d126d900790989a", null ],
+    [ "Dispose", "class_n_a_t_s_1_1_client_1_1_subscription.html#a9c905859f28f78a85ba2fe321a25bd7c", null ],
     [ "Drain", "class_n_a_t_s_1_1_client_1_1_subscription.html#a92255288f701d2b8cc3e5867cb9dcc9b", null ],
     [ "Drain", "class_n_a_t_s_1_1_client_1_1_subscription.html#afa7c5db9d71465a3365df6dca47ccb69", null ],
     [ "DrainAsync", "class_n_a_t_s_1_1_client_1_1_subscription.html#a96dd4506ddf74e464dc4925666119fdb", null ],
