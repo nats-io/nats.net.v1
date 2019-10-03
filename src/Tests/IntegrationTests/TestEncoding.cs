@@ -25,19 +25,11 @@ namespace IntegrationTests
     /// <summary>
     /// Run these tests with the gnatsd auth.conf configuration file.
     /// </summary>
-    [Collection(TestCollections.Default)]
-    public class TestEncoding
+    public class TestEncoding : TestSuite<EncodingSuiteContext>
     {
-        UnitTestUtilities utils = new UnitTestUtilities();
+        public TestEncoding(EncodingSuiteContext context) : base(context) { }
 
-        public IEncodedConnection DefaultEncodedConnection
-        {
-            get
-            {
-                return new ConnectionFactory().CreateEncodedConnection();
-            }
-        }
-
+        public IEncodedConnection DefaultEncodedConnection => Context.OpenEncodedConnectionWithDefaultTimeout(Context.Server1.Port);
 
 #if NET452
         [Serializable]
@@ -73,7 +65,7 @@ namespace IntegrationTests
         [Fact]
         public void TestDefaultObjectSerialization()
         {
-            using (new NATSServer())
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
                 using (IEncodedConnection c = DefaultEncodedConnection)
                 {
@@ -132,7 +124,7 @@ namespace IntegrationTests
         [Fact]
         public void TestEncodedDefaultRequestReplyThreadSafety()
         {
-            using (new NATSServer())
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
                 using (IEncodedConnection c = DefaultEncodedConnection)
                 {
@@ -171,7 +163,7 @@ namespace IntegrationTests
         [Fact]
         public void TestDefaultObjectSerialization()
         {
-            using (new NATSServer())
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
                 using (IEncodedConnection c = DefaultEncodedConnection)
                 {
@@ -209,7 +201,7 @@ namespace IntegrationTests
         [Fact]
         public void TestEncodedObjectSerization()
         {
-            using (new NATSServer())
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
                 using (IEncodedConnection c = DefaultEncodedConnection)
                 {
@@ -250,7 +242,7 @@ namespace IntegrationTests
         [Fact]
         public void TestEncodedInvalidObjectSerialization()
         {
-            using (new NATSServer())
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
                 using (IEncodedConnection c = DefaultEncodedConnection)
                 {
@@ -336,7 +328,7 @@ namespace IntegrationTests
         [Fact]
         public void TestEncodedSerizationOverrides()
         {
-            using (new NATSServer())
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
                 using (IEncodedConnection c = DefaultEncodedConnection)
                 {
@@ -369,7 +361,7 @@ namespace IntegrationTests
         [Fact]
         public void TestEncodedObjectRequestReply()
         {
-            using (new NATSServer())
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
                 using (IEncodedConnection c = DefaultEncodedConnection)
                 {

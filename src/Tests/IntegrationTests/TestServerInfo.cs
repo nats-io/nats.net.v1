@@ -13,8 +13,18 @@
 
 namespace IntegrationTests
 {
-    internal static class TestCollections
+    public class TestServerInfo
     {
-        internal const string Default = "DefaultCollection";
+        public int Port { get; }
+
+        public string Url { get; }
+
+        public TestServerInfo(int port)
+        {
+            Port = port;
+            Url = $"nats://localhost:{port}";
+        }
+
+        public override string ToString() => Url;
     }
 }

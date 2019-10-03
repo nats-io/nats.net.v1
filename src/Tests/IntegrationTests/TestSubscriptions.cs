@@ -25,17 +25,16 @@ namespace IntegrationTests
     /// <summary>
     /// Run these tests with the gnatsd auth.conf configuration file.
     /// </summary>
-    [Collection(TestCollections.Default)]
-    public class TestSubscriptions
+    public class TestSubscriptions : TestSuite<SubscriptionsSuiteContext>
     {
-        UnitTestUtilities utils = new UnitTestUtilities();
+        public TestSubscriptions(SubscriptionsSuiteContext context) : base(context) { }
 
         [Fact]
         public void TestServerAutoUnsub()
         {
-            using (new NATSServer())
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
-                using (IConnection c = utils.DefaultTestConnection)
+                using (IConnection c = Context.OpenConnection(Context.Server1.Port))
                 {
                     long received = 0;
                     int max = 10;
@@ -69,9 +68,9 @@ namespace IntegrationTests
         [Fact]
         public void TestClientAutoUnsub()
         {
-            using (new NATSServer())
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
-                using (IConnection c = utils.DefaultTestConnection)
+                using (IConnection c = Context.OpenConnection(Context.Server1.Port))
                 {
                     long received = 0;
                     int max = 10;
@@ -108,9 +107,9 @@ namespace IntegrationTests
         [Fact]
         public void TestCloseSubRelease()
         {
-            using (new NATSServer())
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
-                using (IConnection c = utils.DefaultTestConnection)
+                using (IConnection c = Context.OpenConnection(Context.Server1.Port))
                 {
                     using (ISyncSubscription s = c.SubscribeSync("foo"))
                     {
@@ -134,9 +133,9 @@ namespace IntegrationTests
         [Fact]
         public void TestValidSubscriber()
         {
-            using (new NATSServer())
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
-                using (IConnection c = utils.DefaultTestConnection)
+                using (IConnection c = Context.OpenConnection(Context.Server1.Port))
                 {
                     using (ISyncSubscription s = c.SubscribeSync("foo"))
                     {
@@ -161,12 +160,12 @@ namespace IntegrationTests
         [Fact]
         public void TestSlowSubscriber()
         {
-            Options opts = utils.DefaultTestOptions;
+            Options opts = Context.GetTestOptions(Context.Server1.Port);
             opts.SubChannelLength = 10;
 
-            using (new NATSServer())
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
-                using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+                using (IConnection c = Context.ConnectionFactory.CreateConnection(opts))
                 {
                     using (ISyncSubscription s = c.SubscribeSync("foo"))
                     {
@@ -198,12 +197,12 @@ namespace IntegrationTests
         {
             AutoResetEvent ev = new AutoResetEvent(false);
 
-            Options opts = utils.DefaultTestOptions;
+            Options opts = Context.GetTestOptions(Context.Server1.Port);
             opts.SubChannelLength = 100;
 
-            using (new NATSServer())
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
-                using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+                using (IConnection c = Context.ConnectionFactory.CreateConnection(opts))
                 {
                     using (IAsyncSubscription s = c.SubscribeAsync("foo"))
                     {
@@ -260,14 +259,14 @@ namespace IntegrationTests
             object testLock = new object();
             IAsyncSubscription s;
 
-            Options opts = utils.DefaultTestOptions;
+            Options opts = Context.GetTestOptions(Context.Server1.Port);
             opts.SubChannelLength = 10;
 
             bool handledError = false;
 
-            using (new NATSServer())
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
-                using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+                using (IConnection c = Context.ConnectionFactory.CreateConnection(opts))
                 {
                     using (s = c.SubscribeAsync("foo"))
                     {
@@ -335,9 +334,9 @@ namespace IntegrationTests
         {
             AutoResetEvent ev = new AutoResetEvent(false);
 
-            using (new NATSServer())
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
-                using (IConnection c = utils.DefaultTestConnection)
+                using (IConnection c = Context.OpenConnection(Context.Server1.Port))
                 {
                     using (IAsyncSubscription helper = c.SubscribeAsync("helper"),
                                               start = c.SubscribeAsync("start"))
@@ -382,9 +381,9 @@ namespace IntegrationTests
             /// cleared on a close.
             AutoResetEvent ev = new AutoResetEvent(false);
             int callbacks = 0;
-            using (new NATSServer())
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
-                using (IConnection c = utils.DefaultTestConnection)
+                using (IConnection c = Context.OpenConnection(Context.Server1.Port))
                 {
                     using (IAsyncSubscription s = c.SubscribeAsync("foo"))
                     {
@@ -418,9 +417,9 @@ namespace IntegrationTests
         [Fact]
         public void TestNextMessageOnClosedSub()
         {
-            using (new NATSServer())
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
-                using (IConnection c = utils.DefaultTestConnection)
+                using (IConnection c = Context.OpenConnection(Context.Server1.Port))
                 {
                     ISyncSubscription s = c.SubscribeSync("foo");
                     s.Unsubscribe();
@@ -447,9 +446,9 @@ namespace IntegrationTests
 
             byte[] data = Encoding.UTF8.GetBytes("0123456789");
 
-            using (new NATSServer())
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
-                using (IConnection c = utils.DefaultTestConnection)
+                using (IConnection c = Context.OpenConnection(Context.Server1.Port))
                 {
                     ISubscription s = c.SubscribeAsync("foo", (sender, args) =>
                     {
@@ -544,12 +543,12 @@ namespace IntegrationTests
 
             byte[] data = Encoding.UTF8.GetBytes("0123456789");
 
-            using (new NATSServer())
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
-                var opts = utils.DefaultTestOptions;
+                var opts = Context.GetTestOptions(Context.Server1.Port);
                 opts.SubscriptionBatchSize = 1;
 
-                using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+                using (IConnection c = Context.ConnectionFactory.CreateConnection(opts))
                 {
                     ISubscription s = c.SubscribeAsync("foo", (sender, args) =>
                     {
@@ -630,9 +629,9 @@ namespace IntegrationTests
 
             byte[] data = Encoding.UTF8.GetBytes("0123456789");
 
-            using (new NATSServer())
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
-                using (IConnection c = utils.DefaultTestConnection)
+                using (IConnection c = Context.OpenConnection(Context.Server1.Port))
                 {
                     ISyncSubscription s = c.SubscribeSync("foo");
 
@@ -679,9 +678,9 @@ namespace IntegrationTests
 
             byte[] data = Encoding.UTF8.GetBytes("0123456789");
 
-            using (new NATSServer())
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
-                using (IConnection c = utils.DefaultTestConnection)
+                using (IConnection c = Context.OpenConnection(Context.Server1.Port))
                 {
                     ISubscription s = c.SubscribeAsync("foo", (sender, args) => { });
 
@@ -712,9 +711,9 @@ namespace IntegrationTests
 
             byte[] data = Encoding.UTF8.GetBytes("0123456789");
 
-            using (new NATSServer())
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
-                using (IConnection c = utils.DefaultTestConnection)
+                using (IConnection c = Context.OpenConnection(Context.Server1.Port))
                 {
                     ISyncSubscription s = c.SubscribeSync("foo");
 
@@ -741,16 +740,16 @@ namespace IntegrationTests
         [Fact]
         public void TestSubDelTaskCountBasic()
         {
-            var opts = utils.DefaultTestOptions;
+            var opts = Context.GetTestOptions(Context.Server1.Port);
 
             Assert.Throws<ArgumentOutOfRangeException>(
                 () => { opts.SubscriberDeliveryTaskCount = -1; });
 
             opts.SubscriberDeliveryTaskCount = 2;
 
-            using (new NATSServer())
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
-                using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+                using (IConnection c = Context.ConnectionFactory.CreateConnection(opts))
                 {
                     int s1Count = 0;
                     int s2Count = 0;
@@ -808,12 +807,12 @@ namespace IntegrationTests
         public void TestSubDelTaskCountScaling()
         {
             int COUNT = 20000;
-            var opts = utils.DefaultTestOptions;
+            var opts = Context.GetTestOptions(Context.Server1.Port);
             opts.SubscriberDeliveryTaskCount = 20;
 
-            using (new NATSServer())
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
-                using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+                using (IConnection c = Context.ConnectionFactory.CreateConnection(opts))
                 {
                     long recvCount = 0;
 
@@ -848,12 +847,12 @@ namespace IntegrationTests
         [Fact]
         public void TestSubDelTaskCountAutoUnsub()
         {
-            var opts = utils.DefaultTestOptions;
+            var opts = Context.GetTestOptions(Context.Server1.Port);
             opts.SubscriberDeliveryTaskCount = 2;
 
-            using (new NATSServer())
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
-                using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+                using (IConnection c = Context.ConnectionFactory.CreateConnection(opts))
                 {
                     long received = 0;
                     int max = 10;
@@ -892,14 +891,14 @@ namespace IntegrationTests
             bool disconnected = false;
             AutoResetEvent reconnectEv = new AutoResetEvent(false);
 
-            var opts = utils.DefaultTestOptions;
+            var opts = Context.GetTestOptions(Context.Server1.Port);
             opts.SubscriberDeliveryTaskCount = 2;
             opts.DisconnectedEventHandler = (obj, args) => { disconnected = true; };
             opts.ReconnectedEventHandler = (obj, args) => { reconnectEv.Set(); };
 
-            using (var server = new NATSServer())
+            using (var server = NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
-                using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+                using (IConnection c = Context.ConnectionFactory.CreateConnection(opts))
                 {
                     long received = 0;
                     int max = 10;
@@ -943,15 +942,15 @@ namespace IntegrationTests
         {
             AutoResetEvent errorEv = new AutoResetEvent(false);
 
-            var opts = utils.DefaultTestOptions;
+            var opts = Context.GetTestOptions(Context.Server1.Port);
             opts.SubscriberDeliveryTaskCount = 1;
             opts.SubChannelLength = 10;
 
             opts.AsyncErrorEventHandler = (obj, args) => { errorEv.Set(); };
 
-            using (new NATSServer())
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
-                using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+                using (IConnection c = Context.ConnectionFactory.CreateConnection(opts))
                 {
                     AutoResetEvent cbEv = new AutoResetEvent(false);
 
@@ -979,12 +978,12 @@ namespace IntegrationTests
         [Fact]
         public void TestSubDelTaskCountWithSyncSub()
         {
-            var opts = utils.DefaultTestOptions;
+            var opts = Context.GetTestOptions(Context.Server1.Port);
             opts.SubscriberDeliveryTaskCount = 1;
 
-            using (new NATSServer())
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
-                using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+                using (IConnection c = Context.ConnectionFactory.CreateConnection(opts))
                 {
                     ISyncSubscription s = c.SubscribeSync("foo");
                     c.Publish("foo", null);
@@ -997,29 +996,12 @@ namespace IntegrationTests
         static readonly string[] invalidQNames = { "foo group", "group\t1", "g1\r\n2" };
 
         [Fact]
-        public void TestSubscriptionValidationAPI()
-        {
-            Assert.True(Subscription.IsValidSubject("foo"));
-            Assert.True(Subscription.IsValidSubject("foo.bar"));
-
-            foreach (string s in invalidSubjects)
-            {
-                Assert.False(Subscription.IsValidSubject(s));
-            }
-
-            foreach (string s in invalidQNames)
-            {
-                Assert.False(Subscription.IsValidQueueGroupName(s));
-            }
-        }
-
-        [Fact]
         public void TestInvalidSubjects()
         {
             EventHandler<MsgHandlerEventArgs> mh = (obj, args) => { /* NOOP */ };
-            using (new NATSServer())
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
-                var c = utils.DefaultTestConnection;
+                var c = Context.OpenConnection(Context.Server1.Port);
 
                 foreach (string s in invalidSubjects)
                 {
@@ -1044,9 +1026,9 @@ namespace IntegrationTests
         [Fact]
         public void TestRespond()
         {
-            using (new NATSServer())
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
-                using (IConnection c = utils.DefaultTestConnection)
+                using (IConnection c = Context.OpenConnection(Context.Server1.Port))
                 using (ISyncSubscription s = c.SubscribeSync("foo"))
                 {
                     string replyTo = c.NewInbox();
@@ -1076,9 +1058,9 @@ namespace IntegrationTests
         [Fact]
         public void TestRespondWithAutoUnsubscribe()
         {
-            using (new NATSServer())
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
-                using (IConnection c = utils.DefaultTestConnection)
+                using (IConnection c = Context.OpenConnection(Context.Server1.Port))
                 using (ISyncSubscription s = c.SubscribeSync("foo"))
                 {
                     s.AutoUnsubscribe(1);
@@ -1109,9 +1091,9 @@ namespace IntegrationTests
         [Fact]
         public void TestRespondFailsWithClosedConnection()
         {
-            using (new NATSServer())
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
-                using (IConnection c = utils.DefaultTestConnection)
+                using (IConnection c = Context.OpenConnection(Context.Server1.Port))
                 {
                     ISyncSubscription s = c.SubscribeSync("foo");
 
@@ -1140,12 +1122,12 @@ namespace IntegrationTests
             try
             {
                 Msg m;
-                using (NATSServer ns = new NATSServer())
+                using (NATSServer ns = NATSServer.CreateFastAndVerify(Context.Server1.Port))
                 {
-                    Options options = utils.DefaultTestOptions;
+                    Options options = Context.GetTestOptions(Context.Server1.Port);
                     options.AllowReconnect = false;
 
-                    c = new ConnectionFactory().CreateConnection(options);
+                    c = Context.ConnectionFactory.CreateConnection(options);
                     s = c.SubscribeSync("foo");
 
                     string replyTo = c.NewInbox();

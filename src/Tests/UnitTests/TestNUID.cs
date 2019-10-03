@@ -17,12 +17,8 @@ using System.Diagnostics;
 using NATS.Client;
 using Xunit;
 
-namespace IntegrationTests
+namespace UnitTests
 {
-    /// <summary>
-    /// Run these tests with the gnatsd auth.conf configuration file.
-    /// </summary>
-    [Collection(TestCollections.Default)]
     public class TestNUID
     {
         [Fact]
@@ -113,7 +109,5 @@ namespace IntegrationTests
             }
         }
 
-    } // class
-
-} // namespace
-
+    }
+}

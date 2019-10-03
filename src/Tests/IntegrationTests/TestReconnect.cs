@@ -22,19 +22,13 @@ using Xunit;
 
 namespace IntegrationTests
 {
-    /// <summary>
-    /// Run these tests with the gnatsd auth.conf configuration file.
-    /// </summary>
-    [Collection(TestCollections.Default)]
-    public class TestReconnect
+    public class TestReconnect : TestSuite<ReconnectSuiteContext>
     {
+        public TestReconnect(ReconnectSuiteContext context) : base(context) { }
 
-        private Options reconnectOptions = getReconnectOptions();
-
-        private static Options getReconnectOptions()
+        private Options getReconnectOptions()
         {
-            Options o = ConnectionFactory.GetDefaultOptions();
-            o.Url = "nats://localhost:22222";
+            Options o = Context.GetTestOptionsWithDefaultTimeout(Context.Server1.Port);
             o.AllowReconnect = true;
             o.MaxReconnect = 10;
             o.ReconnectWait = 100;
@@ -42,13 +36,10 @@ namespace IntegrationTests
             return o;
         }
 
-        UnitTestUtilities utils = new UnitTestUtilities();
-
         [Fact]
         public void TestReconnectDisallowedFlags()
         {
-            Options opts = utils.DefaultTestOptions;
-            opts.Url = "nats://localhost:22222";
+            Options opts = Context.GetTestOptions(Context.Server1.Port);
             opts.AllowReconnect = false;
 
             Object testLock = new Object();
@@ -61,9 +52,9 @@ namespace IntegrationTests
                 }
             };
 
-            using (NATSServer ns = utils.CreateServerOnPort(22222))
+            using (NATSServer ns = NATSServer.Create(Context.Server1.Port))
             {
-                using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+                using (IConnection c = Context.ConnectionFactory.CreateConnection(opts))
                 {
                     lock (testLock)
                     {
@@ -77,8 +68,7 @@ namespace IntegrationTests
         [Fact]
         public void TestReconnectAllowedFlags()
         {
-            Options opts = utils.DefaultTestOptions;
-            opts.Url = "nats://localhost:22222";
+            Options opts = Context.GetTestOptions(Context.Server1.Port);
             opts.MaxReconnect = 2;
             opts.ReconnectWait = 1000;
 
@@ -92,9 +82,9 @@ namespace IntegrationTests
                 }
             };
 
-            using (NATSServer ns = utils.CreateServerOnPort(22222))
+            using (NATSServer ns = NATSServer.Create(Context.Server1.Port))
             {
-                using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+                using (IConnection c = Context.ConnectionFactory.CreateConnection(opts))
                 {
                     lock (testLock)
                     {
@@ -111,8 +101,7 @@ namespace IntegrationTests
         [Fact]
         public void TestBasicReconnectFunctionality()
         {
-            Options opts = utils.DefaultTestOptions;
-            opts.Url = "nats://localhost:22222";
+            Options opts = Context.GetTestOptions(Context.Server1.Port);
             opts.MaxReconnect = 2;
             opts.ReconnectWait = 1000;
 
@@ -132,9 +121,9 @@ namespace IntegrationTests
                 // NOOP
             };
 
-            NATSServer ns = utils.CreateServerOnPort(22222);
+            NATSServer ns = NATSServer.Create(Context.Server1.Port);
 
-            using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+            using (IConnection c = Context.ConnectionFactory.CreateConnection(opts))
             {
                 IAsyncSubscription s = c.SubscribeAsync("foo");
                 s.MessageHandler += (sender, args) =>
@@ -157,7 +146,7 @@ namespace IntegrationTests
                 c.Publish("foo", Encoding.UTF8.GetBytes("Hello"));
 
                 // restart the server.
-                using (ns = utils.CreateServerOnPort(22222))
+                using (ns = NATSServer.Create(Context.Server1.Port))
                 {
                     lock (msgLock)
                     {
@@ -175,7 +164,7 @@ namespace IntegrationTests
         [Fact]
         public void TestExtendedReconnectFunctionality()
         {
-            Options opts = reconnectOptions;
+            Options opts = getReconnectOptions();
 
             Object msgLock = new Object();
             AutoResetEvent disconnectedEvent = new AutoResetEvent(false);
@@ -192,9 +181,9 @@ namespace IntegrationTests
             };
 
             byte[] payload = Encoding.UTF8.GetBytes("bar");
-            NATSServer ns = utils.CreateServerOnPort(22222);
+            NATSServer ns = NATSServer.Create(Context.Server1.Port);
 
-            using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+            using (IConnection c = Context.ConnectionFactory.CreateConnection(opts))
             {
                 IAsyncSubscription s1 = c.SubscribeAsync("foo");
                 IAsyncSubscription s2 = c.SubscribeAsync("foobar");
@@ -227,7 +216,7 @@ namespace IntegrationTests
                 c.Publish("bar", payload);
 
                 // server is restarted here...
-                using (NATSServer ts = utils.CreateServerOnPort(22222))
+                using (NATSServer ts = NATSServer.Create(Context.Server1.Port))
                 {
                     // wait for reconnect
                     Assert.True(reconnectedEvent.WaitOne(60000));
@@ -293,7 +282,7 @@ namespace IntegrationTests
         public void TestQueueSubsOnReconnect()
         {
             AutoResetEvent reconnectEvent = new AutoResetEvent(false);
-            Options opts = reconnectOptions;
+            Options opts = getReconnectOptions();
             IConnection c;
 
             string subj = "foo.bar";
@@ -304,9 +293,9 @@ namespace IntegrationTests
                 reconnectEvent.Set();
             };
 
-            using(NATSServer ns = utils.CreateServerOnPort(22222))
+            using(NATSServer ns = NATSServer.Create(Context.Server1.Port))
             {
-                c = new ConnectionFactory().CreateConnection(opts);
+                c = Context.ConnectionFactory.CreateConnection(opts);
 
                 EventHandler<MsgHandlerEventArgs> eh = (sender, args) =>
                 {
@@ -333,7 +322,7 @@ namespace IntegrationTests
             Thread.Sleep(1000);
 
             // start back up
-            using (NATSServer ns = utils.CreateServerOnPort(22222))
+            using (NATSServer ns = NATSServer.Create(Context.Server1.Port))
             {
                 // wait for reconnect
                 Assert.True(reconnectEvent.WaitOne(6000));
@@ -345,14 +334,13 @@ namespace IntegrationTests
         [Fact]
         public void TestClose()
         {
-            Options opts = utils.DefaultTestOptions;
-            opts.Url = "nats://localhost:22222";
+            Options opts = Context.GetTestOptions(Context.Server1.Port);
             opts.AllowReconnect = true;
             opts.MaxReconnect = 60;
 
-            using (NATSServer s1 = utils.CreateServerOnPort(22222))
+            using (NATSServer s1 = NATSServer.Create(Context.Server1.Port))
             {
-                IConnection c = new ConnectionFactory().CreateConnection(opts);
+                IConnection c = Context.ConnectionFactory.CreateConnection(opts);
                 Assert.False(c.IsClosed());
                 
                 s1.Shutdown();
@@ -360,7 +348,7 @@ namespace IntegrationTests
                 Thread.Sleep(100);
                 Assert.False(c.IsClosed(), string.Format("Invalid state, expecting not closed, received: {0}", c.State));
                 
-                using (NATSServer s2 = utils.CreateServerOnPort(22222))
+                using (NATSServer s2 = NATSServer.Create(Context.Server1.Port))
                 {
                     Thread.Sleep(1000);
                     Assert.False(c.IsClosed());
@@ -383,8 +371,7 @@ namespace IntegrationTests
 
             IConnection c = null;
 
-            Options opts = utils.DefaultTestOptions;
-            opts.Url = "nats://localhost:22222";
+            Options opts = Context.GetTestOptions(Context.Server1.Port);
             opts.AllowReconnect = true;
             opts.MaxReconnect = 10000;
             opts.ReconnectWait = 100;
@@ -407,9 +394,9 @@ namespace IntegrationTests
                 }
             };
 
-            using (NATSServer s = utils.CreateServerOnPort(22222))
+            using (NATSServer s = NATSServer.Create(Context.Server1.Port))
             {
-                c = new ConnectionFactory().CreateConnection(opts);
+                c = Context.ConnectionFactory.CreateConnection(opts);
 
                 Assert.True(c.State == ConnState.CONNECTED);
                 Assert.True(c.IsReconnecting() == false);
@@ -426,7 +413,7 @@ namespace IntegrationTests
             Assert.True(c.IsReconnecting() == true);
 
             // restart the server
-            using (NATSServer s = utils.CreateServerOnPort(22222))
+            using (NATSServer s = NATSServer.Create(Context.Server1.Port))
             {
                 lock (reconnectedLock)
                 {
@@ -456,7 +443,7 @@ namespace IntegrationTests
             Object reconnectLock = new Object();
             bool   reconnected = false;
 
-            Options opts = utils.DefaultTestOptions;
+            Options opts = Context.GetTestOptions(Context.Server1.Port);
             opts.Verbose = true;
 
             opts.ReconnectedEventHandler += (sender, args) =>
@@ -468,16 +455,16 @@ namespace IntegrationTests
                 }
             };
 
-            using (NATSServer s = utils.CreateServerOnPort(4222))
+            using (NATSServer s = NATSServer.Create(Context.Server1.Port))
             {
-                c = new ConnectionFactory().CreateConnection(opts);
+                c = Context.ConnectionFactory.CreateConnection(opts);
                 c.Flush();
 
                 // exit the block and enter a new server block - this
                 // restarts the server.
             }
 
-            using (NATSServer s = utils.CreateServerOnPort(4222))
+            using (NATSServer s = NATSServer.Create(Context.Server1.Port))
             {
                 lock (reconnectLock)
                 {
@@ -488,14 +475,21 @@ namespace IntegrationTests
                 c.Flush();
             }
         }
+    }
+
+    public class TestPublishErrorsDuringReconnect : TestSuite<PublishErrorsDuringReconnectSuiteContext>
+    {
+        public TestPublishErrorsDuringReconnect(PublishErrorsDuringReconnectSuiteContext context)
+            : base(context) { }
 
         [Fact]
-        public void TestPublishErrorsDuringReconnect()
+        public void ConnectionShouldNotBecomeClosed()
         {
-            AutoResetEvent connectedEv = new AutoResetEvent(false);
-            using (var server = new NATSServer())
-            {
+            Options opts = Context.GetTestOptions(Context.Server1.Port);
 
+            AutoResetEvent connectedEv = new AutoResetEvent(false);
+            using (var server = NATSServer.CreateFastAndVerify(Context.Server1.Port))
+            {
                 Task t = Task.Factory.StartNew(() =>
                     {
                         connectedEv.WaitOne(10000);
@@ -513,7 +507,7 @@ namespace IntegrationTests
                     TaskScheduler.Default);
 
                 byte[] payload = Encoding.UTF8.GetBytes("hello");
-                using (var c = utils.DefaultTestConnection)
+                using (var c = Context.ConnectionFactory.CreateConnection(opts))
                 {
                     connectedEv.Set();
 
@@ -532,6 +526,5 @@ namespace IntegrationTests
                 }
             }
         }
-    } // class
-
-} // namespace
+    }
+}

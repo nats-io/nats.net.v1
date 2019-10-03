@@ -15,6 +15,7 @@ using System;
 using System.Threading;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using NATS.Client;
 #if NET452
 using System.Reflection;
@@ -22,52 +23,96 @@ using System.Reflection;
 
 namespace IntegrationTests
 {
-    class NATSServer : IDisposable
+    public class NATSServer : IDisposable
     {
 #if NET452
         static readonly string SERVEREXE = "nats-server.exe";
 #else
         static readonly string SERVEREXE = "nats-server";
 #endif
-        // Enable this for additional server debugging info.
-        static bool debug = false;
-        static bool hideWindow = true;
-        static bool leaveRunning = false;
+        static readonly TimeSpan DefaultDelay = TimeSpan.FromMilliseconds(500);
+
         Process p;
         ProcessStartInfo psInfo;
 
-        // enables debug/trace on the server
-        internal static bool Debug { set => debug = value; get => debug; }
+        // Enables debug/trace on the server
+        public static bool Debug { set; get; } = false;
 
-        // hides the NATS server window.  Default is true;
-        internal static bool HideWindow { set => hideWindow = value; get => hideWindow; }
+        // Hides the NATS server window.  Default is true;
+        public static bool HideWindow { set; get; } = true;
 
-        // leaves the server running after dispose for debugging.
-        internal static bool LeaveRunning { set => leaveRunning = value; get => leaveRunning; }
+        // Leaves the server running after dispose for debugging.
+        public static bool LeaveRunning { set; get; } = false;
 
-        public NATSServer() : this(true) { }
+        static NATSServer()
+        {
+            cleanupExistingServers();
+        }
 
-        public NATSServer(bool verify)
+        private NATSServer(TimeSpan delay, int port, string args = null)
         {
             createProcessStartInfo();
+
+            args = args == null
+                ? $"-p {port}"
+                : $"-p {port} {args}";
+
+            addArgument(args);
+
             p = Process.Start(psInfo);
-            if (verify)
+
+            if(delay > TimeSpan.Zero)
+                Thread.Sleep(delay);
+        }
+
+        public static NATSServer CreateFast(string args = null)
+            => CreateFast(Defaults.Port, args);
+
+        public static NATSServer CreateFast(int port, string args = null)
+            => new NATSServer(TimeSpan.Zero, port, args);
+
+        public static NATSServer CreateFastAndVerify(string args = null)
+            => CreateFastAndVerify(Defaults.Port, args);
+
+        public static NATSServer CreateFastAndVerify(int port, string args = null)
+        {
+            var server = new NATSServer(TimeSpan.Zero, port, args);
+            var cf = new ConnectionFactory();
+            
+            var opts = ConnectionFactory.GetDefaultOptions();
+            opts.Url = $"nats://localhost:{port}";
+
+            var isVerifiedOk = false;
+
+            for (int i = 0; i < 10; i++)
             {
-                for (int i = 0; i < 10; i++)
+                try
                 {
-                    try
-                    {
-                        var c = new ConnectionFactory().CreateConnection();
-                        c.Close();
-                        break;
-                    }
-                    catch
-                    {
-                        Thread.Sleep(i * 250);
-                    }
+                    var c = cf.CreateConnection(opts);
+                    c.Close();
+                    isVerifiedOk = true;
+                    break;
+                }
+                catch
+                {
+                    Thread.Sleep(i * 250);
                 }
             }
+
+            if(!isVerifiedOk)
+                throw new Exception($"Could not connect to test NATS-Server at '{opts.Url}'");
+
+            return server;
         }
+
+        public static NATSServer Create(string args = null)
+            => Create(Defaults.Port, args);
+
+        public static NATSServer Create(int port, string args = null)
+            => new NATSServer(DefaultDelay, port, args);
+
+        public static NATSServer CreateWithConfig(int port, string configFile)
+            => new NATSServer(DefaultDelay, port, $"-config {configFile}");
 
         private void addArgument(string arg)
         {
@@ -83,40 +128,21 @@ namespace IntegrationTests
             }
         }
 
-        public NATSServer(int port)
-        {
-            createProcessStartInfo();
-            addArgument("-p " + port);
-
-            p = Process.Start(psInfo);
-            Thread.Sleep(500);
-        }
-
-        public NATSServer(string args)
-        {
-            createProcessStartInfo();
-            addArgument(args);
-            p = Process.Start(psInfo);
-            Thread.Sleep(500);
-        }
-
         private void createProcessStartInfo()
         {
             psInfo = new ProcessStartInfo(SERVEREXE);
-
-            if (debug)
+            psInfo.UseShellExecute = false;
+            
+            if (Debug)
             {
                 psInfo.Arguments = " -DV ";
             }
             else
             {
-                if (hideWindow)
+                if (HideWindow)
                 {
-#if NET452
-                    psInfo.WindowStyle = ProcessWindowStyle.Hidden;
-#else
                     psInfo.CreateNoWindow = true;
-#endif
+                    psInfo.ErrorDialog = false;
                 }
             }
 
@@ -131,37 +157,67 @@ namespace IntegrationTests
             Thread.Sleep(500);
         }
 
+        private static void stopProcess(Process p)
+        {
+            try
+            {
+                var successfullyClosed = p.CloseMainWindow() || p.WaitForExit(100);
+                if (!successfullyClosed)
+                    p.Kill();
+                p.Close();
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+        }
+
         public void Shutdown()
         {
             if (p == null)
                 return;
 
-            try
-            {
-                p.Kill();
-            }
-            catch (Exception) { }
+            stopProcess(p);
 
             p = null;
         }
 
         void IDisposable.Dispose()
         {
-            if (leaveRunning)
+            if (LeaveRunning)
                 return;
 
             Shutdown();
         }
+
+        static void cleanupExistingServers()
+        {
+            Func<Process[]> getProcesses = () => Process.GetProcessesByName("nats-server");
+
+            var processes = getProcesses();
+            if(!processes.Any())
+                return;
+
+            foreach (var proc in getProcesses())
+                stopProcess(proc);
+
+            // Let the OS cleanup.
+            for (int i = 0; i < 10; i++)
+            {
+                processes = getProcesses();
+                if(!processes.Any())
+                    break;
+
+                Thread.Sleep(i * 250);
+            }
+
+            Thread.Sleep(250);
+        }
     }
 
-    class UnitTestUtilities
+    public class UnitTestUtilities
     {
-        static UnitTestUtilities()
-        {
-            CleanupExistingServers();
-        }
-
-        internal static string GetConfigDir()
+        public static string GetConfigDir()
         {
             var configDirPath = Path.Combine(Environment.CurrentDirectory, "config");
             if(!Directory.Exists(configDirPath))
@@ -170,68 +226,7 @@ namespace IntegrationTests
             return configDirPath;
         }
 
-        public Options DefaultTestOptions
-        {
-            get
-            {
-                var opts = ConnectionFactory.GetDefaultOptions();
-                opts.Timeout = 10000;
-                return opts;
-            }
-        }
-
-        public IConnection DefaultTestConnection
-        {
-            get
-            {
-                return new ConnectionFactory().CreateConnection(DefaultTestOptions);
-            }
-        }
-       
-        internal NATSServer CreateServerOnPort(int p)
-        {
-            return new NATSServer(p);
-        }
-
-        internal NATSServer CreateServerWithConfig(string configFile)
-        {
-            return new NATSServer(" -config " + configFile);
-        }
-
-        internal NATSServer CreateServerWithArgs(string args)
-        {
-            return new NATSServer(" " + args);
-        }
-
-        internal static string GetFullCertificatePath(string certificateName)
+        public static string GetFullCertificatePath(string certificateName)
             => Path.Combine(GetConfigDir(), "certs", certificateName);
-
-        internal static void CleanupExistingServers()
-        {
-            Process[] procs = Process.GetProcessesByName("nats-server");
-            if (procs == null)
-                return;
-
-            foreach (Process proc in procs)
-            {
-                try
-                {
-                    proc.Kill();
-                }
-                catch (Exception) { } // ignore
-            }
-
-            // Let the OS cleanup.
-            for (int i = 0; i < 10; i++)
-            {
-                procs = Process.GetProcessesByName("nats-server");
-                if (procs == null || procs.Length == 0)
-                    break;
-
-                Thread.Sleep(i * 250);
-            }
-
-            Thread.Sleep(250);
-        }
     }
 }
