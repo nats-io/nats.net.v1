@@ -1,7 +1,7 @@
 name: v$(Semver)
 
 variables:
-  Ver: '0.9.0'
+  Ver: '0.9.1'
   BuildRev: $[counter(variables.Ver, 1)]
   BuildVer: $[ format('{0}.{1}', variables.Ver, variables.BuildRev) ]
   ${{ if eq( variables['Build.SourceBranchName'], 'master' ) }}:
