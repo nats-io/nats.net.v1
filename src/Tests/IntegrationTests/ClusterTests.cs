@@ -24,9 +24,9 @@ namespace IntegrationTests
     /// <summary>
     /// Run these tests with the gnatsd auth.conf configuration file.
     /// </summary>
-    public class TestCluster : TestSuite<ClusterSuiteContext>
+    public class ClusterTests : TestSuite<ClusterTestsContext>
     {
-        public TestCluster(ClusterSuiteContext context) : base(context) { }
+        public ClusterTests(ClusterTestsContext context) : base(context) { }
 
         [Fact]
         public void TestServersOption()

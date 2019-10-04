@@ -25,9 +25,9 @@ namespace IntegrationTests
     /// <summary>
     /// Run these tests with the gnatsd auth.conf configuration file.
     /// </summary>
-    public class TestSubscriptions : TestSuite<SubscriptionsSuiteContext>
+    public class SubscriptionTests : TestSuite<SubscriptionsTestsContext>
     {
-        public TestSubscriptions(SubscriptionsSuiteContext context) : base(context) { }
+        public SubscriptionTests(SubscriptionsTestsContext context) : base(context) { }
 
         [Fact]
         public void TestServerAutoUnsub()

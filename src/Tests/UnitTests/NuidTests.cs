@@ -19,7 +19,7 @@ using Xunit;
 
 namespace UnitTests
 {
-    public class TestNUID
+    public class NuidTests
     {
         [Fact]
         public void TestGlobalNUID()

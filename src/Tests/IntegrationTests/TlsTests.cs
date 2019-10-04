@@ -26,9 +26,9 @@ namespace IntegrationTests
     /// <summary>
     /// Run these tests with the gnatsd auth.conf configuration file.
     /// </summary>
-    public class TestTls : TestSuite<TlsSuiteContext>
+    public class TlsTests : TestSuite<TlsTestsContext>
     {
-        public TestTls(TlsSuiteContext context) : base(context) { }
+        public TlsTests(TlsTestsContext context) : base(context) { }
 
         // A hack to avoid issues with our test self signed cert.
         // We don't want to require the runner of the test to install the 

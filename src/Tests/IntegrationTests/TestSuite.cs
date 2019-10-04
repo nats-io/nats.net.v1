@@ -37,7 +37,7 @@ namespace IntegrationTests
 
         public const int AuthorizationSuite = 11490; //3pc
         public const int ReconnectSuite = 11493; //1pc
-        public const int PublishErrorsDuringReconnectSuite = 11494; //1pc
+        public const int ReconnectPublishErrorsSuite = 11494; //1pc
         public const int ClusterSuite = 11495; //10pc
         public const int ConnectionSuite = 11505;//2pc
         public const int ConnectionSecuritySuite = 11507; //1pc
@@ -85,7 +85,7 @@ namespace IntegrationTests
         }
     }
 
-    public class DefaultSuiteContext : SuiteContext
+    public class DefaultTestsContext : SuiteContext
     {
         public const string CollectionKey = "9733f463316047fa9207e0a3aaa3c41a";
 
@@ -112,7 +112,7 @@ namespace IntegrationTests
         public readonly TestServerInfo ClusterServer7 = new TestServerInfo(SeedPortClusterServers + 6);
     }
 
-    public class AuthorizationSuiteContext : SuiteContext
+    public class AuthorizationTestsContext : SuiteContext
     {
         private const int SeedPort = TestSeedPorts.AuthorizationSuite;
 
@@ -121,7 +121,7 @@ namespace IntegrationTests
         public readonly TestServerInfo Server3 = new TestServerInfo(SeedPort + 2);
     }
 
-    public class ConnectionSuiteContext : SuiteContext
+    public class ConnectionTestsContext : SuiteContext
     {
         private const int SeedPort = TestSeedPorts.ConnectionSuite;
 
@@ -129,21 +129,21 @@ namespace IntegrationTests
         public readonly TestServerInfo Server2 = new TestServerInfo(SeedPort + 1);
     }
 
-    public class ConnectionSecuritySuiteContext : SuiteContext
+    public class ConnectionSecurityTestsContext : SuiteContext
     {
         private const int SeedPort = TestSeedPorts.ConnectionSecuritySuite;
 
         public readonly TestServerInfo Server1 = new TestServerInfo(SeedPort);
     }
 
-    public class ConnectionDrainSuiteContext : SuiteContext
+    public class ConnectionDrainTestsContext : SuiteContext
     {
         private const int SeedPort = TestSeedPorts.ConnectionDrainSuite;
 
         public readonly TestServerInfo Server1 = new TestServerInfo(SeedPort);
     }
 
-    public class ConnectionMemoryLeaksSuiteContext : SuiteContext
+    public class ConnectionMemoryLeakTestsContext : SuiteContext
     {
         private const int SeedPort = TestSeedPorts.ConnectionMemoryLeaksSuite;
 
@@ -152,7 +152,7 @@ namespace IntegrationTests
         public readonly TestServerInfo Server3 = new TestServerInfo(SeedPort + 2);
     }
 
-    public class ClusterSuiteContext : SuiteContext
+    public class ClusterTestsContext : SuiteContext
     {
         private const int SeedPort = TestSeedPorts.ClusterSuite;
 
@@ -170,7 +170,7 @@ namespace IntegrationTests
         public readonly TestServerInfo[] TestServers;
         public readonly TestServerInfo[] TestServersShortList;
 
-        public ClusterSuiteContext()
+        public ClusterTestsContext()
         {
             TestServers = new[]
             {
@@ -192,35 +192,35 @@ namespace IntegrationTests
         public string[] GetTestServersShortListUrls() => TestServersShortList.Select(s => s.Url).ToArray();
     }
 
-    public class EncodingSuiteContext : SuiteContext
+    public class EncodingTestsContext : SuiteContext
     {
         private const int SeedPort = TestSeedPorts.EncodingSuite;
 
         public readonly TestServerInfo Server1 = new TestServerInfo(SeedPort);
     }
 
-    public class ReconnectSuiteContext : SuiteContext
+    public class ReconnectTestsContext : SuiteContext
     {
         private const int SeedPort = TestSeedPorts.ReconnectSuite;
 
         public readonly TestServerInfo Server1 = new TestServerInfo(SeedPort);
     }
 
-    public class PublishErrorsDuringReconnectSuiteContext : SuiteContext
+    public class ReconnectPublishErrorsTestsContext : SuiteContext
     {
-        private const int SeedPort = TestSeedPorts.PublishErrorsDuringReconnectSuite;
+        private const int SeedPort = TestSeedPorts.ReconnectPublishErrorsSuite;
 
         public readonly TestServerInfo Server1 = new TestServerInfo(SeedPort);
     }
 
-    public class SubscriptionsSuiteContext : SuiteContext
+    public class SubscriptionsTestsContext : SuiteContext
     {
         private const int SeedPort = TestSeedPorts.SubscriptionsSuite;
 
         public readonly TestServerInfo Server1 = new TestServerInfo(SeedPort);
     }
 
-    public class TlsSuiteContext : SuiteContext
+    public class TlsTestsContext : SuiteContext
     {
         private const int SeedPort = TestSeedPorts.TlsSuite;
 

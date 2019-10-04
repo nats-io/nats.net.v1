@@ -16,7 +16,7 @@ using Xunit;
 
 namespace UnitTests
 {
-    public class TestSubscriptions
+    public class SubscriptionTests
     {
         static readonly string[] invalidSubjects = { "foo bar", "foo..bar", ".foo", "bar.baz.", "baz\t.foo" };
         static readonly string[] invalidQNames = { "foo group", "group\t1", "g1\r\n2" };

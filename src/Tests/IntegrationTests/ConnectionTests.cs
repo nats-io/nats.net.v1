@@ -19,9 +19,9 @@ using System.Diagnostics;
 
 namespace IntegrationTests
 {
-    public class TestConnection : TestSuite<ConnectionSuiteContext>
+    public class ConnectionTests : TestSuite<ConnectionTestsContext>
     {
-        public TestConnection(ConnectionSuiteContext context) : base(context) { }
+        public ConnectionTests(ConnectionTestsContext context) : base(context) { }
 
         [Fact]
         public void TestConnectionStatus()
@@ -457,9 +457,9 @@ namespace IntegrationTests
         /// TestErrOnMaxPayloadLimit
     }
 
-    public class TestConnectionSecurity : TestSuite<ConnectionSecuritySuiteContext>
+    public class ConnectionSecurityTests : TestSuite<ConnectionSecurityTestsContext>
     {
-        public TestConnectionSecurity(ConnectionSecuritySuiteContext context) : base(context) { }
+        public ConnectionSecurityTests(ConnectionSecurityTestsContext context) : base(context) { }
 
         [Fact]
         public void TestNKey()
@@ -660,9 +660,9 @@ namespace IntegrationTests
         }
     }
 
-    public class TestConnectionDrain : TestSuite<ConnectionDrainSuiteContext>
+    public class ConnectionDrainTests : TestSuite<ConnectionDrainTestsContext>
     {
-        public TestConnectionDrain(ConnectionDrainSuiteContext context) : base(context) { }
+        public ConnectionDrainTests(ConnectionDrainTestsContext context) : base(context) { }
 
         [Fact]
         public void TestDrain()
@@ -859,7 +859,7 @@ namespace IntegrationTests
                 sw.Stop();
 
                 // add slack for slow CI.
-                Assert.True(sw.ElapsedMilliseconds >= 1000);
+                Assert.True(sw.ElapsedMilliseconds >= 1000, $"Expected elapsed ms to be gte 1000ms but got {sw.ElapsedMilliseconds}ms");
             }
         }
 
@@ -884,7 +884,7 @@ namespace IntegrationTests
                 sw.Stop();
 
                 // add slack for slow CI.
-                Assert.True(sw.ElapsedMilliseconds >= 500);
+                Assert.True(sw.ElapsedMilliseconds >= 500, $"Expected elapsed ms to be gte 500ms but got {sw.ElapsedMilliseconds}ms");
             }
         }
 
@@ -963,9 +963,9 @@ namespace IntegrationTests
         }
     }
 
-    public class TestConnectionMemoryLeaks : TestSuite<ConnectionMemoryLeaksSuiteContext>
+    public class ConnectionMemoryLeakTests : TestSuite<ConnectionMemoryLeakTestsContext>
     {
-        public TestConnectionMemoryLeaks(ConnectionMemoryLeaksSuiteContext context) : base(context) { }
+        public ConnectionMemoryLeakTests(ConnectionMemoryLeakTestsContext context) : base(context) { }
 
 #if memcheck
         [Fact]

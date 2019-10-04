@@ -24,9 +24,9 @@ namespace IntegrationTests
     /// <summary>
     /// Run these tests with the gnatsd auth.conf configuration file.
     /// </summary>
-    public class TestAuthorization : TestSuite<AuthorizationSuiteContext>
+    public class AuthorizationTests : TestSuite<AuthorizationTestsContext>
     {
-        public TestAuthorization(AuthorizationSuiteContext context) : base(context) { }
+        public AuthorizationTests(AuthorizationTestsContext context) : base(context) { }
 
         int hitDisconnect;
 

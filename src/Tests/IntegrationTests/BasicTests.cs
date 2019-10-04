@@ -26,10 +26,10 @@ namespace IntegrationTests
     /// <summary>
     /// Run these tests with the gnatsd auth.conf configuration file.
     /// </summary>
-    [Collection(DefaultSuiteContext.CollectionKey)]
-    public class TestBasic : TestSuite<DefaultSuiteContext>
+    [Collection(DefaultTestsContext.CollectionKey)]
+    public class BasicTests : TestSuite<DefaultTestsContext>
     {
-        public TestBasic(DefaultSuiteContext context) : base(context) { }
+        public BasicTests(DefaultTestsContext context) : base(context) { }
 
         [Fact]
         public void TestConnectedServer()
@@ -604,7 +604,7 @@ namespace IntegrationTests
             }
         }
 
-        private async void testRequestAsync(bool useOldRequestStyle)
+        private async Task testRequestAsync(bool useOldRequestStyle)
         {
             using (NATSServer.CreateFastAndVerify())
             {
@@ -640,7 +640,7 @@ namespace IntegrationTests
             }
         }
 
-        private async void testRequestAsyncWithOffsets(bool useOldRequestStyle)
+        private async Task testRequestAsyncWithOffsets(bool useOldRequestStyle)
         {
             using (NATSServer.CreateFastAndVerify())
             {
@@ -680,30 +680,30 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public void TestRequestAsync()
+        public async Task TestRequestAsync()
         {
-            testRequestAsync(useOldRequestStyle: false);
+            await testRequestAsync(useOldRequestStyle: false);
         }
 
         [Fact]
-        public void TestRequestAsync_OldRequestStyle()
+        public async Task TestRequestAsync_OldRequestStyle()
         {
-            testRequestAsync(useOldRequestStyle: true);
+            await testRequestAsync(useOldRequestStyle: true);
         }
 
         [Fact]
-        public void TestRequestAsyncWithOffsets()
+        public async Task TestRequestAsyncWithOffsets()
         {
-            testRequestAsyncWithOffsets(useOldRequestStyle: false);
+            await testRequestAsyncWithOffsets(useOldRequestStyle: false);
         }
 
         [Fact]
-        public void TestRequestAsyncWithOffsets_OldRequestStyle()
+        public async Task TestRequestAsyncWithOffsets_OldRequestStyle()
         {
-            testRequestAsyncWithOffsets(useOldRequestStyle: true);
+            await testRequestAsyncWithOffsets(useOldRequestStyle: true);
         }
 
-        private async void testRequestAsyncCancellation(bool useOldRequestStyle)
+        private async Task testRequestAsyncCancellation(bool useOldRequestStyle)
         {
             using (NATSServer.CreateFastAndVerify())
             {
@@ -778,18 +778,18 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public void TestRequestAsyncCancellation()
+        public async Task TestRequestAsyncCancellation()
         {
-            testRequestAsyncCancellation(useOldRequestStyle: false);
+            await testRequestAsyncCancellation(useOldRequestStyle: false);
         }
 
         [Fact]
-        public void TestRequestAsyncCancellation_OldRequestStyle()
+        public async Task TestRequestAsyncCancellation_OldRequestStyle()
         {
-            testRequestAsyncCancellation(useOldRequestStyle: true);
+            await testRequestAsyncCancellation(useOldRequestStyle: true);
         }
 
-        private async void testRequestAsyncTimeout(bool useOldRequestStyle)
+        private async Task testRequestAsyncTimeout(bool useOldRequestStyle)
         {
             using (var server = NATSServer.CreateFastAndVerify())
             {
@@ -808,7 +808,7 @@ namespace IntegrationTests
                 sw.Start();
                 await conn.RequestAsync("foo", new byte[0], 5000);
                 sw.Stop();
-                Assert.True(sw.ElapsedMilliseconds < 5000, "Unexpected timeout behavior");
+                Assert.True(sw.ElapsedMilliseconds < 5000, $"Unexpected timeout behavior. Expected lt 5000ms got {sw.ElapsedMilliseconds}ms");
                 sub.Unsubscribe();
 
                 // valid connection, but no response
@@ -832,15 +832,15 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public void TestRequestAsyncTimeout()
+        public async Task TestRequestAsyncTimeout()
         {
-            testRequestAsyncTimeout(useOldRequestStyle: false);
+            await testRequestAsyncTimeout(useOldRequestStyle: false);
         }
 
         [Fact]
-        public void TestRequestAsyncTimeout_OldRequestStyle()
+        public async Task TestRequestAsyncTimeout_OldRequestStyle()
         {
-            testRequestAsyncTimeout(useOldRequestStyle: true);
+            await testRequestAsyncTimeout(useOldRequestStyle: true);
         }
 
         class TestReplier

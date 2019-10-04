@@ -17,7 +17,7 @@ using Xunit;
 
 namespace UnitTests
 {
-    public class TestOptions
+    public class OptionTests
     {
         private Options GetDefaultOptions() => ConnectionFactory.GetDefaultOptions();
 

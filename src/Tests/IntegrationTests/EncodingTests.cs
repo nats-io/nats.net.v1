@@ -25,9 +25,9 @@ namespace IntegrationTests
     /// <summary>
     /// Run these tests with the gnatsd auth.conf configuration file.
     /// </summary>
-    public class TestEncoding : TestSuite<EncodingSuiteContext>
+    public class EncodingTests : TestSuite<EncodingTestsContext>
     {
-        public TestEncoding(EncodingSuiteContext context) : base(context) { }
+        public EncodingTests(EncodingTestsContext context) : base(context) { }
 
         public IEncodedConnection DefaultEncodedConnection => Context.OpenEncodedConnectionWithDefaultTimeout(Context.Server1.Port);
 

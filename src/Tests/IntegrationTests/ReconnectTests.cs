@@ -22,9 +22,9 @@ using Xunit;
 
 namespace IntegrationTests
 {
-    public class TestReconnect : TestSuite<ReconnectSuiteContext>
+    public class ReconnectTests : TestSuite<ReconnectTestsContext>
     {
-        public TestReconnect(ReconnectSuiteContext context) : base(context) { }
+        public ReconnectTests(ReconnectTestsContext context) : base(context) { }
 
         private Options getReconnectOptions()
         {
@@ -477,9 +477,9 @@ namespace IntegrationTests
         }
     }
 
-    public class TestPublishErrorsDuringReconnect : TestSuite<PublishErrorsDuringReconnectSuiteContext>
+    public class ReconnectPublishErrorsTests : TestSuite<ReconnectPublishErrorsTestsContext>
     {
-        public TestPublishErrorsDuringReconnect(PublishErrorsDuringReconnectSuiteContext context)
+        public ReconnectPublishErrorsTests(ReconnectPublishErrorsTestsContext context)
             : base(context) { }
 
         [Fact]
