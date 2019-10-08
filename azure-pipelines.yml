@@ -1,119 +1,144 @@
-name: v$(Semver)
+name: $(Semver)
 
 variables:
-  Ver: '0.9.1'
-  BuildRev: $[counter(variables.Ver, 1)]
-  BuildVer: $[ format('{0}.{1}', variables.Ver, variables.BuildRev) ]
-  ${{ if eq( variables['Build.SourceBranchName'], 'master' ) }}:
-    SemVer: $[ variables.Ver ]
-  ${{ if ne( variables['Build.SourceBranchName'], 'master' ) }}:
-    SemVer: $[ format('{0}-pre{1}', variables.Ver, variables.BuildRev) ]
+  BuildRev: $[counter(format('{0:yyyyMMdd}', pipeline.startTime), 1)]
+  ${{ if startsWith( variables['Build.SourceBranch'], 'refs/tags' ) }}:
+    SemVer: $[ variables['Build.SourceBranchName'] ]
+  ${{ if not( startsWith( variables['Build.SourceBranch'], 'refs/tags' )) }}:
+    SemVer: $[format('{0:yyyy}.{0:MM}.{0:dd}-pre{1}', pipeline.startTime, variables.BuildRev)]
+  InfoVer: $(Build.SourceVersion)
 
 trigger:
-- master
+  batch: true
+  branches:
+    include:
+    - master
+    - refs/tags/*
+
+pr:
+  autoCancel: true
+  branches:
+    include:
+    - master
 
 pool:
   name: Azure Pipelines
   vmImage: windows-2019
 
-jobs:
-- job: Main
-  displayName: 'Build, test, pack and publish'
-  timeoutInMinutes: 20
-  cancelTimeoutInMinutes: 5
-  steps:
-  - task: DotNetCoreCLI@2
-    displayName: 'Build Solution'
-    inputs:
-      command: build
-      projects: 'src/*.sln'
-      arguments: '-c $(BuildConfiguration) --no-incremental -p:TreatWarningsAsErrors=true -p:Version=$(SemVer) -p:AssemblyVersion=$(BuildVer) -p:FileVersion=$(BuildVer) -p:InformationalVersion=$(BuildVer) -p:SignAssembly=true -p:AssemblyOriginatorKeyFile=$(Build.SourcesDirectory)\NATS.Client.snk'
-
-  - task: DotNetCoreCLI@2
-    displayName: 'UnitTests .NetCoreApp2.2'
-    inputs:
-      command: test
-      projects: 'src/Tests/**/UnitTests.csproj'
-      arguments: '-c $(BuildConfiguration) -f netcoreapp2.2 --no-build'
-      testRunTitle: 'UnitTests .NetCoreApp2.2'
-
-  - task: DotNetCoreCLI@2
-    displayName: 'UnitTests .Net4.5.2'
-    inputs:
-      command: test
-      projects: 'src/Tests/**/UnitTests.csproj'
-      arguments: '-c $(BuildConfiguration) -f net452 --no-build'
-      testRunTitle: 'UnitTests .Net4.5.2'
-
-  - task: PowerShell@2
-    displayName: 'Download latest Win64 NATS-Server'
-    inputs:
-      targetType: 'inline'
-      script: |
-        Write-Host "Getting latest release $releaseUri"
-        $releaseUri = "https://api.github.com/repos/nats-io/nats-server/releases/latest"
-        $response = Invoke-RestMethod -Uri $releaseUri -UseBasicParsing
-
-        $win64asset = $response.assets.where({$_.name -like 'nats-server-*-windows-amd64.zip'})
-        $assetUrl = $win64asset.browser_download_url
-        $name = $win64asset.name
-        $outputFile = "$(Agent.TempDirectory)\nats-server\$name"
-
-        Write-Host "Downloading asset $name to $outputFile from $assetUrl"
-        New-Item -ItemType Directory -Force -Path $(Agent.TempDirectory)\nats-server
-        (New-Object System.Net.WebClient).DownloadFile($assetUrl, $outputFile)
+stages:
+- stage: Build
+  jobs:
+  - job: BuildArtifacts
+    displayName: 'Builds, tests & produces artifacts'
+    timeoutInMinutes: 20
+    cancelTimeoutInMinutes: 5
+    steps:
+    - task: DotNetCoreCLI@2
+      displayName: 'Build Solution'
+      inputs:
+        command: build
+        projects: 'src/*.sln'
+        arguments: '-c $(BuildConfiguration) --no-incremental --nologo -p:TreatWarningsAsErrors=true -p:Version=$(SemVer) -p:InformationalVersion=$(InfoVer) -p:SignAssembly=true -p:AssemblyOriginatorKeyFile=$(Build.SourcesDirectory)\NATS.Client.snk'
   
-  - task: ExtractFiles@1
-    displayName: 'Extract NATS-Server files '
-    inputs:
-      archiveFilePatterns: '$(Agent.TempDirectory)\nats-server\nats-server*.zip'
-      destinationFolder: '$(Agent.TempDirectory)\nats-server'
-      cleanDestinationFolder: false
+    - task: DotNetCoreCLI@2
+      displayName: 'UnitTests .NetCoreApp2.2'
+      inputs:
+        command: test
+        projects: 'src/Tests/**/UnitTests.csproj'
+        arguments: '-c $(BuildConfiguration) -f netcoreapp2.2 --no-build'
+        testRunTitle: 'UnitTests .NetCoreApp2.2'
+  
+    - task: DotNetCoreCLI@2
+      displayName: 'UnitTests .Net4.5.2'
+      inputs:
+        command: test
+        projects: 'src/Tests/**/UnitTests.csproj'
+        arguments: '-c $(BuildConfiguration) -f net452 --no-build'
+        testRunTitle: 'UnitTests .Net4.5.2'
+  
+    - task: PowerShell@2
+      displayName: 'Download latest Win64 NATS-Server'
+      inputs:
+        targetType: 'inline'
+        script: |
+          Write-Host "Getting latest release $releaseUri"
+          $releaseUri = "https://api.github.com/repos/nats-io/nats-server/releases/latest"
+          $response = Invoke-RestMethod -Uri $releaseUri -UseBasicParsing
+  
+          $win64asset = $response.assets.where({$_.name -like 'nats-server-*-windows-amd64.zip'})
+          $assetUrl = $win64asset.browser_download_url
+          $name = $win64asset.name
+          $outputFile = "$(Agent.TempDirectory)\nats-server\$name"
+  
+          Write-Host "Downloading asset $name to $outputFile from $assetUrl"
+          New-Item -ItemType Directory -Force -Path $(Agent.TempDirectory)\nats-server
+          (New-Object System.Net.WebClient).DownloadFile($assetUrl, $outputFile)
+    
+    - task: ExtractFiles@1
+      displayName: 'Extract NATS-Server files '
+      inputs:
+        archiveFilePatterns: '$(Agent.TempDirectory)\nats-server\nats-server*.zip'
+        destinationFolder: '$(Agent.TempDirectory)\nats-server'
+        cleanDestinationFolder: false
+  
+    - task: PowerShell@2
+      displayName: 'Include NATS-Server in path'
+      inputs:
+        targetType: 'inline'
+        script: |
+          $natsServerDir = Get-ChildItem -Directory -Path "$(Agent.TempDirectory)\nats-server\nats-server-*" | Select -Expand FullName
+          Write-Host "Found nats-server path: $natsServerDir"
+          Write-Host "##vso[task.setvariable variable=PATH;]${env:PATH};$natsServerDir"
+  
+    - task: DotNetCoreCLI@2
+      displayName: 'IntegrationTests .NetCoreApp2.2'
+      inputs:
+        command: test
+        projects: 'src/Tests/**/IntegrationTests.csproj'
+        arguments: '-c $(BuildConfiguration) -f netcoreapp2.2 --no-build'
+        testRunTitle: 'IntegrationTests .NetCoreApp2.2'
+  
+    - task: DotNetCoreCLI@2
+      displayName: 'IntegrationTests .Net4.5.2'
+      inputs:
+        command: test
+        projects: 'src/Tests/**/IntegrationTests.csproj'
+        arguments: '-c $(BuildConfiguration) -f net452 --no-build'
+        testRunTitle: 'IntegrationTests .Net4.5.2'
+  
+    - task: DotNetCoreCLI@2
+      displayName: 'Pack Nupkg'
+      inputs:
+        command: custom
+        custom: pack
+        projects: 'src/*.sln'
+        arguments: '-c $(BuildConfiguration) --no-build -o $(Build.ArtifactStagingDirectory) -p:Version=$(SemVer) -p:InformationalVersion=$(InfoVer)'
+  
+    - task: PublishPipelineArtifact@1
+      displayName: 'Publish Artifacts'
+      inputs:
+        path: '$(Build.ArtifactStagingDirectory)'
+        artifact: Artifacts
 
-  - task: PowerShell@2
-    displayName: 'Include NATS-Server in path'
-    inputs:
-      targetType: 'inline'
-      script: |
-        $natsServerDir = Get-ChildItem -Directory -Path "$(Agent.TempDirectory)\nats-server\nats-server-*" | Select -Expand FullName
-        Write-Host "Found nats-server path: $natsServerDir"
-        Write-Host "##vso[task.setvariable variable=PATH;]${env:PATH};$natsServerDir"
-
-  - task: DotNetCoreCLI@2
-    displayName: 'IntegrationTests .NetCoreApp2.2'
-    inputs:
-      command: test
-      projects: 'src/Tests/**/IntegrationTests.csproj'
-      arguments: '-c $(BuildConfiguration) -f netcoreapp2.2 --no-build'
-      testRunTitle: 'IntegrationTests .NetCoreApp2.2'
-
-  - task: DotNetCoreCLI@2
-    displayName: 'IntegrationTests .Net4.5.2'
-    inputs:
-      command: test
-      projects: 'src/Tests/**/IntegrationTests.csproj'
-      arguments: '-c $(BuildConfiguration) -f net452 --no-build'
-      testRunTitle: 'IntegrationTests .Net4.5.2'
-
-  - task: DotNetCoreCLI@2
-    displayName: 'Pack Nupkg'
-    inputs:
-      command: custom
-      custom: pack
-      projects: 'src/*.sln'
-      arguments: '-c $(BuildConfiguration) --no-build -o $(Build.ArtifactStagingDirectory) -p:Version=$(SemVer) -p:AssemblyVersion=$(BuildVer) -p:FileVersion=$(BuildVer) -p:InformationalVersion=$(BuildVer)'
-
-  - task: PublishPipelineArtifact@1
-    displayName: 'Publish Pipeline Artifacts'
-    inputs:
-      targetPath: '$(Build.ArtifactStagingDirectory)'
-      artifact: Artifacts
-
-  - task: NuGetCommand@2
-    displayName: 'Push Nupkg to AZ Artifacts'
-    enabled: false
-    inputs:
-      command: push
-      packagesToPush: '$(Build.ArtifactStagingDirectory)/*.nupkg;!$(Build.ArtifactStagingDirectory)/*.symbols.nupkg'
-      publishVstsFeed: 'nats.net'
-      verbosityPush: Normal
+- stage: Deploy
+  condition: and (succeeded(), startsWith( variables['Build.SourceBranch'], 'refs/tags' ))
+  dependsOn: Build
+  jobs:
+  - deployment: DeployArtifacts
+    environment: 'Prod'
+    displayName: 'Deploys artifacts'
+    timeoutInMinutes: 10
+    cancelTimeoutInMinutes: 5
+    strategy: 
+      runOnce:
+        deploy:
+          steps:
+          - checkout: none
+          - task: NuGetCommand@2
+            displayName: 'Push Nupkg to NuGet.Org'
+            inputs:
+              command: push
+              nugetFeedType: external
+              publishFeedCredentials: nuget_org_push_new_versions
+              verbosityPush: Normal
+              packagesToPush: '$(Pipeline.Workspace)/**/*.nupkg;!$(Pipeline.Workspace)/**/*.symbols.nupkg'
