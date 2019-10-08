@@ -30,7 +30,7 @@ stages:
   jobs:
   - job: BuildArtifacts
     displayName: 'Builds, tests & produces artifacts'
-    timeoutInMinutes: 10
+    timeoutInMinutes: 20
     cancelTimeoutInMinutes: 5
     steps:
     - task: DotNetCoreCLI@2
