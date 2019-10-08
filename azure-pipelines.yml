@@ -135,9 +135,10 @@ stages:
           steps:
           - checkout: none
           - task: NuGetCommand@2
-            displayName: 'Push Nupkg to AZ Feed'
+            displayName: 'Push Nupkg to NuGet.Org'
             inputs:
               command: push
-              packagesToPush: '$(Pipeline.Workspace)/**/*.nupkg;!$(Pipeline.Workspace)/**/*.symbols.nupkg'
-              publishVstsFeed: 'lab-feed'
+              nugetFeedType: external
+              publishFeedCredentials: nuget_org_push_new_versions
               verbosityPush: Normal
+              packagesToPush: '$(Pipeline.Workspace)/**/*.nupkg;!$(Pipeline.Workspace)/**/*.symbols.nupkg'
