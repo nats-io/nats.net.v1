@@ -36,18 +36,19 @@ namespace IntegrationTests
         {
             using (NATSServer.CreateFastAndVerify())
             {
-                IConnection c = Context.OpenConnection();
+                using (var c = Context.OpenConnection())
+                {
+                    string u = c.ConnectedUrl;
 
-                string u = c.ConnectedUrl;
+                    Assert.False(string.IsNullOrWhiteSpace(u), string.Format("Invalid connected url {0}.", u));
 
-                Assert.False(string.IsNullOrWhiteSpace(u), string.Format("Invalid connected url {0}.", u));
+                    Assert.Equal(Defaults.Url, u);
 
-                Assert.Equal(Defaults.Url, u);
+                    c.Close();
+                    u = c.ConnectedUrl;
 
-                c.Close();
-                u = c.ConnectedUrl;
-
-                Assert.Null(u);
+                    Assert.Null(u);
+                }
             }
         }
 
@@ -56,17 +57,15 @@ namespace IntegrationTests
         {
             using (NATSServer.CreateFastAndVerify())
             {
-                IConnection c = Context.OpenConnection();
-
-                Task[] tasks = new Task[10];
-
-                for (int i = 0; i < 10; i++)
+                using (var c = Context.OpenConnection())
                 {
+                    var tasks = new Task[10];
 
-                    tasks[i] = Task.Run(() => c.Close());
+                    for (var i = 0; i < 10; i++)
+                        tasks[i] = Task.Run(() => c.Close());
+
+                    Task.WaitAll(tasks);
                 }
-
-                Task.WaitAll(tasks);
             }
         }
 
@@ -75,7 +74,7 @@ namespace IntegrationTests
         {
             using (NATSServer.CreateFastAndVerify())
             {
-                using (IConnection c = Context.OpenConnection())
+                using (var c = Context.OpenConnection())
                 {
                     c.Publish("foo", Encoding.UTF8.GetBytes("Hello World!"));
                 }
@@ -87,7 +86,7 @@ namespace IntegrationTests
         {
             using (NATSServer.CreateFastAndVerify())
             {
-                using (IConnection c = Context.OpenConnection())
+                using (var c = Context.OpenConnection())
                 {
                     // Null data should succeed
                     c.Publish("foo", null);
@@ -111,7 +110,7 @@ namespace IntegrationTests
         {
             using (NATSServer.CreateFastAndVerify())
             {
-                using (IConnection c = Context.OpenConnection())
+                using (var c = Context.OpenConnection())
                 {
                     byte[] data = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };
                     c.Publish("foo", data);                     // Should succeed.
@@ -303,31 +302,40 @@ namespace IntegrationTests
                 var opts = Context.GetTestOptions();
                 opts.AllowReconnect = false;
 
-                var c = Context.ConnectionFactory.CreateConnection(opts);
-
-                using (ISyncSubscription s = c.SubscribeSync("foo"))
+                using (var c = Context.ConnectionFactory.CreateConnection(opts))
                 {
-                    c.Publish("foo", "reply", omsg);
-                    c.Flush();
+                    using (ISyncSubscription s = c.SubscribeSync("foo"))
+                    {
+                        c.Publish("foo", "reply", omsg);
+                        c.Flush();
+                    }
+
+                    // Test a timeout, locally this may actually succeed, 
+                    // so allow for that.
+                    // TODO: find a way to debug/pause the server to allow
+                    // for timeouts.
+                    try
+                    {
+                        c.Flush(1);
+                    }
+                    catch (NATSTimeoutException)
+                    {
+                    }
+
+                    Assert.Throws<ArgumentOutOfRangeException>(() => { c.Flush(-1); });
+
+                    // test a closed connection
+                    c.Close();
+                    Assert.Throws<NATSConnectionClosedException>(() => { c.Flush(); });
                 }
 
-                // Test a timeout, locally this may actually succeed, 
-                // so allow for that.
-                // TODO: find a way to debug/pause the server to allow
-                // for timeouts.
-                try { c.Flush(1); } catch (NATSTimeoutException) {}
-
-                Assert.Throws<ArgumentOutOfRangeException>(() => { c.Flush(-1); });
-
-                // test a closed connection
-                c.Close();
-                Assert.Throws<NATSConnectionClosedException>(() => { c.Flush(); });
-
                 // test a lost connection
-                c = Context.ConnectionFactory.CreateConnection(opts);
-                server.Shutdown();
-                Thread.Sleep(500);
-                Assert.Throws<NATSConnectionClosedException>(() => { c.Flush(); });
+                using (var c = Context.ConnectionFactory.CreateConnection(opts))
+                {
+                    server.Shutdown();
+                    Thread.Sleep(500);
+                    Assert.Throws<NATSConnectionClosedException>(() => { c.Flush(); });
+                }
             }
         }
 
@@ -622,20 +630,15 @@ namespace IntegrationTests
 
                     using (IAsyncSubscription s = c.SubscribeAsync("foo", eh))
                     {
-                        var tasks = new List<Task>();
-                        for (int i = 0; i < 100; i++)
-                        {
+                        var tasks = new List<Task<Msg>>();
+                        for (var i = 0; i < 100; i++) 
                             tasks.Add(c.RequestAsync("foo", null));
-                        }
 
-                        foreach (Task<Msg> t in tasks)
-                        {
-                            Msg m = await t;
+                        foreach (var m in await Task.WhenAll(tasks))
                             Assert.True(compare(m.Data, response), "Response isn't valid");
-                        }
                     }
 
-                    await Assert.ThrowsAsync<NATSBadSubscriptionException>(() => { return c.RequestAsync("", null); });
+                    await Assert.ThrowsAsync<NATSBadSubscriptionException>(async () => await c.RequestAsync("", null));
                 }
             }
         }
@@ -661,47 +664,30 @@ namespace IntegrationTests
 
                     using (IAsyncSubscription s = c.SubscribeAsync("foo", eh))
                     {
-                        var tasks = new List<Task>();
-                        for (int i = 0; i < 100; i++)
-                        {
+                        var tasks = new List<Task<Msg>>();
+                        for (var i = 0; i < 100; i++) 
                             tasks.Add(c.RequestAsync("foo", request, 5, 5));
-                        }
 
-                        foreach (Task<Msg> t in tasks)
-                        {
-                            Msg m = await t;
+                        foreach (var m in await Task.WhenAll(tasks))
                             Assert.True(compare(response, 11, m.Data, 5), "Response isn't valid");
-                        }
                     }
 
-                    await Assert.ThrowsAsync<NATSBadSubscriptionException>(() => { return c.RequestAsync("", null); });
+                    await Assert.ThrowsAsync<NATSBadSubscriptionException>(async () => await c.RequestAsync("", null));
                 }
             }
         }
 
         [Fact]
-        public async Task TestRequestAsync()
-        {
-            await testRequestAsync(useOldRequestStyle: false);
-        }
+        public async Task TestRequestAsync() => await testRequestAsync(useOldRequestStyle: false);
 
         [Fact]
-        public async Task TestRequestAsync_OldRequestStyle()
-        {
-            await testRequestAsync(useOldRequestStyle: true);
-        }
+        public async Task TestRequestAsync_OldRequestStyle() => await testRequestAsync(useOldRequestStyle: true);
 
         [Fact]
-        public async Task TestRequestAsyncWithOffsets()
-        {
-            await testRequestAsyncWithOffsets(useOldRequestStyle: false);
-        }
+        public async Task TestRequestAsyncWithOffsets() => await testRequestAsyncWithOffsets(useOldRequestStyle: false);
 
         [Fact]
-        public async Task TestRequestAsyncWithOffsets_OldRequestStyle()
-        {
-            await testRequestAsyncWithOffsets(useOldRequestStyle: true);
-        }
+        public async Task TestRequestAsyncWithOffsets_OldRequestStyle() => await testRequestAsyncWithOffsets(useOldRequestStyle: true);
 
         private async Task testRequestAsyncCancellation(bool useOldRequestStyle)
         {
@@ -728,22 +714,17 @@ namespace IntegrationTests
                     var miscToken = new CancellationTokenSource().Token;
                     using (IAsyncSubscription s = c.SubscribeAsync("foo", eh))
                     {
-                        var tasks = new List<Task>();
-                        for (int i = 0; i < 1000; i++)
-                        {
+                        var tasks = new List<Task<Msg>>();
+                        for (var i = 0; i < 1000; i++)
                             tasks.Add(c.RequestAsync("foo", null, miscToken));
-                        }
 
-                        foreach (Task<Msg> t in tasks)
-                        {
-                            Msg m = await t;
+                        foreach (var m in await Task.WhenAll(tasks))
                             Assert.True(compare(m.Data, response), "Response isn't valid");
-                        }
                     }
 
                     // test timeout, make sure we are somewhat close (for testing on stressed systems).
                     Stopwatch sw = Stopwatch.StartNew();
-                    await Assert.ThrowsAsync<NATSTimeoutException>(() => { return c.RequestAsync("no-replier", null, 1000, miscToken); });
+                    await Assert.ThrowsAsync<NATSTimeoutException>(async () => await c.RequestAsync("no-replier", null, 1000, miscToken));
                     sw.Stop();
                     Assert.True(Math.Abs(sw.Elapsed.TotalMilliseconds - 1000) < 250);
 
@@ -751,11 +732,11 @@ namespace IntegrationTests
                     var cts = new CancellationTokenSource();
                     var ct = cts.Token;
                     cts.Cancel();
-                    await Assert.ThrowsAnyAsync<OperationCanceledException>(() => { return c.RequestAsync("foo", null, cts.Token); });
+                    await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await c.RequestAsync("foo", null, cts.Token));
 
                     // test cancellation
                     cts = new CancellationTokenSource();
-                    var ocex = Assert.ThrowsAnyAsync<OperationCanceledException>(() => { return c.RequestAsync("foo", null, cts.Token); });
+                    var ocex = Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await c.RequestAsync("foo", null, cts.Token));
                     Thread.Sleep(2000);
                     cts.Cancel();
                     await ocex;
@@ -768,7 +749,7 @@ namespace IntegrationTests
 
                         // test cancellation with a subscriber
                         cts = new CancellationTokenSource();
-                        ocex = Assert.ThrowsAnyAsync<OperationCanceledException>(() => { return c.RequestAsync("foo", null, cts.Token); });
+                        ocex = Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await c.RequestAsync("foo", null, cts.Token));
                         Thread.Sleep(responseDelay / 2);
                         cts.Cancel();
                         await ocex;
@@ -778,16 +759,10 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public async Task TestRequestAsyncCancellation()
-        {
-            await testRequestAsyncCancellation(useOldRequestStyle: false);
-        }
+        public async Task TestRequestAsyncCancellation() => await testRequestAsyncCancellation(useOldRequestStyle: false);
 
         [Fact]
-        public async Task TestRequestAsyncCancellation_OldRequestStyle()
-        {
-            await testRequestAsyncCancellation(useOldRequestStyle: true);
-        }
+        public async Task TestRequestAsyncCancellation_OldRequestStyle() => await testRequestAsyncCancellation(useOldRequestStyle: true);
 
         private async Task testRequestAsyncTimeout(bool useOldRequestStyle)
         {
@@ -798,50 +773,46 @@ namespace IntegrationTests
                 var opts = Context.GetTestOptionsWithDefaultTimeout();
                 opts.AllowReconnect = false;
                 opts.UseOldRequestStyle = useOldRequestStyle;
-                var conn = Context.ConnectionFactory.CreateConnection(opts);
+                using (var conn = Context.ConnectionFactory.CreateConnection(opts))
+                {
+                    // success condition
+                    var sub = conn.SubscribeAsync("foo", (obj, args) => conn.Publish(args.Message.Reply, new byte[0]));
 
-                // success condition
-                var sub = conn.SubscribeAsync("foo", (obj, args) => {
-                    conn.Publish(args.Message.Reply, new byte[0]);
-                });
+                    sw.Start();
+                    await conn.RequestAsync("foo", new byte[0], 5000);
+                    sw.Stop();
+                    Assert.True(sw.ElapsedMilliseconds < 5000,
+                        $"Unexpected timeout behavior. Expected lt 5000ms got {sw.ElapsedMilliseconds}ms");
+                    sub.Unsubscribe();
 
-                sw.Start();
-                await conn.RequestAsync("foo", new byte[0], 5000);
-                sw.Stop();
-                Assert.True(sw.ElapsedMilliseconds < 5000, $"Unexpected timeout behavior. Expected lt 5000ms got {sw.ElapsedMilliseconds}ms");
-                sub.Unsubscribe();
-
-                // valid connection, but no response
-                sw.Restart();
-                await Assert.ThrowsAsync<NATSTimeoutException>(() => { return conn.RequestAsync("test", new byte[0], 500); });
-                sw.Stop();
-                long elapsed = sw.ElapsedMilliseconds;
-                Assert.True(elapsed >= 500, string.Format("Unexpected value (should be > 500): {0}", elapsed));
-                long variance = elapsed - 500;
+                    // valid connection, but no response
+                    sw.Restart();
+                    await Assert.ThrowsAsync<NATSTimeoutException>(async () =>
+                        await conn.RequestAsync("test", new byte[0], 500));
+                    sw.Stop();
+                    long elapsed = sw.ElapsedMilliseconds;
+                    Assert.True(elapsed >= 500, string.Format("Unexpected value (should be > 500): {0}", elapsed));
+                    long variance = elapsed - 500;
 #if DEBUG
-                Assert.True(variance < 250, string.Format("Invalid timeout variance: {0}", variance));
+                    Assert.True(variance < 250, string.Format("Invalid timeout variance: {0}", variance));
 #else
-                Assert.True(variance < 100, string.Format("Invalid timeout variance: {0}", variance));
+                    Assert.True(variance < 100, string.Format("Invalid timeout variance: {0}", variance));
 #endif
 
-                // Test an invalid connection
-                server.Shutdown();
-                Thread.Sleep(500);
-                await Assert.ThrowsAsync<NATSConnectionClosedException>(() => { return conn.RequestAsync("test", new byte[0], 1000); });
+
+                    // Test an invalid connection
+                    server.Shutdown();
+                    Thread.Sleep(500);
+                    await Assert.ThrowsAsync<NATSConnectionClosedException>(async () => await conn.RequestAsync("test", new byte[0], 1000));
+                }
             }
         }
 
         [Fact]
-        public async Task TestRequestAsyncTimeout()
-        {
-            await testRequestAsyncTimeout(useOldRequestStyle: false);
-        }
+        public async Task TestRequestAsyncTimeout() => await testRequestAsyncTimeout(useOldRequestStyle: false);
 
         [Fact]
-        public async Task TestRequestAsyncTimeout_OldRequestStyle()
-        {
-            await testRequestAsyncTimeout(useOldRequestStyle: true);
-        }
+        public async Task TestRequestAsyncTimeout_OldRequestStyle() => await testRequestAsyncTimeout(useOldRequestStyle: true);
 
         class TestReplier
         {
@@ -1090,20 +1061,21 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public void TestReleaseFlush()
+        public async Task TestReleaseFlush()
         {
             using (NATSServer.CreateFastAndVerify())
             {
-                IConnection c = Context.OpenConnection();
-
-                for (int i = 0; i < 1000; i++)
+                using (var c = Context.OpenConnection())
                 {
-                    c.Publish("foo", Encoding.UTF8.GetBytes("Hello"));
+                    for (int i = 0; i < 1000; i++)
+                    {
+                        c.Publish("foo", Encoding.UTF8.GetBytes("Hello"));
+                    }
+
+                    c.Flush();
+
+                    await Task.Run(() => c.Close());
                 }
-
-                c.Flush();
-
-                Task.Run(() => c.Close());
             }
         }
 
@@ -1176,17 +1148,15 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public void TestRaceSafeStats()
+        public async Task TestRaceSafeStats()
         {
-            using (NATSServer.CreateFast())
+            using (NATSServer.CreateFastAndVerify())
             {
-                Thread.Sleep(1000);
-
                 using (IConnection c = Context.OpenConnection())
                 {
-                    Task.Run(() => c.Publish("foo", null));
+                    await Task.Run(() => c.Publish("foo", null));
 
-                    Thread.Sleep(1000);
+                    await Task.Delay(1000);
 
                     Assert.Equal(1, c.Stats.OutMsgs);
                 }
@@ -1383,22 +1353,23 @@ namespace IntegrationTests
 
             using (NATSServer.CreateFastAndVerify())
             {
-                IConnection c = Context.ConnectionFactory.CreateConnection(urls);
-                Assert.Equal(c.Opts.Servers[0],url1);
-                Assert.Equal(c.Opts.Servers[1],url2);
-                Assert.Equal(c.Opts.Servers[2],url3);
-
-                c.Close();
+                using (var c = Context.ConnectionFactory.CreateConnection(urls))
+                {
+                    Assert.Equal(c.Opts.Servers[0], url1);
+                    Assert.Equal(c.Opts.Servers[1], url2);
+                    Assert.Equal(c.Opts.Servers[2], url3);
+                }
 
                 urls = url1 + "    , " + url2 + "," + url3;
-                c = Context.ConnectionFactory.CreateConnection(urls);
-                Assert.Equal(c.Opts.Servers[0],url1);
-                Assert.Equal(c.Opts.Servers[1],url2);
-                Assert.Equal(c.Opts.Servers[2],url3);
-                c.Close();
 
-                c = Context.ConnectionFactory.CreateConnection(url1);
-                c.Close();
+                using (var c = Context.ConnectionFactory.CreateConnection(urls))
+                {
+                    Assert.Equal(c.Opts.Servers[0], url1);
+                    Assert.Equal(c.Opts.Servers[1], url2);
+                    Assert.Equal(c.Opts.Servers[2], url3);
+                }
+
+                using(Context.ConnectionFactory.CreateConnection(url1)){ }
             }
         }
 
@@ -1432,30 +1403,28 @@ namespace IntegrationTests
                 var opts = Context.GetTestOptions(Context.Server3.Port);
                 opts.NoRandomize = false;
 
-                var c = Context.ConnectionFactory.CreateConnection(opts);
-                Assert.True(assureClusterFormed(c, 7),
-                    "Incomplete cluster with server count: " + c.Servers.Length);
-                c.Close();
+                using (var c = Context.ConnectionFactory.CreateConnection(opts))
+                {
+                    Assert.True(assureClusterFormed(c, 7), "Incomplete cluster with server count: " + c.Servers.Length);
+                }
 
                 // Create a new connection to start from scratch, and recieve 
                 // the entire server list at once.
-                c = Context.ConnectionFactory.CreateConnection(opts);
-                Assert.True(assureClusterFormed(c, 7),
-                    "Incomplete cluster with server count: " + c.Servers.Length);
-
-                for (int i = 0; i < 50; i++)
+                using(var c = Context.ConnectionFactory.CreateConnection(opts))
                 {
-                    var c2 = Context.ConnectionFactory.CreateConnection(opts);
-                    Assert.True(assureClusterFormed(c, 7),
-                        "Incomplete cluster with server count: " + c.Servers.Length);
+                    Assert.True(assureClusterFormed(c, 7), "Incomplete cluster with server count: " + c.Servers.Length);
 
-                    // The first urls should be the same.
-                    Assert.Equal(c.Servers[0],c2.Servers[0]);
+                    for (int i = 0; i < 50; i++)
+                    {
+                        using (var c2 = Context.ConnectionFactory.CreateConnection(opts))
+                        {
+                            Assert.True(assureClusterFormed(c, 7), "Incomplete cluster with server count: " + c.Servers.Length);
 
-                    c2.Close();
+                            // The first urls should be the same.
+                            Assert.Equal(c.Servers[0], c2.Servers[0]);
+                        }
+                    }
                 }
-
-                c.Close();
             }
         }
 
@@ -1477,34 +1446,36 @@ namespace IntegrationTests
             // from being added - for adding servers, 127.0.0.1 matches localhost.
             using (NATSServer s1 = NATSServer.Create(Context.Server3.Port, $"-a localhost --cluster nats://127.0.0.1:{Context.ClusterServer5.Port} --routes nats://127.0.0.1:{Context.ClusterServer6.Port}"))
             {
-                var c = Context.ConnectionFactory.CreateConnection(opts);
-
-                Assert.True(c.Servers.Length == 1);
-                // check that credentials are stripped.
-                Assert.Equal($"nats://127.0.0.1:{Context.Server3.Port}", c.Servers[0]);
-
-                // build an independent cluster
-                using (NATSServer s2 = NATSServer.Create(Context.Server4.Port, $"-a localhost --cluster nats://127.0.0.1:{Context.ClusterServer6.Port} --routes nats://127.0.0.1:{Context.ClusterServer5.Port}"))
+                using (var c = Context.ConnectionFactory.CreateConnection(opts))
                 {
-                    // wait until the servers are routed and the conn has the updated
-                    // server list.
-                    assureClusterFormed(c, 2);
-
-                    // Ensure the first server remains in place and has not been
-                    // randomized.
+                    Assert.True(c.Servers.Length == 1);
+                    // check that credentials are stripped.
                     Assert.Equal($"nats://127.0.0.1:{Context.Server3.Port}", c.Servers[0]);
-                    Assert.True(c.Servers.Length == 2);
-                    Assert.True(c.DiscoveredServers.Length == 1);
+
+                    // build an independent cluster
+                    using (NATSServer s2 = NATSServer.Create(
+                        Context.Server4.Port,
+                        $"-a localhost --cluster nats://127.0.0.1:{Context.ClusterServer6.Port} --routes nats://127.0.0.1:{Context.ClusterServer5.Port}")
+                    )
+                    {
+                        // wait until the servers are routed and the conn has the updated
+                        // server list.
+                        assureClusterFormed(c, 2);
+
+                        // Ensure the first server remains in place and has not been
+                        // randomized.
+                        Assert.Equal($"nats://127.0.0.1:{Context.Server3.Port}", c.Servers[0]);
+                        Assert.True(c.Servers.Length == 2);
+                        Assert.True(c.DiscoveredServers.Length == 1);
 
 
-                    // sanity check to ensure we can connect to another server.
-                    s1.Shutdown();
-                    Assert.True(evReconnect.WaitOne(10000));
-                    Assert.True(newUrl != null);
-                    Assert.Contains(Context.Server4.Port.ToString(), c.ConnectedUrl);
+                        // sanity check to ensure we can connect to another server.
+                        s1.Shutdown();
+                        Assert.True(evReconnect.WaitOne(10000));
+                        Assert.True(newUrl != null);
+                        Assert.Contains(Context.Server4.Port.ToString(), c.ConnectedUrl);
+                    }
                 }
-
-                c.Close();
             }
         }
 
@@ -1526,40 +1497,41 @@ namespace IntegrationTests
                               s2 = NATSServer.Create(Context.Server2.Port, $"-a 127.0.0.1 --cluster nats://127.0.0.1:{Context.ClusterServer2.Port} --routes nats://127.0.0.1:{Context.ClusterServer1.Port}"),
                               s3 = NATSServer.Create(Context.Server3.Port, $"-a 127.0.0.1 --cluster nats://127.0.0.1:{Context.ClusterServer3.Port} --routes nats://127.0.0.1:{Context.ClusterServer1.Port}"))
             {
-
-
-                var c = Context.ConnectionFactory.CreateConnection(opts);
-                Assert.True(assureClusterFormed(c, 3),
-                    "Incomplete cluster with server count: " + c.Servers.Length);
-
-                // shutdown server 2
-                s2.Shutdown();
-
-                using (NATSServer s4 = NATSServer.Create(Context.Server4.Port, $"-a 127.0.0.1 --cluster nats://127.0.0.1:{Context.ClusterServer4.Port} --routes nats://127.0.0.1:{Context.ClusterServer1.Port}"))
+                using (var c = Context.ConnectionFactory.CreateConnection(opts))
                 {
-                    // wait for the update with new server to check.
-                    Assert.True(evDS.WaitOne(10000));
+                    Assert.True(assureClusterFormed(c, 3),"Incomplete cluster with server count: " + c.Servers.Length);
 
-                    // The server on port 4223 should be pruned out.
-                    //
-                    // Discovered servers should contain:
-                    // ["nats://127.0.0.1:4223",
-                    //  "nats://127.0.0.1:4224"]
-                    //
-                    LinkedList<string> discoveredServers = new LinkedList<string>(c.DiscoveredServers);
-                    Assert.True(discoveredServers.Count == 2);
-                    Assert.Contains($"nats://127.0.0.1:{Context.Server3.Port}", discoveredServers);
-                    Assert.Contains($"nats://127.0.0.1:{Context.Server4.Port}", discoveredServers);
+                    // shutdown server 2
+                    s2.Shutdown();
 
-                    // shutdown server 1 and wait for reconnect.
-                    s1.Shutdown();
-                    Assert.True(evRC.WaitOne(10000));
-                    // Make sure we did NOT delete our expclitly configured server.
-                    LinkedList<string> servers = new LinkedList<string>(c.Servers);
-                    Assert.True(servers.Count == 3); // explicit server is still there.
-                    Assert.Contains($"nats://127.0.0.1:{Context.Server1.Port}", servers);
+                    using (NATSServer s4 = NATSServer.Create(
+                        Context.Server4.Port,
+                        $"-a 127.0.0.1 --cluster nats://127.0.0.1:{Context.ClusterServer4.Port} --routes nats://127.0.0.1:{Context.ClusterServer1.Port}")
+                    )
+                    {
+                        // wait for the update with new server to check.
+                        Assert.True(evDS.WaitOne(10000));
+
+                        // The server on port 4223 should be pruned out.
+                        //
+                        // Discovered servers should contain:
+                        // ["nats://127.0.0.1:4223",
+                        //  "nats://127.0.0.1:4224"]
+                        //
+                        LinkedList<string> discoveredServers = new LinkedList<string>(c.DiscoveredServers);
+                        Assert.True(discoveredServers.Count == 2);
+                        Assert.Contains($"nats://127.0.0.1:{Context.Server3.Port}", discoveredServers);
+                        Assert.Contains($"nats://127.0.0.1:{Context.Server4.Port}", discoveredServers);
+
+                        // shutdown server 1 and wait for reconnect.
+                        s1.Shutdown();
+                        Assert.True(evRC.WaitOne(10000));
+                        // Make sure we did NOT delete our expclitly configured server.
+                        LinkedList<string> servers = new LinkedList<string>(c.Servers);
+                        Assert.True(servers.Count == 3); // explicit server is still there.
+                        Assert.Contains($"nats://127.0.0.1:{Context.Server1.Port}", servers);
+                    }
                 }
-                c.Close();
             }
         }
 
@@ -1596,17 +1568,15 @@ namespace IntegrationTests
 
             using (NATSServer.CreateFastAndVerify())
             {
-                var c = Context.ConnectionFactory.CreateConnection(opts);
-                Assert.True(listsEqual(serverList, c.Servers));
-                c.Close();
+                using (var c = Context.ConnectionFactory.CreateConnection(opts))
+                    Assert.True(listsEqual(serverList, c.Servers));
 
                 bool wasRandom = false;
                 opts.NoRandomize = false;
                 for (int i = 0; i < 10; i++)
                 {
-                    c = Context.ConnectionFactory.CreateConnection(opts);
-                    wasRandom = (listsEqual(serverList, c.Servers) == false);
-                    c.Close();
+                    using (var c = Context.ConnectionFactory.CreateConnection(opts))
+                        wasRandom = (listsEqual(serverList, c.Servers) == false);
 
                     if (wasRandom)
                         break;
@@ -1642,28 +1612,28 @@ namespace IntegrationTests
                 var o = ConnectionFactory.GetDefaultOptions();
 
                 // simple url connect
-                Context.ConnectionFactory.CreateConnection("127.0.0.1").Close();
+                using(Context.ConnectionFactory.CreateConnection("127.0.0.1")){ }
 
-                // simple url
+                    // simple url
                 o.Url = "127.0.0.1";
-                Context.ConnectionFactory.CreateConnection(o);
+                using (Context.ConnectionFactory.CreateConnection(o)){ }
 
                 // servers with a simple hostname
                 o.Url = null;
                 o.Servers = new string[] { "127.0.0.1" };
-                Context.ConnectionFactory.CreateConnection(o).Close();
+                using(Context.ConnectionFactory.CreateConnection(o)){ }
 
                 // simple url connect
-                Context.ConnectionFactory.CreateConnection("127.0.0.1, localhost").Close();
+                using(Context.ConnectionFactory.CreateConnection("127.0.0.1, localhost")){ }
 
                 //  url with multiple hosts
                 o.Url = "127.0.0.1,localhost";
-                Context.ConnectionFactory.CreateConnection(o);
+                using(Context.ConnectionFactory.CreateConnection(o)){ }
 
                 // servers with multiple hosts
                 o.Url = null;
                 o.Servers = new string[] { "127.0.0.1", "localhost" };
-                Context.ConnectionFactory.CreateConnection(o).Close();
+                using(Context.ConnectionFactory.CreateConnection(o)) {}
             }
         }
 
@@ -1676,15 +1646,13 @@ namespace IntegrationTests
                 var o = ConnectionFactory.GetDefaultOptions();
                 o.NoEcho = true;
 
-                var c = Context.ConnectionFactory.CreateConnection(o);
-
-                c.SubscribeAsync("foo", (obj, args) =>
+                using (var c = Context.ConnectionFactory.CreateConnection(o))
                 {
-                    Interlocked.Increment(ref received);
-                });
+                    c.SubscribeAsync("foo", (obj, args) => { Interlocked.Increment(ref received); });
 
-                c.Publish("foo", null);
-                c.Flush();
+                    c.Publish("foo", null);
+                    c.Flush();
+                }
 
                 // hate sleeping, but with slow CI's, we need to give time to
                 //make sure that message never arrives.
@@ -1697,8 +1665,6 @@ namespace IntegrationTests
         [Fact]
         public void TestServersOption()
         {
-            Options o = Context.GetTestOptions();
-
             Assert.ThrowsAny<NATSNoServersException>(() => Context.ConnectionFactory.CreateConnection());
         }
 
