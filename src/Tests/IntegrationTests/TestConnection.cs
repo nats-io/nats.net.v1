@@ -16,6 +16,7 @@ using NATS.Client;
 using System.Threading;
 using Xunit;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace IntegrationTests
 {
@@ -926,7 +927,7 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public void TestDrainStateBehavior()
+        public async Task TestDrainStateBehavior()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
@@ -949,13 +950,18 @@ namespace IntegrationTests
                     c.Publish("foo", null);
                 }
                 // give us a long timeout to run our test.
-                c.DrainAsync(10000);
+                var drainTask = c.DrainAsync(10000);
 
                 Assert.True(c.State == ConnState.DRAINING_SUBS);
                 Assert.True(c.IsDraining());
 
                 Assert.Throws<NATSConnectionDrainingException>(() => c.SubscribeAsync("foo"));
                 Assert.Throws<NATSConnectionDrainingException>(() => c.SubscribeSync("foo"));
+
+                await drainTask;
+
+                Assert.Equal(ConnState.CLOSED, c.State);
+                Assert.False(c.IsDraining());
 
                 // Make sure we hit connection closed.
                 Assert.True(closed.WaitOne(10000));
