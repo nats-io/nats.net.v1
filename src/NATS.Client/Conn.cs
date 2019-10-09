@@ -3929,6 +3929,11 @@ namespace NATS.Client
             if (timeout <= 0)
                 throw new ArgumentOutOfRangeException(nameof(timeout), "Timeout must be greater than zero.");
 
+            lock (mu)
+            {
+                status = ConnState.DRAINING_SUBS;
+            }
+
             drain(timeout);
         }
 
@@ -3968,6 +3973,11 @@ namespace NATS.Client
         {
             if (timeout <= 0)
                 throw new ArgumentOutOfRangeException(nameof(timeout), "Timeout must be greater than zero.");
+
+            lock (mu)
+            {
+                status = ConnState.DRAINING_SUBS;
+            }
 
             return Task.Run(() => drain(timeout));
         }
