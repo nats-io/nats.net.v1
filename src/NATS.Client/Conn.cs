@@ -3908,15 +3908,7 @@ namespace NATS.Client
         /// <seealso cref="Close()"/>
         public void Drain()
         {
-            var t = DrainAsync();
-            try
-            {
-                t.Wait();
-            }
-            catch (AggregateException)
-            {
-                throw new NATSTimeoutException();
-            }
+            Drain(Defaults.DefaultDrainTimeout);
         }
 
         /// <summary>
@@ -3934,15 +3926,10 @@ namespace NATS.Client
         /// <param name="timeout">The duration to wait before draining.</param> 
         public void Drain(int timeout)
         {
-            var t = DrainAsync(timeout);
-            try
-            {
-                t.Wait();
-            }
-            catch (AggregateException)
-            {
-                throw new NATSTimeoutException();
-            }
+            if (timeout <= 0)
+                throw new ArgumentOutOfRangeException(nameof(timeout), "Timeout must be greater than zero.");
+
+            drain(timeout);
         }
 
         /// <summary>
@@ -3981,11 +3968,6 @@ namespace NATS.Client
         {
             if (timeout <= 0)
                 throw new ArgumentOutOfRangeException(nameof(timeout), "Timeout must be greater than zero.");
-
-            lock (mu)
-            {
-                status = ConnState.DRAINING_SUBS;
-            }
 
             return Task.Run(() => drain(timeout));
         }
