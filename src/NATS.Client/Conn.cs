@@ -24,6 +24,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Security.Authentication;
 using System.Globalization;
 using System.Diagnostics;
+using NATS.Client.Internals;
 
 namespace NATS.Client
 {
@@ -1206,14 +1207,14 @@ namespace NATS.Client
             checkForSecure();
         }
 
-        private void writeString(string format, object a, object b)
+        private void writeString(string format, string a, string b)
         {
-            writeString(String.Format(format, a, b));
+            writeString(string.Format(format, a, b));
         }
 
-        private void writeString(string format, object a, object b, object c)
+        private void writeString(string format, string a, string b, string c)
         {
-            writeString(String.Format(format, a, b, c));
+            writeString(string.Format(format, a, b, c));
         }
 
         private void writeString(string value)
@@ -3199,7 +3200,7 @@ namespace NATS.Client
                 // so that we can suppress here.
                 if (!isReconnecting())
                 {
-                    writeString(IC.subProto, s.Subject, s.Queue, s.sid);
+                    writeString(IC.subProto, s.Subject, s.Queue, s.sid.ToNumericString());
                     kickFlusher();
                 }
             }
@@ -3302,7 +3303,7 @@ namespace NATS.Client
                 // so that we can suppress here.
                 if (!isReconnecting())
                 {
-                    writeString(IC.subProto, subject, queue, s.sid);
+                    writeString(IC.subProto, subject, queue, s.sid.ToNumericString());
                 }
             }
 
@@ -3464,8 +3465,7 @@ namespace NATS.Client
                 // We will send all subscriptions when reconnecting
                 // so that we can supress here.
                 if (!isReconnecting())
-                    writeString(IC.unsubProto, s.sid, max);
-
+                    writeString(IC.unsubProto, s.sid.ToNumericString(), max.ToNumericString());
             }
 
             kickFlusher();
@@ -3625,7 +3625,7 @@ namespace NATS.Client
                 if (s is IAsyncSubscription)
                     ((AsyncSubscription)s).enableAsyncProcessing();
 
-                writeString(IC.subProto, s.Subject, s.Queue, s.sid);
+                writeString(IC.subProto, s.Subject, s.Queue, s.sid.ToNumericString());
             }
 
             bw.Flush();
