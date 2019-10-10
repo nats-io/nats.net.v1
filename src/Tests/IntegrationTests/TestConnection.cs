@@ -916,7 +916,7 @@ namespace IntegrationTests
                     c.Publish("foo", null);
                 }
                 Stopwatch sw = Stopwatch.StartNew();
-                Assert.Throws<NATSTimeoutException>(()=> s.Drain(500));
+                Assert.Throws<NATSTimeoutException>(() => s.Drain(500));
                 sw.Stop();
 
                 // add slack for slow CI.
@@ -936,7 +936,7 @@ namespace IntegrationTests
                 var opts = Context.GetTestOptionsWithDefaultTimeout(Context.Server1.Port);
                 opts.ClosedEventHandler = (obj, args) =>
                 {
-                    closed.Set(); 
+                    closed.Set();
                 };
                 var c = Context.ConnectionFactory.CreateConnection(opts);
                 var s = c.SubscribeAsync("foo", (obj, args) =>
@@ -966,6 +966,53 @@ namespace IntegrationTests
                 // Make sure we hit connection closed.
                 Assert.True(closed.WaitOne(10000));
             }
+        }
+
+        [Fact]
+        public void TestFlushBuffer()
+        {
+            IConnection c = null;
+            AutoResetEvent disconnected = new AutoResetEvent(false);
+            AutoResetEvent closed = new AutoResetEvent(false);
+
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
+            {
+
+
+                var opts = Context.GetTestOptionsWithDefaultTimeout(Context.Server1.Port);
+                opts.ClosedEventHandler = (obj, args) =>
+                {
+                    closed.Set();
+                };
+                opts.DisconnectedEventHandler = (obj, args) =>
+                {
+                    disconnected.Set();
+                };
+
+                c = Context.ConnectionFactory.CreateConnection(opts);
+
+                // test empty buffer
+                c.FlushBuffer();
+                // test multiple calls
+                c.FlushBuffer();
+
+                c.Publish("foo", new byte[10240]);
+                c.FlushBuffer();
+            }
+
+            // wait until we're disconnected
+            Assert.True(disconnected.WaitOne(10000));
+
+            // Be sure we're reconnecting
+            Assert.True(c.State == ConnState.RECONNECTING);
+
+            // should be a NOOP
+            c.FlushBuffer();
+
+            // close and then check the closed connection.
+            c.Close();
+            Assert.True(closed.WaitOne(10000));
+            Assert.Throws<NATSConnectionClosedException>(() => c.FlushBuffer());
         }
     }
 
