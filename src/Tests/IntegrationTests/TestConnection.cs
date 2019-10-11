@@ -17,6 +17,7 @@ using System.Threading;
 using Xunit;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using System.Timers;
 
 namespace IntegrationTests
 {
@@ -1013,6 +1014,8 @@ namespace IntegrationTests
             c.Close();
             Assert.True(closed.WaitOne(10000));
             Assert.Throws<NATSConnectionClosedException>(() => c.FlushBuffer());
+
+            c.Dispose();
         }
     }
 
