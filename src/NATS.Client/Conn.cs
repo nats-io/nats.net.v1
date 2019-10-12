@@ -2372,7 +2372,7 @@ namespace NATS.Client
         // publish is the internal function to publish messages to a nats-server.
         // Sends a protocol data message by queueing into the bufio writer
         // and kicking the flush go routine. These writes should be protected.
-        internal void publish(string subject, string reply, byte[] data, int offset, int count)
+        internal void publish(string subject, string reply, byte[] data, int offset, int count, bool flushBuffer)
         {
             if (string.IsNullOrWhiteSpace(subject))
             {
@@ -2423,7 +2423,14 @@ namespace NATS.Client
                 stats.outMsgs++;
                 stats.outBytes += count;
 
-                kickFlusher();
+                if (flushBuffer)
+                {
+                    bw.Flush();
+                }
+                else
+                {
+                    kickFlusher();
+                }
             }
 
         } // publish
@@ -2446,7 +2453,7 @@ namespace NATS.Client
         public void Publish(string subject, byte[] data)
         {
             int count = data != null ? data.Length : 0;
-            publish(subject, null, data, 0, count);
+            publish(subject, null, data, 0, count, false);
         }
 
         /// <summary>
@@ -2462,7 +2469,7 @@ namespace NATS.Client
         /// <seealso cref="IConnection.Publish(string, byte[])"/>
         public void Publish(string subject, byte[] data, int offset, int count)
         {
-            publish(subject, null, data, offset, count);
+            publish(subject, null, data, offset, count, false);
         }
 
         /// <summary>
@@ -2488,7 +2495,7 @@ namespace NATS.Client
             }
 
             int count = msg.Data != null ? msg.Data.Length : 0;
-            publish(msg.Subject, msg.Reply, msg.Data, 0, count);
+            publish(msg.Subject, msg.Reply, msg.Data, 0, count, false);
         }
 
         /// <summary>
@@ -2510,7 +2517,7 @@ namespace NATS.Client
         public void Publish(string subject, string reply, byte[] data)
         {
             int count = data != null ? data.Length : 0;
-            publish(subject, reply, data, 0, count);
+            publish(subject, reply, data, 0, count, false);
         }
 
         /// <summary>
@@ -2527,7 +2534,7 @@ namespace NATS.Client
         /// <seealso cref="IConnection.Publish(string, byte[])"/>
         public void Publish(string subject, string reply, byte[] data, int offset, int count)
         {
-            publish(subject, reply, data, offset, count);
+            publish(subject, reply, data, offset, count, false);
         }
 
         internal virtual Msg request(string subject, byte[] data, int offset, int count, int timeout)
@@ -2551,7 +2558,6 @@ namespace NATS.Client
 
                 try
                 {
-                    Flush(timeout > 0 ? timeout : DEFAULT_FLUSH_TIMEOUT);
                     request.Waiter.Task.Wait(timeout);
                     result = request.Waiter.Task.Result;
                 }
@@ -2633,7 +2639,7 @@ namespace NATS.Client
                 if (globalRequestSubscription == null)
                     globalRequestSubReady.Task.Wait(timeout, request.Token);
 
-                publish(subject, globalRequestInbox + "." + request.Id, data, offset, count);
+                publish(subject, globalRequestInbox + "." + request.Id, data, offset, count, true);
             }
             catch
             {
@@ -2671,9 +2677,7 @@ namespace NATS.Client
                             if (globalRequestSubscription == null)
                                 await globalRequestSubReady.Task;
 
-                            publish(subject, globalRequestInbox + "." + request.Id, data, offset, count);
-
-                            Flush(timeout > 0 ? timeout : DEFAULT_FLUSH_TIMEOUT);
+                            publish(subject, globalRequestInbox + "." + request.Id, data, offset, count, true);
                         }
                         catch
                         {
@@ -2745,8 +2749,7 @@ namespace NATS.Client
             SyncSubscription s = subscribeSync(inbox, null);
             s.AutoUnsubscribe(1);
 
-            publish(subject, inbox, data, offset, count);
-            Flush(timeout > 0 ? timeout : DEFAULT_FLUSH_TIMEOUT);
+            publish(subject, inbox, data, offset, count, true);
             m = s.NextMessage(timeout);
             s.unsubscribe(false);
 
@@ -2893,8 +2896,7 @@ namespace NATS.Client
                 SyncSubscription s = subscribeSync(inbox, null);
                 s.AutoUnsubscribe(1);
 
-                publish(subject, inbox, data, offset, count);
-                Flush(timeout > 0 ? timeout: DEFAULT_FLUSH_TIMEOUT);
+                publish(subject, inbox, data, offset, count, true);
 
                 int timeRemaining = timeout;
 
@@ -3474,6 +3476,7 @@ namespace NATS.Client
                 // so that we can supress here.
                 if (!isReconnecting())
                     writeString(IC.unsubProto, s.sid.ToNumericString(), max.ToNumericString());
+
             }
 
             kickFlusher();
@@ -3624,6 +3627,24 @@ namespace NATS.Client
             Flush(DEFAULT_FLUSH_TIMEOUT);
         }
 
+        /// <summary>
+        /// Immediately flushes the underlying connection buffer if the connection is valid.
+        /// </summary>
+        /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
+        /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call while executing the
+        /// request. See <see cref="Exception.InnerException"/> for more details.</exception>
+        public void FlushBuffer()
+        {
+            lock (mu)
+            {
+                if (isClosed())
+                    throw new NATSConnectionClosedException();
+
+                if (status == ConnState.CONNECTED)
+                    bw.Flush();
+            }
+        }
+
         // resendSubscriptions will send our subscription state back to the
         // server. Used in reconnects
         private void resendSubscriptions()
@@ -3760,7 +3781,7 @@ namespace NATS.Client
             disableSubChannelPooling();
         }
 
-        // assume the lock is head.
+        // assume the lock is held.
         private bool isClosed()
         {
             return (status == ConnState.CLOSED);

@@ -171,7 +171,7 @@ namespace NATS.Client
 
             byte[] data = onSerialize(o);
             int count = data != null ? data.Length : 0;
-            publish(subject, reply, data, 0, count);
+            publish(subject, reply, data, 0, count, false);
         }
 
         /// <summary>
