@@ -38,8 +38,8 @@ namespace NATS.Client.Rx.Ops
 
             public MapObserver(IObserver<TResult> observer, Func<TSrc, TResult> mapper)
             {
-                this.observer = observer;
-                this.mapper = mapper;
+                this.observer = observer ?? throw new ArgumentNullException(nameof(observer));
+                this.mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             }
 
             public void OnNext(TSrc value) => observer.OnNext(mapper(value));
