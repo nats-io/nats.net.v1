@@ -11,6 +11,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+
 namespace NATS.Client.Rx
 {
     public static class RxExtensions
@@ -24,7 +26,7 @@ namespace NATS.Client.Rx
         /// <param name="subject"></param>
         /// <returns></returns>
         public static INATSObservable<Msg> Observe(this IConnection cn, string subject)
-            => cn.SubscribeAsync(subject).ToObservable();
+            => (cn ?? throw new ArgumentNullException(nameof(cn))).SubscribeAsync(subject).ToObservable();
 
         /// <summary>
         /// Turns the passed <see cref="IAsyncSubscription"/> to a hot observable. Hence unless you

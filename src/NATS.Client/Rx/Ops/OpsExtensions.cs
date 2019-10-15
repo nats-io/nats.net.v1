@@ -27,7 +27,7 @@ namespace NATS.Client.Rx.Ops
         /// <param name="onCompleted"></param>
         /// <returns></returns>
         public static IDisposable Subscribe<T>(this INATSObservable<T> ob, Action<T> onNext, Action<Exception> onError = null, Action onCompleted = null)
-            => ob.Subscribe(new DelegatingObserver<T>(onNext, onError, onCompleted));
+            => (ob ?? throw new ArgumentNullException(nameof(ob))).Subscribe(new DelegatingObserver<T>(onNext, onError, onCompleted));
 
         /// <summary>
         /// Subscribes a Safe delegating observer. Safe means that in the event of a failing observer, it will not get unsubscribed and disposed
@@ -40,7 +40,7 @@ namespace NATS.Client.Rx.Ops
         /// <param name="onCompleted"></param>
         /// <returns></returns>
         public static IDisposable SubscribeSafe<T>(this INATSObservable<T> ob, Action<T> onNext, Action<Exception> onError = null, Action onCompleted = null)
-            => ob.Subscribe(new SafeObserver<T>(onNext, onError, onCompleted));
+            => (ob ?? throw new ArgumentNullException(nameof(ob))).Subscribe(new SafeObserver<T>(onNext, onError, onCompleted));
 
         /// <summary>
         /// Subscribes a Safe observer. Safe means that in the event of a failing observer, it will not get unsubscribed and disposed
@@ -51,7 +51,7 @@ namespace NATS.Client.Rx.Ops
         /// <param name="observer"></param>
         /// <returns></returns>
         public static IDisposable SubscribeSafe<T>(this INATSObservable<T> ob, IObserver<T> observer)
-            => ob.Subscribe(new SafeObserver<T>(observer.OnNext, observer.OnError, observer.OnCompleted));
+            => (ob ?? throw new ArgumentNullException(nameof(ob))).Subscribe(new SafeObserver<T>(observer.OnNext, observer.OnError, observer.OnCompleted));
 
         /// <summary>
         /// Applies passed predicate <paramref name="predicate"/> to filter the stream of <typeparamref name="T"/>.
