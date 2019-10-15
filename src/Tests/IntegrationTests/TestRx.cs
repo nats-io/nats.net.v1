@@ -104,7 +104,7 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public void WhenObservingMoreThanOneSubjectTheyShouldNotInterfear()
+        public void WhenObservingMoreThanOneSubjectTheyShouldNotInterfere()
         {
             sync = TestSync.TwoActors();
 

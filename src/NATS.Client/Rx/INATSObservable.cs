@@ -16,8 +16,8 @@ using System;
 namespace NATS.Client.Rx
 {
     /// <summary>
-    /// Marker interface to have shipped extension methods to not interfear
-    /// with offical RX extensions.
+    /// Marker interface to have shipped extension methods to not interfere
+    /// with official RX extensions.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public interface INATSObservable<out T> : IObservable<T>, IDisposable { }
