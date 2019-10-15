@@ -26,7 +26,7 @@ namespace NATS.Client.Rx.Ops
             Action<Exception> onError = null,
             Action onCompleted = null)
         {
-            this.onNext = onNext;
+            this.onNext = onNext ?? throw new ArgumentNullException(nameof(onNext));
             this.onError = onError;
             this.onCompleted = onCompleted;
         }
