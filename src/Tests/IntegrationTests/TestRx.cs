@@ -138,7 +138,7 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public void WhenDispoingAnObserverItShouldNotReceiveMoreMessages()
+        public void WhenDisposingAnObserverItShouldNotReceiveMoreMessages()
         {
             sync = TestSync.TwoActors();
 
@@ -175,7 +175,7 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public void WhenDispoingAnObservableNoMoreDispatchesShouldBeDone()
+        public void WhenDisposingAnObservableNoMoreDispatchesShouldBeDone()
         {
             sync = TestSync.TwoActors();
 

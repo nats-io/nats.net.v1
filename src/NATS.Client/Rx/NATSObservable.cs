@@ -32,7 +32,7 @@ namespace NATS.Client.Rx
                 }
                 catch
                 {
-                    //Missbehaving observer will remove its subscription
+                    //Misbehaving observer will remove its subscription
                     //and dispose it. No invoke of OnError as it's not the
                     //producer that is failing.
                     subscriptions.TryRemove(sub.Id, out _);
