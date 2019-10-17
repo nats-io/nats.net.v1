@@ -24,7 +24,7 @@ namespace NATS.Client
     // to be shared by any more than a single producer and single consumer.
     internal sealed class SingleUseChannel<T>
     {
-        static readonly ConcurrentBag<SingleUseChannel<T>> Channels 
+        static readonly ConcurrentBag<SingleUseChannel<T>> Channels
             = new ConcurrentBag<SingleUseChannel<T>>();
 
         readonly ManualResetEventSlim e = new ManualResetEventSlim();
@@ -93,9 +93,9 @@ namespace NATS.Client
     internal sealed class Channel<T>
     {
         readonly Queue<T> q;
-        readonly Object   qLock = new Object();
+        readonly Object qLock = new Object();
 
-        bool   finished = false;
+        bool finished = false;
 
         public string Name { get; set; }
 
@@ -112,9 +112,12 @@ namespace NATS.Client
 
         internal T get(int timeout)
         {
-            Monitor.Enter(qLock);
+            var lockWasTaken = false;
+
             try
             {
+                Monitor.Enter(qLock, ref lockWasTaken);
+
                 if (finished)
                 {
                     return default(T);
@@ -157,7 +160,8 @@ namespace NATS.Client
             }
             finally
             {
-                Monitor.Exit(qLock);
+                if (lockWasTaken)
+                    Monitor.Exit(qLock);
             }
         } // get
 
@@ -168,9 +172,12 @@ namespace NATS.Client
             if (buffer.Length < 1) throw new ArgumentException();
 
             int delivered = 0;
-            Monitor.Enter(qLock);
+            var lockWasTaken = false;
+
             try
             {
+                Monitor.Enter(qLock, ref lockWasTaken);
+
                 if (finished)
                 {
                     return 0;
@@ -226,15 +233,19 @@ namespace NATS.Client
             }
             finally
             {
-                Monitor.Exit(qLock);
+                if (lockWasTaken)
+                    Monitor.Exit(qLock);
             }
         } // get
 
         internal void add(T item)
         {
-            Monitor.Enter(qLock);
+            var lockWasTaken = false;
+
             try
             {
+                Monitor.Enter(qLock, ref lockWasTaken);
+
                 q.Enqueue(item);
 
                 // if the queue count was previously zero, we were
@@ -246,7 +257,8 @@ namespace NATS.Client
             }
             finally
             {
-                Monitor.Exit(qLock);
+                if (lockWasTaken)
+                    Monitor.Exit(qLock);
             }
         }
 
@@ -254,9 +266,12 @@ namespace NATS.Client
         // exceeded the given upper bound.
         internal bool tryAdd(T item, int upperBound)
         {
-            Monitor.Enter(qLock);
+            var lockWasTaken = false;
+
             try
             {
+                Monitor.Enter(qLock, ref lockWasTaken);
+
                 if (q.Count >= upperBound)
                     return false;
 
@@ -273,15 +288,18 @@ namespace NATS.Client
             }
             finally
             {
-                Monitor.Exit(qLock);
+                if (lockWasTaken)
+                    Monitor.Exit(qLock);
             }
         }
 
         internal void close()
         {
-            Monitor.Enter(qLock);
+            var lockWasTaken = false;
+
             try
             {
+                Monitor.Enter(qLock, ref lockWasTaken);
 
                 finished = true;
 
@@ -291,7 +309,8 @@ namespace NATS.Client
             }
             finally
             {
-                Monitor.Exit(qLock);
+                if (lockWasTaken)
+                    Monitor.Exit(qLock);
             }
         }
 
@@ -300,10 +319,17 @@ namespace NATS.Client
             get
             {
                 int rv;
-
-                Monitor.Enter(qLock);
-                rv = q.Count;
-                Monitor.Exit(qLock);
+                var lockWasTaken = false;
+                try
+                {
+                    Monitor.Enter(qLock, ref lockWasTaken);
+                    rv = q.Count;
+                }
+                finally
+                {
+                    if (lockWasTaken)
+                        Monitor.Exit(qLock);
+                }
 
                 return rv;
             }
