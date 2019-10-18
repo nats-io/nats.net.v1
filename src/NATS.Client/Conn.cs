@@ -176,15 +176,12 @@ namespace NATS.Client
 
                     if (timeout > 0)
                     {
-                        var timeoutToken = new CancellationTokenSource();
-
-                        var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
-                            timeoutToken.Token, token);
+                        this.tokenSource = new CancellationTokenSource();
+                        this.linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(tokenSource.Token, token);
                         this.Token = linkedTokenSource.Token;
-
-                        this.timeoutTokenRegistration = timeoutToken.Token.Register(
+                        this.timeoutTokenRegistration = tokenSource.Token.Register(
                             () => this.Waiter.TrySetException(new NATSTimeoutException()));
-                        timeoutToken.CancelAfter(timeout);
+                        this.tokenSource.CancelAfter(timeout);
                     }
                     else
                     {
@@ -195,11 +192,11 @@ namespace NATS.Client
                 {
                     if (timeout > 0)
                     {
-                        var timeoutToken = new CancellationTokenSource();
-                        this.Token = timeoutToken.Token;
-                        this.timeoutTokenRegistration = timeoutToken.Token.Register(
+                        this.tokenSource = new CancellationTokenSource();
+                        this.Token = tokenSource.Token;
+                        this.timeoutTokenRegistration = tokenSource.Token.Register(
                             () => this.Waiter.TrySetException(new NATSTimeoutException()));
-                        timeoutToken.CancelAfter(timeout);
+                        this.tokenSource.CancelAfter(timeout);
                     }
                 }
             }
@@ -210,6 +207,8 @@ namespace NATS.Client
 
             private CancellationTokenRegistration tokenRegistration;
             private CancellationTokenRegistration timeoutTokenRegistration;
+            private readonly CancellationTokenSource linkedTokenSource;
+            private readonly CancellationTokenSource tokenSource;
 
             public void Register(Action action)
             {
@@ -220,6 +219,8 @@ namespace NATS.Client
             {
                 this.timeoutTokenRegistration.Dispose();
                 this.tokenRegistration.Dispose();
+                this.linkedTokenSource?.Dispose();
+                this.tokenSource?.Dispose();
             }
         }
 
@@ -2554,33 +2555,35 @@ namespace NATS.Client
 
             if (!opts.UseOldRequestStyle)
             {
-                var request = requestSync(subject, data, offset, count, timeout, CancellationToken.None);
+                using (var request = requestSync(subject, data, offset, count, timeout, CancellationToken.None))
+                {
 
-                try
-                {
-                    request.Waiter.Task.Wait(timeout);
-                    result = request.Waiter.Task.Result;
-                }
-                catch (AggregateException ae)
-                {
-                    foreach (var e in ae.Flatten().InnerExceptions)
+                    try
                     {
-                        // we *should* only have one, and it should be
-                        // a NATS timeout exception.
-                        throw e;
+                        request.Waiter.Task.Wait(timeout);
+                        result = request.Waiter.Task.Result;
                     }
-                }
-                catch
-                {
-                    // Could be a timeout or exception from the flush.
-                    throw;
-                }
-                finally
-                {
-                    removeOutstandingRequest(request.Id);
-                }
+                    catch (AggregateException ae)
+                    {
+                        foreach (var e in ae.Flatten().InnerExceptions)
+                        {
+                            // we *should* only have one, and it should be
+                            // a NATS timeout exception.
+                            throw e;
+                        }
+                    }
+                    catch
+                    {
+                        // Could be a timeout or exception from the flush.
+                        throw;
+                    }
+                    finally
+                    {
+                        removeOutstandingRequest(request.Id);
+                    }
 
-                return result;
+                    return result;
+                }
             }
             else
             {
@@ -2668,25 +2671,27 @@ namespace NATS.Client
                 return Task.Run(
                     async () =>
                     {
-                        InFlightRequest request = setupRequest(timeout, token);
-
-                        request.Token.ThrowIfCancellationRequested();
-
-                        try
+                        using (var request = setupRequest(timeout, token))
                         {
-                            if (globalRequestSubscription == null)
-                                await globalRequestSubReady.Task;
 
-                            publish(subject, globalRequestInbox + "." + request.Id, data, offset, count, true);
-                        }
-                        catch
-                        {
-                            removeOutstandingRequest(request.Id);
-                            throw;
-                        }
+                            request.Token.ThrowIfCancellationRequested();
 
-                    // InFlightRequest links the token cancellation
-                    return await request.Waiter.Task;
+                            try
+                            {
+                                if (globalRequestSubscription == null)
+                                    await globalRequestSubReady.Task;
+
+                                publish(subject, globalRequestInbox + "." + request.Id, data, offset, count, true);
+                            }
+                            catch
+                            {
+                                removeOutstandingRequest(request.Id);
+                                throw;
+                            }
+
+                            // InFlightRequest links the token cancellation
+                            return await request.Waiter.Task;
+                        }
                     },
                     token);
             }
