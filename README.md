@@ -164,6 +164,68 @@ Here are example snippets of using the API to create a connection, subscribe, pu
             c.Close();
 ```
 
+## RX Usage
+Importing the namespace `NATS.Client.Rx` you will be able to use an extension method
+`connection.Observere(subject)` to turn the connection to an observable. If you have a more
+advanced `IAsyncSubscription`, you can use `asyncSubscription.ToObservable()`.
+
+You can now import the namespace `NATS.Client.Rx.Ops`. After this you get builtin support for:
+- Subscribe
+- SubscribeSafe (will not fail an observer if it misbehaves)
+- Where
+- Select
+
+If you want, you could instead take an external dependency on `System.Reactive` and use that
+instead of `NATS.RX.Ops`.
+
+```csharp
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using NATS.Client;
+using NATS.Client.Rx;
+using NATS.Client.Rx.Ops; //Can be replaced with using System.Reactive.Linq;
+
+namespace RxSample
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            using (var cn = new ConnectionFactory().CreateConnection())
+            {
+                var temperatures =
+                    cn.Observe("temperatures")
+                        .Where(m => m.Data?.Any() == true)
+                        .Select(m => BitConverter.ToInt32(m.Data, 0));
+
+                temperatures.Subscribe(t => Console.WriteLine($"{t}C"));
+
+                temperatures.Subscribe(t => Console.WriteLine($"{(t * 9 / 5) + 32}F"));
+
+                var cts = new CancellationTokenSource();
+
+                Task.Run(async () =>
+                {
+                    var rnd = new Random();
+
+                    while (!cts.IsCancellationRequested)
+                    {
+                        cn.Publish("temperatures", BitConverter.GetBytes(rnd.Next(-10, 40)));
+
+                        await Task.Delay(1000, cts.Token);
+                    }
+                }, cts.Token);
+
+                Console.ReadKey();
+                cts.Cancel();
+            }
+        }
+    }
+}
+```
+
 ## Basic Encoded Usage
 The .NET NATS client mirrors go encoding through serialization and
 deserialization.  Simply create an encoded connection and publish

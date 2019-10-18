@@ -46,6 +46,7 @@ namespace IntegrationTests
         public const int EncodingSuite = 11512; //1pc
         public const int SubscriptionsSuite = 11513; //1pc
         public const int TlsSuite = 11514; //3pc
+        public const int RxSuite = 11517; //1pc
     }
 
     public abstract class SuiteContext
@@ -209,6 +210,13 @@ namespace IntegrationTests
     public class PublishErrorsDuringReconnectSuiteContext : SuiteContext
     {
         private const int SeedPort = TestSeedPorts.PublishErrorsDuringReconnectSuite;
+
+        public readonly TestServerInfo Server1 = new TestServerInfo(SeedPort);
+    }
+
+    public class RxSuiteContext : SuiteContext
+    {
+        private const int SeedPort = TestSeedPorts.RxSuite;
 
         public readonly TestServerInfo Server1 = new TestServerInfo(SeedPort);
     }

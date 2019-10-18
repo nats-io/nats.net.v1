@@ -16,6 +16,7 @@ using System.Threading;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using NATS.Client;
 #if NET452
 using System.Reflection;
@@ -61,7 +62,7 @@ namespace IntegrationTests
 
             p = Process.Start(psInfo);
 
-            if(delay > TimeSpan.Zero)
+            if (delay > TimeSpan.Zero)
                 Thread.Sleep(delay);
         }
 
@@ -78,7 +79,7 @@ namespace IntegrationTests
         {
             var server = new NATSServer(TimeSpan.Zero, port, args);
             var cf = new ConnectionFactory();
-            
+
             var opts = ConnectionFactory.GetDefaultOptions();
             opts.Url = $"nats://localhost:{port}";
 
@@ -99,7 +100,7 @@ namespace IntegrationTests
                 }
             }
 
-            if(!isVerifiedOk)
+            if (!isVerifiedOk)
                 throw new Exception($"Could not connect to test NATS-Server at '{opts.Url}'");
 
             return server;
@@ -132,7 +133,7 @@ namespace IntegrationTests
         {
             psInfo = new ProcessStartInfo(SERVEREXE);
             psInfo.UseShellExecute = false;
-            
+
             if (Debug)
             {
                 psInfo.Arguments = " -DV ";
@@ -195,7 +196,7 @@ namespace IntegrationTests
             Func<Process[]> getProcesses = () => Process.GetProcessesByName("nats-server");
 
             var processes = getProcesses();
-            if(!processes.Any())
+            if (!processes.Any())
                 return;
 
             foreach (var proc in getProcesses())
@@ -205,7 +206,7 @@ namespace IntegrationTests
             for (int i = 0; i < 10; i++)
             {
                 processes = getProcesses();
-                if(!processes.Any())
+                if (!processes.Any())
                     break;
 
                 Thread.Sleep(i * 250);
@@ -220,7 +221,7 @@ namespace IntegrationTests
         public static string GetConfigDir()
         {
             var configDirPath = Path.Combine(Environment.CurrentDirectory, "config");
-            if(!Directory.Exists(configDirPath))
+            if (!Directory.Exists(configDirPath))
                 throw new DirectoryNotFoundException($"The Config dir was not found at: '{configDirPath}'.");
 
             return configDirPath;
@@ -228,5 +229,103 @@ namespace IntegrationTests
 
         public static string GetFullCertificatePath(string certificateName)
             => Path.Combine(GetConfigDir(), "certs", certificateName);
+    }
+
+    public sealed class TestSync : IDisposable
+    {
+        private SemaphoreSlim semaphore;
+        private readonly int initialNumOfActors;
+
+        private static readonly TimeSpan WaitTs = TimeSpan.FromMilliseconds(1000);
+        private static readonly TimeSpan WaitPatientlyTs = TimeSpan.FromMilliseconds(2000);
+
+        private TestSync(int numOfActors)
+        {
+            initialNumOfActors = numOfActors;
+            semaphore = new SemaphoreSlim(0, numOfActors);
+        }
+
+        public static TestSync SingleActor() => new TestSync(1);
+
+        public static TestSync TwoActors() => new TestSync(2);
+
+        public static TestSync FourActors() => new TestSync(4);
+
+        private void Wait(int aquireCount, TimeSpan ts)
+        {
+            if (System.Diagnostics.Debugger.IsAttached)
+            {
+                ts = TimeSpan.FromMilliseconds(-1);
+            }
+
+            using (var cts = new CancellationTokenSource(ts))
+            {
+                for (var c = 0; c < aquireCount; c++)
+                    semaphore.Wait(cts.Token);
+            }
+        }
+
+        public void WaitForAll(TimeSpan? ts = null) => Wait(initialNumOfActors, ts ?? WaitTs);
+
+        public void WaitForAllPatiently(TimeSpan? ts = null) => Wait(initialNumOfActors, ts ?? WaitPatientlyTs);
+        
+        public void WaitForOne(TimeSpan? ts = null) => Wait(1, ts ?? WaitTs);
+
+        public void WaitForOnePatiently(TimeSpan? ts = null) => Wait(1, ts ?? WaitPatientlyTs);
+        
+        public void SignalComplete()
+        {
+            semaphore.Release(1);
+        }
+
+        public void Dispose()
+        {
+            semaphore?.Dispose();
+            semaphore = null;
+        }
+    }
+
+    public sealed class SamplePayload : IEquatable<SamplePayload>
+    {
+        private static readonly Encoding Enc = Encoding.UTF8;
+
+        public readonly byte[] Data;
+        public readonly string Text;
+
+        private SamplePayload(string text)
+        {
+            Text = text ?? throw new ArgumentNullException(nameof(text));
+            Data = Enc.GetBytes(text);
+        }
+
+        private SamplePayload(byte[] data)
+        {
+            Data = data ?? throw new ArgumentNullException(nameof(data));
+            Text = Enc.GetString(data);
+        }
+
+        public static SamplePayload Random() => new SamplePayload(Guid.NewGuid().ToString("N"));
+
+        public static implicit operator SamplePayload(Msg m) => new SamplePayload(m.Data);
+
+        public static implicit operator byte[](SamplePayload p) => p.Data;
+
+        public bool Equals(SamplePayload other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+
+            return other.Data.SequenceEqual(Data);
+        }
+
+        public override bool Equals(object obj) => Equals(obj as SamplePayload);
+
+        public override int GetHashCode() => Data.GetHashCode();
+
+        public override string ToString() => Text;
+
+        public static bool operator ==(SamplePayload left, SamplePayload right) => Equals(left, right);
+
+        public static bool operator !=(SamplePayload left, SamplePayload right) => !Equals(left, right);
     }
 }
