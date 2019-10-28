@@ -47,6 +47,7 @@ namespace IntegrationTests
         public const int SubscriptionsSuite = 11513; //1pc
         public const int TlsSuite = 11514; //3pc
         public const int RxSuite = 11517; //1pc
+        public const int AsyncAwaitDeadlocksSuite = 11518; //1pc
     }
 
     public abstract class SuiteContext
@@ -191,6 +192,13 @@ namespace IntegrationTests
         public string[] GetTestServersUrls() => TestServers.Select(s => s.Url).ToArray();
 
         public string[] GetTestServersShortListUrls() => TestServersShortList.Select(s => s.Url).ToArray();
+    }
+
+    public class AsyncAwaitDeadlocksSuiteContext : SuiteContext
+    {
+        private const int SeedPort = TestSeedPorts.AsyncAwaitDeadlocksSuite;
+
+        public readonly TestServerInfo Server1 = new TestServerInfo(SeedPort);
     }
 
     public class EncodingSuiteContext : SuiteContext
