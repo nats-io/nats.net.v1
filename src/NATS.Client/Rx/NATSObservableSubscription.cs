@@ -15,6 +15,10 @@ using System;
 
 namespace NATS.Client.Rx
 {
+    /// <summary>
+    /// Represents an observable async subscription to which you
+    /// can subscribe an consume messages from in push-style form.
+    /// </summary>
     public sealed class NATSObservableSubscription : NATSObservable<Msg>, IDisposable
     {
         private readonly IAsyncSubscription subscription;
@@ -27,6 +31,11 @@ namespace NATS.Client.Rx
             this.subscription.Start();
         }
 
+        /// <summary>
+        /// Wraps sent subscription and turns it into an observable.
+        /// </summary>
+        /// <param name="subscription"></param>
+        /// <returns></returns>
         public static INATSObservable<Msg> Wrap(IAsyncSubscription subscription)
             => new NATSObservableSubscription(subscription); 
 
