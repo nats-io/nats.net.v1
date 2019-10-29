@@ -882,6 +882,7 @@ namespace NATS.Client
         private void makeTLSConn()
         {
             conn.makeTLS(this.opts);
+
             bw = conn.getWriteBufferedStream(Defaults.defaultBufSize);
             br = conn.getReadBufferedStream();
         }
@@ -1515,128 +1516,152 @@ namespace NATS.Client
             // sent out, but are still in the pipe.
 
             // Hold manually release where needed below.
-            Monitor.Enter(mu);
 
-            // clear any queued pongs, e..g. pending flush calls.
-            clearPendingFlushCalls();
+            var lockWasTaken = false;
 
-            pending = new MemoryStream();
-            bw = new BufferedStream(pending);
-
-            // Clear any errors.
-            lastEx = null;
-
-            scheduleConnEvent(Opts.DisconnectedEventHandler);
-
-            // TODO:  Look at using a predicate delegate in the server pool to
-            // pass a method to, but locking is complex and would need to be
-            // reworked.
-            Srv cur;
-            while ((cur = srvPool.SelectNextServer(Opts.MaxReconnect)) != null)
+            try
             {
-                url = cur.url;
+                Monitor.Enter(mu, ref lockWasTaken);
 
+                // clear any queued pongs, e..g. pending flush calls.
+                clearPendingFlushCalls();
+
+                pending = new MemoryStream();
+
+                bw = new BufferedStream(pending);
+
+                // Clear any errors.
                 lastEx = null;
 
-                // Sleep appropriate amount of time before the
-                // connection attempt if connecting to same server
-                // we just got disconnected from.
-                double elapsedMillis = cur.TimeSinceLastAttempt.TotalMilliseconds;
-                double sleepTime = 0;
+                scheduleConnEvent(Opts.DisconnectedEventHandler);
 
-                if (elapsedMillis < Opts.ReconnectWait)
+                // TODO:  Look at using a predicate delegate in the server pool to
+                // pass a method to, but locking is complex and would need to be
+                // reworked.
+                Srv cur;
+                while ((cur = srvPool.SelectNextServer(Opts.MaxReconnect)) != null)
                 {
-                    sleepTime = Opts.ReconnectWait - elapsedMillis;
-                }
+                    url = cur.url;
 
-                if (sleepTime <= 0)
-                {
-                    // Release to allow parallel processes to close,
-                    // unsub, etc.  Note:  Use the sleep API - yield is
-                    // heavy handed here.
-                    sleepTime = 50;
-                }
-
-                Monitor.Exit(mu);
-                sleep((int)sleepTime);
-                Monitor.Enter(mu);
-
-                if (isClosed())
-                    break;
-
-                cur.reconnects++;
-
-                try
-                {
-                    // try to create a new connection
-                    createConn(cur);
-                }
-                catch (Exception)
-                {
-                    // not yet connected, retry and hold
-                    // the lock.
                     lastEx = null;
-                    continue;
+
+                    // Sleep appropriate amount of time before the
+                    // connection attempt if connecting to same server
+                    // we just got disconnected from.
+                    double elapsedMillis = cur.TimeSinceLastAttempt.TotalMilliseconds;
+                    double sleepTime = 0;
+
+                    if (elapsedMillis < Opts.ReconnectWait)
+                    {
+                        sleepTime = Opts.ReconnectWait - elapsedMillis;
+                    }
+
+                    if (sleepTime <= 0)
+                    {
+                        // Release to allow parallel processes to close,
+                        // unsub, etc.  Note:  Use the sleep API - yield is
+                        // heavy handed here.
+                        sleepTime = 50;
+                    }
+
+                    if (lockWasTaken)
+                    {
+                        Monitor.Exit(mu);
+                        lockWasTaken = false;
+                    }
+
+                    sleep((int)sleepTime);
+                    
+                    Monitor.Enter(mu, ref lockWasTaken);
+
+                    if (isClosed())
+                        break;
+
+                    cur.reconnects++;
+
+                    try
+                    {
+                        // try to create a new connection
+                        createConn(cur);
+                    }
+                    catch (Exception)
+                    {
+                        // not yet connected, retry and hold
+                        // the lock.
+                        lastEx = null;
+                        continue;
+                    }
+
+                    // process our connect logic
+                    try
+                    {
+                        processConnectInit();
+                    }
+                    catch (Exception e)
+                    {
+                        lastEx = e;
+                        status = ConnState.RECONNECTING;
+                        continue;
+                    }
+
+                    try
+                    {
+                        // Send existing subscription state
+                        resendSubscriptions();
+
+                        // Now send off and clear pending buffer
+                        flushReconnectPendingItems();
+                    }
+                    catch (Exception)
+                    {
+                        status = ConnState.RECONNECTING;
+                        continue;
+                    }
+
+                    // We are reconnected.
+                    stats.reconnects++;
+                    cur.didConnect = true;
+                    cur.reconnects = 0;
+                    srvPool.CurrentServer = cur;
+                    status = ConnState.CONNECTED;
+
+                    scheduleConnEvent(Opts.ReconnectedEventHandler);
+
+                    // Release lock here, we will return below
+                    if (lockWasTaken)
+                    {
+                        Monitor.Exit(mu);
+                        lockWasTaken = false;
+                    }
+
+                    // Make sure to flush everything
+                    // We have a corner case where the server we just
+                    // connected to has failed as well - let the reader
+                    // thread detect this and spawn another reconnect 
+                    // thread to simplify locking.
+                    try
+                    {
+                        Flush();
+                    }
+                    catch
+                    {
+                        // ignored
+                    }
+
+                    return;
                 }
 
-                // process our connect logic
-                try
-                {
-                    processConnectInit();
-                }
-                catch (Exception e)
-                {
-                    lastEx = e;
-                    status = ConnState.RECONNECTING;
-                    continue;
-                }
+                // Call into close.. we have no more servers left..
+                if (lastEx == null)
+                    lastEx = new NATSNoServersException("Unable to reconnect");
 
-                try
-                {
-                    // Send existing subscription state
-                    resendSubscriptions();
-
-                    // Now send off and clear pending buffer
-                    flushReconnectPendingItems();
-                }
-                catch (Exception)
-                {
-                    status = ConnState.RECONNECTING;
-                    continue;
-                }
-
-                // We are reconnected.
-                stats.reconnects++;
-                cur.didConnect = true;
-                cur.reconnects = 0;
-                srvPool.CurrentServer = cur;
-                status = ConnState.CONNECTED;
-
-                scheduleConnEvent(Opts.ReconnectedEventHandler);
-
-                // Release lock here, we will return below
-                Monitor.Exit(mu);
-
-                // Make sure to flush everything
-                // We have a corner case where the server we just
-                // connected to has failed as well - let the reader
-                // thread detect this and spawn another reconnect 
-                // thread to simplify locking.
-                try
-                {
-                    Flush();
-                }
-                catch (Exception) { }
-
-                return;
+                Close();
             }
-
-            // Call into close.. we have no more servers left..
-            if (lastEx == null)
-                lastEx = new NATSNoServersException("Unable to reconnect");
-
-            Monitor.Exit(mu);
-            Close();
+            finally
+            {
+                if(lockWasTaken)
+                    Monitor.Exit(mu);
+            }
         }
 
         private bool isConnecting()
