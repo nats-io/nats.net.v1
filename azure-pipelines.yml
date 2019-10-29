@@ -38,7 +38,7 @@ stages:
       inputs:
         command: build
         projects: 'src/*.sln'
-        arguments: '-c $(BuildConfiguration) --no-incremental --nologo -p:TreatWarningsAsErrors=true -p:Version=$(SemVer) -p:InformationalVersion=$(InfoVer) -p:SignAssembly=true -p:AssemblyOriginatorKeyFile=$(Build.SourcesDirectory)\NATS.Client.snk'
+        arguments: '-c $(BuildConfiguration) --no-incremental --nologo -p:TreatWarningsAsErrors=true -p:Version=$(SemVer) -p:InformationalVersion=$(InfoVer)'
   
     - task: DotNetCoreCLI@2
       displayName: 'UnitTests .NetCoreApp2.2'
