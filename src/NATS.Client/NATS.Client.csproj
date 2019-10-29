@@ -23,6 +23,11 @@
     <DocumentationFile>bin\Release\$(TargetFramework)\NATS.Client.xml</DocumentationFile>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\NATS.Client.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+
   <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
     <Reference Include="System" />
     <Reference Include="System.Core" />
