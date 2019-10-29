@@ -893,7 +893,6 @@ namespace NATS.Client
         {
             // Kick old flusher forcefully.
             setFlusherDone(true);
-            kickFlusher();
 
             if (wg.Count > 0)
             {
