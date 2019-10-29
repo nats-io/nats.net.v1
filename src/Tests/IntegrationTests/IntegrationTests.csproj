@@ -20,6 +20,10 @@
     <PackageReference Include="Nito.AsyncEx" Version="5.0.0" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.0'">
+    <PackageReference Include="Nito.AsyncEx" Version="5.0.0" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\NATS.Client\NATS.Client.csproj" />
   </ItemGroup>
