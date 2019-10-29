@@ -142,7 +142,7 @@ namespace NATS.Client
         private ConcurrentDictionary<Int64, Subscription> subs = 
             new ConcurrentDictionary<Int64, Subscription>();
         
-        private Queue<SingleUseChannel<bool>> pongs = new Queue<SingleUseChannel<bool>>();
+        private readonly ConcurrentQueue<SingleUseChannel<bool>> pongs = new ConcurrentQueue<SingleUseChannel<bool>>();
 
         internal MsgArg   msgArgs = new MsgArg();
 
@@ -764,7 +764,6 @@ namespace NATS.Client
         internal Connection(Options options)
         {
             opts = new Options(options);
-            pongs = createPongs();
 
             PING_P_BYTES = Encoding.UTF8.GetBytes(IC.pingProto);
             PING_P_BYTES_LEN = PING_P_BYTES.Length;
@@ -916,9 +915,7 @@ namespace NATS.Client
                     return;
                 }
 
-                pout++;
-
-                if (pout > Opts.MaxPingsOut)
+                if (Interlocked.Increment(ref pout) > Opts.MaxPingsOut)
                 {
                     processOpError(new NATSStaleConnectionException());
                     return;
@@ -950,7 +947,7 @@ namespace NATS.Client
         // caller must lock
         private void startPingTimer()
         {
-            pout = 0;
+            Interlocked.Exchange(ref pout, 0);
 
             stopPingTimer();
 
@@ -1075,11 +1072,6 @@ namespace NATS.Client
                     return srvPool.GetServerList(true);
                 }
             }
-        }
-
-        private Queue<SingleUseChannel<bool>> createPongs()
-        {
-            return new Queue<SingleUseChannel<bool>>();
         }
 
         // Process a connected connection and initialize properly.
@@ -2236,20 +2228,11 @@ namespace NATS.Client
         // processPong is used to process responses to the client's ping
         // messages. We use pings for the flush mechanism as well.
         internal void processPong()
-        {
-            SingleUseChannel<bool> ch = null;
-            lock (mu)
-            {
-                if (pongs.Count > 0)
-                    ch = pongs.Dequeue();
+        { 
+            if (pongs.TryDequeue(out var ch))
+                ch?.add(true);
 
-                pout = 0;
-            }
-
-            if (ch != null)
-            {
-                ch.add(true);
-            }
+            Interlocked.Exchange(ref pout, 0);
         }
 
         // processOK is a placeholder for processing OK messages.
@@ -3535,14 +3518,10 @@ namespace NATS.Client
         // call outstanding and we call close.
         private bool removeFlushEntry(SingleUseChannel<bool> chan)
         {
-            if (pongs == null)
+            if (!pongs.TryDequeue(out var start))
                 return false;
 
-            if (pongs.Count == 0)
-                return false;
-
-            SingleUseChannel<bool> start = pongs.Dequeue();
-            SingleUseChannel<bool> c = start;
+            var c = start;
 
             while (true)
             {
@@ -3551,12 +3530,11 @@ namespace NATS.Client
                     SingleUseChannel<bool>.Return(c);
                     return true;
                 }
-                else
-                {
-                    pongs.Enqueue(c);
-                }
 
-                c = pongs.Dequeue();
+                pongs.Enqueue(c);
+
+                if (!pongs.TryDequeue(out c))
+                    return false;
 
                 if (c == start)
                     break;
@@ -3693,14 +3671,8 @@ namespace NATS.Client
         // Lock must be held by the caller.
         private void clearPendingFlushCalls()
         {
-
-            // Clear any queued pongs, e.g. pending flush calls.
-            foreach (SingleUseChannel<bool> ch in pongs)
-            {
-                if (ch != null)
-                    ch.add(true);
-            }
-            pongs.Clear();
+            while(pongs.TryDequeue(out var ch))
+                ch?.add(true);
         }
 
 
