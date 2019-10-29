@@ -97,6 +97,14 @@ stages:
         projects: 'src/Tests/**/IntegrationTests.csproj'
         arguments: '-c $(BuildConfiguration) -f netcoreapp2.2 --no-build'
         testRunTitle: 'IntegrationTests .NetCoreApp2.2'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'IntegrationTests .NetCoreApp3.0'
+      inputs:
+        command: test
+        projects: 'src/Tests/**/IntegrationTests.csproj'
+        arguments: '-c $(BuildConfiguration) -f netcoreapp3.0 --no-build'
+        testRunTitle: 'IntegrationTests .NetCoreApp3.0'
   
     - task: DotNetCoreCLI@2
       displayName: 'IntegrationTests .Net4.5.2'
