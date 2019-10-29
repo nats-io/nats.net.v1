@@ -1,8 +1,8 @@
-﻿
-using NATS.Client;
-#if !NET452
+﻿#if !NET452
+
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
+using NATS.Client;
 using Nito.AsyncEx;
 using Xunit;
 
