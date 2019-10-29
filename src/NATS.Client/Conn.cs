@@ -3494,9 +3494,6 @@ namespace NATS.Client
         // call outstanding and we call close.
         private bool removeFlushEntry(SingleUseChannel<bool> chan)
         {
-            if (pongs.Count == 0)
-                return false;
-
             if (!pongs.TryDequeue(out var start))
                 return false;
 
