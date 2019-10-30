@@ -182,6 +182,7 @@ namespace NATS.Client
 
         // Must be greater than 0.
         internal int subscriptionBatchSize = 64;
+        internal int reconnectBufSize = Defaults.ReconnectBufferSize;
 
         internal string user;
         internal string password;
@@ -208,6 +209,7 @@ namespace NATS.Client
             noRandomize = o.noRandomize;
             noEcho = o.noEcho;
             pedantic = o.pedantic;
+            reconnectBufSize = o.reconnectBufSize;
             useOldRequestStyle = o.useOldRequestStyle;
             pingInterval = o.pingInterval;
             ReconnectedEventHandler = o.ReconnectedEventHandler;
@@ -269,7 +271,7 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Gets or sets the array of servers that the NATs client will connect to.
+        /// Gets or sets the array of servers that the NATS client will connect to.
         /// </summary>
         /// <remarks>
         /// The individual URLs may contain username/password information.
@@ -585,6 +587,43 @@ namespace NATS.Client
                 sb.AppendFormat("{0}=null;", name);
         }
 
+        
+        /// <summary>
+        /// Constant used to sets the reconnect buffer size to unbounded.
+        /// </summary>
+        /// <seealso cref="ReconnectBufferSize"/>
+        public static readonly int ReconnectBufferSizeUnbounded = 0;
+
+        /// <summary>
+        /// Constant that disables the reconnect buffer.
+        /// </summary>
+        /// <seealso cref="ReconnectBufferSize"/>
+        public static readonly int ReconnectBufferDisabled = -1;
+
+        /// <summary>
+        /// Gets or sets the buffer size of messages kept while busy reconnecting.
+        /// </summary>
+        /// <remarks>
+        /// When reconnecting, the NATS client will hold published messages that
+        /// will be flushed to the new server upon a successful reconnect.  The default
+        /// is buffer size is 8 MB.  This buffering can be disabled.
+        /// </remarks>
+        /// <seealso cref="ReconnectBufferSizeUnbounded"/>
+        /// <seealso cref="ReconnectBufferDisabled"/>
+        public int ReconnectBufferSize
+        {
+            get { return reconnectBufSize; }
+            set
+            {
+                if (value < -1)
+                {
+                    throw new ArgumentOutOfRangeException("value", "Reconnect buffer size must be greater than or equal to -1");
+                }
+
+                reconnectBufSize = value;
+            }
+        }
+
         /// <summary>
         /// Returns a string representation of the
         /// value of this Options instance.
@@ -609,6 +648,7 @@ namespace NATS.Client
             sb.AppendFormat("Pendantic={0};", Pedantic);
             sb.AppendFormat("UseOldRequestStyle={0}", UseOldRequestStyle);
             sb.AppendFormat("PingInterval={0};", PingInterval);
+            sb.AppendFormat("ReconnectBufferSize={0};", ReconnectBufferSize);
             sb.AppendFormat("ReconnectWait={0};", ReconnectWait);
             sb.AppendFormat("Secure={0};", Secure);
             sb.AppendFormat("User={0};", User);
