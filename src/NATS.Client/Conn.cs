@@ -2428,16 +2428,15 @@ namespace NATS.Client
                     if (rbsize != 0)
                     {
                         if (rbsize == -1)
-                        {
                             throw new NATSReconnectBufferException("Reconnect buffering has been disabled.");
-                        }
 
-                        bw.Flush();
+                        if (flushBuffer)
+                            bw.Flush();
+                        else
+                            kickFlusher();
 
                         if (pending.Position + count + pubProtoLen > rbsize)
-                        {
-                            throw new NATSReconnectBufferException("Reconnect buffer exceed.");
-                        }
+                            throw new NATSReconnectBufferException("Reconnect buffer exceeded.");
                     }
                 }
 
@@ -3776,7 +3775,30 @@ namespace NATS.Client
                         {
                             bw.Dispose();
                         }
-                        catch (Exception) { /* ignore */ }
+                        catch (Exception)
+                        {
+                            /* ignore */
+                        }
+                        finally
+                        {
+                            bw = null;
+                        }
+                    }
+
+                    if (br != null)
+                    {
+                        try
+                        {
+                            br.Dispose();
+                        }
+                        catch
+                        {
+                            // ignored
+                        }
+                        finally
+                        {
+                            br = null;
+                        }
                     }
 
                     conn.teardown();
