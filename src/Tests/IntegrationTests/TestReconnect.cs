@@ -554,10 +554,9 @@ namespace IntegrationTests
 
             // PUB foo 25\r\n<...> = 30 so first publish should be OK, 2nd publish
             // should fail.
-            byte[] okPayload = new byte[20];
-            byte[] exceedingPayload = new byte[21];
-            c.Publish("foo", okPayload);
-            Assert.Throws<NATSReconnectBufferException>(() => c.Publish("foo", exceedingPayload));
+            byte[] payload = new byte[18];
+            c.Publish("foo", payload);
+            Assert.Throws<NATSReconnectBufferException>(() => c.Publish("foo", payload));
 
             c.Close();
             c.Dispose();
