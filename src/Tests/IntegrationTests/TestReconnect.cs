@@ -475,6 +475,92 @@ namespace IntegrationTests
                 c.Flush();
             }
         }
+
+        [Fact]
+        public void TestReconnectBufferProperty()
+        {
+            var opts = ConnectionFactory.GetDefaultOptions();
+            opts.ReconnectBufferSize = Options.ReconnectBufferDisabled;
+            opts.ReconnectBufferSize = Options.ReconnectBufferSizeUnbounded;
+            opts.ReconnectBufferSize = 1024 * 1024;
+            Assert.Throws<ArgumentOutOfRangeException>(() => { opts.ReconnectBufferSize = -2; });
+        }
+
+        [Fact]
+        public void TestReconnectBufferDisabled()
+        {
+            IConnection c;
+            ISyncSubscription s;
+
+            AutoResetEvent disconnected = new AutoResetEvent(false);
+            AutoResetEvent reconnected = new AutoResetEvent(false);
+
+            var opts = Context.GetTestOptions(Context.Server1.Port);
+            opts.ReconnectBufferSize = Options.ReconnectBufferDisabled;
+            opts.DisconnectedEventHandler = (obj, args) => { disconnected.Set(); };
+            opts.ReconnectedEventHandler = (obj, args) => { reconnected.Set(); };
+
+            using (var server = NATSServer.Create(Context.Server1.Port))
+            {
+                // Create our client connections.
+                c = new ConnectionFactory().CreateConnection(opts);
+                s = c.SubscribeSync("foo");
+                // let the server shutdown via dispose
+            }
+
+            // wait until we're disconnected.
+            Assert.True(disconnected.WaitOne(5000));
+
+
+            // Publish a message.
+            Assert.Throws<NATSReconnectBufferException>( () => { c.Publish("foo", null);  });
+
+            using (var server = NATSServer.Create(Context.Server1.Port))
+            {
+                // wait for the client to reconnect.
+                Assert.True(reconnected.WaitOne(20000));
+
+                // Check that we do not receive a message.
+                Assert.Throws<NATSTimeoutException>(() => { s.NextMessage(1000); });
+            }
+
+            c.Close();
+            c.Dispose();
+        }
+
+        [Fact]
+        public void TestReconnectBufferBoundary()
+        {
+            IConnection c;
+            ISubscription s;
+
+            AutoResetEvent disconnected = new AutoResetEvent(false);
+
+            var opts = Context.GetTestOptions(Context.Server1.Port);
+            opts.ReconnectBufferSize = 32; // 32 bytes
+            opts.DisconnectedEventHandler = (obj, args) => { disconnected.Set(); };
+            EventHandler<MsgHandlerEventArgs> eh = (obj, args) => { /* NOOP */ };
+
+            using (var server = NATSServer.Create(Context.Server1.Port))
+            {
+                c = new ConnectionFactory().CreateConnection(opts);
+                s = c.SubscribeAsync("foo", eh);
+
+                // let the server shutdown via dispose
+            }
+
+            // wait until we're disconnected.
+            Assert.True(disconnected.WaitOne(5000));
+
+            // PUB foo 25\r\n<...> = 30 so first publish should be OK, 2nd publish
+            // should fail.
+            byte[] payload = new byte[18];
+            c.Publish("foo", payload);
+            Assert.Throws<NATSReconnectBufferException>(() => c.Publish("foo", payload));
+
+            c.Close();
+            c.Dispose();
+        }
     }
 
     public class TestPublishErrorsDuringReconnect : TestSuite<PublishErrorsDuringReconnectSuiteContext>

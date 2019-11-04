@@ -454,8 +454,6 @@ namespace IntegrationTests
         }
 
         /// NOT IMPLEMENTED:
-        /// TestServerSecureConnections
-        /// TestErrOnConnectAndDeadlock
         /// TestErrOnMaxPayloadLimit
     }
 

@@ -2419,6 +2419,27 @@ namespace NATS.Client
                 // write our pubProtoBuf buffer to the buffered writer.
                 int pubProtoLen = writePublishProto(pubProtoBuf, subject, reply, count);
 
+                // Check if we are reconnecting, and if so check if
+                // we have exceeded our reconnect outbound buffer limits.
+                // Don't use IsReconnecting to avoid locking.
+                if (status == ConnState.RECONNECTING)
+                {
+                    int rbsize = opts.ReconnectBufferSize;
+                    if (rbsize != 0)
+                    {
+                        if (rbsize == -1)
+                            throw new NATSReconnectBufferException("Reconnect buffering has been disabled.");
+
+                        if (flushBuffer)
+                            bw.Flush();
+                        else
+                            kickFlusher();
+
+                        if (bw.Position + count + pubProtoLen > rbsize)
+                            throw new NATSReconnectBufferException("Reconnect buffer exceeded.");
+                    }
+                }
+
                 bw.Write(pubProtoBuf, 0, pubProtoLen);
 
                 if (count > 0)
@@ -3754,7 +3775,30 @@ namespace NATS.Client
                         {
                             bw.Dispose();
                         }
-                        catch (Exception) { /* ignore */ }
+                        catch (Exception)
+                        {
+                            /* ignore */
+                        }
+                        finally
+                        {
+                            bw = null;
+                        }
+                    }
+
+                    if (br != null)
+                    {
+                        try
+                        {
+                            br.Dispose();
+                        }
+                        catch
+                        {
+                            // ignored
+                        }
+                        finally
+                        {
+                            br = null;
+                        }
                     }
 
                     conn.teardown();

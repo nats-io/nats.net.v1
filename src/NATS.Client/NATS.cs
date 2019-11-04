@@ -137,6 +137,11 @@ namespace NATS.Client
         /// </summary>
         public const int DefaultDrainTimeout = 30000;
 
+        /// <summary>
+        /// Default Pending buffer size is 8 MB.
+        /// </summary>
+        public const int ReconnectBufferSize = 8 * 1024 * 1024; // 8MB
+
         /*
          * Namespace level defaults
          */

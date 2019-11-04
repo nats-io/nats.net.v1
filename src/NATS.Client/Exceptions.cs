@@ -36,6 +36,15 @@ namespace NATS.Client
     }
 
     /// <summary>
+    /// The exception that is thrown when there is an error writing
+    /// to the internal reconnect buffer.
+    /// </summary>
+    public class NATSReconnectBufferException : NATSConnectionException
+    {
+        internal NATSReconnectBufferException(string err) : base(err) { }
+    }
+
+    /// <summary>
     /// This exception that is thrown when there is an internal error with
     /// the NATS protocol.
     /// </summary>
