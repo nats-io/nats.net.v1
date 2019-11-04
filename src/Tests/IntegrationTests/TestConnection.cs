@@ -1160,4 +1160,22 @@ namespace IntegrationTests
         }
 #endif
     }
+
+    public class TestIpV6Connection : TestSuite<ConnectionIpV6SuiteContext>
+    {
+        public TestIpV6Connection(ConnectionIpV6SuiteContext context) : base(context) { }
+
+        [Fact]
+        public void CanConnectUsingIpV6()
+        {
+            var opts = Context.GetTestOptions(Context.Server1.Port);
+            opts.Url = $"nats://[::1]:{Context.Server1.Port}";
+
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
+            {
+                using (var cn = Context.ConnectionFactory.CreateConnection(opts))
+                    Assert.True(cn.State == ConnState.CONNECTED, $"Failed to connect. Expected '{ConnState.CONNECTED}' got '{cn.State}'");
+            }
+        }
+    }
 }
