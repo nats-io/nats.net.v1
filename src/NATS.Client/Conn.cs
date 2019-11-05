@@ -423,7 +423,7 @@ namespace NATS.Client
 
             string        hostName  = null;
 
-            internal void open(Srv s, int timeoutMillis)
+            internal void open(Srv s, int timeoutMillis, int? readTimeout)
             {
                 lock (mu)
                 {
@@ -455,6 +455,9 @@ namespace NATS.Client
 
                     client.ReceiveBufferSize = Defaults.defaultBufSize*2;
                     client.SendBufferSize    = Defaults.defaultBufSize;
+                    
+                    if (readTimeout.HasValue)
+                        client.ReceiveTimeout = readTimeout.Value;
 
                     stream = client.GetStream();
 
@@ -862,7 +865,7 @@ namespace NATS.Client
         {
             try
             {
-                conn.open(s, opts.Timeout);
+                conn.open(s, opts.Timeout, opts.ReadTimeout);
 
                 if (pending != null && bw != null)
                 {

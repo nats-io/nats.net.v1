@@ -453,6 +453,93 @@ namespace IntegrationTests
             }
         }
 
+        [Fact]
+        public void WhenReadTimeoutOccursAndNoReconnectItShouldGetDisconnected()
+        {
+            var msgEv = new AutoResetEvent(false);
+            var disconnectedEv = new AutoResetEvent(false);
+            var reconnectedEv = new AutoResetEvent(false);
+            
+            var opts = Context.GetTestOptionsWithDefaultTimeout(Context.Server1.Port);
+            opts.AllowReconnect = false;
+            opts.ReadTimeout = 500;
+
+            opts.DisconnectedEventHandler = (sender, args) => disconnectedEv.Set();
+            opts.ReconnectedEventHandler = (sender, args) => reconnectedEv.Set();
+
+            const string subject = "1f9ba82b90474c37a519d97ea12a7f22";
+            var payload = new byte[0];
+
+            using (var s = NATSServer.CreateFastAndVerify(Context.Server1.Port))
+            {
+                using (var cn = Context.ConnectionFactory.CreateConnection(opts))
+                {
+                    cn.SubscribeAsync(subject, (sender, args) =>
+                    {
+                        msgEv.Set();
+                        Thread.Sleep(opts.ReadTimeout.Value + 250); //Causes time to pass so that ReadTimeout occurs
+                    });
+
+                    cn.Publish(subject, payload);
+                    Assert.True(msgEv.WaitOne(1000), "The first message should have been processed.");
+                    msgEv.Reset();
+
+                    cn.Publish(subject, payload);
+                    Assert.False(msgEv.WaitOne(1000), "The second message should not have been processed.");
+                    msgEv.Reset();
+
+                    Assert.False(reconnectedEv.WaitOne(2000), "The connection should not have been reconnected.");
+                    Assert.True(disconnectedEv.WaitOne(2000), "The connection should have been disconnected.");
+                    Assert.True(cn.IsClosed(), "Connection should be disconnected.");
+                }
+            }
+        }
+
+        [Fact]
+        public void WhenReadTimeoutOccursAndReconnectIsSpecifiedItShouldNotGetDisconnected()
+        {
+            var msgEv = new AutoResetEvent(false);
+            var disconnectedEv = new AutoResetEvent(false);
+            var reconnectedEv = new AutoResetEvent(false);
+            var interceptCount = 0;
+            
+            var opts = Context.GetTestOptionsWithDefaultTimeout(Context.Server1.Port);
+            opts.AllowReconnect = true;
+            opts.MaxReconnect = 10;
+            opts.ReadTimeout = 500;
+
+            opts.DisconnectedEventHandler = (sender, args) => disconnectedEv.Set();
+            opts.ReconnectedEventHandler = (sender, args) => reconnectedEv.Set();
+
+            const string subject = "1f9ba82b90474c37a519d97ea12a7f22";
+            var payload = new byte[0];
+
+            using (var s = NATSServer.CreateFastAndVerify(Context.Server1.Port))
+            {
+                using (var cn = Context.ConnectionFactory.CreateConnection(opts))
+                {
+                    cn.SubscribeAsync(subject, (sender, args) =>
+                    {
+                        msgEv.Set();
+                        if(Interlocked.Increment(ref interceptCount) == 1)
+                            Thread.Sleep(opts.ReadTimeout.Value + 250); //Causes time to pass so that ReadTimeout occurs
+                    });
+
+                    cn.Publish(subject, payload);
+                    Assert.True(msgEv.WaitOne(1000), "The first message should have been processed.");
+                    msgEv.Reset();
+
+                    cn.Publish(subject, payload);
+                    Assert.True(msgEv.WaitOne(1000), "The second message should have been processed.");
+                    msgEv.Reset();
+
+                    Assert.True(reconnectedEv.WaitOne(2000), "The connection should have been reconnected.");
+                    Assert.True(disconnectedEv.WaitOne(2000), "The connection should have been disconnected.");
+                    Assert.False(cn.IsClosed(), "Connection should be connected.");
+                }
+            }
+        }
+
         /// NOT IMPLEMENTED:
         /// TestErrOnMaxPayloadLimit
     }

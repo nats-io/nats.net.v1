@@ -38,6 +38,7 @@ namespace NATS.Client
         int reconnectWait = Defaults.ReconnectWait;
         int pingInterval  = Defaults.PingInterval;
         int timeout       = Defaults.Timeout;
+        int? readTimeout  = Defaults.readTimeout;
 
         internal X509Certificate2Collection certificates = null;
  
@@ -236,6 +237,7 @@ namespace NATS.Client
 
             subChanLen = o.subChanLen;
             timeout = o.timeout;
+            readTimeout = o.readTimeout;
             TLSRemoteCertificationValidationCallback = o.TLSRemoteCertificationValidationCallback;
 
             if (o.certificates != null)
@@ -411,6 +413,24 @@ namespace NATS.Client
                 }
 
                 timeout = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the read timeout, in milliseconds.
+        /// </summary>
+        public int? ReadTimeout
+        {
+            get { return readTimeout; }
+            set
+            {
+                if (value <= 0)
+                {
+                    throw new ArgumentOutOfRangeException(
+                        "ReadTimeout must positive or null.");
+                }
+
+                readTimeout = value;
             }
         }
 
@@ -673,6 +693,7 @@ namespace NATS.Client
             }
             sb.AppendFormat("SubChannelLength={0};", SubChannelLength);
             sb.AppendFormat("Timeout={0};", Timeout);
+            sb.AppendFormat("ReadTimeout={0}", ReadTimeout);
             sb.AppendFormat("Pendantic={0}", Pedantic);
             sb.Append("}");
 
