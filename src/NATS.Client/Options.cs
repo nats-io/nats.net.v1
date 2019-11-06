@@ -189,6 +189,8 @@ namespace NATS.Client
         internal string token;
         internal string nkey;
 
+        internal InboxPrefixGenerator inboxPrefixGenerator;
+
         // Options can only be publicly created through 
         // ConnectionFactory.GetDefaultOptions();
         internal Options() { }
@@ -461,6 +463,16 @@ namespace NATS.Client
         {
             get { return token; }
             set { token = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets an optional inbox prefix generator to use when
+        /// generating inbox subjects for replies.
+        /// </summary>
+        public InboxPrefixGenerator InboxPrefixGenerator
+        {
+            get { return inboxPrefixGenerator; }
+            set { inboxPrefixGenerator = value; }
         }
 
         /// <summary>
