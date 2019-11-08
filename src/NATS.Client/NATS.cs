@@ -161,7 +161,7 @@ namespace NATS.Client
         // Default server pool size
         internal const int srvPoolSize = 4;
 
-        internal static readonly int? readTimeout = null;
+        internal static readonly int? handshakeReadTimeout = null;
     }
 
     /// <summary>

@@ -423,7 +423,7 @@ namespace NATS.Client
 
             string        hostName  = null;
 
-            internal void open(Srv s, int timeoutMillis, int? readTimeout)
+            internal void open(Srv s, int timeoutMillis)
             {
                 lock (mu)
                 {
@@ -456,9 +456,6 @@ namespace NATS.Client
                     client.ReceiveBufferSize = Defaults.defaultBufSize*2;
                     client.SendBufferSize    = Defaults.defaultBufSize;
                     
-                    if (readTimeout.HasValue)
-                        client.ReceiveTimeout = readTimeout.Value;
-
                     stream = client.GetStream();
 
                     // save off the hostname
@@ -534,6 +531,22 @@ namespace NATS.Client
                 {
                     if (client != null)
                         client.SendTimeout = value;
+                }
+            }
+
+            internal int ReceiveTimeout
+            {
+                get
+                {
+                    if(client == null)
+                        throw new InvalidOperationException("Connection not properly initialized.");
+
+                    return client.ReceiveTimeout;
+                }
+                set
+                {
+                    if (client != null)
+                        client.ReceiveTimeout = value;
                 }
             }
 
@@ -865,7 +878,7 @@ namespace NATS.Client
         {
             try
             {
-                conn.open(s, opts.Timeout, opts.ReadTimeout);
+                conn.open(s, opts.Timeout);
 
                 if (pending != null && bw != null)
                 {
@@ -1093,8 +1106,30 @@ namespace NATS.Client
         {
             this.status = ConnState.CONNECTING;
 
-            processExpectedInfo();
-            sendConnect();
+            if (opts.HandshakeReadTimeout.HasValue)
+            {
+                var orgTimeout = conn.ReceiveTimeout;
+
+                try
+                {
+                    conn.ReceiveTimeout = opts.HandshakeReadTimeout.Value;
+                    processExpectedInfo();
+                    sendConnect();
+                }
+                catch (IOException ex)
+                {
+                    throw new NATSConnectionException("Error while performing handshake with server. See inner exception for more details.", ex);
+                }
+                finally
+                {
+                    conn.ReceiveTimeout = orgTimeout;
+                }
+            }
+            else
+            {
+                processExpectedInfo();
+                sendConnect();
+            }
 
             // .NET vs go design difference here:
             // Starting the ping timer earlier allows us
