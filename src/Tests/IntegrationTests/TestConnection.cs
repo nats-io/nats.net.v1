@@ -458,7 +458,7 @@ namespace IntegrationTests
         {
             var opts = Context.GetTestOptionsWithDefaultTimeout(Context.Server1.Port);
             opts.AllowReconnect = false;
-            opts.HandshakeReadTimeout = 500;
+            opts.Timeout = 500;
 
             using (var s = NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {

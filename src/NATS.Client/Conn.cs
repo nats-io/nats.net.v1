@@ -1106,29 +1106,21 @@ namespace NATS.Client
         {
             this.status = ConnState.CONNECTING;
 
-            if (opts.HandshakeReadTimeout.HasValue)
-            {
-                var orgTimeout = conn.ReceiveTimeout;
+            var orgTimeout = conn.ReceiveTimeout;
 
-                try
-                {
-                    conn.ReceiveTimeout = opts.HandshakeReadTimeout.Value;
-                    processExpectedInfo();
-                    sendConnect();
-                }
-                catch (IOException ex)
-                {
-                    throw new NATSConnectionException("Error while performing handshake with server. See inner exception for more details.", ex);
-                }
-                finally
-                {
-                    conn.ReceiveTimeout = orgTimeout;
-                }
-            }
-            else
+            try
             {
+                conn.ReceiveTimeout = opts.Timeout;
                 processExpectedInfo();
                 sendConnect();
+            }
+            catch (IOException ex)
+            {
+                throw new NATSConnectionException("Error while performing handshake with server. See inner exception for more details.", ex);
+            }
+            finally
+            {
+                conn.ReceiveTimeout = orgTimeout;
             }
 
             // .NET vs go design difference here:
