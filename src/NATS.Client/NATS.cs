@@ -168,20 +168,22 @@ namespace NATS.Client
     /// </summary>
     public class ConnEventArgs : EventArgs
     {
-        private Connection c;   
-            
-        internal ConnEventArgs(Connection c)
+        internal ConnEventArgs(Connection c, Exception error = null)
         {
-            this.c = c;
+            this.Conn = c;
+            this.Error = error;
         }
 
         /// <summary>
         /// Gets the <see cref="Connection"/> associated with the event.
         /// </summary>
-        public Connection Conn
-        {
-            get { return c; }
-        }
+        public Connection Conn { get; }
+
+        /// <summary>
+        /// Gets any Exception associated with the connection state change.
+        /// </summary>
+        /// <example>Could be an exception causing the connection to get disconnected.</example>
+        public Exception Error { get; }
     }
 
     /// <summary>

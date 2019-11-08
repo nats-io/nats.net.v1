@@ -1124,10 +1124,10 @@ namespace NATS.Client
                     }
                 }
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                exToThrow = e;
-                close(ConnState.DISCONNECTED, false);
+                exToThrow = ex;
+                close(ConnState.DISCONNECTED, false, ex);
                 lock (mu)
                 {
                     url = null;
@@ -1489,14 +1489,14 @@ namespace NATS.Client
         // Schedules a connection event (connected/disconnected/reconnected)
         // if non-null.
         // Caller must lock.
-        private void scheduleConnEvent(EventHandler<ConnEventArgs> connEvent)
+        private void scheduleConnEvent(EventHandler<ConnEventArgs> connEvent, Exception error = null)
         {
             // Schedule a reference to the event handler.
             EventHandler<ConnEventArgs> eh = connEvent;
             if (eh != null)
             {
                 callbackScheduler.Add(
-                    () => { eh(this, new ConnEventArgs(this)); }
+                    () => { eh(this, new ConnEventArgs(this, error)); }
                 );
             }
         }
@@ -1531,10 +1531,11 @@ namespace NATS.Client
 
                 bw = new BufferedStream(pending);
 
-                // Clear any errors.
+                //Keep ref to any error before clearing.
+                var errorForHandler = lastEx;
                 lastEx = null;
 
-                scheduleConnEvent(Opts.DisconnectedEventHandler);
+                scheduleConnEvent(Opts.DisconnectedEventHandler, errorForHandler);
 
                 // TODO:  Look at using a predicate delegate in the server pool to
                 // pass a method to, but locking is complex and would need to be
@@ -2336,7 +2337,7 @@ namespace NATS.Client
                     }
                 }
 
-                close(ConnState.CLOSED, invokeDelegates);
+                close(ConnState.CLOSED, invokeDelegates, ex);
             }
         }
 
@@ -3724,7 +3725,7 @@ namespace NATS.Client
         // desired status. Also controls whether user defined callbacks
         // will be triggered. The lock should not be held entering this
         // function. This function will handle the locking manually.
-        private void close(ConnState closeState, bool invokeDelegates)
+        private void close(ConnState closeState, bool invokeDelegates, Exception error = null)
         {
             lock (mu)
             {
@@ -3766,7 +3767,7 @@ namespace NATS.Client
                 // disconnect;
                 if (invokeDelegates && conn.isSetup())
                 {
-                    scheduleConnEvent(Opts.DisconnectedEventHandler);
+                    scheduleConnEvent(Opts.DisconnectedEventHandler, error);
                 }
 
                 // Go ahead and make sure we have flushed the outbound buffer.
@@ -3816,7 +3817,7 @@ namespace NATS.Client
 
                 if (invokeDelegates)
                 {
-                    scheduleConnEvent(opts.ClosedEventHandler);
+                    scheduleConnEvent(opts.ClosedEventHandler, error);
                 }
 
                 status = closeState;
@@ -3831,7 +3832,7 @@ namespace NATS.Client
         /// <seealso cref="State"/>
         public void Close()
         {
-            close(ConnState.CLOSED, true);
+            close(ConnState.CLOSED, true, lastEx);
             callbackScheduler.ScheduleStop();
             disableSubChannelPooling();
         }
