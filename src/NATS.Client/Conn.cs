@@ -3832,7 +3832,7 @@ namespace NATS.Client
         /// <seealso cref="State"/>
         public void Close()
         {
-            close(ConnState.CLOSED, true);
+            close(ConnState.CLOSED, true, lastEx);
             callbackScheduler.ScheduleStop();
             disableSubChannelPooling();
         }

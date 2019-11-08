@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Concurrent;
 using NATS.Client;
 using System.Threading;
 using Xunit;
@@ -95,6 +96,88 @@ namespace IntegrationTests
                 }
                 Assert.True(disconnected);
             }
+        }
+
+        [Fact]
+        public void TestErrorHandlerWhenNotAllowingReconnectErrorShouldBeProvided()
+        {
+            var closedEv = new AutoResetEvent(false);
+            var disconEv = new AutoResetEvent(false);
+            var opts = Context.GetTestOptions(Context.Server1.Port);
+            var errors = new ConcurrentQueue<Exception>();
+            opts.AllowReconnect = false;
+            opts.ClosedEventHandler = (sender, args) =>
+            {
+                if(args.Error != null)
+                    errors.Enqueue(args.Error);
+
+                closedEv.Set();
+            };
+            opts.DisconnectedEventHandler = (sender, args) =>
+            {
+                if(args.Error != null)
+                    errors.Enqueue(args.Error);
+
+                disconEv.Set();
+            };
+
+            using (var s = NATSServer.CreateFastAndVerify(Context.Server1.Port))
+            {
+                using (var cn = Context.ConnectionFactory.CreateConnection(opts))
+                {
+                    s.Bounce(1000);
+                }
+            }
+
+            Assert.True(closedEv.WaitOne(1000));
+            Assert.True(disconEv.WaitOne(1000));
+            Assert.Equal(2, errors.Count);
+        }
+
+        [Fact]
+        public void TestErrorHandlerWhenAllowingReconnectErrorShouldNotBeProvided()
+        {
+            var closedEv = new AutoResetEvent(false);
+            var disconEv = new AutoResetEvent(false);
+            var reconEv = new AutoResetEvent(false);
+            var opts = Context.GetTestOptions(Context.Server1.Port);
+            var errors = new ConcurrentQueue<Exception>();
+            opts.AllowReconnect = true;
+            opts.MaxReconnect = 1;
+            opts.ClosedEventHandler = (sender, args) =>
+            {
+                if(args.Error != null)
+                    errors.Enqueue(args.Error);
+
+                closedEv.Set();
+            };
+            opts.DisconnectedEventHandler = (sender, args) =>
+            {
+                if(args.Error != null)
+                    errors.Enqueue(args.Error);
+
+                disconEv.Set();
+            };
+            opts.ReconnectedEventHandler = (sender, args) =>
+            {
+                if(args.Error != null)
+                    errors.Enqueue(args.Error);
+
+                reconEv.Set();
+            };
+
+            using (var s = NATSServer.CreateFastAndVerify(Context.Server1.Port))
+            {
+                using (var cn = Context.ConnectionFactory.CreateConnection(opts))
+                {
+                    s.Bounce(1000);
+                    Assert.True(reconEv.WaitOne(1000));
+                }
+            }
+
+            Assert.True(closedEv.WaitOne(1000));
+            Assert.True(disconEv.WaitOne(1000));
+            Assert.Empty(errors);
         }
 
         [Fact]
