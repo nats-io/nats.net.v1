@@ -3224,11 +3224,11 @@ namespace NATS.Client
         /// <returns>A unique inbox string.</returns>
         public string NewInbox()
         {
-            var gen = opts.InboxPrefixGenerator ?? InboxPrefixGenerators.Default;
+            var prefix = opts.CustomInboxPrefix ?? IC.inboxPrefix;
 
             if (!opts.UseOldRequestStyle)
             {
-                return gen() + Guid.NewGuid().ToString("N");
+                return prefix + Guid.NewGuid().ToString("N");
             }
             else
             {
@@ -3239,7 +3239,7 @@ namespace NATS.Client
 
                 r.NextBytes(buf);
 
-                return gen() + BitConverter.ToString(buf).Replace("-","");
+                return prefix + BitConverter.ToString(buf).Replace("-","");
             }
         }
 
