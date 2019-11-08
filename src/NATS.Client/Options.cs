@@ -471,7 +471,13 @@ namespace NATS.Client
         public string CustomInboxPrefix
         {
             get { return customInboxPrefix; }
-            set { customInboxPrefix = value; }
+            set
+            {
+                if (value != null && !Subscription.IsValidSubject(value))
+                    throw new ArgumentException("Prefix would result in an invalid subject.");
+
+                customInboxPrefix = value;
+            }
         }
 
         /// <summary>

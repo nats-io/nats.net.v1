@@ -38,5 +38,19 @@ namespace UnitTests
 
             Assert.ThrowsAny<ArgumentException>(() => opts.SubscriptionBatchSize = 0);
         }
+
+        [Fact]
+        public void TestBadCustomPrefix()
+        {
+            var opts = GetDefaultOptions();
+
+            Assert.ThrowsAny<ArgumentException>(() => opts.CustomInboxPrefix = "");
+            Assert.ThrowsAny<ArgumentException>(() => opts.CustomInboxPrefix = "\r");
+            Assert.ThrowsAny<ArgumentException>(() => opts.CustomInboxPrefix = "\n");
+            Assert.ThrowsAny<ArgumentException>(() => opts.CustomInboxPrefix = "\t");
+            Assert.ThrowsAny<ArgumentException>(() => opts.CustomInboxPrefix = ".a");
+            Assert.ThrowsAny<ArgumentException>(() => opts.CustomInboxPrefix = "a.");
+            Assert.ThrowsAny<ArgumentException>(() => opts.CustomInboxPrefix = "a..a");
+        }
     }
 }
