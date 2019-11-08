@@ -455,7 +455,7 @@ namespace NATS.Client
 
                     client.ReceiveBufferSize = Defaults.defaultBufSize*2;
                     client.SendBufferSize    = Defaults.defaultBufSize;
-
+                    
                     stream = client.GetStream();
 
                     // save off the hostname
@@ -486,14 +486,12 @@ namespace NATS.Client
 
             internal static void close(TcpClient c)
             {
-                if (c != null)
-                {
 #if NET45
-                    c.Close();
+                    c?.Close();
 #else
-                    c.Dispose();
+                    c?.Dispose();
 #endif
-                }
+                c = null;
             }
 
             internal void makeTLS(Options options)
@@ -521,6 +519,7 @@ namespace NATS.Client
                     sslStream = null;
 
                     close(client);
+                    client = null;
                     throw new NATSConnectionException("TLS Authentication error", ex);
                 }
             }
@@ -531,6 +530,22 @@ namespace NATS.Client
                 {
                     if (client != null)
                         client.SendTimeout = value;
+                }
+            }
+
+            internal int ReceiveTimeout
+            {
+                get
+                {
+                    if(client == null)
+                        throw new InvalidOperationException("Connection not properly initialized.");
+
+                    return client.ReceiveTimeout;
+                }
+                set
+                {
+                    if (client != null)
+                        client.ReceiveTimeout = value;
                 }
             }
 
@@ -621,7 +636,10 @@ namespace NATS.Client
                     if (stream != null)
                         stream.Dispose();
                     if (client != null)
+                    {
                         close(client);
+                        client = null;
+                    }
 
                     disposedValue = true;
                 }
@@ -1090,8 +1108,23 @@ namespace NATS.Client
         {
             this.status = ConnState.CONNECTING;
 
-            processExpectedInfo();
-            sendConnect();
+            var orgTimeout = conn.ReceiveTimeout;
+
+            try
+            {
+                conn.ReceiveTimeout = opts.Timeout;
+                processExpectedInfo();
+                sendConnect();
+            }
+            catch (IOException ex)
+            {
+                throw new NATSConnectionException("Error while performing handshake with server. See inner exception for more details.", ex);
+            }
+            finally
+            {
+                if(conn.isSetup())
+                    conn.ReceiveTimeout = orgTimeout;
+            }
 
             // .NET vs go design difference here:
             // Starting the ping timer earlier allows us

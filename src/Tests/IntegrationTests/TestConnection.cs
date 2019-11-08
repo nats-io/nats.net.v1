@@ -536,6 +536,22 @@ namespace IntegrationTests
             }
         }
 
+        [Fact]
+        public void CanConnectWhenHandshakeTimeoutIsSpecified()
+        {
+            var opts = Context.GetTestOptionsWithDefaultTimeout(Context.Server1.Port);
+            opts.AllowReconnect = false;
+            opts.Timeout = 500;
+
+            using (var s = NATSServer.CreateFastAndVerify(Context.Server1.Port))
+            {
+                using (var cn = Context.ConnectionFactory.CreateConnection(opts))
+                {
+                    Assert.False(cn.IsClosed());
+                }
+            }
+        }
+
         /// NOT IMPLEMENTED:
         /// TestErrOnMaxPayloadLimit
     }
