@@ -486,14 +486,12 @@ namespace NATS.Client
 
             internal static void close(TcpClient c)
             {
-                if (c != null)
-                {
 #if NET45
-                    c.Close();
+                    c?.Close();
 #else
-                    c.Dispose();
+                    c?.Dispose();
 #endif
-                }
+                c = null;
             }
 
             internal void makeTLS(Options options)
@@ -521,6 +519,7 @@ namespace NATS.Client
                     sslStream = null;
 
                     close(client);
+                    client = null;
                     throw new NATSConnectionException("TLS Authentication error", ex);
                 }
             }
@@ -637,7 +636,10 @@ namespace NATS.Client
                     if (stream != null)
                         stream.Dispose();
                     if (client != null)
+                    {
                         close(client);
+                        client = null;
+                    }
 
                     disposedValue = true;
                 }
@@ -1120,7 +1122,8 @@ namespace NATS.Client
             }
             finally
             {
-                conn.ReceiveTimeout = orgTimeout;
+                if(conn.isSetup())
+                    conn.ReceiveTimeout = orgTimeout;
             }
 
             // .NET vs go design difference here:
