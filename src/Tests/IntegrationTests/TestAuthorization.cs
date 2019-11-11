@@ -127,6 +127,29 @@ namespace IntegrationTests
             }
         }
 
+        [Fact]
+        public void TestCallbackIsPerformedOnAuthFailure()
+        {
+            var cbEvent = new AutoResetEvent(false);
+            var opts = Context.GetTestOptionsWithDefaultTimeout(Context.Server1.Port);
+            opts.Url = $"nats://username:badpass@localhost:{Context.Server1.Port}";
+
+            opts.AsyncErrorEventHandler += (sender, args) =>
+            {
+                cbEvent.Set();
+            };
+
+            using (NATSServer.CreateWithConfig(Context.Server1.Port, "auth.conf"))
+            {
+                Assert.Throws<NATSConnectionException>(() =>
+                {
+                    using (var cn = Context.ConnectionFactory.CreateConnection(opts)) { }
+                });
+            }
+
+            Assert.True(cbEvent.WaitOne(1000));
+        }
+
 #if NET452
         [Fact]
         public void TestReconnectAuthTimeoutLateClose()

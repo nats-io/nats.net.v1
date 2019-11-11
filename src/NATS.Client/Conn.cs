@@ -1147,13 +1147,44 @@ namespace NATS.Client
             try
             {
                 exToThrow = null;
-                lock (mu)
+
+                NATSConnectionException natsAuthEx = null;
+
+                for(var i = 0; i < 10; i++) //Precaution to not end up in server returning ExTypeA, ExTypeB, ExTypeA etc.
                 {
-                    if (createConn(s))
+                    try
                     {
-                        processConnectInit();
-                        exToThrow = null;
-                        return true;
+                        lock (mu)
+                        {
+                            if (!createConn(s))
+                                return false;
+
+                            processConnectInit();
+                            exToThrow = null;
+
+                            return true;
+                        }
+                    }
+                    catch (NATSConnectionException ex)
+                    {
+                        if (!ex.IsAuthorizationViolationError() && !ex.IsAuthenticationExpiredError())
+                            throw;
+
+                        var aseh = opts.AsyncErrorEventHandler;
+                        if (aseh != null)
+                        {
+                            callbackScheduler.Add(
+                                () => { aseh(s, new ErrEventArgs(this, null, ex.Message)); }
+                            );
+                        }
+
+                        if (natsAuthEx == null || !natsAuthEx.Message.Equals(ex.Message, StringComparison.OrdinalIgnoreCase))
+                        {
+                            natsAuthEx = ex;
+                            continue;
+                        }
+
+                        throw;
                     }
                 }
             }
@@ -1425,7 +1456,7 @@ namespace NATS.Client
                 else if (result.StartsWith(IC._ERR_OP_))
                 {
                     throw new NATSConnectionException(
-                        result.Substring(IC._ERR_OP_.Length));
+                        result.Substring(IC._ERR_OP_.Length).TrimStart(' '));
                 }
                 else
                 {
