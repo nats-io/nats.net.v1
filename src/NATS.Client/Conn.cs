@@ -3258,9 +3258,11 @@ namespace NATS.Client
         /// <returns>A unique inbox string.</returns>
         public string NewInbox()
         {
+            var prefix = opts.CustomInboxPrefix ?? IC.inboxPrefix;
+
             if (!opts.UseOldRequestStyle)
             {
-                return IC.inboxPrefix + Guid.NewGuid().ToString("N");
+                return prefix + Guid.NewGuid().ToString("N");
             }
             else
             {
@@ -3271,7 +3273,7 @@ namespace NATS.Client
 
                 r.NextBytes(buf);
 
-                return IC.inboxPrefix + BitConverter.ToString(buf).Replace("-","");
+                return prefix + BitConverter.ToString(buf).Replace("-","");
             }
         }
 

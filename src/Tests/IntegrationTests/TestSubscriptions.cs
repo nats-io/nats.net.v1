@@ -1056,6 +1056,43 @@ namespace IntegrationTests
         }
 
         [Fact]
+        public void TestRespondWithCustomInbox()
+        {
+            var opts = Context.GetTestOptionsWithDefaultTimeout(Context.Server1.Port);
+            opts.CustomInboxPrefix = "_TEST.";
+
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
+            {
+                using (var cn = Context.ConnectionFactory.CreateConnection(opts))
+                using (var requestSub = cn.SubscribeSync("foo"))
+                {
+                    var replyTo = cn.NewInbox();
+                    Assert.StartsWith("_TEST.", replyTo);
+
+                    using (var responderSub = cn.SubscribeSync(replyTo))
+                    {
+                        cn.Publish("foo", replyTo, SamplePayload.Random());
+
+                        var request = requestSub.NextMessage(1000);
+                        Assert.NotNull(request);
+                        Assert.Equal(replyTo, request.Reply);
+
+                        var reply = SamplePayload.Random();
+                        request.Respond(reply);
+
+                        var response = responderSub.NextMessage(1000);
+                        Assert.NotNull(response);
+                        Assert.Equal(replyTo, response.Subject);
+                        Assert.Equal(reply, response.Data);
+
+                        requestSub.Unsubscribe();
+                        responderSub.Unsubscribe();
+                    }
+                }
+            }
+        }
+
+        [Fact]
         public void TestRespondWithAutoUnsubscribe()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))

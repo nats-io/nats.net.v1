@@ -189,6 +189,8 @@ namespace NATS.Client
         internal string token;
         internal string nkey;
 
+        internal string customInboxPrefix;
+
         // Options can only be publicly created through 
         // ConnectionFactory.GetDefaultOptions();
         internal Options() { }
@@ -222,6 +224,7 @@ namespace NATS.Client
             verbose = o.verbose;
             subscriberDeliveryTaskCount = o.subscriberDeliveryTaskCount;
             subscriptionBatchSize = o.subscriptionBatchSize;
+            customInboxPrefix = o.customInboxPrefix;
 
             if (o.url != null)
             {
@@ -461,6 +464,21 @@ namespace NATS.Client
         {
             get { return token; }
             set { token = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets a custom inbox prefix.
+        /// </summary>
+        public string CustomInboxPrefix
+        {
+            get => customInboxPrefix;
+            set
+            {
+                if (value != null && !Subscription.IsValidPrefix(value))
+                    throw new ArgumentException("Prefix would result in an invalid subject.");
+
+                customInboxPrefix = value;
+            }
         }
 
         /// <summary>

@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System;
+using System.Reflection.Emit;
 using NATS.Client;
 using Xunit;
 
@@ -37,6 +38,32 @@ namespace UnitTests
             Assert.ThrowsAny<ArgumentException>(() => opts.SubscriptionBatchSize = -1);
 
             Assert.ThrowsAny<ArgumentException>(() => opts.SubscriptionBatchSize = 0);
+        }
+
+        [Theory]
+        [InlineData("")]
+        [InlineData("\r")]
+        [InlineData("\n")]
+        [InlineData("\t")]
+        [InlineData("Test")]
+        [InlineData(".Test.")]
+        public void TestBadCustomPrefix(string customPrefix)
+        {
+            var opts = GetDefaultOptions();
+
+            Assert.ThrowsAny<ArgumentException>(() => opts.CustomInboxPrefix = customPrefix);
+        }
+
+        [Theory]
+        [InlineData("Test.")]
+        [InlineData("Test.SubTest.")]
+        [InlineData("_Test.")]
+        [InlineData("_Test.SubTest.")]
+        public void TestOkCustomPrefix(string customPrefix)
+        {
+            var opts = GetDefaultOptions();
+
+            opts.CustomInboxPrefix = customPrefix;
         }
     }
 }
