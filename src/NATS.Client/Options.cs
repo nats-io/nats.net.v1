@@ -224,6 +224,7 @@ namespace NATS.Client
             verbose = o.verbose;
             subscriberDeliveryTaskCount = o.subscriberDeliveryTaskCount;
             subscriptionBatchSize = o.subscriptionBatchSize;
+            customInboxPrefix = o.customInboxPrefix;
 
             if (o.url != null)
             {
@@ -470,10 +471,10 @@ namespace NATS.Client
         /// </summary>
         public string CustomInboxPrefix
         {
-            get { return customInboxPrefix; }
+            get => customInboxPrefix;
             set
             {
-                if (value != null && !Subscription.IsValidSubject(value))
+                if (value != null && !Subscription.IsValidPrefix(value))
                     throw new ArgumentException("Prefix would result in an invalid subject.");
 
                 customInboxPrefix = value;

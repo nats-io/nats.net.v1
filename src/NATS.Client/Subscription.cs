@@ -699,6 +699,19 @@ namespace NATS.Client
         }
 
         /// <summary>
+        /// Checks if a prefix is valid.
+        /// </summary>
+        /// <param name="prefix"></param>
+        /// <returns></returns>
+        public static bool IsValidPrefix(string prefix)
+        {
+            if (ContainsInvalidChars(prefix))
+                return false;
+
+            return !prefix.StartsWith(".") && prefix.EndsWith(".");
+        }
+
+        /// <summary>
         /// Checks if the queue group name is valid.
         /// </summary>
         /// <param name="queueGroup"></param>
