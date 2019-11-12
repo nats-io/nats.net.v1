@@ -171,9 +171,9 @@ namespace NATS.Client
             public InFlightRequest(CancellationToken token, int timeout)
             {
                 this.Waiter = new TaskCompletionSource<Msg>();
-                if (token != default(CancellationToken))
+                if (token != CancellationToken.None)
                 {
-                    token.Register(() => this.Waiter.TrySetCanceled());
+                    tokenCancelledRegistration = token.Register(() => this.Waiter.TrySetCanceled());
 
                     if (timeout > 0)
                     {
@@ -207,6 +207,7 @@ namespace NATS.Client
             public TaskCompletionSource<Msg> Waiter { get; private set; }
 
             private CancellationTokenRegistration tokenRegistration;
+            private CancellationTokenRegistration tokenCancelledRegistration;
             private CancellationTokenRegistration timeoutTokenRegistration;
             private readonly CancellationTokenSource linkedTokenSource;
             private readonly CancellationTokenSource tokenSource;
@@ -219,6 +220,7 @@ namespace NATS.Client
             public void Dispose()
             {
                 this.timeoutTokenRegistration.Dispose();
+                this.tokenCancelledRegistration.Dispose();
                 this.tokenRegistration.Dispose();
                 this.linkedTokenSource?.Dispose();
                 this.tokenSource?.Dispose();
