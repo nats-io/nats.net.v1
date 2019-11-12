@@ -76,10 +76,10 @@ namespace WinFormsSample
                 var payload = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString("N"));
 
                 var numOfMessages = numMessages.Value;
-                var configAwait = chkConfigureAwait.Checked;
+                var configAwaitFalse = chkConfigureAwaitFalse.Checked;
 
                 for (var i = 0; i < numOfMessages; i++)
-                    await _pubConnection.RequestAsync(Subject, payload, _cts.Token).ConfigureAwait(configAwait);
+                    await _pubConnection.RequestAsync(Subject, payload, _cts.Token).ConfigureAwait(!configAwaitFalse);
             }));
 
             static Options GetOptions()
@@ -124,12 +124,12 @@ namespace WinFormsSample
             if (scenario == null)
                 return;
 
-            var configAwait = chkConfigureAwait.Checked;
+            var configAwaitFalse = chkConfigureAwaitFalse.Checked;
             var requester = scenario.Action();
 
             try
             {
-                await requester.ConfigureAwait(configAwait);
+                await requester.ConfigureAwait(!configAwaitFalse);
             }
             catch
             {

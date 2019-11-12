@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.chkConfigureAwait = new System.Windows.Forms.CheckBox();
+            this.chkConfigureAwaitFalse = new System.Windows.Forms.CheckBox();
             this.chkUseOldRequestStyle = new System.Windows.Forms.CheckBox();
             this.numMessages = new System.Windows.Forms.NumericUpDown();
             ((System.ComponentModel.ISupportInitialize)(this.numMessages)).BeginInit();
@@ -38,13 +38,13 @@
             // 
             // chkConfigureAwait
             // 
-            this.chkConfigureAwait.AutoSize = true;
-            this.chkConfigureAwait.Location = new System.Drawing.Point(12, 139);
-            this.chkConfigureAwait.Name = "chkConfigureAwait";
-            this.chkConfigureAwait.Size = new System.Drawing.Size(97, 17);
-            this.chkConfigureAwait.TabIndex = 2;
-            this.chkConfigureAwait.Text = "ConfigureAwait";
-            this.chkConfigureAwait.UseVisualStyleBackColor = true;
+            this.chkConfigureAwaitFalse.AutoSize = true;
+            this.chkConfigureAwaitFalse.Location = new System.Drawing.Point(12, 139);
+            this.chkConfigureAwaitFalse.Name = "chkConfigureAwaitFalse";
+            this.chkConfigureAwaitFalse.Size = new System.Drawing.Size(97, 17);
+            this.chkConfigureAwaitFalse.TabIndex = 2;
+            this.chkConfigureAwaitFalse.Text = "ConfigureAwait(false)";
+            this.chkConfigureAwaitFalse.UseVisualStyleBackColor = true;
             // 
             // numMessages
             // 
@@ -99,7 +99,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(264, 348);
-            this.Controls.Add(this.chkConfigureAwait);
+            this.Controls.Add(this.chkConfigureAwaitFalse);
             this.Controls.Add(this.chkUseOldRequestStyle);
             this.Controls.Add(this.numMessages);
             this.Controls.Add(this.lstScenarios);
@@ -115,7 +115,7 @@
 
         #endregion
 
-        private System.Windows.Forms.CheckBox chkConfigureAwait;
+        private System.Windows.Forms.CheckBox chkConfigureAwaitFalse;
         private System.Windows.Forms.CheckBox chkUseOldRequestStyle;
         private System.Windows.Forms.NumericUpDown numMessages;
         private System.Windows.Forms.Button btnRun;
