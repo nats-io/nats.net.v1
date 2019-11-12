@@ -30,7 +30,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QueueGroup", "Samples\Queue
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmark", "Samples\Benchmark\Benchmark.csproj", "{8BC71128-1FC5-4126-9582-41223E96C2CA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxSample", "Samples\RxSample\RxSample.csproj", "{C21CBF59-9884-436C-8A24-0248F8598979}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RxSample", "Samples\RxSample\RxSample.csproj", "{C21CBF59-9884-436C-8A24-0248F8598979}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinFormsSample", "Samples\WinFormsSample\WinFormsSample.csproj", "{10ED0146-1701-4BC9-9E26-824B22D18CB8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -78,6 +80,10 @@ Global
 		{C21CBF59-9884-436C-8A24-0248F8598979}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C21CBF59-9884-436C-8A24-0248F8598979}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C21CBF59-9884-436C-8A24-0248F8598979}.Release|Any CPU.Build.0 = Release|Any CPU
+		{10ED0146-1701-4BC9-9E26-824B22D18CB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{10ED0146-1701-4BC9-9E26-824B22D18CB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{10ED0146-1701-4BC9-9E26-824B22D18CB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{10ED0146-1701-4BC9-9E26-824B22D18CB8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -92,6 +98,7 @@ Global
 		{2F052465-A58D-4670-8600-24CCB2F220A5} = {776C2E80-958B-4C0D-BCC4-67D39DB4570B}
 		{8BC71128-1FC5-4126-9582-41223E96C2CA} = {776C2E80-958B-4C0D-BCC4-67D39DB4570B}
 		{C21CBF59-9884-436C-8A24-0248F8598979} = {776C2E80-958B-4C0D-BCC4-67D39DB4570B}
+		{10ED0146-1701-4BC9-9E26-824B22D18CB8} = {776C2E80-958B-4C0D-BCC4-67D39DB4570B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0972F03C-E4DF-483A-B767-9216F4434F11}
