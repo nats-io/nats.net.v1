@@ -1150,7 +1150,7 @@ namespace NATS.Client
 
                 NATSConnectionException natsAuthEx = null;
 
-                for(var i = 0; i < 10; i++) //Precaution to not end up in server returning ExTypeA, ExTypeB, ExTypeA etc.
+                for(var i = 0; i < 6; i++) //Precaution to not end up in server returning ExTypeA, ExTypeB, ExTypeA etc.
                 {
                     try
                     {
@@ -1172,11 +1172,7 @@ namespace NATS.Client
 
                         var aseh = opts.AsyncErrorEventHandler;
                         if (aseh != null)
-                        {
-                            callbackScheduler.Add(
-                                () => { aseh(s, new ErrEventArgs(this, null, ex.Message)); }
-                            );
-                        }
+                            callbackScheduler.Add(() => aseh(s, new ErrEventArgs(this, null, ex.Message)));
 
                         if (natsAuthEx == null || !natsAuthEx.Message.Equals(ex.Message, StringComparison.OrdinalIgnoreCase))
                         {
