@@ -132,7 +132,7 @@ namespace IntegrationTests
         private void createProcessStartInfo()
         {
             psInfo = new ProcessStartInfo(SERVEREXE);
-            psInfo.UseShellExecute = false;
+            psInfo.UseShellExecute = Debug || !HideWindow;
 
             if (Debug)
             {

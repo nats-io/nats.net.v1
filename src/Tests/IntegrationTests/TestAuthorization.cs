@@ -127,6 +127,68 @@ namespace IntegrationTests
             }
         }
 
+        [Fact]
+        public void TestCallbackIsPerformedOnAuthFailure()
+        {
+            var cbEvent = new AutoResetEvent(false);
+            var opts = Context.GetTestOptionsWithDefaultTimeout(Context.Server1.Port);
+            opts.Url = $"nats://username:badpass@localhost:{Context.Server1.Port}";
+
+            opts.AsyncErrorEventHandler += (sender, args) =>
+            {
+                cbEvent.Set();
+            };
+
+            using (NATSServer.CreateWithConfig(Context.Server1.Port, "auth.conf"))
+            {
+                var ex = Assert.Throws<NATSConnectionException>(() =>
+                {
+                    using (var cn = Context.ConnectionFactory.CreateConnection(opts)) { }
+                });
+                Assert.Equal("'Authorization Violation'", ex.Message, StringComparer.OrdinalIgnoreCase);
+            }
+
+            Assert.True(cbEvent.WaitOne(1000));
+        }
+
+        [Fact]
+        public void TestExpiredJwt()
+        {
+            var expiredUserJwt 
+                = "eyJ0eXAiOiJqd3QiLCJhbGciOiJlZDI1NTE5In0.eyJleHAiOjE1NDg5NzkyMDAs" +
+                  "Imp0aSI6IlhURFdZUVc3QldDNzJSR0RaVzNWMlNGQUxFRklCWlRKRkZLWDRTVEpa" +
+                  "TVZYWFFBSk01WVEiLCJpYXQiOjE1NzM1NDMyNjYsImlzcyI6IkFBNTVENUw1S0sz" +
+                  "WElJNklLSDc0Vk5CUDNTVjNKWUxVQlRKTkxTVEM2NjJKTDZWN0FPWk9GT0NIIiwi" +
+                  "bmFtZSI6IlRlc3RVc2VyIiwibmJmIjoxNTQ2MzAwODAwLCJzdWIiOiJVRDZPVUNS" +
+                  "T1VEQTZBTTdZMjMySTRLTFVGWU40TTNPWUxJWFhVU0FNTzVQT1RVMkpaVjNVNzY3" +
+                  "SiIsInR5cGUiOiJ1c2VyIiwibmF0cyI6eyJwdWIiOnt9LCJzdWIiOnt9fX0.n81V" +
+                  "bNLwtYMRYfUDbLgnn0MzFL3imxlEk0PQSzOxQpB_nBkVKvRUtbnd22iS8S9i_HRO" +
+                  "FJXfk26xEoOhYtCACg";
+
+            var userSeed = "SUAIBDPBAUTWCWBKIO6XHQNINK5FWJW4OHLXC3HQ2KFE4PEJUA44CNHTC4A";
+    
+            using (NATSServer.CreateWithConfig(Context.Server1.Port, "operator.conf"))
+            {
+                EventHandler<UserJWTEventArgs> jwtEh = (sender, args) => args.JWT = expiredUserJwt;
+                EventHandler<UserSignatureEventArgs> sigEh = (sender, args) =>
+                {
+                    // generate a nats key pair from a private key.
+                    // NEVER EVER handle a real private key/seed like this.
+                    var kp = Nkeys.FromSeed(userSeed);
+                    args.SignedNonce = kp.Sign(args.ServerNonce);
+                };
+                var opts = Context.GetTestOptionsWithDefaultTimeout(Context.Server1.Port);
+                opts.SetUserCredentialHandlers(jwtEh, sigEh);
+
+                var ex = Assert.Throws<NATSConnectionException>(() =>
+                {
+                    using(Context.ConnectionFactory.CreateConnection(opts)){ }
+                });
+
+                Assert.Equal("'Authorization Violation'", ex.Message, StringComparer.OrdinalIgnoreCase);
+            }
+        }
+
 #if NET452
         [Fact]
         public void TestReconnectAuthTimeoutLateClose()

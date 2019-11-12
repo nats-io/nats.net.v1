@@ -35,6 +35,15 @@ namespace NATS.Client
         internal NATSConnectionException(string err, Exception innerEx) : base(err, innerEx) { }
     }
 
+    internal static class NATSConnectionExceptionExtensions
+    {
+        internal static bool IsAuthorizationViolationError(this NATSConnectionException ex)
+            => ex?.Message.Equals("'authorization violation'", StringComparison.OrdinalIgnoreCase) == true;
+        
+        internal static bool IsAuthenticationExpiredError(this NATSConnectionException ex)
+            => ex?.Message.Equals("'authentication expired'", StringComparison.OrdinalIgnoreCase) == true;
+    }
+
     /// <summary>
     /// The exception that is thrown when there is an error writing
     /// to the internal reconnect buffer.
