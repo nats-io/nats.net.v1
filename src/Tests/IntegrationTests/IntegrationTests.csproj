@@ -5,7 +5,7 @@
     <TargetFrameworks Condition="'$(IsWindows)'=='false'">netcoreapp3.0;netcoreapp2.2</TargetFrameworks>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-    <Configurations>Debug;Release;LinuxRelease</Configurations>
+    <Configurations>Debug;Release;LinuxRelease;LinuxDebug</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

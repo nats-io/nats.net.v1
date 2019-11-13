@@ -7,7 +7,7 @@
     <Title>NATS Requestor</Title>
     <Description>NATS Requestor Example</Description>
     <IsPackable>false</IsPackable>
-    <Configurations>Debug;Release;LinuxRelease</Configurations>
+    <Configurations>Debug;Release;LinuxRelease;LinuxDebug</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

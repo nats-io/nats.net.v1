@@ -7,7 +7,7 @@
     <Title>NATS Subscriber</Title>
     <Description>NATS Subscriber Example</Description>
     <IsPackable>false</IsPackable>
-    <Configurations>Debug;Release;LinuxRelease</Configurations>
+    <Configurations>Debug;Release;LinuxRelease;LinuxDebug</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

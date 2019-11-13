@@ -12,7 +12,7 @@
     <PackageReleaseNotes>https://github.com/nats-io/nats.net/releases</PackageReleaseNotes>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageTags>CNCF NATS Messaging Cloud Publish Subscribe PubSub</PackageTags>
-    <Configurations>Debug;Release;LinuxRelease</Configurations>
+    <Configurations>Debug;Release;LinuxRelease;LinuxDebug</Configurations>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
