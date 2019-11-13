@@ -1,5 +1,18 @@
 <Project>
   <PropertyGroup>
+    <IsWindows Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">true</IsWindows>
+    <IsWindows Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'false'">false</IsWindows>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IsWindows)'=='true'">
+    <DefineConstants>Windows</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IsWindows)'=='false'">
+    <DefineConstants>Linux</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <Version>0.0.0</Version>
     <Company>CNCF</Company>
     <Authors>The NATS Authors</Authors>

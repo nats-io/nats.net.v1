@@ -2,10 +2,12 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>netcoreapp2.2;net45</TargetFrameworks>
+    <TargetFrameworks Condition="'$(IsWindows)'=='true'">netcoreapp2.2;net45</TargetFrameworks>
+    <TargetFrameworks Condition="'$(IsWindows)'=='false'">netcoreapp2.2;</TargetFrameworks>
     <Title>NATS Publisher</Title>
     <Description>NATS Publish Example</Description>
     <IsPackable>false</IsPackable>
+    <Configurations>Debug;Release;LinuxRelease</Configurations>
   </PropertyGroup>
 
   <ItemGroup>
