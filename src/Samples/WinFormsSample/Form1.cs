@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,10 +24,10 @@ namespace WinFormsSample
 
     public partial class Form1 : Form
     {
-        private IConnection _subConnection;
-        private IConnection _pubConnection;
-        private Task _responder;
-        private CancellationTokenSource _cts;
+        private IConnection subConnection;
+        private IConnection pubConnection;
+        private Task responder;
+        private CancellationTokenSource cts;
 
         private const string Subject = "queue";
 
@@ -37,24 +38,25 @@ namespace WinFormsSample
 
         private void ResponderWork()
         {
-            using (var s = _subConnection.SubscribeSync(Subject))
+            using (var s = subConnection.SubscribeSync(Subject))
             {
-                while (!_cts.IsCancellationRequested)
+                while (!cts.IsCancellationRequested)
                 {
                     var m = s.NextMessage();
 
-                    if (!_cts.IsCancellationRequested)
+                    if (!cts.IsCancellationRequested)
                     {
-                        _subConnection.Publish(m.Reply, m.Data);
-                        _subConnection.Flush();
+                        subConnection.Publish(m.Reply, m.Data);
+                        subConnection.Flush();
                     }
                 }
             }
         }
 
-        private void Form1_Load(object sender, EventArgs e)
+        private void InitializeScenarios()
         {
-            _cts = new CancellationTokenSource();
+            if(lstScenarios.Items.Count > 0)
+                return;
 
             lstScenarios.Items.Add(new Scenario("Request", () =>
             {
@@ -65,10 +67,10 @@ namespace WinFormsSample
                     var numOfMessages = numMessages.Value;
                     for (var i = 0; i < numOfMessages; i++)
                     {
-                        if (!_cts.IsCancellationRequested)
-                            _pubConnection.Request(Subject, payload);
+                        if (!cts.IsCancellationRequested)
+                            pubConnection.Request(Subject, payload);
                     }
-                }, _cts.Token);
+                }, cts.Token);
             }));
 
             lstScenarios.Items.Add(new Scenario("RequestAsync", async () =>
@@ -79,9 +81,14 @@ namespace WinFormsSample
                 var configAwaitFalse = chkConfigureAwaitFalse.Checked;
 
                 for (var i = 0; i < numOfMessages; i++)
-                    await _pubConnection.RequestAsync(Subject, payload, _cts.Token).ConfigureAwait(!configAwaitFalse);
+                    await pubConnection.RequestAsync(Subject, payload, cts.Token).ConfigureAwait(!configAwaitFalse);
             }));
 
+            lstScenarios.SelectedItem = lstScenarios.Items[0];
+        }
+
+        private void InitializeNats()
+        {
             static Options GetOptions()
             {
                 var options = ConnectionFactory.GetDefaultOptions();
@@ -97,43 +104,67 @@ namespace WinFormsSample
             var pubOptions = GetOptions();
 
             var cnFac = new ConnectionFactory();
-            _subConnection = cnFac.CreateConnection(subOptions);
-            _pubConnection = cnFac.CreateConnection(pubOptions);
+            subConnection = cnFac.CreateConnection(subOptions);
+            pubConnection = cnFac.CreateConnection(pubOptions);
 
-            _responder = Task.Factory.StartNew(
+            responder = Task.Factory.StartNew(
                 ResponderWork,
-                _cts.Token,
+                cts.Token,
                 TaskCreationOptions.LongRunning,
                 TaskScheduler.Default);
         }
 
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            cts = new CancellationTokenSource();
+
+            InitializeScenarios();
+
+            InitializeNats();
+        }
+
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
-            _pubConnection?.Dispose();
-            _pubConnection = null;
+            static void Try(Action w)
+            {
+                try
+                {
+                    w();
+                }
+                catch
+                {
+                    // ignored
+                }
+            }
 
-            _cts.Cancel();
-
-            _subConnection?.Dispose();
-            _subConnection = null;
+            Try(() => pubConnection?.Dispose());
+            Try(() => cts?.Cancel());
+            Try(() => subConnection?.Dispose());
         }
 
         private async void btnRun_Click(object sender, EventArgs e)
         {
-            var scenario = lstScenarios.SelectedItem as Scenario;
-            if (scenario == null)
-                return;
-
-            var configAwaitFalse = chkConfigureAwaitFalse.Checked;
-            var requester = scenario.Action();
+            btnRun.Enabled = false;
 
             try
             {
+                var scenario = lstScenarios.SelectedItem as Scenario;
+                if (scenario == null)
+                    return;
+
+                var configAwaitFalse = chkConfigureAwaitFalse.Checked;
+                var requester = scenario.Action();
+
                 await requester.ConfigureAwait(!configAwaitFalse);
             }
-            catch
+            catch(Exception ex)
             {
                 // ignored
+                MessageBox.Show(ex.Message, "Operation failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                btnRun.Enabled = true;
             }
         }
     }
