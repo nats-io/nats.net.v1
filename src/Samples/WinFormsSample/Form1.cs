@@ -1,5 +1,5 @@
-﻿using System;
-using System.Linq;
+﻿#if Windows
+using System;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -169,3 +169,4 @@ namespace WinFormsSample
         }
     }
 }
+#endif
