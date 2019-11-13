@@ -1,10 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp3.0;netcoreapp2.2;net452</TargetFrameworks>
-
+    <TargetFrameworks Condition="'$(IsLinux)'=='false'">netcoreapp3.0;netcoreapp2.2;net452</TargetFrameworks>
+    <TargetFrameworks Condition="'$(IsLinux)'=='true'">netcoreapp3.0;netcoreapp2.2</TargetFrameworks>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <Configurations>Debug;Release;LinuxRelease;LinuxDebug</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

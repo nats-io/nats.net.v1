@@ -2,10 +2,12 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>netcoreapp2.2;net45</TargetFrameworks>
+    <TargetFrameworks Condition="'$(IsLinux)'=='false'">netcoreapp2.2;net45</TargetFrameworks>
+    <TargetFrameworks Condition="'$(IsLinux)'=='true'">netcoreapp2.2</TargetFrameworks>
     <Title>NATS Subscriber</Title>
     <Description>NATS Subscriber Example</Description>
     <IsPackable>false</IsPackable>
+    <Configurations>Debug;Release;LinuxRelease;LinuxDebug</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

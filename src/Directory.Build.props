@@ -1,5 +1,18 @@
 <Project>
   <PropertyGroup>
+    <IsLinux Condition="'$(Configuration)' == 'LinuxDebug' OR '$(Configuration)' == 'LinuxRelease'">true</IsLinux>
+    <IsLinux Condition="'$(Configuration)' != 'LinuxDebug' AND '$(Configuration)' != 'LinuxRelease'">false</IsLinux>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IsLinux)'=='true'">
+    <DefineConstants>Linux</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IsLinux)'=='false'">
+    <DefineConstants>Windows</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <Version>0.0.0</Version>
     <Company>CNCF</Company>
     <Authors>The NATS Authors</Authors>

@@ -1,0 +1,32 @@
+#if Windows
+using System;
+using System.Windows.Forms;
+
+namespace WinFormsSample
+{
+    static class Program
+    {
+        /// <summary>
+        ///  The main entry point for the application.
+        /// </summary>
+        [STAThread]
+        static void Main()
+        {
+            Application.SetHighDpiMode(HighDpiMode.SystemAware);
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(new Form1());
+        }
+    }
+}
+#else
+namespace WinFormsSample
+{
+    static class Program
+    {
+        static void Main()
+        {
+        }
+    }
+}
+#endif
