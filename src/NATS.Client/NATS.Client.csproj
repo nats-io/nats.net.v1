@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks Condition="'$(IsWindows)'=='true'">netstandard1.6;net45</TargetFrameworks>
-    <TargetFrameworks Condition="'$(IsWindows)'=='false'">netstandard1.6;</TargetFrameworks>
+    <TargetFrameworks Condition="'$(IsLinux)'=='false'">netstandard1.6;net45</TargetFrameworks>
+    <TargetFrameworks Condition="'$(IsLinux)'=='true'">netstandard1.6</TargetFrameworks>
     <Title>NATS .NET Client</Title>
     <Description>NATS acts as a central nervous system for distributed systems at scale for IoT, edge computing, and cloud native and on-premise applications.  This is the .NET client API.</Description>
     <PackageId>NATS.Client</PackageId>

@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks Condition="'$(IsWindows)'=='true'">netcoreapp2.2;net45</TargetFrameworks>
-    <TargetFrameworks Condition="'$(IsWindows)'=='false'">netcoreapp2.2;</TargetFrameworks>
+    <TargetFrameworks Condition="'$(IsLinux)'=='false'">netcoreapp2.2;net45</TargetFrameworks>
+    <TargetFrameworks Condition="'$(IsLinux)'=='true'">netcoreapp2.2</TargetFrameworks>
     <Title>NATS Replier</Title>
     <Description>NATS Replier Example</Description>
     <IsPackable>false</IsPackable>
