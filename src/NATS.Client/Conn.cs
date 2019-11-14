@@ -1777,10 +1777,10 @@ namespace NATS.Client
                     len = br.Read(buffer, 0, Defaults.defaultReadLength);
 
                     // A length of zero can mean that the socket was closed
-                    // locally by the appliation (Close) or the server
+                    // locally by the application (Close) or the server
                     // gracefully closed the socket.  There are some cases
                     // on windows where a server could take an exit path that
-                    // gracefully closed sockets.  Throw an exception so we
+                    // gracefully closes sockets.  Throw an exception so we
                     // can reconnect.  If the network stream has been closed
                     // by the client, processOpError will do the right thing
                     // (nothing).
