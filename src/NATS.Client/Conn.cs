@@ -1786,7 +1786,7 @@ namespace NATS.Client
                     // (nothing).
                     if (len == 0)
                     {
-                        throw new NATSConnectionException("Server closed the connection");
+                        throw new NATSConnectionException("Server closed the connection.");
                     }
 
                     parser.parse(buffer, len);
