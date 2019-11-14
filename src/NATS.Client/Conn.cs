@@ -1646,7 +1646,8 @@ namespace NATS.Client
                     try
                     {
                         // try to create a new connection
-                        createConn(cur);
+                        if(!createConn(cur))
+                            continue;
                     }
                     catch (Exception)
                     {
