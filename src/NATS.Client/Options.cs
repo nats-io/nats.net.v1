@@ -654,6 +654,7 @@ namespace NATS.Client
             sb.Append("{");
             sb.AppendFormat("AllowReconnect={0};", allowReconnect);
 
+            appendEventHandler(sb, "ReconnectedEventHandler", ReconnectedEventHandler);
             appendEventHandler(sb, "AsyncErrorEventHandler", AsyncErrorEventHandler);
             appendEventHandler(sb, "ClosedEventHandler", ClosedEventHandler);
             appendEventHandler(sb, "DisconnectedEventHandler", DisconnectedEventHandler);

@@ -284,10 +284,10 @@ namespace NATS.Client
             {
                 while (Running)
                 {
-                    Action action = tasks.get(-1);
                     try
                     {
-                        action();
+                        Action action = tasks.get(-1);
+                        action?.Invoke();
                     }
                     catch (Exception) { }
                 }
@@ -918,22 +918,27 @@ namespace NATS.Client
 
         // waitForExits will wait for all socket watcher Go routines to
         // be shutdown before proceeding.
-        private void waitForExits()
+        private void waitForExits(List<Thread> wg)
         {
             // Kick old flusher forcefully.
             setFlusherDone(true);
 
-            if (wg.Count > 0)
+            if (wg.Count == 0)
+                return;
+
+            foreach (Thread t in wg)
             {
                 try
                 {
-                    foreach (Thread t in wg)
-                    {
-                        t.Join();
-                    }
+                    t.Join(1000);
                 }
-                catch (Exception) { }
+                catch
+                {
+                    // ignored
+                }
             }
+
+            wg.Clear();
         }
 
         private void pingTimerCallback(object state)
@@ -1000,31 +1005,35 @@ namespace NATS.Client
             return prefix + "-" + name;
         }
 
+        private readonly object wgLock = new object();
+
         private void spinUpSocketWatchers()
         {
-            Thread t = null;
-
-            waitForExits();
-
-            // Ensure threads are started before we continue with
-            // ManualResetEvents.
             ManualResetEvent readLoopStartEvent = new ManualResetEvent(false);
-            t = new Thread(() => {
-                readLoopStartEvent.Set();
-                readLoop();
-            });
-            t.Start();
-            t.Name = generateThreadName("Reader");
-            wg.Add(t);
-
             ManualResetEvent flusherStartEvent = new ManualResetEvent(false);
-            t = new Thread(() => {
-                flusherStartEvent.Set();
-                flusher();
-            });
-            t.Start();
-            t.Name = generateThreadName("Flusher");
-            wg.Add(t);
+
+            lock (wgLock)
+            {
+                waitForExits(wg);
+
+                var t1 = new Thread(() =>
+                {
+                    readLoopStartEvent.Set();
+                    readLoop();
+                });
+                t1.Start();
+                t1.Name = generateThreadName("Reader");
+                wg.Add(t1);
+                
+                var t2 = new Thread(() =>
+                {
+                    flusherStartEvent.Set();
+                    flusher();
+                });
+                t2.Start();
+                t2.Name = generateThreadName("Flusher");
+                wg.Add(t2);
+            }
 
             // wait for both threads to start before continuing.
             flusherStartEvent.WaitOne(60000);
@@ -1136,11 +1145,7 @@ namespace NATS.Client
             // ping timer which can create a memory leak.
             startPingTimer();
 
-            Task.Factory.StartNew(
-                spinUpSocketWatchers,
-                CancellationToken.None,
-                TaskCreationOptions.LongRunning | TaskCreationOptions.DenyChildAttach,
-                TaskScheduler.Default);
+            spinUpSocketWatchers();
         }
 
         internal bool connect(Srv s, out Exception exToThrow)
@@ -1572,7 +1577,8 @@ namespace NATS.Client
         {
             // We want to make sure we have the other watchers shutdown properly
             // here before we proceed past this point
-            waitForExits();
+            lock(wgLock)
+                waitForExits(wg);
 
             // FIXME(dlc) - We have an issue here if we have
             // outstanding flush points (pongs) and they were not
@@ -1646,7 +1652,8 @@ namespace NATS.Client
                     try
                     {
                         // try to create a new connection
-                        createConn(cur);
+                        if(!createConn(cur))
+                            continue;
                     }
                     catch (Exception)
                     {
@@ -1766,30 +1773,32 @@ namespace NATS.Client
         {
             // Stack based buffer.
             byte[] buffer = new byte[Defaults.defaultReadLength];
-            Parser parser = new Parser(this);
-            int    len;
 
-            while (true)
+            using (var parser = new Parser(this))
             {
-                try
+                while (true)
                 {
-                    len = br.Read(buffer, 0, Defaults.defaultReadLength);
-
-                    // Socket has been closed gracefully by host
-                    if (len == 0)
+                    try
                     {
+                        var len = br.Read(buffer, 0, Defaults.defaultReadLength);
+
+                        // Socket has been closed gracefully by host
+                        if (len == 0)
+                        {
+                            break;
+                        }
+
+                        parser.parse(buffer, len);
+                    }
+                    catch (Exception e)
+                    {
+                        if (State != ConnState.CLOSED)
+                        {
+                            processOpError(e);
+                        }
+
                         break;
                     }
-
-                    parser.parse(buffer, len);
-                }
-                catch (Exception e)
-                {
-                    if (State != ConnState.CLOSED)
-                    {
-                        processOpError(e);
-                    }
-                    break;
                 }
             }
         }
@@ -2225,7 +2234,8 @@ namespace NATS.Client
                 {
                     // A spurious wakeup here is OK - we'll just do
                     // an earlier flush.
-                    Monitor.Wait(flusherLock);
+                    if (!Monitor.Wait(flusherLock, Defaults.Timeout))
+                        return true;
                 }
 
                 flusherKicked = false;
@@ -2266,8 +2276,7 @@ namespace NATS.Client
 
             while (!isFlusherDone())
             {
-                bool val = waitForFlusherKick();
-                if (val == false)
+                if (!waitForFlusherKick())
                     return;
 
                 // Yield for a millisecond.  This reduces resource contention,

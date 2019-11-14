@@ -137,7 +137,8 @@ namespace NATS.Client
                 {
                     if (timeout < 0)
                     {
-                        Monitor.Wait(qLock);
+                        if (!Monitor.Wait(qLock, Defaults.Timeout))
+                            return default;
                     }
                     else
                     {
@@ -149,7 +150,7 @@ namespace NATS.Client
 
                     // we waited, but are woken up by a finish...
                     if (finished)
-                        return default(T);
+                        return default;
 
                     // we can have an empty queue if there was a spurious wakeup.
                     if (q.Count > 0)
@@ -203,7 +204,8 @@ namespace NATS.Client
                 {
                     if (timeout < 0)
                     {
-                        Monitor.Wait(qLock);
+                        if (!Monitor.Wait(qLock, Defaults.Timeout))
+                            return 0;
                     }
                     else
                     {
