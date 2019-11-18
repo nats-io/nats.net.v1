@@ -30,7 +30,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">0.9.1</span>
+   &#160;<span id="projectnumber">0.10.0</span>
    </div>
    <div id="projectbrief">The nats.io .NET C# Client</div>
   </td>
@@ -138,6 +138,10 @@ Public Attributes</h2></td></tr>
 Static Public Attributes</h2></td></tr>
 <tr class="memitem:a3db33f1a9202060929cf2cac1b63f3a4"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a3db33f1a9202060929cf2cac1b63f3a4">ReconnectForever</a> = -1</td></tr>
 <tr class="separator:a3db33f1a9202060929cf2cac1b63f3a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3c59b6afb8a232bcf9696badbc9bd136"><td class="memItemLeft" align="right" valign="top">static readonly int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a3c59b6afb8a232bcf9696badbc9bd136">ReconnectBufferSizeUnbounded</a> = 0</td></tr>
+<tr class="separator:a3c59b6afb8a232bcf9696badbc9bd136"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abef6efbc8be65c0894eec97119964f0b"><td class="memItemLeft" align="right" valign="top">static readonly int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#abef6efbc8be65c0894eec97119964f0b">ReconnectBufferDisabled</a> = -1</td></tr>
+<tr class="separator:abef6efbc8be65c0894eec97119964f0b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="properties"></a>
 Properties</h2></td></tr>
@@ -177,12 +181,16 @@ Properties</h2></td></tr>
 <tr class="separator:a7b529b02f42f29ff4016a5b91138ba5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab82e941a962699f7aeca2a3508a7f2d7"><td class="memItemLeft" align="right" valign="top">string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#ab82e941a962699f7aeca2a3508a7f2d7">Token</a><code> [get, set]</code></td></tr>
 <tr class="separator:ab82e941a962699f7aeca2a3508a7f2d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a38491b4af261554939ef6d8d5a5219f5"><td class="memItemLeft" align="right" valign="top">string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a38491b4af261554939ef6d8d5a5219f5">CustomInboxPrefix</a><code> [get, set]</code></td></tr>
+<tr class="separator:a38491b4af261554939ef6d8d5a5219f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a030dfa5eac04072735d7529147d5c562"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a030dfa5eac04072735d7529147d5c562">SubscriberDeliveryTaskCount</a><code> [get, set]</code></td></tr>
 <tr class="separator:a030dfa5eac04072735d7529147d5c562"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4525f2afa6970381335c5dd3fc28a581"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a4525f2afa6970381335c5dd3fc28a581">SubscriptionBatchSize</a><code> [get, set]</code></td></tr>
 <tr class="separator:a4525f2afa6970381335c5dd3fc28a581"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a07bf0acb36faa43c679a19931ae01bff"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a07bf0acb36faa43c679a19931ae01bff">NoEcho</a><code> [get, set]</code></td></tr>
 <tr class="separator:a07bf0acb36faa43c679a19931ae01bff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aef893e0779e1dcf85594d10ecb9381e1"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#aef893e0779e1dcf85594d10ecb9381e1">ReconnectBufferSize</a><code> [get, set]</code></td></tr>
+<tr class="separator:aef893e0779e1dcf85594d10ecb9381e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>This class is used to setup all NATs client options. </p>
@@ -549,6 +557,56 @@ The certificate's password is incorrect.</li>
 
 </div>
 </div>
+<a id="abef6efbc8be65c0894eec97119964f0b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abef6efbc8be65c0894eec97119964f0b">&#9670;&nbsp;</a></span>ReconnectBufferDisabled</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">readonly int NATS.Client.Options.ReconnectBufferDisabled = -1</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Constant that disables the reconnect buffer. </p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#aef893e0779e1dcf85594d10ecb9381e1" title="Gets or sets the buffer size of messages kept while busy reconnecting.">ReconnectBufferSize</a></dd></dl>
+
+</div>
+</div>
+<a id="a3c59b6afb8a232bcf9696badbc9bd136"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3c59b6afb8a232bcf9696badbc9bd136">&#9670;&nbsp;</a></span>ReconnectBufferSizeUnbounded</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">readonly int NATS.Client.Options.ReconnectBufferSizeUnbounded = 0</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Constant used to sets the reconnect buffer size to unbounded. </p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#aef893e0779e1dcf85594d10ecb9381e1" title="Gets or sets the buffer size of messages kept while busy reconnecting.">ReconnectBufferSize</a></dd></dl>
+
+</div>
+</div>
 <a id="ad39b3eec90490ebaa53276fc01668d9a"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad39b3eec90490ebaa53276fc01668d9a">&#9670;&nbsp;</a></span>ReconnectedEventHandler</h2>
 
@@ -644,6 +702,30 @@ The certificate's password is incorrect.</li>
 </div><div class="memdoc">
 
 <p>Gets or sets a value indicating whether or not an <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html" title="Represents a connection to the NATS server.">IConnection</a> will attempt to reconnect to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server if a connection has been lost. </p>
+
+</div>
+</div>
+<a id="a38491b4af261554939ef6d8d5a5219f5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a38491b4af261554939ef6d8d5a5219f5">&#9670;&nbsp;</a></span>CustomInboxPrefix</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">string NATS.Client.Options.CustomInboxPrefix</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">get</span><span class="mlabel">set</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Gets or sets a custom inbox prefix. </p>
 
 </div>
 </div>
@@ -840,6 +922,32 @@ The certificate's password is incorrect.</li>
 
 </div>
 </div>
+<a id="aef893e0779e1dcf85594d10ecb9381e1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aef893e0779e1dcf85594d10ecb9381e1">&#9670;&nbsp;</a></span>ReconnectBufferSize</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">int NATS.Client.Options.ReconnectBufferSize</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">get</span><span class="mlabel">set</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Gets or sets the buffer size of messages kept while busy reconnecting. </p>
+<p>When reconnecting, the <a class="el" href="namespace_n_a_t_s.html">NATS</a> client will hold published messages that will be flushed to the new server upon a successful reconnect. The default is buffer size is 8 MB. This buffering can be disabled. </p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a3c59b6afb8a232bcf9696badbc9bd136" title="Constant used to sets the reconnect buffer size to unbounded.">ReconnectBufferSizeUnbounded</a>, <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#abef6efbc8be65c0894eec97119964f0b" title="Constant that disables the reconnect buffer.">ReconnectBufferDisabled</a></dd></dl>
+
+</div>
+</div>
 <a id="a06448007abc18cdf961a341c9ae1f9ea"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a06448007abc18cdf961a341c9ae1f9ea">&#9670;&nbsp;</a></span>ReconnectWait</h2>
 
@@ -908,7 +1016,7 @@ The certificate's password is incorrect.</li>
 </table>
 </div><div class="memdoc">
 
-<p>Gets or sets the array of servers that the NATs client will connect to. </p>
+<p>Gets or sets the array of servers that the <a class="el" href="namespace_n_a_t_s.html">NATS</a> client will connect to. </p>
 <p>The individual URLs may contain username/password information. </p>
 
 </div>

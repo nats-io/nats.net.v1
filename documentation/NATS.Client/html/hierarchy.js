@@ -36,7 +36,8 @@ var hierarchy =
       [ "NATS.Client.NATSBadSubscriptionException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_bad_subscription_exception.html", null ],
       [ "NATS.Client.NATSConnectionClosedException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_connection_closed_exception.html", null ],
       [ "NATS.Client.NATSConnectionException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_connection_exception.html", [
-        [ "NATS.Client.NATSConnectionDrainingException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_connection_draining_exception.html", null ]
+        [ "NATS.Client.NATSConnectionDrainingException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_connection_draining_exception.html", null ],
+        [ "NATS.Client.NATSReconnectBufferException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_reconnect_buffer_exception.html", null ]
       ] ],
       [ "NATS.Client.NATSMaxMessagesException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_max_messages_exception.html", null ],
       [ "NATS.Client.NATSMaxPayloadException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_max_payload_exception.html", null ],

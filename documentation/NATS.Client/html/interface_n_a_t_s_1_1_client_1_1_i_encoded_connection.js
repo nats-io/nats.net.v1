@@ -7,6 +7,7 @@ var interface_n_a_t_s_1_1_client_1_1_i_encoded_connection =
     [ "DrainAsync", "interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a49310713fcd24756ebaa2153e2f56485", null ],
     [ "Flush", "interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a6db8cb5598e959731ce2d18d05b4e49a", null ],
     [ "Flush", "interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#af6fe99de23616572792b5cb5e43f9e34", null ],
+    [ "FlushBuffer", "interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a2229ad07a9e97952b37c070a523997fd", null ],
     [ "IsClosed", "interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a27ee1b7405f0e47b1cf55fbc00cbdd0c", null ],
     [ "IsDraining", "interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a66e26ffe9344a89337de274500cc3147", null ],
     [ "IsReconnecting", "interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a54788b57a510ed37103c61d956c0ce18", null ],

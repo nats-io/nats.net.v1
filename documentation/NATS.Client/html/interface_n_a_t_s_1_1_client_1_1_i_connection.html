@@ -30,7 +30,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">0.9.1</span>
+   &#160;<span id="projectnumber">0.10.0</span>
    </div>
    <div id="projectbrief">The nats.io .NET C# Client</div>
   </td>
@@ -158,6 +158,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a491851ff65f7f9e49dd1a62992d7a05d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6aa942af0cea9db31b4487f38f7fd241"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a6aa942af0cea9db31b4487f38f7fd241">Flush</a> ()</td></tr>
 <tr class="separator:a6aa942af0cea9db31b4487f38f7fd241"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a08fe4b734c46ab2585aad5fb2f1155ac"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a08fe4b734c46ab2585aad5fb2f1155ac">FlushBuffer</a> ()</td></tr>
+<tr class="separator:a08fe4b734c46ab2585aad5fb2f1155ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a168251a7112d288d198fbb32515649ed"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a168251a7112d288d198fbb32515649ed">Close</a> ()</td></tr>
 <tr class="separator:a168251a7112d288d198fbb32515649ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8bccbc575b9550dd6ef9788866b4e47d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a8bccbc575b9550dd6ef9788866b4e47d">IsClosed</a> ()</td></tr>
@@ -384,6 +386,34 @@ Properties</h2></td></tr>
 
 </div>
 </div>
+<a id="a08fe4b734c46ab2585aad5fb2f1155ac"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a08fe4b734c46ab2585aad5fb2f1155ac">&#9670;&nbsp;</a></span>FlushBuffer()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void NATS.Client.IConnection.FlushBuffer </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Immediately flushes the underlying connection buffer if the connection is valid. </p>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_connection_closed_exception.html" title="The exception that is thrown when a an operation is performed on a connection that is closed.">NATSConnectionClosedException</a></td><td>The <a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html" title="Connection represents a bare connection to a NATS server. Users should create an IConnection instance...">Connection</a> is closed.</td></tr>
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_exception.html" title="The exception that is thrown when there is a NATS error condition. All NATS exception inherit from th...">NATSException</a></td><td>There was an unexpected exception performing an internal <a class="el" href="namespace_n_a_t_s.html">NATS</a> call while executing the request. See Exception.InnerException for more details.</td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p>Implemented in <a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#a225a616781d8b13c57ec0193eff2fe5f">NATS.Client.Connection</a>.</p>
+
+</div>
+</div>
 <a id="a8bccbc575b9550dd6ef9788866b4e47d"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a8bccbc575b9550dd6ef9788866b4e47d">&#9670;&nbsp;</a></span>IsClosed()</h2>
 
@@ -541,6 +571,13 @@ Properties</h2></td></tr>
   </table>
   </dd>
 </dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_reconnect_buffer_exception.html" title="The exception that is thrown when there is an error writing to the internal reconnect buffer.">NATSReconnectBufferException</a></td><td>is thrown when publishing while reconnecting and the internal reconnect buffer has been disabled or exceeded.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#aef893e0779e1dcf85594d10ecb9381e1" title="Gets or sets the buffer size of messages kept while busy reconnecting.">Options.ReconnectBufferSize</a></dd></dl>
 
 <p>Implemented in <a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#a26f31f03e9c61ad7db39dda563b1a9f6">NATS.Client.Connection</a>.</p>
 
