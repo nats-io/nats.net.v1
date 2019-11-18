@@ -18,6 +18,10 @@ using System.Linq;
 
 namespace NATS.Client.Rx
 {
+    /// <summary>
+    /// Base-class for basing observable solutions upon.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public abstract class NATSObservable<T> : INATSObservable<T>
     {
         private readonly ConcurrentDictionary<int, ObserverSubscription> subscriptions = new ConcurrentDictionary<int, ObserverSubscription>();
@@ -64,6 +68,11 @@ namespace NATS.Client.Rx
             }
         }
 
+        /// <summary>
+        /// Subscribes sent observer to the observable stream.
+        /// </summary>
+        /// <param name="observer">The Observer to invoke when messages arrive.</param>
+        /// <returns>Subscription. Dispose when done consuming.</returns>
         public IDisposable Subscribe(IObserver<T> observer)
         {
             if (observer == null)

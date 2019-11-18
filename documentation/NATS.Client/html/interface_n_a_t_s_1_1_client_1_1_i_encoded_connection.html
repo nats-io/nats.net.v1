@@ -30,7 +30,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">0.9.1</span>
+   &#160;<span id="projectnumber">0.10.0</span>
    </div>
    <div id="projectbrief">The nats.io .NET C# Client</div>
   </td>
@@ -125,6 +125,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:af6fe99de23616572792b5cb5e43f9e34"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6db8cb5598e959731ce2d18d05b4e49a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a6db8cb5598e959731ce2d18d05b4e49a">Flush</a> ()</td></tr>
 <tr class="separator:a6db8cb5598e959731ce2d18d05b4e49a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2229ad07a9e97952b37c070a523997fd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a2229ad07a9e97952b37c070a523997fd">FlushBuffer</a> ()</td></tr>
+<tr class="separator:a2229ad07a9e97952b37c070a523997fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a166c840eb8f42cf2b022e3fe8f72fc75"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a166c840eb8f42cf2b022e3fe8f72fc75">Close</a> ()</td></tr>
 <tr class="separator:a166c840eb8f42cf2b022e3fe8f72fc75"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a27ee1b7405f0e47b1cf55fbc00cbdd0c"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a27ee1b7405f0e47b1cf55fbc00cbdd0c">IsClosed</a> ()</td></tr>
@@ -335,6 +337,32 @@ Properties</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">timeout</td><td>The number of milliseconds to wait.</td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a2229ad07a9e97952b37c070a523997fd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2229ad07a9e97952b37c070a523997fd">&#9670;&nbsp;</a></span>FlushBuffer()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void NATS.Client.IEncodedConnection.FlushBuffer </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Immediately flushes the underlying connection buffer if the connection is valid. </p>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_connection_closed_exception.html" title="The exception that is thrown when a an operation is performed on a connection that is closed.">NATSConnectionClosedException</a></td><td>The <a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html" title="Connection represents a bare connection to a NATS server. Users should create an IConnection instance...">Connection</a> is closed.</td></tr>
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_exception.html" title="The exception that is thrown when there is a NATS error condition. All NATS exception inherit from th...">NATSException</a></td><td>There was an unexpected exception performing an internal <a class="el" href="namespace_n_a_t_s.html">NATS</a> call while executing the request. See Exception.InnerException for more details.</td></tr>
   </table>
   </dd>
 </dl>

@@ -30,7 +30,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">0.9.1</span>
+   &#160;<span id="projectnumber">0.10.0</span>
    </div>
    <div id="projectbrief">The nats.io .NET C# Client</div>
   </td>
@@ -101,6 +101,8 @@ $(document).ready(function(){initNavTree('class_n_a_t_s_1_1_client_1_1_conn_even
 Properties</h2></td></tr>
 <tr class="memitem:a11345de0669fdcfe2fae5fccf96acf29"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html">Connection</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_conn_event_args.html#a11345de0669fdcfe2fae5fccf96acf29">Conn</a><code> [get]</code></td></tr>
 <tr class="separator:a11345de0669fdcfe2fae5fccf96acf29"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a83a9998fd0824b3c326ecfbeba99b435"><td class="memItemLeft" align="right" valign="top">Exception&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_conn_event_args.html#a83a9998fd0824b3c326ecfbeba99b435">Error</a><code> [get]</code></td></tr>
+<tr class="separator:a83a9998fd0824b3c326ecfbeba99b435"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Provides the details when the state of a <a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html" title="Connection represents a bare connection to a NATS server. Users should create an IConnection instance...">Connection</a> changes. </p>
@@ -126,6 +128,31 @@ Properties</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Gets the <a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html" title="Connection represents a bare connection to a NATS server. Users should create an IConnection instance...">Connection</a> associated with the event. </p>
+
+</div>
+</div>
+<a id="a83a9998fd0824b3c326ecfbeba99b435"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a83a9998fd0824b3c326ecfbeba99b435">&#9670;&nbsp;</a></span>Error</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">Exception NATS.Client.ConnEventArgs.Error</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">get</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Gets any Exception associated with the connection state change. </p>
+<p>Could be an exception causing the connection to get disconnected.</p>
 
 </div>
 </div>

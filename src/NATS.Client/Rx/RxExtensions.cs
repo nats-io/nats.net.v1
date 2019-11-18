@@ -22,9 +22,9 @@ namespace NATS.Client.Rx
         /// subscribe to the observable, no message will be handled and old messages will
         /// not be delivered, only new messages.
         /// </summary>
-        /// <param name="cn"></param>
-        /// <param name="subject"></param>
-        /// <returns></returns>
+        /// <param name="cn">Connection to observe.</param>
+        /// <param name="subject">Subject to observe.</param>
+        /// <returns>Observable stream of messages.</returns>
         public static INATSObservable<Msg> Observe(this IConnection cn, string subject)
             => (cn ?? throw new ArgumentNullException(nameof(cn))).SubscribeAsync(subject).ToObservable();
 
@@ -33,8 +33,8 @@ namespace NATS.Client.Rx
         /// subscribe to the observable, no message will be handled and old messages will
         /// not be delivered, only new messages.
         /// </summary>
-        /// <param name="subscription"></param>
-        /// <returns></returns>
+        /// <param name="subscription">Subscription to observe.</param>
+        /// <returns>Observable stream of messages.</returns>
         /// <remarks>The passed subscription will be disposed when you dispose the observable.</remarks>
         public static INATSObservable<Msg> ToObservable(this IAsyncSubscription subscription)
             => NATSObservableSubscription.Wrap(subscription);

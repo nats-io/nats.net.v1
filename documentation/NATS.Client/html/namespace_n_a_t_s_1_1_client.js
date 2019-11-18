@@ -25,6 +25,7 @@ var namespace_n_a_t_s_1_1_client =
     [ "NATSMaxPayloadException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_max_payload_exception.html", null ],
     [ "NATSNoServersException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_no_servers_exception.html", null ],
     [ "NATSProtocolException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_protocol_exception.html", null ],
+    [ "NATSReconnectBufferException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_reconnect_buffer_exception.html", null ],
     [ "NATSSecureConnRequiredException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_secure_conn_required_exception.html", null ],
     [ "NATSSecureConnWantedException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_secure_conn_wanted_exception.html", null ],
     [ "NATSSlowConsumerException", "class_n_a_t_s_1_1_client_1_1_n_a_t_s_slow_consumer_exception.html", null ],
