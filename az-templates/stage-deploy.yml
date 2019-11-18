@@ -1,3 +1,4 @@
+stages:
 - stage: Deploy
   condition: and (succeeded(), startsWith( variables['Build.SourceBranch'], 'refs/tags' ))
   dependsOn: Build
