@@ -1,0 +1,25 @@
+name: $(SemVer)
+
+variables:
+  BuildRev: $[counter(format('{0:yyyyMMdd}', pipeline.startTime), 1)]
+  SemVer: $[format('{0:yyyy}.{0:MM}.{0:dd}-pre{1}', pipeline.startTime, variables.BuildRev)]
+  InfoVer: $(Build.SourceVersion)
+
+trigger:
+  batch: true
+  branches:
+    include:
+    - master
+
+pr:
+  autoCancel: true
+  branches:
+    include:
+    - master
+
+pool:
+  name: Azure Pipelines
+  vmImage: windows-2019
+
+stages:
+- template: az-templates/stage-build.yml

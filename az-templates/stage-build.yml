@@ -1,30 +1,3 @@
-name: $(Semver)
-
-variables:
-  BuildRev: $[counter(format('{0:yyyyMMdd}', pipeline.startTime), 1)]
-  ${{ if startsWith( variables['Build.SourceBranch'], 'refs/tags' ) }}:
-    SemVer: $[ variables['Build.SourceBranchName'] ]
-  ${{ if not( startsWith( variables['Build.SourceBranch'], 'refs/tags' )) }}:
-    SemVer: $[format('{0:yyyy}.{0:MM}.{0:dd}-pre{1}', pipeline.startTime, variables.BuildRev)]
-  InfoVer: $(Build.SourceVersion)
-
-trigger:
-  batch: true
-  branches:
-    include:
-    - master
-    - refs/tags/*
-
-pr:
-  autoCancel: true
-  branches:
-    include:
-    - master
-
-pool:
-  name: Azure Pipelines
-  vmImage: windows-2019
-
 stages:
 - stage: Build
   jobs:
@@ -127,26 +100,3 @@ stages:
       inputs:
         path: '$(Build.ArtifactStagingDirectory)'
         artifact: Artifacts
-
-- stage: Deploy
-  condition: and (succeeded(), startsWith( variables['Build.SourceBranch'], 'refs/tags' ))
-  dependsOn: Build
-  jobs:
-  - deployment: DeployArtifacts
-    environment: 'Prod'
-    displayName: 'Deploys artifacts'
-    timeoutInMinutes: 10
-    cancelTimeoutInMinutes: 5
-    strategy: 
-      runOnce:
-        deploy:
-          steps:
-          - checkout: none
-          - task: NuGetCommand@2
-            displayName: 'Push Nupkg to NuGet.Org'
-            inputs:
-              command: push
-              nugetFeedType: external
-              publishFeedCredentials: nuget_org_push_new_versions
-              verbosityPush: Normal
-              packagesToPush: '$(Pipeline.Workspace)/**/*.nupkg;!$(Pipeline.Workspace)/**/*.symbols.nupkg'
