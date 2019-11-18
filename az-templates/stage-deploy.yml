@@ -1,0 +1,22 @@
+- stage: Deploy
+  condition: and (succeeded(), startsWith( variables['Build.SourceBranch'], 'refs/tags' ))
+  dependsOn: Build
+  jobs:
+  - deployment: DeployArtifacts
+    environment: 'Prod'
+    displayName: 'Deploys artifacts'
+    timeoutInMinutes: 10
+    cancelTimeoutInMinutes: 5
+    strategy: 
+      runOnce:
+        deploy:
+          steps:
+          - checkout: none
+          - task: NuGetCommand@2
+            displayName: 'Push Nupkg to NuGet.Org'
+            inputs:
+              command: push
+              nugetFeedType: external
+              publishFeedCredentials: nuget_org_push_new_versions
+              verbosityPush: Normal
+              packagesToPush: '$(Pipeline.Workspace)/**/*.nupkg;!$(Pipeline.Workspace)/**/*.symbols.nupkg'
