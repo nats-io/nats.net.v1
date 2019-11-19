@@ -2812,14 +2812,13 @@ namespace NATS.Client
 
         private void requestResponseHandler(object sender, MsgHandlerEventArgs e)
         {
+            if (e.Message == null)
+                return;
+
             //               \
             //               \/
             //  _INBOX.<nuid>.<requestId>
-            string requestId = e.Message.Subject.Substring(globalRequestInbox.Length + 1);
-            if (e.Message == null)
-            {
-                return;
-            }
+            var requestId = e.Message.Subject.Substring(globalRequestInbox.Length + 1);
 
             bool isClosed;
             InFlightRequest request;
