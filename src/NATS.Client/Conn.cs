@@ -123,8 +123,6 @@ namespace NATS.Client
         private Uri             url     = null;
         private ServerPool srvPool = new ServerPool();
 
-        private Dictionary<string, Uri> urls = new Dictionary<string, Uri>();
-
         // we have a buffered reader for writing, and reading.
         // This is for both performance, and having to work around
         // interlinked read/writes (supported by the underlying network
