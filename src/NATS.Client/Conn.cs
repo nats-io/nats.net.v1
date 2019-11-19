@@ -104,7 +104,7 @@ namespace NATS.Client
 
         // NOTE: We aren't using Mutex here to support enterprises using
         // .NET 4.0.
-        readonly private object mu = new Object();
+        private readonly object mu = new Object();
 
         private Random r = null;
 
@@ -154,14 +154,13 @@ namespace NATS.Client
         int                 pout = 0;
 
         private AsyncSubscription globalRequestSubscription;
-        private TaskCompletionSource<object> globalRequestSubReady;
-        private string globalRequestInbox;
+        private readonly string globalRequestInbox;
 
         // used to map replies to requests from client (should lock)
         private long nextRequestId = 0;
 
-        private readonly Dictionary<string, InFlightRequest> waitingRequests = 
-            new Dictionary<string, InFlightRequest>(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<string, InFlightRequest> waitingRequests
+            = new ConcurrentDictionary<string, InFlightRequest>(StringComparer.OrdinalIgnoreCase);
 
         // Handles in-flight requests when using the new-style request/reply behavior
         private sealed class InFlightRequest : IDisposable
@@ -787,6 +786,8 @@ namespace NATS.Client
             buildPublishProtocolBuffer(Defaults.scratchSize);
 
             callbackScheduler.Start();
+
+            globalRequestInbox = NewInbox();
         }
 
         private void buildPublishProtocolBuffer(int size)
@@ -2625,41 +2626,52 @@ namespace NATS.Client
 
         protected Msg request(string subject, byte[] data, int offset, int count, int timeout) => requestSync(subject, data, offset, count, timeout);
 
-        private InFlightRequest setupRequest(int timeout, CancellationToken token)
+        private void removeOutstandingRequest(string requestId) => waitingRequests.TryRemove(requestId, out _);
+
+        private void requestResponseHandler(object sender, MsgHandlerEventArgs e)
         {
-            InFlightRequest request;
-            bool createSub = false;
+            if (e.Message == null)
+                return;
+
+            //               \
+            //               \/
+            //  _INBOX.<nuid>.<requestId>
+            var requestId = e.Message.Subject.Substring(globalRequestInbox.Length + 1);
+            if (!waitingRequests.TryGetValue(requestId, out var request))
+                return;
+
+            bool isClosed;
 
             lock (mu)
             {
-                if (nextRequestId == long.MaxValue)
-                    nextRequestId = 0;
-
-                var requestId = (nextRequestId++).ToString(CultureInfo.InvariantCulture);
-                request = new InFlightRequest(requestId, token, timeout, removeOutstandingRequest);
-
-                // avoid raising TaskScheduler.UnobservedTaskException if the timeout occurs first
-                request.Waiter.Task.ContinueWith(t => GC.KeepAlive(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
-
-                if (globalRequestSubReady == null)
-                {
-                    globalRequestSubReady = new TaskCompletionSource<object>();
-
-                    globalRequestInbox = NewInbox();
-
-                    createSub = true;
-                }
-
-                waitingRequests.Add(
-                    request.Id,
-                    request);
+                isClosed = this.isClosed();
             }
 
-            if (createSub)
+            if (!isClosed)
             {
-                globalRequestSubscription = subscribeAsync(string.Concat(globalRequestInbox, ".*"), null, requestResponseHandler);
+                request.Waiter.SetResult(e.Message);
+            }
+            else
+            {
+                request.Waiter.SetCanceled();
+            }
+            request.Dispose();
+        }
 
-                globalRequestSubReady.TrySetResult(null);
+        private InFlightRequest setupRequest(int timeout, CancellationToken token)
+        {
+            var requestId = Interlocked.Increment(ref nextRequestId);
+            if (requestId < 0) //Check if recycled
+                requestId = (requestId + long.MaxValue + 1);
+
+            var request = new InFlightRequest(requestId.ToString(CultureInfo.InvariantCulture), token, timeout, removeOutstandingRequest);
+            request.Waiter.Task.ContinueWith(t => GC.KeepAlive(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
+            waitingRequests.TryAdd(request.Id, request);
+
+            lock (mu)
+            {
+                if(globalRequestSubscription == null)
+                    globalRequestSubscription = subscribeAsync(string.Concat(globalRequestInbox, ".*"), null, requestResponseHandler);
             }
 
             return request;
@@ -2684,7 +2696,7 @@ namespace NATS.Client
                 request.Token.ThrowIfCancellationRequested();
 
                 if (globalRequestSubscription == null)
-                    globalRequestSubReady.Task.Wait(timeout, request.Token);
+                    throw new NATSException("No global inbox subscription exists for receiving request responses in.");
 
                 publish(subject, string.Concat(globalRequestInbox, ".", request.Id), data, offset, count, true);
 
@@ -2703,7 +2715,7 @@ namespace NATS.Client
                         throw e;
                     }
 
-                    throw ae;
+                    throw;
                 }
             }
         }
@@ -2727,7 +2739,7 @@ namespace NATS.Client
                 request.Token.ThrowIfCancellationRequested();
 
                 if (globalRequestSubscription == null)
-                    await globalRequestSubReady.Task.ConfigureAwait(false);
+                    throw new NATSException("No global inbox subscription exists for receiving request responses in.");
 
                 publish(subject, string.Concat(globalRequestInbox, ".", request.Id), data, offset, count, true);
 
@@ -2736,63 +2748,20 @@ namespace NATS.Client
             }
         }
 
-        private void requestResponseHandler(object sender, MsgHandlerEventArgs e)
-        {
-            if (e.Message == null)
-                return;
-
-            //               \
-            //               \/
-            //  _INBOX.<nuid>.<requestId>
-            var requestId = e.Message.Subject.Substring(globalRequestInbox.Length + 1);
-
-            bool isClosed;
-            InFlightRequest request;
-            lock (mu)
-            {
-                isClosed = this.isClosed();
-
-                if (!waitingRequests.TryGetValue(requestId, out request))
-                {
-                    return;
-                }
-
-                waitingRequests.Remove(requestId);
-            }
-
-            if (!isClosed)
-            {
-                request.Waiter.SetResult(e.Message);
-            }
-            else
-            {
-                request.Waiter.SetCanceled();
-            }
-            request.Dispose();
-        }
-
-        private void removeOutstandingRequest(string requestId)
-        {
-            lock (mu)
-            {
-                // this is fine even if requestId does not exist
-                waitingRequests.Remove(requestId);
-            }
-        }
-
         private Msg oldRequest(string subject, byte[] data, int offset, int count, int timeout)
         {
-            Msg    m     = null;
-            string inbox = NewInbox();
+            var inbox = NewInbox();
 
-            SyncSubscription s = subscribeSync(inbox, null);
-            s.AutoUnsubscribe(1);
+            using (var s = subscribeSync(inbox, null))
+            {
+                s.AutoUnsubscribe(1);
 
-            publish(subject, inbox, data, offset, count, true);
-            m = s.NextMessage(timeout);
-            s.unsubscribe(false);
+                publish(subject, inbox, data, offset, count, true);
+                var m = s.NextMessage(timeout);
+                s.unsubscribe(false);
 
-            return m;
+                return m;
+            }
         }
 
         /// <summary>
