@@ -757,9 +757,6 @@ namespace NATS.Client
             return null;
         }
 
-        // Ensure we cannot instanciate a connection this way.
-        private Connection() { }
-
         /// <summary>
         /// Initializes a new instance of the <see cref="Connection"/> class
         /// with the specified <see cref="Options"/>.
