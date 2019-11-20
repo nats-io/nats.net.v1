@@ -2665,10 +2665,14 @@ namespace NATS.Client
             request.Waiter.Task.ContinueWith(t => GC.KeepAlive(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
             waitingRequests.TryAdd(request.Id, request);
 
+            if (globalRequestSubscription != null)
+                return request;
+
             lock (mu)
             {
-                if(globalRequestSubscription == null)
-                    globalRequestSubscription = subscribeAsync(string.Concat(globalRequestInbox, ".*"), null, requestResponseHandler);
+                if (globalRequestSubscription == null)
+                    globalRequestSubscription = subscribeAsync(string.Concat(globalRequestInbox, ".*"), null,
+                        requestResponseHandler);
             }
 
             return request;
@@ -2691,9 +2695,6 @@ namespace NATS.Client
             using (var request = setupRequest(timeout, CancellationToken.None))
             {
                 request.Token.ThrowIfCancellationRequested();
-
-                if (globalRequestSubscription == null)
-                    throw new NATSException("No global inbox subscription exists for receiving request responses in.");
 
                 publish(subject, string.Concat(globalRequestInbox, ".", request.Id), data, offset, count, true);
 
@@ -2734,9 +2735,6 @@ namespace NATS.Client
             using (var request = setupRequest(timeout, token))
             {
                 request.Token.ThrowIfCancellationRequested();
-
-                if (globalRequestSubscription == null)
-                    throw new NATSException("No global inbox subscription exists for receiving request responses in.");
 
                 publish(subject, string.Concat(globalRequestInbox, ".", request.Id), data, offset, count, true);
 
