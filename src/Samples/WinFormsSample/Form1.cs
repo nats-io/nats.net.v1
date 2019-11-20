@@ -196,8 +196,6 @@ namespace WinFormsSample
             {
                 await Task.Run(async () =>
                 {
-                    GC.Collect();
-
                     var configAwaitFalse = chkConfigureAwaitFalse.Checked;
                     var requester = scenario.Action();
 
