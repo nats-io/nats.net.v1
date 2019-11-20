@@ -77,6 +77,21 @@ namespace WinFormsSample
                 }, cts.Token);
             }));
 
+            lstScenarios.Items.Add(new Scenario("Request (timeout)", () =>
+            {
+                var payload = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString("N"));
+
+                return Task.Run(() =>
+                {
+                    var numOfMessages = NumOfMessages;
+                    for (var i = 0; i < numOfMessages; i++)
+                    {
+                        if (!cts.IsCancellationRequested)
+                            pubConnection.Request(Subject, payload, 150);
+                    }
+                }, cts.Token);
+            }));
+
             lstScenarios.Items.Add(new Scenario("RequestAsync", async () =>
             {
                 var configAwaitFalse = chkConfigureAwaitFalse.Checked;
@@ -86,6 +101,17 @@ namespace WinFormsSample
 
                 for (var i = 0; i < numOfMessages; i++)
                     await pubConnection.RequestAsync(Subject, payload, cts.Token).ConfigureAwait(!configAwaitFalse);
+            }));
+
+            lstScenarios.Items.Add(new Scenario("RequestAsync (timeout)", async () =>
+            {
+                var configAwaitFalse = chkConfigureAwaitFalse.Checked;
+                var payload = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString("N"));
+
+                var numOfMessages = NumOfMessages;
+
+                for (var i = 0; i < numOfMessages; i++)
+                    await pubConnection.RequestAsync(Subject, payload, 150).ConfigureAwait(!configAwaitFalse);
             }));
 
             lstScenarios.Items.Add(new Scenario("RequestAsync (batched)", async () =>
