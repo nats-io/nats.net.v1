@@ -1,6 +1,4 @@
-﻿
-using System.Collections.Generic;
-#if Windows
+﻿#if Windows
 using System;
 using System.Text;
 using System.Threading;
