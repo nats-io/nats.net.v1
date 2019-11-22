@@ -11,189 +11,123 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.IO;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Json;
+using System.Linq;
 using System.Text;
+using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client
 {
-    [DataContract]
     internal class ServerInfo
     {
-        internal string serverId;
-        internal string serverHost;
-        internal int serverPort;
-        internal string serverVersion;
-        internal bool authRequired;
-        internal bool tlsRequired;
-        internal long maxPayload;
-        internal string[] connectURLs;
-        internal string serverNonce;
-        internal int serverProto;
+        public string server_id { get; private set; }
 
-        [DataMember]
-        public string server_id
-        {
-            get { return serverId; }
-            set { serverId = value; }
-        }
+        public string host { get; private set; }
 
-        [DataMember]
-        public string host
-        {
-            get { return serverHost; }
-            set { serverHost = value; }
-        }
+        public int port { get; private set; }
 
-        [DataMember]
-        public int port
-        {
-            get { return serverPort; }
-            set { serverPort = value; }
-        }
+        public string version { get; private set; }
 
-        [DataMember]
-        public string version
-        {
-            get { return serverVersion; }
-            set { serverVersion = value; }
-        }
+        public bool auth_required { get; private set; }
 
-        [DataMember]
-        public bool auth_required
-        {
-            get { return authRequired; }
-            set { authRequired = value; }
-        }
+        public bool tls_required { get; private set; }
 
-        [DataMember]
-        public bool tls_required
-        {
-            get { return tlsRequired; }
-            set { tlsRequired = value; }
-        }
+        public long max_payload { get; private set; }
 
-        [DataMember]
-        public long max_payload
-        {
-            get { return maxPayload; }
-            set { maxPayload = value; }
-        }
+        public string[] connect_urls { get; private set; }
 
-        [DataMember]
-        public string[] connect_urls
-        {
-            get { return connectURLs; }
-            set { connectURLs = value; }
-        }
+        public string nonce { get; private set; }
 
-        [DataMember]
-        public string nonce
-        {
-            get { return serverNonce; }
-            set { serverNonce = value; }
-        }
-
-        [DataMember]
-        internal int proto { get => serverProto; set => serverProto = value; }
+        public int proto { get; private set; }
 
         public static ServerInfo CreateFromJson(string json)
         {
-            using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(json)))
+            var x = JSON.Parse(json);
+
+            return new ServerInfo
             {
-                var serializer = new DataContractJsonSerializer(typeof(ServerInfo));
-                stream.Position = 0;
-                return (ServerInfo)serializer.ReadObject(stream);
-            }
+                server_id = x["server_id"].Value,
+                host = x["host"].Value,
+                port = x["port"].AsInt,
+                version = x["version"].Value,
+                auth_required = x["auth_required"].AsBool,
+                tls_required = x["tls_required"].AsBool,
+                max_payload =  x["max_payload"].AsLong,
+                connect_urls =  x["connect_urls"].Children.Select(n => n.Value).ToArray(),
+                nonce =  x["nonce"].Value,
+                proto = x["proto"].AsInt
+            };
         }
     }
     
-    [DataContract]
     internal class ConnectInfo
     {
-        bool isVerbose;
-        bool isPedantic;
-        string userJWT;
-        string userNkey;
-        string signature;
-        string clientUser;
-        string clientPass;
-        bool sslRequired;
-        string clientName;
-        string clientLang = Defaults.LangString;
-        string clientVersion = Defaults.Version;
-        int protocolVersion = (int)ClientProtcolVersion.ClientProtoInfo;
-        bool clientEcho;
-        string authToken = null;
+        public bool verbose { get; private set; }
 
-        [DataMember]
-        public bool verbose { get => isVerbose; set => isVerbose = value; }
+        public bool pedantic { get; private set; }
 
-        [DataMember]
-        public bool pedantic { get => isPedantic; set => isPedantic = value; }
+        public string user { get; private set; }
 
-        [DataMember]
-        public string user { get => clientUser; set => clientUser = value; }
+        public string pass { get; private set; }
 
-        [DataMember]
-        public string pass { get => clientPass; set => clientPass = value; }
+        public bool ssl_required { get; private set; }
 
-        [DataMember]
-        public bool ssl_required { get => sslRequired; set => sslRequired = value; }
+        public string name { get; private set; }
 
-        [DataMember]
-        public string name { get => clientName; set => clientName = value; }
+        public string auth_token { get; private set; }
 
-        [DataMember]
-        public string auth_token{ get => authToken; set => authToken = value; }
+        public string lang { get; private set; } = Defaults.LangString;
 
-        [DataMember]
-        public string lang { get => clientLang; set => clientLang = value; }
+        public string version { get; private set; } = Defaults.Version;
 
-        [DataMember]
-        public string version { get => clientVersion; set => clientVersion = value; }
+        public int protocol { get; private set; } = (int) ClientProtcolVersion.ClientProtoInfo;
 
-        [DataMember]
-        public int protocol { get => protocolVersion; set => protocolVersion = value; }
+        public string jwt { get; private set; }
 
-        [DataMember]
-        public string jwt { get => userJWT; set => userJWT = value; }
+        public string nkey { get; private set; }
 
-        [DataMember]
-        public string nkey { get => userNkey; set => userNkey = value; }
+        public string sig { get; private set; }
 
-        [DataMember]
-        public string sig { get => signature; set => signature = value; }
-
-        [DataMember]
-        public bool echo { get => clientEcho; set => clientEcho = value; }
+        public bool echo { get; private set; }
 
         internal ConnectInfo(bool verbose, bool pedantic, string ujwt, string nkey, string sig, 
             string user, string pass, string token, bool secure, string name, bool echo)
         {
-            isVerbose = verbose;
-            isPedantic = pedantic;
-            userJWT = ujwt;
-            userNkey = nkey;
-            signature = sig;
-            clientUser = user;
-            clientPass = pass;
-            sslRequired = secure;
-            clientName = name;
-            authToken = token;
-            clientEcho = echo;
+            this.verbose = verbose;
+            this.pedantic = pedantic;
+            this.jwt = ujwt;
+            this.nkey = nkey;
+            this.sig = sig;
+            this.user = user;
+            this.pass = pass;
+            this.ssl_required = secure;
+            this.name = name;
+            this.auth_token = token;
+            this.echo = echo;
         }
 
-        internal string ToJson()
+        internal StringBuilder AppendAsJsonTo(StringBuilder sb)
         {
-            var serializer = new DataContractJsonSerializer(typeof(ConnectInfo));
-            using (var stream = new MemoryStream())
+            var n = new JSONObject
             {
-                serializer.WriteObject(stream, this);
-                return Encoding.UTF8.GetString(stream.ToArray());
-            }
+                ["verbose"] = verbose,
+                ["pedantic"] = pedantic,
+                ["user"] = user ?? string.Empty,
+                ["pass"] = pass ?? string.Empty,
+                ["ssl_required"] = ssl_required,
+                ["name"] = name ?? string.Empty,
+                ["auth_token"] = auth_token ?? string.Empty,
+                ["lang"] = lang ?? string.Empty,
+                ["version"] = version ?? string.Empty,
+                ["protocol"] = protocol,
+                ["jwt"] = jwt ?? string.Empty,
+                ["nkey"] = nkey ?? string.Empty,
+                ["sig"] = sig ?? string.Empty,
+                ["echo"] = echo
+            };
+
+            n.WriteToStringBuilder(sb, 0, 0, JSONTextMode.Compact);
+
+            return sb;
         }
     }
 }
