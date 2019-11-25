@@ -118,7 +118,7 @@ namespace NATS.Client
             get { return opts; }
         }
 
-        List<Thread> wg = new List<Thread>(2);
+        private readonly List<Thread> wg = new List<Thread>(2);
 
         private Uri             url     = null;
         private ServerPool srvPool = new ServerPool();
@@ -923,16 +923,22 @@ namespace NATS.Client
             // Kick old flusher forcefully.
             setFlusherDone(true);
 
-            if (wg.Count > 0)
+            if (wg.Count <= 0)
+                return;
+
+            var cpy = wg.ToArray();
+
+            foreach (var t in cpy)
             {
                 try
                 {
-                    foreach (Thread t in wg)
-                    {
-                        t.Join();
-                    }
+                    t.Join();
+                    wg.Remove(t);
                 }
-                catch (Exception) { }
+                catch (Exception)
+                {
+                    // ignored
+                }
             }
         }
 
