@@ -1068,7 +1068,7 @@ namespace NATS.Client
                     if (status != ConnState.CONNECTED)
                         return IC._EMPTY_;
 
-                    return this.info.serverId;
+                    return this.info.server_id;
                 }
             }
         }
@@ -1234,11 +1234,11 @@ namespace NATS.Client
         {
             // Check to see if we need to engage TLS
             // Check for mismatch in setups
-            if (Opts.Secure && !info.tlsRequired)
+            if (Opts.Secure && !info.tls_required)
             {
                 throw new NATSSecureConnWantedException();
             }
-            else if (info.tlsRequired && !Opts.Secure)
+            else if (info.tls_required && !Opts.Secure)
             {
                 throw new NATSSecureConnRequiredException();
             }
@@ -1395,14 +1395,12 @@ namespace NATS.Client
             ConnectInfo info = new ConnectInfo(opts.Verbose, opts.Pedantic, userJWT, nkey, sig, user,
                 pass, token, opts.Secure, opts.Name, !opts.NoEcho);
 
-            StringBuilder sb = new StringBuilder();
-
-            sb.AppendFormat(IC.conProto, info.ToJson());
-
             if (opts.NoEcho && info.protocol < 1)
                 throw new NATSProtocolException("Echo is not supported by the server.");
 
-            return sb.ToString();
+            var sb = new StringBuilder().Append(IC.conProtoNoCRLF).Append(" ");
+
+            return info.AppendAsJsonTo(sb).Append(IC._CRLF_).ToString();
         }
 
 
@@ -2346,7 +2344,7 @@ namespace NATS.Client
             }
 
             info = ServerInfo.CreateFromJson(json);
-            var discoveredUrls = info.connectURLs;
+            var discoveredUrls = info.connect_urls;
  
             // Note about pool randomization: when the pool was first created,
             // it was randomized (if allowed). We keep the order the same (removing
@@ -2501,7 +2499,7 @@ namespace NATS.Client
                     throw new NATSConnectionDrainingException();
 
                 // Proactively reject payloads over the threshold set by server.
-                if (count > info.maxPayload)
+                if (count > info.max_payload)
                     throw new NATSMaxPayloadException();
 
                 if (lastEx != null)
@@ -4274,7 +4272,7 @@ namespace NATS.Client
             {
                 lock (mu)
                 {
-                    return info.maxPayload;
+                    return info.max_payload;
                 }
             }
         }

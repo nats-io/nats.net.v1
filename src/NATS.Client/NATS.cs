@@ -315,7 +315,7 @@ namespace NATS.Client
 
         internal const string inboxPrefix = "_INBOX.";
 
-        internal const string conProto   = "CONNECT {0}" + IC._CRLF_;
+        internal const string conProtoNoCRLF   = "CONNECT";
         internal const string pingProto  = "PING" + IC._CRLF_;
         internal const string pongProto  = "PONG" + IC._CRLF_;
         internal const string pubProto   = "PUB {0} {1} {2}" + IC._CRLF_;
