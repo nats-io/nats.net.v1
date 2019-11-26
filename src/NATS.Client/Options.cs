@@ -248,6 +248,8 @@ namespace NATS.Client
             }
         }
 
+        static readonly string[] protcolSep = new[] {"://"};
+        
         static string ensureProperUrl(string url)
         {
             if (string.IsNullOrWhiteSpace(url))
@@ -259,7 +261,7 @@ namespace NATS.Client
             if (url.StartsWith("tls://", StringComparison.OrdinalIgnoreCase))
                 return url;
 
-            var parts = url.Split(new[]{"://"}, StringSplitOptions.RemoveEmptyEntries);
+            var parts = url.Split(protcolSep, StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length == 1)
                 return $"nats://{url}";
             
