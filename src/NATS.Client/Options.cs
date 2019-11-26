@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System;
+using System.Linq;
 using System.Text;
 using System.Security.Cryptography.X509Certificates;
 using System.Net.Security;
@@ -247,6 +248,26 @@ namespace NATS.Client
             }
         }
 
+        static readonly string[] protcolSep = new[] {"://"};
+        
+        static string ensureProperUrl(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+                return url;
+            
+            if (url.StartsWith("nats://", StringComparison.OrdinalIgnoreCase))
+                return url;
+
+            if (url.StartsWith("tls://", StringComparison.OrdinalIgnoreCase))
+                return url;
+
+            var parts = url.Split(protcolSep, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 1)
+                return $"nats://{url}";
+            
+            throw new ArgumentException("Allowed protocols are: 'nats://, tls://'.");
+        }
+
         internal void processUrlString(string url)
         {
             if (url == null)
@@ -270,7 +291,10 @@ namespace NATS.Client
         public string Url
         {
             get { return url; }
-            set { url = value; }
+            set
+            {
+                url = ensureProperUrl(value);
+            }
         }
 
         /// <summary>
@@ -282,7 +306,10 @@ namespace NATS.Client
         public string[] Servers
         {
             get { return servers; }
-            set { servers = value; }
+            set
+            {
+                servers = value?.Select(ensureProperUrl).ToArray();
+            }
         }
 
         /// <summary>
