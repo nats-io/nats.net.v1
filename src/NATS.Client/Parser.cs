@@ -26,9 +26,9 @@ namespace NATS.Client
 
     internal sealed class Parser : IDisposable
     {
-        Connection conn;
-        byte[] argBufBase = new byte[Defaults.defaultBufSize];
-        MemoryStream argBufStream = null;
+        readonly Connection conn;
+        readonly byte[] argBufBase = new byte[Defaults.defaultBufSize];
+        readonly MemoryStream argBufStream = null;
 
         byte[] msgBufBase = new byte[Defaults.defaultBufSize];
         MemoryStream msgBufStream = null;
@@ -195,6 +195,8 @@ namespace NATS.Client
                                 {
                                     // Add 2 to account for the \r\n
                                     msgBufBase = new byte[conn.msgArgs.size+2];
+
+                                    msgBufStream?.Dispose();
                                     msgBufStream = new MemoryStream(msgBufBase);
                                 }
                                 state = MSG_PAYLOAD;
