@@ -104,7 +104,7 @@ namespace NATS.Client
 
         // NOTE: We aren't using Mutex here to support enterprises using
         // .NET 4.0.
-        readonly private object mu = new Object();
+        private readonly object mu = new Object();
 
         private Random r = null;
 
@@ -122,8 +122,6 @@ namespace NATS.Client
 
         private Uri             url     = null;
         private ServerPool srvPool = new ServerPool();
-
-        private Dictionary<string, Uri> urls = new Dictionary<string, Uri>();
 
         // we have a buffered reader for writing, and reading.
         // This is for both performance, and having to work around
@@ -156,74 +154,51 @@ namespace NATS.Client
         int                 pout = 0;
 
         private AsyncSubscription globalRequestSubscription;
-        private TaskCompletionSource<object> globalRequestSubReady;
-        private string globalRequestInbox;
+        private readonly string globalRequestInbox;
 
         // used to map replies to requests from client (should lock)
         private long nextRequestId = 0;
 
-        private Dictionary<string, InFlightRequest> waitingRequests = 
-            new Dictionary<string, InFlightRequest>(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<string, InFlightRequest> waitingRequests
+            = new ConcurrentDictionary<string, InFlightRequest>(StringComparer.OrdinalIgnoreCase);
 
         // Handles in-flight requests when using the new-style request/reply behavior
         private sealed class InFlightRequest : IDisposable
         {
-            public InFlightRequest(CancellationToken token, int timeout)
+            internal InFlightRequest(string id, CancellationToken token, int timeout, Action<string> onCompleted)
             {
+                this.Id = id;
                 this.Waiter = new TaskCompletionSource<Msg>();
-                if (token != CancellationToken.None)
+                this.onCompleted = onCompleted;
+                this.tokenSource = token == CancellationToken.None
+                    ? new CancellationTokenSource()
+                    : CancellationTokenSource.CreateLinkedTokenSource(token);
+                
+                this.tokenRegistration = this.tokenSource.Token.Register(() =>
                 {
-                    tokenCancelledRegistration = token.Register(() => this.Waiter.TrySetCanceled());
+                    if (timeout > 0)
+                        this.Waiter.TrySetException(new NATSTimeoutException());
 
-                    if (timeout > 0)
-                    {
-                        this.tokenSource = new CancellationTokenSource();
-                        this.linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(tokenSource.Token, token);
-                        this.Token = linkedTokenSource.Token;
-                        this.timeoutTokenRegistration = tokenSource.Token.Register(
-                            () => this.Waiter.TrySetException(new NATSTimeoutException()));
-                        this.tokenSource.CancelAfter(timeout);
-                    }
-                    else
-                    {
-                        this.Token = token;
-                    }
-                }
-                else
-                {
-                    if (timeout > 0)
-                    {
-                        this.tokenSource = new CancellationTokenSource();
-                        this.Token = tokenSource.Token;
-                        this.timeoutTokenRegistration = tokenSource.Token.Register(
-                            () => this.Waiter.TrySetException(new NATSTimeoutException()));
-                        this.tokenSource.CancelAfter(timeout);
-                    }
-                }
+                    this.Waiter.TrySetCanceled();
+                });
+
+                if(timeout > 0)
+                    this.tokenSource.CancelAfter(timeout);
             }
 
-            public string Id { get; set; }
-            public CancellationToken Token { get; private set; }
-            public TaskCompletionSource<Msg> Waiter { get; private set; }
+            public string Id { get; }
+            public TaskCompletionSource<Msg> Waiter { get; }
+            public CancellationToken Token => tokenSource.Token;
 
-            private CancellationTokenRegistration tokenRegistration;
-            private CancellationTokenRegistration tokenCancelledRegistration;
-            private CancellationTokenRegistration timeoutTokenRegistration;
-            private readonly CancellationTokenSource linkedTokenSource;
+            private readonly Action<string> onCompleted;
             private readonly CancellationTokenSource tokenSource;
-
-            public void Register(Action action)
-            {
-                tokenRegistration = Token.Register(action);
-            }
+            private CancellationTokenRegistration tokenRegistration;
 
             public void Dispose()
             {
-                this.timeoutTokenRegistration.Dispose();
-                this.tokenCancelledRegistration.Dispose();
                 this.tokenRegistration.Dispose();
-                this.linkedTokenSource?.Dispose();
                 this.tokenSource?.Dispose();
+                this.onCompleted?.Invoke(this.Id);
             }
         }
 
@@ -782,9 +757,6 @@ namespace NATS.Client
             return null;
         }
 
-        // Ensure we cannot instanciate a connection this way.
-        private Connection() { }
-
         /// <summary>
         /// Initializes a new instance of the <see cref="Connection"/> class
         /// with the specified <see cref="Options"/>.
@@ -811,6 +783,8 @@ namespace NATS.Client
             buildPublishProtocolBuffer(Defaults.scratchSize);
 
             callbackScheduler.Start();
+
+            globalRequestInbox = NewInbox();
         }
 
         private void buildPublishProtocolBuffer(int size)
@@ -2657,192 +2631,27 @@ namespace NATS.Client
             publish(subject, reply, data, offset, count, false);
         }
 
-        internal virtual Msg request(string subject, byte[] data, int offset, int count, int timeout)
-        {
-            Msg result = null;
+        protected Msg request(string subject, byte[] data, int offset, int count, int timeout) => requestSync(subject, data, offset, count, timeout);
 
-            if (string.IsNullOrWhiteSpace(subject))
-            {
-                throw new NATSBadSubscriptionException();
-            }
-            else if (timeout == 0)
-            {
-                // a timeout of 0 will never succeed - do not allow it.
-                throw new ArgumentException("Timeout must not be 0.", "timeout");
-            }
-            // offset/count checking covered by publish
-
-            if (!opts.UseOldRequestStyle)
-            {
-                using (var request = requestSync(subject, data, offset, count, timeout, CancellationToken.None))
-                {
-
-                    try
-                    {
-                        request.Waiter.Task.Wait(timeout);
-                        result = request.Waiter.Task.Result;
-                    }
-                    catch (AggregateException ae)
-                    {
-                        foreach (var e in ae.Flatten().InnerExceptions)
-                        {
-                            // we *should* only have one, and it should be
-                            // a NATS timeout exception.
-                            throw e;
-                        }
-                    }
-                    catch
-                    {
-                        // Could be a timeout or exception from the flush.
-                        throw;
-                    }
-                    finally
-                    {
-                        removeOutstandingRequest(request.Id);
-                    }
-
-                    return result;
-                }
-            }
-            else
-            {
-                return oldRequest(subject, data, offset, count, timeout);
-            }
-        }
-
-        private InFlightRequest setupRequest(int timeout, CancellationToken token)
-        {
-            InFlightRequest request = new InFlightRequest(token, timeout);
-            // avoid raising TaskScheduler.UnobservedTaskException if the timeout occurs first
-            request.Waiter.Task.ContinueWith(t => GC.KeepAlive(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
-            bool createSub = false;
-            lock (mu)
-            {
-                if (globalRequestSubReady == null)
-                {
-                    globalRequestSubReady = new TaskCompletionSource<object>();
-
-                    globalRequestInbox = NewInbox();
-
-                    createSub = true;
-                }
-
-                if (nextRequestId < 0)
-                {
-                    nextRequestId = 0;
-                }
-
-                request.Id = (nextRequestId++).ToString(CultureInfo.InvariantCulture);
-                request.Register(() => removeOutstandingRequest(request.Id));
-
-                waitingRequests.Add(
-                    request.Id,
-                    request);
-            }
-
-            if (createSub)
-            {
-                globalRequestSubscription = subscribeAsync(globalRequestInbox + ".*", null, requestResponseHandler);
-
-                globalRequestSubReady.TrySetResult(null);
-            }
-
-            return request;
-        }
-
-        private InFlightRequest requestSync(string subject, byte[] data, int offset, int count, int timeout, CancellationToken token)
-        {
-            InFlightRequest request = setupRequest(timeout, token);
-
-            request.Token.ThrowIfCancellationRequested();
-
-            try
-            {
-                if (globalRequestSubscription == null)
-                    globalRequestSubReady.Task.Wait(timeout, request.Token);
-
-                publish(subject, globalRequestInbox + "." + request.Id, data, offset, count, true);
-            }
-            catch
-            {
-                removeOutstandingRequest(request.Id);
-                throw;
-            }
-
-            return request;
-        }
-
-        private Task<Msg> requestAsync(string subject, byte[] data, int offset, int count, int timeout, CancellationToken token)
-        {
-            if (string.IsNullOrWhiteSpace(subject))
-            {
-                throw new NATSBadSubscriptionException();
-            }
-            else if (timeout == 0)
-            {
-                // a timeout of 0 will never succeed - do not allow it.
-                throw new ArgumentException("Timeout must not be 0.", "timeout");
-            }
-            // offset/count checking covered by publish
-
-            if (!opts.UseOldRequestStyle)
-            {
-                return Task.Run(
-                    async () =>
-                    {
-                        using (var request = setupRequest(timeout, token))
-                        {
-
-                            request.Token.ThrowIfCancellationRequested();
-
-                            try
-                            {
-                                if (globalRequestSubscription == null)
-                                    await globalRequestSubReady.Task;
-
-                                publish(subject, globalRequestInbox + "." + request.Id, data, offset, count, true);
-                            }
-                            catch
-                            {
-                                removeOutstandingRequest(request.Id);
-                                throw;
-                            }
-
-                            // InFlightRequest links the token cancellation
-                            return await request.Waiter.Task;
-                        }
-                    },
-                    token);
-            }
-            else
-            {
-                return oldRequestAsync(subject, data, offset, count, timeout, token);
-            }
-        }
+        private void removeOutstandingRequest(string requestId) => waitingRequests.TryRemove(requestId, out _);
 
         private void requestResponseHandler(object sender, MsgHandlerEventArgs e)
         {
+            if (e.Message == null)
+                return;
+
             //               \
             //               \/
             //  _INBOX.<nuid>.<requestId>
-            string requestId = e.Message.Subject.Substring(globalRequestInbox.Length + 1);
-            if (e.Message == null)
-            {
+            var requestId = e.Message.Subject.Substring(globalRequestInbox.Length + 1);
+            if (!waitingRequests.TryGetValue(requestId, out var request))
                 return;
-            }
 
             bool isClosed;
-            InFlightRequest request;
+
             lock (mu)
             {
                 isClosed = this.isClosed();
-
-                if (!waitingRequests.TryGetValue(requestId, out request))
-                {
-                    return;
-                }
-
-                waitingRequests.Remove(requestId);
             }
 
             if (!isClosed)
@@ -2856,28 +2665,108 @@ namespace NATS.Client
             request.Dispose();
         }
 
-        private void removeOutstandingRequest(string requestId)
+        private InFlightRequest setupRequest(int timeout, CancellationToken token)
         {
+            var requestId = Interlocked.Increment(ref nextRequestId);
+            if (requestId < 0) //Check if recycled
+                requestId = (requestId + long.MaxValue + 1);
+
+            var request = new InFlightRequest(requestId.ToString(CultureInfo.InvariantCulture), token, timeout, removeOutstandingRequest);
+            request.Waiter.Task.ContinueWith(t => GC.KeepAlive(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
+            waitingRequests.TryAdd(request.Id, request);
+
+            if (globalRequestSubscription != null)
+                return request;
+
             lock (mu)
             {
-                // this is fine even if requestId does not exist
-                waitingRequests.Remove(requestId);
+                if (globalRequestSubscription == null)
+                    globalRequestSubscription = subscribeAsync(string.Concat(globalRequestInbox, ".*"), null,
+                        requestResponseHandler);
+            }
+
+            return request;
+        }
+
+        private Msg requestSync(string subject, byte[] data, int offset, int count, int timeout)
+        {
+            if (string.IsNullOrWhiteSpace(subject))
+                throw new NATSBadSubscriptionException();
+            
+            // a timeout of 0 will never succeed - do not allow it.
+            if (timeout == 0)
+                throw new ArgumentException("Timeout must not be 0.", nameof(timeout));
+
+            // offset/count checking covered by publish
+
+            if (opts.UseOldRequestStyle)
+                return oldRequest(subject, data, offset, count, timeout);
+
+            using (var request = setupRequest(timeout, CancellationToken.None))
+            {
+                request.Token.ThrowIfCancellationRequested();
+
+                publish(subject, string.Concat(globalRequestInbox, ".", request.Id), data, offset, count, true);
+
+                try
+                {
+                    request.Waiter.Task.Wait(timeout);
+
+                    return request.Waiter.Task.Result;
+                }
+                catch (AggregateException ae)
+                {
+                    foreach (var e in ae.Flatten().InnerExceptions)
+                    {
+                        // we *should* only have one, and it should be
+                        // a NATS timeout exception.
+                        throw e;
+                    }
+
+                    throw;
+                }
+            }
+        }
+
+        private async Task<Msg> requestAsync(string subject, byte[] data, int offset, int count, int timeout, CancellationToken token)
+        {
+            if (string.IsNullOrWhiteSpace(subject))
+                throw new NATSBadSubscriptionException();
+
+            // a timeout of 0 will never succeed - do not allow it.
+            if (timeout == 0)
+                throw new ArgumentException("Timeout must not be 0.", nameof(timeout));
+
+            // offset/count checking covered by publish
+
+            if (opts.UseOldRequestStyle)
+                return await oldRequestAsync(subject, data, offset, count, timeout, token).ConfigureAwait(false);
+
+            using (var request = setupRequest(timeout, token))
+            {
+                request.Token.ThrowIfCancellationRequested();
+
+                publish(subject, string.Concat(globalRequestInbox, ".", request.Id), data, offset, count, true);
+
+                // InFlightRequest links the token cancellation
+                return await request.Waiter.Task.ConfigureAwait(false);
             }
         }
 
         private Msg oldRequest(string subject, byte[] data, int offset, int count, int timeout)
         {
-            Msg    m     = null;
-            string inbox = NewInbox();
+            var inbox = NewInbox();
 
-            SyncSubscription s = subscribeSync(inbox, null);
-            s.AutoUnsubscribe(1);
+            using (var s = subscribeSync(inbox, null))
+            {
+                s.AutoUnsubscribe(1);
 
-            publish(subject, inbox, data, offset, count, true);
-            m = s.NextMessage(timeout);
-            s.unsubscribe(false);
+                publish(subject, inbox, data, offset, count, true);
+                var m = s.NextMessage(timeout);
+                s.unsubscribe(false);
 
-            return m;
+                return m;
+            }
         }
 
         /// <summary>
@@ -2996,13 +2885,11 @@ namespace NATS.Client
             return request(subject, data, offset, count, Timeout.Infinite);
         }
 
-        internal virtual Task<Msg> oldRequestAsync(string subject, byte[] data, int offset, int count, int timeout, CancellationToken ct)
+        private Task<Msg> oldRequestAsync(string subject, byte[] data, int offset, int count, int timeout, CancellationToken ct)
         {
             // Simple case without a cancellation token.
-            if (ct == null)
-            {
-                return Task.Run(() => oldRequest(subject, data, offset, count, timeout));
-            }
+            if (ct == CancellationToken.None)
+                return Task.Run(() => oldRequest(subject, data, offset, count, timeout), ct);
 
             // More complex case, supporting cancellation.
             return Task.Run(() =>

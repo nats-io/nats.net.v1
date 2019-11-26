@@ -53,6 +53,8 @@ namespace WinFormsSample
             }
         }
 
+        private int NumOfMessages => Convert.ToInt32(numMessages.Value);
+
         private void InitializeScenarios()
         {
             if(lstScenarios.Items.Count > 0)
@@ -64,7 +66,7 @@ namespace WinFormsSample
 
                 return Task.Run(() =>
                 {
-                    var numOfMessages = numMessages.Value;
+                    var numOfMessages = NumOfMessages;
                     for (var i = 0; i < numOfMessages; i++)
                     {
                         if (!cts.IsCancellationRequested)
@@ -73,15 +75,55 @@ namespace WinFormsSample
                 }, cts.Token);
             }));
 
-            lstScenarios.Items.Add(new Scenario("RequestAsync", async () =>
+            lstScenarios.Items.Add(new Scenario("Request (timeout)", () =>
             {
                 var payload = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString("N"));
 
-                var numOfMessages = numMessages.Value;
+                return Task.Run(() =>
+                {
+                    var numOfMessages = NumOfMessages;
+                    for (var i = 0; i < numOfMessages; i++)
+                    {
+                        if (!cts.IsCancellationRequested)
+                            pubConnection.Request(Subject, payload, 150);
+                    }
+                }, cts.Token);
+            }));
+
+            lstScenarios.Items.Add(new Scenario("RequestAsync", async () =>
+            {
                 var configAwaitFalse = chkConfigureAwaitFalse.Checked;
+                var payload = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString("N"));
+
+                var numOfMessages = NumOfMessages;
 
                 for (var i = 0; i < numOfMessages; i++)
                     await pubConnection.RequestAsync(Subject, payload, cts.Token).ConfigureAwait(!configAwaitFalse);
+            }));
+
+            lstScenarios.Items.Add(new Scenario("RequestAsync (timeout)", async () =>
+            {
+                var configAwaitFalse = chkConfigureAwaitFalse.Checked;
+                var payload = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString("N"));
+
+                var numOfMessages = NumOfMessages;
+
+                for (var i = 0; i < numOfMessages; i++)
+                    await pubConnection.RequestAsync(Subject, payload, 150).ConfigureAwait(!configAwaitFalse);
+            }));
+
+            lstScenarios.Items.Add(new Scenario("RequestAsync (batched)", async () =>
+            {
+                var configAwaitFalse = chkConfigureAwaitFalse.Checked;
+                var payload = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString("N"));
+
+                var numOfMessages = NumOfMessages;
+                var tasks = new Task<Msg>[numOfMessages];
+
+                for (var i = 0; i < numOfMessages; i++)
+                    tasks[i] = pubConnection.RequestAsync(Subject, payload, cts.Token);
+
+                await Task.WhenAll(tasks).ConfigureAwait(!configAwaitFalse);
             }));
 
             lstScenarios.SelectedItem = lstScenarios.Items[0];
@@ -146,20 +188,22 @@ namespace WinFormsSample
         {
             btnRun.Enabled = false;
 
+            var scenario = lstScenarios.SelectedItem as Scenario;
+            if (scenario == null)
+                return;
+
             try
             {
-                var scenario = lstScenarios.SelectedItem as Scenario;
-                if (scenario == null)
-                    return;
+                await Task.Run(async () =>
+                {
+                    var configAwaitFalse = chkConfigureAwaitFalse.Checked;
+                    var requester = scenario.Action();
 
-                var configAwaitFalse = chkConfigureAwaitFalse.Checked;
-                var requester = scenario.Action();
-
-                await requester.ConfigureAwait(!configAwaitFalse);
+                    await requester.ConfigureAwait(!configAwaitFalse);
+                });
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                // ignored
                 MessageBox.Show(ex.Message, "Operation failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
