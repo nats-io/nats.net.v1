@@ -162,7 +162,16 @@ namespace NATS.Client
         /// <summary>
         /// Gets the <see cref="ISubscription"/> which received the message.
         /// </summary>
+        [ObsoleteAttribute("This property will soon be deprecated. Use ArrivalSubscription instead.")]
         public ISubscription ArrivalSubcription
+        {
+            get { return sub; }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="ISubscription"/> which received the message.
+        /// </summary>
+        public ISubscription ArrivalSubscription
         {
             get { return sub; }
         }
@@ -174,7 +183,7 @@ namespace NATS.Client
         /// <exception cref="NATSException">
         /// <para><see cref="Reply"/> is null or empty.</para>
         /// <para>-or-</para>
-        /// <para><see cref="ArrivalSubcription"/> is null.</para>
+        /// <para><see cref="ArrivalSubscription"/> is null.</para>
         /// </exception>
         public void Respond(byte[] data)
         {
@@ -183,7 +192,7 @@ namespace NATS.Client
                 throw new NATSException("No Reply subject");
             }
 
-            Connection conn = ArrivalSubcription?.Connection;
+            Connection conn = ArrivalSubscription?.Connection;
             if (conn == null)
             {
                 throw new NATSException("Message is not bound to a subscription");
