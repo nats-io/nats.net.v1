@@ -66,7 +66,7 @@ namespace NATS.Client
 
         // Create the server pool using the options given.
         // We will place a Url option first, followed by any
-        // Server Options. We will randomize the server pool unlesss
+        // Server Options. We will randomize the server pool unless
         // the NoRandomize flag is set.
         internal void Setup(Options opts)
         {
@@ -220,7 +220,7 @@ namespace NATS.Client
             }
         }
 
-        // removes implict servers NOT found in the provided list. 
+        // removes implicit servers NOT found in the provided list. 
         internal void PruneOutdatedServers(string[] newUrls)
         {
             LinkedList<string> ulist = new LinkedList<string>(newUrls);
@@ -235,7 +235,7 @@ namespace NATS.Client
                 foreach (Srv s in tmp)
                 {
                     // The server returns "<host>:<port>".  We can't compare
-                    // againts Uri.Authority becase that API may strip out 
+                    // against Uri.Authority because that API may strip out 
                     // ports.
                     string hp = string.Format("{0}:{1}", s.url.Host, s.url.Port);
                     if (s.isImplicit && !ulist.Contains(hp) &&

@@ -71,8 +71,8 @@ namespace NATS.Client
         /// <para>NATS implements a publish-subscribe message distribution model. NATS publish subscribe is a
         /// one-to-many communication. A publisher sends a message on a subject. Any active subscriber listening
         /// on that subject receives the message. Subscribers can register interest in wildcard subjects.</para>
-        /// <para>In the basic NATS platfrom, if a subscriber is not listening on the subject (no subject match),
-        /// or is not acive when the message is sent, the message is not recieved. NATS is a fire-and-forget
+        /// <para>In the basic NATS platform, if a subscriber is not listening on the subject (no subject match),
+        /// or is not active when the message is sent, the message is not received. NATS is a fire-and-forget
         /// messaging system. If you need higher levels of service, you can either use NATS Streaming, or build the
         /// additional reliability into your client(s) yourself.</para>
         /// </remarks>

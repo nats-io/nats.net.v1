@@ -793,7 +793,7 @@ namespace IntegrationTests
                 c.Drain();
 
                 done.WaitOne(5000);
-                Assert.True(received == expected, string.Format("recieved {0} of {1}", received, expected));
+                Assert.True(received == expected, string.Format("received {0} of {1}", received, expected));
             }
         }
 
@@ -833,7 +833,7 @@ namespace IntegrationTests
                 t.Wait();
 
                 done.WaitOne(5000);
-                Assert.True(received == expected, string.Format("recieved {0} of {1}", received, expected));
+                Assert.True(received == expected, string.Format("received {0} of {1}", received, expected));
             }
         }
 
@@ -867,7 +867,7 @@ namespace IntegrationTests
                 s.Drain();
 
                 done.WaitOne(5000);
-                Assert.True(received == expected, string.Format("recieved {0} of {1}", received, expected));
+                Assert.True(received == expected, string.Format("received {0} of {1}", received, expected));
             }
         }
 
@@ -907,7 +907,7 @@ namespace IntegrationTests
                 t.Wait();
 
                 done.WaitOne(5000);
-                Assert.True(received == expected, string.Format("recieved {0} of {1}", received, expected));
+                Assert.True(received == expected, string.Format("received {0} of {1}", received, expected));
             }
         }
 

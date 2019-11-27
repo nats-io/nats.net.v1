@@ -152,7 +152,7 @@ namespace NATS.Client
         /// sign the server nonce.
         /// </summary>
         /// <param name="publicNkey">The User's public Nkey</param>
-        /// <param name="privateKeyPath">A path to a file contianing the private Nkey.</param>
+        /// <param name="privateKeyPath">A path to a file containing the private Nkey.</param>
         public void SetNkey(string publicNkey, string privateKeyPath)
         {
             if (string.IsNullOrWhiteSpace(publicNkey)) throw new ArgumentException("Invalid publicNkey", nameof(publicNkey));
@@ -509,12 +509,12 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Adds an X.509 certifcate from a file for use with a secure connection.
+        /// Adds an X.509 certificate from a file for use with a secure connection.
         /// </summary>
         /// <param name="fileName">Path to the certificate file to add.</param>
         /// <exception cref="ArgumentNullException"><paramref name="fileName"/> is <c>null</c>.</exception>
         /// <exception cref="System.Security.Cryptography.CryptographicException">An error with the certificate
-        /// ocurred. For example:
+        /// occurred. For example:
         /// <list>
         /// <item>The certificate file does not exist.</item>
         /// <item>The certificate is invalid.</item>
@@ -528,12 +528,12 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Adds an X.509 certifcate for use with a secure connection.
+        /// Adds an X.509 certificate for use with a secure connection.
         /// </summary>
         /// <param name="certificate">An X.509 certificate represented as an <see cref="X509Certificate2"/> object.</param>
         /// <exception cref="ArgumentNullException"><paramref name="certificate"/> is <c>null</c>.</exception>
         /// <exception cref="System.Security.Cryptography.CryptographicException">An error with the certificate
-        /// ocurred. For example:
+        /// occurred. For example:
         /// <list>
         /// <item>The certificate file does not exist.</item>
         /// <item>The certificate is invalid.</item>
