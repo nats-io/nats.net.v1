@@ -96,10 +96,6 @@ namespace NATS.Client
     // interfaces.
     public class Connection : IConnection, IDisposable
     {
-#if NET45
-        private static readonly Task CompletedTask = Task.FromResult(true);
-#endif
-
         Statistics stats = new Statistics();
 
         // NOTE: We aren't using Mutex here to support enterprises using
@@ -3453,23 +3449,15 @@ namespace NATS.Client
         // Use Subscription.Unsubscribe()
         internal Task unsubscribe(Subscription sub, int max, bool drain, int timeout)
         {
-#if NET45
-            var task = CompletedTask;
-#else
-            var task = Task.CompletedTask;
-#endif
+            var task = CompletedTask.Get();
+            
             lock (mu)
             {
                 if (isClosed())
                     throw new NATSConnectionClosedException();
 
-                Subscription s;
-                if (!subs.TryGetValue(sub.sid, out s)
-                    || s == null)
-                {
-                    // already unsubscribed
-                    return null;
-                }
+                if (!subs.TryGetValue(sub.sid, out var s) || s == null)
+                    return task;
 
                 if (max > 0)
                 {
