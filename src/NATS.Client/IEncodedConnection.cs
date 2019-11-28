@@ -179,7 +179,7 @@ namespace NATS.Client
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call while executing the
         /// request. See <see cref="Exception.InnerException"/> for more details.</exception>
-        public void FlushBuffer();
+        void FlushBuffer();
 
         /// <summary>
         /// Closes the <see cref="IConnection"/> and all associated
