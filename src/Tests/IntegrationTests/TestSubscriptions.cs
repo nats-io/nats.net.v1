@@ -421,16 +421,20 @@ namespace IntegrationTests
             {
                 using (IConnection c = Context.OpenConnection(Context.Server1.Port))
                 {
-                    ISyncSubscription s = c.SubscribeSync("foo");
-                    s.Unsubscribe();
-
-                    try
+                    using (var s = c.SubscribeSync("foo"))
                     {
-                        s.NextMessage();
-                    }
-                    catch (NATSBadSubscriptionException) { } // ignore.
+                        s.Unsubscribe();
 
-                    // any other exceptions will fail the test.
+                        try
+                        {
+                            s.NextMessage();
+                        }
+                        catch (NATSBadSubscriptionException)
+                        {
+                        } // ignore.
+
+                        // any other exceptions will fail the test.
+                    }
                 }
             }
         }
@@ -450,7 +454,7 @@ namespace IntegrationTests
             {
                 using (IConnection c = Context.OpenConnection(Context.Server1.Port))
                 {
-                    ISubscription s = c.SubscribeAsync("foo", (sender, args) =>
+                    using (var s = c.SubscribeAsync("foo", (sender, args) =>
                     {
                         evStart.WaitOne(60000);
 
@@ -459,75 +463,77 @@ namespace IntegrationTests
                         {
                             evSubDone.Set();
                         }
-                    });
-
-                    for (int i = 0; i < total; i++)
+                    }))
                     {
-                        c.Publish("foo", data);
+                        for (int i = 0; i < total; i++)
+                        {
+                            c.Publish("foo", data);
+                        }
+
+                        c.Flush();
+
+                        Thread.Sleep(1000);
+
+                        int expectedPendingCount = total - 1;
+
+                        // At least 1 message will be dequeued
+                        Assert.True(s.QueuedMessageCount <= expectedPendingCount);
+
+                        Assert.True((s.MaxPendingBytes == (data.Length * total)) ||
+                                    (s.MaxPendingBytes == (data.Length * expectedPendingCount)));
+                        Assert.True((s.MaxPendingMessages == total) ||
+                                    (s.MaxPendingMessages == expectedPendingCount));
+                        Assert.True((s.PendingBytes == (data.Length * total)) ||
+                                    (s.PendingBytes == (data.Length * expectedPendingCount)));
+
+                        long pendingBytes;
+                        long pendingMsgs;
+
+                        s.GetPending(out pendingBytes, out pendingMsgs);
+                        Assert.True(pendingBytes == s.PendingBytes);
+                        Assert.True(pendingMsgs == s.PendingMessages);
+
+                        long maxPendingBytes;
+                        long maxPendingMsgs;
+                        s.GetMaxPending(out maxPendingBytes, out maxPendingMsgs);
+                        Assert.True(maxPendingBytes == s.MaxPendingBytes);
+                        Assert.True(maxPendingMsgs == s.MaxPendingMessages);
+
+
+                        Assert.True((s.PendingMessages == total) ||
+                                    (s.PendingMessages == expectedPendingCount));
+
+                        Assert.True(s.Delivered == 1);
+                        Assert.True(s.Dropped == 0);
+
+                        evStart.Set();
+                        evSubDone.WaitOne(10000);
+
+                        Assert.True(s.QueuedMessageCount == 0);
+
+                        Assert.True((s.MaxPendingBytes == (data.Length * total)) ||
+                                    (s.MaxPendingBytes == (data.Length * expectedPendingCount)));
+                        Assert.True((s.MaxPendingMessages == total) ||
+                                    (s.MaxPendingMessages == expectedPendingCount));
+
+                        Assert.True(s.PendingMessages == 0);
+                        Assert.True(s.PendingBytes == 0);
+
+                        Assert.True(s.Delivered == total);
+                        Assert.True(s.Dropped == 0);
+
+                        s.Unsubscribe();
+
+                        Assert.ThrowsAny<Exception>(() => s.MaxPendingBytes);
+
+                        Assert.ThrowsAny<Exception>(() => s.MaxPendingMessages);
+
+                        Assert.ThrowsAny<Exception>(() => s.PendingMessageLimit);
+
+                        Assert.ThrowsAny<Exception>(() => s.PendingByteLimit);
+
+                        Assert.ThrowsAny<Exception>(() => s.SetPendingLimits(1, 10));
                     }
-                    c.Flush();
-
-                    Thread.Sleep(1000);
-
-                    int expectedPendingCount = total - 1;
-
-                    // At least 1 message will be dequeued
-                    Assert.True(s.QueuedMessageCount <= expectedPendingCount);
-
-                    Assert.True((s.MaxPendingBytes == (data.Length * total)) ||
-                        (s.MaxPendingBytes == (data.Length * expectedPendingCount)));
-                    Assert.True((s.MaxPendingMessages == total) ||
-                        (s.MaxPendingMessages == expectedPendingCount));
-                    Assert.True((s.PendingBytes == (data.Length * total)) ||
-                        (s.PendingBytes == (data.Length * expectedPendingCount)));
-
-                    long pendingBytes;
-                    long pendingMsgs;
-
-                    s.GetPending(out pendingBytes, out pendingMsgs);
-                    Assert.True(pendingBytes == s.PendingBytes);
-                    Assert.True(pendingMsgs == s.PendingMessages);
-
-                    long maxPendingBytes;
-                    long maxPendingMsgs;
-                    s.GetMaxPending(out maxPendingBytes, out maxPendingMsgs);
-                    Assert.True(maxPendingBytes == s.MaxPendingBytes);
-                    Assert.True(maxPendingMsgs == s.MaxPendingMessages);
-
-
-                    Assert.True((s.PendingMessages == total) ||
-                        (s.PendingMessages == expectedPendingCount));
-
-                    Assert.True(s.Delivered == 1);
-                    Assert.True(s.Dropped == 0);
-
-                    evStart.Set();
-                    evSubDone.WaitOne(10000);
-
-                    Assert.True(s.QueuedMessageCount == 0);
-
-                    Assert.True((s.MaxPendingBytes == (data.Length * total)) ||
-                        (s.MaxPendingBytes == (data.Length * expectedPendingCount)));
-                    Assert.True((s.MaxPendingMessages == total) ||
-                        (s.MaxPendingMessages == expectedPendingCount));
-
-                    Assert.True(s.PendingMessages == 0);
-                    Assert.True(s.PendingBytes == 0);
-
-                    Assert.True(s.Delivered == total);
-                    Assert.True(s.Dropped == 0);
-
-                    s.Unsubscribe();
-
-                    Assert.ThrowsAny<Exception>(() => s.MaxPendingBytes);
-
-                    Assert.ThrowsAny<Exception>(() => s.MaxPendingMessages);
-
-                    Assert.ThrowsAny<Exception>(() => s.PendingMessageLimit);
-
-                    Assert.ThrowsAny<Exception>(() => s.PendingByteLimit);
-
-                    Assert.ThrowsAny<Exception>(() => s.SetPendingLimits(1, 10));
                 }
             }
         }
@@ -550,7 +556,7 @@ namespace IntegrationTests
 
                 using (IConnection c = Context.ConnectionFactory.CreateConnection(opts))
                 {
-                    ISubscription s = c.SubscribeAsync("foo", (sender, args) =>
+                    using (var s = c.SubscribeAsync("foo", (sender, args) =>
                     {
                         evStart.WaitOne(60000);
 
@@ -559,65 +565,67 @@ namespace IntegrationTests
                         {
                             evSubDone.Set();
                         }
-                    });
-
-                    for (int i = 0; i < total; i++)
+                    }))
                     {
-                        c.Publish("foo", data);
+                        for (int i = 0; i < total; i++)
+                        {
+                            c.Publish("foo", data);
+                        }
+
+                        c.Flush();
+
+                        Thread.Sleep(1000);
+
+                        int expectedPendingCount = total - 1;
+
+                        // Exactly 1 message will be dequeued
+                        Assert.True(s.QueuedMessageCount == expectedPendingCount);
+
+                        Assert.True((s.MaxPendingBytes == (data.Length * total)) ||
+                                    (s.MaxPendingBytes == (data.Length * expectedPendingCount)));
+                        Assert.True((s.MaxPendingMessages == total) ||
+                                    (s.MaxPendingMessages == expectedPendingCount));
+                        Assert.True((s.PendingBytes == (data.Length * total)) ||
+                                    (s.PendingBytes == (data.Length * expectedPendingCount)));
+
+                        long pendingBytes;
+                        long pendingMsgs;
+
+                        s.GetPending(out pendingBytes, out pendingMsgs);
+                        Assert.True(pendingBytes == s.PendingBytes);
+                        Assert.True(pendingMsgs == s.PendingMessages);
+
+                        long maxPendingBytes;
+                        long maxPendingMsgs;
+                        s.GetMaxPending(out maxPendingBytes, out maxPendingMsgs);
+                        Assert.True(maxPendingBytes == s.MaxPendingBytes);
+                        Assert.True(maxPendingMsgs == s.MaxPendingMessages);
+
+
+                        Assert.True((s.PendingMessages == total) ||
+                                    (s.PendingMessages == expectedPendingCount));
+
+                        Assert.True(s.Delivered == 1);
+                        Assert.True(s.Dropped == 0);
+
+                        evStart.Set();
+                        evSubDone.WaitOne(10000);
+
+                        Assert.True(s.QueuedMessageCount == 0);
+
+                        Assert.True((s.MaxPendingBytes == (data.Length * total)) ||
+                                    (s.MaxPendingBytes == (data.Length * expectedPendingCount)));
+                        Assert.True((s.MaxPendingMessages == total) ||
+                                    (s.MaxPendingMessages == expectedPendingCount));
+
+                        Assert.True(s.PendingMessages == 0);
+                        Assert.True(s.PendingBytes == 0);
+
+                        Assert.True(s.Delivered == total);
+                        Assert.True(s.Dropped == 0);
+
+                        s.Unsubscribe();
                     }
-                    c.Flush();
-
-                    Thread.Sleep(1000);
-
-                    int expectedPendingCount = total - 1;
-
-                    // Exactly 1 message will be dequeued
-                    Assert.True(s.QueuedMessageCount == expectedPendingCount);
-
-                    Assert.True((s.MaxPendingBytes == (data.Length * total)) ||
-                        (s.MaxPendingBytes == (data.Length * expectedPendingCount)));
-                    Assert.True((s.MaxPendingMessages == total) ||
-                        (s.MaxPendingMessages == expectedPendingCount));
-                    Assert.True((s.PendingBytes == (data.Length * total)) ||
-                        (s.PendingBytes == (data.Length * expectedPendingCount)));
-
-                    long pendingBytes;
-                    long pendingMsgs;
-
-                    s.GetPending(out pendingBytes, out pendingMsgs);
-                    Assert.True(pendingBytes == s.PendingBytes);
-                    Assert.True(pendingMsgs == s.PendingMessages);
-
-                    long maxPendingBytes;
-                    long maxPendingMsgs;
-                    s.GetMaxPending(out maxPendingBytes, out maxPendingMsgs);
-                    Assert.True(maxPendingBytes == s.MaxPendingBytes);
-                    Assert.True(maxPendingMsgs == s.MaxPendingMessages);
-
-
-                    Assert.True((s.PendingMessages == total) ||
-                        (s.PendingMessages == expectedPendingCount));
-
-                    Assert.True(s.Delivered == 1);
-                    Assert.True(s.Dropped == 0);
-
-                    evStart.Set();
-                    evSubDone.WaitOne(10000);
-
-                    Assert.True(s.QueuedMessageCount == 0);
-
-                    Assert.True((s.MaxPendingBytes == (data.Length * total)) ||
-                        (s.MaxPendingBytes == (data.Length * expectedPendingCount)));
-                    Assert.True((s.MaxPendingMessages == total) ||
-                        (s.MaxPendingMessages == expectedPendingCount));
-
-                    Assert.True(s.PendingMessages == 0);
-                    Assert.True(s.PendingBytes == 0);
-
-                    Assert.True(s.Delivered == total);
-                    Assert.True(s.Dropped == 0);
-
-                    s.Unsubscribe();
                 }
             }
         }
@@ -633,40 +641,42 @@ namespace IntegrationTests
             {
                 using (IConnection c = Context.OpenConnection(Context.Server1.Port))
                 {
-                    ISyncSubscription s = c.SubscribeSync("foo");
-
-                    for (int i = 0; i < total; i++)
+                    using (var s = c.SubscribeSync("foo"))
                     {
-                        c.Publish("foo", data);
+                        for (int i = 0; i < total; i++)
+                        {
+                            c.Publish("foo", data);
+                        }
+
+                        c.Flush();
+
+                        Assert.True(s.QueuedMessageCount == total);
+
+                        Assert.True((s.MaxPendingBytes == (data.Length * total)) ||
+                                    (s.MaxPendingBytes == (data.Length * total)));
+                        Assert.True((s.MaxPendingMessages == total) ||
+                                    (s.MaxPendingMessages == total));
+
+                        Assert.True(s.Delivered == 0);
+                        Assert.True(s.Dropped == 0);
+
+                        for (int i = 0; i < total; i++)
+                        {
+                            s.NextMessage();
+                        }
+
+                        Assert.True(s.QueuedMessageCount == 0);
+
+                        Assert.True((s.MaxPendingBytes == (data.Length * total)) ||
+                                    (s.MaxPendingBytes == (data.Length * total)));
+                        Assert.True((s.MaxPendingMessages == total) ||
+                                    (s.MaxPendingMessages == total));
+
+                        Assert.True(s.Delivered == total);
+                        Assert.True(s.Dropped == 0);
+
+                        s.Unsubscribe();
                     }
-                    c.Flush();
-
-                    Assert.True(s.QueuedMessageCount == total);
-
-                    Assert.True((s.MaxPendingBytes == (data.Length * total)) ||
-                        (s.MaxPendingBytes == (data.Length * total)));
-                    Assert.True((s.MaxPendingMessages == total) ||
-                        (s.MaxPendingMessages == total));
-
-                    Assert.True(s.Delivered == 0);
-                    Assert.True(s.Dropped == 0);
-
-                    for (int i = 0; i < total; i++)
-                    {
-                        s.NextMessage();
-                    }
-
-                    Assert.True(s.QueuedMessageCount == 0);
-
-                    Assert.True((s.MaxPendingBytes == (data.Length * total)) ||
-                        (s.MaxPendingBytes == (data.Length * total)));
-                    Assert.True((s.MaxPendingMessages == total) ||
-                        (s.MaxPendingMessages == total));
-
-                    Assert.True(s.Delivered == total);
-                    Assert.True(s.Dropped == 0);
-
-                    s.Unsubscribe();
                 }
             }
         }
@@ -682,24 +692,26 @@ namespace IntegrationTests
             {
                 using (IConnection c = Context.OpenConnection(Context.Server1.Port))
                 {
-                    ISubscription s = c.SubscribeAsync("foo", (sender, args) => { });
-
-                    for (int i = 0; i < total; i++)
+                    using (var s = c.SubscribeAsync("foo", (sender, args) => { }))
                     {
-                        c.Publish("foo", data);
+                        for (int i = 0; i < total; i++)
+                        {
+                            c.Publish("foo", data);
+                        }
+
+                        c.Flush();
+
+                        while (s.Delivered != total)
+                        {
+                            Thread.Sleep(50);
+                        }
+
+                        Assert.True(s.Dropped == 0);
+                        Assert.True(s.PendingBytes == 0);
+                        Assert.True(s.PendingMessages == 0);
+
+                        s.Unsubscribe();
                     }
-                    c.Flush();
-
-                    while (s.Delivered != total)
-                    {
-                        Thread.Sleep(50);
-                    }
-
-                    Assert.True(s.Dropped == 0);
-                    Assert.True(s.PendingBytes == 0);
-                    Assert.True(s.PendingMessages == 0);
-
-                    s.Unsubscribe();
                 }
             }
         }
@@ -715,24 +727,26 @@ namespace IntegrationTests
             {
                 using (IConnection c = Context.OpenConnection(Context.Server1.Port))
                 {
-                    ISyncSubscription s = c.SubscribeSync("foo");
-
-                    for (int i = 0; i < total; i++)
+                    using (var s = c.SubscribeSync("foo"))
                     {
-                        c.Publish("foo", data);
+                        for (int i = 0; i < total; i++)
+                        {
+                            c.Publish("foo", data);
+                        }
+
+                        c.Flush();
+
+                        while (s.Delivered != total)
+                        {
+                            s.NextMessage(100);
+                        }
+
+                        Assert.True(s.Dropped == 0);
+                        Assert.True(s.PendingBytes == 0);
+                        Assert.True(s.PendingMessages == 0);
+
+                        s.Unsubscribe();
                     }
-                    c.Flush();
-
-                    while (s.Delivered != total)
-                    {
-                        s.NextMessage(100);
-                    }
-
-                    Assert.True(s.Dropped == 0);
-                    Assert.True(s.PendingBytes == 0);
-                    Assert.True(s.PendingMessages == 0);
-
-                    s.Unsubscribe();
                 }
             }
         }
@@ -758,47 +772,50 @@ namespace IntegrationTests
                     AutoResetEvent ev1 = new AutoResetEvent(false);
                     AutoResetEvent ev2 = new AutoResetEvent(false);
 
-                    IAsyncSubscription s1 = c.SubscribeAsync("foo", (obj, args) =>
+                    using (var s1 = c.SubscribeAsync("foo", (obj, args) =>
                     {
                         s1Count++;
                         if (s1Count == COUNT)
                         {
                             ev1.Set();
                         }
-                    });
-
-                    IAsyncSubscription s2 = c.SubscribeAsync("bar", (obj, args) =>
+                    }))
                     {
-                        s2Count++;
-                        if (s2Count >= COUNT)
+                        using (var s2 = c.SubscribeAsync("bar", (obj, args) =>
                         {
-                            ev2.Set();
+                            s2Count++;
+                            if (s2Count >= COUNT)
+                            {
+                                ev2.Set();
+                            }
+                        }))
+                        {
+                            for (int i = 0; i < 10; i++)
+                            {
+                                c.Publish("foo", null);
+                                c.Publish("bar", null);
+                            }
+
+                            c.Flush();
+
+                            Assert.True(ev1.WaitOne(10000));
+                            Assert.True(ev2.WaitOne(10000));
+                            s1.Unsubscribe();
+
+                            Assert.True(s1Count == COUNT);
+                            Assert.True(s2Count == COUNT);
+
+                            ev2.Reset();
+
+                            c.Publish("bar", null);
+                            c.Flush();
+
+                            Assert.True(ev2.WaitOne(10000));
+                            Assert.True(s2Count == COUNT + 1);
+
+                            s2.Unsubscribe();
                         }
-                    });
-
-                    for (int i = 0; i < 10; i++)
-                    {
-                        c.Publish("foo", null);
-                        c.Publish("bar", null);
                     }
-                    c.Flush();
-
-                    Assert.True(ev1.WaitOne(10000));
-                    Assert.True(ev2.WaitOne(10000));
-                    s1.Unsubscribe();
-
-                    Assert.True(s1Count == COUNT);
-                    Assert.True(s2Count == COUNT);
-
-                    ev2.Reset();
-
-                    c.Publish("bar", null);
-                    c.Flush();
-
-                    Assert.True(ev2.WaitOne(10000));
-                    Assert.True(s2Count == COUNT + 1);
-
-                    s2.Unsubscribe();
                 }
             }
         }
@@ -839,7 +856,11 @@ namespace IntegrationTests
                     // ensure we are not creating a thread per subscriber.
                     Assert.True(Process.GetCurrentProcess().Threads.Count < 500);
 
-                    subs.ForEach((s) => { s.Unsubscribe(); });
+                    subs.ForEach(s =>
+                    {
+                        s.Unsubscribe();
+                        s.Dispose();
+                    });
                 }
             }
         }
@@ -985,9 +1006,11 @@ namespace IntegrationTests
             {
                 using (IConnection c = Context.ConnectionFactory.CreateConnection(opts))
                 {
-                    ISyncSubscription s = c.SubscribeSync("foo");
-                    c.Publish("foo", null);
-                    s.NextMessage(10000);
+                    using (var s = c.SubscribeSync("foo"))
+                    {
+                        c.Publish("foo", null);
+                        s.NextMessage(10000);
+                    }
                 }
             }
         }
@@ -1001,24 +1024,25 @@ namespace IntegrationTests
             EventHandler<MsgHandlerEventArgs> mh = (obj, args) => { /* NOOP */ };
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
-                var c = Context.OpenConnection(Context.Server1.Port);
-
-                foreach (string s in invalidSubjects)
+                using (var c = Context.OpenConnection(Context.Server1.Port))
                 {
-                    Assert.Throws<NATSBadSubscriptionException>(() => c.SubscribeSync(s));
-                    Assert.Throws<NATSBadSubscriptionException>(() => c.SubscribeSync(s, "qgroup"));
-                    Assert.Throws<NATSBadSubscriptionException>(() => c.SubscribeAsync(s));
-                    Assert.Throws<NATSBadSubscriptionException>(() => c.SubscribeAsync(s, mh));
-                    Assert.Throws<NATSBadSubscriptionException>(() => c.SubscribeAsync(s, "qgroup"));
-                    Assert.Throws<NATSBadSubscriptionException>(() => c.SubscribeAsync(s, "qgroup", mh));
-                }
+                    foreach (string s in invalidSubjects)
+                    {
+                        Assert.Throws<NATSBadSubscriptionException>(() => c.SubscribeSync(s));
+                        Assert.Throws<NATSBadSubscriptionException>(() => c.SubscribeSync(s, "qgroup"));
+                        Assert.Throws<NATSBadSubscriptionException>(() => c.SubscribeAsync(s));
+                        Assert.Throws<NATSBadSubscriptionException>(() => c.SubscribeAsync(s, mh));
+                        Assert.Throws<NATSBadSubscriptionException>(() => c.SubscribeAsync(s, "qgroup"));
+                        Assert.Throws<NATSBadSubscriptionException>(() => c.SubscribeAsync(s, "qgroup", mh));
+                    }
 
-                foreach (string s in invalidQNames)
-                {
-                    Assert.Throws<NATSBadSubscriptionException>(() => c.SubscribeSync("subject", s));
+                    foreach (string s in invalidQNames)
+                    {
+                        Assert.Throws<NATSBadSubscriptionException>(() => c.SubscribeSync("subject", s));
 
-                    Assert.Throws<NATSBadSubscriptionException>(() => c.SubscribeAsync("subject", s));
-                    Assert.Throws<NATSBadSubscriptionException>(() => c.SubscribeAsync("subject", s, mh));
+                        Assert.Throws<NATSBadSubscriptionException>(() => c.SubscribeAsync("subject", s));
+                        Assert.Throws<NATSBadSubscriptionException>(() => c.SubscribeAsync("subject", s, mh));
+                    }
                 }
             }
         }
@@ -1132,21 +1156,20 @@ namespace IntegrationTests
             {
                 using (IConnection c = Context.OpenConnection(Context.Server1.Port))
                 {
-                    ISyncSubscription s = c.SubscribeSync("foo");
+                    using (var s = c.SubscribeSync("foo"))
+                    {
+                        string replyTo = c.NewInbox();
+                        c.Publish("foo", replyTo, Encoding.UTF8.GetBytes("message"));
 
-                    string replyTo = c.NewInbox();
-                    c.Publish("foo", replyTo, Encoding.UTF8.GetBytes("message"));
+                        Msg m = s.NextMessage(1000);
+                        Assert.NotNull(m);
+                        Assert.Equal(replyTo, m.Reply);
 
-                    Msg m = s.NextMessage(1000);
-                    Assert.NotNull(m);
-                    Assert.Equal(replyTo, m.Reply);
+                        c.Close();
 
-                    c.Close();
-
-                    byte[] reply = Encoding.UTF8.GetBytes("reply");
-                    Assert.ThrowsAny<NATSConnectionClosedException>(() => m.Respond(reply));
-
-                    s.Dispose();
+                        byte[] reply = Encoding.UTF8.GetBytes("reply");
+                        Assert.ThrowsAny<NATSConnectionClosedException>(() => m.Respond(reply));
+                    }
                 }
             }
         }
@@ -1154,40 +1177,33 @@ namespace IntegrationTests
         [Fact]
         public void TestRespondFailsWithServerClosed()
         {
-            IConnection c = null;
-            ISyncSubscription s = null;
-            try
+            Msg m;
+            using (NATSServer ns = NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
-                Msg m;
-                using (NATSServer ns = NATSServer.CreateFastAndVerify(Context.Server1.Port))
+                Options options = Context.GetTestOptions(Context.Server1.Port);
+                options.AllowReconnect = false;
+
+                using (var c = Context.ConnectionFactory.CreateConnection(options))
                 {
-                    Options options = Context.GetTestOptions(Context.Server1.Port);
-                    options.AllowReconnect = false;
+                    using (var s = c.SubscribeSync("foo"))
+                    {
+                        string replyTo = c.NewInbox();
 
-                    c = Context.ConnectionFactory.CreateConnection(options);
-                    s = c.SubscribeSync("foo");
+                        c.Publish("foo", replyTo, Encoding.UTF8.GetBytes("message"));
 
-                    string replyTo = c.NewInbox();
+                        m = s.NextMessage(1000);
+                        Assert.NotNull(m);
+                        Assert.Equal(replyTo, m.Reply);
+                        
+                        ns.Shutdown();
+                
+                        // Give the server time to close
+                        Thread.Sleep(2000);
 
-                    c.Publish("foo", replyTo, Encoding.UTF8.GetBytes("message"));
-
-                    m = s.NextMessage(1000);
-                    Assert.NotNull(m);
-                    Assert.Equal(replyTo, m.Reply);
-
-                    ns.Shutdown();
+                        byte[] reply = Encoding.UTF8.GetBytes("reply");
+                        Assert.ThrowsAny<NATSConnectionClosedException>(() => m.Respond(reply));
+                    }
                 }
-
-                // Give the server time to close
-                Thread.Sleep(2000);
-
-                byte[] reply = Encoding.UTF8.GetBytes("reply");
-                Assert.ThrowsAny<NATSConnectionClosedException>(() => m.Respond(reply));
-            }
-            finally
-            {
-                c?.Dispose();
-                s?.Dispose();
             }
         }
     }

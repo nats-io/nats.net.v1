@@ -246,13 +246,15 @@ namespace IntegrationTests
                     ev.Set();
                 };
 
-                IConnection c = Context.ConnectionFactory.CreateConnection(opts);
-                s1.Shutdown();
+                using (Context.ConnectionFactory.CreateConnection(opts))
+                {
+                    s1.Shutdown();
 
-                // This should fail over to S2 where an authorization timeout occurs
-                // then successfully reconnect to S3.
+                    // This should fail over to S2 where an authorization timeout occurs
+                    // then successfully reconnect to S3.
 
-                Assert.True(ev.WaitOne(20000));
+                    Assert.True(ev.WaitOne(20000));
+                }
             }
         }
 
@@ -280,30 +282,31 @@ namespace IntegrationTests
                     ev.Set();
                 };
 
-                IConnection c = Context.ConnectionFactory.CreateConnection(opts);
+                using (var c = Context.ConnectionFactory.CreateConnection(opts))
+                {
+                    // inject an authorization timeout, as if it were processed by an incoming server message.
+                    // this is done at the parser level so that parsing is also tested,
+                    // therefore it needs reflection since Parser is an internal type.
+                    Type parserType = typeof(Connection).Assembly.GetType("NATS.Client.Parser");
+                    Assert.NotNull(parserType);
 
-                // inject an authorization timeout, as if it were processed by an incoming server message.
-                // this is done at the parser level so that parsing is also tested,
-                // therefore it needs reflection since Parser is an internal type.
-                Type parserType = typeof(Connection).Assembly.GetType("NATS.Client.Parser");
-                Assert.NotNull(parserType);
+                    BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance;
+                    object parser = Activator.CreateInstance(parserType, flags, null, new object[] {c}, null);
+                    Assert.NotNull(parser);
 
-                BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance;
-                object parser = Activator.CreateInstance(parserType, flags, null, new object[] { c }, null);
-                Assert.NotNull(parser);
+                    MethodInfo parseMethod = parserType.GetMethod("parse", flags);
+                    Assert.NotNull(parseMethod);
 
-                MethodInfo parseMethod = parserType.GetMethod("parse", flags);
-                Assert.NotNull(parseMethod);
+                    byte[] bytes = "-ERR 'Authorization Timeout'\r\n".ToCharArray().Select(ch => (byte) ch).ToArray();
+                    parseMethod.Invoke(parser, new object[] {bytes, bytes.Length});
 
-                byte[] bytes = "-ERR 'Authorization Timeout'\r\n".ToCharArray().Select(ch => (byte)ch).ToArray();
-                parseMethod.Invoke(parser, new object[] { bytes, bytes.Length });
+                    // sleep to allow the client to process the error, then shutdown the server.
+                    Thread.Sleep(250);
+                    s1.Shutdown();
 
-                // sleep to allow the client to process the error, then shutdown the server.
-                Thread.Sleep(250);
-                s1.Shutdown();
-
-                // Wait for a reconnect.
-                Assert.True(ev.WaitOne(20000));
+                    // Wait for a reconnect.
+                    Assert.True(ev.WaitOne(20000));
+                }
             }
         }
 #endif

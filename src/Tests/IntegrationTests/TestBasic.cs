@@ -36,18 +36,19 @@ namespace IntegrationTests
         {
             using (NATSServer.CreateFastAndVerify())
             {
-                IConnection c = Context.OpenConnection();
+                using (var c = Context.OpenConnection())
+                {
+                    string u = c.ConnectedUrl;
 
-                string u = c.ConnectedUrl;
+                    Assert.False(string.IsNullOrWhiteSpace(u), string.Format("Invalid connected url {0}.", u));
 
-                Assert.False(string.IsNullOrWhiteSpace(u), string.Format("Invalid connected url {0}.", u));
+                    Assert.Equal(Defaults.Url, u);
 
-                Assert.Equal(Defaults.Url, u);
+                    c.Close();
+                    u = c.ConnectedUrl;
 
-                c.Close();
-                u = c.ConnectedUrl;
-
-                Assert.Null(u);
+                    Assert.Null(u);
+                }
             }
         }
 
@@ -56,17 +57,17 @@ namespace IntegrationTests
         {
             using (NATSServer.CreateFastAndVerify())
             {
-                IConnection c = Context.OpenConnection();
-
-                Task[] tasks = new Task[10];
-
-                for (int i = 0; i < 10; i++)
+                using (var c = Context.OpenConnection())
                 {
+                    Task[] tasks = new Task[10];
 
-                    tasks[i] = Task.Run(() => c.Close());
+                    for (int i = 0; i < 10; i++)
+                    {
+                        tasks[i] = Task.Run(() => c.Close());
+                    }
+
+                    Task.WaitAll(tasks);
                 }
-
-                Task.WaitAll(tasks);
             }
         }
 
@@ -303,31 +304,40 @@ namespace IntegrationTests
                 var opts = Context.GetTestOptions();
                 opts.AllowReconnect = false;
 
-                var c = Context.ConnectionFactory.CreateConnection(opts);
-
-                using (ISyncSubscription s = c.SubscribeSync("foo"))
+                using (var c = Context.ConnectionFactory.CreateConnection(opts))
                 {
-                    c.Publish("foo", "reply", omsg);
-                    c.Flush();
+                    using (ISyncSubscription s = c.SubscribeSync("foo"))
+                    {
+                        c.Publish("foo", "reply", omsg);
+                        c.Flush();
+                    }
+
+                    // Test a timeout, locally this may actually succeed, 
+                    // so allow for that.
+                    // TODO: find a way to debug/pause the server to allow
+                    // for timeouts.
+                    try
+                    {
+                        c.Flush(1);
+                    }
+                    catch (NATSTimeoutException)
+                    {
+                    }
+
+                    Assert.Throws<ArgumentOutOfRangeException>(() => { c.Flush(-1); });
+
+                    // test a closed connection
+                    c.Close();
+                    Assert.Throws<NATSConnectionClosedException>(() => { c.Flush(); });
                 }
 
-                // Test a timeout, locally this may actually succeed, 
-                // so allow for that.
-                // TODO: find a way to debug/pause the server to allow
-                // for timeouts.
-                try { c.Flush(1); } catch (NATSTimeoutException) {}
-
-                Assert.Throws<ArgumentOutOfRangeException>(() => { c.Flush(-1); });
-
-                // test a closed connection
-                c.Close();
-                Assert.Throws<NATSConnectionClosedException>(() => { c.Flush(); });
-
                 // test a lost connection
-                c = Context.ConnectionFactory.CreateConnection(opts);
-                server.Shutdown();
-                Thread.Sleep(500);
-                Assert.Throws<NATSConnectionClosedException>(() => { c.Flush(); });
+                using (var c = Context.ConnectionFactory.CreateConnection(opts))
+                {
+                    server.Shutdown();
+                    Thread.Sleep(500);
+                    Assert.Throws<NATSConnectionClosedException>(() => { c.Flush(); });
+                }
             }
         }
 
@@ -798,36 +808,35 @@ namespace IntegrationTests
                 var opts = Context.GetTestOptionsWithDefaultTimeout();
                 opts.AllowReconnect = false;
                 opts.UseOldRequestStyle = useOldRequestStyle;
-                var conn = Context.ConnectionFactory.CreateConnection(opts);
+                using (var conn = Context.ConnectionFactory.CreateConnection(opts))
+                {
+                    // success condition
+                    using (var sub = conn.SubscribeAsync("foo", (obj, args) => { conn.Publish(args.Message.Reply, new byte[0]); }))
+                    {
+                        sw.Start();
+                        await conn.RequestAsync("foo", new byte[0], 5000);
+                        sw.Stop();
+                        Assert.True(sw.ElapsedMilliseconds < 5000, "Unexpected timeout behavior");
+                        sub.Unsubscribe();
+                    }
 
-                // success condition
-                var sub = conn.SubscribeAsync("foo", (obj, args) => {
-                    conn.Publish(args.Message.Reply, new byte[0]);
-                });
-
-                sw.Start();
-                await conn.RequestAsync("foo", new byte[0], 5000);
-                sw.Stop();
-                Assert.True(sw.ElapsedMilliseconds < 5000, "Unexpected timeout behavior");
-                sub.Unsubscribe();
-
-                // valid connection, but no response
-                sw.Restart();
-                await Assert.ThrowsAsync<NATSTimeoutException>(() => { return conn.RequestAsync("test", new byte[0], 500); });
-                sw.Stop();
-                long elapsed = sw.ElapsedMilliseconds;
-                Assert.True(elapsed >= 500, string.Format("Unexpected value (should be > 500): {0}", elapsed));
-                long variance = elapsed - 500;
+                    // valid connection, but no response
+                    sw.Restart();
+                    await Assert.ThrowsAsync<NATSTimeoutException>(() => { return conn.RequestAsync("test", new byte[0], 500); });
+                    sw.Stop();
+                    long elapsed = sw.ElapsedMilliseconds;
+                    Assert.True(elapsed >= 500, string.Format("Unexpected value (should be > 500): {0}", elapsed));
+                    long variance = elapsed - 500;
 #if DEBUG
-                Assert.True(variance < 250, string.Format("Invalid timeout variance: {0}", variance));
+                    Assert.True(variance < 250, string.Format("Invalid timeout variance: {0}", variance));
 #else
                 Assert.True(variance < 100, string.Format("Invalid timeout variance: {0}", variance));
 #endif
-
-                // Test an invalid connection
-                server.Shutdown();
-                Thread.Sleep(500);
-                await Assert.ThrowsAsync<NATSConnectionClosedException>(() => { return conn.RequestAsync("test", new byte[0], 1000); });
+                    // Test an invalid connection
+                    server.Shutdown();
+                    Thread.Sleep(500);
+                    await Assert.ThrowsAsync<NATSConnectionClosedException>(() => { return conn.RequestAsync("test", new byte[0], 1000); });
+                }
             }
         }
 
@@ -1094,16 +1103,17 @@ namespace IntegrationTests
         {
             using (NATSServer.CreateFastAndVerify())
             {
-                IConnection c = Context.OpenConnection();
-
-                for (int i = 0; i < 1000; i++)
+                using (var c = Context.OpenConnection())
                 {
-                    c.Publish("foo", Encoding.UTF8.GetBytes("Hello"));
+                    for (int i = 0; i < 1000; i++)
+                    {
+                        c.Publish("foo", Encoding.UTF8.GetBytes("Hello"));
+                    }
+
+                    c.Flush();
+
+                    Task.Run(() => c.Close()).Wait();
                 }
-
-                c.Flush();
-
-                Task.Run(() => c.Close());
             }
         }
 
@@ -1156,21 +1166,25 @@ namespace IntegrationTests
                     c.ResetStats();
 
                     // Test both sync and async versions of subscribe.
-                    IAsyncSubscription s1 = c.SubscribeAsync("foo");
-                    s1.MessageHandler += (sender, arg) => { };
-                    s1.Start();
-
-                    ISyncSubscription s2 = c.SubscribeSync("foo");
-
-                    for (int i = 0; i < iter; i++)
+                    using (var s1 = c.SubscribeAsync("foo"))
                     {
-                        c.Publish("foo", data);
-                    }
-                    c.Flush(1000);
+                        s1.MessageHandler += (sender, arg) => { };
+                        s1.Start();
 
-                    stats = c.Stats;
-                    Assert.Equal(2 * iter, stats.InMsgs);
-                    Assert.Equal(2 * iter * data.Length, stats.InBytes);
+                        using (c.SubscribeSync("foo"))
+                        {
+                            for (int i = 0; i < iter; i++)
+                            {
+                                c.Publish("foo", data);
+                            }
+
+                            c.Flush(1000);
+
+                            stats = c.Stats;
+                            Assert.Equal(2 * iter, stats.InMsgs);
+                            Assert.Equal(2 * iter * data.Length, stats.InBytes);
+                        }
+                    }
                 }
             }
         }
@@ -1383,22 +1397,28 @@ namespace IntegrationTests
 
             using (NATSServer.CreateFastAndVerify())
             {
-                IConnection c = Context.ConnectionFactory.CreateConnection(urls);
-                Assert.Equal(c.Opts.Servers[0],url1);
-                Assert.Equal(c.Opts.Servers[1],url2);
-                Assert.Equal(c.Opts.Servers[2],url3);
+                using (var c = Context.ConnectionFactory.CreateConnection(urls))
+                {
+                    Assert.Equal(c.Opts.Servers[0], url1);
+                    Assert.Equal(c.Opts.Servers[1], url2);
+                    Assert.Equal(c.Opts.Servers[2], url3);
 
-                c.Close();
+                    c.Close();
+                }
 
                 urls = url1 + "    , " + url2 + "," + url3;
-                c = Context.ConnectionFactory.CreateConnection(urls);
-                Assert.Equal(c.Opts.Servers[0],url1);
-                Assert.Equal(c.Opts.Servers[1],url2);
-                Assert.Equal(c.Opts.Servers[2],url3);
-                c.Close();
+                using (var c = Context.ConnectionFactory.CreateConnection(urls))
+                {
+                    Assert.Equal(c.Opts.Servers[0], url1);
+                    Assert.Equal(c.Opts.Servers[1], url2);
+                    Assert.Equal(c.Opts.Servers[2], url3);
+                    c.Close();
+                }
 
-                c = Context.ConnectionFactory.CreateConnection(url1);
-                c.Close();
+                using(var c = Context.ConnectionFactory.CreateConnection(url1))
+                {
+                    c.Close();
+                }
             }
         }
 
@@ -1432,30 +1452,36 @@ namespace IntegrationTests
                 var opts = Context.GetTestOptions(Context.Server3.Port);
                 opts.NoRandomize = false;
 
-                var c = Context.ConnectionFactory.CreateConnection(opts);
-                Assert.True(assureClusterFormed(c, 7),
-                    "Incomplete cluster with server count: " + c.Servers.Length);
-                c.Close();
+                using (var c = Context.ConnectionFactory.CreateConnection(opts))
+                {
+                    Assert.True(assureClusterFormed(c, 7),
+                        "Incomplete cluster with server count: " + c.Servers.Length);
+                    c.Close();
+                }
 
                 // Create a new connection to start from scratch, and recieve 
                 // the entire server list at once.
-                c = Context.ConnectionFactory.CreateConnection(opts);
-                Assert.True(assureClusterFormed(c, 7),
-                    "Incomplete cluster with server count: " + c.Servers.Length);
-
-                for (int i = 0; i < 50; i++)
+                using (var c = Context.ConnectionFactory.CreateConnection(opts))
                 {
-                    var c2 = Context.ConnectionFactory.CreateConnection(opts);
                     Assert.True(assureClusterFormed(c, 7),
                         "Incomplete cluster with server count: " + c.Servers.Length);
 
-                    // The first urls should be the same.
-                    Assert.Equal(c.Servers[0],c2.Servers[0]);
+                    for (int i = 0; i < 50; i++)
+                    {
+                        using (var c2 = Context.ConnectionFactory.CreateConnection(opts))
+                        {
+                            Assert.True(assureClusterFormed(c, 7),
+                                "Incomplete cluster with server count: " + c.Servers.Length);
 
-                    c2.Close();
+                            // The first urls should be the same.
+                            Assert.Equal(c.Servers[0], c2.Servers[0]);
+
+                            c2.Close();
+                        }
+                    }
+
+                    c.Close();
                 }
-
-                c.Close();
             }
         }
 
@@ -1477,34 +1503,36 @@ namespace IntegrationTests
             // from being added - for adding servers, 127.0.0.1 matches localhost.
             using (NATSServer s1 = NATSServer.Create(Context.Server3.Port, $"-a localhost --cluster nats://127.0.0.1:{Context.ClusterServer5.Port} --routes nats://127.0.0.1:{Context.ClusterServer6.Port}"))
             {
-                var c = Context.ConnectionFactory.CreateConnection(opts);
-
-                Assert.True(c.Servers.Length == 1);
-                // check that credentials are stripped.
-                Assert.Equal($"nats://127.0.0.1:{Context.Server3.Port}", c.Servers[0]);
-
-                // build an independent cluster
-                using (NATSServer s2 = NATSServer.Create(Context.Server4.Port, $"-a localhost --cluster nats://127.0.0.1:{Context.ClusterServer6.Port} --routes nats://127.0.0.1:{Context.ClusterServer5.Port}"))
+                using (var c = Context.ConnectionFactory.CreateConnection(opts))
                 {
-                    // wait until the servers are routed and the conn has the updated
-                    // server list.
-                    assureClusterFormed(c, 2);
-
-                    // Ensure the first server remains in place and has not been
-                    // randomized.
+                    Assert.True(c.Servers.Length == 1);
+                    // check that credentials are stripped.
                     Assert.Equal($"nats://127.0.0.1:{Context.Server3.Port}", c.Servers[0]);
-                    Assert.True(c.Servers.Length == 2);
-                    Assert.True(c.DiscoveredServers.Length == 1);
+
+                    // build an independent cluster
+                    using (NATSServer s2 = NATSServer.Create(Context.Server4.Port,
+                        $"-a localhost --cluster nats://127.0.0.1:{Context.ClusterServer6.Port} --routes nats://127.0.0.1:{Context.ClusterServer5.Port}"))
+                    {
+                        // wait until the servers are routed and the conn has the updated
+                        // server list.
+                        assureClusterFormed(c, 2);
+
+                        // Ensure the first server remains in place and has not been
+                        // randomized.
+                        Assert.Equal($"nats://127.0.0.1:{Context.Server3.Port}", c.Servers[0]);
+                        Assert.True(c.Servers.Length == 2);
+                        Assert.True(c.DiscoveredServers.Length == 1);
 
 
-                    // sanity check to ensure we can connect to another server.
-                    s1.Shutdown();
-                    Assert.True(evReconnect.WaitOne(10000));
-                    Assert.True(newUrl != null);
-                    Assert.Contains(Context.Server4.Port.ToString(), c.ConnectedUrl);
+                        // sanity check to ensure we can connect to another server.
+                        s1.Shutdown();
+                        Assert.True(evReconnect.WaitOne(10000));
+                        Assert.True(newUrl != null);
+                        Assert.Contains(Context.Server4.Port.ToString(), c.ConnectedUrl);
+                    }
+
+                    c.Close();
                 }
-
-                c.Close();
             }
         }
 
@@ -1526,40 +1554,41 @@ namespace IntegrationTests
                               s2 = NATSServer.Create(Context.Server2.Port, $"-a 127.0.0.1 --cluster nats://127.0.0.1:{Context.ClusterServer2.Port} --routes nats://127.0.0.1:{Context.ClusterServer1.Port}"),
                               s3 = NATSServer.Create(Context.Server3.Port, $"-a 127.0.0.1 --cluster nats://127.0.0.1:{Context.ClusterServer3.Port} --routes nats://127.0.0.1:{Context.ClusterServer1.Port}"))
             {
-
-
-                var c = Context.ConnectionFactory.CreateConnection(opts);
-                Assert.True(assureClusterFormed(c, 3),
-                    "Incomplete cluster with server count: " + c.Servers.Length);
-
-                // shutdown server 2
-                s2.Shutdown();
-
-                using (NATSServer s4 = NATSServer.Create(Context.Server4.Port, $"-a 127.0.0.1 --cluster nats://127.0.0.1:{Context.ClusterServer4.Port} --routes nats://127.0.0.1:{Context.ClusterServer1.Port}"))
+                using (var c = Context.ConnectionFactory.CreateConnection(opts))
                 {
-                    // wait for the update with new server to check.
-                    Assert.True(evDS.WaitOne(10000));
+                    Assert.True(assureClusterFormed(c, 3), "Incomplete cluster with server count: " + c.Servers.Length);
 
-                    // The server on port 4223 should be pruned out.
-                    //
-                    // Discovered servers should contain:
-                    // ["nats://127.0.0.1:4223",
-                    //  "nats://127.0.0.1:4224"]
-                    //
-                    LinkedList<string> discoveredServers = new LinkedList<string>(c.DiscoveredServers);
-                    Assert.True(discoveredServers.Count == 2);
-                    Assert.Contains($"nats://127.0.0.1:{Context.Server3.Port}", discoveredServers);
-                    Assert.Contains($"nats://127.0.0.1:{Context.Server4.Port}", discoveredServers);
+                    // shutdown server 2
+                    s2.Shutdown();
 
-                    // shutdown server 1 and wait for reconnect.
-                    s1.Shutdown();
-                    Assert.True(evRC.WaitOne(10000));
-                    // Make sure we did NOT delete our expclitly configured server.
-                    LinkedList<string> servers = new LinkedList<string>(c.Servers);
-                    Assert.True(servers.Count == 3); // explicit server is still there.
-                    Assert.Contains($"nats://127.0.0.1:{Context.Server1.Port}", servers);
+                    using (NATSServer s4 = NATSServer.Create(Context.Server4.Port,
+                        $"-a 127.0.0.1 --cluster nats://127.0.0.1:{Context.ClusterServer4.Port} --routes nats://127.0.0.1:{Context.ClusterServer1.Port}"))
+                    {
+                        // wait for the update with new server to check.
+                        Assert.True(evDS.WaitOne(10000));
+
+                        // The server on port 4223 should be pruned out.
+                        //
+                        // Discovered servers should contain:
+                        // ["nats://127.0.0.1:4223",
+                        //  "nats://127.0.0.1:4224"]
+                        //
+                        LinkedList<string> discoveredServers = new LinkedList<string>(c.DiscoveredServers);
+                        Assert.True(discoveredServers.Count == 2);
+                        Assert.Contains($"nats://127.0.0.1:{Context.Server3.Port}", discoveredServers);
+                        Assert.Contains($"nats://127.0.0.1:{Context.Server4.Port}", discoveredServers);
+
+                        // shutdown server 1 and wait for reconnect.
+                        s1.Shutdown();
+                        Assert.True(evRC.WaitOne(10000));
+                        // Make sure we did NOT delete our expclitly configured server.
+                        LinkedList<string> servers = new LinkedList<string>(c.Servers);
+                        Assert.True(servers.Count == 3); // explicit server is still there.
+                        Assert.Contains($"nats://127.0.0.1:{Context.Server1.Port}", servers);
+                    }
+
+                    c.Close();
                 }
-                c.Close();
             }
         }
 
@@ -1596,17 +1625,21 @@ namespace IntegrationTests
 
             using (NATSServer.CreateFastAndVerify())
             {
-                var c = Context.ConnectionFactory.CreateConnection(opts);
-                Assert.True(listsEqual(serverList, c.Servers));
-                c.Close();
+                using (var c = Context.ConnectionFactory.CreateConnection(opts))
+                {
+                    Assert.True(listsEqual(serverList, c.Servers));
+                    c.Close();
+                }
 
                 bool wasRandom = false;
                 opts.NoRandomize = false;
                 for (int i = 0; i < 10; i++)
                 {
-                    c = Context.ConnectionFactory.CreateConnection(opts);
-                    wasRandom = (listsEqual(serverList, c.Servers) == false);
-                    c.Close();
+                    using (var c = Context.ConnectionFactory.CreateConnection(opts))
+                    {
+                        wasRandom = (listsEqual(serverList, c.Servers) == false);
+                        c.Close();
+                    }
 
                     if (wasRandom)
                         break;
@@ -1622,11 +1655,12 @@ namespace IntegrationTests
             opts.Url = $"nats://localhost:{Context.DefaultServer.Port}";
             for (int i = 0; i < 5; i++)
             {
-                c = Context.ConnectionFactory.CreateConnection(opts);
-                wasRandom = (listsEqual(serverList, c.Servers) == false);
-                Assert.True(Equals(serverList[0], c.Servers[0]));
-                c.Close();
-
+                using(var c = Context.ConnectionFactory.CreateConnection(opts))
+                {
+                    wasRandom = (listsEqual(serverList, c.Servers) == false);
+                    Assert.True(Equals(serverList[0], c.Servers[0]));
+                    c.Close();
+                }
                 if (wasRandom)
                     break;
             }
@@ -1642,28 +1676,32 @@ namespace IntegrationTests
                 var o = ConnectionFactory.GetDefaultOptions();
 
                 // simple url connect
-                Context.ConnectionFactory.CreateConnection("127.0.0.1").Close();
+                using (var cn = Context.ConnectionFactory.CreateConnection("127.0.0.1"))
+                    cn.Close();
 
                 // simple url
                 o.Url = "127.0.0.1";
-                Context.ConnectionFactory.CreateConnection(o);
+                using(Context.ConnectionFactory.CreateConnection(o)){}
 
                 // servers with a simple hostname
                 o.Url = null;
                 o.Servers = new string[] { "127.0.0.1" };
-                Context.ConnectionFactory.CreateConnection(o).Close();
+                using(var cn = Context.ConnectionFactory.CreateConnection(o))
+                    cn.Close();
 
                 // simple url connect
-                Context.ConnectionFactory.CreateConnection("127.0.0.1, localhost").Close();
+                using(var cn = Context.ConnectionFactory.CreateConnection("127.0.0.1, localhost"))
+                    cn.Close();
 
                 //  url with multiple hosts
                 o.Url = "127.0.0.1,localhost";
-                Context.ConnectionFactory.CreateConnection(o);
+                using (Context.ConnectionFactory.CreateConnection(o)) {}
 
                 // servers with multiple hosts
                 o.Url = null;
                 o.Servers = new string[] { "127.0.0.1", "localhost" };
-                Context.ConnectionFactory.CreateConnection(o).Close();
+                using(var cn = Context.ConnectionFactory.CreateConnection(o))
+                    cn.Close();
             }
         }
 
@@ -1676,19 +1714,18 @@ namespace IntegrationTests
                 var o = ConnectionFactory.GetDefaultOptions();
                 o.NoEcho = true;
 
-                var c = Context.ConnectionFactory.CreateConnection(o);
-
-                c.SubscribeAsync("foo", (obj, args) =>
+                using (var c = Context.ConnectionFactory.CreateConnection(o))
                 {
-                    Interlocked.Increment(ref received);
-                });
+                    using (c.SubscribeAsync("foo", (obj, args) => { Interlocked.Increment(ref received); }))
+                    {
+                        c.Publish("foo", null);
+                        c.Flush();
 
-                c.Publish("foo", null);
-                c.Flush();
-
-                // hate sleeping, but with slow CI's, we need to give time to
-                //make sure that message never arrives.
-                Thread.Sleep(1000);
+                        // hate sleeping, but with slow CI's, we need to give time to
+                        //make sure that message never arrives.
+                        Thread.Sleep(1000);
+                    }
+                }
 
                 Assert.True(Interlocked.Read(ref received) == 0);
             }
@@ -1697,8 +1734,6 @@ namespace IntegrationTests
         [Fact]
         public void TestServersOption()
         {
-            Options o = Context.GetTestOptions();
-
             Assert.ThrowsAny<NATSNoServersException>(() => Context.ConnectionFactory.CreateConnection());
         }
 

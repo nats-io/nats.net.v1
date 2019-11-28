@@ -31,7 +31,6 @@ namespace IntegrationTests
         [Fact]
         public void TestServersOption()
         {
-            IConnection c = null;
             ConnectionFactory cf = Context.ConnectionFactory;
             Options o = Context.GetTestOptions();
             o.NoRandomize = true;
@@ -42,17 +41,21 @@ namespace IntegrationTests
             // Make sure we can connect to first server if running
             using (NATSServer ns = NATSServer.Create(Context.Server1.Port))
             {
-                c = cf.CreateConnection(o);
-                Assert.Equal(Context.Server1.Url, c.ConnectedUrl);
-                c.Close();
+                using (var c = cf.CreateConnection(o))
+                {
+                    Assert.Equal(Context.Server1.Url, c.ConnectedUrl);
+                    c.Close();
+                }
             }
 
             // make sure we can connect to a non-first server.
-            using (NATSServer ns = NATSServer.Create(Context.Server6.Port))
+            using (NATSServer.Create(Context.Server6.Port))
             {
-                c = cf.CreateConnection(o);
-                Assert.Equal(Context.Server6.Url, c.ConnectedUrl);
-                c.Close();
+                using (var c = cf.CreateConnection(o))
+                {
+                    Assert.Equal(Context.Server6.Url, c.ConnectedUrl);
+                    c.Close();
+                }
             }
         }
 
@@ -157,7 +160,6 @@ namespace IntegrationTests
         [Fact]
         public void TestServerDiscoveredHandler()
         {
-            IConnection c = null;
             ConnectionFactory cf = Context.ConnectionFactory;
             Options o = Context.GetTestOptions();
 
@@ -177,7 +179,7 @@ namespace IntegrationTests
             using (NATSServer ns1 = NATSServer.Create(seedServerArgs))
             {
                 // ...then connect to it...
-                using (c = cf.CreateConnection(o))
+                using (var c = cf.CreateConnection(o))
                 {
                     Assert.Equal(Context.Server1.Url,c.ConnectedUrl);
 
@@ -320,24 +322,24 @@ namespace IntegrationTests
 
             using (NATSServer s1 = NATSServer.Create(Context.Server1.Port))
             {
-                IConnection c = Context.ConnectionFactory.CreateConnection(opts);
-
-                lock (mu)
+                using (var c = Context.ConnectionFactory.CreateConnection(opts))
                 {
-                    s1.Shutdown();
-                    // wait for disconnect
-                    Assert.True(Monitor.Wait(mu, 10000));
+                    lock (mu)
+                    {
+                        s1.Shutdown();
+                        // wait for disconnect
+                        Assert.True(Monitor.Wait(mu, 10000));
 
 
-                    // Wait, want to make sure we don't spin on
-                    //reconnect to non-existant servers.
-                    Thread.Sleep(1000);
+                        // Wait, want to make sure we don't spin on
+                        //reconnect to non-existant servers.
+                        Thread.Sleep(1000);
 
-                    Assert.False(closedCbCalled);
-                    Assert.True(disconnectHandlerCalled);
-                    Assert.True(c.State == ConnState.RECONNECTING);
+                        Assert.False(closedCbCalled);
+                        Assert.True(disconnectHandlerCalled);
+                        Assert.True(c.State == ConnState.RECONNECTING);
+                    }
                 }
-
             }
         }
 

@@ -27,7 +27,9 @@ namespace IntegrationTests
     /// </summary>
     public class TestEncoding : TestSuite<EncodingSuiteContext>
     {
-        public TestEncoding(EncodingSuiteContext context) : base(context) { }
+        public TestEncoding(EncodingSuiteContext context) : base(context)
+        {
+        }
 
         public IEncodedConnection DefaultEncodedConnection => Context.OpenEncodedConnectionWithDefaultTimeout(Context.Server1.Port);
 
@@ -44,7 +46,7 @@ namespace IntegrationTests
                 if (o.GetType() != this.GetType())
                     return false;
 
-                SerializationTestObj to = (SerializationTestObj)o;
+                SerializationTestObj to = (SerializationTestObj) o;
 
                 return (a == to.a && b == to.b && c.Equals(to.c));
             }
@@ -74,8 +76,8 @@ namespace IntegrationTests
 
                     EventHandler<EncodedMessageEventArgs> eh = (sender, args) =>
                     {
-                    // Ensure we blow up in the cast
-                    SerializationTestObj so = (SerializationTestObj)args.ReceivedObject;
+                        // Ensure we blow up in the cast
+                        SerializationTestObj so = (SerializationTestObj) args.ReceivedObject;
                         Assert.True(so.Equals(origObj));
 
                         lock (mu)
@@ -108,16 +110,19 @@ namespace IntegrationTests
 
             public int A { get; set; }
 
-            public override int GetHashCode() { return base.GetHashCode(); }
+            public override int GetHashCode()
+            {
+                return base.GetHashCode();
+            }
 
             public override bool Equals(Object o)
             {
                 if (o.GetType() != GetType())
                     return false;
 
-                BasicObj to = (BasicObj)o;
+                BasicObj to = (BasicObj) o;
 
-                return (A == ((BasicObj)to).A);
+                return (A == ((BasicObj) to).A);
             }
         }
 
@@ -128,33 +133,37 @@ namespace IntegrationTests
             {
                 using (IEncodedConnection c = DefaultEncodedConnection)
                 {
-                    c.SubscribeAsync("replier", (obj, args) => {
+                    using (c.SubscribeAsync("replier", (obj, args) =>
+                    {
                         try
                         {
-                            c.Publish(args.Reply, new BasicObj(((BasicObj)args.ReceivedObject).A));
+                            c.Publish(args.Reply, new BasicObj(((BasicObj) args.ReceivedObject).A));
                         }
                         catch (Exception ex)
                         {
                             Assert.True(false, "Replier Exception: " + ex.Message);
                         }
-                        c.Flush();
-                    });
-                    c.Flush();
 
-                    using (IEncodedConnection c2 = DefaultEncodedConnection)
+                        c.Flush();
+                    }))
                     {
-                        System.Threading.Tasks.Parallel.For(0, 20, i =>
+                        c.Flush();
+
+                        using (IEncodedConnection c2 = DefaultEncodedConnection)
                         {
-                            try
+                            System.Threading.Tasks.Parallel.For(0, 20, i =>
                             {
-                                var bo = new BasicObj(i);
-                                Assert.True(bo.Equals(c2.Request("replier", bo, 30000)), "Objects did not equal");
-                            }
-                            catch (Exception ex)
-                            {
-                                Assert.True(false, "Exception: " + ex.Message);
-                            }
-                        });
+                                try
+                                {
+                                    var bo = new BasicObj(i);
+                                    Assert.True(bo.Equals(c2.Request("replier", bo, 30000)), "Objects did not equal");
+                                }
+                                catch (Exception ex)
+                                {
+                                    Assert.True(false, "Exception: " + ex.Message);
+                                }
+                            });
+                        }
                     }
                 }
             }
@@ -177,10 +186,11 @@ namespace IntegrationTests
         [DataContract]
         public class JsonObject
         {
-            [DataMember]
-            public string Value = "";
+            [DataMember] public string Value = "";
 
-            public JsonObject() { }
+            public JsonObject()
+            {
+            }
 
             public JsonObject(string val)
             {
@@ -189,7 +199,7 @@ namespace IntegrationTests
 
             public override bool Equals(object obj)
             {
-                return (((JsonObject)obj).Value == Value);
+                return (((JsonObject) obj).Value == Value);
             }
 
             public override int GetHashCode()
@@ -217,7 +227,7 @@ namespace IntegrationTests
                         ev.Set();
                     };
 
-                    using (IAsyncSubscription s = c.SubscribeAsync("foo", eh))
+                    using (c.SubscribeAsync("foo", eh))
                     {
                         for (int i = 0; i < 10; i++)
                             c.Publish("foo", jo);
@@ -228,7 +238,7 @@ namespace IntegrationTests
                     }
 
                     ev.Reset();
-                    using (IAsyncSubscription s = c.SubscribeAsync("foo", eh))
+                    using (c.SubscribeAsync("foo", eh))
                     {
                         c.Publish("foo", "bar", jo);
                         c.Flush();
@@ -255,10 +265,10 @@ namespace IntegrationTests
 
                     EventHandler<EncodedMessageEventArgs> eh = (sender, args) =>
                     {
-                    // Ensure we blow up in the cast or not implemented in .NET core
-                    try
+                        // Ensure we blow up in the cast or not implemented in .NET core
+                        try
                         {
-                            Exception invalid = (Exception)args.ReceivedObject;
+                            Exception invalid = (Exception) args.ReceivedObject;
                         }
                         catch (Exception)
                         {
@@ -306,7 +316,7 @@ namespace IntegrationTests
                 byte[] buffer = stream.GetBuffer();
                 long len = stream.Position;
                 var rv = new byte[len];
-                Array.Copy(buffer, rv, (int)len);
+                Array.Copy(buffer, rv, (int) len);
                 return rv;
 #else
                 ArraySegment<byte> buffer;
@@ -341,7 +351,7 @@ namespace IntegrationTests
 
                     EventHandler<EncodedMessageEventArgs> eh = (sender, args) =>
                     {
-                        JsonObject so = (JsonObject)args.ReceivedObject;
+                        JsonObject so = (JsonObject) args.ReceivedObject;
                         Assert.True(so.Equals(origObj));
 
                         ev.Set();
@@ -372,25 +382,23 @@ namespace IntegrationTests
 
                     EventHandler<EncodedMessageEventArgs> eh = (sender, args) =>
                     {
-                        JsonObject so = (JsonObject)args.ReceivedObject;
+                        JsonObject so = (JsonObject) args.ReceivedObject;
                         Assert.True(so.Equals(origObj));
 
                         c.Publish(args.Reply, new JsonObject("Received"));
                         c.Flush();
                     };
 
-                    using (IAsyncSubscription s = c.SubscribeAsync("foo", eh))
+                    using (c.SubscribeAsync("foo", eh))
                     {
-                        var jo = (JsonObject)c.Request("foo", origObj, 1000);
-                        Assert.Equal("Received",jo.Value);
+                        var jo = (JsonObject) c.Request("foo", origObj, 1000);
+                        Assert.Equal("Received", jo.Value);
 
-                        jo = (JsonObject)c.Request("foo", origObj, 1000);
-                        Assert.Equal("Received",jo.Value);
+                        jo = (JsonObject) c.Request("foo", origObj, 1000);
+                        Assert.Equal("Received", jo.Value);
                     }
                 }
             }
         }
     } // class
-
 } // namespace
-
