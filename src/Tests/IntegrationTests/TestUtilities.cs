@@ -89,8 +89,8 @@ namespace IntegrationTests
             {
                 try
                 {
-                    var c = cf.CreateConnection(opts);
-                    c.Close();
+                    using(var c = cf.CreateConnection(opts))
+                        c.Close();
                     isVerifiedOk = true;
                     break;
                 }
@@ -262,7 +262,7 @@ namespace IntegrationTests
 
         private void Wait(int aquireCount, TimeSpan ts)
         {
-            if (System.Diagnostics.Debugger.IsAttached)
+            if (Debugger.IsAttached)
             {
                 ts = TimeSpan.FromMilliseconds(-1);
             }
