@@ -26,7 +26,7 @@ namespace IntegrationTests
     {
         public TestConnection(ConnectionSuiteContext context) : base(context) { }
 
-        [Fact]
+        [NatsFact]
         public void TestConnectionStatus()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
@@ -40,7 +40,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestCloseHandler()
         {
             AutoResetEvent ev = new AutoResetEvent(false);
@@ -65,7 +65,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestCloseDisconnectedHandler()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
@@ -106,7 +106,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestErrorHandlerWhenNotAllowingReconnectErrorShouldBeProvided()
         {
             var closedEv = new AutoResetEvent(false);
@@ -142,7 +142,7 @@ namespace IntegrationTests
             Assert.Equal(2, errors.Count);
         }
 
-        [Fact]
+        [NatsFact]
         public void TestErrorHandlerWhenAllowingReconnectErrorShouldNotBeProvided()
         {
             var closedEv = new AutoResetEvent(false);
@@ -188,7 +188,7 @@ namespace IntegrationTests
             Assert.Empty(errors);
         }
 
-        [Fact]
+        [NatsFact]
         public void TestServerStopDisconnectedHandler()
         {
             using (var s = NATSServer.CreateFastAndVerify(Context.Server1.Port))
@@ -213,7 +213,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestClosedConnections()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
@@ -252,7 +252,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestConnectVerbose()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
@@ -265,7 +265,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestServerDiscoveredHandlerNotCalledOnConnect()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
@@ -451,7 +451,7 @@ namespace IntegrationTests
             }
         }
         
-        [Fact]
+        [NatsFact]
         public void TestConnectionCloseAndDispose()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
@@ -480,7 +480,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestGenerateUniqueInboxNames()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
@@ -501,7 +501,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestInfineReconnect()
         {
             var reconnectEv = new AutoResetEvent(false);
@@ -555,7 +555,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void CanConnectWhenHandshakeTimeoutIsSpecified()
         {
             var opts = Context.GetTestOptionsWithDefaultTimeout(Context.Server1.Port);
@@ -579,7 +579,7 @@ namespace IntegrationTests
     {
         public TestConnectionSecurity(ConnectionSecuritySuiteContext context) : base(context) { }
 
-        [Fact]
+        [NatsFact]
         public void TestNKey()
         {
             using (NATSServer.CreateWithConfig(Context.Server1.Port, "nkey.conf"))
@@ -593,7 +593,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestInvalidNKey()
         {
             using (NATSServer.CreateWithConfig(Context.Server1.Port, "nkey.conf"))
@@ -612,7 +612,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void Test20Security()
         {
             AutoResetEvent ev = new AutoResetEvent(false);
@@ -637,7 +637,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void Test20SecurityFactoryApi()
         {
             using (NATSServer.CreateWithConfig(Context.Server1.Port, "operator.conf"))
@@ -655,7 +655,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void Test20SecurityHandlerExceptions()
         {
             bool userThrown = false;
@@ -687,7 +687,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void Test20SecurityHandlerNoJWTSet()
         {
             using (NATSServer.CreateWithConfig(Context.Server1.Port, "operator.conf"))
@@ -698,7 +698,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void Test20SecurityHandlerNoSigSet()
         {
             using (NATSServer.CreateWithConfig(Context.Server1.Port, "operator.conf"))
@@ -709,7 +709,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void Test20SecurityHandlers()
         {
             string userJWT = "eyJ0eXAiOiJqd3QiLCJhbGciOiJlZDI1NTE5In0.e" +
@@ -747,7 +747,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestUserPassTokenOptions()
         {
             using (NATSServer.Create(Context.Server1.Port, $"--auth foo"))
@@ -791,7 +791,7 @@ namespace IntegrationTests
     {
         public TestConnectionDrain(ConnectionDrainSuiteContext context) : base(context) { }
 
-        [Fact]
+        [NatsFact]
         public void TestDrain()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
@@ -828,7 +828,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestDrainAsync()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
@@ -871,7 +871,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestDrainSub()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
@@ -908,7 +908,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestDrainSubAsync()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
@@ -951,7 +951,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestDrainBadParams()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
@@ -973,7 +973,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestDrainTimeoutAsync()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
@@ -1011,7 +1011,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestDrainBlocking()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
@@ -1040,7 +1040,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestSubDrainBlockingTimeout()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
@@ -1081,7 +1081,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public async Task TestDrainStateBehavior()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
@@ -1127,7 +1127,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestFlushBuffer()
         {
             AutoResetEvent disconnected = new AutoResetEvent(false);
@@ -1180,7 +1180,7 @@ namespace IntegrationTests
         public TestConnectionMemoryLeaks(ConnectionMemoryLeaksSuiteContext context) : base(context) { }
 
 #if memcheck
-        [Fact]
+        [NatsFact]
         public void TestConnectionMemoryLeak()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
@@ -1213,7 +1213,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestConnectionSubscriberMemoryLeak()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server2.Port))
@@ -1263,7 +1263,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestMemoryLeakRequestReplyAsync()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server3.Port))
@@ -1326,7 +1326,7 @@ namespace IntegrationTests
     {
         public TestIpV6Connection(ConnectionIpV6SuiteContext context) : base(context) { }
 
-        [Fact]
+        [NatsFact]
         public void CanConnectUsingIpV6()
         {
             var opts = Context.GetTestOptions(Context.Server1.Port);

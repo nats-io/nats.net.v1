@@ -28,7 +28,7 @@ namespace IntegrationTests
     {
         public TestCluster(ClusterSuiteContext context) : base(context) { }
 
-        [Fact]
+        [NatsFact]
         public void TestServersOption()
         {
             ConnectionFactory cf = Context.ConnectionFactory;
@@ -59,7 +59,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestAuthServers()
         {
             Options opts = Context.GetTestOptions();
@@ -86,7 +86,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestBasicClusterReconnect()
         {
             Options opts = Context.GetTestOptions();
@@ -157,7 +157,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestServerDiscoveredHandler()
         {
             ConnectionFactory cf = Context.ConnectionFactory;
@@ -294,7 +294,7 @@ namespace IntegrationTests
 
         }
 
-        [Fact]
+        [NatsFact]
         public void TestProperReconnectDelay()
         {
             Object mu = new Object();
@@ -343,7 +343,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestProperFalloutAfterMaxAttempts()
         {
             Options opts = Context.GetTestOptions();
@@ -403,7 +403,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestProperFalloutAfterMaxAttemptsWithAuthMismatch()
         {
             Options opts = Context.GetTestOptions();
@@ -471,7 +471,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestTimeoutOnNoServers()
         {
             Options opts = Context.GetTestOptions();

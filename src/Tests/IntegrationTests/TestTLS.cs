@@ -60,7 +60,7 @@ namespace IntegrationTests
             return false;
         }
 
-        [Fact]
+        [NatsFact]
         public void TestTlsSuccessWithCert()
         {
             using (NATSServer srv = NATSServer.CreateWithConfig(Context.Server1.Port, "tls_verify.conf"))
@@ -91,7 +91,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestTlsFailWithCert()
         {
             using (NATSServer srv = NATSServer.CreateWithConfig(Context.Server1.Port, "tls_verify.conf"))
@@ -117,7 +117,7 @@ namespace IntegrationTests
             return false;
         }
 
-        [Fact]
+        [NatsFact]
         public void TestTlsFailWithInvalidServerCert()
         {
             using (NATSServer srv = NATSServer.CreateWithConfig(Context.Server1.Port, "tls_verify.conf"))
@@ -134,7 +134,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestTlsFailWithBadAuth()
         {
             using (NATSServer srv = NATSServer.CreateWithConfig(Context.Server1.Port, "tls_user.conf"))
@@ -152,7 +152,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestTlsSuccessSecureConnect()
         {
             using (NATSServer srv = NATSServer.CreateWithConfig(Context.Server1.Port, "tls.conf"))
@@ -175,7 +175,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestTlsReconnect()
         {
             AutoResetEvent ev = new AutoResetEvent(false);
@@ -221,7 +221,7 @@ namespace IntegrationTests
 
         // Tests if reconnection can still occur after a user authorization failure
         // under TLS.
-        [Fact]
+        [NatsFact]
         public void TestTlsReconnectAuthTimeout()
         {
             AutoResetEvent ev = new AutoResetEvent(false);
@@ -259,7 +259,7 @@ namespace IntegrationTests
         }
 
 #if NET452
-        [Fact]
+        [NatsFact]
         public void TestTlsReconnectAuthTimeoutLateClose()
         {
             AutoResetEvent ev = new AutoResetEvent(false);

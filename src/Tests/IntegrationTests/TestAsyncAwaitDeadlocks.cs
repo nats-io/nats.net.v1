@@ -25,7 +25,7 @@ namespace IntegrationTests
     {
         public TestAsyncAwaitDeadlocks(AsyncAwaitDeadlocksSuiteContext context) : base(context) { }
 
-        [Fact]
+        [NatsFact]
         public void EnsureDrain()
         {
             var subject = "176bb0976ef943e3988de4957c9e1a1a";
@@ -59,7 +59,7 @@ namespace IntegrationTests
             });
         }
 
-        [Fact]
+        [NatsFact]
         public void EnsureDrainAsync()
         {
             var subject = "5dc823d90cab46679e0bf51afffda767";
@@ -93,7 +93,7 @@ namespace IntegrationTests
             });
         }
 
-        [Fact]
+        [NatsFact]
         public void EnsureRequestResponder()
         {
             var subject = "751182b093ea42b68d79b69353bf6266";
@@ -117,7 +117,7 @@ namespace IntegrationTests
             });
         }
 
-        [Fact]
+        [NatsFact]
         public void EnsureRequestAsyncResponder()
         {
             var subject = "6f7c177f910c4ce587d886cc7212a00f";
@@ -141,7 +141,7 @@ namespace IntegrationTests
             });
         }
 
-        [Fact]
+        [NatsFact]
         public void EnsureRequestResponderWithFlush()
         {
             var subject = "67870ca086184482b52815d288a4388e";
@@ -170,7 +170,7 @@ namespace IntegrationTests
             });
         }
 
-        [Fact]
+        [NatsFact]
         public void EnsureRequestAsyncResponderWithFlush()
         {
             var subject = "3cce135bef9348209dacf9acfc75427e";
@@ -199,7 +199,7 @@ namespace IntegrationTests
             });
         }
 
-        [Fact]
+        [NatsFact]
         public void EnsurePubSub()
         {
             var subject = "16160bf236cb42dda5bbd0dfc744dacc";
@@ -233,7 +233,7 @@ namespace IntegrationTests
             });
         }
 
-        [Fact]
+        [NatsFact]
         public void EnsurePubSubWithFlush()
         {
             var subject = "0b122a47380145b49969ddfaafe0c206";
@@ -271,7 +271,7 @@ namespace IntegrationTests
             });
         }
 
-        [Fact]
+        [NatsFact]
         public void EnsurePubSubWithAsyncHandler()
         {
             var subject = "236c9af7eae044f585973503e9803f4a";

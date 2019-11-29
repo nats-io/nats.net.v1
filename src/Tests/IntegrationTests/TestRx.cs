@@ -31,7 +31,7 @@ namespace IntegrationTests
 
         public void Dispose() => sync?.Dispose();
 
-        [Fact]
+        [NatsFact]
         public void WhenPublishingAllSubscribedObserversShouldGetTheMessage()
         {
             sync = TestSync.FourActors();
@@ -73,7 +73,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void WhenSubscribingMoreThanOneObserverToTheObservableOnlyOneServerSubscriptionShouldBeSetup()
         {
             sync = TestSync.FourActors();
@@ -103,7 +103,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void WhenObservingMoreThanOneSubjectTheyShouldNotInterfere()
         {
             sync = TestSync.TwoActors();
@@ -137,7 +137,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void WhenDisposingAnObserverItShouldNotReceiveMoreMessages()
         {
             sync = TestSync.TwoActors();
@@ -174,7 +174,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void WhenDisposingAnObservableNoMoreDispatchesShouldBeDone()
         {
             sync = TestSync.TwoActors();

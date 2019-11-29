@@ -31,7 +31,7 @@ namespace IntegrationTests
     {
         public TestBasic(DefaultSuiteContext context) : base(context) { }
 
-        [Fact]
+        [NatsFact]
         public void TestConnectedServer()
         {
             using (NATSServer.CreateFastAndVerify())
@@ -52,7 +52,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestMultipleClose()
         {
             using (NATSServer.CreateFastAndVerify())
@@ -71,7 +71,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestSimplePublish()
         {
             using (NATSServer.CreateFastAndVerify())
@@ -83,7 +83,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestSimplePublishNoData()
         {
             using (NATSServer.CreateFastAndVerify())
@@ -107,7 +107,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestPublishDataWithOffsets()
         {
             using (NATSServer.CreateFastAndVerify())
@@ -201,7 +201,7 @@ namespace IntegrationTests
         IAsyncSubscription asyncSub = null;
         Boolean received = false;
 
-        [Fact]
+        [NatsFact]
         public void TestAsyncSubscribe()
         {
             using (NATSServer.CreateFastAndVerify())
@@ -240,7 +240,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestSyncSubscribe()
         {
             using (NATSServer.CreateFastAndVerify())
@@ -268,7 +268,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestPubWithReply()
         {
             using (NATSServer.CreateFastAndVerify())
@@ -296,7 +296,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestFlush()
         {
             using (var server = NATSServer.CreateFastAndVerify())
@@ -341,7 +341,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestQueueSubscriber()
         {
             using (NATSServer.CreateFastAndVerify())
@@ -384,7 +384,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestReplyArg()
         {
             using (NATSServer.CreateFastAndVerify())
@@ -420,7 +420,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestSyncReplyArg()
         {
             using (NATSServer.CreateFastAndVerify())
@@ -441,7 +441,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestUnsubscribe()
         {
             int count = 0;
@@ -493,7 +493,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestDoubleUnsubscribe()
         {
             using (NATSServer.CreateFastAndVerify())
@@ -510,7 +510,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestRequestTimeout()
         {
             using (NATSServer.CreateFastAndVerify())
@@ -531,7 +531,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestRequest()
         {
             using (NATSServer.CreateFastAndVerify())
@@ -558,7 +558,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestRequestNoBody()
         {
             using (NATSServer.CreateFastAndVerify())
@@ -584,7 +584,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestRequestWithOffset()
         {
             using (NATSServer.CreateFastAndVerify())
@@ -689,25 +689,25 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestRequestAsync()
         {
             testRequestAsync(useOldRequestStyle: false);
         }
 
-        [Fact]
+        [NatsFact]
         public void TestRequestAsync_OldRequestStyle()
         {
             testRequestAsync(useOldRequestStyle: true);
         }
 
-        [Fact]
+        [NatsFact]
         public void TestRequestAsyncWithOffsets()
         {
             testRequestAsyncWithOffsets(useOldRequestStyle: false);
         }
 
-        [Fact]
+        [NatsFact]
         public void TestRequestAsyncWithOffsets_OldRequestStyle()
         {
             testRequestAsyncWithOffsets(useOldRequestStyle: true);
@@ -787,13 +787,13 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestRequestAsyncCancellation()
         {
             testRequestAsyncCancellation(useOldRequestStyle: false);
         }
 
-        [Fact]
+        [NatsFact]
         public void TestRequestAsyncCancellation_OldRequestStyle()
         {
             testRequestAsyncCancellation(useOldRequestStyle: true);
@@ -840,13 +840,13 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestRequestAsyncTimeout()
         {
             testRequestAsyncTimeout(useOldRequestStyle: false);
         }
 
-        [Fact]
+        [NatsFact]
         public void TestRequestAsyncTimeout_OldRequestStyle()
         {
             testRequestAsyncTimeout(useOldRequestStyle: true);
@@ -895,13 +895,13 @@ namespace IntegrationTests
         // This test method tests mulitiple overlapping requests across many
         // threads.  The responder simulates work, to introduce variablility
         // in the request timing.
-        [Fact]
+        [NatsFact]
         public void TestRequestSafetyWithThreads()
         {
             testRequestSafetyWithThreads(useOldRequestStyle: false);
         }
 
-        [Fact]
+        [NatsFact]
         public void TestRequestSafetyWithThreads_OldRequestStyle()
         {
             testRequestSafetyWithThreads(useOldRequestStyle: true);
@@ -1065,7 +1065,7 @@ namespace IntegrationTests
         }
 #endif
 
-        [Fact]
+        [NatsFact]
         public void TestFlushInHandler()
         {
             using (NATSServer.CreateFastAndVerify())
@@ -1098,7 +1098,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestReleaseFlush()
         {
             using (NATSServer.CreateFastAndVerify())
@@ -1117,7 +1117,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestCloseAndDispose()
         {
             using (NATSServer.CreateFastAndVerify())
@@ -1129,7 +1129,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestInbox()
         {
             using (NATSServer.CreateFastAndVerify())
@@ -1143,7 +1143,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestStats()
         {
             using (NATSServer.CreateFastAndVerify())
@@ -1189,7 +1189,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestRaceSafeStats()
         {
             using (NATSServer.CreateFast())
@@ -1207,7 +1207,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestBadSubject()
         {
             using (NATSServer.CreateFastAndVerify())
@@ -1229,7 +1229,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestLargeMessage()
         {
             using (NATSServer.CreateFastAndVerify())
@@ -1271,7 +1271,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestSendAndRecv()
         {
             using (NATSServer.CreateFastAndVerify())
@@ -1304,7 +1304,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestLargeSubjectAndReply()
         {
             using (NATSServer.CreateFastAndVerify())
@@ -1353,7 +1353,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestAsyncSubHandlerAPI()
         {
             using (NATSServer.CreateFastAndVerify())
@@ -1386,7 +1386,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestUrlArgument()
         {
             string url1 = Context.DefaultServer.Url;
@@ -1438,7 +1438,7 @@ namespace IntegrationTests
             return (c.Servers.Length == serverCount);
         }
 
-        [Fact]
+        [NatsFact]
         public void TestAsyncInfoProtocolConnect()
         {
             using (NATSServer s1 = NATSServer.Create(Context.Server1.Port, $"-a localhost --cluster nats://127.0.0.1:{Context.ClusterServer1.Port} --routes nats://127.0.0.1:{Context.ClusterServer2.Port}"),
@@ -1485,7 +1485,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestAsyncInfoProtocolUpdate()
         {
             AutoResetEvent evReconnect = new AutoResetEvent(false);
@@ -1536,7 +1536,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestAsyncInfoProtocolPrune()
         {
             var opts = Context.GetTestOptions();
@@ -1606,7 +1606,7 @@ namespace IntegrationTests
             return true;
         }
 
-        [Fact]
+        [NatsFact]
         public void TestServersRandomize()
         {
             var serverList = new [] {
@@ -1668,7 +1668,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestSimpleUrlArgument()
         {
             using (NATSServer.CreateFastAndVerify())
@@ -1705,7 +1705,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestNoEcho()
         {
             using (NATSServer.CreateFastAndVerify())
@@ -1731,7 +1731,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
+        [NatsFact]
         public void TestServersOption()
         {
             Assert.ThrowsAny<NATSNoServersException>(() => Context.ConnectionFactory.CreateConnection());
