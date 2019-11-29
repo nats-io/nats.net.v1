@@ -11,8 +11,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#if !NET452
 
+#if !NET452
+using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using NATS.Client;
@@ -285,9 +286,8 @@ namespace IntegrationTests
                     {
                         using (var cn = Context.ConnectionFactory.CreateConnection(Context.Server1.Url))
                         {
-                            using (cn.SubscribeAsync(subject, async (_, m) =>
+                            using (cn.SubscribeAsync(subject, (_, m) =>
                             {
-                                await Task.Delay(100);
                                 recieved.Enqueue(m.Message);
                                 if(recieved.Count == 5)
                                     sync.SignalComplete();
@@ -301,6 +301,143 @@ namespace IntegrationTests
                         }
                         
                         Assert.Equal(5, recieved.Count);
+                    }
+                }
+            });
+        }
+        
+        [NatsFact]
+        public void EnsureAutoUnsubscribeForSyncSub()
+        {
+            var subject = "de82267b22454dd7afc37c9e34a8e0ab";
+            var recieved = new ConcurrentQueue<Msg>();
+
+            AsyncContext.Run(() =>
+            {
+                using (NATSServer.CreateFast(Context.Server1.Port))
+                {
+                    using (var cn = Context.ConnectionFactory.CreateConnection(Context.Server1.Url))
+                    {
+                        using (var sub = cn.SubscribeSync(subject))
+                        {
+                            sub.AutoUnsubscribe(1);
+                            
+                            cn.Publish(subject, new byte[0]);
+
+                            recieved.Enqueue(sub.NextMessage());
+
+                            cn.Publish(subject, new byte[0]);
+                            
+                            Assert.Equal(1, sub.Delivered);
+                        }
+                    }
+                        
+                    Assert.Single(recieved);
+                }
+            });
+        }
+        
+        [NatsFact]
+        public void EnsureAutoUnsubscribeForAsyncSub()
+        {
+            var subject = "0be903f6c9c14c10973e78ce03ad47e1";
+            var recieved = new ConcurrentQueue<Msg>();
+
+            AsyncContext.Run(async () =>
+            {
+                using (NATSServer.CreateFast(Context.Server1.Port))
+                {
+                    using (var sync = TestSync.SingleActor())
+                    {
+                        using (var cn = Context.ConnectionFactory.CreateConnection(Context.Server1.Url))
+                        {
+                            using (var sub = cn.SubscribeAsync(subject, (_, m) =>
+                            {
+                                recieved.Enqueue(m.Message);
+                                sync.SignalComplete();
+                            }))
+                            {
+                                sub.AutoUnsubscribe(1);
+                                
+                                cn.Publish(subject, new byte[0]);
+                                cn.Publish(subject, new byte[0]);
+                                
+                                sync.WaitForAll();
+
+                                await Task.Delay(100);
+                                Assert.Equal(1, sub.Delivered);
+                            }
+                        }
+                        
+                        Assert.Single(recieved);
+                    }
+                }
+            });
+        }
+        
+        [NatsFact]
+        public void EnsureUnsubscribeForSyncSub()
+        {
+            var subject = "b2dcc4f56fd041cb985300d4966bd1c1";
+            var recieved = new ConcurrentQueue<Msg>();
+
+            AsyncContext.Run(() =>
+            {
+                using (NATSServer.CreateFast(Context.Server1.Port))
+                {
+                    using (var cn = Context.ConnectionFactory.CreateConnection(Context.Server1.Url))
+                    {
+                        using (var sub = cn.SubscribeSync(subject))
+                        {
+                            cn.Publish(subject, new byte[0]);
+
+                            recieved.Enqueue(sub.NextMessage());
+                                
+                            sub.Unsubscribe();
+
+                            cn.Publish(subject, new byte[0]);
+                            Assert.Throws<NATSBadSubscriptionException>(sub.NextMessage);
+                            Assert.Equal(1, sub.Delivered);
+                        }
+                    }
+                    
+                    Assert.Single(recieved);
+                }
+            });
+        }
+        
+        [NatsFact]
+        public void EnsureUnsubscribeForAsyncSub()
+        {
+            var subject = "d37e3729c5c84702b836a4bb4edf7241";
+            var recieved = new ConcurrentQueue<Msg>();
+
+            AsyncContext.Run(async () =>
+            {
+                using (NATSServer.CreateFast(Context.Server1.Port))
+                {
+                    using (var sync = TestSync.SingleActor())
+                    {
+                        using (var cn = Context.ConnectionFactory.CreateConnection(Context.Server1.Url))
+                        {
+                            using (var sub = cn.SubscribeAsync(subject, (_, m) =>
+                            {
+                                recieved.Enqueue(m.Message);
+                                sync.SignalComplete();
+                            }))
+                            {
+                                cn.Publish(subject, new byte[0]);
+                                sync.WaitForAll();
+                                
+                                sub.Unsubscribe();
+                                
+                                cn.Publish(subject, new byte[0]);
+                                await Task.Delay(100);
+                                Assert.Equal(1, sub.Delivered);
+                            }
+                        }
+                        
+                        Assert.Single(recieved);
                     }
                 }
             });
