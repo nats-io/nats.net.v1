@@ -162,14 +162,23 @@ namespace IntegrationTests
         {
             try
             {
-                var successfullyClosed = p.CloseMainWindow() || p.WaitForExit(100);
-                if (!successfullyClosed)
+                var s = false;
+
+                if (p.MainWindowHandle != IntPtr.Zero)
+                    s = p.CloseMainWindow();
+
+                if (!s)
                     p.Kill();
-                p.Close();
+
+                p.WaitForExit(250);
             }
             catch (Exception)
             {
                 // ignored
+            }
+            finally
+            {
+                p.Close();
             }
         }
 
