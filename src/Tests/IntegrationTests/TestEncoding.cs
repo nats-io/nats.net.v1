@@ -64,7 +64,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestDefaultObjectSerialization()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
@@ -126,7 +126,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestEncodedDefaultRequestReplyThreadSafety()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
@@ -169,7 +169,7 @@ namespace IntegrationTests
             }
         }
 #else
-        [NatsFact]
+        [Fact]
         public void TestDefaultObjectSerialization()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
@@ -208,7 +208,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestEncodedObjectSerization()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
@@ -249,7 +249,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestEncodedInvalidObjectSerialization()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
@@ -335,7 +335,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestEncodedSerizationOverrides()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
@@ -368,7 +368,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestEncodedObjectRequestReply()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))

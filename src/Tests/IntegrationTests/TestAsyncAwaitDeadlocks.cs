@@ -26,7 +26,7 @@ namespace IntegrationTests
     {
         public TestAsyncAwaitDeadlocks(AsyncAwaitDeadlocksSuiteContext context) : base(context) { }
 
-        [NatsFact]
+        [Fact]
         public void EnsureDrain()
         {
             var subject = "176bb0976ef943e3988de4957c9e1a1a";
@@ -60,7 +60,7 @@ namespace IntegrationTests
             });
         }
 
-        [NatsFact]
+        [Fact]
         public void EnsureDrainAsync()
         {
             var subject = "5dc823d90cab46679e0bf51afffda767";
@@ -94,7 +94,7 @@ namespace IntegrationTests
             });
         }
 
-        [NatsFact]
+        [Fact]
         public void EnsureRequestResponder()
         {
             var subject = "751182b093ea42b68d79b69353bf6266";
@@ -118,7 +118,7 @@ namespace IntegrationTests
             });
         }
 
-        [NatsFact]
+        [Fact]
         public void EnsureRequestAsyncResponder()
         {
             var subject = "6f7c177f910c4ce587d886cc7212a00f";
@@ -142,7 +142,7 @@ namespace IntegrationTests
             });
         }
 
-        [NatsFact]
+        [Fact]
         public void EnsureRequestResponderWithFlush()
         {
             var subject = "67870ca086184482b52815d288a4388e";
@@ -171,7 +171,7 @@ namespace IntegrationTests
             });
         }
 
-        [NatsFact]
+        [Fact]
         public void EnsureRequestAsyncResponderWithFlush()
         {
             var subject = "3cce135bef9348209dacf9acfc75427e";
@@ -200,7 +200,7 @@ namespace IntegrationTests
             });
         }
 
-        [NatsFact]
+        [Fact]
         public void EnsurePubSub()
         {
             var subject = "16160bf236cb42dda5bbd0dfc744dacc";
@@ -234,7 +234,7 @@ namespace IntegrationTests
             });
         }
 
-        [NatsFact]
+        [Fact]
         public void EnsurePubSubWithFlush()
         {
             var subject = "0b122a47380145b49969ddfaafe0c206";
@@ -272,7 +272,7 @@ namespace IntegrationTests
             });
         }
 
-        [NatsFact]
+        [Fact]
         public void EnsurePubSubWithAsyncHandler()
         {
             var subject = "236c9af7eae044f585973503e9803f4a";
@@ -306,7 +306,7 @@ namespace IntegrationTests
             });
         }
         
-        [NatsFact]
+        [Fact]
         public void EnsureAutoUnsubscribeForSyncSub()
         {
             var subject = "de82267b22454dd7afc37c9e34a8e0ab";
@@ -337,7 +337,7 @@ namespace IntegrationTests
             });
         }
         
-        [NatsFact]
+        [Fact]
         public void EnsureAutoUnsubscribeForAsyncSub()
         {
             var subject = "0be903f6c9c14c10973e78ce03ad47e1";
@@ -375,7 +375,7 @@ namespace IntegrationTests
             });
         }
         
-        [NatsFact]
+        [Fact]
         public void EnsureUnsubscribeForSyncSub()
         {
             var subject = "b2dcc4f56fd041cb985300d4966bd1c1";
@@ -406,7 +406,7 @@ namespace IntegrationTests
             });
         }
         
-        [NatsFact]
+        [Fact]
         public void EnsureUnsubscribeForAsyncSub()
         {
             var subject = "d37e3729c5c84702b836a4bb4edf7241";

@@ -59,7 +59,7 @@ namespace IntegrationTests
             hitDisconnect++;
         }
 
-        [NatsFact]
+        [Fact]
         public void TestAuthSuccess()
         {
             using (NATSServer.CreateWithConfig(Context.Server1.Port, "auth.conf"))
@@ -69,7 +69,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestAuthFailure()
         {
             using (NATSServer.CreateWithConfig(Context.Server1.Port, "auth.conf"))
@@ -81,7 +81,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestAuthToken()
         {
             using (NATSServer.Create(Context.Server1.Port, "-auth S3Cr3T0k3n!"))
@@ -94,7 +94,7 @@ namespace IntegrationTests
         }
 
 
-        [NatsFact]
+        [Fact]
         public void TestReconnectAuthTimeout()
         {
             AutoResetEvent ev  = new AutoResetEvent(false);
@@ -129,7 +129,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestCallbackIsPerformedOnAuthFailure()
         {
             var cbEvent = new AutoResetEvent(false);
@@ -153,7 +153,7 @@ namespace IntegrationTests
             Assert.True(cbEvent.WaitOne(1000));
         }
 
-        [NatsFact]
+        [Fact]
         public void TestExpiredJwt()
         {
             var expiredUserJwt 
@@ -192,7 +192,7 @@ namespace IntegrationTests
         }
 
 #if NET452
-        [NatsFact]
+        [Fact]
         public void TestReconnectAuthTimeoutLateClose()
         {
             AutoResetEvent ev = new AutoResetEvent(false);

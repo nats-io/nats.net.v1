@@ -36,7 +36,7 @@ namespace IntegrationTests
             return o;
         }
 
-        [NatsFact]
+        [Fact]
         public void TestReconnectDisallowedFlags()
         {
             Options opts = Context.GetTestOptions(Context.Server1.Port);
@@ -65,7 +65,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestReconnectAllowedFlags()
         {
             Options opts = Context.GetTestOptions(Context.Server1.Port);
@@ -98,7 +98,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestBasicReconnectFunctionality()
         {
             Options opts = Context.GetTestOptions(Context.Server1.Port);
@@ -164,7 +164,7 @@ namespace IntegrationTests
 
         int received = 0;
 
-        [NatsFact]
+        [Fact]
         public void TestExtendedReconnectFunctionality()
         {
             Options opts = getReconnectOptions();
@@ -285,7 +285,7 @@ namespace IntegrationTests
             checkResults(numToSend);
         }
 
-        [NatsFact]
+        [Fact]
         public void TestQueueSubsOnReconnect()
         {
             AutoResetEvent reconnectEvent = new AutoResetEvent(false);
@@ -339,7 +339,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestClose()
         {
             Options opts = Context.GetTestOptions(Context.Server1.Port);
@@ -369,7 +369,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestIsReconnectingAndStatus()
         {
             bool disconnected = false;
@@ -443,7 +443,7 @@ namespace IntegrationTests
         }
 
 
-        [NatsFact]
+        [Fact]
         public void TestReconnectVerbose()
         {
             // an exception stops and fails the test.
@@ -484,7 +484,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestReconnectBufferProperty()
         {
             var opts = ConnectionFactory.GetDefaultOptions();
@@ -494,7 +494,7 @@ namespace IntegrationTests
             Assert.Throws<ArgumentOutOfRangeException>(() => { opts.ReconnectBufferSize = -2; });
         }
 
-        [NatsFact]
+        [Fact]
         public void TestReconnectBufferDisabled()
         {
             AutoResetEvent disconnected = new AutoResetEvent(false);
@@ -535,7 +535,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestReconnectBufferBoundary()
         {
             AutoResetEvent disconnected = new AutoResetEvent(false);
@@ -574,7 +574,7 @@ namespace IntegrationTests
         public TestPublishErrorsDuringReconnect(PublishErrorsDuringReconnectSuiteContext context)
             : base(context) { }
 
-        [NatsFact]
+        [Fact]
         public void ConnectionShouldNotBecomeClosed()
         {
             Options opts = Context.GetTestOptions(Context.Server1.Port);

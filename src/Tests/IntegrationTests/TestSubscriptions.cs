@@ -29,7 +29,7 @@ namespace IntegrationTests
     {
         public TestSubscriptions(SubscriptionsSuiteContext context) : base(context) { }
 
-        [NatsFact]
+        [Fact]
         public void TestServerAutoUnsub()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
@@ -65,7 +65,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestClientAutoUnsub()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
@@ -104,7 +104,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestCloseSubRelease()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
@@ -130,7 +130,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestValidSubscriber()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
@@ -157,7 +157,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestSlowSubscriber()
         {
             Options opts = Context.GetTestOptions(Context.Server1.Port);
@@ -192,7 +192,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestSlowAsyncSubscriber()
         {
             AutoResetEvent ev = new AutoResetEvent(false);
@@ -252,7 +252,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestAsyncErrHandler()
         {
             object subLock = new object();
@@ -329,7 +329,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestAsyncSubscriberStarvation()
         {
             AutoResetEvent ev = new AutoResetEvent(false);
@@ -374,7 +374,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestAsyncSubscribersOnClose()
         {
             /// basically tests if the subscriber sub channel gets
@@ -414,7 +414,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestNextMessageOnClosedSub()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
@@ -439,7 +439,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestAsyncSubscriptionPending()
         {
             int total = 100;
@@ -538,7 +538,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestAsyncPendingSubscriptionBatchSizeExactlyOne()
         {
             int total = 10;
@@ -630,7 +630,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestSyncSubscriptionPending()
         {
             int total = 100;
@@ -681,7 +681,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestAsyncSubscriptionPendingDrain()
         {
             int total = 100;
@@ -716,7 +716,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestSyncSubscriptionPendingDrain()
         {
             int total = 100;
@@ -751,7 +751,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestSubDelTaskCountBasic()
         {
             var opts = Context.GetTestOptions(Context.Server1.Port);
@@ -820,7 +820,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestSubDelTaskCountScaling()
         {
             int COUNT = 20000;
@@ -865,7 +865,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestSubDelTaskCountAutoUnsub()
         {
             var opts = Context.GetTestOptions(Context.Server1.Port);
@@ -906,7 +906,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestSubDelTaskCountReconnect()
         {
             bool disconnected = false;
@@ -958,7 +958,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestSubDelTaskCountSlowConsumer()
         {
             AutoResetEvent errorEv = new AutoResetEvent(false);
@@ -996,7 +996,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestSubDelTaskCountWithSyncSub()
         {
             var opts = Context.GetTestOptions(Context.Server1.Port);
@@ -1018,7 +1018,7 @@ namespace IntegrationTests
         static readonly string[] invalidSubjects = { "foo bar", "foo..bar", ".foo", "bar.baz.", "baz\t.foo" };
         static readonly string[] invalidQNames = { "foo group", "group\t1", "g1\r\n2" };
 
-        [NatsFact]
+        [Fact]
         public void TestInvalidSubjects()
         {
             EventHandler<MsgHandlerEventArgs> mh = (obj, args) => { /* NOOP */ };
@@ -1047,7 +1047,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestRespond()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
@@ -1079,7 +1079,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestRespondWithCustomInbox()
         {
             var opts = Context.GetTestOptionsWithDefaultTimeout(Context.Server1.Port);
@@ -1116,7 +1116,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestRespondWithAutoUnsubscribe()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
@@ -1149,7 +1149,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestRespondFailsWithClosedConnection()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
@@ -1174,7 +1174,7 @@ namespace IntegrationTests
             }
         }
 
-        [NatsFact]
+        [Fact]
         public void TestRespondFailsWithServerClosed()
         {
             Msg m;
