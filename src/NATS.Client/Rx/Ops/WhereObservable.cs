@@ -39,7 +39,7 @@ namespace NATS.Client.Rx.Ops
             public WhereObserver(IObserver<T> observer, Func<T, bool> predicate)
             {
                 this.observer = observer ?? throw new ArgumentNullException(nameof(observer));
-                this.predicate = predicate ?? throw new ArgumentNullException(nameof(observer));
+                this.predicate = predicate ?? throw new ArgumentNullException(nameof(predicate));
             }
 
             public void OnNext(T value)

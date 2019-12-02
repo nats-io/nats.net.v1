@@ -89,8 +89,8 @@ namespace IntegrationTests
             {
                 try
                 {
-                    var c = cf.CreateConnection(opts);
-                    c.Close();
+                    using(var c = cf.CreateConnection(opts))
+                        c.Close();
                     isVerifiedOk = true;
                     break;
                 }
@@ -162,14 +162,23 @@ namespace IntegrationTests
         {
             try
             {
-                var successfullyClosed = p.CloseMainWindow() || p.WaitForExit(100);
-                if (!successfullyClosed)
+                var s = false;
+
+                if (p.MainWindowHandle != IntPtr.Zero)
+                    s = p.CloseMainWindow();
+
+                if (!s)
                     p.Kill();
-                p.Close();
+
+                p.WaitForExit(250);
             }
             catch (Exception)
             {
                 // ignored
+            }
+            finally
+            {
+                p.Close();
             }
         }
 
@@ -253,7 +262,7 @@ namespace IntegrationTests
 
         private void Wait(int aquireCount, TimeSpan ts)
         {
-            if (System.Diagnostics.Debugger.IsAttached)
+            if (Debugger.IsAttached)
             {
                 ts = TimeSpan.FromMilliseconds(-1);
             }

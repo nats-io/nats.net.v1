@@ -13,20 +13,20 @@ stages:
         projects: 'src/*.sln'
         arguments: '-c $(BuildConfiguration) --no-incremental --nologo -p:TreatWarningsAsErrors=true -p:Version=$(SemVer) -p:InformationalVersion=$(InfoVer)'
   
-    - task: DotNetCoreCLI@2
+    - task: VSTest@2
       displayName: 'UnitTests .NetCoreApp2.2'
       inputs:
-        command: test
-        projects: 'src/Tests/**/UnitTests.csproj'
-        arguments: '-c $(BuildConfiguration) -f netcoreapp2.2 --no-build'
+        testSelector: 'testAssemblies'
+        testAssemblyVer2: 'src/Tests/UnitTests/bin/$(BuildConfiguration)/netcoreapp2.2/UnitTests.dll'
+        configuration: $(BuildConfiguration)
         testRunTitle: 'UnitTests .NetCoreApp2.2'
   
-    - task: DotNetCoreCLI@2
+    - task: VSTest@2
       displayName: 'UnitTests .Net4.5.2'
       inputs:
-        command: test
-        projects: 'src/Tests/**/UnitTests.csproj'
-        arguments: '-c $(BuildConfiguration) -f net452 --no-build'
+        testSelector: 'testAssemblies'
+        testAssemblyVer2: 'src/Tests/UnitTests/bin/$(BuildConfiguration)/net452/UnitTests.dll'
+        configuration: $(BuildConfiguration)
         testRunTitle: 'UnitTests .Net4.5.2'
   
     - task: PowerShell@2
@@ -62,29 +62,35 @@ stages:
           $natsServerDir = Get-ChildItem -Directory -Path "$(Agent.TempDirectory)\nats-server\nats-server-*" | Select -Expand FullName
           Write-Host "Found nats-server path: $natsServerDir"
           Write-Host "##vso[task.setvariable variable=PATH;]${env:PATH};$natsServerDir"
-  
-    - task: DotNetCoreCLI@2
+
+    - task: VSTest@2
       displayName: 'IntegrationTests .NetCoreApp2.2'
       inputs:
-        command: test
-        projects: 'src/Tests/**/IntegrationTests.csproj'
-        arguments: '-c $(BuildConfiguration) -f netcoreapp2.2 --no-build'
+        testSelector: 'testAssemblies'
+        testAssemblyVer2: 'src/Tests/IntegrationTests/bin/$(BuildConfiguration)/netcoreapp2.2/IntegrationTests.dll'
+        configuration: $(BuildConfiguration)
+        rerunFailedTests: True
+        rerunMaxAttempts: 2
         testRunTitle: 'IntegrationTests .NetCoreApp2.2'
 
-    - task: DotNetCoreCLI@2
+    - task: VSTest@2
       displayName: 'IntegrationTests .NetCoreApp3.0'
       inputs:
-        command: test
-        projects: 'src/Tests/**/IntegrationTests.csproj'
-        arguments: '-c $(BuildConfiguration) -f netcoreapp3.0 --no-build'
+        testSelector: 'testAssemblies'
+        testAssemblyVer2: 'src/Tests/IntegrationTests/bin/$(BuildConfiguration)/netcoreapp3.0/IntegrationTests.dll'
+        configuration: $(BuildConfiguration)
+        rerunFailedTests: True
+        rerunMaxAttempts: 2
         testRunTitle: 'IntegrationTests .NetCoreApp3.0'
   
-    - task: DotNetCoreCLI@2
+    - task: VSTest@2
       displayName: 'IntegrationTests .Net4.5.2'
       inputs:
-        command: test
-        projects: 'src/Tests/**/IntegrationTests.csproj'
-        arguments: '-c $(BuildConfiguration) -f net452 --no-build'
+        testSelector: 'testAssemblies'
+        testAssemblyVer2: 'src/Tests/IntegrationTests/bin/$(BuildConfiguration)/net452/IntegrationTests.dll'
+        configuration: $(BuildConfiguration)
+        rerunFailedTests: True
+        rerunMaxAttempts: 2
         testRunTitle: 'IntegrationTests .Net4.5.2'
   
     - task: DotNetCoreCLI@2
