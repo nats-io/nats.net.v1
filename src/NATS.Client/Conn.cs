@@ -2496,7 +2496,7 @@ namespace NATS.Client
                         else
                             kickFlusher();
 
-                        if (bw.Position + count + pubProtoLen > rbsize)
+                        if (pending != null && bw.Position + count + pubProtoLen > rbsize)
                             throw new NATSReconnectBufferException("Reconnect buffer exceeded.");
                     }
                 }
