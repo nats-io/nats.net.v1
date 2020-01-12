@@ -1,6 +1,4 @@
-﻿using System;
-using System.Security.Cryptography;
-using BenchmarkDotNet.Attributes;
+﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Order;
 using BenchmarkDotNet.Running;
@@ -17,7 +15,13 @@ namespace MicroBenchmarks
     [SimpleJob(RuntimeMoniker.NetCoreApp31)]
     public class RandomBenchmark
     {
+        private static readonly NUID _nuid = NUID.Instance;
 
+        [BenchmarkCategory("NextNuid"), Benchmark(Baseline = true)]
+        public string NextNuid() => _nuid.Next;
+
+        [BenchmarkCategory("RandomizePrefix"), Benchmark(Baseline = true)]
+        public void RandomizePrefix() => _nuid.RandomizePrefix();
     }
 
     public class Program
