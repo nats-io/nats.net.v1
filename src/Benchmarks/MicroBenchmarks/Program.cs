@@ -3,6 +3,7 @@ using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Order;
 using BenchmarkDotNet.Running;
 using NATS.Client;
+using NATS.Client.Internals;
 
 namespace MicroBenchmarks
 {
@@ -16,12 +17,15 @@ namespace MicroBenchmarks
     public class RandomBenchmark
     {
         private static readonly NUID _nuid = NUID.Instance;
+        private static readonly Nuid _newNuid = new Nuid();
 
-        [BenchmarkCategory("NextNuid"), Benchmark(Baseline = true)]
-        public string NextNuid() => _nuid.Next;
+        [BenchmarkCategory("NextNuid")]
+        [Benchmark(Baseline = true)]
+        public string NUIDNext() => _nuid.Next;
 
-        [BenchmarkCategory("RandomizePrefix"), Benchmark(Baseline = true)]
-        public void RandomizePrefix() => _nuid.RandomizePrefix();
+        [BenchmarkCategory("NextNuid"), Benchmark]
+        public string NextNuid() => _newNuid.GetNext();
+
     }
 
     public class Program
