@@ -2,13 +2,14 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>netcoreapp3.1;net462</TargetFrameworks>
+    <TargetFramework Condition="$(OS) != 'Windows_NT'">netcoreapp3.1</TargetFramework>
+    <TargetFrameworks Condition="$(OS) == 'Windows_NT'">netcoreapp3.1;net462</TargetFrameworks>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <DebugSymbols>true</DebugSymbols>
     <Configurations>Debug;Release;LinuxRelease;LinuxDebug</Configurations>
   </PropertyGroup>
-
+  
   <PropertyGroup Condition="$(Configuration) == 'Release' Or $(Configuration) == 'LinuxRelease'">
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\NATS.Client.snk</AssemblyOriginatorKeyFile>
