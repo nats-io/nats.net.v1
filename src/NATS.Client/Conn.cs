@@ -989,6 +989,7 @@ namespace NATS.Client
                 readLoopStartEvent.Set();
                 readLoop();
             });
+            t.IsBackground = true;
             t.Start();
             t.Name = generateThreadName("Reader");
             wg.Add(t);
@@ -998,6 +999,7 @@ namespace NATS.Client
                 flusherStartEvent.Set();
                 flusher();
             });
+            t.IsBackground = true;
             t.Start();
             t.Name = generateThreadName("Flusher");
             wg.Add(t);
@@ -1481,6 +1483,7 @@ namespace NATS.Client
                 {
                     doReconnect();
                 });
+                t.IsBackground = true;
                 t.Name = generateThreadName("Reconnect");
                 t.Start();
             }

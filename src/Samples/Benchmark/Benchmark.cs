@@ -369,6 +369,7 @@ namespace Benchmark
                     subConn.Flush();
                 }
             });
+            t.IsBackground = true;
             t.Start();
 
             Thread.Sleep(1000);
@@ -413,6 +414,7 @@ namespace Benchmark
                     subConn.Flush();
             }
             });
+            t.IsBackground = true;
             t.Start();
 
             Thread.Sleep(1000);
