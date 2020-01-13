@@ -24,7 +24,7 @@
   <ItemGroup>
     <None Include="package-icon.png">
       <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
+      <PackagePath />
     </None>
   </ItemGroup>
 
