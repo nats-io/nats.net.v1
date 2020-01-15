@@ -75,7 +75,7 @@ namespace UnitTests.Internals
         {
             // Arrange
             var increment = 100;
-            var maxSequential = 0x1000_0000_0000_0000 - increment;
+            var maxSequential = 0x1000_0000_0000_0000 - increment - 1;
             var nuid = new Nuid(RandomNumberGenerator.Create(), maxSequential, increment);
 
             // Act
