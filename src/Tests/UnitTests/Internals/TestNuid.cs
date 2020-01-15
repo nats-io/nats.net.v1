@@ -3,11 +3,19 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using NATS.Client.Internals;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace UnitTests.Internals
 {
     public class TestNuid
     {
+        private readonly ITestOutputHelper _outputHelper;
+
+        public TestNuid(ITestOutputHelper outputHelper)
+        {
+            _outputHelper = outputHelper;
+        }
+        
         [Fact]
         public void GetNextNuid_ReturnsNuidOfLength22()
         {
@@ -59,7 +67,7 @@ namespace UnitTests.Internals
             var result = nuid.GetNext();
 
             // Assert
-            Assert.Matches("[A-z0-9_-]{22}", result);
+            Assert.Matches("[A-z0-9+/]{22}", result);
         }
 
         [Fact]
@@ -67,7 +75,7 @@ namespace UnitTests.Internals
         {
             // Arrange
             var increment = 100;
-            var maxSequential = 1152921504606846976 - increment;
+            var maxSequential = 0x1000_0000_0000_0000 - increment;
             var nuid = new Nuid(RandomNumberGenerator.Create(), maxSequential, increment);
 
             // Act
@@ -82,7 +90,7 @@ namespace UnitTests.Internals
         public void GetNextNuid_PrefixAsExpected()
         {
             // Arrange
-            var rngBytes = new byte[12] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+            var rngBytes = new byte[12] { 0, 1, 2, 3, 4, 5, 6, 7, 11, 253, 254, 255 };
             var rng = new ControlledRng(new Queue<byte[]>(new byte[][] { rngBytes, rngBytes }));
 
             var nuid = new Nuid(rng);
@@ -91,7 +99,7 @@ namespace UnitTests.Internals
             var prefix = nuid.GetNext().Substring(0, 12);
 
             // Assert
-            Assert.Equal("0123456789AB", prefix);
+            Assert.Equal("ABCDEFGHL9+/", prefix);
         }
 
         [Fact]
@@ -99,19 +107,41 @@ namespace UnitTests.Internals
         {
             // Arrange
             var rngBytes = new byte[12] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
-            var rng = new ControlledRng(new Queue<byte[]>(new byte[][] { rngBytes, rngBytes }));
+            var rng = new ControlledRng(new Queue<byte[]>(new[] { rngBytes, rngBytes }));
 
             // Act
             var nuid = new Nuid(rng); ;
 
             // Assert
 #if NET452
+            // On .NET FX we have an additional invocation for seeding System.Random
             Assert.Equal(2, rng.GetBytesInvocations);
 #else
             Assert.Equal(1, rng.GetBytesInvocations);
 #endif
         }
+        
+        [Fact]
+        public void GetNextNuid_NuidsAreUnique()
+        {
+            // Arrange
+            const int count = 1_000_000;
+            var nuid = new Nuid();
+            var m = new HashSet<string>(count);
 
+            // Act
+            for (var i = 0; i < count; i++)
+            {
+                var curNuid = nuid.GetNext();
+                
+                //HashSet.Add returns false if the set already contains the item
+                if (m.Add(curNuid))
+                    continue;
+                
+                _outputHelper.WriteLine($"Duplicate Nuid {curNuid}");
+                Assert.True(false, "Duplicate Nuid detected");
+            }
+        }
         private class ControlledRng : RandomNumberGenerator
         {
             public int GetBytesInvocations = 0;
