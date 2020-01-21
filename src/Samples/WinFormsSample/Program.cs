@@ -1,4 +1,3 @@
-#if Windows
 using System;
 using System.Windows.Forms;
 
@@ -19,14 +18,3 @@ namespace WinFormsSample
         }
     }
 }
-#else
-namespace WinFormsSample
-{
-    static class Program
-    {
-        static void Main()
-        {
-        }
-    }
-}
-#endif

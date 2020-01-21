@@ -1,5 +1,4 @@
-﻿#if Windows
-namespace WinFormsSample
+﻿namespace WinFormsSample
 {
     partial class Form1
     {
@@ -123,4 +122,3 @@ namespace WinFormsSample
         private System.Windows.Forms.ListBox lstScenarios;
     }
 }
-#endif

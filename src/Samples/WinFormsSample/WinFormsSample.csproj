@@ -1,15 +1,39 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+﻿<Project>
+  <!-- 
+    Manually importing .props and .targets instead of defining the SDK in
+    the Skd attribute of the Project element. Otherwise the implicit import
+    of Sdk.targets after </Project> would overwrite our custom Build target.
+    Treat project as standard Sdk project on non-Windows platforms
+  -->
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" Condition="$(OS) != 'Windows_NT'" />
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk.WindowsDesktop" Condition="$(OS) == 'Windows_NT'" />
 
   <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
-    <UseWindowsForms>true</UseWindowsForms>
+    <TargetFrameworks>netcoreapp3.1</TargetFrameworks>
     <IsPackable>false</IsPackable>
-    <Configurations>Debug;Release;LinuxRelease;LinuxDebug</Configurations>
   </PropertyGroup>
+
+  <!-- Set Windows specific properties -->
+  <PropertyGroup Condition="$(OS) == 'Windows_NT'">
+    <OutputType>WinExe</OutputType>
+    <UseWindowsForms>true</UseWindowsForms>
+  </PropertyGroup>
+  
+  <!-- Remove files with Windows specific contents on non-Windows platforms -->
+  <ItemGroup Condition="$(OS) != 'Windows_NT'">
+    <Compile Remove="*.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\NATS.Client\NATS.Client.csproj" />
   </ItemGroup>
 
+  <!-- Import default Sdk targets on non-Windows platforms, otherwise the project is invalid -->
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" Condition="$(OS) != 'Windows_NT'" />
+  <!-- Override the Build target on non-Windows platforms, so nothing will happen -->
+  <Target Condition="$(OS) != 'Windows_NT'" Name="Build">
+    <Message Text="Not building WinForms project on non-Windows platforms" />
+  </Target>
+  <!-- Import the WindowsDesktop targets on Windows -->
+  <Import Condition="$(OS) == 'Windows_NT'" Project="Sdk.targets" Sdk="Microsoft.NET.Sdk.WindowsDesktop" />
 </Project>

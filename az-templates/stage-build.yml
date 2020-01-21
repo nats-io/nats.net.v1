@@ -14,12 +14,12 @@ stages:
         arguments: '-c $(BuildConfiguration) --no-incremental --nologo -p:TreatWarningsAsErrors=true -p:Version=$(SemVer) -p:InformationalVersion=$(InfoVer)'
   
     - task: VSTest@2
-      displayName: 'UnitTests .NetCoreApp2.2'
+      displayName: 'UnitTests .NetCoreApp3.1'
       inputs:
         testSelector: 'testAssemblies'
-        testAssemblyVer2: 'src/Tests/UnitTests/bin/$(BuildConfiguration)/netcoreapp2.2/UnitTests.dll'
+        testAssemblyVer2: 'src/Tests/UnitTests/bin/$(BuildConfiguration)/netcoreapp3.1/UnitTests.dll'
         configuration: $(BuildConfiguration)
-        testRunTitle: 'UnitTests .NetCoreApp2.2'
+        testRunTitle: 'UnitTests .NetCoreApp3.1'
   
     - task: VSTest@2
       displayName: 'UnitTests .Net4.5.2'
@@ -64,24 +64,14 @@ stages:
           Write-Host "##vso[task.setvariable variable=PATH;]${env:PATH};$natsServerDir"
 
     - task: VSTest@2
-      displayName: 'IntegrationTests .NetCoreApp2.2'
+      displayName: 'IntegrationTests .NetCoreApp3.1'
       inputs:
         testSelector: 'testAssemblies'
-        testAssemblyVer2: 'src/Tests/IntegrationTests/bin/$(BuildConfiguration)/netcoreapp2.2/IntegrationTests.dll'
+        testAssemblyVer2: 'src/Tests/IntegrationTests/bin/$(BuildConfiguration)/netcoreapp3.1/IntegrationTests.dll'
         configuration: $(BuildConfiguration)
         rerunFailedTests: True
         rerunMaxAttempts: 2
-        testRunTitle: 'IntegrationTests .NetCoreApp2.2'
-
-    - task: VSTest@2
-      displayName: 'IntegrationTests .NetCoreApp3.0'
-      inputs:
-        testSelector: 'testAssemblies'
-        testAssemblyVer2: 'src/Tests/IntegrationTests/bin/$(BuildConfiguration)/netcoreapp3.0/IntegrationTests.dll'
-        configuration: $(BuildConfiguration)
-        rerunFailedTests: True
-        rerunMaxAttempts: 2
-        testRunTitle: 'IntegrationTests .NetCoreApp3.0'
+        testRunTitle: 'IntegrationTests .NetCoreApp3.1'
   
     - task: VSTest@2
       displayName: 'IntegrationTests .Net4.5.2'
