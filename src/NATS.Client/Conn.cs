@@ -3890,6 +3890,13 @@ namespace NATS.Client
 
             lock (mu)
             {
+                if (isClosed())
+                    throw new NATSConnectionClosedException();
+
+                // if we're already draining, exit.
+                if (isDrainingSubs() || isDrainingPubs())
+                    return;
+
                 lsubs = subs.Values;
                 status = ConnState.DRAINING_SUBS;
             }
@@ -3974,11 +3981,6 @@ namespace NATS.Client
             if (timeout <= 0)
                 throw new ArgumentOutOfRangeException(nameof(timeout), "Timeout must be greater than zero.");
 
-            lock (mu)
-            {
-                status = ConnState.DRAINING_SUBS;
-            }
-
             drain(timeout);
         }
 
@@ -4018,11 +4020,6 @@ namespace NATS.Client
         {
             if (timeout <= 0)
                 throw new ArgumentOutOfRangeException(nameof(timeout), "Timeout must be greater than zero.");
-
-            lock (mu)
-            {
-                status = ConnState.DRAINING_SUBS;
-            }
 
             return Task.Run(() => drain(timeout));
         }
