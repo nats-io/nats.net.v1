@@ -11,7 +11,7 @@ namespace NATS.Client.Internals
         private const uint NUID_LENGTH = PREFIX_LENGTH + SEQUENTIAL_LENGTH;
         private const int MIN_INCREMENT = 33;
         private const int MAX_INCREMENT = 333;
-        private const long MAX_SEQUENTIAL = 0x1000_0000_0000_0000; //64^10 - 1
+        private const long MAX_SEQUENTIAL = 0x1000_0000_0000_0000; //64^10
         private const int BASE = 64;
 
         private static readonly byte[] _digits = new byte[BASE]{
