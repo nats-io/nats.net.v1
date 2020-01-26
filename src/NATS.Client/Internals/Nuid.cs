@@ -26,7 +26,7 @@ namespace NATS.Client.Internals
         
         private readonly object _nuidLock = new object();
 
-        private readonly Random _rng = new Random();
+        private readonly Random _rng;
         private readonly object _rngLock = new object();
         private readonly RandomNumberGenerator _cryptoRng;
         private readonly object _cryptRngLock = new object();
@@ -52,8 +52,6 @@ namespace NATS.Client.Internals
             else
                 _cryptoRng = rng;
             
-            //TODO: What about netstandard when not running on CoreCLR?!
-#if NET45
             // Instantiating System.Random multiple times in quick succession without a
             // proper seed may result in instances that yield identical sequences on .NET FX.
             // See https://docs.microsoft.com/en-us/dotnet/api/system.random?view=netframework-4.8#instantiating-the-random-number-generator
@@ -61,7 +59,7 @@ namespace NATS.Client.Internals
             var seedBytes = new byte[4];
             _cryptoRng.GetBytes(seedBytes);
             _rng = new Random(BitConverter.ToInt32(seedBytes, 0));
-#endif
+
             if (sequential is null)
                 _sequential = GetSequential();
             else
@@ -132,7 +130,6 @@ namespace NATS.Client.Internals
         private long GetSequential()
         {
             var randomBytes = new byte[8];
-            const ulong s = ulong.MaxValue - ((ulong.MaxValue % MAX_SEQUENTIAL) + 1) % MAX_SEQUENTIAL;
 
             lock (_rngLock)
             {
