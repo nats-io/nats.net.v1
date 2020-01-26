@@ -28,9 +28,7 @@ namespace NATS.Client.Internals
         private readonly object _nuidLock = new object();
 
         private readonly Random _rng;
-        private readonly object _rngLock = new object();
         private readonly RandomNumberGenerator _cryptoRng;
-        private readonly object _cryptRngLock = new object();
 
         private byte[] _prefix = new byte[PREFIX_LENGTH];
         private int _increment;
@@ -121,20 +119,14 @@ namespace NATS.Client.Internals
 
         private int GetIncrement()
         {
-            lock (_rngLock)
-            {
-                return _rng.Next(MIN_INCREMENT, MAX_INCREMENT);
-            }
+            return _rng.Next(MIN_INCREMENT, MAX_INCREMENT);
         }
 
         private long GetSequential()
         {
             var randomBytes = new byte[8];
 
-            lock (_rngLock)
-            {
-                _rng.NextBytes(randomBytes);
-            }
+            _rng.NextBytes(randomBytes);
 
             var sequential = BitConverter.ToUInt64(randomBytes, 0);
 
@@ -153,10 +145,8 @@ namespace NATS.Client.Internals
         private void SetPrefix()
         {
             var randomBytes = new byte[PREFIX_LENGTH];
-            lock (_cryptRngLock)
-            {
-                _cryptoRng.GetBytes(randomBytes);
-            }
+
+            _cryptoRng.GetBytes(randomBytes);
 
             for(var i = 0; i < randomBytes.Length; i++)
             {
