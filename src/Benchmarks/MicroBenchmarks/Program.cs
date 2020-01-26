@@ -1,4 +1,5 @@
-﻿using BenchmarkDotNet.Attributes;
+﻿using System;
+using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Order;
 using BenchmarkDotNet.Running;
@@ -18,7 +19,7 @@ namespace MicroBenchmarks
     {
         private readonly NUID _nuid = NUID.Instance;
         private readonly Nuid _newNuid = new Nuid(null, 0, 1);
-
+        private readonly Random _random = new Random();
         public RandomBenchmark()
         {
             _nuid.Seq = 0;
@@ -31,6 +32,18 @@ namespace MicroBenchmarks
         [BenchmarkCategory("NextNuid"), Benchmark]
         public string NextNuid() => _newNuid.GetNext();
 
+        [BenchmarkCategory("NextNuid"), Benchmark]
+        public string NextNuidMonitor() => _newNuid.GetNextMonitor();
+
+        [BenchmarkCategory("NextNuid"), Benchmark]
+        public string NextNuidMutex() => _newNuid.GetNextMutex();
+
+        [BenchmarkCategory("NextNuid"), Benchmark]
+        public string OldNewInbox() {
+            byte[] buf = new byte[13];
+            _random.NextBytes(buf);
+            return BitConverter.ToString(buf).Replace("-", "");
+        }
     }
 
     public class Program

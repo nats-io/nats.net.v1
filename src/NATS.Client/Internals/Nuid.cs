@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Security.Cryptography;
+using System.Threading;
 
 namespace NATS.Client.Internals
 {
-    internal sealed class Nuid
+    internal sealed class Nuid : IDisposable
     {
         private const uint PREFIX_LENGTH = 12;
         private const uint SEQUENTIAL_LENGTH = 10;
@@ -30,6 +31,7 @@ namespace NATS.Client.Internals
         private readonly object _rngLock = new object();
         private readonly RandomNumberGenerator _cryptoRng;
         private readonly object _cryptRngLock = new object();
+        private readonly Mutex _nuidMutex = new Mutex();
 
         private byte[] _prefix = new byte[PREFIX_LENGTH];
         private int _increment;
@@ -119,6 +121,72 @@ namespace NATS.Client.Internals
             return new string(nuidBuffer);
         }
 
+        internal string GetNextMonitor()
+        {
+            var sequential = 0L;
+            var nuidBuffer = new char[NUID_LENGTH];
+            Monitor.Enter(_nuidLock);
+            sequential = _sequential += _increment;
+            if (_sequential >= MAX_SEQUENTIAL)
+            {
+                SetPrefix();
+                sequential = _sequential = GetSequential();
+                _increment = GetIncrement();
+            }
+
+            // For small arrays this is way faster than Array.Copy and still faster than Buffer.BlockCopy
+            for (var i = 0; i < PREFIX_LENGTH; i++)
+            {
+                nuidBuffer[i] = (char)_prefix[i];
+            }
+            Monitor.Exit(_nuidLock);
+
+            for (var i = PREFIX_LENGTH; i < NUID_LENGTH; i++)
+            {
+                // We operate on unsigned integers and BASE is a power of two
+                // therefore we can optimize sequential % BASE to sequential & (BASE - 1)
+                nuidBuffer[i] = (char)_digits[(int)sequential & (BASE - 1)];
+                // BASE is 64 = 2^6 and sequential >= 0
+                // therefore we can optimize sequential / BASE to sequential >> 6
+                sequential >>= 6;
+            }
+
+            return new string(nuidBuffer);
+        }
+
+        internal string GetNextMutex()
+        {
+            var sequential = 0L;
+            var nuidBuffer = new char[NUID_LENGTH];
+            _nuidMutex.WaitOne();
+            sequential = _sequential += _increment;
+            if (_sequential >= MAX_SEQUENTIAL)
+            {
+                SetPrefix();
+                sequential = _sequential = GetSequential();
+                _increment = GetIncrement();
+            }
+
+            // For small arrays this is way faster than Array.Copy and still faster than Buffer.BlockCopy
+            for (var i = 0; i < PREFIX_LENGTH; i++)
+            {
+                nuidBuffer[i] = (char)_prefix[i];
+            }
+            _nuidMutex.ReleaseMutex();
+
+            for (var i = PREFIX_LENGTH; i < NUID_LENGTH; i++)
+            {
+                // We operate on unsigned integers and BASE is a power of two
+                // therefore we can optimize sequential % BASE to sequential & (BASE - 1)
+                nuidBuffer[i] = (char)_digits[(int)sequential & (BASE - 1)];
+                // BASE is 64 = 2^6 and sequential >= 0
+                // therefore we can optimize sequential / BASE to sequential >> 6
+                sequential >>= 6;
+            }
+
+            return new string(nuidBuffer);
+        }
+
         private int GetIncrement()
         {
             lock (_rngLock)
@@ -164,6 +232,11 @@ namespace NATS.Client.Internals
                 // therefore we can optimize randomBytes[i] % BASE to randomBytes[i] & (BASE - 1)
                 _prefix[i] = _digits[randomBytes[i] & (BASE - 1)];
             }
+        }
+
+        public void Dispose()
+        {
+            _nuidMutex.Dispose();
         }
     }
 }
