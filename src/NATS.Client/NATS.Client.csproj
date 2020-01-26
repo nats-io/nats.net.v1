@@ -12,7 +12,7 @@
     <PackageReleaseNotes>https://github.com/nats-io/nats.net/releases</PackageReleaseNotes>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageTags>CNCF NATS Messaging Cloud Publish Subscribe PubSub</PackageTags>
-	<DebugType>pdbonly</DebugType>
+    <DebugType>pdbonly</DebugType>
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
