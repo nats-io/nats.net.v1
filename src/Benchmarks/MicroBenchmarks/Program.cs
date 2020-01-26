@@ -11,7 +11,6 @@ namespace MicroBenchmarks
     [DisassemblyDiagnoser(printAsm: true, printSource: true)]
     [Orderer(SummaryOrderPolicy.FastestToSlowest)]
     [MemoryDiagnoser]
-    [RPlotExporter]
     [MarkdownExporterAttribute.GitHub]
     [SimpleJob(RuntimeMoniker.Net462)]
     [SimpleJob(RuntimeMoniker.NetCoreApp31)]
@@ -31,12 +30,6 @@ namespace MicroBenchmarks
 
         [BenchmarkCategory("NextNuid"), Benchmark]
         public string NextNuid() => _newNuid.GetNext();
-
-        [BenchmarkCategory("NextNuid"), Benchmark]
-        public string NextNuidMonitor() => _newNuid.GetNextMonitor();
-
-        [BenchmarkCategory("NextNuid"), Benchmark]
-        public string NextNuidMutex() => _newNuid.GetNextMutex();
 
         [BenchmarkCategory("NextNuid"), Benchmark]
         public string OldNewInbox() {
