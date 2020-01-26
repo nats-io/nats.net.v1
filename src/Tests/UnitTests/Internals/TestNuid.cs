@@ -114,12 +114,8 @@ namespace UnitTests.Internals
             var nuid = new Nuid(rng); ;
 
             // Assert
-#if NET452
-            // On .NET FX we have an additional invocation for seeding System.Random
             Assert.Equal(2, rng.GetBytesInvocations);
-#else
-            Assert.Equal(1, rng.GetBytesInvocations);
-#endif
+
         }
         
         [Fact]
