@@ -7,10 +7,9 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <DebugSymbols>true</DebugSymbols>
-    <Configurations>Debug;Release;LinuxRelease;LinuxDebug</Configurations>
   </PropertyGroup>
   
-  <PropertyGroup Condition="$(Configuration) == 'Release' Or $(Configuration) == 'LinuxRelease'">
+  <PropertyGroup Condition="$(Configuration) == 'Release'">
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\NATS.Client.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
