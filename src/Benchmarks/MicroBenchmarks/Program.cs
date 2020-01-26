@@ -16,8 +16,13 @@ namespace MicroBenchmarks
     [SimpleJob(RuntimeMoniker.NetCoreApp31)]
     public class RandomBenchmark
     {
-        private static readonly NUID _nuid = NUID.Instance;
-        private static readonly Nuid _newNuid = new Nuid();
+        private readonly NUID _nuid = NUID.Instance;
+        private readonly Nuid _newNuid = new Nuid(null, 0, 1);
+
+        public RandomBenchmark()
+        {
+            _nuid.Seq = 0;
+        }
 
         [BenchmarkCategory("NextNuid")]
         [Benchmark(Baseline = true)]
