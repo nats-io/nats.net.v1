@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Security.Cryptography;
 using NATS.Client.Internals;
 using Xunit;
@@ -127,21 +128,22 @@ namespace UnitTests.Internals
             // Arrange
             const int count = 1_000_000;
             var nuid = new Nuid();
-            var m = new HashSet<string>(count);
+            var nuids = new HashSet<string>(StringComparer.Ordinal);
 
             // Act
             for (var i = 0; i < count; i++)
             {
-                var curNuid = nuid.GetNext();
+                var currentNuid = nuid.GetNext();
                 
                 //HashSet.Add returns false if the set already contains the item
-                if (m.Add(curNuid))
+                if (nuids.Add(currentNuid))
                     continue;
                 
-                _outputHelper.WriteLine($"Duplicate Nuid {curNuid}");
+                _outputHelper.WriteLine($"Duplicate Nuid {currentNuid}");
                 Assert.True(false, "Duplicate Nuid detected");
             }
         }
+
         private class ControlledRng : RandomNumberGenerator
         {
             public int GetBytesInvocations = 0;
