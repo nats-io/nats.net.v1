@@ -19,6 +19,7 @@ using Xunit;
 
 namespace UnitTests
 {
+#pragma warning disable CS0618
     public class TestNUID
     {
         [Fact]
@@ -110,4 +111,5 @@ namespace UnitTests
         }
 
     }
+#pragma warning restore CS0618
 }

@@ -1,5 +1,4 @@
-﻿using System;
-using BenchmarkDotNet.Attributes;
+﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Order;
 using NATS.Client;
@@ -15,7 +14,9 @@ namespace MicroBenchmarks
     [SimpleJob(RuntimeMoniker.NetCoreApp31)]
     public class NuidBenchmark
     {
+#pragma warning disable CS0618
         private readonly NUID _nuid = NUID.Instance;
+#pragma warning restore CS0618
         private readonly Nuid _newNuid = new Nuid(null, 0, 1);
 
         public NuidBenchmark()
