@@ -17,7 +17,7 @@ namespace MicroBenchmarks
     {
         private readonly NUID _nuid = NUID.Instance;
         private readonly Nuid _newNuid = new Nuid(null, 0, 1);
-        private readonly Random _random = new Random();
+
         public NuidBenchmark()
         {
             _nuid.Seq = 0;
