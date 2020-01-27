@@ -80,7 +80,7 @@ namespace UnitTests.Internals
             var result = nuid.GetNext();
 
             // Assert
-            Assert.Matches("[A-z0-9+/]{22}", result);
+            Assert.Matches("[A-z0-9-_]{22}", result);
         }
 
         [Fact]
@@ -112,7 +112,7 @@ namespace UnitTests.Internals
             var prefix = nuid.GetNext().Substring(0, 12);
 
             // Assert
-            Assert.Equal("ABCDEFGHL9+/", prefix);
+            Assert.Equal("ABCDEFGHL9-_", prefix);
         }
 
         [Fact]
