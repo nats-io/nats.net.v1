@@ -24,7 +24,7 @@ namespace NATS.Client.Internals
         private const uint NUID_LENGTH = PREFIX_LENGTH + SEQUENTIAL_LENGTH;
         private const int MIN_INCREMENT = 33;
         private const int MAX_INCREMENT = 333;
-        private const long MAX_SEQUENTIAL = 0x1000_0000_0000_0000; //64^10
+        private const ulong MAX_SEQUENTIAL = 0x1000_0000_0000_0000; //64^10
         private const int BASE = 64;
 
         private static readonly byte[] _digits = new byte[BASE]{
@@ -44,8 +44,8 @@ namespace NATS.Client.Internals
         private readonly RandomNumberGenerator _cryptoRng;
 
         private byte[] _prefix = new byte[PREFIX_LENGTH];
-        private int _increment;
-        private long _sequential;
+        private uint _increment;
+        private ulong _sequential;
 
         /// <summary>
         /// Initializes a new instance of <see cref="Nuid"/>.
@@ -57,7 +57,7 @@ namespace NATS.Client.Internals
         /// <param name="rng">A cryptographically strong random number generator.</param>
         /// <param name="sequential">The initial sequential.</param>
         /// <param name="increment">The initial increment.</param>
-        internal Nuid(RandomNumberGenerator rng = null, long? sequential = null, int? increment = null)
+        internal Nuid(RandomNumberGenerator rng = null, ulong? sequential = null, uint? increment = null)
         {
             if (rng is null)
                 _cryptoRng = RandomNumberGenerator.Create();
@@ -102,7 +102,7 @@ namespace NATS.Client.Internals
             var nuidBuffer = new char[NUID_LENGTH];
 
             Monitor.Enter(_nuidLock);
-            long sequential = _sequential += _increment;
+            ulong sequential = _sequential += _increment;
             if (_sequential >= MAX_SEQUENTIAL)
             {
                 SetPrefix();
@@ -121,7 +121,7 @@ namespace NATS.Client.Internals
             {
                 // We operate on unsigned integers and BASE is a power of two
                 // therefore we can optimize sequential % BASE to sequential & (BASE - 1)
-                nuidBuffer[i] = (char)_digits[(int)sequential & (BASE - 1)];
+                nuidBuffer[i] = (char)_digits[sequential & (BASE - 1)];
                 // BASE is 64 = 2^6 and sequential >= 0
                 // therefore we can optimize sequential / BASE to sequential >> 6
                 sequential >>= 6;
@@ -130,12 +130,12 @@ namespace NATS.Client.Internals
             return new string(nuidBuffer);
         }
 
-        private int GetIncrement()
+        private uint GetIncrement()
         {
-            return _rng.Next(MIN_INCREMENT, MAX_INCREMENT);
+            return (uint)_rng.Next(MIN_INCREMENT, MAX_INCREMENT);
         }
 
-        private long GetSequential()
+        private ulong GetSequential()
         {
             var randomBytes = new byte[8];
 
@@ -151,8 +151,8 @@ namespace NATS.Client.Internals
             //       The right hand side of the comparision happens to be const too now and can be folded to:
             //       18446744073709551615 which happens to be equal to ulong.MaxValue, hence the condition will
             //       never be true and we can omit the do-while loop entirely.
-            
-            return (long)(sequential % MAX_SEQUENTIAL);
+
+            return sequential % MAX_SEQUENTIAL;
         }
 
         private void SetPrefix()

@@ -87,8 +87,8 @@ namespace UnitTests.Internals
         public void GetNextNuid_PrefixRenewed()
         {
             // Arrange
-            var increment = 100;
-            var maxSequential = 0x1000_0000_0000_0000 - increment - 1;
+            var increment = 100U;
+            var maxSequential = 0x1000_0000_0000_0000UL - increment - 1;
             var nuid = new Nuid(RandomNumberGenerator.Create(), maxSequential, increment);
 
             // Act
