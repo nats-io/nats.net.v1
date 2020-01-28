@@ -27,8 +27,8 @@ namespace NATS.Client.Internals
         private readonly CancellationTokenRegistration _tokenRegistration;
 
         public string Id { get; }
-        public TaskCompletionSource<Msg> Waiter { get; }
         public CancellationToken Token => _tokenSource.Token;
+        public TaskCompletionSource<Msg> Waiter { get; } = new TaskCompletionSource<Msg>();
 
         /// <summary>
         /// Initializes a new instance of <see cref="InFlightRequest"/>
@@ -41,8 +41,7 @@ namespace NATS.Client.Internals
         {
             _onCompleted = onCompleted ?? throw new ArgumentNullException(nameof(onCompleted));
             Id = id;
-            Waiter = new TaskCompletionSource<Msg>();
-            
+
             _tokenSource = token == CancellationToken.None
                 ? new CancellationTokenSource()
                 : CancellationTokenSource.CreateLinkedTokenSource(token);
