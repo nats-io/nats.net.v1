@@ -22,6 +22,7 @@ namespace NATS.Client
     /// that is started at a pseudo random number and increments with a pseudo-random increment.
     /// Total is 22 bytes of base 36 ascii text.
     /// </summary>
+    [Obsolete("NATS.Client.NUID is deprecated and will be removed in a future version")]
     public class NUID
     {
         private static char[] digits = 

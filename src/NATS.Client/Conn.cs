@@ -102,7 +102,7 @@ namespace NATS.Client
         // .NET 4.0.
         private readonly object mu = new Object();
 
-        private Random r = null;
+        private readonly Nuid _nuid = new Nuid();
 
         Options opts = new Options();
 
@@ -3191,23 +3191,8 @@ namespace NATS.Client
         /// <returns>A unique inbox string.</returns>
         public string NewInbox()
         {
-            var prefix = opts.CustomInboxPrefix ?? IC.inboxPrefix;
-
-            if (!opts.UseOldRequestStyle)
-            {
-                return prefix + Guid.NewGuid().ToString("N");
-            }
-            else
-            {
-                if (r == null)
-                    r = new Random(Guid.NewGuid().GetHashCode());
-
-                byte[] buf = new byte[13];
-
-                r.NextBytes(buf);
-
-                return prefix + BitConverter.ToString(buf).Replace("-","");
-            }
+            var prefix = opts.customInboxPrefix ?? IC.inboxPrefix;
+            return prefix + _nuid.GetNext();
         }
 
         internal void sendSubscriptionMessage(AsyncSubscription s)

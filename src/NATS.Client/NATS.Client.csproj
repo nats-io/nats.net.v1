@@ -12,6 +12,8 @@
     <PackageReleaseNotes>https://github.com/nats-io/nats.net/releases</PackageReleaseNotes>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageTags>CNCF NATS Messaging Cloud Publish Subscribe PubSub</PackageTags>
+    <DebugType>pdbonly</DebugType>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
   <PropertyGroup Condition="$(Configuration) == 'Release'">
@@ -20,7 +22,7 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\NATS.Client.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
-  
+
   <ItemGroup>
     <None Include="package-icon.png">
       <Pack>True</Pack>
