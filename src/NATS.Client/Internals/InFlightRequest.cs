@@ -39,9 +39,10 @@ namespace NATS.Client.Internals
         /// <param name="onCompleted"></param>
         internal InFlightRequest(string id, CancellationToken token, int timeout, Action<string> onCompleted)
         {
+            _onCompleted = onCompleted ?? throw new ArgumentNullException(nameof(onCompleted));
             Id = id;
             Waiter = new TaskCompletionSource<Msg>();
-            _onCompleted = onCompleted;
+            
             _tokenSource = token == CancellationToken.None
                 ? new CancellationTokenSource()
                 : CancellationTokenSource.CreateLinkedTokenSource(token);
@@ -65,8 +66,8 @@ namespace NATS.Client.Internals
         public void Dispose()
         {
             _tokenRegistration.Dispose();
-            _tokenSource?.Dispose();
-            _onCompleted?.Invoke(Id);
+            _tokenSource.Dispose();
+            _onCompleted.Invoke(Id);
         }
     }
 }

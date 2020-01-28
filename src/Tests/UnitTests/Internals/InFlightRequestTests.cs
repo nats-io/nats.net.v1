@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using NATS.Client;
 using NATS.Client.Internals;
@@ -73,16 +74,9 @@ namespace UnitTests.Internals
         }
 
         [Fact]
-        public void Dispose_DoesNotThrowForNullDelegate()
+        public void Ctor_ThrowsForNullArg()
         {
-            // Arrange
-            var sut = new InFlightRequest("Foo", default, 0, null);
-
-            // Act
-            var ex = Record.Exception(() => sut.Dispose());
-
-            // Assert
-            Assert.Null(ex);
+            Assert.Throws<ArgumentNullException>("onCompleted", () => new InFlightRequest("Foo", default, 0, null));
         }
     }
 }
