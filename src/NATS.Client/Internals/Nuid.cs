@@ -100,22 +100,24 @@ namespace NATS.Client.Internals
         internal string GetNext()
         {
             var nuidBuffer = new char[NUID_LENGTH];
+            var sequential = 0UL;
 
-            Monitor.Enter(_nuidLock);
-            ulong sequential = _sequential += _increment;
-            if (_sequential >= MAX_SEQUENTIAL)
+            lock (_nuidLock)
             {
-                SetPrefix();
-                sequential = _sequential = GetSequential();
-                _increment = GetIncrement();
-            }
+                sequential = _sequential += _increment;
+                if (_sequential >= MAX_SEQUENTIAL)
+                {
+                    SetPrefix();
+                    sequential = _sequential = GetSequential();
+                    _increment = GetIncrement();
+                }
 
-            // For small arrays this is way faster than Array.Copy and still faster than Buffer.BlockCopy
-            for (var i = 0; i < PREFIX_LENGTH; i++)
-            {
-                nuidBuffer[i] = (char)_prefix[i];
+                // For small arrays this is way faster than Array.Copy and still faster than Buffer.BlockCopy
+                for (var i = 0; i < PREFIX_LENGTH; i++)
+                {
+                    nuidBuffer[i] = (char)_prefix[i];
+                }
             }
-            Monitor.Exit(_nuidLock);
 
             for (var i = PREFIX_LENGTH; i < NUID_LENGTH; i++)
             {
