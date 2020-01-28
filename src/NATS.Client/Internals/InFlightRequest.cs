@@ -27,7 +27,7 @@ namespace NATS.Client.Internals
         private readonly CancellationTokenRegistration _tokenRegistration;
 
         public string Id { get; }
-        public CancellationToken Token => _tokenSource.Token;
+        public CancellationToken Token { get; }
         public TaskCompletionSource<Msg> Waiter { get; } = new TaskCompletionSource<Msg>();
 
         /// <summary>
@@ -42,11 +42,22 @@ namespace NATS.Client.Internals
             _onCompleted = onCompleted ?? throw new ArgumentNullException(nameof(onCompleted));
             Id = id;
 
-            _tokenSource = token == CancellationToken.None
-                ? new CancellationTokenSource()
-                : CancellationTokenSource.CreateLinkedTokenSource(token);
+            if (timeout > 0 && token == default)
+            {
+                _tokenSource = new CancellationTokenSource();
+                Token = _tokenSource.Token;
+            }
+            else if (timeout > 0)
+            {
+                _tokenSource = CancellationTokenSource.CreateLinkedTokenSource(token);
+                Token = _tokenSource.Token;
+            } 
+            else
+            {
+                Token = token;
+            }
 
-            _tokenRegistration = _tokenSource.Token.Register(() =>
+            _tokenRegistration = Token.Register(() =>
             {
                 if (timeout > 0)
                     Waiter.TrySetException(new NATSTimeoutException());
@@ -59,13 +70,13 @@ namespace NATS.Client.Internals
         }
 
         /// <summary>
-        /// Releases all resources used by the <see cref="InFlightRequest"/> object
-        /// and invokes the <c>onCompleted</c> delegate.
+        /// Releases all resources used by the current instance of the <see cref="InFlightRequest"/>
+        /// class and invokes the <c>onCompleted</c> delegate.
         /// </summary>
         public void Dispose()
         {
             _tokenRegistration.Dispose();
-            _tokenSource.Dispose();
+            _tokenSource?.Dispose();
             _onCompleted.Invoke(Id);
         }
     }
