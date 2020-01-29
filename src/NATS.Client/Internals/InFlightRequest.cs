@@ -57,13 +57,15 @@ namespace NATS.Client.Internals
                 Token = token;
             }
 
-            _tokenRegistration = Token.Register(() =>
+            _tokenRegistration = Token.Register((req) =>
             {
-                if (timeout > 0)
-                    Waiter.TrySetException(new NATSTimeoutException());
+                var request = req as InFlightRequest;
 
-                Waiter.TrySetCanceled();
-            });
+                if (timeout > 0)
+                    request.Waiter.TrySetException(new NATSTimeoutException());
+
+                request.Waiter.TrySetCanceled();
+            }, this);
 
             if(timeout > 0)
                 _tokenSource.CancelAfter(timeout);
