@@ -1093,6 +1093,7 @@ namespace IntegrationTests
                 {
                     closed.Set();
                 };
+
                 using (var c = Context.ConnectionFactory.CreateConnection(opts))
                 {
                     using (c.SubscribeAsync("foo", (obj, args) =>
@@ -1109,6 +1110,8 @@ namespace IntegrationTests
                         // give us a long timeout to run our test.
                         var drainTask = c.DrainAsync(10000);
 
+                        // Sleep a bit to ensure the drain task is running.
+                        Thread.Sleep(100);
                         Assert.True(c.State == ConnState.DRAINING_SUBS);
                         Assert.True(c.IsDraining());
 
@@ -1124,6 +1127,12 @@ namespace IntegrationTests
                         Assert.True(closed.WaitOne(10000));
                     }
                 }
+
+                // Now test connection state checking in drain after being closed via API.
+                var conn = Context.ConnectionFactory.CreateConnection(opts);
+                conn.Close();
+                _ = Assert.Throws<NATSConnectionClosedException>(() => conn.Drain());
+                await Assert.ThrowsAsync<NATSConnectionClosedException>(() => { return conn.DrainAsync(); });
             }
         }
 
