@@ -58,7 +58,7 @@ namespace UnitTests.Internals
         }
 
         [Fact]
-        public async Task CanceledWithTimeout_ThrowsNatsTimeoutException()
+        public async Task CanceledWithTimeout_ThrowsTaskCanceledException()
         {
             // Arrange
             var cts = new CancellationTokenSource();
