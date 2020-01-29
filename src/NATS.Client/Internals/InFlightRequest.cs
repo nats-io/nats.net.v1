@@ -18,26 +18,32 @@ using System.Threading.Tasks;
 namespace NATS.Client.Internals
 {
     /// <summary>
-    /// Handles in-flight requests when using the default (i.e. not old) request/reply behavior
+    /// Represents an in-flight request/reply operation.
     /// </summary>
+    /// <remarks>
+    /// This class is not used when using the legacy request/reply
+    /// pattern (see <see cref="Options.UseOldRequestStyle"/>).
+    /// </remarks>
     internal sealed class InFlightRequest : IDisposable
     {
         private readonly Action<string> _onCompleted;
         private readonly CancellationTokenSource _tokenSource;
         private readonly CancellationTokenRegistration _tokenRegistration;
-
-        public string Id { get; }
-        public CancellationToken Token { get; }
-        public TaskCompletionSource<Msg> Waiter { get; } = new TaskCompletionSource<Msg>();
         private readonly CancellationToken _clientProvidedToken;
 
+        public readonly string Id;
+        public readonly CancellationToken Token;
+        public readonly TaskCompletionSource<Msg> Waiter = new TaskCompletionSource<Msg>();
+
         /// <summary>
-        /// Initializes a new instance of <see cref="InFlightRequest"/>
+        /// Initializes a new instance of <see cref="InFlightRequest"/> class.
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="token"></param>
-        /// <param name="timeout"></param>
-        /// <param name="onCompleted"></param>
+        /// <param name="id">The id associated with the request.</param>
+        /// <param name="token">The cancellation token used to cancel the request.</param>
+        /// <param name="timeout">A timeout (ms) after which the request is canceled.</param>
+        /// <param name="onCompleted">The delegate that will be executed after the request ended.</param>
+        /// <exception cref="TaskCanceledException">Thrown if the request is cancelled by <paramref name="token"/> before receiving a response.</exception>
+        /// <exception cref="NATSTimeoutException">Thrown if the request is cancelled because <paramref name="timeout"/> period has elapsed before receiving a response.</exception>
         internal InFlightRequest(string id, CancellationToken token, int timeout, Action<string> onCompleted)
         {
             _onCompleted = onCompleted ?? throw new ArgumentNullException(nameof(onCompleted));
@@ -53,24 +59,26 @@ namespace NATS.Client.Internals
             {
                 _tokenSource = CancellationTokenSource.CreateLinkedTokenSource(token);
                 Token = _tokenSource.Token;
-            } 
+            }
             else
             {
                 Token = token;
             }
 
-            _tokenRegistration = Token.Register((req) =>
-            {
-                var request = req as InFlightRequest;
-
-                if (request._clientProvidedToken.IsCancellationRequested || timeout < 1)
-                    request.Waiter.TrySetCanceled();
-
-                request.Waiter.TrySetException(new NATSTimeoutException());
-            }, this);
+            _tokenRegistration = Token.Register(CancellationCallback, this);
 
             if (timeout > 0)
                 _tokenSource.CancelAfter(timeout);
+        }
+
+        private static void CancellationCallback(object req)
+        {
+            var request = req as InFlightRequest;
+
+            if (request._clientProvidedToken.IsCancellationRequested)
+                request.Waiter.TrySetCanceled();
+
+            request.Waiter.TrySetException(new NATSTimeoutException());
         }
 
         /// <summary>
