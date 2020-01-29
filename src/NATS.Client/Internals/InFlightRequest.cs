@@ -29,6 +29,7 @@ namespace NATS.Client.Internals
         public string Id { get; }
         public CancellationToken Token { get; }
         public TaskCompletionSource<Msg> Waiter { get; } = new TaskCompletionSource<Msg>();
+        private readonly CancellationToken _clientProvidedToken;
 
         /// <summary>
         /// Initializes a new instance of <see cref="InFlightRequest"/>
@@ -40,6 +41,7 @@ namespace NATS.Client.Internals
         internal InFlightRequest(string id, CancellationToken token, int timeout, Action<string> onCompleted)
         {
             _onCompleted = onCompleted ?? throw new ArgumentNullException(nameof(onCompleted));
+            _clientProvidedToken = token;
             Id = id;
 
             if (timeout > 0 && token == default)
@@ -61,13 +63,13 @@ namespace NATS.Client.Internals
             {
                 var request = req as InFlightRequest;
 
-                if (timeout > 0)
-                    request.Waiter.TrySetException(new NATSTimeoutException());
+                if (request._clientProvidedToken.IsCancellationRequested || timeout < 1)
+                    request.Waiter.TrySetCanceled();
 
-                request.Waiter.TrySetCanceled();
+                request.Waiter.TrySetException(new NATSTimeoutException());
             }, this);
 
-            if(timeout > 0)
+            if (timeout > 0)
                 _tokenSource.CancelAfter(timeout);
         }
 

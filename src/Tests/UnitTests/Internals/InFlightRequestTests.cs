@@ -55,8 +55,7 @@ namespace UnitTests.Internals
             cts.Cancel();
 
             // Assert
-            // NATSTimeoutException is somewhat unexpected here
-            await Assert.ThrowsAsync<NATSTimeoutException>(() => sut.Waiter.Task);
+            await Assert.ThrowsAsync<TaskCanceledException>(() => sut.Waiter.Task);
         }
 
         [Fact]
