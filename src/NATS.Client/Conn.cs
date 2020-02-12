@@ -2596,15 +2596,38 @@ namespace NATS.Client
 
         private void requestResponseHandler(object sender, MsgHandlerEventArgs e)
         {
+            InFlightRequest request;
+
             if (e.Message == null)
                 return;
 
-            //               \
-            //               \/
-            //  _INBOX.<nuid>.<requestId>
-            var requestId = e.Message.Subject.Substring(globalRequestInbox.Length + 1);
-            if (!waitingRequests.TryGetValue(requestId, out var request))
-                return;
+            var subject = e.Message.Subject;
+
+            // if it's a typical response, process normally.
+            if (subject.StartsWith(globalRequestInbox))
+            {
+                //               \
+                //               \/
+                //  _INBOX.<nuid>.<requestId>
+                var requestId = subject.Substring(globalRequestInbox.Length + 1);
+                if (!waitingRequests.TryGetValue(requestId, out request))
+                    return;
+            }
+            else
+            {
+                // We have a jetstream subject (remapped), so if there's only one
+                // request assume we're OK and handle it.
+                if (waitingRequests.Count == 1)
+                {
+                    request = waitingRequests.ToArray()[0].Value;
+                }
+                else
+                {
+                    // if we get here, we have multiple outsanding jetstream
+                    // requests.  We can't tell which is which we'll punt.
+                    return;
+                }
+            }
 
             bool isClosed;
 
