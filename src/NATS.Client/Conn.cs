@@ -155,8 +155,8 @@ namespace NATS.Client
         // used to map replies to requests from client (should lock)
         private long nextRequestId = 0;
 
-        private readonly ConcurrentDictionary<string, InFlightRequest> waitingRequests
-            = new ConcurrentDictionary<string, InFlightRequest>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, InFlightRequest> waitingRequests
+            = new Dictionary<string, InFlightRequest>(StringComparer.OrdinalIgnoreCase);
 
         // Prepare protocol messages for efficiency
         private byte[] PING_P_BYTES = null;
@@ -2592,7 +2592,13 @@ namespace NATS.Client
 
         protected Msg request(string subject, byte[] data, int offset, int count, int timeout) => requestSync(subject, data, offset, count, timeout);
 
-        private void RemoveOutstandingRequest(string requestId) => waitingRequests.TryRemove(requestId, out _);
+        private void RemoveOutstandingRequest(string requestId)
+        {
+            lock (mu)
+            {
+                waitingRequests.Remove(requestId);
+            }
+        }
 
         private void RequestResponseHandler(object sender, MsgHandlerEventArgs e)
         {
@@ -2622,7 +2628,10 @@ namespace NATS.Client
                     // request assume we're OK and handle it.
                     if (waitingRequests.Count == 1)
                     {
-                        request = waitingRequests.ToArray()[0].Value;
+                        InFlightRequest[] values = new InFlightRequest[1];
+                        waitingRequests.Values.CopyTo(values, 0);
+                        request = values[0];
+
                     }
                     else
                     {
@@ -2654,13 +2663,16 @@ namespace NATS.Client
 
             var request = new InFlightRequest(requestId.ToString(CultureInfo.InvariantCulture), token, timeout, RemoveOutstandingRequest);
             request.Waiter.Task.ContinueWith(t => GC.KeepAlive(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
-            waitingRequests.TryAdd(request.Id, request);
-
-            if (globalRequestSubscription != null)
-                return request;
 
             lock (mu)
             {
+                // We shouldn't ever get an Argument exception because the ID is incrementing
+                // and since this is performant sensitive code, skipping an existence check.
+                waitingRequests.Add(request.Id, request);
+
+                if (globalRequestSubscription != null)
+                    return request;
+
                 if (globalRequestSubscription == null)
                     globalRequestSubscription = subscribeAsync(string.Concat(globalRequestInbox, ".*"), null,
                         RequestResponseHandler);
@@ -3639,12 +3651,14 @@ namespace NATS.Client
         // Caller must lock
         private void clearPendingRequestCalls()
         {
-            foreach (var request in waitingRequests)
+            lock (mu)
             {
-                request.Value.Waiter.TrySetCanceled();
+                foreach (var request in waitingRequests)
+                {
+                    request.Value.Waiter.TrySetCanceled();
+                }
+                waitingRequests.Clear();
             }
-
-            waitingRequests.Clear();
         }
 
 
