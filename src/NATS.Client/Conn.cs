@@ -2592,47 +2592,46 @@ namespace NATS.Client
 
         protected Msg request(string subject, byte[] data, int offset, int count, int timeout) => requestSync(subject, data, offset, count, timeout);
 
-        private void removeOutstandingRequest(string requestId) => waitingRequests.TryRemove(requestId, out _);
+        private void RemoveOutstandingRequest(string requestId) => waitingRequests.TryRemove(requestId, out _);
 
-        private void requestResponseHandler(object sender, MsgHandlerEventArgs e)
+        private void RequestResponseHandler(object sender, MsgHandlerEventArgs e)
         {
             InFlightRequest request;
+            bool isClosed;
 
             if (e.Message == null)
                 return;
 
             var subject = e.Message.Subject;
 
-            // if it's a typical response, process normally.
-            if (subject.StartsWith(globalRequestInbox))
+            lock (mu)
             {
-                //               \
-                //               \/
-                //  _INBOX.<nuid>.<requestId>
-                var requestId = subject.Substring(globalRequestInbox.Length + 1);
-                if (!waitingRequests.TryGetValue(requestId, out request))
-                    return;
-            }
-            else
-            {
-                // We have a jetstream subject (remapped), so if there's only one
-                // request assume we're OK and handle it.
-                if (waitingRequests.Count == 1)
+                // if it's a typical response, process normally.
+                if (subject.StartsWith(globalRequestInbox))
                 {
-                    request = waitingRequests.ToArray()[0].Value;
+                    //               \
+                    //               \/
+                    //  _INBOX.<nuid>.<requestId>
+                    var requestId = subject.Substring(globalRequestInbox.Length + 1);
+                    if (!waitingRequests.TryGetValue(requestId, out request))
+                        return;
                 }
                 else
                 {
-                    // if we get here, we have multiple outsanding jetstream
-                    // requests.  We can't tell which is which we'll punt.
-                    return;
+                    // We have a jetstream subject (remapped), so if there's only one
+                    // request assume we're OK and handle it.
+                    if (waitingRequests.Count == 1)
+                    {
+                        request = waitingRequests.ToArray()[0].Value;
+                    }
+                    else
+                    {
+                        // if we get here, we have multiple outsanding jetstream
+                        // requests.  We can't tell which is which we'll punt.
+                        return;
+                    }
                 }
-            }
 
-            bool isClosed;
-
-            lock (mu)
-            {
                 isClosed = this.isClosed();
             }
 
@@ -2653,7 +2652,7 @@ namespace NATS.Client
             if (requestId < 0) //Check if recycled
                 requestId = (requestId + long.MaxValue + 1);
 
-            var request = new InFlightRequest(requestId.ToString(CultureInfo.InvariantCulture), token, timeout, removeOutstandingRequest);
+            var request = new InFlightRequest(requestId.ToString(CultureInfo.InvariantCulture), token, timeout, RemoveOutstandingRequest);
             request.Waiter.Task.ContinueWith(t => GC.KeepAlive(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
             waitingRequests.TryAdd(request.Id, request);
 
@@ -2664,7 +2663,7 @@ namespace NATS.Client
             {
                 if (globalRequestSubscription == null)
                     globalRequestSubscription = subscribeAsync(string.Concat(globalRequestInbox, ".*"), null,
-                        requestResponseHandler);
+                        RequestResponseHandler);
             }
 
             return request;
