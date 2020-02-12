@@ -1741,7 +1741,33 @@ namespace IntegrationTests
         /// Temporary test for upcoming jetstream functionality.  The jetstream server must be run
         /// manually and loaded per the issue listed below.  JetStream will remap reply subjects
         /// for requests, so additional code had to be added to handle this.  Future jetstream tests
-        /// will cover this.
+        /// will cover this and this test should be replaced.
+        ///
+        /// # Start server with jetstream enabled.
+        /// $ ./nats-server -js
+        ///
+        /// Create the stream
+        /// $ jsm str create
+        /// ? Stream Name foo
+        /// ? Subjects to consume foo.*
+        /// ? Storage backend memory
+        /// ? Retention Policy Limits
+        /// ? Message count limit -1
+        /// ? Message size limit -1
+        /// ? Maximum message age limit -1
+        /// ? Maximum individual message size -1
+        ///
+        /// Create the server side consumer
+        /// $ jsm con create
+        /// ? Select a Stream foo
+        /// ? Consumer name bar
+        /// ? Delivery target
+        /// ? Start policy (all, last, 1h, msg sequence) all
+        /// ? Filter Stream by subject (blank for all)
+        /// ? Maximum Allowed Deliveries -1
+        ///
+        /// Now manually run this test.
+        /// 
         /// </summary>
         [Fact(Skip = "Manual")]
         public void TestJetstreamSubjectHandling()
@@ -1750,9 +1776,11 @@ namespace IntegrationTests
             // as described in issue https://github.com/nats-io/nats.net/issues/364
 
             // publish a message into JS
-            using var c = new ConnectionFactory().CreateConnection();
-            c.Publish("foo.inc", Encoding.UTF8.GetBytes("hello"));
-            c.Request("$JS.STREAM.foo.CONSUMER.bar.NEXT", Encoding.ASCII.GetBytes("1"), 1000);
+            using (var c = new ConnectionFactory().CreateConnection())
+            {
+                c.Publish("foo.inc", Encoding.UTF8.GetBytes("hello"));
+                c.Request("$JS.STREAM.foo.CONSUMER.bar.NEXT", Encoding.ASCII.GetBytes("1"), 1000);
+            }
         }
 
     } // class
