@@ -21,9 +21,9 @@ namespace NATS.Client
     /// </summary>
     public class NATSException : Exception
     {
-        internal NATSException() : base() { }
-        internal NATSException(string err) : base (err) {}
-        internal NATSException(string err, Exception innerEx) : base(err, innerEx) { }
+        public NATSException() : base() { }
+        public NATSException(string err) : base (err) {}
+        public NATSException(string err, Exception innerEx) : base(err, innerEx) { }
     }
 
     /// <summary>
@@ -31,8 +31,8 @@ namespace NATS.Client
     /// </summary>
     public class NATSConnectionException : NATSException
     {
-        internal NATSConnectionException(string err) : base(err) { }
-        internal NATSConnectionException(string err, Exception innerEx) : base(err, innerEx) { }
+        public NATSConnectionException(string err) : base(err) { }
+        public NATSConnectionException(string err, Exception innerEx) : base(err, innerEx) { }
     }
 
     internal static class NATSConnectionExceptionExtensions
@@ -50,7 +50,7 @@ namespace NATS.Client
     /// </summary>
     public class NATSReconnectBufferException : NATSConnectionException
     {
-        internal NATSReconnectBufferException(string err) : base(err) { }
+        public NATSReconnectBufferException(string err) : base(err) { }
     }
 
     /// <summary>
@@ -59,7 +59,7 @@ namespace NATS.Client
     /// </summary>
     public class NATSProtocolException : NATSException
     {
-        internal NATSProtocolException(string err) : base(err) { }
+        public NATSProtocolException(string err) : base(err) { }
     }
 
     /// <summary>
@@ -68,7 +68,7 @@ namespace NATS.Client
     /// </summary>
     public class NATSNoServersException : NATSException
     {
-        internal NATSNoServersException(string err) : base(err) { }
+        public NATSNoServersException(string err) : base(err) { }
     }
 
     /// <summary>
@@ -77,7 +77,7 @@ namespace NATS.Client
     /// </summary>
     public class NATSSecureConnWantedException : NATSException
     {
-        internal NATSSecureConnWantedException() : base("A secure connection is requested.") { }
+        public NATSSecureConnWantedException() : base("A secure connection is requested.") { }
     }
 
     /// <summary>
@@ -85,8 +85,8 @@ namespace NATS.Client
     /// </summary>
     public class NATSSecureConnRequiredException : NATSException
     {
-        internal NATSSecureConnRequiredException() : base("A secure connection is required.") { }
-        internal NATSSecureConnRequiredException(String s) : base(s) { }
+        public NATSSecureConnRequiredException() : base("A secure connection is required.") { }
+        public NATSSecureConnRequiredException(String s) : base(s) { }
     }
 
     /// <summary>
@@ -95,7 +95,7 @@ namespace NATS.Client
     /// </summary>
     public class NATSConnectionClosedException : NATSException
     {
-        internal NATSConnectionClosedException() : base("Connection is closed.") { }
+        public NATSConnectionClosedException() : base("Connection is closed.") { }
     }
 
     /// <summary>
@@ -103,7 +103,7 @@ namespace NATS.Client
     /// </summary>
     public class NATSSlowConsumerException : NATSException
     {
-        internal NATSSlowConsumerException() : base("Consumer is too slow.") { }
+        public NATSSlowConsumerException() : base("Consumer is too slow.") { }
     }
 
     /// <summary>
@@ -112,7 +112,7 @@ namespace NATS.Client
     /// </summary>
     public class NATSStaleConnectionException : NATSException
     {
-        internal NATSStaleConnectionException() : base("Connection is stale.") { }
+        public NATSStaleConnectionException() : base("Connection is stale.") { }
     }
 
     /// <summary>
@@ -121,8 +121,8 @@ namespace NATS.Client
     /// </summary>
     public class NATSMaxPayloadException : NATSException
     {
-        internal NATSMaxPayloadException() : base("Maximum payload size has been exceeded") { }
-        internal NATSMaxPayloadException(string err) : base(err) { }
+        public NATSMaxPayloadException() : base("Maximum payload size has been exceeded") { }
+        public NATSMaxPayloadException(string err) : base(err) { }
     }
 
     /// <summary>
@@ -131,7 +131,7 @@ namespace NATS.Client
     /// </summary>
     public class NATSMaxMessagesException : NATSException
     {
-        internal NATSMaxMessagesException() : base("Maximum number of messages have been exceeded.") { }
+        public NATSMaxMessagesException() : base("Maximum number of messages have been exceeded.") { }
     }
     
     /// <summary>
@@ -140,8 +140,8 @@ namespace NATS.Client
     /// </summary>
     public class NATSBadSubscriptionException : NATSException
     {
-        internal NATSBadSubscriptionException() : base("Subscription is not valid.") { }
-        internal NATSBadSubscriptionException(string s) : base(s) { }
+        public NATSBadSubscriptionException() : base("Subscription is not valid.") { }
+        public NATSBadSubscriptionException(string s) : base(s) { }
     }
 
     /// <summary>
@@ -149,8 +149,8 @@ namespace NATS.Client
     /// </summary>
     public class NATSTimeoutException : NATSException
     {
-        internal NATSTimeoutException() : base("Timeout occurred.") { }
-        internal NATSTimeoutException(String s) : base(s) { }
+        public NATSTimeoutException() : base("Timeout occurred.") { }
+        public NATSTimeoutException(String s) : base(s) { }
     }
 
     /// <summary>
@@ -158,6 +158,6 @@ namespace NATS.Client
     /// </summary>
     public class NATSConnectionDrainingException : NATSConnectionException
     {
-        internal NATSConnectionDrainingException() : base("Connection is draining.") { }
+        public NATSConnectionDrainingException() : base("Connection is draining.") { }
     }
 }
