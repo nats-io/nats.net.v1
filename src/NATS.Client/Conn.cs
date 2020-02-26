@@ -155,8 +155,8 @@ namespace NATS.Client
         // used to map replies to requests from client (should lock)
         private long nextRequestId = 0;
 
-        private readonly ConcurrentDictionary<string, InFlightRequest> waitingRequests
-            = new ConcurrentDictionary<string, InFlightRequest>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, InFlightRequest> waitingRequests
+            = new Dictionary<string, InFlightRequest>(StringComparer.OrdinalIgnoreCase);
 
         // Prepare protocol messages for efficiency
         private byte[] PING_P_BYTES = null;
@@ -2592,24 +2592,55 @@ namespace NATS.Client
 
         protected Msg request(string subject, byte[] data, int offset, int count, int timeout) => requestSync(subject, data, offset, count, timeout);
 
-        private void removeOutstandingRequest(string requestId) => waitingRequests.TryRemove(requestId, out _);
-
-        private void requestResponseHandler(object sender, MsgHandlerEventArgs e)
+        private void RemoveOutstandingRequest(string requestId)
         {
+            lock (mu)
+            {
+                waitingRequests.Remove(requestId);
+            }
+        }
+
+        private void RequestResponseHandler(object sender, MsgHandlerEventArgs e)
+        {
+            InFlightRequest request;
+            bool isClosed;
+
             if (e.Message == null)
                 return;
 
-            //               \
-            //               \/
-            //  _INBOX.<nuid>.<requestId>
-            var requestId = e.Message.Subject.Substring(globalRequestInbox.Length + 1);
-            if (!waitingRequests.TryGetValue(requestId, out var request))
-                return;
-
-            bool isClosed;
+            var subject = e.Message.Subject;
 
             lock (mu)
             {
+                // if it's a typical response, process normally.
+                if (subject.StartsWith(globalRequestInbox))
+                {
+                    //               \
+                    //               \/
+                    //  _INBOX.<nuid>.<requestId>
+                    var requestId = subject.Substring(globalRequestInbox.Length + 1);
+                    if (!waitingRequests.TryGetValue(requestId, out request))
+                        return;
+                }
+                else
+                {
+                    // We have a jetstream subject (remapped), so if there's only one
+                    // request assume we're OK and handle it.
+                    if (waitingRequests.Count == 1)
+                    {
+                        InFlightRequest[] values = new InFlightRequest[1];
+                        waitingRequests.Values.CopyTo(values, 0);
+                        request = values[0];
+
+                    }
+                    else
+                    {
+                        // if we get here, we have multiple outsanding jetstream
+                        // requests.  We can't tell which is which we'll punt.
+                        return;
+                    }
+                }
+
                 isClosed = this.isClosed();
             }
 
@@ -2630,18 +2661,21 @@ namespace NATS.Client
             if (requestId < 0) //Check if recycled
                 requestId = (requestId + long.MaxValue + 1);
 
-            var request = new InFlightRequest(requestId.ToString(CultureInfo.InvariantCulture), token, timeout, removeOutstandingRequest);
+            var request = new InFlightRequest(requestId.ToString(CultureInfo.InvariantCulture), token, timeout, RemoveOutstandingRequest);
             request.Waiter.Task.ContinueWith(t => GC.KeepAlive(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
-            waitingRequests.TryAdd(request.Id, request);
-
-            if (globalRequestSubscription != null)
-                return request;
 
             lock (mu)
             {
+                // We shouldn't ever get an Argument exception because the ID is incrementing
+                // and since this is performant sensitive code, skipping an existence check.
+                waitingRequests.Add(request.Id, request);
+
+                if (globalRequestSubscription != null)
+                    return request;
+
                 if (globalRequestSubscription == null)
                     globalRequestSubscription = subscribeAsync(string.Concat(globalRequestInbox, ".*"), null,
-                        requestResponseHandler);
+                        RequestResponseHandler);
             }
 
             return request;
@@ -3617,12 +3651,14 @@ namespace NATS.Client
         // Caller must lock
         private void clearPendingRequestCalls()
         {
-            foreach (var request in waitingRequests)
+            lock (mu)
             {
-                request.Value.Waiter.TrySetCanceled();
+                foreach (var request in waitingRequests)
+                {
+                    request.Value.Waiter.TrySetCanceled();
+                }
+                waitingRequests.Clear();
             }
-
-            waitingRequests.Clear();
         }
 
 

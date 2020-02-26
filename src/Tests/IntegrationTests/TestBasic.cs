@@ -517,7 +517,7 @@ namespace IntegrationTests
             {
                 using (IConnection c = Context.OpenConnection())
                 {
-                    Assert.Throws<NATSTimeoutException>(() => c.Request("foo", null, 50));  
+                    Assert.Throws<NATSTimeoutException>(() => c.Request("foo", null, 50));
                 }
 
                 Options opts = Context.GetTestOptions();
@@ -1415,7 +1415,7 @@ namespace IntegrationTests
                     c.Close();
                 }
 
-                using(var c = Context.ConnectionFactory.CreateConnection(url1))
+                using (var c = Context.ConnectionFactory.CreateConnection(url1))
                 {
                     c.Close();
                 }
@@ -1543,7 +1543,7 @@ namespace IntegrationTests
             opts.Url = $"nats://127.0.0.1:{Context.Server1.Port}";
 
             AutoResetEvent evDS = new AutoResetEvent(false);
-            opts.ServerDiscoveredEventHandler = (o, a) =>{evDS.Set();};
+            opts.ServerDiscoveredEventHandler = (o, a) => { evDS.Set(); };
 
             AutoResetEvent evRC = new AutoResetEvent(false);
             opts.ReconnectedEventHandler = (o, a) => { evRC.Set(); };
@@ -1609,13 +1609,13 @@ namespace IntegrationTests
         [Fact]
         public void TestServersRandomize()
         {
-            var serverList = new [] {
+            var serverList = new[] {
                 Context.DefaultServer.Url,
                 "nats://localhost:2",
                 "nats://localhost:3",
-                "nats://localhost:4", 
-                "nats://localhsot:5", 
-                "nats://localhost:6", 
+                "nats://localhost:4",
+                "nats://localhsot:5",
+                "nats://localhost:6",
                 "nats://localhost:7"
             };
 
@@ -1681,26 +1681,26 @@ namespace IntegrationTests
 
                 // simple url
                 o.Url = "127.0.0.1";
-                using(Context.ConnectionFactory.CreateConnection(o)){}
+                using (Context.ConnectionFactory.CreateConnection(o)) { }
 
                 // servers with a simple hostname
                 o.Url = null;
                 o.Servers = new string[] { "127.0.0.1" };
-                using(var cn = Context.ConnectionFactory.CreateConnection(o))
+                using (var cn = Context.ConnectionFactory.CreateConnection(o))
                     cn.Close();
 
                 // simple url connect
-                using(var cn = Context.ConnectionFactory.CreateConnection("127.0.0.1, localhost"))
+                using (var cn = Context.ConnectionFactory.CreateConnection("127.0.0.1, localhost"))
                     cn.Close();
 
                 //  url with multiple hosts
                 o.Url = "127.0.0.1,localhost";
-                using (Context.ConnectionFactory.CreateConnection(o)) {}
+                using (Context.ConnectionFactory.CreateConnection(o)) { }
 
                 // servers with multiple hosts
                 o.Url = null;
                 o.Servers = new string[] { "127.0.0.1", "localhost" };
-                using(var cn = Context.ConnectionFactory.CreateConnection(o))
+                using (var cn = Context.ConnectionFactory.CreateConnection(o))
                     cn.Close();
             }
         }
@@ -1735,6 +1735,52 @@ namespace IntegrationTests
         public void TestServersOption()
         {
             Assert.ThrowsAny<NATSNoServersException>(() => Context.ConnectionFactory.CreateConnection());
+        }
+
+        /// <summary>
+        /// Temporary test for upcoming jetstream functionality.  The jetstream server must be run
+        /// manually and loaded per the issue listed below.  JetStream will remap reply subjects
+        /// for requests, so additional code had to be added to handle this.  Future jetstream tests
+        /// will cover this and this test should be replaced.
+        ///
+        /// # Start server with jetstream enabled.
+        /// $ ./nats-server -js
+        ///
+        /// Create the stream
+        /// $ jsm str create
+        /// ? Stream Name foo
+        /// ? Subjects to consume foo.*
+        /// ? Storage backend memory
+        /// ? Retention Policy Limits
+        /// ? Message count limit -1
+        /// ? Message size limit -1
+        /// ? Maximum message age limit -1
+        /// ? Maximum individual message size -1
+        ///
+        /// Create the server side consumer
+        /// $ jsm con create
+        /// ? Select a Stream foo
+        /// ? Consumer name bar
+        /// ? Delivery target
+        /// ? Start policy (all, last, 1h, msg sequence) all
+        /// ? Filter Stream by subject (blank for all)
+        /// ? Maximum Allowed Deliveries -1
+        ///
+        /// Now manually run this test.
+        /// 
+        /// </summary>
+        [Fact(Skip = "Manual")]
+        public void TestJetstreamSubjectHandling()
+        {
+            // Start a NATS server with experimental -js feature and create a stream and consumer
+            // as described in issue https://github.com/nats-io/nats.net/issues/364
+
+            // publish a message into JS
+            using (var c = new ConnectionFactory().CreateConnection())
+            {
+                c.Publish("foo.inc", Encoding.UTF8.GetBytes("hello"));
+                c.Request("$JS.STREAM.foo.CONSUMER.bar.NEXT", Encoding.ASCII.GetBytes("1"), 1000);
+            }
         }
 
     } // class

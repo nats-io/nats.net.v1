@@ -290,6 +290,7 @@ namespace IntegrationTests
         {
             AutoResetEvent reconnectEvent = new AutoResetEvent(false);
             Options opts = getReconnectOptions();
+            opts.MaxReconnect = 32;
 
             string subj = "foo.bar";
             string qgroup = "workers";
