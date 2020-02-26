@@ -134,8 +134,8 @@ namespace NATS.Client
         private ServerInfo     info = null;
         private Int64          ssid = 0;
 
-        private ConcurrentDictionary<Int64, Subscription> subs = 
-            new ConcurrentDictionary<Int64, Subscription>();
+        private Dictionary<Int64, Subscription> subs = 
+            new Dictionary<Int64, Subscription>();
         
         private readonly ConcurrentQueue<SingleUseChannel<bool>> pongs = new ConcurrentQueue<SingleUseChannel<bool>>();
 
@@ -1778,7 +1778,10 @@ namespace NATS.Client
                     mm[ii] = null; // do not hold onto the Msg any longer than we need to
                     if (!m.sub.processMsg(m))
                     {
-                        removeSub(m.sub);
+                        lock (mu)
+                        {
+                            removeSub(m.sub);
+                        }
                     }
                 }
             }
@@ -2128,10 +2131,10 @@ namespace NATS.Client
 
                 } // lock s.mu
 
-            } // lock conn.mu
+                if (maxReached)
+                    removeSub(s);
 
-            if (maxReached)
-                removeSub(s);
+            } // lock conn.mu
         }
 
         // processSlowConsumer will set SlowConsumer state and fire the
@@ -3467,11 +3470,18 @@ namespace NATS.Client
             return task;
         }
 
+        internal void removeSubSafe(Subscription s)
+        {
+            lock (mu)
+            {
+                removeSub(s);
+            }
+        }
+
+        // caller must lock
         internal virtual void removeSub(Subscription s)
         {
-            Subscription o;
-
-            subs.TryRemove(s.sid, out o);
+            subs.Remove(s.sid);
             if (s.mch != null)
             {
                 if (s.ownsChannel)
