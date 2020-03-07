@@ -11,7 +11,7 @@ This NATS Maintainer supported client parallels the [NATS GO Client](https://git
 [![NuGet](https://img.shields.io/nuget/v/NATS.Client.svg?cacheSeconds=3600)](https://www.nuget.org/packages/NATS.Client)
 
 ## Getting started
-The easiest and recommended way to start using NATS in you .NET projects, is to use the [NuGet package]((https://www.nuget.org/packages/NATS.Client)). For examples on how to use the client, see below or in any of the included sample projects.
+The easiest and recommended way to start using NATS in your .NET projects, is to use the [NuGet package]((https://www.nuget.org/packages/NATS.Client)). For examples on how to use the client, see below or in any of the included sample projects.
 
 ## Get up and running with the source code
 First, download the source code:
