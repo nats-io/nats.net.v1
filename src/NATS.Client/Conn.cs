@@ -1704,7 +1704,7 @@ namespace NATS.Client
         {
             // Stack based buffer.
             byte[] buffer = new byte[Defaults.defaultReadLength];
-			var parser = new Parser(this);
+            var parser = new Parser(this);
             int len;
 
             while (true)
@@ -2653,6 +2653,7 @@ namespace NATS.Client
             {
                 request.Waiter.SetCanceled();
             }
+            request.Dispose();
         }
 
         private InFlightRequest setupRequest(int timeout, CancellationToken token)
