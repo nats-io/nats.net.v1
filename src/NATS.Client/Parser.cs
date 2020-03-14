@@ -24,7 +24,7 @@ namespace NATS.Client
 	    internal int    size;
     }
 
-    internal sealed class Parser : IDisposable
+    internal sealed class Parser
     {
         readonly Connection conn;
         readonly byte[] argBufBase = new byte[Defaults.defaultBufSize];
@@ -527,10 +527,5 @@ namespace NATS.Client
      
         } // parse
 
-        public void Dispose()
-        {
-            argBufStream.Dispose();
-            msgBufStream.Dispose();
-        }
     }
 }
