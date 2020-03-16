@@ -1704,43 +1704,41 @@ namespace NATS.Client
         {
             // Stack based buffer.
             byte[] buffer = new byte[Defaults.defaultReadLength];
-            using (var parser = new Parser(this))
+            var parser = new Parser(this);
+            int len;
+
+            while (true)
             {
-                int len;
-
-                while (true)
+                try
                 {
-                    try
+                    len = br.Read(buffer, 0, Defaults.defaultReadLength);
+
+                    // A length of zero can mean that the socket was closed
+                    // locally by the application (Close) or the server
+                    // gracefully closed the socket.  There are some cases
+                    // on windows where a server could take an exit path that
+                    // gracefully closes sockets.  Throw an exception so we
+                    // can reconnect.  If the network stream has been closed
+                    // by the client, processOpError will do the right thing
+                    // (nothing).
+                    if (len == 0)
                     {
-                        len = br.Read(buffer, 0, Defaults.defaultReadLength);
+                        if (disposedValue || State == ConnState.CLOSED)
+                            break;
 
-                        // A length of zero can mean that the socket was closed
-                        // locally by the application (Close) or the server
-                        // gracefully closed the socket.  There are some cases
-                        // on windows where a server could take an exit path that
-                        // gracefully closes sockets.  Throw an exception so we
-                        // can reconnect.  If the network stream has been closed
-                        // by the client, processOpError will do the right thing
-                        // (nothing).
-                        if (len == 0)
-                        {
-                            if (disposedValue || State == ConnState.CLOSED)
-                                break;
-
-                            throw new NATSConnectionException("Server closed the connection.");
-                        }
-
-                        parser.parse(buffer, len);
+                        throw new NATSConnectionException("Server closed the connection.");
                     }
-                    catch (Exception e)
+
+                    parser.parse(buffer, len);
+                }
+                catch (Exception e)
+                {
+                    if (State != ConnState.CLOSED)
                     {
-                        if (State != ConnState.CLOSED)
-                        {
-                            processOpError(e);
-                        }
-
-                        break;
+                        processOpError(e);
                     }
+
+                    break;
                 }
             }
         }
