@@ -26,6 +26,7 @@ namespace NATS.Client
         internal int reconnects = 0;
         internal DateTime lastAttempt = DateTime.Now;
         internal bool isImplicit = false;
+        private bool secure = false;
 
         // never create a srv object without a url.
         private Srv() { }
@@ -35,6 +36,10 @@ namespace NATS.Client
             if (!urlString.Contains("://"))
             {
                 urlString = defaultScheme + urlString;
+            }
+            else
+            {
+                secure = urlString.Contains("tls://");
             }
 
             var uri = new Uri(urlString);
@@ -59,6 +64,8 @@ namespace NATS.Client
                 return (DateTime.Now - lastAttempt);
             }
         }
+
+        internal bool Secure => secure;
     }
 }
 

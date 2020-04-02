@@ -523,8 +523,8 @@ namespace NATS.Client
 
             internal Stream getWriteBufferedStream(int size)
             {
-                BufferedStream bs = null;
 
+                BufferedStream bs = null;
                 if (sslStream != null)
                     bs = new BufferedStream(sslStream, size);
                 else
@@ -1044,7 +1044,7 @@ namespace NATS.Client
 
         // Process a connected connection and initialize properly.
         // Caller must lock.
-        private void processConnectInit()
+        private void processConnectInit(Srv s)
         {
             this.status = ConnState.CONNECTING;
 
@@ -1053,7 +1053,7 @@ namespace NATS.Client
             try
             {
                 conn.ReceiveTimeout = opts.Timeout;
-                processExpectedInfo();
+                processExpectedInfo(s);
                 sendConnect();
             }
             catch (IOException ex)
@@ -1099,7 +1099,7 @@ namespace NATS.Client
                             if (!createConn(s))
                                 return false;
 
-                            processConnectInit();
+                            processConnectInit(s);
                             exToThrow = null;
 
                             return true;
@@ -1162,7 +1162,7 @@ namespace NATS.Client
         // This will check to see if the connection should be
         // secure. This can be dictated from either end and should
         // only be called after the INIT protocol has been received.
-        private void checkForSecure()
+        private void checkForSecure(Srv s)
         {
             // Check to see if we need to engage TLS
             // Check for mismatch in setups
@@ -1172,11 +1172,14 @@ namespace NATS.Client
             }
             else if (info.tls_required && !Opts.Secure)
             {
-                throw new NATSSecureConnRequiredException();
+                // If the server asks us to be secure, give it
+                // a shot.
+                Opts.Secure = true;
             }
 
-            // Need to rewrap with bufio
-            if (Opts.Secure)
+            // Need to rewrap with bufio if options tell us we need
+            // a secure connection or the tls url scheme was specified.
+            if (Opts.Secure || s.Secure)
             {
                 makeTLSConn();
             }
@@ -1185,7 +1188,7 @@ namespace NATS.Client
         // processExpectedInfo will look for the expected first INFO message
         // sent when a connection is established. The lock should be held entering.
         // Caller must lock.
-        private void processExpectedInfo()
+        private void processExpectedInfo(Srv s)
         {
             Control c;
 
@@ -1211,7 +1214,7 @@ namespace NATS.Client
 
             // do not notify listeners of server changes when we process the first INFO message
             processInfo(c.args, false);
-            checkForSecure();
+            checkForSecure(s);
         }
 
         private void writeString(string format, string a, string b)
@@ -1597,7 +1600,7 @@ namespace NATS.Client
                     // process our connect logic
                     try
                     {
-                        processConnectInit();
+                        processConnectInit(cur);
                     }
                     catch (Exception e)
                     {

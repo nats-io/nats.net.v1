@@ -152,15 +152,49 @@ namespace IntegrationTests
             }
         }
 
-        [Fact]
-        public void TestTlsSuccessSecureConnect()
+        private void TestTLSSecureConnect(bool setSecure)
         {
             using (NATSServer srv = NATSServer.CreateWithConfig(Context.Server1.Port, "tls.conf"))
             {
                 // we can't call create secure connection w/ the certs setup as they are
-                // so we'll override the 
+                // so we'll override the validation callback
                 Options opts = Context.GetTestOptions(Context.Server1.Port);
-                opts.Secure = true;
+                opts.Secure = setSecure;
+                opts.TLSRemoteCertificationValidationCallback = verifyServerCert;
+
+                using (IConnection c = Context.ConnectionFactory.CreateConnection(opts))
+                {
+                    using (ISyncSubscription s = c.SubscribeSync("foo"))
+                    {
+                        c.Publish("foo", null);
+                        c.Flush();
+                        Msg m = s.NextMessage();
+                    }
+                }
+            }
+        }
+
+        [Fact]
+        public void TestTlsSuccessSecureConnect()
+        {
+            TestTLSSecureConnect(true);
+        }
+
+        [Fact]
+        public void TestTlsSuccessSecureConnectFromServerInfo()
+        {
+            TestTLSSecureConnect(false);
+        }
+
+        [Fact]
+        public void TestTlsScheme()
+        {
+            using (NATSServer srv = NATSServer.CreateWithConfig(Context.Server1.Port, "tls.conf"))
+            {
+                // we can't call create secure connection w/ the certs setup as they are
+                // so we'll override the validation callback
+                Options opts = Context.GetTestOptions(Context.Server1.Port);
+                opts.Url = $"tls://127.0.0.1:{Context.Server1.Port}";
                 opts.TLSRemoteCertificationValidationCallback = verifyServerCert;
 
                 using (IConnection c = Context.ConnectionFactory.CreateConnection(opts))
