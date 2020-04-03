@@ -34,7 +34,7 @@ namespace IntegrationTests
 
             AsyncContext.Run(() =>
             {
-                using (NATSServer.CreateFast(Context.Server1.Port))
+                using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
                 {
                     using (var sync = TestSync.SingleActor())
                     {
@@ -68,7 +68,7 @@ namespace IntegrationTests
 
             AsyncContext.Run(async () =>
             {
-                using (NATSServer.CreateFast(Context.Server1.Port))
+                using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
                 {
                     using (var sync = TestSync.SingleActor())
                     {
@@ -102,7 +102,7 @@ namespace IntegrationTests
 
             AsyncContext.Run(() =>
             {
-                using (NATSServer.CreateFast(Context.Server1.Port))
+                using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
                 {
                     using (var cn = Context.ConnectionFactory.CreateConnection(Context.Server1.Url))
                     {
@@ -126,7 +126,7 @@ namespace IntegrationTests
 
             AsyncContext.Run(async () =>
             {
-                using (NATSServer.CreateFast(Context.Server1.Port))
+                using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
                 {
                     using (var cn = Context.ConnectionFactory.CreateConnection(Context.Server1.Url))
                     {
@@ -150,7 +150,7 @@ namespace IntegrationTests
 
             AsyncContext.Run(() =>
             {
-                using (NATSServer.CreateFast(Context.Server1.Port))
+                using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
                 {
                     using (var cn = Context.ConnectionFactory.CreateConnection(Context.Server1.Url))
                     {
@@ -179,7 +179,7 @@ namespace IntegrationTests
 
             AsyncContext.Run(async () =>
             {
-                using (NATSServer.CreateFast(Context.Server1.Port))
+                using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
                 {
                     using (var cn = Context.ConnectionFactory.CreateConnection(Context.Server1.Url))
                     {
@@ -208,7 +208,7 @@ namespace IntegrationTests
 
             AsyncContext.Run(() =>
             {
-                using (NATSServer.CreateFast(Context.Server1.Port))
+                using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
                 {
                     using (var sync = TestSync.SingleActor())
                     {
@@ -242,7 +242,7 @@ namespace IntegrationTests
 
             AsyncContext.Run(() =>
             {
-                using (NATSServer.CreateFast(Context.Server1.Port))
+                using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
                 {
                     using (var sync = TestSync.SingleActor())
                     {
@@ -280,7 +280,7 @@ namespace IntegrationTests
 
             AsyncContext.Run(() =>
             {
-                using (NATSServer.CreateFast(Context.Server1.Port))
+                using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
                 {
                     using (var sync = TestSync.SingleActor())
                     {
@@ -314,7 +314,7 @@ namespace IntegrationTests
 
             AsyncContext.Run(() =>
             {
-                using (NATSServer.CreateFast(Context.Server1.Port))
+                using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
                 {
                     using (var cn = Context.ConnectionFactory.CreateConnection(Context.Server1.Url))
                     {
@@ -345,7 +345,7 @@ namespace IntegrationTests
 
             AsyncContext.Run(async () =>
             {
-                using (NATSServer.CreateFast(Context.Server1.Port))
+                using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
                 {
                     using (var sync = TestSync.SingleActor())
                     {
@@ -383,7 +383,7 @@ namespace IntegrationTests
 
             AsyncContext.Run(() =>
             {
-                using (NATSServer.CreateFast(Context.Server1.Port))
+                using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
                 {
                     using (var cn = Context.ConnectionFactory.CreateConnection(Context.Server1.Url))
                     {
@@ -414,7 +414,7 @@ namespace IntegrationTests
 
             AsyncContext.Run(async () =>
             {
-                using (NATSServer.CreateFast(Context.Server1.Port))
+                using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
                 {
                     using (var sync = TestSync.SingleActor())
                     {
