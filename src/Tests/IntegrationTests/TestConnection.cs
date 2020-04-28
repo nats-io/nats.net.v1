@@ -116,14 +116,14 @@ namespace IntegrationTests
             opts.AllowReconnect = false;
             opts.ClosedEventHandler = (sender, args) =>
             {
-                if(args.Error != null)
+                if (args.Error != null)
                     errors.Enqueue(args.Error);
 
                 closedEv.Set();
             };
             opts.DisconnectedEventHandler = (sender, args) =>
             {
-                if(args.Error != null)
+                if (args.Error != null)
                     errors.Enqueue(args.Error);
 
                 disconEv.Set();
@@ -154,21 +154,21 @@ namespace IntegrationTests
             opts.MaxReconnect = 1;
             opts.ClosedEventHandler = (sender, args) =>
             {
-                if(args.Error != null)
+                if (args.Error != null)
                     errors.Enqueue(args.Error);
 
                 closedEv.Set();
             };
             opts.DisconnectedEventHandler = (sender, args) =>
             {
-                if(args.Error != null)
+                if (args.Error != null)
                     errors.Enqueue(args.Error);
 
                 disconEv.Set();
             };
             opts.ReconnectedEventHandler = (sender, args) =>
             {
-                if(args.Error != null)
+                if (args.Error != null)
                     errors.Enqueue(args.Error);
 
                 reconEv.Set();
@@ -220,7 +220,7 @@ namespace IntegrationTests
             {
                 using (var c = Context.OpenConnection(Context.Server1.Port))
                 {
-                    using(var s = c.SubscribeSync("foo"))
+                    using (var s = c.SubscribeSync("foo"))
                     {
                         c.Close();
 
@@ -260,7 +260,7 @@ namespace IntegrationTests
                 var o = Context.GetTestOptions(Context.Server1.Port);
                 o.Verbose = true;
 
-                using(var c = Context.ConnectionFactory.CreateConnection(o))
+                using (var c = Context.ConnectionFactory.CreateConnection(o))
                     c.Close();
             }
         }
@@ -279,7 +279,7 @@ namespace IntegrationTests
                     serverDiscoveredCalled = true;
                 };
 
-                using(var c = Context.ConnectionFactory.CreateConnection(o))
+                using (var c = Context.ConnectionFactory.CreateConnection(o))
                     c.Close();
 
                 Assert.False(serverDiscoveredCalled);
@@ -303,12 +303,12 @@ namespace IntegrationTests
             long ctime = orig;
 
             AutoResetEvent reconnected = new AutoResetEvent(false);
-            AutoResetEvent closed      = new AutoResetEvent(false);
-            AutoResetEvent asyncErr1   = new AutoResetEvent(false);
-            AutoResetEvent asyncErr2   = new AutoResetEvent(false);
-            AutoResetEvent recvCh      = new AutoResetEvent(false);
-            AutoResetEvent recvCh1     = new AutoResetEvent(false);
-            AutoResetEvent recvCh2     = new AutoResetEvent(false);
+            AutoResetEvent closed = new AutoResetEvent(false);
+            AutoResetEvent asyncErr1 = new AutoResetEvent(false);
+            AutoResetEvent asyncErr2 = new AutoResetEvent(false);
+            AutoResetEvent recvCh = new AutoResetEvent(false);
+            AutoResetEvent recvCh1 = new AutoResetEvent(false);
+            AutoResetEvent recvCh2 = new AutoResetEvent(false);
 
             using (NATSServer
                    serverAuth = NATSServer.CreateWithConfig(Context.Server1.Port, "auth.conf"),
@@ -360,7 +360,7 @@ namespace IntegrationTests
 
                 o.ReconnectWait = 500;
                 o.NoRandomize = true;
-                o.Servers = new [] { Context.Server2.Url, Context.Server1.Url };
+                o.Servers = new[] { Context.Server2.Url, Context.Server1.Url };
                 o.SubChannelLength = 1;
 
                 using (IConnection
@@ -450,7 +450,7 @@ namespace IntegrationTests
                 }
             }
         }
-        
+
         [Fact]
         public void TestConnectionCloseAndDispose()
         {
@@ -506,7 +506,7 @@ namespace IntegrationTests
         {
             var reconnectEv = new AutoResetEvent(false);
             var closedEv = new AutoResetEvent(false);
-            
+
             var opts = Context.GetTestOptionsWithDefaultTimeout(Context.Server1.Port);
 
             opts.Timeout = 500;
@@ -571,8 +571,17 @@ namespace IntegrationTests
             }
         }
 
-        /// NOT IMPLEMENTED:
-        /// TestErrOnMaxPayloadLimit
+        [Fact]
+        public void TestClientIP()
+        {
+            IConnection conn;
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
+            {
+                conn = Context.ConnectionFactory.CreateConnection("nats://127.0.0.1:" + Context.Server1.Port);
+                Assert.Equal(conn.ClientIP.MapToIPv4(), System.Net.IPAddress.Parse("127.0.0.1"));
+                conn.Close();
+            }
+        }
     }
 
     public class TestConnectionSecurity : TestSuite<ConnectionSecuritySuiteContext>
@@ -778,12 +787,6 @@ namespace IntegrationTests
                 opts.Password = "bar";
                 Assert.Throws<NATSConnectionException>(() => Context.ConnectionFactory.CreateConnection(opts));
             }
-        }
-
-        [Fact(Skip = "WorkInProgress")]
-        public void TestJwtFunctionality()
-        {
-            //using (NATSServer.CreateFastAndVerify(Context.Server1.Port)) { }
         }
     }
 

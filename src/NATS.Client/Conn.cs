@@ -26,6 +26,7 @@ using System.Globalization;
 using System.Diagnostics;
 using NATS.Client.Extensions;
 using NATS.Client.Internals;
+using System.Net;
 
 namespace NATS.Client
 {
@@ -983,6 +984,27 @@ namespace NATS.Client
                         return null;
 
                     return url.OriginalString;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the IP of client as known by the NATS server, otherwise <c>null</c>.
+        /// </summary>
+        /// <remarks>
+        /// Supported in the NATS server version 2.1.6 and above.  If the client is connected to
+        /// an older server or is in the process of connecting, null will be returned.
+        /// </remarks>
+        public IPAddress ClientIP
+        {
+            get
+            {
+                lock (mu)
+                {
+                    if (string.IsNullOrEmpty(info.client_ip))
+                        return null;
+
+                    return IPAddress.Parse(info.client_ip);
                 }
             }
         }

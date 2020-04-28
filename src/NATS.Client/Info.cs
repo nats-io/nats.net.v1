@@ -21,6 +21,8 @@ namespace NATS.Client
     {
         public string server_id { get; private set; }
 
+        public string client_ip { get; private set; }
+
         public string host { get; private set; }
 
         public int port { get; private set; }
@@ -46,6 +48,7 @@ namespace NATS.Client
             return new ServerInfo
             {
                 server_id = x["server_id"].Value,
+                client_ip = x["client_ip"].Value,
                 host = x["host"].Value,
                 port = x["port"].AsInt,
                 version = x["version"].Value,
