@@ -999,13 +999,13 @@ namespace NATS.Client
         {
             get
             {
+                string clientIp;
                 lock (mu)
                 {
-                    if (string.IsNullOrEmpty(info.client_ip))
-                        return null;
-
-                    return IPAddress.Parse(info.client_ip);
+                    clientIp = info.client_ip;
                 }
+                
+                return !String.IsNullOrEmpty(clientIp) ? IPAddress.Parse(clientIp) : null;
             }
         }
 
