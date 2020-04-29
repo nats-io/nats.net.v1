@@ -572,6 +572,7 @@ namespace IntegrationTests
         }
 
         [Fact]
+        [Trait("Category", "NATS 2.1.6+")]
         public void TestClientIP()
         {
             IConnection conn;
