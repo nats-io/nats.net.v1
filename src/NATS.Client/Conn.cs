@@ -18,6 +18,7 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Net;
 using System.Net.Sockets;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
@@ -26,7 +27,6 @@ using System.Globalization;
 using System.Diagnostics;
 using NATS.Client.Extensions;
 using NATS.Client.Internals;
-using System.Net;
 
 namespace NATS.Client
 {
