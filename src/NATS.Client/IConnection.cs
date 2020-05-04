@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -26,6 +27,15 @@ namespace NATS.Client
         /// Gets the configuration options for this instance.
         /// </summary>
         Options Opts { get; }
+
+        /// <summary>
+        /// Gets the IP of client as known by the NATS server, otherwise <c>null</c>.
+        /// </summary>
+        /// <remarks>
+        /// Supported in the NATS server version 2.1.6 and above.  If the client is connected to
+        /// an older server or is in the process of connecting, null will be returned.
+        /// </remarks>
+        IPAddress ClientIP { get; }
 
         /// <summary>
         /// Gets the URL of the NATS server to which this instance

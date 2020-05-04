@@ -18,6 +18,7 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Net;
 using System.Net.Sockets;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
@@ -984,6 +985,27 @@ namespace NATS.Client
 
                     return url.OriginalString;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Gets the IP of client as known by the NATS server, otherwise <c>null</c>.
+        /// </summary>
+        /// <remarks>
+        /// Supported in the NATS server version 2.1.6 and above.  If the client is connected to
+        /// an older server or is in the process of connecting, null will be returned.
+        /// </remarks>
+        public IPAddress ClientIP
+        {
+            get
+            {
+                string clientIp;
+                lock (mu)
+                {
+                    clientIp = info.client_ip;
+                }
+                
+                return !String.IsNullOrEmpty(clientIp) ? IPAddress.Parse(clientIp) : null;
             }
         }
 
