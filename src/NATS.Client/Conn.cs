@@ -177,7 +177,7 @@ namespace NATS.Client
         static readonly int REQ_CANCEL_IVL = 100;
 
         // 60 second default flush timeout
-        static readonly int DEFAULT_FLUSH_TIMEOUT = 60000;
+        static readonly int DEFAULT_FLUSH_TIMEOUT = 10000;
 
         TCPConnection conn = new TCPConnection();
 
