@@ -43,8 +43,6 @@ namespace NATS.Client
 
         internal int state = 0;
 
-        private const int MAX_CONTROL_LINE_SIZE = 1024;
-
         // For performance declare these as consts - they'll be
         // baked into the IL code (thus faster).  An enum would
         // be nice, but we want speed in this critical section of

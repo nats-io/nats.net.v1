@@ -737,7 +737,7 @@ namespace NATS.Client
             CRLF_BYTES_LEN = CRLF_BYTES.Length;
 
             // predefine the start of the publish protocol message.
-            buildPublishProtocolBuffer(Defaults.scratchSize);
+            buildPublishProtocolBuffer(Defaults.MaxControlLineSize);
 
             callbackScheduler.Start();
 
@@ -1382,7 +1382,7 @@ namespace NATS.Client
             try
             {
                 // we need the underlying stream, so leave it open.
-                sr = new StreamReader(br, Encoding.UTF8, false, 512, true);
+                sr = new StreamReader(br, Encoding.UTF8, false, Defaults.MaxControlLineSize, true);
                 result = sr.ReadLine();
 
                 // If opts.verbose is set, handle +OK.
@@ -1432,7 +1432,7 @@ namespace NATS.Client
             // the string directly using the buffered reader.
             //
             // Keep the underlying stream open.
-            using (StreamReader sr = new StreamReader(br, Encoding.ASCII, false, 1024, true))
+            using (StreamReader sr = new StreamReader(br, Encoding.ASCII, false, Defaults.MaxControlLineSize, true))
             {
                 return new Control(sr.ReadLine());
             }
@@ -1812,7 +1812,7 @@ namespace NATS.Client
 
         // Roll our own fast conversion - we know it's the right
         // encoding. 
-        char[] convertToStrBuf = new char[Defaults.scratchSize];
+        char[] convertToStrBuf = new char[Defaults.MaxControlLineSize];
 
         // Caller must ensure thread safety.
         private string convertToString(byte[] buffer, long length)
