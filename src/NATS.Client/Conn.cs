@@ -737,7 +737,7 @@ namespace NATS.Client
             CRLF_BYTES_LEN = CRLF_BYTES.Length;
 
             // predefine the start of the publish protocol message.
-            buildPublishProtocolBuffer(Defaults.scratchSize);
+            buildPublishProtocolBuffer(512);
 
             callbackScheduler.Start();
 
@@ -1381,8 +1381,9 @@ namespace NATS.Client
             StreamReader sr = null;
             try
             {
+                // TODO:  Make this reader (or future equivalent) unbounded.
                 // we need the underlying stream, so leave it open.
-                sr = new StreamReader(br, Encoding.UTF8, false, 512, true);
+                sr = new StreamReader(br, Encoding.UTF8, false, Defaults.MaxControlLineSize, true);
                 result = sr.ReadLine();
 
                 // If opts.verbose is set, handle +OK.
@@ -1432,7 +1433,7 @@ namespace NATS.Client
             // the string directly using the buffered reader.
             //
             // Keep the underlying stream open.
-            using (StreamReader sr = new StreamReader(br, Encoding.ASCII, false, 1024, true))
+            using (StreamReader sr = new StreamReader(br, Encoding.ASCII, false, Defaults.MaxControlLineSize, true))
             {
                 return new Control(sr.ReadLine());
             }
@@ -1812,25 +1813,7 @@ namespace NATS.Client
 
         // Roll our own fast conversion - we know it's the right
         // encoding. 
-        char[] convertToStrBuf = new char[Defaults.scratchSize];
-
-        // Caller must ensure thread safety.
-        private string convertToString(byte[] buffer, long length)
-        {
-            // expand if necessary
-            if (length > convertToStrBuf.Length)
-            {
-                convertToStrBuf = new char[length];
-            }
-
-            for (int i = 0; i < length; i++)
-            {
-                convertToStrBuf[i] = (char)buffer[i];
-            }
-
-            // This is the copy operation for msg arg strings.
-            return new string(convertToStrBuf, 0, (int)length);
-        }
+        char[] convertToStrBuf = new char[Defaults.MaxControlLineSize];
 
         // Since we know we don't need to decode the protocol string,
         // just copy the chars into bytes.  This increased

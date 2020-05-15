@@ -147,7 +147,7 @@ namespace NATS.Client
          */
 
         // Scratch storage for assembling protocol headers
-        internal const int scratchSize = 512;
+        internal const int MaxControlLineSize = 4096;
 
         // The size of the bufio writer on top of the socket.
         internal const int defaultBufSize = 32768;
