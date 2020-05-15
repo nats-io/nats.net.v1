@@ -1,4 +1,4 @@
-﻿// Copyright 2016-2018 The NATS Authors
+﻿// Copyright 2016-2020 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -19,16 +19,18 @@ namespace NATS.Client
 {
     internal sealed class ServerPool
     {
-        private object poolLock = new object();
-        private LinkedList<Srv> sList = new LinkedList<Srv>();
+        private readonly object poolLock = new object();
+        private readonly LinkedList<Srv> sList = new LinkedList<Srv>();
         private Srv currentServer = null;
+        private readonly Random rand = new Random(DateTime.Now.Millisecond);
+        private bool randomize = true;
 
         // Used to find duplicates in the server pool.
         // Loopback is equivalent to localhost, and
         // a URL match is equivalent.
         private class SrvEqualityComparer : IEqualityComparer<Srv>
         {
-            private bool isLocal(Uri url)
+            private bool IsLocal(Uri url)
             {
                 if (url.IsLoopback)
                     return true;
@@ -50,7 +52,7 @@ namespace NATS.Client
                 if (x.url.Equals(y.url))
                     return true;
 
-                if (isLocal(x.url) && isLocal(y.url) && (y.url.Port == x.url.Port))
+                if (IsLocal(x.url) && IsLocal(y.url) && (y.url.Port == x.url.Port))
                     return true;
 
                 return false;
@@ -74,16 +76,17 @@ namespace NATS.Client
             {
                 Add(opts.Servers, false);
 
-                if (!opts.NoRandomize)
-                    shuffle();
+                randomize = !opts.NoRandomize;
+                if (randomize)
+                    Shuffle();
             }
 
             if (!string.IsNullOrWhiteSpace(opts.Url))
-                add(opts.Url, false);
+                Add(opts.Url, false);
 
             // Place default URL if pool is empty.
-            if (isEmpty())
-                add(Defaults.Url, false);
+            if (IsEmpty())
+                Add(Defaults.Url, false);
         }
 
         // Used for initially connecting to a server.
@@ -134,7 +137,7 @@ namespace NATS.Client
                     // a server was removed in the meantime, add it back.
                     if (sList.Contains(currentServer) == false)
                     {
-                        add(currentServer);
+                        Add(currentServer);
                     }
                 }
             }
@@ -164,7 +167,7 @@ namespace NATS.Client
                     sList.AddLast(s);
                 }
 
-                currentServer = isEmpty() ? null : sList.First();
+                currentServer = IsEmpty() ? null : sList.First();
 
                 return currentServer;
             }
@@ -200,21 +203,30 @@ namespace NATS.Client
 
         // returns true if it modified the pool, false if
         // the url already exists.
-        private bool add(string s, bool isImplicit)
+        private bool Add(string s, bool isImplicit)
         {
-            return add(new Srv(s, isImplicit));
+            return Add(new Srv(s, isImplicit));
         }
 
         // returns true if it modified the pool, false if
         // the url already exists.
-        private bool add(Srv s)
+        private bool Add(Srv s)
         {
             lock (poolLock)
             {
                 if (sList.Contains(s, duplicateSrvCheck))
                     return false;
 
-                sList.AddLast(s);
+                if (s.isImplicit && randomize)
+                {
+                    // pick a random spot to add the server.
+                    var randElem = sList.ElementAt(rand.Next(sList.Count));
+                    sList.AddAfter(sList.Find(randElem), s);
+                }
+                else
+                {
+                    sList.AddLast(s);
+                }
 
                 return true;
             }
@@ -257,7 +269,7 @@ namespace NATS.Client
             bool didAdd = false;
             foreach (string s in urls)
             {
-                didAdd |= add(s, isImplicit);
+                didAdd |= Add(s, isImplicit);
             }
 
             return didAdd;
@@ -265,7 +277,7 @@ namespace NATS.Client
 
         // Convenience method to shuffle a list.  The list passed
         // is modified.
-        internal static void shuffle<T>(IList<T> list)
+        internal static void Shuffle<T>(IList<T> list)
         {
             if (list == null)
                 return;
@@ -285,12 +297,12 @@ namespace NATS.Client
             }
         }
 
-        private void shuffle()
+        private void Shuffle()
         {
             lock (poolLock)
             {
                 var servers = sList.ToArray();
-                shuffle(servers);
+                Shuffle(servers);
 
                 sList.Clear();
                 foreach (Srv s in servers)
@@ -300,7 +312,7 @@ namespace NATS.Client
             }
         }
 
-        private bool isEmpty()
+        private bool IsEmpty()
         {
             return sList.Count == 0;
         }
