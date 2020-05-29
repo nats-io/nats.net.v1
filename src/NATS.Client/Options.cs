@@ -77,11 +77,15 @@ namespace NATS.Client
         /// <summary>
         /// Represents the optional method that is used to get from the
         /// user the desired delay the client should pause before attempting
-        /// to reconnect again. Note that this is invoked after the library tried the
+        /// to reconnect again.
+        /// </summary>
+        /// <remarks>
+        /// Note that this is invoked after the library tried the
         /// entire list of URLs and failed to reconnect.  By default, the client
         /// will use the sum of <see cref="ReconnectWait"/> and a random value between
         /// zero and <see cref="Options.ReconnectJitter"/> or
         /// <see cref="Options.ReconnectJitterTLS"/>
+        /// </remarks>
         public EventHandler<ReconnectDelayEventArgs> ReconnectDelayHandler = null;
 
         /// <summary>
@@ -710,7 +714,6 @@ namespace NATS.Client
         /// Get the the upper bound for a random delay added to
         /// ReconnectWait during a reconnect for connections.
         /// </summary>
-        /// <remarks>
         /// <seealso cref="ReconnectDelayHandler"/>
         /// <seealso cref="ReconnectJitterTLS"/>
         /// <seealso cref="ReconnectWait"/>
@@ -722,7 +725,6 @@ namespace NATS.Client
         /// Get the the upper bound for a random delay added to
         /// ReconnectWait during a reconnect for TLS connections.
         /// </summary>
-        /// <remarks>
         /// <seealso cref="ReconnectDelayHandler"/>
         /// <seealso cref="ReconnectJitter"/>
         /// <seealso cref="SetReconnectJitter(int, int)"/>
