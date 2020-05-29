@@ -39,6 +39,8 @@ namespace NATS.Client
         int reconnectWait = Defaults.ReconnectWait;
         int pingInterval  = Defaults.PingInterval;
         int timeout       = Defaults.Timeout;
+        int reconnectJitter = Defaults.ReconnectJitter;
+        int reconnectJitterTLS = Defaults.ReconnectJitterTLS;
 
         internal X509Certificate2Collection certificates = null;
  
@@ -71,6 +73,16 @@ namespace NATS.Client
         /// when an error occurs out of band.
         /// </summary>
         public EventHandler<ErrEventArgs> AsyncErrorEventHandler = null;
+
+        /// <summary>
+        /// Represents the optional method that is used to get from the
+        /// user the desired delay the client should pause before attempting
+        /// to reconnect again. Note that this is invoked after the library tried the
+        /// entire list of URLs and failed to reconnect.  By default, the client
+        /// will use the sum of <see cref="ReconnectWait"/> and a random value between
+        /// zero and <see cref="Options.ReconnectJitter"/> or
+        /// <see cref="Options.ReconnectJitterTLS"/>
+        public EventHandler<ReconnectDelayEventArgs> ReconnectDelayHandler = null;
 
         /// <summary>
         /// Represents the optional method that is used to fetch and
@@ -206,6 +218,7 @@ namespace NATS.Client
             DisconnectedEventHandler = o.DisconnectedEventHandler;
             UserJWTEventHandler = o.UserJWTEventHandler;
             UserSignatureEventHandler = o.UserSignatureEventHandler;
+            ReconnectDelayHandler = o.ReconnectDelayHandler;
             maxPingsOut = o.maxPingsOut;
             maxReconnect = o.maxReconnect;
             name = o.name;
@@ -216,6 +229,8 @@ namespace NATS.Client
             useOldRequestStyle = o.useOldRequestStyle;
             pingInterval = o.pingInterval;
             ReconnectedEventHandler = o.ReconnectedEventHandler;
+            reconnectJitter = o.reconnectJitter;
+            reconnectJitterTLS = o.reconnectJitterTLS;
             reconnectWait = o.reconnectWait;
             secure = o.secure;
             user = o.user;
@@ -670,6 +685,50 @@ namespace NATS.Client
         }
 
         /// <summary>
+        /// Sets the the upper bound for a random delay in milliseconds added to
+        /// ReconnectWait during a reconnect for clear and TLS connections.
+        /// </summary>
+        /// <remarks>
+        /// Defaults are 100 ms and 1s for TLS.
+        /// </remarks>
+        /// <seealso cref="ReconnectDelayHandler"/>
+        /// <seealso cref="ReconnectJitter"/>
+        /// <seealso cref="ReconnectJitterTLS"/>
+        /// <seealso cref="ReconnectWait"/>
+        public void SetReconnectJitter(int jitter, int tlsJitter)
+        {
+            if (jitter < 0 || tlsJitter < 0)
+            {
+                throw new ArgumentOutOfRangeException("value", "Reconnect jitter must be positive");
+            }
+
+            reconnectJitter = jitter;
+            reconnectJitterTLS = tlsJitter;
+        }
+
+        /// <summary>
+        /// Get the the upper bound for a random delay added to
+        /// ReconnectWait during a reconnect for connections.
+        /// </summary>
+        /// <remarks>
+        /// <seealso cref="ReconnectDelayHandler"/>
+        /// <seealso cref="ReconnectJitterTLS"/>
+        /// <seealso cref="ReconnectWait"/>
+        /// <seealso cref="SetReconnectJitter(int, int)"/>
+        public int ReconnectJitter { get => reconnectJitter; }
+
+
+        /// <summary>
+        /// Get the the upper bound for a random delay added to
+        /// ReconnectWait during a reconnect for TLS connections.
+        /// </summary>
+        /// <remarks>
+        /// <seealso cref="ReconnectDelayHandler"/>
+        /// <seealso cref="ReconnectJitter"/>
+        /// <seealso cref="SetReconnectJitter(int, int)"/>
+        public int ReconnectJitterTLS { get => reconnectJitterTLS; }
+
+        /// <summary>
         /// Returns a string representation of the
         /// value of this Options instance.
         /// </summary>
@@ -684,7 +743,10 @@ namespace NATS.Client
             appendEventHandler(sb, "AsyncErrorEventHandler", AsyncErrorEventHandler);
             appendEventHandler(sb, "ClosedEventHandler", ClosedEventHandler);
             appendEventHandler(sb, "DisconnectedEventHandler", DisconnectedEventHandler);
-
+            appendEventHandler(sb, "ReconnectedEventHandler", ReconnectedEventHandler);
+            appendEventHandler(sb, "ReconnectDelayHandler", ReconnectDelayHandler);
+            appendEventHandler(sb, "ServerDiscoveredEventHandler", ServerDiscoveredEventHandler);
+ 
             sb.AppendFormat("MaxPingsOut={0};", MaxPingsOut);
             sb.AppendFormat("MaxReconnect={0};", MaxReconnect);
             sb.AppendFormat("Name={0};", Name != null ? Name : "null");
@@ -694,12 +756,14 @@ namespace NATS.Client
             sb.AppendFormat("UseOldRequestStyle={0}", UseOldRequestStyle);
             sb.AppendFormat("PingInterval={0};", PingInterval);
             sb.AppendFormat("ReconnectBufferSize={0};", ReconnectBufferSize);
+            sb.AppendFormat("ReconnectJitter={0};", ReconnectJitter);
+            sb.AppendFormat("ReconnectJitterTLS={0};", ReconnectJitterTLS);
             sb.AppendFormat("ReconnectWait={0};", ReconnectWait);
             sb.AppendFormat("Secure={0};", Secure);
-            sb.AppendFormat("User={0};", User);
-            sb.AppendFormat("Token={0};", Token);
             sb.AppendFormat("SubscriberDeliveryTaskCount={0};", SubscriberDeliveryTaskCount);
             sb.AppendFormat("SubscriptionBatchSize={0};", SubscriptionBatchSize);
+            sb.AppendFormat("User={0};", User);
+            sb.AppendFormat("Token={0};", Token);
 
             if (Servers == null)
             {

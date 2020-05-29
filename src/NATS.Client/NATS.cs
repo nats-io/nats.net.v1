@@ -142,6 +142,16 @@ namespace NATS.Client
         /// </summary>
         public const int ReconnectBufferSize = 8 * 1024 * 1024; // 8MB
 
+        /// <summary>
+        /// Default non-TLS reconnect jitter of 100ms.
+        /// </summary>
+        public const int ReconnectJitter = 100;
+
+        /// <summary>
+        /// Default TLS reconnect jitter of 1s.
+        /// </summary>
+        public const int ReconnectJitterTLS = 1000;
+
         /*
          * Namespace level defaults
          */
@@ -185,6 +195,29 @@ namespace NATS.Client
         /// <example>Could be an exception causing the connection to get disconnected.</example>
         public Exception Error { get; }
     }
+
+    /// <summary>
+    /// Provides details for the ReconnectDelayEvent.
+    /// </summary>
+    /// <remarks>
+    /// This event handler is a good place to apply backoff logic.  The associated
+    /// connection will be RECONNECTING so access or calling methods will result
+    /// in undefined behavior.
+    /// </remarks>
+    public class ReconnectDelayEventArgs : EventArgs
+    {
+        internal ReconnectDelayEventArgs(int attempts)
+        {
+            Attempts = attempts;
+        }
+
+        /// <Summary>
+        /// Gets the number of times the client has traversed the
+        /// server list in attempting to reconnect.
+        /// </Summary>>
+        public int Attempts { get; }
+    }
+
 
     /// <summary>
     /// Provides details when a user JWT is read during a connection.  The

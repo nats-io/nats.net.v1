@@ -72,26 +72,19 @@ namespace IntegrationTests
             opts.MaxReconnect = 2;
             opts.ReconnectWait = 1000;
 
-            Object testLock = new Object();
+            AutoResetEvent Closed = new AutoResetEvent(false);
+            AutoResetEvent Disconnected = new AutoResetEvent(false);
 
-            opts.ClosedEventHandler = (sender, args) =>
-            {
-                lock (testLock)
-                {
-                    Monitor.Pulse(testLock);
-                }
-            };
+            opts.DisconnectedEventHandler = (sender, args) => Disconnected.Set();
+            opts.ClosedEventHandler = (sender, args) => Closed.Set();
 
             using (NATSServer ns = NATSServer.Create(Context.Server1.Port))
             {
-                using (IConnection c = Context.ConnectionFactory.CreateConnection(opts))
+                using (var c = Context.ConnectionFactory.CreateConnection(opts))
                 {
-                    lock (testLock)
-                    {
-                        ns.Shutdown();
-                        Assert.False(Monitor.Wait(testLock, 1000));
-                    }
-
+                    ns.Shutdown();
+                    Assert.True(Disconnected.WaitOne(1000));
+                    Assert.False(Closed.WaitOne(1000));
                     Assert.True(c.State == ConnState.RECONNECTING);
                     c.Opts.ClosedEventHandler = null;
                 }
@@ -105,20 +98,21 @@ namespace IntegrationTests
             opts.MaxReconnect = 2;
             opts.ReconnectWait = 1000;
 
+            AutoResetEvent Disconnected = new AutoResetEvent(false);
+            AutoResetEvent Reconnected = new AutoResetEvent(false);
+            AutoResetEvent MessageArrived = new AutoResetEvent(false);
+
             Object testLock = new Object();
             Object msgLock = new Object();
 
             opts.DisconnectedEventHandler = (sender, args) =>
             {
-                lock (testLock)
-                {
-                    Monitor.Pulse(testLock);
-                }
+                Disconnected.Set();
             };
 
             opts.ReconnectedEventHandler = (sender, args) =>
             {
-                // NOOP
+                Reconnected.Set();
             };
 
             using (var ns1 = NATSServer.Create(Context.Server1.Port))
@@ -129,10 +123,7 @@ namespace IntegrationTests
                     {
                         s.MessageHandler += (sender, args) =>
                         {
-                            lock (msgLock)
-                            {
-                                Monitor.Pulse(msgLock);
-                            }
+                            MessageArrived.Set();
                         };
 
                         s.Start();
@@ -141,7 +132,7 @@ namespace IntegrationTests
                         lock (testLock)
                         {
                             ns1.Shutdown();
-                            Assert.True(Monitor.Wait(testLock, 100000));
+                            Assert.True(Disconnected.WaitOne(100000));
                         }
 
                         c.Publish("foo", Encoding.UTF8.GetBytes("Hello"));
@@ -149,13 +140,12 @@ namespace IntegrationTests
                         // restart the server.
                         using (NATSServer.Create(Context.Server1.Port))
                         {
-                            lock (msgLock)
-                            {
-                                c.Flush(50000);
-                                Assert.True(Monitor.Wait(msgLock, 10000));
-                            }
-
+                            Assert.True(Reconnected.WaitOne(20000));
                             Assert.True(c.Stats.Reconnects == 1);
+
+                            c.Flush(5000);
+
+                            Assert.True(MessageArrived.WaitOne(20000));
                         }
                     }
                 }
@@ -567,6 +557,92 @@ namespace IntegrationTests
                     }    
                 }
             }
+        }
+
+        [Fact]
+        public void TestReconnectWaitJitter()
+        {
+            AutoResetEvent reconnected = new AutoResetEvent(false);
+            Stopwatch sw = new Stopwatch();
+
+            var opts = Context.GetTestOptions(Context.Server1.Port);
+            opts.ReconnectWait = 100;
+            opts.SetReconnectJitter(500, 0);
+            opts.ReconnectedEventHandler = (obj, args) => {
+                sw.Stop();
+                reconnected.Set();
+            };
+
+            using (var s = NATSServer.Create(Context.Server1.Port))
+            {
+                // Create our client connections.
+                using (new ConnectionFactory().CreateConnection(opts))
+                {
+                    sw.Start();
+                    s.Bounce(50);
+                    Assert.True(reconnected.WaitOne(5000));
+                }
+            }
+            // We should wait at least the reconnect wait + random up to 500ms.
+            // Account for a bit of variation since we rely on the reconnect
+            // handler which is not invoked in place.
+            long elapsed = sw.ElapsedMilliseconds;
+            Assert.True(elapsed > 90);
+            Assert.True(elapsed < 800);
+        }
+
+        [Fact]
+        public void TestReconnectWaitBreakOnClose()
+        {
+            var opts = Context.GetTestOptions(Context.Server1.Port);
+            opts.ReconnectWait = 30000;
+
+            using (var s = NATSServer.Create(Context.Server1.Port))
+            {
+                // Create our client connections.
+                using (var c = new ConnectionFactory().CreateConnection(opts))
+                {
+                    Stopwatch sw = Stopwatch.StartNew();
+                    s.Shutdown();
+
+                    // Wait a bit for the reconnect loop to go into wait mode.
+                    Thread.Sleep(250);
+
+                    // Close the connection to break waiting
+                    c.Close();
+                    sw.Stop();
+
+                    // It should be around 400 ms max, but only need to check that
+                    // it's less than 30000.
+                    Assert.True(sw.ElapsedMilliseconds < 2000);
+                }
+            }
+        }
+
+        [Fact]
+        public void TestCustomReconnectDelay()
+        {
+            AutoResetEvent ev = new AutoResetEvent(false);
+
+            var opts = Context.GetTestOptions(Context.Server1.Port);
+            opts.ReconnectDelayHandler = (obj, args) => ev.Set();
+
+            using (var s = NATSServer.Create(Context.Server1.Port))
+            {
+                using (new ConnectionFactory().CreateConnection(opts))
+                {
+                    s.Shutdown();
+                    Assert.True(ev.WaitOne(10000));
+                }
+            }
+        }
+
+        [Fact]
+        public void TestReconnectDelayJitterOptions()
+        {
+            var opts = Context.GetTestOptions(Context.Server1.Port);
+            Assert.True(opts.ReconnectJitter == Defaults.ReconnectJitter);
+            Assert.True(opts.ReconnectJitterTLS == Defaults.ReconnectJitterTLS);
         }
     }
 
