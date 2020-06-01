@@ -214,7 +214,7 @@ namespace NATS.Client
         /// <Summary>
         /// Gets the number of times the client has traversed the
         /// server list in attempting to reconnect.
-        /// </Summary>>
+        /// </Summary>
         public int Attempts { get; }
     }
 
