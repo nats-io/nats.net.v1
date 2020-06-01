@@ -201,7 +201,7 @@ namespace NATS.Client
     /// </summary>
     /// <remarks>
     /// This event handler is a good place to apply backoff logic.  The associated
-    /// connection will be RECONNECTING so access or calling methods will result
+    /// connection will be RECONNECTING so accessing or calling IConnection methods will result
     /// in undefined behavior.
     /// </remarks>
     public class ReconnectDelayEventArgs : EventArgs
