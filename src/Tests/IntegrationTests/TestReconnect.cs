@@ -587,7 +587,7 @@ namespace IntegrationTests
             // Account for a bit of variation since we rely on the reconnect
             // handler which is not invoked in place.
             long elapsed = sw.ElapsedMilliseconds;
-            Assert.True(elapsed > 90);
+            Assert.True(elapsed > 100);
             Assert.True(elapsed < 800);
         }
 
@@ -614,7 +614,7 @@ namespace IntegrationTests
 
                     // It should be around 400 ms max, but only need to check that
                     // it's less than 30000.
-                    Assert.True(sw.ElapsedMilliseconds < 2000);
+                    Assert.True(sw.ElapsedMilliseconds < 30000);
                 }
             }
         }

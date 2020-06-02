@@ -149,7 +149,7 @@ namespace NATS.Client
         Timer               ptmr = null;
         int                 pout = 0;
 
-        internal AutoResetEvent ReconnectDelayARE = new AutoResetEvent(false);
+        internal static Random random = new Random();
 
         private AsyncSubscription globalRequestSubscription;
         private readonly string globalRequestInbox;
@@ -1533,11 +1533,9 @@ namespace NATS.Client
 
         private void DefaultReconnectDelayHandler(object o, ReconnectDelayEventArgs args)
         {
-            Random rand = new Random();
-            int jitter = srvPool.HasSecureServer() ? rand.Next(opts.ReconnectJitterTLS) : rand.Next(opts.ReconnectJitter);
+            int jitter = srvPool.HasSecureServer() ? random.Next(opts.ReconnectJitterTLS) : random.Next(opts.ReconnectJitter);
 
-            ReconnectDelayARE.Reset();
-            ReconnectDelayARE.WaitOne(opts.ReconnectWait + jitter);
+            Thread.Sleep(opts.ReconnectWait + jitter);
         }
 
         // Try to reconnect using the option parameters.
@@ -3715,8 +3713,6 @@ namespace NATS.Client
 
             lock (mu)
             {
-                ReconnectDelayARE?.Set();
-
                 // Clear any queued pongs, e.g. pending flush calls.
                 clearPendingFlushCalls();
                 if (pending != null)
