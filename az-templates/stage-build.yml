@@ -24,7 +24,7 @@ stages:
         projects: src/*.sln
         arguments: '-c $(BuildConfiguration) --no-incremental --nologo -p:TreatWarningsAsErrors=true -p:Version=$(SemVer) -p:InformationalVersion=$(InfoVer)'
 
-    - task: PublishPipelineArtifact@2
+    - task: PublishPipelineArtifact@1
       displayName: Publish binaries for use in following jobs
       condition: eq(variables['Agent.OS'], 'Windows_NT')
       inputs:
