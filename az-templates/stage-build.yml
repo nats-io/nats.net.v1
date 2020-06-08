@@ -141,11 +141,22 @@ stages:
           cleanDestinationFolder: false
 
       - task: CmdLine@2
-        displayName: 'Include NATS-Server in path (Linux & MacOS)'
-        condition: ne(variables['Agent.OS'], 'Windows_NT')
+        displayName: 'Include NATS-Server in path (Linux)'
+        condition: eq(variables['Agent.OS'], 'Linux')
         inputs:
           script: |
             nats_server=$(find $AGENT_TEMPDIRECTORY/nats-server -executable -type f)
+            echo "nats_server: $nats_server"
+            nats_server_dir=$(dirname $nats_server)
+            echo "nats_server_dir: $nats_server_dir"
+            echo "##vso[task.setvariable variable=PATH]$PATH:$nats_server_dir"
+
+      - task: CmdLine@2
+        displayName: 'Include NATS-Server in path (MacOS)'
+        condition: eq(variables['Agent.OS'], 'Darwin')
+        inputs:
+          script: |
+            nats_server=$(find $AGENT_TEMPDIRECTORY/nats-server -perm +111 -type f)
             echo "nats_server: $nats_server"
             nats_server_dir=$(dirname $nats_server)
             echo "nats_server_dir: $nats_server_dir"
