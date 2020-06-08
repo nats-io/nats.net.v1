@@ -17,6 +17,12 @@ stages:
       vmImage: $(imageName)
 
     steps:
+    - task: PowerShell@2
+      displayName: 'Print env'
+      inputs:
+        targetType: 'inline'
+        script: 'gci Env:'
+                  
     - task: CmdLine@2 # Restore frequently fails when using it
       displayName: Disable Nuget source "Microsoft Visual Studio Offline Packages"
       condition: eq(variables['Agent.OS'], 'Windows_NT') # Not an issue on Linux and MacOS obviously
