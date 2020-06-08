@@ -95,7 +95,7 @@ stages:
   - job: IntegrationTestBinaries
     dependsOn: BuildBinaries
     displayName: Run integration tests
-    timeoutInMinutes: 10
+    timeoutInMinutes: 7
     strategy:
       matrix:
         linux-netcore:
