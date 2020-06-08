@@ -2,7 +2,7 @@ stages:
 - stage: Build
   jobs:
   - job: BuildBinaries
-    displayName: Builds binaries
+    displayName: Build solution
     timeoutInMinutes: 10
     strategy:
       matrix:
@@ -17,23 +17,47 @@ stages:
       vmImage: $(imageName)
 
     steps:
+    - task: PowerShell@2
+      displayName: Print environment
+      inputs:
+        targetType: 'inline'
+        script: |
+          gci ENV:
+          $HOME
+          $PWD
+        pwsh: true
+    
+    - task: PowerShell@2 # Restore frequently fails when using it
+      displayName: Disable Nuget source "Microsoft Visual Studio Offline Packages"
+      condition: eq(variables['Agent.OS'], 'Windows_NT') # Not an issue on Linux and MacOS obviously
+      inputs:
+        targetType: 'inline'
+        script: dotnet nuget disable source "Microsoft Visual Studio Offline Packages"
+        pwsh: true
+
     - task: DotNetCoreCLI@2
       displayName: Build solution
       inputs:
         command: build
         projects: src/*.sln
-        arguments: '-c $(BuildConfiguration) --no-incremental --nologo -p:TreatWarningsAsErrors=true -p:Version=$(SemVer) -p:InformationalVersion=$(InfoVer)'
+        arguments: >-
+          --configuration $(BuildConfiguration)
+          --no-incremental
+          --nologo
+          -p:TreatWarningsAsErrors=true
+          -p:Version=$(SemVer)
+          -p:InformationalVersion=$(InfoVer)
 
     - task: PublishPipelineArtifact@1
-      displayName: Publish binaries for use in following jobs
-      condition: eq(variables['Agent.OS'], 'Windows_NT')
+      displayName: Publish binaries for use in dependent jobs
+      condition: eq(variables['Agent.OS'], 'Windows_NT') # We only use the binaries from the Windows built, it produces net452 and netstandard1.6 DLLs
       inputs:
         targetpath: ./
         artifactname: binaries
 
-  - job: TestBinaries
+  - job: UnitTestBinaries
     dependsOn: BuildBinaries
-    displayName: Test binaries
+    displayName: Run unit tests
     timeoutInMinutes: 10
     strategy:
       matrix:
@@ -66,4 +90,4 @@ stages:
           command: test
           projects: src/Tests/UnitTests/bin/$(BuildConfiguration)/$(targetFrameworkMoniker)/UnitTests.dll
           arguments: --framework $(targetFrameworkMoniker) --nologo
-          testRunTitle: 'UnitTests $(imageName) $(targetFrameworkMoniker)'
+          testRunTitle: UnitTests $(imageName) $(targetFrameworkMoniker)
