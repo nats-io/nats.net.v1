@@ -1,26 +1,26 @@
 stages:
 - stage: Test
   jobs:
-    - job: TestBinaries
-      dependsOn: BuildBinaries
-      displayName: Test binaries
-      timeoutInMinutes: 10
-      strategy:
-        matrix:
-          linux-netcore:
-            imageName: ubuntu-18.04
-            targetFrameworkMoniker: netcoreapp3.1
-          mac-netcore:
-            imageName: macos-10.15
-            targetFrameworkMoniker: netcoreapp3.1
-          windows-netcore:
-            imageName: windows-2019
-            targetFrameworkMoniker: netcoreapp3.1
-          windows-nextfx:
-            imageName: windows-2019
-            targetFrameworkMoniker: net452
-      pool:
-        vmImage: $(imageName)
+  - job: TestBinaries
+    dependsOn: BuildBinaries
+    displayName: Test binaries
+    timeoutInMinutes: 10
+    strategy:
+      matrix:
+        linux-netcore:
+          imageName: ubuntu-18.04
+          targetFrameworkMoniker: netcoreapp3.1
+        mac-netcore:
+          imageName: macos-10.15
+          targetFrameworkMoniker: netcoreapp3.1
+        windows-netcore:
+          imageName: windows-2019
+          targetFrameworkMoniker: netcoreapp3.1
+        windows-nextfx:
+          imageName: windows-2019
+          targetFrameworkMoniker: net452
+    pool:
+      vmImage: $(imageName)
 
     steps:
     - checkout: none

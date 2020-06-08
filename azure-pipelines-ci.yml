@@ -30,7 +30,6 @@ pr:
   branches:
     include:
     - master
-    - jasper-d/ci
 
 stages:
 - template: az-templates/stage-build.yml
