@@ -1,0 +1,107 @@
+stages:
+- stage: Test
+  jobs:
+    - job: TestBinaries
+      dependsOn: BuildBinaries
+      displayName: Test binaries
+      timeoutInMinutes: 10
+      strategy:
+        matrix:
+          linux-netcore:
+            imageName: ubuntu-18.04
+            targetFrameworkMoniker: netcoreapp3.1
+          mac-netcore:
+            imageName: macos-10.15
+            targetFrameworkMoniker: netcoreapp3.1
+          windows-netcore:
+            imageName: windows-2019
+            targetFrameworkMoniker: netcoreapp3.1
+          windows-nextfx:
+            imageName: windows-2019
+            targetFrameworkMoniker: net452
+      pool:
+        vmImage: $(imageName)
+
+    steps:
+    - checkout: none
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        targetpath: ./
+        artifactname: binaries
+
+    - task: DotNetCoreCLI@2
+      displayName: Run unit tests
+      inputs:
+        command: test
+        projects: src/Tests/UnitTests/bin/$(BuildConfiguration)/$(targetFrameworkMoniker)/UnitTests.dll
+        arguments: --framework $(targetFrameworkMoniker) --nologo
+        testRunTitle: 'UnitTests $(imageName) $(targetFrameworkMoniker)'
+
+#    - task: PowerShell@2
+#      displayName: 'Download latest Win64 NATS-Server'
+#      inputs:
+#        targetType: 'inline'
+#        script: |
+#          Write-Host "Getting latest release $releaseUri"
+#          $releaseUri = "https://api.github.com/repos/nats-io/nats-server/releases/latest"
+#          $response = Invoke-RestMethod -Uri $releaseUri -UseBasicParsing
+#    
+#          $win64asset = $response.assets.where({$_.name -like 'nats-server-*-windows-amd64.zip'})
+#          $assetUrl = $win64asset.browser_download_url
+#          $name = $win64asset.name
+#          $outputFile = "$(Agent.TempDirectory)\nats-server\$name"
+#    
+#          Write-Host "Downloading asset $name to $outputFile from $assetUrl"
+#          New-Item -ItemType Directory -Force -Path $(Agent.TempDirectory)\nats-server
+#          (New-Object System.Net.WebClient).DownloadFile($assetUrl, $outputFile)
+#    
+#    - task: ExtractFiles@1
+#      displayName: 'Extract NATS-Server files '
+#      inputs:
+#        archiveFilePatterns: '$(Agent.TempDirectory)\nats-server\nats-server*.zip'
+#        destinationFolder: '$(Agent.TempDirectory)\nats-server'
+#        cleanDestinationFolder: false
+#    
+#    - task: PowerShell@2
+#      displayName: 'Include NATS-Server in path'
+#      inputs:
+#        targetType: 'inline'
+#        script: |
+#          $natsServerDir = Get-ChildItem -Directory -Path "$(Agent.TempDirectory)\nats-server\nats-server-*" | Select -Expand FullName
+#          Write-Host "Found nats-server path: $natsServerDir"
+#          Write-Host "##vso[task.setvariable variable=PATH;]${env:PATH};$natsServerDir"
+#    
+#    - task: VSTest@2
+#      displayName: 'IntegrationTests .NetCoreApp3.1'
+#      inputs:
+#        testSelector: 'testAssemblies'
+#        testAssemblyVer2: 'src/Tests/IntegrationTests/bin/$(BuildConfiguration)/netcoreapp3.1/IntegrationTests.dll'
+#        configuration: $(BuildConfiguration)
+#        rerunFailedTests: True
+#        rerunMaxAttempts: 2
+#        testRunTitle: 'IntegrationTests .NetCoreApp3.1'
+#    
+#    - task: VSTest@2
+#      displayName: 'IntegrationTests .Net4.5.2'
+#      inputs:
+#        testSelector: 'testAssemblies'
+#        testAssemblyVer2: 'src/Tests/IntegrationTests/bin/$(BuildConfiguration)/net452/IntegrationTests.dll'
+#        configuration: $(BuildConfiguration)
+#        rerunFailedTests: True
+#        rerunMaxAttempts: 2
+#        testRunTitle: 'IntegrationTests .Net4.5.2'
+#    
+#    - task: DotNetCoreCLI@2
+#      displayName: 'Pack Nupkg'
+#      inputs:
+#        command: custom
+#        custom: pack
+#        projects: 'src/*.sln'
+#        arguments: '-c $(BuildConfiguration) --no-build -o $(Build.ArtifactStagingDirectory) -p:Version=$(SemVer) -p:InformationalVersion=$(InfoVer)'
+#    
+#    - task: PublishPipelineArtifact@1
+#      displayName: 'Publish Artifacts'
+#      inputs:
+#        path: '$(Build.ArtifactStagingDirectory)'
+#        artifact: Artifacts

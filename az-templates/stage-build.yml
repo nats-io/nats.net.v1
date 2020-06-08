@@ -1,7 +1,7 @@
 stages:
 - stage: Build
   jobs:
-  - job: BuildArtifacts
+  - job: BuildBinaries
     displayName: Builds binaries
     timeoutInMinutes: 10
     strategy:

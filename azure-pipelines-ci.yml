@@ -13,8 +13,6 @@ name: $(SemVer)
 # Unity             x         x     (x)
 # Mono             (x)       (x)    (x)
 
-
-
 variables:
   BuildRev: $[counter(format('{0:yyyyMMdd}', pipeline.startTime), 1)]
   SemVer: $[format('{0:yyyy}.{0:MM}.{0:dd}-pre{1}', pipeline.startTime, variables.BuildRev)]
@@ -32,9 +30,7 @@ pr:
   branches:
     include:
     - master
-
-pool:
-  vmImage: windows-2019
+    - jasper-d/ci
 
 stages:
 - template: az-templates/stage-build.yml
