@@ -1465,6 +1465,12 @@ namespace NATS.Client
                     conn.teardown();
                 }
 
+                // clear any queued pongs, e..g. pending flush calls.
+                clearPendingFlushCalls();
+
+                pending = new MemoryStream();
+                bw = new BufferedStream(pending);
+
                 Thread t = new Thread(() =>
                 {
                     doReconnect();
@@ -1548,13 +1554,6 @@ namespace NATS.Client
             try
             {
                 Monitor.Enter(mu, ref lockWasTaken);
-
-                // clear any queued pongs, e..g. pending flush calls.
-                clearPendingFlushCalls();
-
-                pending = new MemoryStream();
-
-                bw = new BufferedStream(pending);
 
                 //Keep ref to any error before clearing.
                 var errorForHandler = lastEx;
