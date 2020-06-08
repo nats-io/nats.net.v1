@@ -1,5 +1,20 @@
 name: $(SemVer)
 
+# Build Matrix
+# OS/TFM:                       Windows_NT, Linux, Darwin
+# netstandard1.6 + net45/net46*     x
+# netstandard1.6                             (x)     (x)
+# * net45 is used for NATS.Client.csproj, net46 is used for test projects, see .csproj for reference
+
+# Test Matrix
+# OS/Runtime:   Windows_NT, Linux, Darwin
+# .NET FX           x
+# netcoreapp3.1     x         x     (x)
+# Unity             x         x     (x)
+# Mono             (x)       (x)    (x)
+
+
+
 variables:
   BuildRev: $[counter(format('{0:yyyyMMdd}', pipeline.startTime), 1)]
   SemVer: $[format('{0:yyyy}.{0:MM}.{0:dd}-pre{1}', pipeline.startTime, variables.BuildRev)]
@@ -10,6 +25,7 @@ trigger:
   branches:
     include:
     - master
+    - jasper-d/ci
 
 pr:
   autoCancel: true
@@ -22,3 +38,4 @@ pool:
 
 stages:
 - template: az-templates/stage-build.yml
+#- tamplate: az-templates/stage-test.yml
