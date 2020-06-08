@@ -18,6 +18,7 @@ variables:
   SemVer: $[format('{0:yyyy}.{0:MM}.{0:dd}-pre{1}', pipeline.startTime, variables.BuildRev)]
   InfoVer: $(Build.SourceVersion)
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_NOLOGO: true
 
 trigger:
   batch: true
