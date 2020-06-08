@@ -125,23 +125,13 @@ stages:
           targetpath: ./
           artifactname: binaries
 
-      - task: PowerShell@2
-        displayName: 'Download latest NATS-Server'
+      - task: DownloadGitHubRelease@0
         inputs:
-          targetType: 'inline'
-          script: |
-            Write-Host "Getting latest release $releaseUri"
-            $releaseUri = "https://api.github.com/repos/nats-io/nats-server/releases/latest"
-            $response = Invoke-RestMethod -Uri $releaseUri -UseBasicParsing
-    
-            $asset = $response.assets.where({$_.name -like '$(natsServerPattern)'})
-            $assetUrl = $asset.browser_download_url
-            $name = $asset.name
-            $outputFile = "$(Agent.TempDirectory)/nats-server/$name"
-    
-            Write-Host "Downloading asset $name to $outputFile from $assetUrl"
-            New-Item -ItemType Directory -Force -Path $(Agent.TempDirectory)/nats-server
-            (New-Object System.Net.WebClient).DownloadFile($assetUrl, $outputFile)
+          connection: jasper-d
+          userRepository: nats-io/nats-server
+          defaultVersionType: latest
+          itemPattern: $(natsServerPattern)
+          downloadPath: $(Agent.TempDirectory)/nats-server
 
       - task: ExtractFiles@1
         displayName: 'Extract NATS-Server files '
