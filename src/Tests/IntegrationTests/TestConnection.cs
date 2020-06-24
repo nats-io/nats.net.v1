@@ -179,7 +179,7 @@ namespace IntegrationTests
                 {
                     s.Bounce(1000);
                     Assert.True(disconEv.WaitOne(1000));
-                    Assert.True(reconEv.WaitOne(1000));
+                    Assert.True(reconEv.WaitOne(2000));
                 }
                 Assert.True(closedEv.WaitOne(1000));
             }
