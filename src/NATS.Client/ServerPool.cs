@@ -330,6 +330,19 @@ namespace NATS.Client
                 return sList.First();
             }
         }
+
+        internal bool HasSecureServer()
+        {
+            lock (poolLock)
+            {
+                foreach (Srv s in sList)
+                {
+                    if (s.Secure)
+                        return true;
+                }
+            }
+            return false;
+        }
     }
 
 }

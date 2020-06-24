@@ -151,7 +151,6 @@ namespace IntegrationTests
             var opts = Context.GetTestOptions(Context.Server1.Port);
             var errors = new ConcurrentQueue<Exception>();
             opts.AllowReconnect = true;
-            opts.MaxReconnect = 1;
             opts.ClosedEventHandler = (sender, args) =>
             {
                 if (args.Error != null)
@@ -179,12 +178,12 @@ namespace IntegrationTests
                 using (Context.ConnectionFactory.CreateConnection(opts))
                 {
                     s.Bounce(1000);
-                    Assert.True(reconEv.WaitOne(1000));
+                    Assert.True(disconEv.WaitOne(1000));
+                    Assert.True(reconEv.WaitOne(2000));
                 }
+                Assert.True(closedEv.WaitOne(1000));
             }
 
-            Assert.True(closedEv.WaitOne(1000));
-            Assert.True(disconEv.WaitOne(1000));
             Assert.Empty(errors);
         }
 
