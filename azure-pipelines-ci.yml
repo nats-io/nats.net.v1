@@ -20,6 +20,13 @@ variables:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   DOTNET_NOLOGO: true
 
+schedules:
+- cron: "0 */8 * * *"
+  displayName: Scheduled Build
+  branches:
+    include:
+    - master
+
 trigger:
   batch: true
   branches:
