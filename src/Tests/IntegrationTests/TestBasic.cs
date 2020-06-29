@@ -755,7 +755,7 @@ namespace IntegrationTests
                     Stopwatch sw = Stopwatch.StartNew();
                     await Assert.ThrowsAsync<NATSTimeoutException>(() => { return c.RequestAsync("no-replier", null, 1000, miscToken); });
                     sw.Stop();
-                    Assert.True(Math.Abs(sw.Elapsed.TotalMilliseconds - 1000) < 250);
+                    Assert.True(Math.Abs(sw.Elapsed.TotalMilliseconds - 1000) < 250, $"Actual: {sw.ElapsedMilliseconds}ms, Expected: (750, 1250)");
 
                     // test early cancellation
                     var cts = new CancellationTokenSource();
