@@ -35,7 +35,7 @@ stages:
         command: build
         projects: src/*.sln
         arguments: >-
-          --configuration $(BuildConfiguration)
+          --configuration Release
           --no-incremental
           --nologo
           -p:TreatWarningsAsErrors=true
@@ -82,7 +82,7 @@ stages:
         displayName: Run unit tests
         inputs:
           command: test
-          projects: src/Tests/UnitTests/bin/$(BuildConfiguration)/$(targetFrameworkMoniker)/UnitTests.dll
+          projects: src/Tests/UnitTests/bin/Release/$(targetFrameworkMoniker)/UnitTests.dll
           arguments: --framework $(targetFrameworkMoniker) --nologo
           testRunTitle: UnitTests $(imageName) $(targetFrameworkMoniker)
 
@@ -170,6 +170,6 @@ stages:
         displayName: Run integration tests
         inputs:
           command: test
-          projects: src/Tests/IntegrationTests/bin/$(BuildConfiguration)/$(targetFrameworkMoniker)/IntegrationTests.dll
+          projects: src/Tests/IntegrationTests/bin/Release/$(targetFrameworkMoniker)/IntegrationTests.dll
           arguments: --framework $(targetFrameworkMoniker) --nologo
           testRunTitle: IntegrationTests $(imageName) $(targetFrameworkMoniker)
