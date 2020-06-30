@@ -121,7 +121,7 @@ stages:
 
       - task: DownloadGitHubRelease@0
         inputs:
-          connection: jasper-d
+          connection: github-no-grants
           userRepository: nats-io/nats-server
           defaultVersionType: latest
           itemPattern: $(natsServerPattern)
