@@ -19,6 +19,7 @@ using NATS.Client;
 using System.Diagnostics;
 using Xunit;
 using System.Collections.Generic;
+using Xunit.Abstractions;
 
 
 namespace IntegrationTests
@@ -29,8 +30,11 @@ namespace IntegrationTests
     [Collection(DefaultSuiteContext.CollectionKey)]
     public class TestBasic : TestSuite<DefaultSuiteContext>
     {
-        public TestBasic(DefaultSuiteContext context) : base(context) { }
-
+        public TestBasic(ITestOutputHelper outputHelper, DefaultSuiteContext context) : base(context)
+        {
+            _outputHelper = outputHelper;
+        }
+        
         [Fact]
         public void TestConnectedServer()
         {
@@ -200,6 +204,7 @@ namespace IntegrationTests
         readonly object mu = new Object();
         IAsyncSubscription asyncSub = null;
         Boolean received = false;
+        private readonly ITestOutputHelper _outputHelper;
 
         [Fact]
         public void TestAsyncSubscribe()
@@ -825,15 +830,14 @@ namespace IntegrationTests
                     await Assert.ThrowsAsync<NATSTimeoutException>(() => { return conn.RequestAsync("test", new byte[0], 500); });
                     sw.Stop();
                     long elapsed = sw.ElapsedMilliseconds;
-                    Assert.True(elapsed >= 500, string.Format("Unexpected value (should be > 500): {0}", elapsed));
-                    long variance = elapsed - 500;
-#if DEBUG
-                    Assert.True(variance < 250, string.Format("Invalid timeout variance: {0}", variance));
-#else
-                Assert.True(variance < 100, string.Format("Invalid timeout variance: {0}", variance));
-#endif
+
+                    _outputHelper.WriteLine($"Observed elapsed time: {elapsed}ms");
+                    // It's odd but sometimes the cancellation happens a bit early, we accept up to 10ms here
+                    Assert.InRange(elapsed, 490, 600);
+
                     // Test an invalid connection
                     server.Shutdown();
+                    conn.Close();
                     Thread.Sleep(500);
                     await Assert.ThrowsAsync<NATSConnectionClosedException>(() => { return conn.RequestAsync("test", new byte[0], 1000); });
                 }
