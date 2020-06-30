@@ -147,8 +147,9 @@ namespace NATS.Client
         internal Exception lastEx;
 
         Timer               ptmr = null;
-
         int                 pout = 0;
+
+        internal static Random random = new Random();
 
         private AsyncSubscription globalRequestSubscription;
         private readonly string globalRequestInbox;
@@ -723,6 +724,10 @@ namespace NATS.Client
         internal Connection(Options options)
         {
             opts = new Options(options);
+            if (opts.ReconnectDelayHandler == null)
+            {
+                opts.ReconnectDelayHandler = DefaultReconnectDelayHandler;
+            }
 
             PING_P_BYTES = Encoding.UTF8.GetBytes(IC.pingProto);
             PING_P_BYTES_LEN = PING_P_BYTES.Length;
@@ -1532,6 +1537,13 @@ namespace NATS.Client
             }
         }
 
+        private void DefaultReconnectDelayHandler(object o, ReconnectDelayEventArgs args)
+        {
+            int jitter = srvPool.HasSecureServer() ? random.Next(opts.ReconnectJitterTLS) : random.Next(opts.ReconnectJitter);
+
+            Thread.Sleep(opts.ReconnectWait + jitter);
+        }
+
         // Try to reconnect using the option parameters.
         // This function assumes we are allowed to reconnect.
         //
@@ -1561,34 +1573,24 @@ namespace NATS.Client
 
                 scheduleConnEvent(Opts.DisconnectedEventHandler, errorForHandler);
 
-                // TODO:  Look at using a predicate delegate in the server pool to
-                // pass a method to, but locking is complex and would need to be
-                // reworked.
                 Srv cur;
+                int wlf = 0;
+                bool doSleep = false;
                 while ((cur = srvPool.SelectNextServer(Opts.MaxReconnect)) != null)
                 {
+                    // check if we've been through the list
+                    if (cur == srvPool.First())
+                    {
+                        doSleep = (wlf != 0);
+                        wlf++;
+                    }
+                    else
+                    {
+                        doSleep = false;
+                    }
+
                     url = cur.url;
-
                     lastEx = null;
-
-                    // Sleep appropriate amount of time before the
-                    // connection attempt if connecting to same server
-                    // we just got disconnected from.
-                    double elapsedMillis = cur.TimeSinceLastAttempt.TotalMilliseconds;
-                    double sleepTime = 0;
-
-                    if (elapsedMillis < Opts.ReconnectWait)
-                    {
-                        sleepTime = Opts.ReconnectWait - elapsedMillis;
-                    }
-
-                    if (sleepTime <= 0)
-                    {
-                        // Release to allow parallel processes to close,
-                        // unsub, etc.  Note:  Use the sleep API - yield is
-                        // heavy handed here.
-                        sleepTime = 50;
-                    }
 
                     if (lockWasTaken)
                     {
@@ -1596,8 +1598,18 @@ namespace NATS.Client
                         lockWasTaken = false;
                     }
 
-                    sleep((int)sleepTime);
-                    
+                    if (doSleep)
+                    {
+                        try
+                        {
+                            // If unset, the default handler will be called which uses an
+                            // auto reset event to wait, unless kicked out of a close
+                            // call.
+                            opts?.ReconnectDelayHandler(this, new ReconnectDelayEventArgs(wlf - 1));
+                        }
+                        catch { } // swallow user exceptions
+                    }
+
                     Monitor.Enter(mu, ref lockWasTaken);
 
                     if (isClosed())
