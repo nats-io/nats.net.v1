@@ -21,7 +21,7 @@ variables:
   DOTNET_NOLOGO: true
 
 schedules:
-- cron: "0 */8 * * *"
+- cron: "0 */1 * * *"
   displayName: Scheduled Build
   branches:
     include:
