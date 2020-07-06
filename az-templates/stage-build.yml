@@ -144,6 +144,7 @@ stages:
             nats_server_dir=$(dirname $nats_server)
             echo "nats_server_dir: $nats_server_dir"
             echo "##vso[task.setvariable variable=PATH]$PATH:$nats_server_dir"
+            echo "##vso[task.setvariable variable=ComPlus_ThreadPool_ForceMinWorkerThreads]200"
 
       - task: CmdLine@2
         displayName: 'Include NATS-Server in path (MacOS)'
