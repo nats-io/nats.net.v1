@@ -23,6 +23,7 @@ variables:
 schedules:
 - cron: "0 */1 * * *"
   displayName: Scheduled Build
+  always: true
   branches:
     include:
     - master
