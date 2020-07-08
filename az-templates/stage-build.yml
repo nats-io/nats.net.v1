@@ -139,9 +139,9 @@ stages:
         condition: ne(variables['Agent.OS'], 'Windows_NT')
         inputs:
           script: |
-            echo "$(Agent.OS)"
             if [ "$(Agent.OS)" = "Darwin" ]; then
               nats_server=$(find $AGENT_TEMPDIRECTORY/nats-server -perm +111 -type f)
+              echo "##vso[task.setvariable variable=ComPlus_ThreadPool_ForceMinWorkerThreads]8"
             else
               nats_server=$(find $AGENT_TEMPDIRECTORY/nats-server -executable -type f)
             fi
@@ -149,7 +149,6 @@ stages:
             nats_server_dir=$(dirname $nats_server)
             echo "nats_server_dir: $nats_server_dir"
             echo "##vso[task.setvariable variable=PATH]$PATH:$nats_server_dir"
-            echo "##vso[task.setvariable variable=ComPlus_ThreadPool_ForceMinWorkerThreads]12"
 
       - task: PowerShell@2
         displayName: 'Include NATS-Server in path (Windows)'
