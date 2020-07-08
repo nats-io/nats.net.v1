@@ -1,7 +1,7 @@
 stages:
 - stage: Build
   jobs:
-  - template: job-template.yml
+  - template: platform-dependent-job.yml
     parameters:
       jobTitle: BuildBinaries
       displayName: Build solution
@@ -18,7 +18,7 @@ stages:
         condition: eq(variables['Agent.OS'], 'Windows_NT') # Not an issue on Linux and MacOS obviously
         inputs:
           script: dotnet nuget disable source "Microsoft Visual Studio Offline Packages"
-  
+
       - task: DotNetCoreCLI@2
         displayName: Build solution
         inputs:
@@ -31,19 +31,18 @@ stages:
             -p:TreatWarningsAsErrors=true
             -p:Version=$(SemVer)
             -p:InformationalVersion=$(InfoVer)
-  
+
       - task: PublishPipelineArtifact@1
         displayName: Publish binaries for use in dependent jobs
         condition: eq(variables['Agent.OS'], 'Windows_NT') # We only use the binaries from the Windows built, it produces net452 and netstandard1.6 DLLs
         inputs:
           targetpath: ./
           artifactname: binaries
-        
 
-  - template: job-template.yml
+  - template: platform-dependent-job.yml
     parameters:
       jobTitle: UnitTestBinaries
-      displayName: Run integration tests
+      displayName: Run unit tests
       dependsOn: BuildBinaries
       steps:
         - checkout: none
@@ -51,6 +50,7 @@ stages:
         - task: DownloadPipelineArtifact@2
           inputs:
             targetpath: ./
+            patterns: src/Tests/UnitTests/bin/Release/$(targetFrameworkMoniker)/**/*
             artifactname: binaries
 
         - task: DotNetCoreCLI@2
@@ -61,7 +61,7 @@ stages:
             arguments: --framework $(targetFrameworkMoniker) --nologo
             testRunTitle: UnitTests $(imageName) $(targetFrameworkMoniker)
 
-  - template: job-template.yml
+  - template: platform-dependent-job.yml
     parameters:
       jobTitle: IntegrationTestBinaries
       displayName: Run integration tests
@@ -72,6 +72,7 @@ stages:
         - task: DownloadPipelineArtifact@2
           inputs:
             targetpath: ./
+            patterns: src/Tests/IntegrationTests/bin/Release/$(targetFrameworkMoniker)/**/*
             artifactname: binaries
 
         - task: DownloadGitHubRelease@0
