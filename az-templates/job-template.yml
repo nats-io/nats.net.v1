@@ -1,0 +1,43 @@
+parameters:
+- name: jobTitle
+  type: string 
+  default: ''
+- name: dependsOn
+  type: string
+  default: ''
+- name: displayName
+  type: string
+  default: ''
+- name: steps
+  type: stepList
+  default: []
+- name: matrix
+  type: object
+  default:
+    linux-netcore:
+      imageName: ubuntu-18.04
+      targetFrameworkMoniker: netcoreapp3.1
+      natsServerPattern: nats-server-*-linux-amd64.zip
+    mac-netcore:
+      imageName: macos-10.15
+      targetFrameworkMoniker: netcoreapp3.1
+      natsServerPattern: nats-server-*-darwin-amd64.zip
+    windows-netcore:
+      imageName: windows-2019
+      targetFrameworkMoniker: netcoreapp3.1
+      natsServerPattern: nats-server-*-windows-amd64.zip
+    windows-nextfx:
+      imageName: windows-2019
+      targetFrameworkMoniker: net452
+      natsServerPattern: nats-server-*-windows-amd64.zip
+
+- job: ${{ parameters.jobTitle }}
+  dependsOn: ${{ parameters.dependsOn }}
+  displayName: ${{ parameters.displayName }}
+  timeoutInMinutes: 10
+  strategy:
+    matrix: ${{ parameters.matrix }}
+  pool:
+    vmImage: $(imageName)
+
+  steps: ${{ parameters.steps }}
