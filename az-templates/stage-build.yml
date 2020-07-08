@@ -139,7 +139,8 @@ stages:
         condition: ne(variables['Agent.OS'], 'Windows_NT')
         inputs:
           script: |
-            if [ "$(Agent.OS)" -eq "Darwin" ]; then
+            echo "$(Agent.OS)"
+            if [ "$(Agent.OS)" = "Darwin" ]; then
               nats_server=$(find $AGENT_TEMPDIRECTORY/nats-server -perm +111 -type f)
             else
               nats_server=$(find $AGENT_TEMPDIRECTORY/nats-server -executable -type f)
