@@ -21,6 +21,7 @@ namespace NATS.Client
 	    internal string subject;
 	    internal string reply;
 	    internal long   sid;
+        internal int    hdr;
 	    internal int    size;
     }
 
@@ -42,6 +43,7 @@ namespace NATS.Client
         }
 
         internal int state = 0;
+        internal int hdr = 0;
 
         // For performance declare these as consts - they'll be
         // baked into the IL code (thus faster).  An enum would
@@ -50,41 +52,42 @@ namespace NATS.Client
         private const int OP_START         = 0;
         private const int OP_PLUS          = 1;
         private const int OP_PLUS_O        = 2;
-	    private const int OP_PLUS_OK       = 3;
-	    private const int OP_MINUS         = 4;
-	    private const int OP_MINUS_E       = 5;
-	    private const int OP_MINUS_ER      = 6;
-	    private const int OP_MINUS_ERR     = 7;
-	    private const int OP_MINUS_ERR_SPC = 8;
-	    private const int MINUS_ERR_ARG    = 9;
-	    private const int OP_C             = 10;
-	    private const int OP_CO            = 11;
-	    private const int OP_CON           = 12;
-	    private const int OP_CONN          = 13;
-	    private const int OP_CONNE         = 14;
-	    private const int OP_CONNEC        = 15;
-	    private const int OP_CONNECT       = 16;
-	    private const int CONNECT_ARG      = 17; 
-	    private const int OP_M             = 18;
-	    private const int OP_MS            = 19;
-	    private const int OP_MSG           = 20; 
-	    private const int OP_MSG_SPC       = 21;
-	    private const int MSG_ARG          = 22; 
-	    private const int MSG_PAYLOAD      = 23;
-	    private const int MSG_END          = 24;
-	    private const int OP_P             = 25;
-	    private const int OP_PI            = 26;
-	    private const int OP_PIN           = 27;
-	    private const int OP_PING          = 28;
-	    private const int OP_PO            = 29;
-	    private const int OP_PON           = 30;
-	    private const int OP_PONG          = 31;
-        private const int OP_I             = 32;
-        private const int OP_IN            = 33;
-        private const int OP_INF           = 34;
-        private const int OP_INFO          = 35;
-        private const int OP_INFO_SPC      = 36;
-        private const int INFO_ARG         = 37;
+        private const int OP_PLUS_OK       = 3;
+        private const int OP_MINUS         = 4;
+        private const int OP_MINUS_E       = 5;
+        private const int OP_MINUS_ER      = 6;
+        private const int OP_MINUS_ERR     = 7;
+        private const int OP_MINUS_ERR_SPC = 8;
+        private const int MINUS_ERR_ARG    = 9;
+        private const int OP_C             = 10;
+        private const int OP_CO            = 11;
+        private const int OP_CON           = 12;
+        private const int OP_CONN          = 13;
+        private const int OP_CONNE         = 14;
+        private const int OP_CONNEC        = 15;
+        private const int OP_CONNECT       = 16;
+        private const int CONNECT_ARG      = 17;
+        private const int OP_M             = 18;
+        private const int OP_MS            = 19;
+        private const int OP_MSG           = 20;
+        private const int OP_MSG_SPC       = 21;
+        private const int MSG_ARG          = 22;
+        private const int MSG_PAYLOAD      = 23;
+        private const int MSG_END          = 24;
+        private const int OP_P             = 25;
+        private const int OP_H             = 26;
+        private const int OP_PI            = 27;
+        private const int OP_PIN           = 28;
+        private const int OP_PING          = 29;
+        private const int OP_PO            = 30;
+        private const int OP_PON           = 31;
+        private const int OP_PONG          = 32;
+        private const int OP_I             = 33;
+        private const int OP_IN            = 34;
+        private const int OP_INF           = 35;
+        private const int OP_INFO          = 36;
+        private const int OP_INFO_SPC      = 37;
+        private const int INFO_ARG         = 38;
 
         private void parseError(byte[] buffer, int position)
         {
@@ -108,6 +111,12 @@ namespace NATS.Client
                             case 'M':
                             case 'm':
                                 state = OP_M;
+                                hdr = -1;
+                                break;
+                            case 'H':
+                            case 'h':
+                                state = OP_H;
+                                hdr = 1;
                                 break;
                             case 'C':
                             case 'c':
@@ -129,6 +138,18 @@ namespace NATS.Client
                                 break;
                             default:
                                 parseError(buffer,i);
+                                break;
+                        }
+                        break;
+                    case OP_H:
+                        switch(b)
+                        {
+                            case 'M':
+                            case 'm':
+                                state = OP_M;
+                                break;
+                            default:
+                                parseError(buffer, i);
                                 break;
                         }
                         break;
@@ -187,7 +208,14 @@ namespace NATS.Client
                             case '\r':
                                 break;
                             case '\n':
-                                conn.processMsgArgs(argBufBase, argBufStream.Position);
+                                if (hdr >= 0)
+                                {
+                                    conn.processHeaderMsgArgs(argBufBase, argBufStream.Position);
+                                }
+                                else
+                                {
+                                    conn.processMsgArgs(argBufBase, argBufStream.Position);
+                                }
                                 argBufStream.Position = 0;
                                 if (conn.msgArgs.size > msgBufBase.Length)
                                 {

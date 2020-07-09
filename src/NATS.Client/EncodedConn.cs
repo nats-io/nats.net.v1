@@ -171,7 +171,7 @@ namespace NATS.Client
 
             byte[] data = onSerialize(o);
             int count = data != null ? data.Length : 0;
-            publish(subject, reply, data, 0, count, false);
+            publish(subject, reply, null, data, 0, count, false);
         }
 
         /// <summary>
@@ -336,7 +336,7 @@ namespace NATS.Client
         {
             byte[] data = onSerialize(obj);
             int count = data != null ? data.Length : 0;
-            Msg m = base.request(subject, data, 0, count, timeout);
+            Msg m = base.request(subject, null, data, 0, count, timeout);
             return onDeserialize(m.Data);
         }
 

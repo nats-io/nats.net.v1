@@ -674,7 +674,7 @@ namespace IntegrationTests
                         var tasks = new List<Task>();
                         for (int i = 0; i < 100; i++)
                         {
-                            tasks.Add(c.RequestAsync("foo", request, 5, 5));
+                            tasks.Add(c.RequestAsync("foo", request, 5, 5, 1000));
                         }
 
                         foreach (Task<Msg> t in tasks)
@@ -1561,6 +1561,13 @@ namespace IntegrationTests
                     // shutdown server 2
                     s2.Shutdown();
 
+                    // receive the updated topology from the cluster shrinking
+                    Assert.True(evDS.WaitOne(10000));
+                    LinkedList<string> discoveredServers = new LinkedList<string>(c.DiscoveredServers);
+                    Assert.True(discoveredServers.Count == 1);
+                    Assert.Contains($"nats://127.0.0.1:{Context.Server3.Port}", discoveredServers);
+                    evDS.Reset();
+
                     using (NATSServer s4 = NATSServer.Create(Context.Server4.Port,
                         $"-a 127.0.0.1 --cluster nats://127.0.0.1:{Context.ClusterServer4.Port} --routes nats://127.0.0.1:{Context.ClusterServer1.Port}"))
                     {
@@ -1573,8 +1580,9 @@ namespace IntegrationTests
                         // ["nats://127.0.0.1:4223",
                         //  "nats://127.0.0.1:4224"]
                         //
-                        LinkedList<string> discoveredServers = new LinkedList<string>(c.DiscoveredServers);
+                        discoveredServers = new LinkedList<string>(c.DiscoveredServers);
                         Assert.True(discoveredServers.Count == 2);
+                        Assert.DoesNotContain($"nats://127.0.0.1:{Context.Server2.Port}", discoveredServers);
                         Assert.Contains($"nats://127.0.0.1:{Context.Server3.Port}", discoveredServers);
                         Assert.Contains($"nats://127.0.0.1:{Context.Server4.Port}", discoveredServers);
 
@@ -1783,5 +1791,81 @@ namespace IntegrationTests
             }
         }
 
+        [Fact]
+        public void TestMessageHeaders()
+        {
+            using (NATSServer.CreateFastAndVerify())
+            {
+                var o = ConnectionFactory.GetDefaultOptions();
+
+                using (var c = Context.ConnectionFactory.CreateConnection(o))
+                {
+                    using (var s = c.SubscribeSync("foo"))
+                    {
+                        // basic headers test
+                        var m = new Msg("foo");
+                        m.Headers["key"] = "value";
+                        m.Subject = "foo";
+                        m.Data = Encoding.UTF8.GetBytes("hello");
+
+                        c.Publish(m);
+                        var recvMsg = s.NextMessage(1000);
+                        Assert.True(recvMsg.Headers["key"].Equals("value"));
+
+                        // assigning message headers
+                        MsgHeaders headers = new MsgHeaders();
+                        headers["foo"] = "bar";
+                        m.Headers = headers;
+                        c.Publish(m);
+                        recvMsg = s.NextMessage(1000);
+                        Assert.True(recvMsg.Headers["foo"].Equals("bar"));
+
+                        // assigning message header copy constructor
+                        m.Headers = new MsgHeaders(headers);
+                        c.Publish(m);
+                        recvMsg = s.NextMessage(1000);
+                        Assert.True(recvMsg.Headers["foo"].Equals("bar"));
+
+                        // publish to the same subject w/o headers.
+                        c.Publish("foo", null);
+                        recvMsg = s.NextMessage(1000);
+
+                        // reset headers and check that none are received.
+                        m.Headers = null;
+                        c.Publish(m);
+                        recvMsg = s.NextMessage(1000);
+                        Assert.True(recvMsg.Headers.Count == 0);
+
+                        // try empty headers and check that none are received.
+                        m.Headers = new MsgHeaders();
+                        c.Publish(m);
+                        recvMsg = s.NextMessage(1000);
+                        Assert.True(recvMsg.Headers.Count == 0);
+                    }
+                }
+            }
+        }
+
+        [Fact(Skip = "Manual")]
+        public void TestMessageHeadersNoServerSupport()
+        {
+            //////////////////////////////////////////////////
+            // Requires a running server w/o header support //
+            //////////////////////////////////////////////////
+            using (var c = new ConnectionFactory().CreateConnection())
+            {
+                Msg m = new Msg();
+                m.Headers["header"] = "value";
+                m.Subject = "foo";
+
+                Assert.Throws<NATSNotSupportedException>(() => c.Publish(m));
+
+                // try w/o headers...
+                m.Headers = null;
+                c.Publish(m);
+            }
+        }
+
     } // class
+
 } // namespace
