@@ -39,7 +39,7 @@ namespace NATS.Client
     /// string contentType = m.Headers["Content-Type"];
     /// </code>
     /// </example>
-    public sealed class MsgHeaders : NameValueCollection, IEnumerable
+    public sealed class MsgHeader : NameValueCollection, IEnumerable
     {
         private static readonly string[] crlf = new string[] { "\r\n" };
         private static readonly char[] kvsep = new char[] { ':' };
@@ -60,21 +60,21 @@ namespace NATS.Client
         /// <summary>
         /// Initializes a new empty instance of the MsgHeaders class.
         /// </summary>
-        public MsgHeaders() : base() { }
+        public MsgHeader() : base() { }
 
         /// <summary>
         /// Copies the entries from existing MsgHeaders to a new MsgHeaders
         /// instance.
         /// </summary>
         /// <param name="headers">the NATS message headers to copy.</param>
-        public MsgHeaders(MsgHeaders headers) : base(headers) { }
+        public MsgHeader(MsgHeader headers) : base(headers) { }
 
         /// <summary>
         /// Initializes a new instance of the MsgHeaders class.
         /// </summary>
         /// <param name="bytes">A byte array of a serialized MsgHeaders class.</param>
         /// <param name="byteCount">Count of bytes in the serialized array.</param>
-        internal MsgHeaders(byte[] bytes, int byteCount) : base()
+        internal MsgHeader(byte[] bytes, int byteCount) : base()
         {
             if (byteCount < 1)
             {
@@ -155,7 +155,7 @@ namespace NATS.Client
         private string ToHeaderString()
         {
             // TODO:  optimize based on perf testing
-            StringBuilder sb = new StringBuilder(MsgHeaders.Header);
+            StringBuilder sb = new StringBuilder(MsgHeader.Header);
             foreach (string s in this)
             {
                 sb.AppendFormat("{0}:{1}\r\n", s, this[s]);
@@ -193,7 +193,7 @@ namespace NATS.Client
         private string reply;
         private byte[] data;
         internal Subscription sub;
-        internal MsgHeaders headers;
+        internal MsgHeader header;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Msg"/> class without any
@@ -205,7 +205,7 @@ namespace NATS.Client
             reply = null;
             data = null;
             sub = null;
-            headers = null;
+            header = null;
         }
 
         /// <summary>
@@ -215,7 +215,7 @@ namespace NATS.Client
         /// <param name="reply">A reply subject, or <c>null</c>.</param>
         /// <param name="headers">Message headers or <c>null</c>.</param>
         /// <param name="data">A byte array containing the message payload.</param>
-        public Msg(string subject, string reply, MsgHeaders headers, byte[] data)
+        public Msg(string subject, string reply, MsgHeader headers, byte[] data)
         {
             if (string.IsNullOrWhiteSpace(subject))
             {
@@ -226,7 +226,7 @@ namespace NATS.Client
 
             this.Subject = subject;
             this.Reply = reply;
-            this.Headers = headers;
+            this.Header = headers;
             this.Data = data;
         }
 
@@ -268,7 +268,7 @@ namespace NATS.Client
 
             if (arg.hdr > 0)
             {
-                headers = new MsgHeaders(payload, (int)arg.hdr);
+                header = new MsgHeader(payload, (int)arg.hdr);
             }
 
             // make a deep copy of the bytes for this message.
@@ -394,9 +394,9 @@ namespace NATS.Client
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("{");
-            if (headers != null)
+            if (header != null)
             {
-                sb.AppendFormat("Headers={0};", headers.ToString());
+                sb.AppendFormat("Header={0};", header.ToString());
             }
             sb.AppendFormat("Subject={0};Reply={1};Payload=<", Subject,
                 Reply != null ? reply : "null");
@@ -421,24 +421,24 @@ namespace NATS.Client
 
 
         /// <summary>
-        /// Gets or sets the <see cref="MsgHeaders"/> of the message.
+        /// Gets or sets the <see cref="MsgHeader"/> of the message.
         /// </summary>
-        public MsgHeaders Headers
+        public MsgHeader Header
         {
             get
             {
                 // Auto generate the headers if requested from the
                 // application.
-                if (headers == null)
+                if (header == null)
                 {
-                    headers = new MsgHeaders();
+                    header = new MsgHeader();
                 }
-                return headers;
+                return header;
             }
 
             set
             {
-                headers = value;
+                header = value;
             }
         }
     }

@@ -2691,7 +2691,7 @@ namespace NATS.Client
             }
 
             int count = msg.Data != null ? msg.Data.Length : 0;
-            byte[] headers = msg.headers != null ? msg.headers.ToByteArray() : null;
+            byte[] headers = msg.header != null ? msg.header.ToByteArray() : null;
             publish(msg.Subject, msg.Reply, headers, msg.Data, 0, count, false);
         }
 

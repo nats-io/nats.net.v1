@@ -1804,43 +1804,43 @@ namespace IntegrationTests
                     {
                         // basic headers test
                         var m = new Msg("foo");
-                        m.Headers["key"] = "value";
+                        m.Header["key"] = "value";
                         m.Subject = "foo";
                         m.Data = Encoding.UTF8.GetBytes("hello");
 
                         c.Publish(m);
                         var recvMsg = s.NextMessage(1000);
-                        Assert.True(recvMsg.Headers["key"].Equals("value"));
+                        Assert.True(recvMsg.Header["key"].Equals("value"));
 
                         // assigning message headers
-                        MsgHeaders headers = new MsgHeaders();
+                        MsgHeader headers = new MsgHeader();
                         headers["foo"] = "bar";
-                        m.Headers = headers;
+                        m.Header = headers;
                         c.Publish(m);
                         recvMsg = s.NextMessage(1000);
-                        Assert.True(recvMsg.Headers["foo"].Equals("bar"));
+                        Assert.True(recvMsg.Header["foo"].Equals("bar"));
 
                         // assigning message header copy constructor
-                        m.Headers = new MsgHeaders(headers);
+                        m.Header = new MsgHeader(headers);
                         c.Publish(m);
                         recvMsg = s.NextMessage(1000);
-                        Assert.True(recvMsg.Headers["foo"].Equals("bar"));
+                        Assert.True(recvMsg.Header["foo"].Equals("bar"));
 
                         // publish to the same subject w/o headers.
                         c.Publish("foo", null);
                         recvMsg = s.NextMessage(1000);
 
                         // reset headers and check that none are received.
-                        m.Headers = null;
+                        m.Header = null;
                         c.Publish(m);
                         recvMsg = s.NextMessage(1000);
-                        Assert.True(recvMsg.Headers.Count == 0);
+                        Assert.True(recvMsg.Header.Count == 0);
 
                         // try empty headers and check that none are received.
-                        m.Headers = new MsgHeaders();
+                        m.Header = new MsgHeader();
                         c.Publish(m);
                         recvMsg = s.NextMessage(1000);
-                        Assert.True(recvMsg.Headers.Count == 0);
+                        Assert.True(recvMsg.Header.Count == 0);
                     }
                 }
             }
@@ -1855,13 +1855,13 @@ namespace IntegrationTests
             using (var c = new ConnectionFactory().CreateConnection())
             {
                 Msg m = new Msg();
-                m.Headers["header"] = "value";
+                m.Header["header"] = "value";
                 m.Subject = "foo";
 
                 Assert.Throws<NATSNotSupportedException>(() => c.Publish(m));
 
                 // try w/o headers...
-                m.Headers = null;
+                m.Header = null;
                 c.Publish(m);
             }
         }

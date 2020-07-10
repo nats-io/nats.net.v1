@@ -24,7 +24,7 @@ namespace UnitTests
         [Fact]
         public void TestHeadersBasic()
         {
-            var mh = new MsgHeaders();
+            var mh = new MsgHeader();
             mh["foo"] = "bar";
             Assert.True(mh["foo"].Equals("bar"));
 
@@ -57,7 +57,7 @@ namespace UnitTests
             string headers = $"NATS/1.0\r\nfoo:bar\r\nbaz:bam\r\n\r\n";
             byte[] headerBytes = System.Text.Encoding.UTF8.GetBytes(headers);
 
-            var mh = new MsgHeaders(headerBytes, headerBytes.Length);
+            var mh = new MsgHeader(headerBytes, headerBytes.Length);
             Assert.True(mh["foo"].Equals("bar"));
             Assert.True(mh["baz"].Equals("bam"));
             Assert.True(mh.Count == 2);
@@ -70,7 +70,7 @@ namespace UnitTests
             byte[] headerBytes = System.Text.Encoding.UTF8.GetBytes(headers);
 
             // can only test with one because order isn't guaranteed
-            var mh = new MsgHeaders();
+            var mh = new MsgHeader();
             mh["foo"] = "bar";
 
             byte[] bytes = mh.ToByteArray();
@@ -82,71 +82,71 @@ namespace UnitTests
             }
 
             // now serialize back
-            var mh2 = new MsgHeaders(bytes, bytes.Length);
+            var mh2 = new MsgHeader(bytes, bytes.Length);
             Assert.True(mh2["foo"].Equals("bar"));
         }
 
         [Fact]
         public void TestHeaderCopyConstructor()
         {
-            var mh = new MsgHeaders();
+            var mh = new MsgHeader();
             mh["foo"] = "bar";
 
-            var mh2 = new MsgHeaders(mh);
+            var mh2 = new MsgHeader(mh);
             Assert.True(mh2["foo"].Equals("bar"));
         }
 
         [Fact]
         public void TestHeaderMultiValues()
         {
-            var mh = new MsgHeaders();
+            var mh = new MsgHeader();
             mh.Add("foo", "bar");
             mh.Add("foo", "baz");
 
             Assert.True(mh["foo"].Equals("bar,baz"));
 
             byte[] bytes = mh.ToByteArray();
-            var mh2 = new MsgHeaders(bytes, bytes.Length);
+            var mh2 = new MsgHeader(bytes, bytes.Length);
             Assert.True(mh2["foo"].Equals("bar,baz"));
         }
 
         [Fact]
         public void TestHeaderExceptions()
         {
-            Assert.Throws<NATSException>(() => new MsgHeaders(null, 1));
-            Assert.Throws<NATSException>(() => new MsgHeaders(new byte[16], 17));
-            Assert.Throws<NATSException>(() => new MsgHeaders(null, 1));
-            Assert.Throws<NATSException>(() => new MsgHeaders(new byte[16], 0));
-            Assert.Throws<NATSException>(() => new MsgHeaders(new byte[16], -1));
+            Assert.Throws<NATSException>(() => new MsgHeader(null, 1));
+            Assert.Throws<NATSException>(() => new MsgHeader(new byte[16], 17));
+            Assert.Throws<NATSException>(() => new MsgHeader(null, 1));
+            Assert.Throws<NATSException>(() => new MsgHeader(new byte[16], 0));
+            Assert.Throws<NATSException>(() => new MsgHeader(new byte[16], -1));
 
-            Assert.Throws<ArgumentNullException>(() => new MsgHeaders(null));
+            Assert.Throws<ArgumentNullException>(() => new MsgHeader(null));
 
             byte[] b = Encoding.UTF8.GetBytes("GARBAGE");
-            Assert.Throws<NATSInvalidHeaderException>(() => new MsgHeaders(b, b.Length));
+            Assert.Throws<NATSInvalidHeaderException>(() => new MsgHeader(b, b.Length));
 
             // No headers
             b = Encoding.UTF8.GetBytes("NATS/1.0");
-            Assert.Throws<NATSInvalidHeaderException>(() => new MsgHeaders(b, b.Length));
+            Assert.Throws<NATSInvalidHeaderException>(() => new MsgHeader(b, b.Length));
 
             // No headers
             b = Encoding.UTF8.GetBytes("NATS/1.0\r\n");
-            Assert.Throws<NATSInvalidHeaderException>(() => new MsgHeaders(b, b.Length));
+            Assert.Throws<NATSInvalidHeaderException>(() => new MsgHeader(b, b.Length));
 
             // Missing last \r\n
             b = Encoding.UTF8.GetBytes("NATS/1.0\r\nk1:v1\r\n");
-            Assert.Throws<NATSInvalidHeaderException>(() => new MsgHeaders(b, b.Length));
+            Assert.Throws<NATSInvalidHeaderException>(() => new MsgHeader(b, b.Length));
 
             // invalid headers
             b = Encoding.UTF8.GetBytes("NATS/1.0\r\ngarbage\r\n\r\n");
-            Assert.Throws<NATSInvalidHeaderException>(() => new MsgHeaders(b, b.Length));
+            Assert.Throws<NATSInvalidHeaderException>(() => new MsgHeader(b, b.Length));
 
             // missing value
             b = Encoding.UTF8.GetBytes("NATS/1.0\r\nkey:\r\n\r\n");
-            Assert.Throws<NATSInvalidHeaderException>(() => new MsgHeaders(b, b.Length));
+            Assert.Throws<NATSInvalidHeaderException>(() => new MsgHeader(b, b.Length));
 
             // missing key
             b = Encoding.UTF8.GetBytes("NATS/1.0\r\n:value\r\n\r\n");
-            Assert.Throws<NATSInvalidHeaderException>(() => new MsgHeaders(b, b.Length));
+            Assert.Throws<NATSInvalidHeaderException>(() => new MsgHeader(b, b.Length));
         }
     }
 }
