@@ -19,7 +19,7 @@ using System.Collections.Specialized;
 namespace NATS.Client
 {
     /// <summary>
-    /// The MsgHeaders class provides key/value message header support
+    /// The MsgHeader class provides key/value message header support
     /// simlilar to HTTP headers.
     /// </summary>
     /// <remarks>
@@ -58,21 +58,21 @@ namespace NATS.Client
         private byte[] bytes = null;
 
         /// <summary>
-        /// Initializes a new empty instance of the MsgHeaders class.
+        /// Initializes a new empty instance of the MsgHeader class.
         /// </summary>
         public MsgHeader() : base() { }
 
         /// <summary>
-        /// Copies the entries from existing MsgHeaders to a new MsgHeaders
-        /// instance.
+        /// Copies the entries from an existing MsgHeader instance to a
+        /// new MsgHeader instance.
         /// </summary>
-        /// <param name="headers">the NATS message headers to copy.</param>
-        public MsgHeader(MsgHeader headers) : base(headers) { }
+        /// <param name="header">the NATS message header to copy.</param>
+        public MsgHeader(MsgHeader header) : base(header) { }
 
         /// <summary>
-        /// Initializes a new instance of the MsgHeaders class.
+        /// Initializes a new instance of the MsgHeader class.
         /// </summary>
-        /// <param name="bytes">A byte array of a serialized MsgHeaders class.</param>
+        /// <param name="bytes">A byte array of a serialized MsgHeader class.</param>
         /// <param name="byteCount">Count of bytes in the serialized array.</param>
         internal MsgHeader(byte[] bytes, int byteCount) : base()
         {
@@ -132,7 +132,7 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Gets or sets the string entry with the specified string key in the message headers.
+        /// Gets or sets the string entry with the specified string key in the message header.
         /// </summary>
         /// <param name="name">The string key of the entry to locate. The key can be null.</param>
         /// <returns>A string that contains the comma-separated list of values associated with the specified key, if found; otherwise, null</returns>
@@ -167,7 +167,7 @@ namespace NATS.Client
         internal byte[] ToByteArray()
         {
             // An empty set of headers should be treated as a message with no
-            // headers.
+            // header.
             if (Count == 0)
             {
                 return null;
@@ -183,7 +183,7 @@ namespace NATS.Client
 
     /// <summary>
     /// A NATS message is an object encapsulating a subject, optional reply
-    /// payload, optional headers, and subscription information, sent or
+    /// payload, optional header, and subscription information, sent or
     /// received by the client application.
     /// </summary>
     public sealed class Msg
@@ -209,13 +209,13 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Msg"/> class with a subject, reply, headers, and data.
+        /// Initializes a new instance of the <see cref="Msg"/> class with a subject, reply, header, and data.
         /// </summary>
         /// <param name="subject">Subject of the message.</param>
         /// <param name="reply">A reply subject, or <c>null</c>.</param>
-        /// <param name="headers">Message headers or <c>null</c>.</param>
+        /// <param name="header">Message headers or <c>null</c>.</param>
         /// <param name="data">A byte array containing the message payload.</param>
-        public Msg(string subject, string reply, MsgHeader headers, byte[] data)
+        public Msg(string subject, string reply, MsgHeader header, byte[] data)
         {
             if (string.IsNullOrWhiteSpace(subject))
             {
@@ -226,7 +226,7 @@ namespace NATS.Client
 
             this.Subject = subject;
             this.Reply = reply;
-            this.Header = headers;
+            this.Header = header;
             this.Data = data;
         }
 
@@ -268,7 +268,7 @@ namespace NATS.Client
 
             if (arg.hdr > 0)
             {
-                header = new MsgHeader(payload, (int)arg.hdr);
+                header = new MsgHeader(payload, arg.hdr);
             }
 
             // make a deep copy of the bytes for this message.
@@ -427,8 +427,8 @@ namespace NATS.Client
         {
             get
             {
-                // Auto generate the headers if requested from the
-                // application.
+                // Auto generate the header when accessed from the
+                // caller.
                 if (header == null)
                 {
                     header = new MsgHeader();

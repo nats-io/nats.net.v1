@@ -2068,7 +2068,7 @@ namespace NATS.Client
             }
         }
 
-        // Same as above, except when we know there are no headers present.
+        // Same as above, except when we know there is no header.
         internal void processMsgArgs(byte[] buffer, long length)
         {
             int argCount = setMsgArgsAryOffsets(buffer, length);

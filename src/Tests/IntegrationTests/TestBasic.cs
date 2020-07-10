@@ -1792,7 +1792,7 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public void TestMessageHeaders()
+        public void TestMessageHeader()
         {
             using (NATSServer.CreateFastAndVerify())
             {
@@ -1802,7 +1802,7 @@ namespace IntegrationTests
                 {
                     using (var s = c.SubscribeSync("foo"))
                     {
-                        // basic headers test
+                        // basic header test
                         var m = new Msg("foo");
                         m.Header["key"] = "value";
                         m.Subject = "foo";
@@ -1812,16 +1812,16 @@ namespace IntegrationTests
                         var recvMsg = s.NextMessage(1000);
                         Assert.True(recvMsg.Header["key"].Equals("value"));
 
-                        // assigning message headers
-                        MsgHeader headers = new MsgHeader();
-                        headers["foo"] = "bar";
-                        m.Header = headers;
+                        // assigning a message header
+                        MsgHeader header = new MsgHeader();
+                        header["foo"] = "bar";
+                        m.Header = header;
                         c.Publish(m);
                         recvMsg = s.NextMessage(1000);
                         Assert.True(recvMsg.Header["foo"].Equals("bar"));
 
                         // assigning message header copy constructor
-                        m.Header = new MsgHeader(headers);
+                        m.Header = new MsgHeader(header);
                         c.Publish(m);
                         recvMsg = s.NextMessage(1000);
                         Assert.True(recvMsg.Header["foo"].Equals("bar"));
@@ -1847,7 +1847,7 @@ namespace IntegrationTests
         }
 
         [Fact(Skip = "Manual")]
-        public void TestMessageHeadersNoServerSupport()
+        public void TestMessageHeaderNoServerSupport()
         {
             //////////////////////////////////////////////////
             // Requires a running server w/o header support //

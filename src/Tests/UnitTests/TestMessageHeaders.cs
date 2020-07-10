@@ -22,7 +22,7 @@ namespace UnitTests
     {
 
         [Fact]
-        public void TestHeadersBasic()
+        public void TestHeaderBasic()
         {
             var mh = new MsgHeader();
             mh["foo"] = "bar";
