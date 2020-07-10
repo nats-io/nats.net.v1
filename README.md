@@ -684,7 +684,7 @@ Message headers are represented as a string name value pair just as HTTP headers
 IConnection c = new new ConnectionFactory().CreateConnection();
 
 Msg m = new Msg();
-m.Headers["Content-Type"] = "json";
+m.Header["Content-Type"] = "json";
 m.Subject = "foo";
 c.Publish(m);
 ```
@@ -696,7 +696,7 @@ IConnection c = new new ConnectionFactory().CreateConnection();
 var s = c.SubscribeSync("foo")
 
 Msg m = s.NextMessage();
-string contentType = m.Headers["Content-Type"];
+string contentType = m.Header["Content-Type"];
 ```
 
 ## Exceptions

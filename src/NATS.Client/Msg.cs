@@ -31,12 +31,12 @@ namespace NATS.Client
     /// Setting a header field in a message:
     /// <code>
     /// var m = new Msg();
-    /// m.Headers["Content-Type"] = "json";
+    /// m.Header["Content-Type"] = "json";
     /// </code>
     /// 
     /// Getting a header field from a message:
     /// <code>
-    /// string contentType = m.Headers["Content-Type"];
+    /// string contentType = m.Header["Content-Type"];
     /// </code>
     /// </example>
     public sealed class MsgHeader : NameValueCollection, IEnumerable
