@@ -34,7 +34,7 @@ stages:
       inputs:
         targetType: 'inline'
         script: |
-          git clone https://nats.net.deps.git "$(Agent.TempDirectory)\deps"
+          git clone https://github.com/nats-io/nats.net.deps.git "$(Agent.TempDirectory)\deps"
           $natsServerDir = Get-ChildItem -Directory -Path "$(Agent.TempDirectory)\deps\nats-server" | Select -Expand FullName
           Write-Host "Found nats-server path: $natsServerDir"
           Write-Host "##vso[task.setvariable variable=PATH;]${env:PATH};$natsServerDir"
