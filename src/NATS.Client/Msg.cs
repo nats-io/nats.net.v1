@@ -41,9 +41,6 @@ namespace NATS.Client
     /// </example>
     public sealed class MsgHeader : NameValueCollection, IEnumerable
     {
-        private static readonly string[] crlf = new string[] { "\r\n" };
-        private static readonly char[] kvsep = new char[] { ':' };
-
         // Message headers are in the form of:
         // |HEADER|crlf|key1:value1|crlf|key2:value2|crlf|...|crlf
         // e.g. MATS/1.0\r\nkey1:value1\r\nkey2:value2\r\n\r\n
