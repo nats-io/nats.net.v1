@@ -26,13 +26,13 @@ namespace UnitTests
         {
             var mh = new MsgHeader();
             mh["foo"] = "bar";
-            Assert.True(mh["foo"].Equals("bar"));
+            Assert.Equal("bar", mh["foo"]);
 
             // check iteration
             foreach (string key in mh)
             {
-                Assert.True(key.Equals("foo"));
-                Assert.True(mh[key].Equals("bar"));
+                Assert.Equal("foo", key);
+                Assert.Equal("bar", mh[key]);
             }
 
             mh["baz"] = "nnn";
@@ -55,11 +55,11 @@ namespace UnitTests
         public void TestHeaderDeserialization()
         {
             string headers = $"NATS/1.0\r\nfoo:bar\r\nbaz:bam\r\n\r\n";
-            byte[] headerBytes = System.Text.Encoding.UTF8.GetBytes(headers);
+            byte[] headerBytes = Encoding.UTF8.GetBytes(headers);
 
             var mh = new MsgHeader(headerBytes, headerBytes.Length);
-            Assert.True(mh["foo"].Equals("bar"));
-            Assert.True(mh["baz"].Equals("bam"));
+            Assert.Equal("bar", mh["foo"]);
+            Assert.Equal("bam", mh["baz"]);
             Assert.True(mh.Count == 2);
         }
 
@@ -83,7 +83,29 @@ namespace UnitTests
 
             // now serialize back
             var mh2 = new MsgHeader(bytes, bytes.Length);
-            Assert.True(mh2["foo"].Equals("bar"));
+            Assert.Equal("bar", mh2["foo"]);
+
+            // large header
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < 20480; i++)
+            {
+                sb.Append("N");
+            }
+            string lv = sb.ToString();
+            mh["LargeValue"] = lv;
+
+            // test null and empty values
+            mh["Null-Value"] = null;
+            mh["Empty-Value"] = "";
+
+            bytes = mh.ToByteArray();
+
+            // now serialize back
+            mh2 = new MsgHeader(bytes, bytes.Length);
+            Assert.Equal("bar", mh2["foo"]);
+            Assert.Equal("", mh2["Null-Value"]);
+            Assert.Equal("", mh2["Empty-Value"]);
+            Assert.Equal(lv, mh2["LargeValue"]);
         }
 
         [Fact]
@@ -93,7 +115,10 @@ namespace UnitTests
             mh["foo"] = "bar";
 
             var mh2 = new MsgHeader(mh);
-            Assert.True(mh2["foo"].Equals("bar"));
+            Assert.Equal("bar", mh2["foo"]);
+
+            Assert.Throws<ArgumentNullException>(() => new MsgHeader(null));
+            Assert.Throws<ArgumentException>(() => new MsgHeader(new MsgHeader()));
         }
 
         [Fact]
@@ -103,11 +128,11 @@ namespace UnitTests
             mh.Add("foo", "bar");
             mh.Add("foo", "baz");
 
-            Assert.True(mh["foo"].Equals("bar,baz"));
+            Assert.Equal("bar,baz", mh["foo"]);
 
             byte[] bytes = mh.ToByteArray();
             var mh2 = new MsgHeader(bytes, bytes.Length);
-            Assert.True(mh2["foo"].Equals("bar,baz"));
+            Assert.Equal("bar,baz", mh2["foo"]);
         }
 
         [Fact]
@@ -138,10 +163,6 @@ namespace UnitTests
 
             // invalid headers
             b = Encoding.UTF8.GetBytes("NATS/1.0\r\ngarbage\r\n\r\n");
-            Assert.Throws<NATSInvalidHeaderException>(() => new MsgHeader(b, b.Length));
-
-            // missing value
-            b = Encoding.UTF8.GetBytes("NATS/1.0\r\nkey:\r\n\r\n");
             Assert.Throws<NATSInvalidHeaderException>(() => new MsgHeader(b, b.Length));
 
             // missing key

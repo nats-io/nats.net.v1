@@ -17,6 +17,7 @@
   <PropertyGroup Condition="$(OS) == 'Windows_NT'">
     <OutputType>WinExe</OutputType>
     <UseWindowsForms>true</UseWindowsForms>
+    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
   
   <!-- Remove files with Windows specific contents on non-Windows platforms -->

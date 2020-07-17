@@ -52,7 +52,8 @@ namespace NATS.Client
         internal static readonly string Header = "NATS/1.0\r\n";
         internal static readonly byte[] HeaderBytes = Encoding.UTF8.GetBytes(Header);
         internal static readonly int    HeaderLen = HeaderBytes.Length;
-        internal static readonly int    MinimalValidHeaderLen = Encoding.UTF8.GetBytes(Header + "k:v\r\n\r\n").Length;
+        internal static readonly int    MinimalValidHeaderLen = Encoding.UTF8.GetBytes(Header + "k:\r\n\r\n").Length;
+
 
         // Cache the serialized headers to optimize reuse
         private byte[] bytes = null;
@@ -66,8 +67,28 @@ namespace NATS.Client
         /// Copies the entries from an existing MsgHeader instance to a
         /// new MsgHeader instance.
         /// </summary>
+        /// <remarks>
+        /// The header cannot be empty or contain invalid fields.
+        /// </remarks>
         /// <param name="header">the NATS message header to copy.</param>
-        public MsgHeader(MsgHeader header) : base(header) { }
+        public MsgHeader(MsgHeader header)
+        {
+            if (header == null)
+            {
+                throw new ArgumentNullException("header");
+            }
+            if (header.Count == 0)
+            {
+                throw new ArgumentException("header", "header cannot be empty");
+            }
+            foreach (string s in header.Keys)
+            {
+                this[s] = header[s];
+            }
+        }
+
+        // buffer for parsing strings
+        public char[] stringBuf = new char[64];
 
         /// <summary>
         /// Initializes a new instance of the MsgHeader class.
@@ -102,7 +123,8 @@ namespace NATS.Client
 
             // we are in the fastpath so compare bytes vs a string
             // method.
-            for (int i = 0; i < HeaderLen; i++)
+            int i;
+            for (i = 0; i < HeaderLen; i++)
             {
                 if (bytes[i] != HeaderBytes[i])
                 {
@@ -110,31 +132,75 @@ namespace NATS.Client
                 }
             }
 
-            // Remove the header identifier and trailing crlfs when creating the string
-            string kvs = Encoding.UTF8.GetString(bytes, HeaderLen, byteCount - HeaderLen - 4);
+            int loc = 0;
+            string key = null;
 
-            // Split Name Value Pairs
-            string[] kvpairs = kvs.Split(crlf, StringSplitOptions.RemoveEmptyEntries);
-            if (kvpairs.Length == 0)
+            // must start on a key
+            for (i = HeaderLen; i < byteCount - 2; i++)
             {
-                throw new NATSInvalidHeaderException("Empty header");
+                if (bytes[i] == ':')
+                {
+                    if (loc == 0)
+                    {
+                        // empty key
+                        throw new NATSInvalidHeaderException("Missing key");
+                    }
+                    key = new string(stringBuf, 0, loc).TrimEnd();
+                    loc = 0;
+                }
+                else if (bytes[i] == '\r' && bytes[i + 1] == '\n')
+                {
+                    if (key == null)
+                    {
+                        throw new NATSInvalidHeaderException("Missing key.");
+                    }
+                    // empty value
+                    if (loc == 0)
+                    {
+                        // empty value
+                        Add(key, "");
+                    }
+                    else
+                    {
+                        Add(key, new string(stringBuf, 0, loc));
+                    }
+
+                    // reset the key, buffer location, and skip past the \n.
+                    key = null;
+                    loc = 0;
+                    i++;
+                }
+                else
+                {
+                    // it's a key or value
+
+                    // check our header length and resize if need be.
+                    if (loc > stringBuf.Length - 1)
+                    {
+                        // For simplicity, just resize it to the entire header kv size.
+                        char[] buf = new char[byteCount - HeaderLen];
+                        Array.Copy(stringBuf, buf, stringBuf.Length);
+                        stringBuf = buf;
+                    }
+
+                    // copy the key or value byte into our buffer.
+                    stringBuf[loc] = (char)bytes[i];
+                    loc++;
+                }
             }
 
-            foreach (string s in kvpairs)
+            // we don't support empty headers - those are a different protocol
+            // message and should never be deserialized here.
+            if (Count == 0)
             {
-                string[] nvpair = s.Split(kvsep, StringSplitOptions.RemoveEmptyEntries);
-                if (nvpair.Length != 2)
-                {
-                    throw new NATSInvalidHeaderException("Header field missing key or value.");
-                }
-                Add(nvpair[0], nvpair[1]);
+                throw new NATSInvalidHeaderException("Malformed header.");
             }
         }
 
         /// <summary>
         /// Gets or sets the string entry with the specified string key in the message header.
         /// </summary>
-        /// <param name="name">The string key of the entry to locate. The key can be null.</param>
+        /// <param name="name">The string key of the entry to locate. The key cannot be null, empty, or whitespace.</param>
         /// <returns>A string that contains the comma-separated list of values associated with the specified key, if found; otherwise, null</returns>
         new public string this[string name]
         {
@@ -145,6 +211,10 @@ namespace NATS.Client
 
             set
             {
+                if (string.IsNullOrWhiteSpace(name))
+                {
+                    throw new ArgumentNullException("Header key cannot be null, empty, or whitespace.");
+                }
                 base[name] = value;
 
                 // Trigger serialization the next time ToByteArray is called.

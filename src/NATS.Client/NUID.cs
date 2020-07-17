@@ -53,7 +53,7 @@ namespace NATS.Client
         private static int  minInc = 33;
         private static int  maxInc = 333;
         private static long totalLen = preLen + seqLen;
-#if NET45
+#if NET46
         private RNGCryptoServiceProvider srand = new RNGCryptoServiceProvider();
 #else
         private RandomNumberGenerator srand = RandomNumberGenerator.Create();

@@ -14,7 +14,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-#if NET45
+#if NET46
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 #endif
@@ -110,7 +110,7 @@ namespace NATS.Client
             onDeserialize = defaultDeserializer;
         }
 
-#if NET45
+#if NET46
         private IFormatter f = new BinaryFormatter();
 
         // Note, the connection locks around this, so while we are using a

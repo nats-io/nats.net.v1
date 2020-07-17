@@ -60,7 +60,7 @@ namespace NATS.Client
                 connect_urls = x["connect_urls"].Children.Select(n => n.Value).ToArray(),
                 nonce = x["nonce"].Value,
                 proto = x["proto"].AsInt,
-                headers = x["headers"].AsBool
+                headers = x["headers"].AsBool,
             };
         }
     }
@@ -132,7 +132,7 @@ namespace NATS.Client
                 ["nkey"] = nkey ?? string.Empty,
                 ["sig"] = sig ?? string.Empty,
                 ["echo"] = echo,
-                ["headers"] = headers
+                ["headers"] = headers,
             };
 
             n.WriteToStringBuilder(sb, 0, 0, JSONTextMode.Compact);

@@ -891,7 +891,7 @@ namespace IntegrationTests
             }
         }
 
-#if NET452
+#if NET46
         // This test method tests mulitiple overlapping requests across many
         // threads.  The responder simulates work, to introduce variablility
         // in the request timing.
@@ -1810,7 +1810,7 @@ namespace IntegrationTests
 
                         c.Publish(m);
                         var recvMsg = s.NextMessage(1000);
-                        Assert.True(recvMsg.Header["key"].Equals("value"));
+                        Assert.Equal("value", recvMsg.Header["key"]);
 
                         // assigning a message header
                         MsgHeader header = new MsgHeader();
@@ -1818,13 +1818,13 @@ namespace IntegrationTests
                         m.Header = header;
                         c.Publish(m);
                         recvMsg = s.NextMessage(1000);
-                        Assert.True(recvMsg.Header["foo"].Equals("bar"));
+                        Assert.Equal("bar", recvMsg.Header["foo"]);
 
                         // assigning message header copy constructor
                         m.Header = new MsgHeader(header);
                         c.Publish(m);
                         recvMsg = s.NextMessage(1000);
-                        Assert.True(recvMsg.Header["foo"].Equals("bar"));
+                        Assert.Equal("bar", recvMsg.Header["foo"]);
 
                         // publish to the same subject w/o headers.
                         c.Publish("foo", null);

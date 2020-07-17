@@ -12,7 +12,7 @@
 // limitations under the License.
 
 
-#if !NET452
+#if !NET46
 using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
