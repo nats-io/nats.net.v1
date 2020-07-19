@@ -35,24 +35,14 @@ stages:
         testRunTitle: 'UnitTests .Net4.6'
   
     - task: PowerShell@2
-      displayName: 'Setup Dependencies'
+      displayName: 'Install Dependencies'
       inputs:
         targetType: 'inline'
         script: |
+          Write-Host "Cloning dependency repo."
           git clone https://github.com/nats-io/nats.net.deps.git "$(Agent.TempDirectory)\deps"
-          dir "$(Agent.TempDirectory)\deps\nats-server"
           $natsServerDir = "$(Agent.TempDirectory)\deps\nats-server"
-          Write-Host "Setting nats-server path: $natsServerDir"
-          Write-Host "##vso[task.setvariable variable=PATH;]${env:PATH};$natsServerDir"
-
-    - task: PowerShell@2
-      displayName: 'Include NATS-Server in path'
-      inputs:
-        targetType: 'inline'
-        script: |
-          dir "$(Agent.TempDirectory)\deps\nats-server"
-          $natsServerDir = Get-ChildItem -Directory -Path "$(Agent.TempDirectory)\deps\nats-server" | Select -Expand FullName
-          Write-Host "Found nats-server path: $natsServerDir"
+          Write-Host "Appending nats-server directory $natsServerDir to path."
           Write-Host "##vso[task.setvariable variable=PATH;]${env:PATH};$natsServerDir"
 
     - task: VSTest@2
