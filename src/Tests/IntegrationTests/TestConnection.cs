@@ -1008,7 +1008,7 @@ namespace IntegrationTests
                         sw.Stop();
 
                         // add slack for slow CI.
-                        Assert.True(sw.ElapsedMilliseconds >= 1000);
+                        Assert.InRange(sw.ElapsedMilliseconds, 1000, long.MaxValue);
                     }
                 }
             }

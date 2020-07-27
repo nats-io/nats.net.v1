@@ -586,9 +586,7 @@ namespace IntegrationTests
             // We should wait at least the reconnect wait + random up to 500ms.
             // Account for a bit of variation since we rely on the reconnect
             // handler which is not invoked in place.
-            long elapsed = sw.ElapsedMilliseconds;
-            Assert.True(elapsed > 100);
-            Assert.True(elapsed < 800);
+            Assert.InRange(sw.ElapsedMilliseconds, 100, 800);
         }
 
         [Fact]
