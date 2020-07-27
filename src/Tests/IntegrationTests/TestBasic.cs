@@ -761,9 +761,12 @@ namespace IntegrationTests
                     await Assert.ThrowsAsync<NATSTimeoutException>(() => { return c.RequestAsync("no-replier", null, 1000, miscToken); });
                     sw.Stop();
 
+                    var macOsSlack = 1000;
                     // This fails half of the time on MacOS build agents
                     if (Environment.OSVersion.Platform != PlatformID.MacOSX)
-                        Assert.InRange(sw.ElapsedMilliseconds, 750, 1250);
+                        macOsSlack = 0;
+
+                    Assert.InRange(sw.ElapsedMilliseconds, 750, 1250 + macOsSlack);
                     
                     // test early cancellation
                     var cts = new CancellationTokenSource();
@@ -835,8 +838,12 @@ namespace IntegrationTests
                     long elapsed = sw.ElapsedMilliseconds;
 
                     _outputHelper.WriteLine($"Observed elapsed time: {elapsed}ms");
-                    // It's odd but sometimes the cancellation happens a bit early, we accept up to 10ms here
-                    Assert.InRange(elapsed, 490, 600);
+
+                    var macOsSlack = 100;
+                    if (Environment.OSVersion.Platform != PlatformID.MacOSX)
+                        macOsSlack = 0;
+                    // It's odd but sometimes the cancellation happens a bit early, we accept up to 15ms here
+                    Assert.InRange(elapsed, 485, 600 + macOsSlack);
 
                     // Test an invalid connection
                     server.Shutdown();
