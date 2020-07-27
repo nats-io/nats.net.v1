@@ -83,9 +83,9 @@ namespace IntegrationTests
                 using (var c = Context.ConnectionFactory.CreateConnection(opts))
                 {
                     ns.Shutdown();
-                    Assert.True(Disconnected.WaitOne(1000));
-                    Assert.False(Closed.WaitOne(1000));
-                    Assert.True(c.State == ConnState.RECONNECTING);
+                    Assert.True(Disconnected.WaitOne(1000), "Disconnected event did not receive a signal");
+                    Assert.False(Closed.WaitOne(1000), "Closed event did not receive a signal");
+                    Assert.True(c.State == ConnState.RECONNECTING, $"Expected {ConnState.RECONNECTING} but got {c.State}");
                     c.Opts.ClosedEventHandler = null;
                 }
             }
