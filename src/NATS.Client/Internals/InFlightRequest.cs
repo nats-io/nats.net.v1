@@ -33,8 +33,12 @@ namespace NATS.Client.Internals
 
         public readonly string Id;
         public readonly CancellationToken Token;
+#if NET45
+        // TODO: TaskCreationOptions.RunContinuationsAsynchronously is not available in NET45 :( => Potential deadlock
         public readonly TaskCompletionSource<Msg> Waiter = new TaskCompletionSource<Msg>();
-
+#else
+        public readonly TaskCompletionSource<Msg> Waiter = new TaskCompletionSource<Msg>(TaskCreationOptions.RunContinuationsAsynchronously);
+#endif
         /// <summary>
         /// Initializes a new instance of <see cref="InFlightRequest"/> class.
         /// </summary>

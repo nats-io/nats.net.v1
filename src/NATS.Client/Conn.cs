@@ -2666,11 +2666,11 @@ namespace NATS.Client
 
             if (!isClosed)
             {
-                request.Waiter.SetResult(e.Message);
+                request.Waiter.TrySetResult(e.Message);
             }
             else
             {
-                request.Waiter.SetCanceled();
+                request.Waiter.TrySetCanceled();
             }
             request.Dispose();
         }
@@ -2720,24 +2720,8 @@ namespace NATS.Client
                 request.Token.ThrowIfCancellationRequested();
 
                 publish(subject, string.Concat(globalRequestInbox, ".", request.Id), data, offset, count, true);
-
-                try
-                {
-                    request.Waiter.Task.Wait(timeout);
-
-                    return request.Waiter.Task.Result;
-                }
-                catch (AggregateException ae)
-                {
-                    foreach (var e in ae.Flatten().InnerExceptions)
-                    {
-                        // we *should* only have one, and it should be
-                        // a NATS timeout exception.
-                        throw e;
-                    }
-
-                    throw;
-                }
+                
+                return request.Waiter.Task.GetAwaiter().GetResult();
             }
         }
 
