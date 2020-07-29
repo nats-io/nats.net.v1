@@ -30,10 +30,18 @@ namespace NATS.Client.Internals
         private readonly CancellationTokenSource _tokenSource;
         private readonly CancellationTokenRegistration _tokenRegistration;
         private readonly CancellationToken _clientProvidedToken;
+#if NET45
+        // We use TaskCreationOptions.RunContinuationsAsynchronously to avoid execution of continuations on the thread
+        // that executed TrySetResult/Canceled/Exception. On .NET 45 we use Task.Run() when setting _waiter's result
+        // as a workaround.
+        private readonly TaskCompletionSource<Msg> _waiter = new TaskCompletionSource<Msg>();
+#else
+        private readonly TaskCompletionSource<Msg> _waiter = new TaskCompletionSource<Msg>(TaskCreationOptions.RunContinuationsAsynchronously);
+#endif
 
         public readonly string Id;
         public readonly CancellationToken Token;
-        public readonly TaskCompletionSource<Msg> Waiter = new TaskCompletionSource<Msg>();
+        public readonly Task<Msg> Task;
 
         /// <summary>
         /// Initializes a new instance of <see cref="InFlightRequest"/> class.
@@ -49,6 +57,7 @@ namespace NATS.Client.Internals
             _onCompleted = onCompleted ?? throw new ArgumentNullException(nameof(onCompleted));
             _clientProvidedToken = token;
             Id = id;
+            Task = _waiter.Task;
 
             if (timeout > 0 && token == default)
             {
@@ -76,9 +85,47 @@ namespace NATS.Client.Internals
             var request = req as InFlightRequest;
 
             if (request._clientProvidedToken.IsCancellationRequested)
-                request.Waiter.TrySetCanceled();
+                request._waiter.TrySetCanceled();
 
-            request.Waiter.TrySetException(new NATSTimeoutException());
+            request._waiter.TrySetException(new NATSTimeoutException());
+        }
+
+        /// <summary>
+        /// Attempts to set the result on the underlying <see cref="TaskCompletionSource{TResult}"/>.
+        /// </summary>
+        /// <param name="msg">The received message</param>
+        internal void TrySetResult(Msg msg)
+        {
+#if NET45
+            var _ = System.Threading.Tasks.Task.Run(() => _waiter.TrySetResult(msg));
+#else
+            _waiter.TrySetResult(msg);
+#endif
+        }
+        
+        /// <summary>
+        /// Attempts to set an exception on the underlying <see cref="TaskCompletionSource{TResult}"/>.
+        /// </summary>
+        /// <param name="ex">The exception</param>
+        internal void TrySetException(Exception ex)
+        {
+#if NET45
+            var _ = System.Threading.Tasks.Task.Run(() => _waiter.TrySetException(ex));
+#else
+            _waiter.TrySetException(ex);
+#endif
+        }
+
+        /// <summary>
+        /// Attempts to set the underlying <see cref="TaskCompletionSource{TResult}"/> as canceled.
+        /// </summary>
+        internal void TrySetCanceled()
+        {
+#if NET45
+            var _ = System.Threading.Tasks.Task.Run(() => _waiter.TrySetCanceled());
+#else
+            _waiter.TrySetCanceled();
+#endif
         }
 
         /// <summary>
