@@ -891,32 +891,7 @@ namespace IntegrationTests
             }
         }
 
-
-        [Fact] // Test deadlock condition https://github.com/nats-io/nats.net/issues/395
-        public async Task TestRequestAsync_RequestSync_NoDeadlock()
-        {
-            // Arrange
-            Exception exception = default;
-            var options = Context.GetTestOptions();
-            
-            using var server = NATSServer.CreateFastAndVerify();
-            using var subConn = Context.ConnectionFactory.CreateConnection(options);
-            using var reqConn = Context.ConnectionFactory.CreateConnection(options);
-
-            var subject = subConn.NewInbox();
-
-            void EventHandler(object sender, MsgHandlerEventArgs args) => subConn.Publish(args.Message.Reply, args.Message.Data);
-            using var subscribeAsync = subConn.SubscribeAsync(subject, EventHandler);
-            subConn.Flush();
-
-            // Act
-            var m = await reqConn.RequestAsync(subject, Encoding.UTF8.GetBytes("Async request"), 10000);
-            exception = Record.Exception(() => reqConn.Request(subject, Encoding.UTF8.GetBytes("Sync request"), 10000));
-
-            // Assert
-            Assert.Null(exception);
-        }
-
+        
 #if NET452
         // This test method tests mulitiple overlapping requests across many
         // threads.  The responder simulates work, to introduce variablility
