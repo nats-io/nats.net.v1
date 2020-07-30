@@ -86,6 +86,64 @@ namespace UnitTests.Internals
         }
 
         [Fact]
+        public async Task TrySetResult_CompletedSuccessfullyWithResult()
+        {
+            // Arrange
+            var msg = new Msg();
+            var sut = new InFlightRequest("Subject", default, 0, _ => {});
+            
+            // Act
+            sut.TrySetResult(msg);
+            
+            // Assert
+            Assert.Equal(msg,  await sut.Task);
+        }
+        
+        [Fact]
+        public async Task TrySetCancelled_TaskCanceledExceptionThrownWhenAwaiting()
+        {
+            // Arrange
+            var sut = new InFlightRequest("Subject", default, 0, _ => {});
+            
+            // Act
+            sut.TrySetCanceled();
+            
+            // Assert
+            await Assert.ThrowsAsync<TaskCanceledException>(() => sut.Task);
+        }
+        
+        [Fact]
+        public async Task TrySetException_ExceptionThrownWhenAwaiting()
+        {
+            // Arrange
+            var sut = new InFlightRequest("Subject", default, 0, _ => {});
+            
+            // Act
+            sut.TrySetException(new InvalidOperationException());
+            
+            // Assert
+            await Assert.ThrowsAsync<InvalidOperationException>(() => sut.Task);
+        }
+        
+        [Fact]
+        public async Task ContinueWith_ContinuationInvokedOnCompletion()
+        {
+            // Arrange
+            var guard = new TaskCompletionSource<bool>();
+            Task task = default;
+
+            var sut = new InFlightRequest("Subject", default, 0, _ => {});
+            sut.ContinueWith(t => { task = t; guard.TrySetResult(false); }, TaskContinuationOptions.None);
+
+            // Act
+            sut.TrySetResult(new Msg());
+
+            // Assert
+            await guard.Task;
+            Assert.Equal(sut.Task, task);
+        }
+        
+        [Fact]
         public void Ctor_ThrowsForNullArg()
         {
             Assert.Throws<ArgumentNullException>("onCompleted", () => new InFlightRequest("Foo", default, 0, null));
