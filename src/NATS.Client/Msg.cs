@@ -23,9 +23,9 @@ namespace NATS.Client
     /// simlilar to HTTP headers.
     /// </summary>
     /// <remarks>
-    /// This is subclassed from NameValueCollection which is not threadsafe
-    /// so concurrent access or modifications may result in undefined behavior.
-    /// Only strings are supported for keys and values.
+    /// Keys and values may only contain printable ASCII character values and
+    /// cannot contain `:`.  Concurrent access may result in undefined
+    /// behavior.
     /// </remarks>
     /// <example>
     /// Setting a header field in a message:
@@ -38,8 +38,18 @@ namespace NATS.Client
     /// <code>
     /// string contentType = m.Header["Content-Type"];
     /// </code>
+    ///
+    /// To set multiple values:
+    /// <code>
+    /// m.Header.Add("foo", "value1");
+    /// m.Header.Add("foo", "value2");
+    /// </code>
+    /// Get multiple values:
+    /// <code>
+    /// string []values = m.Header.GetValues("foo");
+    /// </code>
     /// </example>
-    public sealed class MsgHeader : NameValueCollection, IEnumerable
+    public sealed class MsgHeader : IEnumerable
     {
         // Message headers are in the form of:
         // |HEADER|crlf|key1:value1|crlf|key2:value2|crlf|...|crlf
@@ -49,11 +59,12 @@ namespace NATS.Client
         internal static readonly string Header = "NATS/1.0\r\n";
         internal static readonly byte[] HeaderBytes = Encoding.UTF8.GetBytes(Header);
         internal static readonly int    HeaderLen = HeaderBytes.Length;
-        internal static readonly int    MinimalValidHeaderLen = Encoding.UTF8.GetBytes(Header + "k:\r\n\r\n").Length;
-
+        internal static readonly int    MinimalValidHeaderLen = Encoding.UTF8.GetBytes(Header + "\r\n").Length;
 
         // Cache the serialized headers to optimize reuse
         private byte[] bytes = null;
+
+        private readonly NameValueCollection nvc = new NameValueCollection();
 
         /// <summary>
         /// Initializes a new empty instance of the MsgHeader class.
@@ -80,7 +91,7 @@ namespace NATS.Client
             }
             foreach (string s in header.Keys)
             {
-                this[s] = header[s];
+                nvc[s] = header[s];
             }
         }
 
@@ -135,7 +146,7 @@ namespace NATS.Client
             // must start on a key
             for (i = HeaderLen; i < byteCount - 2; i++)
             {
-                if (bytes[i] == ':')
+                if (bytes[i] == ':' && key == null)
                 {
                     if (loc == 0)
                     {
@@ -185,13 +196,52 @@ namespace NATS.Client
                     loc++;
                 }
             }
+        }
 
-            // we don't support empty headers - those are a different protocol
-            // message and should never be deserialized here.
-            if (Count == 0)
+        private void CheckKeyValue(string key, string value)
+        {
+            // values are OK to be null, check keys elsewhere.
+            if (string.IsNullOrWhiteSpace(key))
             {
-                throw new NATSInvalidHeaderException("Malformed header.");
+                throw new ArgumentException("key cannot be empty or null.");
             }
+
+            foreach (char c in key)
+            {
+                // only printable characters and no colon
+                if (c < 32 || c > 126 || c == ':')
+                    throw new ArgumentException(string.Format("Invalid character {0:X2} in key.", c));
+            }
+
+            if (value != null)
+            {
+                foreach (char c in value)
+                {
+                    // Generally more permissive than HTTP.  Allow only printable
+                    // characters and include tab (0x9) to cover what's allowed
+                    // in quoted strings and comments.
+                    if (c == 9 || c < 32 || c > 126)
+                        throw new ArgumentException(string.Format("Invalid character {0:X2} in value.", c));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets an enumerator for the keys.
+        /// </summary>
+        public IEnumerable Keys
+        {
+            get {
+                return nvc.Keys;
+            }
+        }
+
+        /// <summary>
+        /// Gets the current number of header entries.
+        /// </summary>
+        public int Count
+        {
+            get { return nvc.Count;  }
         }
 
         /// <summary>
@@ -199,31 +249,71 @@ namespace NATS.Client
         /// </summary>
         /// <param name="name">The string key of the entry to locate. The key cannot be null, empty, or whitespace.</param>
         /// <returns>A string that contains the comma-separated list of values associated with the specified key, if found; otherwise, null</returns>
-        new public string this[string name]
+        public string this[string name]
         {
             get
             {
-                return base[name];
+                return nvc[name];
             }
 
             set
             {
-                if (string.IsNullOrWhiteSpace(name))
-                {
-                    throw new ArgumentNullException("Header key cannot be null, empty, or whitespace.");
-                }
-                base[name] = value;
+                CheckKeyValue(name, value);
+
+                nvc[name] = value;
 
                 // Trigger serialization the next time ToByteArray is called.
                 bytes = null;
             }
         }
 
+        /// <summary>
+        /// Add a header field with the specified name and value.
+        /// </summary>
+        /// <param name="name">Name of the header field.</param>
+        /// <param name="value">Value of the header field.</param>
+        public void Add(string name, string value)
+        {
+            CheckKeyValue(name, value);
+            nvc.Add(name, value);
+            bytes = null;
+        }
+
+        /// <summary>
+        /// Sets the value of a message header field.
+        /// </summary>
+        /// <param name="name">Name of the header field to set.</param>
+        /// <param name="value">Value of the header field.</param>
+        public void Set(string name, string value)
+        {
+            CheckKeyValue(name, value);
+            nvc.Set(name, value);
+            bytes = null;
+        }
+
+        /// <summary>
+        /// Remove a header entry.
+        /// </summary>
+        /// <param name="name">Name of the header field to remove.</param>
+        public void Remove(string name)
+        {
+            nvc.Remove(name);
+        }
+
+        /// <summary>
+        /// Removes all entries from the message header.
+        /// </summary>
+        public void Clear()
+        {
+            nvc.Clear();
+            bytes = null;
+        }
+
         private string ToHeaderString()
         {
             // TODO:  optimize based on perf testing
             StringBuilder sb = new StringBuilder(MsgHeader.Header);
-            foreach (string s in this)
+            foreach (string s in nvc.Keys)
             {
                 sb.AppendFormat("{0}:{1}\r\n", s, this[s]);
             }
@@ -235,7 +325,7 @@ namespace NATS.Client
         {
             // An empty set of headers should be treated as a message with no
             // header.
-            if (Count == 0)
+            if (nvc.Count == 0)
             {
                 return null;
             }
@@ -245,6 +335,26 @@ namespace NATS.Client
                 bytes = Encoding.UTF8.GetBytes(ToHeaderString());
             }
             return bytes;
+        }
+
+        /// <summary>
+        /// Gets all values of a header field.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public string[] GetValues(string name)
+        {
+            return nvc.GetValues(name);
+        }
+
+        /// <summary>
+        /// Returns an enumerator that iterates through the message header
+        /// keys.
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerator GetEnumerator()
+        {
+            return nvc.GetEnumerator();
         }
     }
 

@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Text;
 using NATS.Client;
 using Xunit;
@@ -35,6 +36,13 @@ namespace UnitTests
                 Assert.Equal("bar", mh[key]);
             }
 
+            // check iteration
+            foreach (string key in mh)
+            {
+                Assert.Equal("foo", key);
+                Assert.Equal("bar", mh[key]);
+            }
+
             mh["baz"] = "nnn";
             Assert.True(mh.Count == 2);
 
@@ -49,18 +57,39 @@ namespace UnitTests
             // test clearing it out
             mh.Clear();
             Assert.True(mh.Count == 0);
+
+            // test quoted string
+            mh["foo"] = "\"mystring:bar;foo:\"";
+            Assert.Equal("\"mystring:bar;foo:\"", mh["foo"]);
+
         }
 
         [Fact]
         public void TestHeaderDeserialization()
         {
-            string headers = $"NATS/1.0\r\nfoo:bar\r\nbaz:bam\r\n\r\n";
-            byte[] headerBytes = Encoding.UTF8.GetBytes(headers);
+            byte[] hb = Encoding.UTF8.GetBytes($"NATS/1.0\r\nfoo:bar\r\nbaz:bam\r\n\r\n");
 
-            var mh = new MsgHeader(headerBytes, headerBytes.Length);
+            var mh = new MsgHeader(hb, hb.Length);
             Assert.Equal("bar", mh["foo"]);
             Assert.Equal("bam", mh["baz"]);
             Assert.True(mh.Count == 2);
+
+            // test quoted strings
+            hb = Encoding.UTF8.GetBytes($"NATS/1.0\r\nfoo:\"string:with:quotes\"\r\nbaz:no:quotes\r\n\r\n");
+            mh = new MsgHeader(hb, hb.Length);
+            Assert.Equal("\"string:with:quotes\"", mh["foo"]);
+            Assert.Equal("no:quotes", mh["baz"]);
+
+            // Test unquoted strings.  Technically not to spec, but
+            // support anyhow.
+            hb = Encoding.UTF8.GetBytes($"NATS/1.0\r\nfoo::::\r\n\r\n");
+            mh = new MsgHeader(hb, hb.Length);
+            Assert.Equal(":::", mh["foo"]);
+
+            // Test empty headers, which may come from teh server.
+            hb = Encoding.UTF8.GetBytes($"NATS/1.0\r\n\r\n");
+            mh = new MsgHeader(hb, hb.Length);
+            Assert.True(mh.Count == 0);
         }
 
         [Fact]
@@ -130,9 +159,24 @@ namespace UnitTests
 
             Assert.Equal("bar,baz", mh["foo"]);
 
+            // Test the GetValues API, don't make assumpions about
+            // order.
+            string []values = mh.GetValues("foo");
+            Assert.True(values.Length == 2);
+            List<string> results = new List<string>(values);
+            Assert.Contains("bar", results);
+            Assert.Contains("baz", results);
+
             byte[] bytes = mh.ToByteArray();
             var mh2 = new MsgHeader(bytes, bytes.Length);
             Assert.Equal("bar,baz", mh2["foo"]);
+
+            // test the API on a single value key
+            mh = new MsgHeader();
+            mh["foo"] = "bar";
+            values = mh.GetValues("foo");
+            Assert.True(values.Length == 1);
+            Assert.Equal("bar", values[0]);
         }
 
         [Fact]
@@ -168,6 +212,17 @@ namespace UnitTests
             // missing key
             b = Encoding.UTF8.GetBytes("NATS/1.0\r\n:value\r\n\r\n");
             Assert.Throws<NATSInvalidHeaderException>(() => new MsgHeader(b, b.Length));
+
+            // test invalid characters
+            var mh = new MsgHeader();
+            Assert.Throws<ArgumentException>(() => mh["k\r\ney"] = "value");
+            Assert.Throws<ArgumentException>(() => mh["key"] = "val\r\nue");
+            Assert.Throws<ArgumentException>(() => mh["foo:bar"] = "value");
+            Assert.Throws<ArgumentException>(() => mh["foo"] = "value\f");
+            Assert.Throws<ArgumentException>(() => mh["foo\f"] = "value");
+
+            // test constructor with invalid assignment
+            Assert.Throws<ArgumentException>(() => new MsgHeader() { ["foo:bar"] = "baz" });
         }
     }
 }
