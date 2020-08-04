@@ -25,7 +25,7 @@ stages:
       displayName: 'UnitTests .Net4.6'
       inputs:
         testSelector: 'testAssemblies'
-        testAssemblyVer2: 'src/Tests/UnitTests/bin/$(BuildConfiguration)/net452/UnitTests.dll'
+        testAssemblyVer2: 'src/Tests/UnitTests/bin/$(BuildConfiguration)/net46/UnitTests.dll'
         configuration: $(BuildConfiguration)
         testRunTitle: 'UnitTests .Net4.6'
   
@@ -77,7 +77,7 @@ stages:
       displayName: 'IntegrationTests .Net4.6'
       inputs:
         testSelector: 'testAssemblies'
-        testAssemblyVer2: 'src/Tests/IntegrationTests/bin/$(BuildConfiguration)/net452/IntegrationTests.dll'
+        testAssemblyVer2: 'src/Tests/IntegrationTests/bin/$(BuildConfiguration)/net46/IntegrationTests.dll'
         configuration: $(BuildConfiguration)
         rerunFailedTests: True
         rerunMaxAttempts: 2
