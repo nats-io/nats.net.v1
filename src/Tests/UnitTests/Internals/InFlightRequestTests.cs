@@ -29,7 +29,7 @@ namespace UnitTests.Internals
             var sut = new InFlightRequest("Foo", default, 1, _ => { });
 
             // Assert
-            await Assert.ThrowsAsync<NATSTimeoutException>(() => sut.Task);
+            await Assert.ThrowsAsync<NATSTimeoutException>(() => sut.Waiter.Task);
         }
 
         [Fact]
@@ -40,7 +40,7 @@ namespace UnitTests.Internals
             var sut = new InFlightRequest("Foo", cts.Token, 1, _ => { });
 
             // Assert
-            await Assert.ThrowsAsync<NATSTimeoutException>(() => sut.Task);
+            await Assert.ThrowsAsync<NATSTimeoutException>(() => sut.Waiter.Task);
         }
 
         [Fact]
@@ -54,7 +54,7 @@ namespace UnitTests.Internals
             cts.Cancel();
 
             // Assert
-            await Assert.ThrowsAsync<TaskCanceledException>(() => sut.Task);
+            await Assert.ThrowsAsync<TaskCanceledException>(() => sut.Waiter.Task);
         }
 
         [Fact]
@@ -68,7 +68,7 @@ namespace UnitTests.Internals
             cts.Cancel();
 
             // Assert
-            await Assert.ThrowsAsync<TaskCanceledException>(() => sut.Task);
+            await Assert.ThrowsAsync<TaskCanceledException>(() => sut.Waiter.Task);
         }
 
         [Fact]
@@ -83,46 +83,6 @@ namespace UnitTests.Internals
 
             // Assert
             Assert.Equal("Foo", onCompletedArg);
-        }
-
-        [Fact]
-        public async Task TrySetResult_CompletedSuccessfullyWithResult()
-        {
-            // Arrange
-            var msg = new Msg();
-            var sut = new InFlightRequest("Subject", default, 0, _ => {});
-            
-            // Act
-            sut.TrySetResult(msg);
-            
-            // Assert
-            Assert.Equal(msg,  await sut.Task);
-        }
-        
-        [Fact]
-        public async Task TrySetCancelled_TaskCanceledExceptionThrownWhenAwaiting()
-        {
-            // Arrange
-            var sut = new InFlightRequest("Subject", default, 0, _ => {});
-            
-            // Act
-            sut.TrySetCanceled();
-            
-            // Assert
-            await Assert.ThrowsAsync<TaskCanceledException>(() => sut.Task);
-        }
-        
-        [Fact]
-        public async Task TrySetException_ExceptionThrownWhenAwaiting()
-        {
-            // Arrange
-            var sut = new InFlightRequest("Subject", default, 0, _ => {});
-            
-            // Act
-            sut.TrySetException(new InvalidOperationException());
-            
-            // Assert
-            await Assert.ThrowsAsync<InvalidOperationException>(() => sut.Task);
         }
 
         [Fact]

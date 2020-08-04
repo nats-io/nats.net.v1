@@ -2666,11 +2666,11 @@ namespace NATS.Client
 
             if (!isClosed)
             {
-                request.TrySetResult(e.Message);
+                request.Waiter.TrySetResult(e.Message);
             }
             else
             {
-                request.TrySetCanceled();
+                request.Waiter.TrySetCanceled();
             }
             request.Dispose();
         }
@@ -2682,7 +2682,7 @@ namespace NATS.Client
                 requestId = (requestId + long.MaxValue + 1);
 
             var request = new InFlightRequest(requestId.ToString(CultureInfo.InvariantCulture), token, timeout, RemoveOutstandingRequest);
-            request.Task.ContinueWith(t => GC.KeepAlive(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
+            request.Waiter.Task.ContinueWith(t => GC.KeepAlive(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
 
             lock (mu)
             {
@@ -2721,7 +2721,7 @@ namespace NATS.Client
 
                 publish(subject, string.Concat(globalRequestInbox, ".", request.Id), data, offset, count, true);
                 
-                return request.Task.GetAwaiter().GetResult();
+                return request.Waiter.Task.GetAwaiter().GetResult();
             }
         }
 
@@ -2746,7 +2746,7 @@ namespace NATS.Client
                 publish(subject, string.Concat(globalRequestInbox, ".", request.Id), data, offset, count, true);
 
                 // InFlightRequest links the token cancellation
-                return await request.Task.ConfigureAwait(false);
+                return await request.Waiter.Task.ConfigureAwait(false);
             }
         }
 
@@ -3666,7 +3666,7 @@ namespace NATS.Client
             {
                 foreach (var request in waitingRequests)
                 {
-                    request.Value.TrySetCanceled();
+                    request.Value.Waiter.TrySetCanceled();
                 }
                 waitingRequests.Clear();
             }
