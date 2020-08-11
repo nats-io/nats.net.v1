@@ -130,6 +130,7 @@ stages:
                 --results-directory ./results
 
         - task: PublishTestResults@2
+          condition: always()
           inputs:
             testResultsFormat: VSTest
             testResultsFiles: '**/*.trx'
