@@ -121,7 +121,7 @@ stages:
           displayName: Run integration tests
           inputs:
             script: |
-              dotnet test src/Tests/IntegrationTests/bin/Release/$(targetFrameworkMoniker)/IntegrationTests.dll --framework $(targetFrameworkMoniker) --nologo --logger trx  --no-build -c Release --results-directory ./results
+              dotnet test src/Tests/IntegrationTests/bin/Release/$(targetFrameworkMoniker)/IntegrationTests.dll --framework $(targetFrameworkMoniker) --logger trx  --no-build -c Release --results-directory ./results
 
         - task: PublishTestResults@2
           condition: always()
@@ -129,3 +129,9 @@ stages:
             testResultsFormat: VSTest
             testResultsFiles: '**/*.trx'
             testRunTitle: IntegrationTests $(imageName) $(targetFrameworkMoniker)
+
+        - task: PublishPipelineArtifact@1
+          displayName: Publish binaries for use in dependent jobs
+          inputs:
+            targetpath: ./results
+            artifactname: test-results-$(imageName)-$(targetFrameworkMoniker)
