@@ -121,7 +121,7 @@ stages:
           displayName: Run integration tests
           inputs:
             script: |
-              dotnet test src/Tests/IntegrationTests/bin/Release/$(targetFrameworkMoniker)/IntegrationTests.dll --framework $(targetFrameworkMoniker) --logger trx  --no-build -c Release --results-directory ./results
+              dotnet test src/Tests/IntegrationTests/bin/Release/$(targetFrameworkMoniker)/IntegrationTests.dll --framework $(targetFrameworkMoniker) --logger trx --results-directory ./results
 
         - task: PublishTestResults@2
           condition: always()
