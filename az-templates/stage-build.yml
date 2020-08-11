@@ -120,14 +120,8 @@ stages:
         - task: CmdLine@2
           displayName: Run integration tests
           inputs:
-            script: >-
-              dotnet test src/Tests/IntegrationTests/bin/Release/$(targetFrameworkMoniker)/IntegrationTests.dll
-                --framework $(targetFrameworkMoniker)
-                --nologo
-                --logger trx
-                --no-build
-                -c Release
-                --results-directory ./results
+            script: |
+              dotnet test src/Tests/IntegrationTests/bin/Release/$(targetFrameworkMoniker)/IntegrationTests.dll --framework $(targetFrameworkMoniker) --nologo--logger trx  --no-build -c Release --results-directory ./results
 
         - task: PublishTestResults@2
           condition: always()
