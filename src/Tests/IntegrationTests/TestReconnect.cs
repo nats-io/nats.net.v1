@@ -19,12 +19,18 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Collections.Generic;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IntegrationTests
 {
     public class TestReconnect : TestSuite<ReconnectSuiteContext>
     {
-        public TestReconnect(ReconnectSuiteContext context) : base(context) { }
+        private readonly ITestOutputHelper _testOutputHelper;
+
+        public TestReconnect(ReconnectSuiteContext context, ITestOutputHelper testOutputHelper) : base(context)
+        {
+            _testOutputHelper = testOutputHelper;
+        }
 
         private Options getReconnectOptions()
         {
@@ -75,17 +81,32 @@ namespace IntegrationTests
             AutoResetEvent Closed = new AutoResetEvent(false);
             AutoResetEvent Disconnected = new AutoResetEvent(false);
 
-            opts.DisconnectedEventHandler = (sender, args) => Disconnected.Set();
-            opts.ClosedEventHandler = (sender, args) => Closed.Set();
+            var sw = new Stopwatch();
+
+            opts.DisconnectedEventHandler = (sender, args) =>
+            {
+                _testOutputHelper.WriteLine($"Disconnected event handler invoked after: {sw.ElapsedMilliseconds}ms");
+                Disconnected.Set();
+            };
+            opts.ClosedEventHandler = (sender, args) =>
+            {
+                _testOutputHelper.WriteLine($"Closed event handler invoked after: {sw.ElapsedMilliseconds}ms");
+                Closed.Set();
+            };
+            opts.ReconnectedEventHandler = (_, __) =>
+            {
+                _testOutputHelper.WriteLine($"Reconnect event handler invoked after: {sw.ElapsedMilliseconds}ms");
+            };
 
             using (NATSServer ns = NATSServer.Create(Context.Server1.Port))
             {
                 using (var c = Context.ConnectionFactory.CreateConnection(opts))
                 {
+                    sw.Start();
                     ns.Shutdown();
                     Assert.True(Disconnected.WaitOne(1000), "Disconnected event did not receive a signal");
                     Assert.False(Closed.WaitOne(1000), "Closed event did not receive a signal");
-                    Assert.True(c.State == ConnState.RECONNECTING, $"Expected {ConnState.RECONNECTING} but got {c.State}");
+                    Assert.True(c.State == ConnState.RECONNECTING, $"Expected {ConnState.RECONNECTING} but got {c.State} after {sw.ElapsedMilliseconds} ms");
                     c.Opts.ClosedEventHandler = null;
                 }
             }

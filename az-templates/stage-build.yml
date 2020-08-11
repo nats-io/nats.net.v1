@@ -121,5 +121,10 @@ stages:
           inputs:
             command: test
             projects: src/Tests/IntegrationTests/bin/Release/$(targetFrameworkMoniker)/IntegrationTests.dll
-            arguments: --framework $(targetFrameworkMoniker) --nologo
+            arguments: --framework $(targetFrameworkMoniker) --nologo --logger trx --no-build --no-restore -c Release -r ./results
             testRunTitle: IntegrationTests $(imageName) $(targetFrameworkMoniker)
+
+        - task: PublishTestResults@2
+          inputs:
+            testResultsFormat: VSTest
+            testResultsFiles: '**/*.trx'
