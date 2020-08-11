@@ -1563,9 +1563,19 @@ namespace IntegrationTests
 
                     // receive the updated topology from the cluster shrinking
                     Assert.True(evDS.WaitOne(10000));
+
                     LinkedList<string> discoveredServers = new LinkedList<string>(c.DiscoveredServers);
                     Assert.True(discoveredServers.Count == 1);
-                    Assert.Contains($"nats://127.0.0.1:{Context.Server3.Port}", discoveredServers);
+
+                    string expectedServer = $"nats://127.0.0.1:{Context.Server3.Port}";
+                    if (!discoveredServers.Contains(expectedServer))
+                    {
+                        foreach (string s in discoveredServers)
+                        {
+                            Console.WriteLine("\tDiscovered server:" + expectedServer);
+                        }
+                        Assert.True(false, "Discovered servers does not contain " + expectedServer);
+                    }
                     evDS.Reset();
 
                     using (NATSServer s4 = NATSServer.Create(Context.Server4.Port,
