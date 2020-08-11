@@ -116,15 +116,21 @@ stages:
               Write-Host "Found nats-server path: $natsServerDir"
               Write-Host "##vso[task.setvariable variable=PATH;]${env:PATH};$natsServerDir"
 
-        - task: DotNetCoreCLI@2
+
+        - task: CmdLine@2
           displayName: Run integration tests
           inputs:
-            command: test
-            projects: src/Tests/IntegrationTests/bin/Release/$(targetFrameworkMoniker)/IntegrationTests.dll
-            arguments: --framework $(targetFrameworkMoniker) --nologo --logger trx --no-build --no-restore -c Release -r ./results
-            testRunTitle: IntegrationTests $(imageName) $(targetFrameworkMoniker)
+            script: >-
+              dotnet test src/Tests/IntegrationTests/bin/Release/$(targetFrameworkMoniker)/IntegrationTests.dll
+                --framework $(targetFrameworkMoniker)
+                --nologo
+                --logger trx
+                --no-build
+                -c Release
+                --results-directory ./results
 
         - task: PublishTestResults@2
           inputs:
             testResultsFormat: VSTest
             testResultsFiles: '**/*.trx'
+            testRunTitle: IntegrationTests $(imageName) $(targetFrameworkMoniker)
