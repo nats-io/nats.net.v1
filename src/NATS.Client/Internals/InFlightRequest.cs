@@ -31,9 +31,10 @@ namespace NATS.Client.Internals
         private readonly CancellationTokenRegistration _tokenRegistration;
         private readonly CancellationToken _clientProvidedToken;
 
+        internal readonly TaskCompletionSource<Msg> Waiter = new TaskCompletionSource<Msg>(TaskCreationOptions.RunContinuationsAsynchronously);
+
         public readonly string Id;
         public readonly CancellationToken Token;
-        public readonly TaskCompletionSource<Msg> Waiter = new TaskCompletionSource<Msg>();
 
         /// <summary>
         /// Initializes a new instance of <see cref="InFlightRequest"/> class.

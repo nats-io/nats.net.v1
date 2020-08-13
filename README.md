@@ -540,7 +540,6 @@ The NATS .NET client supports the cluster discovery protocol.  The list of serve
             Options opts = ConnectionFactory.GetDefaultOptions();
             opts.MaxReconnect = 2;
             opts.ReconnectWait = 1000;
-            opts.NoRandomize = true;
             opts.Servers = servers;
 
             IConnection c = new ConnectionFactory().CreateConnection(opts);

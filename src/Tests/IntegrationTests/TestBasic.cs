@@ -1581,6 +1581,8 @@ namespace IntegrationTests
                     using (NATSServer s4 = NATSServer.Create(Context.Server4.Port,
                         $"-a 127.0.0.1 --cluster nats://127.0.0.1:{Context.ClusterServer4.Port} --routes nats://127.0.0.1:{Context.ClusterServer1.Port}"))
                     {
+                        Assert.True(assureClusterFormed(c, 3), "Incomplete cluster with server count: " + c.Servers.Length);
+
                         // wait for the update with new server to check.
                         Assert.True(evDS.WaitOne(10000));
 
