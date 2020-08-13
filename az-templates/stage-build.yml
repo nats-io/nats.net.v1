@@ -75,55 +75,33 @@ stages:
             patterns: src/Tests/IntegrationTests/bin/Release/$(targetFrameworkMoniker)/**/*
             artifactname: binaries
 
+        - task: GoTool@0
+          inputs:
+            version: 1.14.7
+
+        - task: Go@0
+          displayName: go get github.com/nats-io/nats-server
+          inputs:
+            arguments: github.com/nats-io/nats-server
         - task: CmdLine@2
           displayName: Build nats-server nightly
-          inputs:
-            script: |
-              go get github.com/nats-io/nats-server
-              go build github.com/nats-io/nats-server
-              $GOPATH/bin/nats-server -v
-
-        - task: DownloadGitHubRelease@0
-          inputs:
-            connection: github-no-grants
-            userRepository: nats-io/nats-server
-            defaultVersionType: latest
-            itemPattern: $(natsServerPattern)
-            downloadPath: $(Agent.TempDirectory)/nats-server
-
-        - task: ExtractFiles@1
-          displayName: 'Extract NATS-Server files '
-          inputs:
-            archiveFilePatterns: '$(Agent.TempDirectory)/nats-server/nats-server*.zip'
-            destinationFolder: '$(Agent.TempDirectory)/nats-server'
-            cleanDestinationFolder: false
-
-        - task: CmdLine@2
-          displayName: 'Include NATS-Server in path (nix)'
           condition: ne(variables['Agent.OS'], 'Windows_NT')
           inputs:
             script: |
-              if [ "$(Agent.OS)" = "Darwin" ]; then
-                nats_server=$(find $AGENT_TEMPDIRECTORY/nats-server -perm +111 -type f)
-                echo "##vso[task.setvariable variable=ComPlus_ThreadPool_ForceMinWorkerThreads]8"
-              else
-                nats_server=$(find $AGENT_TEMPDIRECTORY/nats-server -executable -type f)
-              fi
-              echo "nats_server: $nats_server"
-              nats_server_dir=$(dirname $nats_server)
-              echo "nats_server_dir: $nats_server_dir"
-              echo "##vso[task.setvariable variable=PATH]$PATH:$nats_server_dir"
+              echo "GOPATH: $GOPATH"
+              echo "GOBIN: $GOBIN"
+              echo "##vso[task.setvariable variable=PATH]$PATH:$GOBIN"
+              nats-server.exe -v
 
-        - task: PowerShell@2
-          displayName: 'Include NATS-Server in path (Windows)'
-          condition: eq(variables['Agent.OS'], 'Windows_NT')
+        - task: CmdLine@2
+          displayName: Build nats-server nightly
+          condition: ne(variables['Agent.OS'], 'Windows_NT')
           inputs:
-            targetType: 'inline'
             script: |
-              $natsServerDir = Get-ChildItem -Directory -Path "$(Agent.TempDirectory)\nats-server\nats-server-*" | Select -Expand FullName
-              Write-Host "Found nats-server path: $natsServerDir"
-              Write-Host "##vso[task.setvariable variable=PATH;]${env:PATH};$natsServerDir"
-
+              echo "GOPATH: $GOPATH"
+              echo "GOBIN: $GOBIN"
+              echo "##vso[task.setvariable variable=PATH]$PATH:$GOBIN"
+              nats-server.exe -v
 
         - task: CmdLine@2
           displayName: Run integration tests
