@@ -26,7 +26,7 @@ parameters:
       imageName: windows-2019
       targetFrameworkMoniker: netcoreapp3.1
       natsServerPattern: nats-server-*-windows-amd64.zip
-    windows-nextfx:
+    windows-netfx:
       imageName: windows-2019
       targetFrameworkMoniker: net46
       natsServerPattern: nats-server-*-windows-amd64.zip
