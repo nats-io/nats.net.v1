@@ -4,12 +4,14 @@ steps:
   inputs:
     arguments: github.com/nats-io/nats-server
 
-- task: CmdLine@2
+- task: Powershell@2
   displayName: Include nats-server in path
   inputs:
     script: |
-      echo "GOBIN: $(GOBIN)"
-      echo "##vso[task.prependpath]$(GOBIN)"
+      Write-Host "GOBIN: $(GOBIN)"
+      $resolvedGOBIN = Resolve-Path $(GOBIN) | Select -Expand Path
+      Write-Host "Resolved form: $resolvedGOBIN"
+      Write-Host "##vso[task.prependpath]$resolvedGOBIN"
 
 - task: CmdLine@2
   displayName: Verify nats-server
