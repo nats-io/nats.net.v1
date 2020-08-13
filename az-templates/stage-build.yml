@@ -6,6 +6,11 @@ stages:
     timeoutInMinutes: 20
     cancelTimeoutInMinutes: 5
     steps:
+    - task: NugetToolInstaller@1
+    - task: DotNetCoreCLI@2
+      inputs:
+        command: restore
+        projects: 'src/*.sln'
     - task: DotNetCoreCLI@2
       displayName: 'Build Solution'
       inputs:
@@ -30,37 +35,14 @@ stages:
         testRunTitle: 'UnitTests .Net4.6'
   
     - task: PowerShell@2
-      displayName: 'Download latest Win64 NATS-Server'
+      displayName: 'Install Dependencies'
       inputs:
         targetType: 'inline'
         script: |
-          Write-Host "Getting latest release $releaseUri"
-          $releaseUri = "https://api.github.com/repos/nats-io/nats-server/releases/latest"
-          $response = Invoke-RestMethod -Uri $releaseUri -UseBasicParsing
-  
-          $win64asset = $response.assets.where({$_.name -like 'nats-server-*-windows-amd64.zip'})
-          $assetUrl = $win64asset.browser_download_url
-          $name = $win64asset.name
-          $outputFile = "$(Agent.TempDirectory)\nats-server\$name"
-  
-          Write-Host "Downloading asset $name to $outputFile from $assetUrl"
-          New-Item -ItemType Directory -Force -Path $(Agent.TempDirectory)\nats-server
-          (New-Object System.Net.WebClient).DownloadFile($assetUrl, $outputFile)
-    
-    - task: ExtractFiles@1
-      displayName: 'Extract NATS-Server files '
-      inputs:
-        archiveFilePatterns: '$(Agent.TempDirectory)\nats-server\nats-server*.zip'
-        destinationFolder: '$(Agent.TempDirectory)\nats-server'
-        cleanDestinationFolder: false
-  
-    - task: PowerShell@2
-      displayName: 'Include NATS-Server in path'
-      inputs:
-        targetType: 'inline'
-        script: |
-          $natsServerDir = Get-ChildItem -Directory -Path "$(Agent.TempDirectory)\nats-server\nats-server-*" | Select -Expand FullName
-          Write-Host "Found nats-server path: $natsServerDir"
+          Write-Host "Cloning dependency repo."
+          git clone https://github.com/nats-io/nats.net.deps.git "$(Agent.TempDirectory)\deps"
+          $natsServerDir = "$(Agent.TempDirectory)\deps\nats-server"
+          Write-Host "Appending nats-server directory $natsServerDir to path."
           Write-Host "##vso[task.setvariable variable=PATH;]${env:PATH};$natsServerDir"
 
     - task: VSTest@2

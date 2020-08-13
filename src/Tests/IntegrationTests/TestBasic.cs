@@ -674,7 +674,7 @@ namespace IntegrationTests
                         var tasks = new List<Task>();
                         for (int i = 0; i < 100; i++)
                         {
-                            tasks.Add(c.RequestAsync("foo", request, 5, 5));
+                            tasks.Add(c.RequestAsync("foo", request, 5, 5, 1000));
                         }
 
                         foreach (Task<Msg> t in tasks)
@@ -1561,9 +1561,28 @@ namespace IntegrationTests
                     // shutdown server 2
                     s2.Shutdown();
 
+                    // receive the updated topology from the cluster shrinking
+                    Assert.True(evDS.WaitOne(10000));
+
+                    LinkedList<string> discoveredServers = new LinkedList<string>(c.DiscoveredServers);
+                    Assert.True(discoveredServers.Count == 1);
+
+                    string expectedServer = $"nats://127.0.0.1:{Context.Server3.Port}";
+                    if (!discoveredServers.Contains(expectedServer))
+                    {
+                        foreach (string s in discoveredServers)
+                        {
+                            Console.WriteLine("\tDiscovered server:" + expectedServer);
+                        }
+                        Assert.True(false, "Discovered servers does not contain " + expectedServer);
+                    }
+                    evDS.Reset();
+
                     using (NATSServer s4 = NATSServer.Create(Context.Server4.Port,
                         $"-a 127.0.0.1 --cluster nats://127.0.0.1:{Context.ClusterServer4.Port} --routes nats://127.0.0.1:{Context.ClusterServer1.Port}"))
                     {
+                        Assert.True(assureClusterFormed(c, 3), "Incomplete cluster with server count: " + c.Servers.Length);
+
                         // wait for the update with new server to check.
                         Assert.True(evDS.WaitOne(10000));
 
@@ -1573,8 +1592,9 @@ namespace IntegrationTests
                         // ["nats://127.0.0.1:4223",
                         //  "nats://127.0.0.1:4224"]
                         //
-                        LinkedList<string> discoveredServers = new LinkedList<string>(c.DiscoveredServers);
+                        discoveredServers = new LinkedList<string>(c.DiscoveredServers);
                         Assert.True(discoveredServers.Count == 2);
+                        Assert.DoesNotContain($"nats://127.0.0.1:{Context.Server2.Port}", discoveredServers);
                         Assert.Contains($"nats://127.0.0.1:{Context.Server3.Port}", discoveredServers);
                         Assert.Contains($"nats://127.0.0.1:{Context.Server4.Port}", discoveredServers);
 
@@ -1780,6 +1800,89 @@ namespace IntegrationTests
             {
                 c.Publish("foo.inc", Encoding.UTF8.GetBytes("hello"));
                 c.Request("$JS.STREAM.foo.CONSUMER.bar.NEXT", Encoding.ASCII.GetBytes("1"), 1000);
+            }
+        }
+
+        [Fact]
+        public void TestMessageHeader()
+        {
+            using (NATSServer.CreateFastAndVerify())
+            {
+                var o = ConnectionFactory.GetDefaultOptions();
+
+                using (var c = Context.ConnectionFactory.CreateConnection(o))
+                {
+                    using (var s = c.SubscribeSync("foo"))
+                    {
+                        // basic header test
+                        var m = new Msg("foo");
+                        m.Header["key"] = "value";
+                        m.Subject = "foo";
+                        m.Data = Encoding.UTF8.GetBytes("hello");
+
+                        c.Publish(m);
+                        var recvMsg = s.NextMessage(1000);
+                        Assert.Equal("value", recvMsg.Header["key"]);
+
+                        // assigning a message header
+                        MsgHeader header = new MsgHeader();
+                        header["foo"] = "bar";
+                        m.Header = header;
+                        c.Publish(m);
+                        recvMsg = s.NextMessage(1000);
+                        Assert.Equal("bar", recvMsg.Header["foo"]);
+
+                        // assigning message header copy constructor
+                        m.Header = new MsgHeader(header);
+                        c.Publish(m);
+                        recvMsg = s.NextMessage(1000);
+                        Assert.Equal("bar", recvMsg.Header["foo"]);
+
+                        // publish to the same subject w/o headers.
+                        c.Publish("foo", null);
+                        recvMsg = s.NextMessage(1000);
+
+                        // reset headers and check that none are received.
+                        m.Header = null;
+                        c.Publish(m);
+                        recvMsg = s.NextMessage(1000);
+                        Assert.True(recvMsg.Header.Count == 0);
+
+                        // try empty headers and check that none are received.
+                        m.Header = new MsgHeader();
+                        c.Publish(m);
+                        recvMsg = s.NextMessage(1000);
+                        Assert.True(recvMsg.Header.Count == 0);
+
+                        // test with a reply subject
+                        m.Header["foo"] = "bar";
+                        m.Reply = "reply.subject";
+                        c.Publish(m);
+                        recvMsg = s.NextMessage(1000);
+                        Assert.True(recvMsg.Header.Count == 1);
+
+                    }
+                }
+            }
+        }
+
+        [Fact(Skip = "Manual")]
+        public void TestMessageHeaderNoServerSupport()
+        {
+            //////////////////////////////////////////////////
+            // Requires a running server w/o header support //
+            //////////////////////////////////////////////////
+            using (var c = new ConnectionFactory().CreateConnection())
+            {
+                Msg m = new Msg();
+                m.Header["header"] = "value";
+                m.Subject = "foo";
+
+                Assert.Throws<NATSNotSupportedException>(() => c.Publish(m));
+
+                // try w/o headers...
+                m.Header = null;
+                c.Publish(m);
             }
         }
 

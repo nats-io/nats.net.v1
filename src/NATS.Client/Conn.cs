@@ -170,6 +170,9 @@ namespace NATS.Client
         private byte[] PUB_P_BYTES = null;
         private int    PUB_P_BYTES_LEN = 0;
 
+        private byte[] HPUB_P_BYTES = null;
+        private int    HPUB_P_BYTES_LEN = 0;
+
         private byte[] CRLF_BYTES = null;
         private int    CRLF_BYTES_LEN = 0;
 
@@ -738,21 +741,24 @@ namespace NATS.Client
             PUB_P_BYTES = Encoding.UTF8.GetBytes(IC._PUB_P_);
             PUB_P_BYTES_LEN = PUB_P_BYTES.Length;
 
+            HPUB_P_BYTES = Encoding.UTF8.GetBytes(IC._HPUB_P_);
+            HPUB_P_BYTES_LEN = HPUB_P_BYTES.Length;
+
             CRLF_BYTES = Encoding.UTF8.GetBytes(IC._CRLF_);
             CRLF_BYTES_LEN = CRLF_BYTES.Length;
 
             // predefine the start of the publish protocol message.
-            buildPublishProtocolBuffer(512);
+            buildPublishProtocolBuffers(512);
 
             callbackScheduler.Start();
 
             globalRequestInbox = NewInbox();
         }
 
-        private void buildPublishProtocolBuffer(int size)
+        private void buildPublishProtocolBuffers(int size)
         {
             pubProtoBuf = new byte[size];
-            Buffer.BlockCopy(PUB_P_BYTES, 0, pubProtoBuf, 0, PUB_P_BYTES_LEN);
+            Buffer.BlockCopy(HPUB_P_BYTES, 0, pubProtoBuf, 0, HPUB_P_BYTES_LEN);
         }
 
         // Ensures that pubProtoBuf is appropriately sized for the given
@@ -762,14 +768,14 @@ namespace NATS.Client
         {
             // Publish protocol buffer sizing:
             //
-            // PUB_P_BYTES_LEN (includes trailing space)
+            // HPUB_P_BYTES_LEN (includes trailing space)
             //  + SUBJECT field length
             //  + SIZE field maximum + 1 (= log(2147483647) + 1 = 11)
             //  + (optional) REPLY field length + 1
 
-            int pubProtoBufSize = PUB_P_BYTES_LEN
+            int pubProtoBufSize = HPUB_P_BYTES_LEN
                                 + (1 + subject.Length)
-                                + (11)
+                                + (34) // Include payload/header sizes and stamp
                                 + (reply != null ? reply.Length + 1 : 0);
 
             // only resize if we're increasing the buffer...
@@ -784,7 +790,7 @@ namespace NATS.Client
                 pubProtoBufSize |= pubProtoBufSize >> 16;
                 pubProtoBufSize++;
 
-                buildPublishProtocolBuffer(pubProtoBufSize);
+                buildPublishProtocolBuffers(pubProtoBufSize);
             }
         }
 
@@ -1991,7 +1997,7 @@ namespace NATS.Client
         #endregion
 
         // Finds the ends of each token in the argument buffer.
-        private int[] argEnds = new int[4];
+        private int[] argEnds = new int[5];
         private int setMsgArgsAryOffsets(byte[] buffer, long length)
         {
             if (convertToStrBuf.Length < length)
@@ -2002,8 +2008,8 @@ namespace NATS.Client
             int count = 0;
             int i = 0;
 
-            // We only support 4 elements in this protocol version
-            for ( ; i < length && count < 4; i++)
+            // We support up to 5 elements in this protocol version
+            for ( ; i < length && count < 5; i++)
             {
                 convertToStrBuf[i] = (char)buffer[i];
                 if (buffer[i] == ' ')
@@ -2024,23 +2030,63 @@ namespace NATS.Client
         // place to hold them, until we create the message.
         //
         // These strings, once created, are never copied.
-        internal void processMsgArgs(byte[] buffer, long length)
+        internal void processHeaderMsgArgs(byte[] buffer, long length)
         {
             int argCount = setMsgArgsAryOffsets(buffer, length);
 
             switch (argCount)
             {
+                case 4:
+                    msgArgs.subject = new string(convertToStrBuf, 0, argEnds[0]);
+                    msgArgs.sid = ToInt64(buffer, argEnds[0] + 1, argEnds[1]);
+                    msgArgs.reply = null;
+                    msgArgs.hdr = (int)ToInt64(buffer, argEnds[1] + 1, argEnds[2]);
+                    msgArgs.size = (int)ToInt64(buffer, argEnds[2] + 1, argEnds[3]);
+                    break;
+                case 5:
+                    msgArgs.subject = new string(convertToStrBuf, 0, argEnds[0]);
+                    msgArgs.sid = ToInt64(buffer, argEnds[0] + 1, argEnds[1]);
+                    msgArgs.reply = new string(convertToStrBuf, argEnds[1] + 1, argEnds[2] - argEnds[1] - 1);
+                    msgArgs.hdr = (int)ToInt64(buffer, argEnds[2] + 1, argEnds[3]);
+                    msgArgs.size = (int)ToInt64(buffer, argEnds[3] + 1, argEnds[4]);
+                    break;
+                default:
+                    throw new NATSException("Unable to parse message arguments: " + Encoding.UTF8.GetString(buffer, 0, (int)length));
+            }
+
+            if (msgArgs.size < 0)
+            {
+                throw new NATSException("Invalid Message - Bad or Missing Size: " + Encoding.UTF8.GetString(buffer, 0, (int)length));
+            }
+            if (msgArgs.sid < 0)
+            {
+                throw new NATSException("Invalid Message - Bad or Missing Sid: " + Encoding.UTF8.GetString(buffer, 0, (int)length));
+            }
+            if (msgArgs.hdr < 0 || msgArgs.hdr > msgArgs.size)
+            {
+                throw new NATSException("Invalid Message - Bad or Missing Header Size: " + Encoding.UTF8.GetString(buffer, 0, (int)length));
+            }
+        }
+
+        // Same as above, except when we know there is no header.
+        internal void processMsgArgs(byte[] buffer, long length)
+        {
+            int argCount = setMsgArgsAryOffsets(buffer, length);
+            msgArgs.hdr = 0;
+
+            switch (argCount)
+            {
                 case 3:
                     msgArgs.subject = new string(convertToStrBuf, 0, argEnds[0]);
-                    msgArgs.sid     = ToInt64(buffer, argEnds[0] + 1, argEnds[1]);
-                    msgArgs.reply   = null;
-                    msgArgs.size    = (int)ToInt64(buffer, argEnds[1] + 1, argEnds[2]);
+                    msgArgs.sid = ToInt64(buffer, argEnds[0] + 1, argEnds[1]);
+                    msgArgs.reply = null;
+                    msgArgs.size = (int)ToInt64(buffer, argEnds[1] + 1, argEnds[2]);
                     break;
                 case 4:
                     msgArgs.subject = new string(convertToStrBuf, 0, argEnds[0]);
-                    msgArgs.sid     = ToInt64(buffer, argEnds[0] + 1, argEnds[1]);
-                    msgArgs.reply   = new string(convertToStrBuf, argEnds[1] + 1, argEnds[2] - argEnds[1] - 1);
-                    msgArgs.size    = (int)ToInt64(buffer, argEnds[2] + 1, argEnds[3]);
+                    msgArgs.sid = ToInt64(buffer, argEnds[0] + 1, argEnds[1]);
+                    msgArgs.reply = new string(convertToStrBuf, argEnds[1] + 1, argEnds[2] - argEnds[1] - 1);
+                    msgArgs.size = (int)ToInt64(buffer, argEnds[2] + 1, argEnds[3]);
                     break;
                 default:
                     throw new NATSException("Unable to parse message arguments: " + Encoding.UTF8.GetString(buffer, 0, (int)length));
@@ -2384,10 +2430,65 @@ namespace NATS.Client
 
         // Use low level primitives to build the protocol for the publish
         // message.
-        private int writePublishProto(byte[] dst, string subject, string reply, int msgSize)
+        //
+        // HPUB<SUBJ>[REPLY] <HDR_LEN> <TOT_LEN>
+        // <HEADER><PAYLOAD>
+        // For example:
+        // HPUB SUBJECT REPLY 23 30␍␊NATS/1.0␍␊Header: X␍␊␍␊PAYLOAD␍␊
+        // HPUB SUBJECT REPLY 23 23␍␊NATS/1.0␍␊Header: X␍␊␍␊␍␊
+        private void WriteHPUBProto(byte[] dst, string subject, string reply, int headerSize, int msgSize,
+            out int length, out int offset)
         {
-            // skip past the predefined "PUB "
-            int index = PUB_P_BYTES_LEN;
+            // skip past the predefined "HPUB "
+            int index = HPUB_P_BYTES_LEN;
+
+            // Subject
+            index = writeStringToBuffer(dst, index, subject);
+
+            if (reply != null)
+            {
+                // " REPLY"
+                dst[index] = (byte)' ';
+                index++;
+
+                index = writeStringToBuffer(dst, index, reply);
+            }
+
+            // " HEADERSIZE"
+            dst[index] = (byte)' ';
+            index++;
+            index = writeInt32ToBuffer(dst, index, headerSize);
+
+            // " TOTALSIZE"
+            dst[index] = (byte)' ';
+            index++;
+            index = writeInt32ToBuffer(dst, index, msgSize+headerSize);
+
+            // "\r\n"
+            dst[index] = CRLF_BYTES[0];
+            dst[index + 1] = CRLF_BYTES[1];
+            if (CRLF_BYTES_LEN > 2)
+            {
+                for (int i = 2; i < CRLF_BYTES_LEN; ++i)
+                    dst[index + i] = CRLF_BYTES[i];
+            }
+            index += CRLF_BYTES_LEN;
+
+            length = index;
+            offset = 0;
+        }
+
+        // The pubProtoBuf will always start with HPUB... with the
+        // rest of the protocol representing a standard publish or
+        // header publish.  If a standard publish, we must skip the H
+        // to create a PUB protocol message, and reduce the length.
+        // We write as if it's a HPUB, but adjust the returned offset
+        // and length so the future write will ignore the H.
+        private void WritePUBProto(byte[] dst, string subject, string reply, int msgSize,
+            out int length, out int offset)
+        {
+            // skip past the predefined "HPUB "
+            int index = HPUB_P_BYTES_LEN;
 
             // Subject
             index = writeStringToBuffer(dst, index, subject);
@@ -2418,13 +2519,14 @@ namespace NATS.Client
             }
             index += CRLF_BYTES_LEN;
 
-            return index;
+            length = index-1;
+            offset = 1;
         }
 
         // publish is the internal function to publish messages to a nats-server.
         // Sends a protocol data message by queueing into the bufio writer
         // and kicking the flush go routine. These writes should be protected.
-        internal void publish(string subject, string reply, byte[] data, int offset, int count, bool flushBuffer)
+        internal void publish(string subject, string reply, byte[] headers, byte[] data, int offset, int count, bool flushBuffer)
         {
             if (string.IsNullOrWhiteSpace(subject))
             {
@@ -2460,8 +2562,23 @@ namespace NATS.Client
 
                 ensurePublishProtocolBuffer(subject, reply);
 
-                // write our pubProtoBuf buffer to the buffered writer.
-                int pubProtoLen = writePublishProto(pubProtoBuf, subject, reply, count);
+                // protoLen and protoOffset provide a length and offset for
+                // copying the publish protocol buffer.  This is to avoid extra
+                // copies or use of multiple publish protocol buffers.
+                int protoLen;
+                int protoOffset;
+                if (headers != null)
+                {
+                    if (info.headers == false)
+                    {
+                        throw new NATSNotSupportedException("Headers are not supported by the server.");
+                    }
+                    WriteHPUBProto(pubProtoBuf, subject, reply, headers.Length, count, out protoLen, out protoOffset);
+                }
+                else
+                {
+                    WritePUBProto(pubProtoBuf, subject, reply, count, out protoLen, out protoOffset);
+                }
 
                 // Check if we are reconnecting, and if so check if
                 // we have exceeded our reconnect outbound buffer limits.
@@ -2479,12 +2596,18 @@ namespace NATS.Client
                         else
                             kickFlusher();
 
-                        if (pending != null && bw.Position + count + pubProtoLen > rbsize)
+                        if (pending != null && bw.Position + count + protoLen > rbsize)
                             throw new NATSReconnectBufferException("Reconnect buffer exceeded.");
                     }
                 }
 
-                bw.Write(pubProtoBuf, 0, pubProtoLen);
+                bw.Write(pubProtoBuf, protoOffset, protoLen);
+
+                if (headers != null)
+                {
+                    bw.Write(headers, 0, headers.Length);
+                    stats.outBytes += headers.Length;
+                }
 
                 if (count > 0)
                 {
@@ -2526,7 +2649,7 @@ namespace NATS.Client
         public void Publish(string subject, byte[] data)
         {
             int count = data != null ? data.Length : 0;
-            publish(subject, null, data, 0, count, false);
+            publish(subject, null, null, data, 0, count, false);
         }
 
         /// <summary>
@@ -2542,7 +2665,7 @@ namespace NATS.Client
         /// <seealso cref="IConnection.Publish(string, byte[])"/>
         public void Publish(string subject, byte[] data, int offset, int count)
         {
-            publish(subject, null, data, offset, count, false);
+            publish(subject, null, null, data, offset, count, false);
         }
 
         /// <summary>
@@ -2568,7 +2691,8 @@ namespace NATS.Client
             }
 
             int count = msg.Data != null ? msg.Data.Length : 0;
-            publish(msg.Subject, msg.Reply, msg.Data, 0, count, false);
+            byte[] headers = msg.header != null ? msg.header.ToByteArray() : null;
+            publish(msg.Subject, msg.Reply, headers, msg.Data, 0, count, false);
         }
 
         /// <summary>
@@ -2590,7 +2714,7 @@ namespace NATS.Client
         public void Publish(string subject, string reply, byte[] data)
         {
             int count = data != null ? data.Length : 0;
-            publish(subject, reply, data, 0, count, false);
+            publish(subject, reply, null, data, 0, count, false);
         }
 
         /// <summary>
@@ -2607,10 +2731,10 @@ namespace NATS.Client
         /// <seealso cref="IConnection.Publish(string, byte[])"/>
         public void Publish(string subject, string reply, byte[] data, int offset, int count)
         {
-            publish(subject, reply, data, offset, count, false);
+            publish(subject, reply, null, data, offset, count, false);
         }
 
-        protected Msg request(string subject, byte[] data, int offset, int count, int timeout) => requestSync(subject, data, offset, count, timeout);
+        protected Msg request(string subject, byte[] headers, byte[] data, int offset, int count, int timeout) => requestSync(subject, headers, data, offset, count, timeout);
 
         private void RemoveOutstandingRequest(string requestId)
         {
@@ -2701,7 +2825,7 @@ namespace NATS.Client
             return request;
         }
 
-        private Msg requestSync(string subject, byte[] data, int offset, int count, int timeout)
+        private Msg requestSync(string subject, byte[] headers, byte[] data, int offset, int count, int timeout)
         {
             if (string.IsNullOrWhiteSpace(subject))
                 throw new NATSBadSubscriptionException();
@@ -2713,19 +2837,19 @@ namespace NATS.Client
             // offset/count checking covered by publish
 
             if (opts.UseOldRequestStyle)
-                return oldRequest(subject, data, offset, count, timeout);
+                return oldRequest(subject, null, data, offset, count, timeout);
 
             using (var request = setupRequest(timeout, CancellationToken.None))
             {
                 request.Token.ThrowIfCancellationRequested();
 
-                publish(subject, string.Concat(globalRequestInbox, ".", request.Id), data, offset, count, true);
-                
+                publish(subject, string.Concat(globalRequestInbox, ".", request.Id), null, data, offset, count, true);
+
                 return request.Waiter.Task.GetAwaiter().GetResult();
             }
         }
 
-        private async Task<Msg> requestAsync(string subject, byte[] data, int offset, int count, int timeout, CancellationToken token)
+        private async Task<Msg> requestAsync(string subject, byte[] headers, byte[] data, int offset, int count, int timeout, CancellationToken token)
         {
             if (string.IsNullOrWhiteSpace(subject))
                 throw new NATSBadSubscriptionException();
@@ -2737,20 +2861,20 @@ namespace NATS.Client
             // offset/count checking covered by publish
 
             if (opts.UseOldRequestStyle)
-                return await oldRequestAsync(subject, data, offset, count, timeout, token).ConfigureAwait(false);
+                return await oldRequestAsync(subject, headers, data, offset, count, timeout, token).ConfigureAwait(false);
 
             using (var request = setupRequest(timeout, token))
             {
                 request.Token.ThrowIfCancellationRequested();
 
-                publish(subject, string.Concat(globalRequestInbox, ".", request.Id), data, offset, count, true);
+                publish(subject, string.Concat(globalRequestInbox, ".", request.Id), headers, data, offset, count, true);
 
                 // InFlightRequest links the token cancellation
                 return await request.Waiter.Task.ConfigureAwait(false);
             }
         }
 
-        private Msg oldRequest(string subject, byte[] data, int offset, int count, int timeout)
+        private Msg oldRequest(string subject, byte[] headers, byte[] data, int offset, int count, int timeout)
         {
             var inbox = NewInbox();
 
@@ -2758,7 +2882,7 @@ namespace NATS.Client
             {
                 s.AutoUnsubscribe(1);
 
-                publish(subject, inbox, data, offset, count, true);
+                publish(subject, inbox, headers, data, offset, count, true);
                 var m = s.NextMessage(timeout);
                 s.unsubscribe(false);
 
@@ -2797,7 +2921,7 @@ namespace NATS.Client
         public Msg Request(string subject, byte[] data, int timeout)
         {
             int count = data != null ? data.Length : 0;
-            return request(subject, data, 0, count, timeout);
+            return request(subject, null, data, 0, count, timeout);
         }
 
         /// <summary>
@@ -2822,7 +2946,7 @@ namespace NATS.Client
         /// <seealso cref="IConnection.Request(string, byte[])"/>
         public Msg Request(string subject, byte[] data, int offset, int count, int timeout)
         {
-            return request(subject, data, offset, count, timeout);
+            return request(subject, null, data, offset, count, timeout);
         }
 
         /// <summary>
@@ -2852,7 +2976,7 @@ namespace NATS.Client
         public Msg Request(string subject, byte[] data)
         {
             int count = data != null ? data.Length : 0;
-            return request(subject, data, 0, count, Timeout.Infinite);
+            return request(subject, null, data, 0, count, Timeout.Infinite);
         }
 
         /// <summary>
@@ -2879,14 +3003,14 @@ namespace NATS.Client
         /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
         public Msg Request(string subject, byte[] data, int offset, int count)
         {
-            return request(subject, data, offset, count, Timeout.Infinite);
+            return request(subject, null, data, offset, count, Timeout.Infinite);
         }
 
-        private Task<Msg> oldRequestAsync(string subject, byte[] data, int offset, int count, int timeout, CancellationToken ct)
+        private Task<Msg> oldRequestAsync(string subject, byte[] headers, byte[] data, int offset, int count, int timeout, CancellationToken ct)
         {
             // Simple case without a cancellation token.
             if (ct == CancellationToken.None)
-                return Task.Run(() => oldRequest(subject, data, offset, count, timeout), ct);
+                return Task.Run(() => oldRequest(subject, headers, data, offset, count, timeout), ct);
 
             // More complex case, supporting cancellation.
             return Task.Run(() =>
@@ -2904,7 +3028,7 @@ namespace NATS.Client
                 SyncSubscription s = subscribeSync(inbox, null);
                 s.AutoUnsubscribe(1);
 
-                publish(subject, inbox, data, offset, count, true);
+                publish(subject, inbox, headers, data, offset, count, true);
 
                 int timeRemaining = timeout;
 
@@ -2988,7 +3112,7 @@ namespace NATS.Client
         public Task<Msg> RequestAsync(string subject, byte[] data, int timeout)
         {
             int count = data != null ? data.Length : 0;
-            return requestAsync(subject, data, 0, count, timeout, CancellationToken.None);
+            return requestAsync(subject, null, data, 0, count, timeout, CancellationToken.None);
         }
 
         /// <summary>
@@ -3014,7 +3138,7 @@ namespace NATS.Client
         /// <seealso cref="IConnection.Request(string, byte[])"/>
         public Task<Msg> RequestAsync(string subject, byte[] data, int offset, int count, int timeout)
         {
-            return requestAsync(subject, data, offset, count, timeout, CancellationToken.None);
+            return requestAsync(subject, null, data, offset, count, timeout, CancellationToken.None);
         }
 
         /// <summary>
@@ -3048,7 +3172,7 @@ namespace NATS.Client
         public Task<Msg> RequestAsync(string subject, byte[] data)
         {
             int count = data != null ? data.Length : 0;
-            return requestAsync(subject, data, 0, count, Timeout.Infinite, CancellationToken.None);
+            return requestAsync(subject, null, data, 0, count, Timeout.Infinite, CancellationToken.None);
         }
 
         /// <summary>
@@ -3073,7 +3197,7 @@ namespace NATS.Client
         /// <seealso cref="IConnection.Request(string, byte[])"/>
         public Task<Msg> RequestAsync(string subject, byte[] data, int offset, int count)
         {
-            return requestAsync(subject, data, offset, count, Timeout.Infinite, CancellationToken.None);
+            return requestAsync(subject, null, data, offset, count, Timeout.Infinite, CancellationToken.None);
         }
 
         /// <summary>
@@ -3113,7 +3237,7 @@ namespace NATS.Client
         public Task<Msg> RequestAsync(string subject, byte[] data, int timeout, CancellationToken token)
         {
             int count = data != null ? data.Length : 0;
-            return requestAsync(subject, data, 0, count, timeout, token);
+            return requestAsync(subject, null, data, 0, count, timeout, token);
         }
 
         /// <summary>
@@ -3149,7 +3273,7 @@ namespace NATS.Client
         public Task<Msg> RequestAsync(string subject, byte[] data, CancellationToken token)
         {
             int count = data != null ? data.Length : 0;
-            return requestAsync(subject, data, 0, count, Timeout.Infinite, token);
+            return requestAsync(subject, null, data, 0, count, Timeout.Infinite, token);
         }
 
         /// <summary>
@@ -3176,7 +3300,7 @@ namespace NATS.Client
         /// <seealso cref="IConnection.Request(string, byte[])"/>
         public Task<Msg> RequestAsync(string subject, byte[] data, int offset, int count, CancellationToken token)
         {
-            return requestAsync(subject, data, offset, count, Timeout.Infinite, token);
+            return requestAsync(subject, null, data, offset, count, Timeout.Infinite, token);
         }
 
         /// <summary>

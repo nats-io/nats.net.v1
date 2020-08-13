@@ -600,7 +600,7 @@ The NATS server default cipher suites **may not be supported** by the Microsoft
 the  NATS server to include the most secure cipher suites supported by the
 .NET framework.
 
-## New Authentication (Nkeys and User Credentials)
+## NATS 2.0 Authentication (Nkeys and User Credentials)
 
 This requires server with version >= 2.0.0
 
@@ -618,7 +618,7 @@ and wipe and erase memory it uses for each connect or reconnect.
 The helper also can take two entries, one for the JWT and one for the NKey seed file.
 
 ```C#
-IConnection c = new ConnectionFactory().CreateConnection("nats://127.0.0.1", "user.creds", "user.nk"
+IConnection c = new ConnectionFactory().CreateConnection("nats://127.0.0.1", "user.jwt", "user.nk");
 ```
 
 You can also set the event handlers directly and manage challenge signing directly.
@@ -670,6 +670,32 @@ opts.SetNkey("UCKKTOZV72L3NITTGNOCRDZUI5H632XCT4ZWPJBC2X3VEY72KJUWEZ2Z",
 
 // Direct
 IConnection c = new ConnectionFactory().CreateConnection(opts));
+```
+
+## Message Headers
+
+The NATS.Client version 0.11.0 and NATS server version 2.2 support message headers.
+Message headers are represented as a string name value pair just as HTTP headers are.
+
+### Setting Message Headers
+
+```C#
+IConnection c = new new ConnectionFactory().CreateConnection();
+
+Msg m = new Msg();
+m.Header["Content-Type"] = "json";
+m.Subject = "foo";
+c.Publish(m);
+```
+
+### Getting Message Headers
+
+```C#
+IConnection c = new new ConnectionFactory().CreateConnection();
+var s = c.SubscribeSync("foo")
+
+Msg m = s.NextMessage();
+string contentType = m.Header["Content-Type"];
 ```
 
 ## Exceptions
