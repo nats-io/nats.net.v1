@@ -33,6 +33,8 @@ namespace NATS.Client
 
         public bool tls_required { get; private set; }
 
+        public bool headers { get; private set; }
+
         public long max_payload { get; private set; }
 
         public string[] connect_urls { get; private set; }
@@ -54,10 +56,11 @@ namespace NATS.Client
                 version = x["version"].Value,
                 auth_required = x["auth_required"].AsBool,
                 tls_required = x["tls_required"].AsBool,
-                max_payload =  x["max_payload"].AsLong,
-                connect_urls =  x["connect_urls"].Children.Select(n => n.Value).ToArray(),
-                nonce =  x["nonce"].Value,
-                proto = x["proto"].AsInt
+                max_payload = x["max_payload"].AsLong,
+                connect_urls = x["connect_urls"].Children.Select(n => n.Value).ToArray(),
+                nonce = x["nonce"].Value,
+                proto = x["proto"].AsInt,
+                headers = x["headers"].AsBool,
             };
         }
     }
@@ -92,6 +95,8 @@ namespace NATS.Client
 
         public bool echo { get; private set; }
 
+        public bool headers { get; private set; }
+
         internal ConnectInfo(bool verbose, bool pedantic, string ujwt, string nkey, string sig, 
             string user, string pass, string token, bool secure, string name, bool echo)
         {
@@ -106,6 +111,7 @@ namespace NATS.Client
             this.name = name;
             this.auth_token = token;
             this.echo = echo;
+            this.headers = true;
         }
 
         internal StringBuilder AppendAsJsonTo(StringBuilder sb)
@@ -125,7 +131,8 @@ namespace NATS.Client
                 ["jwt"] = jwt ?? string.Empty,
                 ["nkey"] = nkey ?? string.Empty,
                 ["sig"] = sig ?? string.Empty,
-                ["echo"] = echo
+                ["echo"] = echo,
+                ["headers"] = headers,
             };
 
             n.WriteToStringBuilder(sb, 0, 0, JSONTextMode.Compact);

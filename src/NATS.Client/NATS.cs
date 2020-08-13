@@ -339,6 +339,7 @@ namespace NATS.Client
         internal const string _EMPTY_ = "";
         internal const string _SPC_   = " ";
         internal const string _PUB_P_ = "PUB ";
+        internal const string _HPUB_P_ = "HPUB ";
 
         internal const string _OK_OP_   = "+OK";
         internal const string _ERR_OP_  = "-ERR";

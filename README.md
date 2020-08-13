@@ -1,7 +1,7 @@
 
 # NATS - .NET C# Client
 
-A [C# .NET](https://msdn.microsoft.com/en-us/vstudio/aa496123.aspx) client for the [NATS messaging system](https://nats.io) multi targetting `.NET4.5+` and `.NETStandard1.6`.
+A [C# .NET](https://msdn.microsoft.com/en-us/vstudio/aa496123.aspx) client for the [NATS messaging system](https://nats.io) multi targetting `.NET4.6+` and `.NETStandard1.6`.
 
 This NATS Maintainer supported client parallels the [NATS GO Client](https://github.com/nats-io/nats).
 
@@ -40,7 +40,7 @@ The repository contains several projects, all located under `src\`
 All examples provide statistics for benchmarking.
 
 ### .NET Core SDK
-.NET Core SDK style projects are used, so ensure your environment (command line, VSCode, Visual Studio, etc) supports the targetted .NET Core SDK in `src\global.json` as well as .NET Framework 4.5.1 or greater.
+.NET Core SDK style projects are used, so ensure your environment (command line, VSCode, Visual Studio, etc) supports the targetted .NET Core SDK in `src\global.json` as well as .NET Framework 4.6 or greater.
 
 ### Visual Studio
 The recommendation is to load `src\NATS.sln` into Visual Studio 2019 (Visual Studio 2017 works as well). .NET Core SDK style projects are used to multitarget different frameworks, so when working with the source code (debugging, running tets etc) you might need to mind the "context" of the current framework.
@@ -230,7 +230,7 @@ namespace RxSample
 The .NET NATS client mirrors go encoding through serialization and
 deserialization.  Simply create an encoded connection and publish
 objects, and receive objects through an asynchronous subscription using
-the encoded message event handler.  The .NET 4.5 client has a default formatter
+the encoded message event handler.  The .NET 4.6 client has a default formatter
 serializing objects using the BinaryFormatter, but methods used to serialize and deserialize
 objects can be overridden.  The NATS core version does not have serialization
 defaults and they must be specified.
@@ -265,7 +265,7 @@ defaults and they must be specified.
 ### Other Types of Serialization
 Optionally, one can override serialization.  Depending on the level of support or
 third party packages used, objects can be serialized to JSON, SOAP, or a custom
-scheme.  XML was chosen as the example here as it is natively supported by .NET 4.5.
+scheme.  XML was chosen as the example here as it is natively supported by .NET 4.6.
 
 ```C#
         // Example XML serialization.
@@ -540,7 +540,6 @@ The NATS .NET client supports the cluster discovery protocol.  The list of serve
             Options opts = ConnectionFactory.GetDefaultOptions();
             opts.MaxReconnect = 2;
             opts.ReconnectWait = 1000;
-            opts.NoRandomize = true;
             opts.Servers = servers;
 
             IConnection c = new ConnectionFactory().CreateConnection(opts);
@@ -601,7 +600,7 @@ The NATS server default cipher suites **may not be supported** by the Microsoft
 the  NATS server to include the most secure cipher suites supported by the
 .NET framework.
 
-## New Authentication (Nkeys and User Credentials)
+## NATS 2.0 Authentication (Nkeys and User Credentials)
 
 This requires server with version >= 2.0.0
 
@@ -619,7 +618,7 @@ and wipe and erase memory it uses for each connect or reconnect.
 The helper also can take two entries, one for the JWT and one for the NKey seed file.
 
 ```C#
-IConnection c = new ConnectionFactory().CreateConnection("nats://127.0.0.1", "user.creds", "user.nk"
+IConnection c = new ConnectionFactory().CreateConnection("nats://127.0.0.1", "user.jwt", "user.nk");
 ```
 
 You can also set the event handlers directly and manage challenge signing directly.
@@ -671,6 +670,32 @@ opts.SetNkey("UCKKTOZV72L3NITTGNOCRDZUI5H632XCT4ZWPJBC2X3VEY72KJUWEZ2Z",
 
 // Direct
 IConnection c = new ConnectionFactory().CreateConnection(opts));
+```
+
+## Message Headers
+
+The NATS.Client version 0.11.0 and NATS server version 2.2 support message headers.
+Message headers are represented as a string name value pair just as HTTP headers are.
+
+### Setting Message Headers
+
+```C#
+IConnection c = new new ConnectionFactory().CreateConnection();
+
+Msg m = new Msg();
+m.Header["Content-Type"] = "json";
+m.Subject = "foo";
+c.Publish(m);
+```
+
+### Getting Message Headers
+
+```C#
+IConnection c = new new ConnectionFactory().CreateConnection();
+var s = c.SubscribeSync("foo")
+
+Msg m = s.NextMessage();
+string contentType = m.Header["Content-Type"];
 ```
 
 ## Exceptions

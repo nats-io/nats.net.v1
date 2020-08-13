@@ -154,6 +154,25 @@ namespace NATS.Client
     }
 
     /// <summary>
+    /// The exception that is thrown when a NATS operation is not supported due
+    /// to client and server feature conflict.
+    /// </summary>
+    public class NATSNotSupportedException : NATSException
+    {
+        public NATSNotSupportedException() : base("Operation not supported.") { }
+        public NATSNotSupportedException(String s) : base(s) { }
+    }
+
+    /// <summary>
+    /// The exception that is thrown when a NATS header is invalid.
+    /// </summary>
+    public class NATSInvalidHeaderException : NATSException
+    {
+        public NATSInvalidHeaderException() : base("Invalid message header.") { }
+        public NATSInvalidHeaderException(String s) : base(s) { }
+    }
+
+    /// <summary>
     /// The exception that is thrown when a NATS operation is performed on a draining connection.
     /// </summary>
     public class NATSConnectionDrainingException : NATSConnectionException
