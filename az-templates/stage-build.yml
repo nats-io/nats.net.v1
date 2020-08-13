@@ -75,6 +75,14 @@ stages:
             patterns: src/Tests/IntegrationTests/bin/Release/$(targetFrameworkMoniker)/**/*
             artifactname: binaries
 
+        - task: CmdLine@2
+          displayName: Build nats-server nightly
+          inputs:
+            script: |
+              go get github.com/nats-io/nats-server
+              go build github.com/nats-io/nats-server
+              $GOPATH/bin/nats-server -v
+
         - task: DownloadGitHubRelease@0
           inputs:
             connection: github-no-grants
