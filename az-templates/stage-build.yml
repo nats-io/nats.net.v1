@@ -83,8 +83,9 @@ stages:
           displayName: go get github.com/nats-io/nats-server
           inputs:
             arguments: github.com/nats-io/nats-server
+            
         - task: CmdLine@2
-          displayName: Build nats-server nightly
+          displayName: Add nats-server to path (Unix)
           condition: ne(variables['Agent.OS'], 'Windows_NT')
           inputs:
             script: |
@@ -94,8 +95,8 @@ stages:
               nats-server -v
 
         - task: CmdLine@2
-          displayName: Build nats-server nightly
-          condition: ne(variables['Agent.OS'], 'Windows_NT')
+          displayName: Add nats-server to path (Windows)
+          condition: eq(variables['Agent.OS'], 'Windows_NT')
           inputs:
             script: |
               echo "GOPATH: %GOPATH%"
