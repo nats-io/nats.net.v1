@@ -13,16 +13,3 @@ steps:
       $resolvedGOBIN = Resolve-Path $(GOBIN) | Select -Expand Path
       Write-Host "Resolved form: $resolvedGOBIN"
       Write-Host "##vso[task.prependpath]$resolvedGOBIN"
-
-- task: CmdLine@2
-  displayName: Verify nats-server
-  inputs:
-    script: |
-      nats-server -v
-
-- task: CmdLine@2
-  displayName: Verify nats-server.exe
-  condition: eq(variables['Agent.OS'], 'Windows_NT')
-  inputs:
-    script: |
-      nats-server.exe -v

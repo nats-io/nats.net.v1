@@ -75,13 +75,6 @@ stages:
             patterns: src/Tests/IntegrationTests/bin/Release/$(targetFrameworkMoniker)/**/*
             artifactname: binaries
 
-        - task: UseDotNet@2
-          displayName: 'Use .NET Core sdk'
-          inputs:
-            packageType: sdk
-            version: 3.x
-            installationPath: $(Agent.ToolsDirectory)/dotnet
-
         - template: install-nats-server.yml
 
         - task: CmdLine@2
