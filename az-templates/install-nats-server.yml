@@ -7,6 +7,7 @@ steps:
 - task: Powershell@2
   displayName: Include nats-server in path
   inputs:
+    targetType: inline
     script: |
       Write-Host "GOBIN: $(GOBIN)"
       $resolvedGOBIN = Resolve-Path $(GOBIN) | Select -Expand Path
