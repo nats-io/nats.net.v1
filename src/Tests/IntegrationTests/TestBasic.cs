@@ -1546,7 +1546,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact(Skip = "Always failing")]
+        [Fact]
         public void TestAsyncInfoProtocolPrune()
         {
             var opts = Context.GetTestOptions();
