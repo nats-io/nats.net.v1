@@ -131,7 +131,8 @@ stages:
             testRunTitle: IntegrationTests $(imageName) $(targetFrameworkMoniker)
 
         - task: PublishPipelineArtifact@1
-          displayName: Publish binaries for use in dependent jobs
+          condition: always()
+          displayName: Publish test results manually
           inputs:
             targetpath: ./results
             artifactname: test-results-$(imageName)-$(targetFrameworkMoniker)
