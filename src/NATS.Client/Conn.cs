@@ -1997,7 +1997,7 @@ namespace NATS.Client
         #endregion
 
         // Finds the ends of each token in the argument buffer.
-        private int[] argEnds = new int[4];
+        private int[] argEnds = new int[5];
         private int setMsgArgsAryOffsets(byte[] buffer, long length)
         {
             if (convertToStrBuf.Length < length)
@@ -2008,7 +2008,7 @@ namespace NATS.Client
             int count = 0;
             int i = 0;
 
-            // We only support 4 elements in this protocol version
+            // We support up to 5 elements in this protocol version
             for ( ; i < length && count < 5; i++)
             {
                 convertToStrBuf[i] = (char)buffer[i];

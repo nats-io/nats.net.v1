@@ -1851,6 +1851,14 @@ namespace IntegrationTests
                         c.Publish(m);
                         recvMsg = s.NextMessage(1000);
                         Assert.True(recvMsg.Header.Count == 0);
+
+                        // test with a reply subject
+                        m.Header["foo"] = "bar";
+                        m.Reply = "reply.subject";
+                        c.Publish(m);
+                        recvMsg = s.NextMessage(1000);
+                        Assert.True(recvMsg.Header.Count == 1);
+
                     }
                 }
             }

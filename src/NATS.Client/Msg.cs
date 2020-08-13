@@ -96,7 +96,7 @@ namespace NATS.Client
         }
 
         // buffer for parsing strings
-        public char[] stringBuf = new char[64];
+        private char[] StringBuf = new char[64];
 
         /// <summary>
         /// Initializes a new instance of the MsgHeader class.
@@ -153,7 +153,7 @@ namespace NATS.Client
                         // empty key
                         throw new NATSInvalidHeaderException("Missing key");
                     }
-                    key = new string(stringBuf, 0, loc).TrimEnd();
+                    key = new string(StringBuf, 0, loc).TrimEnd();
                     loc = 0;
                 }
                 else if (bytes[i] == '\r' && bytes[i + 1] == '\n')
@@ -170,7 +170,7 @@ namespace NATS.Client
                     }
                     else
                     {
-                        Add(key, new string(stringBuf, 0, loc));
+                        Add(key, new string(StringBuf, 0, loc));
                     }
 
                     // reset the key, buffer location, and skip past the \n.
@@ -183,16 +183,16 @@ namespace NATS.Client
                     // it's a key or value
 
                     // check our header length and resize if need be.
-                    if (loc > stringBuf.Length - 1)
+                    if (loc > StringBuf.Length - 1)
                     {
                         // For simplicity, just resize it to the entire header kv size.
                         char[] buf = new char[byteCount - HeaderLen];
-                        Array.Copy(stringBuf, buf, stringBuf.Length);
-                        stringBuf = buf;
+                        Array.Copy(StringBuf, buf, StringBuf.Length);
+                        StringBuf = buf;
                     }
 
                     // copy the key or value byte into our buffer.
-                    stringBuf[loc] = (char)bytes[i];
+                    StringBuf[loc] = (char)bytes[i];
                     loc++;
                 }
             }
