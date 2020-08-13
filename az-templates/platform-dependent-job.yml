@@ -36,6 +36,10 @@ jobs:
   dependsOn: ${{ parameters.dependsOn }}
   displayName: ${{ parameters.displayName }}
   timeoutInMinutes: 10
+  variables:
+    GOBIN:  '$(GOPATH)/bin'
+    GOPATH: '$(System.DefaultWorkingDirectory)/gopath'
+
   strategy:
     matrix: ${{ parameters.matrix }}
   pool:
