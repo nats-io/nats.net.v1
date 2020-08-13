@@ -1813,7 +1813,7 @@ namespace IntegrationTests
             }
         }
 
-        [Fact(Skip = "Not supported exception")]
+        [Fact]
         public void TestMessageHeader()
         {
             using (NATSServer.CreateFastAndVerify())
