@@ -1572,10 +1572,10 @@ namespace IntegrationTests
                     s2.Shutdown();
 
                     // receive the updated topology from the cluster shrinking
-                    Assert.True(evDS.WaitOne(10000));
+                    Assert.True(evDS.WaitOne(10000), "evDS timeout");
 
                     LinkedList<string> discoveredServers = new LinkedList<string>(c.DiscoveredServers);
-                    Assert.True(discoveredServers.Count == 1);
+                    Assert.Equal(1, discoveredServers.Count);
 
                     string expectedServer = $"nats://127.0.0.1:{Context.Server3.Port}";
                     if (!discoveredServers.Contains(expectedServer))
@@ -1603,17 +1603,17 @@ namespace IntegrationTests
                         //  "nats://127.0.0.1:4224"]
                         //
                         discoveredServers = new LinkedList<string>(c.DiscoveredServers);
-                        Assert.True(discoveredServers.Count == 2);
+                        Assert.Equal(2, discoveredServers.Count);
                         Assert.DoesNotContain($"nats://127.0.0.1:{Context.Server2.Port}", discoveredServers);
                         Assert.Contains($"nats://127.0.0.1:{Context.Server3.Port}", discoveredServers);
                         Assert.Contains($"nats://127.0.0.1:{Context.Server4.Port}", discoveredServers);
 
                         // shutdown server 1 and wait for reconnect.
                         s1.Shutdown();
-                        Assert.True(evRC.WaitOne(10000));
+                        Assert.True(evRC.WaitOne(10000), "evRC timeout");
                         // Make sure we did NOT delete our expclitly configured server.
                         LinkedList<string> servers = new LinkedList<string>(c.Servers);
-                        Assert.True(servers.Count == 3); // explicit server is still there.
+                        Assert.Equal(3, servers.Count); // explicit server is still there.
                         Assert.Contains($"nats://127.0.0.1:{Context.Server1.Port}", servers);
                     }
 
