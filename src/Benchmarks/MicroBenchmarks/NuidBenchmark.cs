@@ -19,7 +19,7 @@ using NATS.Client.Internals;
 
 namespace MicroBenchmarks
 {
-    [DisassemblyDiagnoser(printAsm: true, printSource: true)]
+    [DisassemblyDiagnoser(printSource: true)]
     [Orderer(SummaryOrderPolicy.FastestToSlowest)]
     [MemoryDiagnoser]
     [MarkdownExporterAttribute.GitHub]
