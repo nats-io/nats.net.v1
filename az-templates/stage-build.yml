@@ -92,7 +92,7 @@ stages:
               echo "GOPATH: $GOPATH"
               echo "GOBIN: $GOBIN"
               echo "##vso[task.setvariable variable=PATH]$PATH:$GOBIN"
-              nats-server -v
+              $GOBIN/nats-server -v
 
         - task: CmdLine@2
           displayName: Add nats-server to path (Windows)
@@ -102,6 +102,12 @@ stages:
               echo "GOPATH: %GOPATH%"
               echo "GOBIN: %GOBIN%"
               echo "##vso[task.setvariable variable=PATH]${env:PATH};%GOBIN%"
+              %GOBIN%\nats-server -v
+
+        - task: CmdLine@2
+          displayName: Verify nats-server
+          inputs:
+            script: |
               nats-server -v
 
         - task: CmdLine@2
