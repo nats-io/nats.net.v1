@@ -33,7 +33,7 @@ namespace UnitTests.Internals
         }
 
         [Fact]
-        public async Task TimeoutWithToken_ThrowsTaskCanceledExcpetion()
+        public async Task TimeoutWithToken_ThrowsNATSTimeoutExcpetion()
         {
             // Arrange
             var cts = new CancellationTokenSource();
