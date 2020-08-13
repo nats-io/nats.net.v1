@@ -91,17 +91,17 @@ stages:
               echo "GOPATH: $GOPATH"
               echo "GOBIN: $GOBIN"
               echo "##vso[task.setvariable variable=PATH]$PATH:$GOBIN"
-              nats-server.exe -v
+              nats-server -v
 
         - task: CmdLine@2
           displayName: Build nats-server nightly
           condition: ne(variables['Agent.OS'], 'Windows_NT')
           inputs:
             script: |
-              echo "GOPATH: $GOPATH"
-              echo "GOBIN: $GOBIN"
-              echo "##vso[task.setvariable variable=PATH]$PATH:$GOBIN"
-              nats-server.exe -v
+              echo "GOPATH: %GOPATH%"
+              echo "GOBIN: %GOBIN%"
+              echo "##vso[task.setvariable variable=PATH]${env:PATH};%GOBIN%"
+              nats-server -v
 
         - task: CmdLine@2
           displayName: Run integration tests
