@@ -1575,15 +1575,13 @@ namespace IntegrationTests
                     Assert.True(evDS.WaitOne(10000), "evDS timeout");
 
                     LinkedList<string> discoveredServers = new LinkedList<string>(c.DiscoveredServers);
+                    _outputHelper.WriteLine($"Discovered: {string.Join(",", discoveredServers)}");
                     Assert.Single(discoveredServers);
 
                     string expectedServer = $"nats://127.0.0.1:{Context.Server3.Port}";
                     if (!discoveredServers.Contains(expectedServer))
                     {
-                        foreach (string s in discoveredServers)
-                        {
-                            Console.WriteLine("\tDiscovered server:" + expectedServer);
-                        }
+                        _outputHelper.WriteLine($"Expected server: {expectedServer}, discovered: {string.Join(",", discoveredServers)}");
                         Assert.True(false, "Discovered servers does not contain " + expectedServer);
                     }
                     evDS.Reset();
@@ -1603,6 +1601,7 @@ namespace IntegrationTests
                         //  "nats://127.0.0.1:4224"]
                         //
                         discoveredServers = new LinkedList<string>(c.DiscoveredServers);
+                        _outputHelper.WriteLine($"Discovered: {string.Join(",", discoveredServers)}");
                         Assert.Equal(2, discoveredServers.Count);
                         Assert.DoesNotContain($"nats://127.0.0.1:{Context.Server2.Port}", discoveredServers);
                         Assert.Contains($"nats://127.0.0.1:{Context.Server3.Port}", discoveredServers);
