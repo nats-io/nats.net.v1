@@ -25,7 +25,6 @@ using System.Security.Cryptography.X509Certificates;
 using System.Security.Authentication;
 using System.Globalization;
 using System.Diagnostics;
-using NATS.Client.Extensions;
 using NATS.Client.Internals;
 
 namespace NATS.Client
@@ -378,7 +377,8 @@ namespace NATS.Client
                         sslStream = null;
                     }
 
-                    client = createTcpClient(s.url);
+                    client = new TcpClient(AddressFamily.InterNetworkV6);
+                    client.Client.DualMode = true;
                     var task = client.ConnectAsync(s.url.Host, s.url.Port);
                     // avoid raising TaskScheduler.UnobservedTaskException if the timeout occurs first
                     task.ContinueWith(t => GC.KeepAlive(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
@@ -399,15 +399,6 @@ namespace NATS.Client
                     // save off the hostname
                     hostName = s.url.Host;
                 }
-            }
-
-            private static TcpClient createTcpClient(Uri uri)
-            {
-                var interNetworkAddressFamily = uri.GetInterNetworkAddressFamily();
-
-                return interNetworkAddressFamily != null
-                       ? new TcpClient(interNetworkAddressFamily.Value)
-                       : new TcpClient();
             }
 
             private static bool remoteCertificateValidation(
