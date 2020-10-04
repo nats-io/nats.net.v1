@@ -614,7 +614,7 @@ namespace IntegrationTests
             }
         }
 
-        private async void testRequestAsync(bool useOldRequestStyle)
+        private async void testRequestAsync(bool useOldRequestStyle, bool useMsgAPI)
         {
             using (NATSServer.CreateFastAndVerify())
             {
@@ -624,18 +624,19 @@ namespace IntegrationTests
                 using (IConnection c = Context.ConnectionFactory.CreateConnection(opts))
                 {
                     byte[] response = Encoding.UTF8.GetBytes("I will help you.");
-
-                    EventHandler<MsgHandlerEventArgs> eh = (sender, args) =>
-                    {
-                        c.Publish(args.Message.Reply, response);
-                    };
-
-                    using (IAsyncSubscription s = c.SubscribeAsync("foo", eh))
+                    using (c.SubscribeAsync("foo", (obj, args) => args.Message.Respond(response)))
                     {
                         var tasks = new List<Task>();
                         for (int i = 0; i < 100; i++)
                         {
-                            tasks.Add(c.RequestAsync("foo", null));
+                            if (useMsgAPI)
+                            {
+                                tasks.Add(c.RequestAsync(new Msg("foo"), 10000));
+                            }
+                            else
+                            {
+                                tasks.Add(c.RequestAsync("foo", null, 10000));
+                            }
                         }
 
                         foreach (Task<Msg> t in tasks)
@@ -692,13 +693,25 @@ namespace IntegrationTests
         [Fact]
         public void TestRequestAsync()
         {
-            testRequestAsync(useOldRequestStyle: false);
+            testRequestAsync(useOldRequestStyle: false, useMsgAPI: false);
         }
 
         [Fact]
         public void TestRequestAsync_OldRequestStyle()
         {
-            testRequestAsync(useOldRequestStyle: true);
+            testRequestAsync(useOldRequestStyle: true, useMsgAPI: false);
+        }
+
+        [Fact]
+        public void TestRequestAsyncMsg()
+        {
+            testRequestAsync(useOldRequestStyle: false, useMsgAPI: true);
+        }
+
+        [Fact]
+        public void TestRequestAsyncMsg_OldRequestStyle()
+        {
+            testRequestAsync(useOldRequestStyle: true, useMsgAPI: true);
         }
 
         [Fact]
@@ -713,7 +726,7 @@ namespace IntegrationTests
             testRequestAsyncWithOffsets(useOldRequestStyle: true);
         }
 
-        private async void testRequestAsyncCancellation(bool useOldRequestStyle)
+        private async void testRequestAsyncCancellation(bool useOldRequestStyle, bool useMsgAPI)
         {
             using (NATSServer.CreateFastAndVerify())
             {
@@ -741,7 +754,14 @@ namespace IntegrationTests
                         var tasks = new List<Task>();
                         for (int i = 0; i < 1000; i++)
                         {
-                            tasks.Add(c.RequestAsync("foo", null, miscToken));
+                            if (useMsgAPI)
+                            {
+                                tasks.Add(c.RequestAsync(new Msg("foo"), miscToken));
+                            }
+                            else
+                            {
+                                tasks.Add(c.RequestAsync("foo", null, miscToken));
+                            }
                         }
 
                         foreach (Task<Msg> t in tasks)
@@ -790,16 +810,29 @@ namespace IntegrationTests
         [Fact]
         public void TestRequestAsyncCancellation()
         {
-            testRequestAsyncCancellation(useOldRequestStyle: false);
+            testRequestAsyncCancellation(useOldRequestStyle: false, useMsgAPI: false);
+            testRequestAsyncCancellation(useOldRequestStyle: false, useMsgAPI: true);
+        }
+
+        [Fact]
+        public void TestRequestAsyncMsgCancellation()
+        {
+            testRequestAsyncCancellation(useOldRequestStyle: false, useMsgAPI: true);
         }
 
         [Fact]
         public void TestRequestAsyncCancellation_OldRequestStyle()
         {
-            testRequestAsyncCancellation(useOldRequestStyle: true);
+            testRequestAsyncCancellation(useOldRequestStyle: true, useMsgAPI: false);
         }
 
-        private async void testRequestAsyncTimeout(bool useOldRequestStyle)
+        [Fact]
+        public void TestRequestAsyncMsgCancellation_OldRequestStyle()
+        {
+            testRequestAsyncCancellation(useOldRequestStyle: true, useMsgAPI: true);
+        }
+
+        private async void testRequestAsyncTimeout(bool useOldRequestStyle, bool useMsgAPI)
         {
             using (var server = NATSServer.CreateFastAndVerify())
             {
@@ -814,7 +847,14 @@ namespace IntegrationTests
                     using (var sub = conn.SubscribeAsync("foo", (obj, args) => { conn.Publish(args.Message.Reply, new byte[0]); }))
                     {
                         sw.Start();
-                        await conn.RequestAsync("foo", new byte[0], 5000);
+                        if (useMsgAPI)
+                        {
+                            await conn.RequestAsync(new Msg("foo", new byte[0]), 5000);
+                        }
+                        else
+                        {
+                            await conn.RequestAsync("foo", new byte[0], 5000);
+                        }
                         sw.Stop();
                         Assert.True(sw.ElapsedMilliseconds < 5000, "Unexpected timeout behavior");
                         sub.Unsubscribe();
@@ -843,13 +883,118 @@ namespace IntegrationTests
         [Fact]
         public void TestRequestAsyncTimeout()
         {
-            testRequestAsyncTimeout(useOldRequestStyle: false);
+            testRequestAsyncTimeout(useOldRequestStyle: false, useMsgAPI: false);
+        }
+
+        [Fact]
+        public void TestRequestAsyncMsgTimeout()
+        {
+            testRequestAsyncTimeout(useOldRequestStyle: false, useMsgAPI: true);
         }
 
         [Fact]
         public void TestRequestAsyncTimeout_OldRequestStyle()
         {
-            testRequestAsyncTimeout(useOldRequestStyle: true);
+            testRequestAsyncTimeout(useOldRequestStyle: true, useMsgAPI: false);
+        }
+
+        [Fact]
+        public void TestRequestAsyncMsgTimeout_OldRequestStyle()
+        {
+            testRequestAsyncTimeout(useOldRequestStyle: true, useMsgAPI: true);
+        }
+
+        private void TestRequestMsgWithHeader(bool useOldStyle)
+        {
+            using (NATSServer.CreateFastAndVerify())
+            {
+                Options opts = Context.GetTestOptions();
+                opts.UseOldRequestStyle = useOldStyle;
+
+                using (var c = Context.ConnectionFactory.CreateConnection(opts))
+                {
+                    bool validHeader = false;
+                    byte[] response = Encoding.UTF8.GetBytes("I will help you.");
+
+                    c.SubscribeAsync("foo", (obj, args) =>
+                    {
+                        var m = args.Message;
+                        if (m.HasHeaders)
+                        {
+                            validHeader = "bar".Equals(m.Header["foo"]);
+                        }
+                        m.Respond(response);
+                    });
+
+                    Msg rmsg = new Msg();
+                    rmsg.Subject = "foo";
+                    rmsg.Data = Encoding.UTF8.GetBytes("help!");
+                    rmsg.Header["foo"] = "bar";
+
+                    Msg m = c.Request(rmsg, 5000);
+                    Assert.True(compare(response, m.Data), "Response #1 isn't valid");
+
+                    Assert.True(validHeader);
+
+                    // test both APIs.
+                    m = c.Request(rmsg);
+                    Assert.True(compare(response, m.Data), "Response #2 isn't valid");
+                }
+            }
+        }
+
+        [Fact]
+        public void TestRequestMessageWithHeader()
+        {
+            TestRequestMsgWithHeader(false);
+        }
+
+        [Fact]
+        public void TestRequestMessageWithHeader_OldRequestStyle()
+        {
+            TestRequestMsgWithHeader(true);
+        }
+
+        [Fact]
+        public void TestRequestMessageVarious()
+        {
+            using (NATSServer.CreateFastAndVerify())
+            {
+                using (IConnection c = Context.OpenConnection())
+                {
+                    c.SubscribeAsync("foo", (obj, args) => args.Message.Respond(null));
+
+                    // test no data
+                    Msg m = c.Request(new Msg("foo"), 5000);
+                    Assert.False(m.HasHeaders);
+                    Assert.True(m.Data.Length == 0);
+
+                    // test that the reply subject is ignored (no timeout)
+                    c.Request(new Msg("foo", "bar", null), 5000);
+                }
+            }
+        }
+
+        [Fact]
+        public void TestRequestMessageExceptions()
+        {
+            using (NATSServer.CreateFastAndVerify())
+            {
+                using (IConnection c = Context.OpenConnection())
+                {
+                    // null msg
+                    Assert.Throws<ArgumentNullException>(() => c.Request(null));
+
+                    // no subject
+                    Assert.Throws<NATSBadSubscriptionException>(() => c.Request(new Msg()));
+
+                    // invalid timeout
+                    Assert.Throws<ArgumentException>(() => c.Request(new Msg("foo"), 0));
+
+                    // actual timeout
+                    Assert.Throws<NATSTimeoutException>(() => c.Request(new Msg("foo"), 100));
+                }
+            }
         }
 
         class TestReplier
@@ -1822,6 +1967,7 @@ namespace IntegrationTests
 
                         c.Publish(m);
                         var recvMsg = s.NextMessage(1000);
+                        Assert.True(m.HasHeaders);
                         Assert.Equal("value", recvMsg.Header["key"]);
 
                         // assigning a message header
