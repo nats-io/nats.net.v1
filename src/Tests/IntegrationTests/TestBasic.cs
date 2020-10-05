@@ -1687,11 +1687,6 @@ namespace IntegrationTests
             var opts = Context.GetTestOptions();
             opts.Url = $"nats://127.0.0.1:{Context.Server1.Port}";
 
-            AutoResetEvent evDS = new AutoResetEvent(false);
-            opts.ServerDiscoveredEventHandler = (o, a) => { evDS.Set(); };
-
-            AutoResetEvent evRC = new AutoResetEvent(false);
-            opts.ReconnectedEventHandler = (o, a) => { evRC.Set(); };
             // Create a cluster of 3 nodes, then take one implicit server away
             // and add another.  The server removed should no longer be in the
             // discovered servers list.
@@ -1699,15 +1694,28 @@ namespace IntegrationTests
                               s2 = NATSServer.Create(Context.Server2.Port, $"-a 127.0.0.1 --cluster nats://127.0.0.1:{Context.ClusterServer2.Port} --routes nats://127.0.0.1:{Context.ClusterServer1.Port}"),
                               s3 = NATSServer.Create(Context.Server3.Port, $"-a 127.0.0.1 --cluster nats://127.0.0.1:{Context.ClusterServer3.Port} --routes nats://127.0.0.1:{Context.ClusterServer1.Port}"))
             {
+                // create a test connection to check for cluster formation.  This helps avoid
+                // flappers in protocol messages being sent as the cluster forms.
+                var tc = Context.ConnectionFactory.CreateConnection(opts);
+                Assert.True(assureClusterFormed(tc, 3), "Incomplete cluster with server count: " + tc.Servers.Length);
+                tc.Close();
+
+                // Now add event handers to the options
+                AutoResetEvent evDS = new AutoResetEvent(false);
+                opts.ServerDiscoveredEventHandler = (o, a) => { evDS.Set(); };
+
+                AutoResetEvent evRC = new AutoResetEvent(false);
+                opts.ReconnectedEventHandler = (o, a) => { evRC.Set(); };
+
+                // Connect again to test pruning.
                 using (var c = Context.ConnectionFactory.CreateConnection(opts))
                 {
-                    Assert.True(assureClusterFormed(c, 3), "Incomplete cluster with server count: " + c.Servers.Length);
+                    Assert.True(c.Servers.Length == 3, "Unexpected server count");
 
                     // shutdown server 2
                     s2.Shutdown();
 
-                    // receive the updated topology from the cluster shrinking
-                    Assert.True(evDS.WaitOne(10000));
+                    evDS.WaitOne(5000);
 
                     LinkedList<string> discoveredServers = new LinkedList<string>(c.DiscoveredServers);
                     Assert.True(discoveredServers.Count == 1);
