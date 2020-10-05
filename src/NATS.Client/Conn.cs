@@ -3374,11 +3374,11 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Asynchronously sends a request payload and returns the response <see cref="Msg"/>, or throws 
+        /// Asynchronously sends a request message and returns the response <see cref="Msg"/>, or throws 
         /// <see cref="NATSTimeoutException"/> if the <paramref name="timeout"/> expires.
         /// </summary>
         /// <remarks>
-        /// <see cref="RequestAsync(string, byte[], int)"/> will create an unique inbox for this request, sharing a
+        /// <see cref="RequestAsync(Msg, int)"/> will create an unique inbox for this request, sharing a
         /// single subscription for all replies to this <see cref="Connection"/> instance. However, if
         /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription.
         /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
@@ -3417,10 +3417,10 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Asynchronously sends a request payload and returns the response <see cref="Msg"/>.
+        /// Asynchronously sends a request message and returns the response <see cref="Msg"/>.
         /// </summary>
         /// <remarks>
-        /// <see cref="RequestAsync(string, byte[])"/> will create an unique inbox for this request, sharing a single
+        /// <see cref="RequestAsync(Msg)"/> will create an unique inbox for this request, sharing a single
         /// subscription for all replies to this <see cref="Connection"/> instance. However, if
         /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription. 
         /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
@@ -3457,12 +3457,12 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Asynchronously sends a request payload and returns the response <see cref="Msg"/>, or throws
+        /// Asynchronously sends a request message and returns the response <see cref="Msg"/>, or throws
         /// <see cref="NATSTimeoutException"/> if the <paramref name="timeout"/> expires, while monitoring for 
         /// cancellation requests.
         /// </summary>
         /// <remarks>
-        /// <see cref="RequestAsync(string, byte[], int, CancellationToken)"/> will create an unique inbox for this
+        /// <see cref="RequestAsync(Msg, int, CancellationToken)"/> will create an unique inbox for this
         /// request, sharing a single subscription for all replies to this <see cref="Connection"/> instance. However,
         /// if <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription.
         /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
@@ -3503,11 +3503,11 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Asynchronously sends a request payload and returns the response <see cref="Msg"/>, while monitoring for
+        /// Asynchronously sends a request message and returns the response <see cref="Msg"/>, while monitoring for
         /// cancellation requests.
         /// </summary>
         /// <remarks>
-        /// <see cref="RequestAsync(string, byte[], CancellationToken)"/> will create an unique inbox for this request,
+        /// <see cref="RequestAsync(Msg, CancellationToken)"/> will create an unique inbox for this request,
         /// sharing a single subscription for all replies to this <see cref="Connection"/> instance. However, if 
         /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription.
         /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
