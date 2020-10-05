@@ -918,12 +918,12 @@ namespace IntegrationTests
 
                     c.SubscribeAsync("foo", (obj, args) =>
                     {
-                        var m = args.Message;
-                        if (m.HasHeaders)
+                        var msg = args.Message;
+                        if (msg.HasHeaders)
                         {
-                            validHeader = "bar".Equals(m.Header["foo"]);
+                            validHeader = "bar".Equals(msg.Header["foo"]);
                         }
-                        m.Respond(response);
+                        msg.Respond(response);
                     });
 
                     Msg rmsg = new Msg();
