@@ -382,6 +382,117 @@ namespace NATS.Client
         Task<Msg> RequestAsync(string subject, byte[] data, int offset, int count, CancellationToken token);
 
         /// <summary>
+        /// Sends a request message and returns the response <see cref="Msg"/>.
+        /// </summary>
+        /// <remarks>
+        /// <para>NATS supports two flavors of request-reply messaging: point-to-point or one-to-many. Point-to-point
+        /// involves the fastest or first to respond. In a one-to-many exchange, you set a limit on the number of 
+        /// responses the requestor may receive and instead must use a subscription (<see cref="ISubscription.AutoUnsubscribe(int)"/>).
+        /// In a request-response exchange, publish request operation publishes a message with a reply subject expecting
+        /// a response on that reply subject.</para>
+        /// <para><see cref="Request(Msg)"/> will create an unique inbox for this request, sharing a single
+        /// subscription for all replies to this <see cref="Connection"/> instance. However, if 
+        /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription. 
+        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.</para>
+        /// </remarks>=
+        /// <param name="message">A <see cref="Msg"/> that contains the request data to publish
+        /// to the connected NATS server.  Any reply subject will be overridden.</param>
+        /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
+        Msg Request(Msg message);
+
+        /// <summary>
+        /// Sends a request message and returns the response <see cref="Msg"/>, or throws
+        /// <see cref="NATSTimeoutException"/> if the <paramref name="timeout"/> expires.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Request(Msg, int)"/> will create an unique inbox for this request, sharing a single
+        /// subscription for all replies to this <see cref="Connection"/> instance. However, if 
+        /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription. 
+        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
+        /// </remarks>
+        /// <param name="message">A NATS <see cref="Msg"/> that contains the request data to publish
+        /// to the connected NATS server.  The reply subject will be overridden.</param>
+        /// <param name="timeout">The number of milliseconds to wait.</param>
+        /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
+        /// <seealso cref="IConnection.Request(Msg)"/>
+        Msg Request(Msg message, int timeout);
+
+        /// <summary>
+        /// Asynchronously sends a request message and returns the response <see cref="Msg"/>.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="RequestAsync(Msg)"/> will create an unique inbox for this request, sharing a single
+        /// subscription for all replies to this <see cref="Connection"/> instance. However, if
+        /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription. 
+        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
+        /// </remarks>
+        /// <param name="message">A NATS <see cref="Msg"/> that contains the request data to publish
+        /// to the connected NATS server. The reply subject will be overridden.</param>
+        /// <returns>A task that represents the asynchronous read operation. The value of the 
+        /// <see cref="Task{TResult}.Result"/> parameter contains a <see cref="Msg"/> with the response from the NATS
+        /// server.</returns>
+        /// <seealso cref="IConnection.Request(Msg)"/>
+        Task<Msg> RequestAsync(Msg message);
+
+        /// <summary>
+        /// Asynchronously sends a request message and returns the response <see cref="Msg"/>, or throws 
+        /// <see cref="NATSTimeoutException"/> if the <paramref name="timeout"/> expires.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="RequestAsync(Msg, int)"/> will create an unique inbox for this request, sharing a
+        /// single subscription for all replies to this <see cref="Connection"/> instance. However, if
+        /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription.
+        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
+        /// </remarks>
+        /// <param name="message">A NATS message <see cref="Msg"/> that contains the request data to publish
+        /// to the connected NATS server. The reply subject will be overridden.</param>
+        /// <param name="timeout">The number of milliseconds to wait.</param>
+        /// <returns>A task that represents the asynchronous read operation. The value of the <see cref="Task{TResult}.Result"/>
+        /// parameter contains a <see cref="Msg"/> with the response from the NATS server.</returns>
+        /// <seealso cref="IConnection.Request(Msg, int)"/>
+        Task<Msg> RequestAsync(Msg message, int timeout);
+
+        /// <summary>
+        /// Asynchronously sends a request message and returns the response <see cref="Msg"/>, while monitoring for
+        /// cancellation requests.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="RequestAsync(Msg, CancellationToken)"/> will create an unique inbox for this request,
+        /// sharing a single subscription for all replies to this <see cref="Connection"/> instance. However, if 
+        /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription.
+        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
+        /// </remarks>
+        /// <param name="message">A NATS <see cref="Msg"/> that contains the request data to publish
+        /// to the connected NATS server.  The reply subject will be overridden.</param>
+        /// <param name="token">The token to monitor for cancellation requests.</param>
+        /// <returns>A task that represents the asynchronous read operation. The value of the
+        /// <see cref="Task{TResult}.Result"/> parameter contains a <see cref="Msg"/> with the response from the NATS 
+        /// server.</returns>
+        /// <seealso cref="IConnection.Request(Msg)"/>
+        Task<Msg> RequestAsync(Msg message, CancellationToken token);
+
+        /// <summary>
+        /// Asynchronously sends a request message and returns the response <see cref="Msg"/>, or throws
+        /// <see cref="NATSTimeoutException"/> if the <paramref name="timeout"/> expires, while monitoring for 
+        /// cancellation requests.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="RequestAsync(Msg, int, CancellationToken)"/> will create an unique inbox for this
+        /// request, sharing a single subscription for all replies to this <see cref="Connection"/> instance. However,
+        /// if <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription.
+        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
+        /// </remarks>
+        /// <param name="message">A NATS <see cref="Msg"/> that contains the request data to publish
+        /// to the connected NATS server.  The reply subject will be overridden.</param>
+        /// <param name="timeout">The number of milliseconds to wait.</param>
+        /// <param name="token">The token to monitor for cancellation requests.</param>
+        /// <returns>A task that represents the asynchronous read operation. The value of the
+        /// <see cref="Task{TResult}.Result"/> parameter contains  a <see cref="Msg"/> with the response from the NATS
+        /// server.</returns>
+        /// <seealso cref="IConnection.Request(Msg, int)"/>
+        Task<Msg> RequestAsync(Msg message, int timeout, CancellationToken token);
+
+        /// <summary>
         /// Creates an inbox string which can be used for directed replies from subscribers.
         /// </summary>
         /// <remarks>
