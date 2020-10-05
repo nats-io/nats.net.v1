@@ -934,7 +934,7 @@ namespace IntegrationTests
                     Msg m = c.Request(rmsg, 5000);
                     Assert.True(compare(response, m.Data), "Response #1 isn't valid");
 
-                    Assert.True(validHeader);
+                    Assert.True(validHeader, "Header is not valid");
 
                     // test both APIs.
                     m = c.Request(rmsg);

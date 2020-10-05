@@ -2828,7 +2828,7 @@ namespace NATS.Client
             // offset/count checking covered by publish
 
             if (opts.UseOldRequestStyle)
-                return oldRequest(subject, null, data, offset, count, timeout);
+                return oldRequest(subject, headers, data, offset, count, timeout);
 
             using (var request = setupRequest(timeout, CancellationToken.None))
             {
