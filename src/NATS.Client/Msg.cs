@@ -618,7 +618,16 @@ namespace NATS.Client
                 header = value;
             }
         }
+
+        /// <summary>
+        /// Returns true if there is a <see cref="MsgHeader"/> with fields set.
+        /// </summary>
+        public bool HasHeaders
+        {
+            get
+            {
+                return header?.Count > 0;
+            }
+        }
     }
-
-
 }

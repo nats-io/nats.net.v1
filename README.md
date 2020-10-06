@@ -166,7 +166,7 @@ Here are example snippets of using the API to create a connection, subscribe, pu
 
 ## RX Usage
 Importing the namespace `NATS.Client.Rx` you will be able to use an extension method
-`connection.Observere(subject)` to turn the connection to an observable. If you have a more
+`connection.Observe(subject)` to turn the connection to an observable. If you have a more
 advanced `IAsyncSubscription`, you can use `asyncSubscription.ToObservable()`.
 
 You can now import the namespace `NATS.Client.Rx.Ops`. After this you get builtin support for:
