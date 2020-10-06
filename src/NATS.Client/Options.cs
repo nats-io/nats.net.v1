@@ -75,6 +75,17 @@ namespace NATS.Client
         public EventHandler<ErrEventArgs> AsyncErrorEventHandler = null;
 
         /// <summary>
+        /// Represents the method that will handle an event raised
+        /// when the server notifies the connection that it entered lame duck mode.
+        /// </summary>
+        /// <remarks>
+        /// A server in lame duck mode will gradually disconnect all its connections
+        /// before shuting down. This is often used in deployments when upgrading
+        /// NATS Servers.
+        /// </remarks>
+        public EventHandler<ConnEventArgs> LameDuckModeEventHandler = null;
+
+        /// <summary>
         /// Represents the optional method that is used to get from the
         /// user the desired delay the client should pause before attempting
         /// to reconnect again.
@@ -223,6 +234,7 @@ namespace NATS.Client
             UserJWTEventHandler = o.UserJWTEventHandler;
             UserSignatureEventHandler = o.UserSignatureEventHandler;
             ReconnectDelayHandler = o.ReconnectDelayHandler;
+            LameDuckModeEventHandler = o.LameDuckModeEventHandler;
             maxPingsOut = o.maxPingsOut;
             maxReconnect = o.maxReconnect;
             name = o.name;
@@ -748,7 +760,8 @@ namespace NATS.Client
             appendEventHandler(sb, "ReconnectedEventHandler", ReconnectedEventHandler);
             appendEventHandler(sb, "ReconnectDelayHandler", ReconnectDelayHandler);
             appendEventHandler(sb, "ServerDiscoveredEventHandler", ServerDiscoveredEventHandler);
- 
+            appendEventHandler(sb, "LameDuckModeEventHandler", LameDuckModeEventHandler);
+
             sb.AppendFormat("MaxPingsOut={0};", MaxPingsOut);
             sb.AppendFormat("MaxReconnect={0};", MaxReconnect);
             sb.AppendFormat("Name={0};", Name != null ? Name : "null");

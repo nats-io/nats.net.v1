@@ -52,13 +52,13 @@ namespace IntegrationTests
 
         private NATSServer(TimeSpan delay, int port, string args = null)
         {
-            createProcessStartInfo();
+            psInfo = createProcessStartInfo();
 
             args = args == null
                 ? $"-p {port}"
                 : $"-p {port} {args}";
 
-            addArgument(args);
+            addArgument(psInfo, args);
 
             p = Process.Start(psInfo);
 
@@ -115,39 +115,40 @@ namespace IntegrationTests
         public static NATSServer CreateWithConfig(int port, string configFile)
             => new NATSServer(DefaultDelay, port, $"-config {configFile}");
 
-        private void addArgument(string arg)
+        private void addArgument(ProcessStartInfo psi, string arg)
         {
-            if (psInfo.Arguments == null)
+            if (psi.Arguments == null)
             {
-                psInfo.Arguments = arg;
+                psi.Arguments = arg;
             }
             else
             {
-                string args = psInfo.Arguments;
+                string args = psi.Arguments;
                 args += arg;
-                psInfo.Arguments = args;
+                psi.Arguments = args;
             }
         }
 
-        private void createProcessStartInfo()
+        private ProcessStartInfo createProcessStartInfo()
         {
-            psInfo = new ProcessStartInfo(SERVEREXE);
-            psInfo.UseShellExecute = Debug || !HideWindow;
+            var psi = new ProcessStartInfo(SERVEREXE);
+            psi.UseShellExecute = Debug || !HideWindow;
 
             if (Debug)
             {
-                psInfo.Arguments = " -DV ";
+                psi.Arguments = " -DV ";
             }
             else
             {
                 if (HideWindow)
                 {
-                    psInfo.CreateNoWindow = true;
-                    psInfo.ErrorDialog = false;
+                    psi.CreateNoWindow = true;
+                    psi.ErrorDialog = false;
                 }
             }
 
-            psInfo.WorkingDirectory = UnitTestUtilities.GetConfigDir();
+            psi.WorkingDirectory = UnitTestUtilities.GetConfigDir();
+            return psi;
         }
 
         public void Bounce(int millisDown)
@@ -190,6 +191,27 @@ namespace IntegrationTests
             stopProcess(p);
 
             p = null;
+        }
+
+        public static bool SupportsSignals
+        {
+            get => Environment.OSVersion.Platform == PlatformID.MacOSX ||
+                       Environment.OSVersion.Platform == PlatformID.Unix;
+        }
+
+        /// <summary>
+        /// Sets lame duck mode if the OS supports signals.  Otherwise, we need to
+        /// get adminstrative permissions, install a windows service, start it, etc.
+        /// </summary>
+        public void SetLameDuckMode()
+        {
+            if (!SupportsSignals)
+                throw new NotSupportedException("LDM testing is only support on platforms with signals.");
+
+            var ldmPs = createProcessStartInfo();
+            addArgument(ldmPs, " -sl ldm=" + p.Id);
+            var ldmp = Process.Start(ldmPs);
+            ldmp.WaitForExit();
         }
 
         void IDisposable.Dispose()
