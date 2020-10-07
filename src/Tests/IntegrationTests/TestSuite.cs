@@ -252,4 +252,16 @@ namespace IntegrationTests
         public readonly TestServerInfo Server2 = new TestServerInfo(SeedPort + 1);
         public readonly TestServerInfo Server3 = new TestServerInfo(SeedPort + 2);
     }
+
+    public sealed class SkipPlatformsWithoutSignals : FactAttribute
+    {
+        public SkipPlatformsWithoutSignals()
+        {
+            if (NATSServer.SupportsSignals == false)
+            {
+                Skip = "Ignore environments that do not support signaling.";
+            }
+        }
+
+    }
 }

@@ -2326,7 +2326,7 @@ namespace NATS.Client
         // processInfo is used to parse the info messages sent
         // from the server.
         // Caller must lock.
-        internal void processInfo(string json, bool notifyOnServerAddition)
+        internal void processInfo(string json, bool notify)
         {
             if (json == null || IC._EMPTY_.Equals(json))
             {
@@ -2335,7 +2335,12 @@ namespace NATS.Client
 
             info = ServerInfo.CreateFromJson(json);
             var discoveredUrls = info.connect_urls;
- 
+
+            // The discoveredUrls array could be empty/not present on initial
+            // connect if advertise is disabled on that server, or servers that
+            // did not include themselves in the async INFO protocol.
+            // If empty, do not remove the implicit servers from the pool.  
+
             // Note about pool randomization: when the pool was first created,
             // it was randomized (if allowed). We keep the order the same (removing
             // implicit servers that are no longer sent to us). New URLs are sent
@@ -2347,10 +2352,15 @@ namespace NATS.Client
                 // the entire list.
                 srvPool.PruneOutdatedServers(discoveredUrls);
                 var serverAdded = srvPool.Add(discoveredUrls, true);
-                if (notifyOnServerAddition && serverAdded)
+                if (notify && serverAdded)
                 {
                     scheduleConnEvent(opts.ServerDiscoveredEventHandler);
                 }
+            }
+
+            if (notify && info.ldm && opts.LameDuckModeEventHandler != null)
+            {
+                scheduleConnEvent(opts.LameDuckModeEventHandler);
             }
         }
 
