@@ -43,6 +43,8 @@ namespace NATS.Client
 
         public int proto { get; private set; }
 
+        public bool ldm { get; private set; }
+
         public static ServerInfo CreateFromJson(string json)
         {
             var x = JSON.Parse(json);
@@ -61,6 +63,7 @@ namespace NATS.Client
                 nonce = x["nonce"].Value,
                 proto = x["proto"].AsInt,
                 headers = x["headers"].AsBool,
+                ldm = x["ldm"].AsBool,
             };
         }
     }

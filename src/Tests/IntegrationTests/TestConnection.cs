@@ -582,6 +582,77 @@ namespace IntegrationTests
                 conn.Close();
             }
         }
+
+        [SkipPlatformsWithoutSignals]
+        public void TestLameDuckMode()
+        {
+            using (var s = NATSServer.CreateFastAndVerify(Context.Server1.Port))
+            {
+                var lameEv = new AutoResetEvent(false);
+                var opts = Context.GetTestOptions(Context.Server1.Port);
+                opts.LameDuckModeEventHandler = (sender, args) =>
+                {
+                    lameEv.Set();
+                };
+
+                using (Context.ConnectionFactory.CreateConnection(opts))
+                {
+                    s.SetLameDuckMode();
+                    Assert.True(lameEv.WaitOne(60000));
+                }
+            }
+        }
+
+        [SkipPlatformsWithoutSignals]
+        public void TestLameDuckModeNoCallback()
+        {
+            using (var s = NATSServer.CreateFastAndVerify(Context.Server1.Port))
+            {
+                var closedEv = new AutoResetEvent(false);
+
+                var opts = Context.GetTestOptions(Context.Server1.Port);
+                opts.AllowReconnect = false;
+
+                opts.DisconnectedEventHandler = (obj, args) =>
+                {
+                    closedEv.Set();
+                };
+
+                using (Context.ConnectionFactory.CreateConnection(opts))
+                {
+                    s.SetLameDuckMode();
+                    Assert.True(closedEv.WaitOne(20000));
+                }
+            }
+        }
+
+        [Fact]
+        public void TestLameDuckModeNotCalled()
+        {
+            using (var s = NATSServer.CreateFastAndVerify(Context.Server1.Port))
+            {
+                bool ldmCalled = false;
+                var closedEv = new AutoResetEvent(false);
+
+                var opts = Context.GetTestOptions(Context.Server1.Port);
+                opts.AllowReconnect = false;
+                opts.LameDuckModeEventHandler = (sender, args) =>
+                {
+                    ldmCalled = true;
+                };
+                opts.ClosedEventHandler = (sender, args) =>
+                {
+                    closedEv.Set();
+                };
+
+                using (Context.ConnectionFactory.CreateConnection(opts))
+                {
+                    s.Shutdown();
+                    Assert.True(closedEv.WaitOne(10000));
+                    Assert.False(ldmCalled);
+                }
+            }
+        }
     }
 
     public class TestConnectionSecurity : TestSuite<ConnectionSecuritySuiteContext>
