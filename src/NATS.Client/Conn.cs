@@ -2336,17 +2336,10 @@ namespace NATS.Client
             info = ServerInfo.CreateFromJson(json);
             var discoveredUrls = info.connect_urls;
 
-            // The array could be empty/not present on initial connect,
-            // if advertise is disabled on that server, or servers that
+            // The discoveredUrls array could be empty/not present on initial
+            // connect if advertise is disabled on that server, or servers that
             // did not include themselves in the async INFO protocol.
-            // If empty, do not remove the implicit servers from the pool.
-            if (discoveredUrls?.Length == 0)
-            {
-                if (notify && info.ldm && opts.LameDuckModeEventHandler != null) {
-                    scheduleConnEvent(opts.LameDuckModeEventHandler);
-		        }
-                return;
-            }   
+            // If empty, do not remove the implicit servers from the pool.  
 
             // Note about pool randomization: when the pool was first created,
             // it was randomized (if allowed). We keep the order the same (removing
