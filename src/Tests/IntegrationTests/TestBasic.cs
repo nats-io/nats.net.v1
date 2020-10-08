@@ -632,23 +632,29 @@ namespace IntegrationTests
                     byte[] response = Encoding.UTF8.GetBytes("I will help you.");
                     using (c.SubscribeAsync("foo", (obj, args) => args.Message.Respond(response)))
                     {
-                        var tasks = new List<Task>();
+                        var cts = new CancellationTokenSource(10_000);
+                        var tasks = new List<Task<Msg>>();
                         for (int i = 0; i < 100; i++)
                         {
                             if (useMsgAPI)
                             {
-                                tasks.Add(c.RequestAsync(new Msg("foo"), 10000));
+                                tasks.Add(c.RequestAsync(new Msg("foo"), cts.Token));
                             }
                             else
                             {
-                                tasks.Add(c.RequestAsync("foo", null, 10000));
+                                tasks.Add(c.RequestAsync("foo", null, cts.Token));
                             }
                         }
 
-                        foreach (Task<Msg> t in tasks)
+                        foreach (var t in Interleaved(tasks))
                         {
-                            Msg m = await t;
-                            Assert.True(compare(m.Data, response), "Response isn't valid");
+                            Msg m = await await t;
+
+                            if (!compare(m.Data, response))
+                            {
+                                cts.Cancel();
+                                Assert.True(false, "Response isn't valid");
+                            }
                         }
                     }
 
@@ -679,15 +685,20 @@ namespace IntegrationTests
                     using (IAsyncSubscription s = c.SubscribeAsync("foo", eh))
                     {
                         var tasks = new List<Task<Msg>>();
+                        var cts = new CancellationTokenSource(1_000);
                         for (int i = 0; i < 100; i++)
                         {
-                            tasks.Add(c.RequestAsync("foo", request, 5, 5, 1000));
+                            tasks.Add(c.RequestAsync("foo", request, 5, 5, cts.Token));
                         }
 
-                        foreach (Task<Msg> t in tasks)
+                        foreach (var t in Interleaved(tasks))
                         {
-                            Msg m = await t;
-                            Assert.True(compare(response, 11, m.Data, 5), "Response isn't valid");
+                            Msg m = await await t;
+                            if (!compare(response, 11, m.Data, 5))
+                            {
+                                cts.Cancel();
+                                Assert.True(false, "Response isn't valid");
+                            }
                         }
                     }
 
@@ -757,23 +768,28 @@ namespace IntegrationTests
                     var miscToken = new CancellationTokenSource().Token;
                     using (IAsyncSubscription s = c.SubscribeAsync("foo", eh))
                     {
-                        var tasks = new List<Task>();
+                        var tasks = new List<Task<Msg>>();
+                        var cancellationTokenSource = new CancellationTokenSource();
                         for (int i = 0; i < 1000; i++)
                         {
                             if (useMsgAPI)
                             {
-                                tasks.Add(c.RequestAsync(new Msg("foo"), miscToken));
+                                tasks.Add(c.RequestAsync(new Msg("foo"), cancellationTokenSource.Token));
                             }
                             else
                             {
-                                tasks.Add(c.RequestAsync("foo", null, miscToken));
+                                tasks.Add(c.RequestAsync("foo", null, cancellationTokenSource.Token));
                             }
                         }
 
-                        foreach (Task<Msg> t in tasks)
+                        foreach (var t in Interleaved(tasks))
                         {
-                            Msg m = await t;
-                            Assert.True(compare(m.Data, response), "Response isn't valid");
+                            Msg m = await await t;
+                            if (!compare(m.Data, response))
+                            {
+                                cancellationTokenSource.Cancel();
+                                Assert.True(false, "Response isn't valid");
+                            }
                         }
                     }
 
@@ -817,20 +833,21 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public async Task  TestRequestAsyncCancellation()
+        public async Task TestRequestAsyncCancellation()
         {
-            await testRequestAsyncCancellation(useOldRequestStyle: false, useMsgAPI: false);
+            var request1 = testRequestAsyncCancellation(useOldRequestStyle: false, useMsgAPI: false);
+            var request2 = testRequestAsyncCancellation(useOldRequestStyle: false, useMsgAPI: true);
+            await Task.WhenAll(request1, request2);
+        }
+
+        [Fact]
+        public async Task TestRequestAsyncMsgCancellation()
+        {
             await testRequestAsyncCancellation(useOldRequestStyle: false, useMsgAPI: true);
         }
 
         [Fact]
-        public async Task  TestRequestAsyncMsgCancellation()
-        {
-            await testRequestAsyncCancellation(useOldRequestStyle: false, useMsgAPI: true);
-        }
-
-        [Fact]
-        public async Task  TestRequestAsyncCancellation_OldRequestStyle()
+        public async Task TestRequestAsyncCancellation_OldRequestStyle()
         {
             await testRequestAsyncCancellation(useOldRequestStyle: true, useMsgAPI: false);
         }
@@ -2047,6 +2064,32 @@ namespace IntegrationTests
                 m.Header = null;
                 c.Publish(m);
             }
+        }
+        
+        // Taken from https://devblogs.microsoft.com/pfxteam/processing-tasks-as-they-complete/
+        private static Task<Task<T>> [] Interleaved<T>(List<Task<T>> tasks)
+        {
+            var inputTasks = tasks;
+
+            var buckets = new TaskCompletionSource<Task<T>>[inputTasks.Count];
+            var results = new Task<Task<T>>[buckets.Length];
+            for (int i = 0; i < buckets.Length; i++) 
+            {
+                buckets[i] = new TaskCompletionSource<Task<T>>();
+                results[i] = buckets[i].Task;
+            }
+
+            int nextTaskIndex = -1;
+            Action<Task<T>> continuation = completed =>
+            {
+                var bucket = buckets[Interlocked.Increment(ref nextTaskIndex)];
+                bucket.TrySetResult(completed);
+            };
+
+            foreach (var inputTask in inputTasks)
+                inputTask.ContinueWith(continuation, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+
+            return results;
         }
 
     } // class
