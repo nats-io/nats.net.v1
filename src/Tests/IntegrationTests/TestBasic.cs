@@ -620,7 +620,7 @@ namespace IntegrationTests
             }
         }
 
-        private async void testRequestAsync(bool useOldRequestStyle, bool useMsgAPI)
+        private async Task testRequestAsync(bool useOldRequestStyle, bool useMsgAPI)
         {
             using (NATSServer.CreateFastAndVerify())
             {
@@ -657,7 +657,7 @@ namespace IntegrationTests
             }
         }
 
-        private async void testRequestAsyncWithOffsets(bool useOldRequestStyle)
+        private async Task testRequestAsyncWithOffsets(bool useOldRequestStyle)
         {
             using (NATSServer.CreateFastAndVerify())
             {
@@ -678,7 +678,7 @@ namespace IntegrationTests
 
                     using (IAsyncSubscription s = c.SubscribeAsync("foo", eh))
                     {
-                        var tasks = new List<Task>();
+                        var tasks = new List<Task<Msg>>();
                         for (int i = 0; i < 100; i++)
                         {
                             tasks.Add(c.RequestAsync("foo", request, 5, 5, 1000));
@@ -697,42 +697,42 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public void TestRequestAsync()
+        public async Task TestRequestAsync()
         {
-            testRequestAsync(useOldRequestStyle: false, useMsgAPI: false);
+            await testRequestAsync(useOldRequestStyle: false, useMsgAPI: false);
         }
 
         [Fact]
-        public void TestRequestAsync_OldRequestStyle()
+        public async Task TestRequestAsync_OldRequestStyle()
         {
-            testRequestAsync(useOldRequestStyle: true, useMsgAPI: false);
+            await testRequestAsync(useOldRequestStyle: true, useMsgAPI: false);
         }
 
         [Fact]
-        public void TestRequestAsyncMsg()
+        public async Task TestRequestAsyncMsg()
         {
-            testRequestAsync(useOldRequestStyle: false, useMsgAPI: true);
+            await testRequestAsync(useOldRequestStyle: false, useMsgAPI: true);
         }
 
         [Fact]
-        public void TestRequestAsyncMsg_OldRequestStyle()
+        public async Task TestRequestAsyncMsg_OldRequestStyle()
         {
-            testRequestAsync(useOldRequestStyle: true, useMsgAPI: true);
+            await testRequestAsync(useOldRequestStyle: true, useMsgAPI: true);
         }
 
         [Fact]
-        public void TestRequestAsyncWithOffsets()
+        public async Task TestRequestAsyncWithOffsets()
         {
-            testRequestAsyncWithOffsets(useOldRequestStyle: false);
+            await testRequestAsyncWithOffsets(useOldRequestStyle: false);
         }
 
         [Fact]
-        public void TestRequestAsyncWithOffsets_OldRequestStyle()
+        public async Task TestRequestAsyncWithOffsets_OldRequestStyle()
         {
-            testRequestAsyncWithOffsets(useOldRequestStyle: true);
+            await testRequestAsyncWithOffsets(useOldRequestStyle: true);
         }
 
-        private async void testRequestAsyncCancellation(bool useOldRequestStyle, bool useMsgAPI)
+        private async Task testRequestAsyncCancellation(bool useOldRequestStyle, bool useMsgAPI)
         {
             using (NATSServer.CreateFastAndVerify())
             {
@@ -817,31 +817,31 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public void TestRequestAsyncCancellation()
+        public async Task  TestRequestAsyncCancellation()
         {
-            testRequestAsyncCancellation(useOldRequestStyle: false, useMsgAPI: false);
-            testRequestAsyncCancellation(useOldRequestStyle: false, useMsgAPI: true);
+            await testRequestAsyncCancellation(useOldRequestStyle: false, useMsgAPI: false);
+            await testRequestAsyncCancellation(useOldRequestStyle: false, useMsgAPI: true);
         }
 
         [Fact]
-        public void TestRequestAsyncMsgCancellation()
+        public async Task  TestRequestAsyncMsgCancellation()
         {
-            testRequestAsyncCancellation(useOldRequestStyle: false, useMsgAPI: true);
+            await testRequestAsyncCancellation(useOldRequestStyle: false, useMsgAPI: true);
         }
 
         [Fact]
-        public void TestRequestAsyncCancellation_OldRequestStyle()
+        public async Task  TestRequestAsyncCancellation_OldRequestStyle()
         {
-            testRequestAsyncCancellation(useOldRequestStyle: true, useMsgAPI: false);
+            await testRequestAsyncCancellation(useOldRequestStyle: true, useMsgAPI: false);
         }
 
         [Fact]
-        public void TestRequestAsyncMsgCancellation_OldRequestStyle()
+        public async Task TestRequestAsyncMsgCancellation_OldRequestStyle()
         {
-            testRequestAsyncCancellation(useOldRequestStyle: true, useMsgAPI: true);
+            await testRequestAsyncCancellation(useOldRequestStyle: true, useMsgAPI: true);
         }
 
-        private async void testRequestAsyncTimeout(bool useOldRequestStyle, bool useMsgAPI)
+        private async Task testRequestAsyncTimeout(bool useOldRequestStyle, bool useMsgAPI)
         {
             using (var server = NATSServer.CreateFastAndVerify())
             {
@@ -891,27 +891,27 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public void TestRequestAsyncTimeout()
+        public async Task TestRequestAsyncTimeout()
         {
-            testRequestAsyncTimeout(useOldRequestStyle: false, useMsgAPI: false);
+            await testRequestAsyncTimeout(useOldRequestStyle: false, useMsgAPI: false);
         }
 
         [Fact]
-        public void TestRequestAsyncMsgTimeout()
+        public async Task TestRequestAsyncMsgTimeout()
         {
-            testRequestAsyncTimeout(useOldRequestStyle: false, useMsgAPI: true);
+            await testRequestAsyncTimeout(useOldRequestStyle: false, useMsgAPI: true);
         }
 
         [Fact]
-        public void TestRequestAsyncTimeout_OldRequestStyle()
+        public async Task TestRequestAsyncTimeout_OldRequestStyle()
         {
-            testRequestAsyncTimeout(useOldRequestStyle: true, useMsgAPI: false);
+            await testRequestAsyncTimeout(useOldRequestStyle: true, useMsgAPI: false);
         }
 
         [Fact]
-        public void TestRequestAsyncMsgTimeout_OldRequestStyle()
+        public async Task TestRequestAsyncMsgTimeout_OldRequestStyle()
         {
-            testRequestAsyncTimeout(useOldRequestStyle: true, useMsgAPI: true);
+            await testRequestAsyncTimeout(useOldRequestStyle: true, useMsgAPI: true);
         }
 
         private void TestRequestMsgWithHeader(bool useOldStyle)
