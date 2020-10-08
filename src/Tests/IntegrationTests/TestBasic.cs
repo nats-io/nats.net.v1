@@ -765,7 +765,6 @@ namespace IntegrationTests
                     };
 
                     // test cancellation success.
-                    var miscToken = new CancellationTokenSource().Token;
                     using (IAsyncSubscription s = c.SubscribeAsync("foo", eh))
                     {
                         var tasks = new List<Task<Msg>>();
@@ -793,6 +792,7 @@ namespace IntegrationTests
                         }
                     }
 
+                    var miscToken = new CancellationTokenSource().Token;
                     // test timeout, make sure we are somewhat close (for testing on stressed systems).
                     Stopwatch sw = Stopwatch.StartNew();
                     await Assert.ThrowsAsync<NATSTimeoutException>(() => { return c.RequestAsync("no-replier", null, 1000, miscToken); });
@@ -882,7 +882,7 @@ namespace IntegrationTests
                             await conn.RequestAsync("foo", new byte[0], 5000);
                         }
                         sw.Stop();
-                        Assert.True(sw.ElapsedMilliseconds < 5000, "Unexpected timeout behavior");
+                        Assert.InRange(sw.ElapsedMilliseconds, 0, 5000);
                         sub.Unsubscribe();
                     }
 
@@ -1026,6 +1026,7 @@ namespace IntegrationTests
 
         class TestReplier
         {
+            private byte[] response = Encoding.UTF8.GetBytes("reply");
             string replySubject;
             string id;
             int delay;
@@ -1049,7 +1050,7 @@ namespace IntegrationTests
                 // delay the response to simulate a heavy workload and introduce
                 // variability
                 Thread.Sleep(r.Next((delay / 5), delay));
-                c.Publish(replySubject, Encoding.UTF8.GetBytes("reply"));
+                c.Publish(replySubject, response);
                 c.Flush();
             }
 
@@ -1058,7 +1059,7 @@ namespace IntegrationTests
                 // delay the response to simulate a heavy workload and introduce
                 // variability
                 await Task.Delay(r.Next((delay / 5), delay));
-                c.Publish(replySubject, Encoding.UTF8.GetBytes("reply"));
+                c.Publish(replySubject, response);
                 c.Flush();
             }
         }
@@ -1085,9 +1086,7 @@ namespace IntegrationTests
             int TEST_COUNT = 300;
 
             Stopwatch sw = new Stopwatch();
-            byte[] response = Encoding.UTF8.GetBytes("reply");
 
-            ThreadPool.SetMinThreads(300, 300);
             using (NATSServer.CreateFastAndVerify())
             {
                 Options opts = Context.GetTestOptions();
@@ -1111,16 +1110,18 @@ namespace IntegrationTests
 
                         // use lower level threads over tasks here for predictibility
                         Thread[] threads = new Thread[TEST_COUNT];
+                        int[] sleepDurations = new int[TEST_COUNT];
                         Random r = new Random();
 
                         for (int i = 0; i < TEST_COUNT; i++)
                         {
-                            threads[i] = new Thread((() =>
+                            sleepDurations[i] = r.Next(100, 500);
+                            threads[i] = new Thread(sleepDuration =>
                             {
                                 // randomly delay for a bit to test potential timing issues.
-                                Thread.Sleep(r.Next(100, 500));
+                                Thread.Sleep((int)sleepDuration);
                                 c2.Request("foo", null, MAX_DELAY * 2);
-                            }));
+                            });
                         }
 
                         // sleep for one second to allow the threads to initialize.
@@ -1131,7 +1132,7 @@ namespace IntegrationTests
                         // start all of the threads at the same time.
                         for (int i = 0; i < TEST_COUNT; i++)
                         {
-                            threads[i].Start();
+                            threads[i].Start(sleepDurations[i]);
                         }
 
                         // wait for every thread to stop.
@@ -1143,7 +1144,7 @@ namespace IntegrationTests
                         sw.Stop();
 
                         // check that we didn't process the requests consecutively.
-                        Assert.True(sw.ElapsedMilliseconds < (MAX_DELAY * 2));
+                        Assert.InRange(sw.ElapsedMilliseconds, 0, MAX_DELAY * 2);
                     }
                 }
             }
@@ -1179,7 +1180,6 @@ namespace IntegrationTests
             ThreadPool.SetMinThreads(300, 300);
 
             Stopwatch sw = new Stopwatch();
-            byte[] response = Encoding.UTF8.GetBytes("reply");
 
             using (NATSServer.CreateFastAndVerify())
             {
