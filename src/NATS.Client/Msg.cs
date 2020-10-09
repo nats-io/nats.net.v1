@@ -491,13 +491,16 @@ namespace NATS.Client
             }
 
             // make a deep copy of the bytes for this message.
-            if (totalLen > 0)
+            long payloadLen = totalLen - arg.hdr;
+            if (payloadLen > 0)
             {
-                data = new byte[totalLen];
-                Array.Copy(payload, (int)arg.hdr, data, 0, (int)(totalLen-arg.hdr));
+                data = new byte[payloadLen];
+                Array.Copy(payload, (int)arg.hdr, data, 0, (int)(totalLen - arg.hdr));
             }
             else
+            {
                 data = Empty;
+            }
         }
 
         /// <summary>
