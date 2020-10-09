@@ -100,6 +100,8 @@ namespace NATS.Client
 
         public bool headers { get; private set; }
 
+        public bool no_responders { get; private set; }
+
         internal ConnectInfo(bool verbose, bool pedantic, string ujwt, string nkey, string sig, 
             string user, string pass, string token, bool secure, string name, bool echo)
         {
@@ -115,6 +117,7 @@ namespace NATS.Client
             this.auth_token = token;
             this.echo = echo;
             this.headers = true;
+            this.no_responders = true;
         }
 
         internal StringBuilder AppendAsJsonTo(StringBuilder sb)
@@ -136,6 +139,7 @@ namespace NATS.Client
                 ["sig"] = sig ?? string.Empty,
                 ["echo"] = echo,
                 ["headers"] = headers,
+                ["no_responders"] = no_responders,
             };
 
             n.WriteToStringBuilder(sb, 0, 0, JSONTextMode.Compact);

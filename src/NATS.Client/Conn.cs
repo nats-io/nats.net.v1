@@ -2745,15 +2745,22 @@ namespace NATS.Client
             }
         }
 
-        private void RequestResponseHandler(object sender, MsgHandlerEventArgs e)
+        private static bool IsNoRespondersMsg(Msg m)
+        {
+            return m != null && m.HasHeaders && MsgHeader.noResponders.Equals(m.Header[MsgHeader.Status]);
+        }
+
+        private void RequestResponseHandler(object sender, MsgHandlerEventArgs args)
         {
             InFlightRequest request;
             bool isClosed;
 
-            if (e.Message == null)
+            var m = args.Message;
+
+            if (m == null)
                 return;
 
-            var subject = e.Message.Subject;
+            var subject = args.Message.Subject;
 
             lock (mu)
             {
@@ -2791,7 +2798,14 @@ namespace NATS.Client
 
             if (!isClosed)
             {
-                request.Waiter.TrySetResult(e.Message);
+                if (IsNoRespondersMsg(m))
+                {
+                    request.Waiter.TrySetException(new NATSNoRespondersException());
+                }
+                else
+                {
+                    request.Waiter.TrySetResult(m);
+                }
             }
             else
             {
@@ -2836,18 +2850,30 @@ namespace NATS.Client
                 throw new ArgumentException("Timeout must not be 0.", nameof(timeout));
 
             // offset/count checking covered by publish
-
+            Msg m;
             if (opts.UseOldRequestStyle)
-                return oldRequest(subject, headers, data, offset, count, timeout);
-
-            using (var request = setupRequest(timeout, CancellationToken.None))
             {
-                request.Token.ThrowIfCancellationRequested();
-
-                publish(subject, string.Concat(globalRequestInbox, ".", request.Id), headers, data, offset, count, true);
-
-                return request.Waiter.Task.GetAwaiter().GetResult();
+                m = oldRequest(subject, headers, data, offset, count, timeout);
             }
+            else
+            {
+
+                using (var request = setupRequest(timeout, CancellationToken.None))
+                {
+                    request.Token.ThrowIfCancellationRequested();
+
+                    publish(subject, string.Concat(globalRequestInbox, ".", request.Id), headers, data, offset, count, true);
+
+                    m = request.Waiter.Task.GetAwaiter().GetResult();
+                }
+            }
+
+            if (IsNoRespondersMsg(m))
+            {
+                throw new NATSNoRespondersException();
+            }
+
+            return m;
         }
 
         private async Task<Msg> requestAsync(string subject, byte[] headers, byte[] data, int offset, int count, int timeout, CancellationToken token)
@@ -2887,6 +2913,11 @@ namespace NATS.Client
                 var m = s.NextMessage(timeout);
                 s.unsubscribe(false);
 
+                if (IsNoRespondersMsg(m))
+                {
+                    throw new NATSNoRespondersException();
+                }
+
                 return m;
             }
         }
@@ -2916,6 +2947,7 @@ namespace NATS.Client
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the 
         /// response.</exception>
+        /// <exception cref="NATSNoRespondersException">No responders are available for this request.</exception>
         /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call
         /// while executing the request. See <see cref="Exception.InnerException"/> for more details.</exception>
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
@@ -2971,6 +3003,7 @@ namespace NATS.Client
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
+        /// <exception cref="NATSNoRespondersException">No responders are available for this request.</exception>
         /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call while
         /// executing the request. See <see cref="Exception.InnerException"/> for more details.</exception>
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
@@ -3004,6 +3037,17 @@ namespace NATS.Client
         /// bytes to the subject.</param>
         /// <param name="count">The number of bytes to be published to the subject.</param>
         /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or 
+        /// entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size 
+        /// supported by the NATS server.</exception>
+        /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
+        /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
+        /// response.</exception>
+        /// <exception cref="NATSNoRespondersException">No responders are available for this request.</exception>
+        /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call while
+        /// executing the request. See <see cref="Exception.InnerException"/> for more details.</exception>
+        /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public Msg Request(string subject, byte[] data, int offset, int count)
         {
             return request(subject, null, data, offset, count, Timeout.Infinite);
@@ -3033,6 +3077,7 @@ namespace NATS.Client
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the 
         /// response.</exception>
+        /// <exception cref="NATSNoRespondersException">No responders are available for this request.</exception>
         /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call
         /// while executing the request. See <see cref="Exception.InnerException"/> for more details.</exception>
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
@@ -3069,6 +3114,7 @@ namespace NATS.Client
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
+        /// <exception cref="NATSNoRespondersException">No responders are available for this request.</exception>
         /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call while
         /// executing the request. See <see cref="Exception.InnerException"/> for more details.</exception>
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
@@ -3142,6 +3188,11 @@ namespace NATS.Client
                                 throw;
                             }
                         }
+
+                        if (IsNoRespondersMsg(m))
+                        {
+                            throw new NATSNoRespondersException();
+                        }
                     }
                 }
 
@@ -3184,6 +3235,7 @@ namespace NATS.Client
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
+        /// <exception cref="NATSNoRespondersException">No responders are available for this request.</exception>
         /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call
         /// while executing the request. See <see cref="Exception.InnerException"/> for more details.</exception>
         /// <exception cref="OperationCanceledException">The asynchronous operation was cancelled or timed out before
@@ -3244,6 +3296,7 @@ namespace NATS.Client
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
+        /// <exception cref="NATSNoRespondersException">No responders are available for this request.</exception>
         /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call while
         /// executing the request. See <see cref="Exception.InnerException"/> for more details.</exception>
         /// <exception cref="OperationCanceledException">The asynchronous operation was cancelled or timed out before
@@ -3309,6 +3362,7 @@ namespace NATS.Client
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
+        /// <exception cref="NATSNoRespondersException">No responders are available for this request.</exception>
         /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call while
         /// executing the request. See <see cref="Exception.InnerException"/> for more details.</exception>
         /// <exception cref="OperationCanceledException">The asynchronous operation was cancelled or timed out before
@@ -3345,6 +3399,7 @@ namespace NATS.Client
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the 
         /// response.</exception>
+        /// <exception cref="NATSNoRespondersException">No responders are available for this request.</exception>
         /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call while 
         /// executing the request. See <see cref="Exception.InnerException"/> for more details.</exception>
         /// <exception cref="OperationCanceledException">The asynchronous operation was cancelled or timed out before it
@@ -3408,6 +3463,7 @@ namespace NATS.Client
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
+        /// <exception cref="NATSNoRespondersException">No responders are available for this request.</exception>
         /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call
         /// while executing the request. See <see cref="Exception.InnerException"/> for more details.</exception>
         /// <exception cref="OperationCanceledException">The asynchronous operation was cancelled or timed out before
@@ -3448,6 +3504,7 @@ namespace NATS.Client
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
+        /// <exception cref="NATSNoRespondersException">No responders are available for this request.</exception>
         /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call while
         /// executing the request. See <see cref="Exception.InnerException"/> for more details.</exception>
         /// <exception cref="OperationCanceledException">The asynchronous operation was cancelled or timed out before
@@ -3494,6 +3551,7 @@ namespace NATS.Client
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
+        /// <exception cref="NATSNoRespondersException">No responders are available for this request.</exception>
         /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call while
         /// executing the request. See <see cref="Exception.InnerException"/> for more details.</exception>
         /// <exception cref="OperationCanceledException">The asynchronous operation was cancelled or timed out before
@@ -3536,6 +3594,7 @@ namespace NATS.Client
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the 
         /// response.</exception>
+        /// <exception cref="NATSNoRespondersException">No responders are available for this request.</exception>
         /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call while 
         /// executing the request. See <see cref="Exception.InnerException"/> for more details.</exception>
         /// <exception cref="OperationCanceledException">The asynchronous operation was cancelled or timed out before it

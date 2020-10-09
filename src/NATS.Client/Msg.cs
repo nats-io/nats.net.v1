@@ -58,8 +58,10 @@ namespace NATS.Client
         // Define message header version string and size.
         internal static readonly string Header = "NATS/1.0\r\n";
         internal static readonly byte[] HeaderBytes = Encoding.UTF8.GetBytes(Header);
-        internal static readonly int    HeaderLen = HeaderBytes.Length;
-        internal static readonly int    MinimalValidHeaderLen = Encoding.UTF8.GetBytes(Header + "\r\n").Length;
+        internal static readonly int HeaderLen = HeaderBytes.Length;
+        internal static readonly int MinimalValidHeaderLen = Encoding.UTF8.GetBytes(Header + "\r\n").Length;
+        internal static readonly string Status = "Status";
+        internal static readonly string noResponders = "503";
 
         // Cache the serialized headers to optimize reuse
         private byte[] bytes = null;
@@ -98,6 +100,12 @@ namespace NATS.Client
         // buffer for parsing strings
         private char[] StringBuf = new char[64];
 
+        private static void ThrowInvalidHeaderException(byte[] bytes, int byteCount)
+        {
+            throw new NATSInvalidHeaderException("Invalid header: " +
+                  Encoding.UTF8.GetString(bytes, 0, byteCount));
+        }
+
         /// <summary>
         /// Initializes a new instance of the MsgHeader class.
         /// </summary>
@@ -126,17 +134,51 @@ namespace NATS.Client
             if (bytes[byteCount-4] != '\r' || bytes[byteCount - 3] != '\n' ||
                 bytes[byteCount-2] != '\r' || bytes[byteCount - 1] != '\n')
             {
-                throw new NATSInvalidHeaderException();
+                ThrowInvalidHeaderException(bytes, byteCount);
             }
 
-            // we are in the fastpath so compare bytes vs a string
-            // method.
+            // normally, start KV pairs after the standard header.
+            // this may change with inlined status.
+            int kvStart = HeaderLen;
+
+            // We need to be fast so do a byte comparison.
             int i;
             for (i = 0; i < HeaderLen; i++)
             {
                 if (bytes[i] != HeaderBytes[i])
                 {
-                    throw new NATSInvalidHeaderException();
+                    // check for inlined status:  e.g. "NATS/1.0 503\r\n\r\n"
+                    if (bytes[i] == ' ')
+                    {
+                        try
+                        {
+                            // could assume three digits, but want to be a bit more
+                            // future proof in case we someday insert something
+                            // else there.  So find the \r\n
+                            int start = i + 1;
+                            int end; 
+                            for (end = start;
+                                end < byteCount - 1 && bytes[end] != '\r' && bytes[end + 1] != '\n';
+                                    end++);
+
+                            Add(Status, Encoding.UTF8.GetString(bytes, start, end - start));
+
+                            // start other kv pairs at end of the status + \r\n.
+                            kvStart = end + 2;
+
+                            // we're done
+                            break;
+                        }
+                        catch
+                        {
+                            ThrowInvalidHeaderException(bytes, byteCount);
+                        }
+                    }
+                    else
+                    {
+                        ThrowInvalidHeaderException(bytes, byteCount);
+
+                    }
                 }
             }
 
@@ -144,7 +186,7 @@ namespace NATS.Client
             string key = null;
 
             // must start on a key
-            for (i = HeaderLen; i < byteCount - 2; i++)
+            for (i = kvStart; i < byteCount - 2; i++)
             {
                 if (bytes[i] == ':' && key == null)
                 {

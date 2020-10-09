@@ -86,10 +86,23 @@ namespace UnitTests
             mh = new MsgHeader(hb, hb.Length);
             Assert.Equal(":::", mh["foo"]);
 
-            // Test empty headers, which may come from teh server.
+            // Test empty headers, which may come from the server.
             hb = Encoding.UTF8.GetBytes($"NATS/1.0\r\n\r\n");
             mh = new MsgHeader(hb, hb.Length);
             Assert.True(mh.Count == 0);
+
+            // Test inline status which will come from the server.
+            hb = Encoding.UTF8.GetBytes($"NATS/1.0 503\r\n\r\n");
+            mh = new MsgHeader(hb, hb.Length);
+            Assert.True(mh.Count == 1);
+            Assert.True(MsgHeader.noResponders.Equals(mh[MsgHeader.Status]));
+
+            // Test inline status with kv pair.
+            hb = Encoding.UTF8.GetBytes($"NATS/1.0 503\r\nfoo:bar\r\n\r\n");
+            mh = new MsgHeader(hb, hb.Length);
+            Assert.True(mh.Count == 2);
+            Assert.Equal(MsgHeader.noResponders, mh[MsgHeader.Status]);
+            Assert.Equal("bar", mh["foo"]);
         }
 
         [Fact]
