@@ -95,7 +95,7 @@ namespace UnitTests
             hb = Encoding.UTF8.GetBytes($"NATS/1.0 503\r\n\r\n");
             mh = new MsgHeader(hb, hb.Length);
             Assert.True(mh.Count == 1);
-            Assert.True(MsgHeader.noResponders.Equals(mh[MsgHeader.Status]));
+            Assert.Equal(MsgHeader.noResponders, mh[MsgHeader.Status]);
 
             // Test inline status with kv pair.
             hb = Encoding.UTF8.GetBytes($"NATS/1.0 503\r\nfoo:bar\r\n\r\n");
