@@ -105,7 +105,7 @@ namespace IntegrationTests
                     sw.Start();
                     ns.Shutdown();
                     Assert.True(Disconnected.WaitOne(1000), "Disconnected event did not receive a signal");
-                    Assert.False(Closed.WaitOne(1000), "Closed event did not receive a signal");
+                    Assert.False(Closed.WaitOne(1000), "Closed event did receive a signal");
                     Assert.True(c.State == ConnState.RECONNECTING, $"Expected {ConnState.RECONNECTING} but got {c.State} after {sw.ElapsedMilliseconds} ms");
                     c.Opts.ClosedEventHandler = null;
                 }
