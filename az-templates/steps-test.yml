@@ -11,6 +11,7 @@ parameters:
   - Linux
   - Windows_NT
   - Darwin
+  - ''
 - name: preTestSteps
   type: stepList
   default: []
@@ -78,4 +79,4 @@ steps:
   inputs:
     script: |
       cd src/Tests/${{ parameters.testProject }}/bin/Release/$(targetFrameworkMoniker)/
-      bash <(curl https://codecov.io/bash) -F ${{ parameters.testProject }} -F $(targetFrameworkMoniker)
+      bash <(curl https://codecov.io/bash) -F ${{ parameters.testProject }} -F $(Agent.OS) -F $(targetFrameworkMoniker)
