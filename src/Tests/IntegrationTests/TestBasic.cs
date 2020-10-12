@@ -517,6 +517,9 @@ namespace IntegrationTests
             {
                 using (IConnection c = Context.OpenConnection())
                 {
+                    // actually test a timeout, not no-responders.
+                    c.SubscribeSync("foo");
+
                     Assert.Throws<NATSTimeoutException>(() => c.Request("foo", null, 50));
                 }
 
@@ -525,6 +528,7 @@ namespace IntegrationTests
 
                 using (IConnection c = Context.ConnectionFactory.CreateConnection(opts))
                 {
+                    c.SubscribeSync("foo");
                     Assert.Throws<NATSTimeoutException>(() => c.Request("foo", null, 50));
                 }
 
@@ -610,6 +614,37 @@ namespace IntegrationTests
 
                         Assert.True(compare(response, 11, m.Data, 5), "Response isn't valid");
                     }
+                }
+            }
+        }
+
+        [Fact]
+        public void TestRequestNoResponders()
+        {
+            using (NATSServer.CreateFastAndVerify())
+            {
+                Options opts = Context.GetTestOptions();
+
+                using (var c = Context.ConnectionFactory.CreateConnection(opts))
+                {
+                    var sw = Stopwatch.StartNew();
+                    Assert.Throws<NATSNoRespondersException>(() => c.Request("foo", null, 10000));
+                    sw.Stop();
+
+                    // make sure we didn't also time out.
+                    Assert.True(sw.ElapsedMilliseconds < 5000);
+                }
+
+                // test old request style.
+                opts.UseOldRequestStyle = true;
+                using (var c = Context.ConnectionFactory.CreateConnection(opts))
+                {
+                    var sw = Stopwatch.StartNew();
+                    Assert.Throws<NATSNoRespondersException>(() => c.Request("foo", null, 10000));
+                    sw.Stop();
+
+                    // make sure we didn't also time out.
+                    Assert.True(sw.ElapsedMilliseconds < 5000);
                 }
             }
         }
@@ -773,19 +808,26 @@ namespace IntegrationTests
 
                     // test timeout, make sure we are somewhat close (for testing on stressed systems).
                     Stopwatch sw = Stopwatch.StartNew();
-                    await Assert.ThrowsAsync<NATSTimeoutException>(() => { return c.RequestAsync("no-replier", null, 1000, miscToken); });
+                    await Assert.ThrowsAsync<NATSNoRespondersException>(() => { return c.RequestAsync("no-responder", null, 10000, miscToken); });
                     sw.Stop();
-                    Assert.True(Math.Abs(sw.Elapsed.TotalMilliseconds - 1000) < 250);
+                    Assert.True(sw.Elapsed.TotalMilliseconds < 9000);
+
+                    sw.Reset();
+                    sw.Start();
+                    c.SubscribeSync("timeout");
+                    await Assert.ThrowsAsync<NATSTimeoutException>(() => { return c.RequestAsync("timeout", null, 500, miscToken); });
+                    sw.Stop();
+                    Assert.True(sw.Elapsed.TotalMilliseconds > 500, "Elapsed millis are: " + sw.ElapsedMilliseconds);
 
                     // test early cancellation
                     var cts = new CancellationTokenSource();
                     var ct = cts.Token;
                     cts.Cancel();
-                    await Assert.ThrowsAnyAsync<OperationCanceledException>(() => { return c.RequestAsync("foo", null, cts.Token); });
+                    await Assert.ThrowsAnyAsync<OperationCanceledException>(() => { return c.RequestAsync("timeout", null, cts.Token); });
 
                     // test cancellation
                     cts = new CancellationTokenSource();
-                    var ocex = Assert.ThrowsAnyAsync<OperationCanceledException>(() => { return c.RequestAsync("foo", null, cts.Token); });
+                    var ocex = Assert.ThrowsAnyAsync<OperationCanceledException>(() => { return c.RequestAsync("timeout", null, cts.Token); });
                     Thread.Sleep(2000);
                     cts.Cancel();
                     await ocex;
@@ -844,7 +886,7 @@ namespace IntegrationTests
                 using (var conn = Context.ConnectionFactory.CreateConnection(opts))
                 {
                     // success condition
-                    using (var sub = conn.SubscribeAsync("foo", (obj, args) => { conn.Publish(args.Message.Reply, new byte[0]); }))
+                    using (var sub = conn.SubscribeAsync("foo", (obj, args) => { args.Message.Respond(new byte[0]); }))
                     {
                         sw.Start();
                         if (useMsgAPI)
@@ -861,6 +903,7 @@ namespace IntegrationTests
                     }
 
                     // valid connection, but no response
+                    conn.SubscribeSync("test");
                     sw.Restart();
                     await Assert.ThrowsAsync<NATSTimeoutException>(() => { return conn.RequestAsync("test", new byte[0], 500); });
                     sw.Stop();
@@ -873,6 +916,13 @@ namespace IntegrationTests
                 Assert.True(variance < 100, string.Format("Invalid timeout variance: {0}", variance));
 #endif
                     // Test an invalid connection
+
+                    // no responders
+                    sw.Restart();
+                    await Assert.ThrowsAsync<NATSNoRespondersException>(() => { return conn.RequestAsync("nosubs", new byte[0], 10000); });
+                    sw.Stop();
+                    Assert.True(sw.ElapsedMilliseconds < 9000);
+
                     server.Shutdown();
                     Thread.Sleep(500);
                     await Assert.ThrowsAsync<NATSConnectionClosedException>(() => { return conn.RequestAsync("test", new byte[0], 1000); });
@@ -982,6 +1032,8 @@ namespace IntegrationTests
             {
                 using (IConnection c = Context.OpenConnection())
                 {
+                    c.SubscribeSync("foo");
+
                     // null msg
                     Assert.Throws<ArgumentNullException>(() => c.Request(null));
 
@@ -993,6 +1045,9 @@ namespace IntegrationTests
 
                     // actual timeout
                     Assert.Throws<NATSTimeoutException>(() => c.Request(new Msg("foo"), 100));
+
+                    // no responders
+                    Assert.Throws<NATSNoRespondersException>(() => c.Request("bar", null));
                 }
             }
         }
