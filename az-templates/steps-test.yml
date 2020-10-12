@@ -20,7 +20,7 @@ steps:
   displayName: Download ${{ parameters.testProject }} binaries
   inputs:
     targetpath: ./
-    patterns: src/Tests/${{ parameters.testProject }}/bin/Release/$(targetFrameworkMoniker)/**/*
+    patterns: src/Tests/${{ parameters.testProject }}/**/*
     artifactname: binaries
 
 - task: Powershell@2
