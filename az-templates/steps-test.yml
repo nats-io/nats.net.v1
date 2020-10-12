@@ -73,5 +73,7 @@ steps:
   condition: always()
   inputs:
     script: |
+      pwd
       cd src/Tests/${{ parameters.testProject }}/bin/Release/$(targetFrameworkMoniker)/
+      pwd
       bash <(curl https://codecov.io/bash) -F ${{ parameters.testProject }} -F $(Agent.OS) -F $(targetFrameworkMoniker)
