@@ -71,9 +71,9 @@ steps:
 - task: Bash@3
   displayName: Publish ${{ parameters.testProject }} coverage
   condition: always()
-  targetType: inline
   continueOnError: true # TODO: Fix me
   inputs:
+    targetType: inline
     script: |
       pwd
       cd src/Tests/${{ parameters.testProject }}/bin/Release/$(targetFrameworkMoniker)/
