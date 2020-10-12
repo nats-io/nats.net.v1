@@ -71,6 +71,7 @@ steps:
 - task: Bash@3
   displayName: Publish ${{ parameters.testProject }} coverage
   condition: always()
+  continueOnError: true
   inputs:
     script: |
       pwd
