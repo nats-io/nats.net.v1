@@ -179,4 +179,16 @@ namespace NATS.Client
     {
         public NATSConnectionDrainingException() : base("Connection is draining.") { }
     }
+
+    /// <summary>
+    /// The exception thrown when the server has detected there are no responders for a request.
+    /// </summary>
+    /// <remarks>
+    /// This is circuit breaking behavior from the NATS server to more quickly identify when
+    /// a request would have timed out.
+    /// </remarks>
+    public class NATSNoRespondersException : NATSTimeoutException
+    {
+        public NATSNoRespondersException() : base("No responders are available for the request.") { }
+    }
 }
