@@ -7,6 +7,10 @@ parameters:
 - name: mayFailOn
   type: string
   default: ''
+  values:
+  - Linux
+  - Windows_NT
+  - Darwin
 - name: preTestSteps
   type: stepList
   default: []
@@ -36,6 +40,7 @@ steps:
       --framework $(targetFrameworkMoniker)
       --logger trx
       --results-directory ./results
+      --collect:"XPlat Code Coverage"
     testRunTitle: ${{ parameters.testProject }} $(imageName) $(targetFrameworkMoniker)
 
 - task: CmdLine@2
@@ -49,6 +54,7 @@ steps:
       --framework $(targetFrameworkMoniker)
       --logger trx
       --results-directory ./results
+      --collect:"XPlat Code Coverage"
     testRunTitle: ${{ parameters.testProject }} $(imageName) $(targetFrameworkMoniker)
 
 - task: PublishTestResults@2
@@ -65,3 +71,11 @@ steps:
   inputs:
     targetpath: ./results
     artifactname: ${{ parameters.testProject }}-results-$(imageName)-$(targetFrameworkMoniker)
+
+- task: Bash@3
+  displayName: Publish ${{ parameters.testProject }} coverage
+  condition: always()
+  inputs:
+    script: |
+      cd src/Tests/${{ parameters.testProject }}/bin/Release/$(targetFrameworkMoniker)/
+      bash <(curl https://codecov.io/bash) -F ${{ parameters.testProject }} -F $(targetFrameworkMoniker)
