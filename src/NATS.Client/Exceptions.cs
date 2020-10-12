@@ -182,7 +182,7 @@ namespace NATS.Client
 
     /// <summary>
     /// The exception thrown when the server has detected there are no responders for a request.
-    /// /// </summary>
+    /// </summary>
     /// <remarks>
     /// This is circuit breaking behavior from the NATS server to more quickly identify when
     /// a request would have timed out.

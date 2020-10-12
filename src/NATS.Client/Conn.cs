@@ -2757,9 +2757,7 @@ namespace NATS.Client
             InFlightRequest request;
             bool isClosed;
 
-            var m = args.Message;
-
-            if (m == null)
+            if (args.Message == null)
                 return;
 
             var subject = args.Message.Subject;
@@ -2800,13 +2798,13 @@ namespace NATS.Client
 
             if (!isClosed)
             {
-                if (IsNoRespondersMsg(m))
+                if (IsNoRespondersMsg(args.Message))
                 {
                     request.Waiter.TrySetException(new NATSNoRespondersException());
                 }
                 else
                 {
-                    request.Waiter.TrySetResult(m);
+                    request.Waiter.TrySetResult(args.Message);
                 }
             }
             else
