@@ -31,6 +31,9 @@ namespace IntegrationTests
     [Collection(DefaultSuiteContext.CollectionKey)]
     public class TestBasic : TestSuite<DefaultSuiteContext>
     {
+        // Resolution on Windows is 15.6 iirc, Linux should be better but is > 0
+        private const int TIMER_RESOLUTION = 16;
+
         public TestBasic(ITestOutputHelper outputHelper, DefaultSuiteContext context) : base(context)
         {
             _outputHelper = outputHelper;
@@ -820,11 +823,11 @@ namespace IntegrationTests
                         {
                             Msg m = await await t;
                             if (!compare(m.Data, response))
-                        {
+                            {
                                 cancellationTokenSource.Cancel();
                                 Assert.True(false, "Response isn't valid");
+                            }
                         }
-                    }
                     }
 
                     var miscToken = new CancellationTokenSource().Token;
@@ -839,7 +842,7 @@ namespace IntegrationTests
                     c.SubscribeSync("timeout");
                     await Assert.ThrowsAsync<NATSTimeoutException>(() => { return c.RequestAsync("timeout", null, 500, miscToken); });
                     sw.Stop();
-                    Assert.True(sw.Elapsed.TotalMilliseconds > 500, "Elapsed millis are: " + sw.ElapsedMilliseconds);
+                    Assert.True(sw.Elapsed.TotalMilliseconds > 500 - TIMER_RESOLUTION, "Elapsed millis are: " + sw.ElapsedMilliseconds);
 
                     // test early cancellation
                     var cts = new CancellationTokenSource();
@@ -934,7 +937,7 @@ namespace IntegrationTests
 
                     _outputHelper.WriteLine($"Observed elapsed time: {elapsed}ms");
 
-                    Assert.InRange(elapsed, 485, 600);
+                    Assert.InRange(elapsed, 500 - TIMER_RESOLUTION, 600);
 
                     // Test an invalid connection
 
