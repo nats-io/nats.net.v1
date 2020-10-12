@@ -39,6 +39,7 @@ jobs:
   variables:
     GOBIN:  '$(GOPATH)/bin'
     GOPATH: '$(System.DefaultWorkingDirectory)/gopath'
+    DOTNET_NOLOGO: 1
 
   strategy:
     matrix: ${{ parameters.matrix }}

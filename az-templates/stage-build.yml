@@ -27,14 +27,13 @@ stages:
           arguments: >-
             --configuration Release
             --no-incremental
-            --nologo
             -p:TreatWarningsAsErrors=true
             -p:Version=$(SemVer)
             -p:InformationalVersion=$(InfoVer)
 
       - task: PublishPipelineArtifact@1
         displayName: Publish binaries for use in dependent jobs
-        condition: eq(variables['Agent.OS'], 'Windows_NT') # We only use the binaries from the Windows built, it produces net452 and netstandard1.6 DLLs
+        condition: eq(variables['Agent.OS'], 'Windows_NT') # We only use the binaries from the Windows built, it produces net46 and netstandard1.6 DLLs
         inputs:
           targetpath: ./
           artifactname: binaries
@@ -45,21 +44,9 @@ stages:
       displayName: Run unit tests
       dependsOn: BuildBinaries
       steps:
-        - checkout: none
-
-        - task: DownloadPipelineArtifact@2
-          inputs:
-            targetpath: ./
-            patterns: src/Tests/UnitTests/bin/Release/$(targetFrameworkMoniker)/**/*
-            artifactname: binaries
-
-        - task: DotNetCoreCLI@2
-          displayName: Run unit tests
-          inputs:
-            command: test
-            projects: src/Tests/UnitTests/bin/Release/$(targetFrameworkMoniker)/UnitTests.dll
-            arguments: --framework $(targetFrameworkMoniker) --nologo
-            testRunTitle: UnitTests $(imageName) $(targetFrameworkMoniker)
+      - template: steps-test.yml
+        parameters:
+          testProject: UnitTests
 
   - template: platform-dependent-job.yml
     parameters:
@@ -67,32 +54,9 @@ stages:
       displayName: Run integration tests
       dependsOn: BuildBinaries
       steps:
-        - checkout: none
-
-        - task: DownloadPipelineArtifact@2
-          inputs:
-            targetpath: ./
-            patterns: src/Tests/IntegrationTests/bin/Release/$(targetFrameworkMoniker)/**/*
-            artifactname: binaries
-
-        - template: install-nats-server.yml
-
-        - task: CmdLine@2
-          displayName: Run integration tests
-          inputs:
-            script: |
-              dotnet test src/Tests/IntegrationTests/bin/Release/$(targetFrameworkMoniker)/IntegrationTests.dll --framework $(targetFrameworkMoniker) --logger trx --results-directory ./results
-
-        - task: PublishTestResults@2
-          condition: always()
-          inputs:
-            testResultsFormat: VSTest
-            testResultsFiles: '**/*.trx'
-            testRunTitle: IntegrationTests $(imageName) $(targetFrameworkMoniker)
-
-        - task: PublishPipelineArtifact@1
-          condition: always()
-          displayName: Publish test results manually
-          inputs:
-            targetpath: ./results
-            artifactname: test-results-$(imageName)-$(targetFrameworkMoniker)
+      - template: steps-test.yml
+        parameters:
+          testProject: IntegrationTests
+          mayFailOn: Darwin
+          preTestSteps:
+          - template: install-nats-server.yml

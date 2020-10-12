@@ -1,0 +1,67 @@
+parameters:
+- name: testProject
+  type: string
+  values:
+  - UnitTests
+  - IntegrationTests
+- name: mayFailOn
+  type: string
+  default: ''
+- name: preTestSteps
+  type: stepList
+  default: []
+
+steps:
+- checkout: none
+
+- ${{ parameters.preTestSteps }}
+
+- task: DownloadPipelineArtifact@2
+  displayName: Download ${{ parameters.testProject }} binaries
+  inputs:
+    targetpath: ./
+    patterns: src/Tests/${{ parameters.testProject }}/bin/Release/$(targetFrameworkMoniker)/**/*
+    artifactname: binaries
+
+# We cannot set continueOnError dynamically due to Azure Devops limitations
+# As a workaround, we duplicate the tasks and use a condition to switch between a version w/ and w/o continueOnError
+# https://developercommunityapi.westus.cloudapp.azure.com/idea/782159/yaml-pipeline-continueonerror-cant-accept-a-variab.html
+- task: DotNetCoreCLI@2
+  displayName: Run ${{ parameters.testProject }}
+  condition: and(succeeded(), ne(${{ parameters.mayFailOn }}, variables['Agent.OS']))
+  inputs:
+    command: test
+    projects: src/Tests/${{ parameters.testProject }}/bin/Release/$(targetFrameworkMoniker)/${{ parameters.testProject }}.dll
+    arguments: >-
+      --framework $(targetFrameworkMoniker)
+      --logger trx
+      --results-directory ./results
+    testRunTitle: ${{ parameters.testProject }} $(imageName) $(targetFrameworkMoniker)
+
+- task: DotNetCoreCLI@2
+  displayName: Run ${{ parameters.testProject }}
+  condition: and(succeeded(), eq(${{ parameters.mayFailOn }}, variables['Agent.OS']))
+  continueOnError: true
+  inputs:
+    command: test
+    projects: src/Tests/${{ parameters.testProject }}/bin/Release/$(targetFrameworkMoniker)/${{ parameters.testProject }}.dll
+    arguments: >-
+      --framework $(targetFrameworkMoniker)
+      --logger trx
+      --results-directory ./results
+    testRunTitle: ${{ parameters.testProject }} $(imageName) $(targetFrameworkMoniker)
+
+- task: PublishTestResults@2
+  displayName: Publish ${{ parameters.testProject }} results
+  condition: always()
+  inputs:
+    testResultsFormat: VSTest
+    testResultsFiles: '**/*.trx'
+    testRunTitle: ${{ parameters.testProject }} $(imageName) $(targetFrameworkMoniker)
+
+- task: PublishPipelineArtifact@1
+  condition: always()
+  displayName: Publish ${{ parameters.testProject }} TRX files manually
+  inputs:
+    targetpath: ./results
+    artifactname: ${{ parameters.testProject }}-results-$(imageName)-$(targetFrameworkMoniker)
