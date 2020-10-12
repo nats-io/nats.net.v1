@@ -26,26 +26,26 @@ steps:
 # We cannot set continueOnError dynamically due to Azure Devops limitations
 # As a workaround, we duplicate the tasks and use a condition to switch between a version w/ and w/o continueOnError
 # https://developercommunityapi.westus.cloudapp.azure.com/idea/782159/yaml-pipeline-continueonerror-cant-accept-a-variab.html
-- task: DotNetCoreCLI@2
+- task: CmdLine@2
   displayName: Run ${{ parameters.testProject }}
   condition: and(succeeded(), ne('${{ parameters.mayFailOn }}', variables['Agent.OS']))
   inputs:
-    command: test
-    projects: src/Tests/${{ parameters.testProject }}/bin/Release/$(targetFrameworkMoniker)/${{ parameters.testProject }}.dll
-    arguments: >-
+    script: >-
+      dotnet test
+      src/Tests/${{ parameters.testProject }}/bin/Release/$(targetFrameworkMoniker)/${{ parameters.testProject }}.dll
       --framework $(targetFrameworkMoniker)
       --logger trx
       --results-directory ./results
     testRunTitle: ${{ parameters.testProject }} $(imageName) $(targetFrameworkMoniker)
 
-- task: DotNetCoreCLI@2
+- task: CmdLine@2
   displayName: Run ${{ parameters.testProject }} (continue on error)
   condition: and(succeeded(), eq('${{ parameters.mayFailOn }}', variables['Agent.OS']))
   continueOnError: true
   inputs:
-    command: test
-    projects: src/Tests/${{ parameters.testProject }}/bin/Release/$(targetFrameworkMoniker)/${{ parameters.testProject }}.dll
-    arguments: >-
+    script: >-
+      dotnet test
+      src/Tests/${{ parameters.testProject }}/bin/Release/$(targetFrameworkMoniker)/${{ parameters.testProject }}.dll
       --framework $(targetFrameworkMoniker)
       --logger trx
       --results-directory ./results
