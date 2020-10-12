@@ -4,14 +4,9 @@ parameters:
   values:
   - UnitTests
   - IntegrationTests
-- name: mayFailOn
+- name: mayFailOn # Agent.OS: Linux, Windows_NT, Darwin
   type: string
   default: ''
-  values:
-  - Linux
-  - Windows_NT
-  - Darwin
-  - ''
 - name: preTestSteps
   type: stepList
   default: []
