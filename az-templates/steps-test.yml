@@ -28,7 +28,7 @@ steps:
 # https://developercommunityapi.westus.cloudapp.azure.com/idea/782159/yaml-pipeline-continueonerror-cant-accept-a-variab.html
 - task: DotNetCoreCLI@2
   displayName: Run ${{ parameters.testProject }}
-  condition: and(succeeded(), ne(${{ parameters.mayFailOn }}, variables['Agent.OS']))
+  condition: and(succeeded(), ne('${{ parameters.mayFailOn }}', variables['Agent.OS']))
   inputs:
     command: test
     projects: src/Tests/${{ parameters.testProject }}/bin/Release/$(targetFrameworkMoniker)/${{ parameters.testProject }}.dll
@@ -39,8 +39,8 @@ steps:
     testRunTitle: ${{ parameters.testProject }} $(imageName) $(targetFrameworkMoniker)
 
 - task: DotNetCoreCLI@2
-  displayName: Run ${{ parameters.testProject }}
-  condition: and(succeeded(), eq(${{ parameters.mayFailOn }}, variables['Agent.OS']))
+  displayName: Run ${{ parameters.testProject }} (continue on error)
+  condition: and(succeeded(), eq('${{ parameters.mayFailOn }}', variables['Agent.OS']))
   continueOnError: true
   inputs:
     command: test
