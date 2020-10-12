@@ -71,7 +71,8 @@ steps:
 - task: Bash@3
   displayName: Publish ${{ parameters.testProject }} coverage
   condition: always()
-  continueOnError: true
+  targetType: inline
+  continueOnError: true # TODO: Fix me
   inputs:
     script: |
       pwd
