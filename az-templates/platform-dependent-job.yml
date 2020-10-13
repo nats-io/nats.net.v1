@@ -40,7 +40,6 @@ jobs:
     GOBIN:  '$(GOPATH)/bin'
     GOPATH: '$(System.DefaultWorkingDirectory)/gopath'
     DOTNET_NOLOGO: 1
-    DOTNET_PACKAGES: '$(System.DefaultWorkingDirectory)/.nuget'
 
   strategy:
     matrix: ${{ parameters.matrix }}

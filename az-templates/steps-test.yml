@@ -20,15 +20,17 @@ steps:
   displayName: Download ${{ parameters.testProject }} binaries
   inputs:
     targetpath: ./
+    patterns: src/Tests/${{ parameters.testProject }}/**/*
     artifactname: binaries
 
 - task: Powershell@2
-  displayName: Set coverage collector
+  displayName: Set coverage collector and restore
   inputs:
     targetType: inline
     script: |
       if ( -not ( "$(targetFrameworkMoniker)" -ilike "net4*" ) ) {
         echo "##vso[task.setvariable variable=collector;]XPlat Code Coverage"
+        dotnet restore src/Tests/${{ parameters.testProject }} --no-dependencies
       } else {
         # coverlet.collector does not support legacy net4.x
         echo "##vso[task.setvariable variable=collector;]"
