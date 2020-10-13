@@ -90,7 +90,5 @@ steps:
   inputs:
     targetType: inline
     script: |
-      pwd
-      cd src/Tests/${{ parameters.testProject }}/bin/Release/$(targetFrameworkMoniker)/
-      pwd
+      cd ./results
       bash <(curl https://codecov.io/bash) -F ${{ parameters.testProject }} -F $(Agent.OS) -F $(targetFrameworkMoniker)
