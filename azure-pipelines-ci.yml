@@ -43,3 +43,4 @@ pr:
 
 stages:
 - template: az-templates/stage-build.yml
+
