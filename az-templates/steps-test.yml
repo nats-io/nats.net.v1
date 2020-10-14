@@ -31,6 +31,7 @@ steps:
   inputs:
     targetType: inline
     script: |
+      dotnet msbuild -version
       if ( -not ( "$(targetFrameworkMoniker)" -ilike "net4*" ) ) {
         echo "##vso[task.setvariable variable=collector;]XPlat Code Coverage"
       } else {
