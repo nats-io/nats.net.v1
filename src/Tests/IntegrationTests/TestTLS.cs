@@ -49,7 +49,7 @@ namespace IntegrationTests
                     UnitTestUtilities.GetFullCertificatePath("server-cert.pem"));
 
             // UNSAFE hack for testing purposes.
-#if NET46
+#if NET462
             var isOK = serverCert.GetRawCertDataString().Equals(certificate.GetRawCertDataString());
 #else
             var isOK = serverCert.Issuer.Equals(certificate.Issuer);
@@ -292,7 +292,7 @@ namespace IntegrationTests
             }
         }
 
-#if NET46
+#if NET462
         [Fact]
         public void TestTlsReconnectAuthTimeoutLateClose()
         {

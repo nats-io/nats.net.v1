@@ -18,7 +18,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using NATS.Client;
-#if NET46
+#if NET462
 using System.Reflection;
 #endif
 
@@ -26,7 +26,7 @@ namespace IntegrationTests
 {
     public class NATSServer : IDisposable
     {
-#if NET46
+#if NET462
         static readonly string SERVEREXE = "nats-server.exe";
 #else
         static readonly string SERVEREXE = "nats-server";

@@ -191,7 +191,7 @@ namespace IntegrationTests
             }
         }
 
-#if NET46
+#if NET462
         [Fact]
         public void TestReconnectAuthTimeoutLateClose()
         {

@@ -17,11 +17,11 @@ namespace NATS.Client.Internals
 {
     internal static class CompletedTask
     {
-#if NET46
+#if NET462
         private static readonly Task Completed = Task.FromResult(true);
 #endif
         internal static Task Get() =>
-#if NET46
+#if NET462
             Completed;
 #else
             Task.CompletedTask;

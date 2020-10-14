@@ -33,7 +33,7 @@ namespace IntegrationTests
 
         public IEncodedConnection DefaultEncodedConnection => Context.OpenEncodedConnectionWithDefaultTimeout(Context.Server1.Port);
 
-#if NET46
+#if NET462
         [Serializable]
         public class SerializationTestObj
         {
@@ -312,7 +312,7 @@ namespace IntegrationTests
             using (MemoryStream stream = new MemoryStream())
             {
                 serializer.WriteObject(stream, obj);
-#if NET46
+#if NET462
                 byte[] buffer = stream.GetBuffer();
                 long len = stream.Position;
                 var rv = new byte[len];
