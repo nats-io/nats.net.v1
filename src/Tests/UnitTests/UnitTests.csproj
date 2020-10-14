@@ -25,11 +25,7 @@
     </PackageReference>
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
-    <ProjectReference Include="..\..\NATS.Client\NATS.Client.csproj" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'net46'">
+  <ItemGroup>
     <ProjectReference Include="..\..\NATS.Client\NATS.Client.csproj" />
   </ItemGroup>
 

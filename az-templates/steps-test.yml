@@ -38,7 +38,11 @@ steps:
   inputs:
     targetType: inline
     script: |
+      Write-Host "msbuild version"
       dotnet msbuild -version
+      Write-Host "project.assets.json"
+      Get-Content src/NATS.Client/obj/project.assets.json
+      Write-Host "Set variable"
       if ( -not ( "$(targetFrameworkMoniker)" -ilike "net4*" ) ) {
         echo "##vso[task.setvariable variable=collector;]XPlat Code Coverage"
       } else {
