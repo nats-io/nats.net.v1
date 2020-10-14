@@ -48,15 +48,6 @@ steps:
         echo "##vso[task.setvariable variable=collector;]"
       }
 
-- task: CmdLine@2
-  displayName: Restore ${{ parameters.testProject }}
-  condition: and(succeeded(), ne('${{ parameters.mayFailOn }}', variables['Agent.OS']))
-  inputs:
-    script: >-
-      dotnet restore
-      src/Tests/${{ parameters.testProject }}
-      --force
-
 # We cannot set continueOnError dynamically due to Azure Devops limitations
 # As a workaround, we duplicate the tasks and use a condition to switch between a version w/ and w/o continueOnError
 # https://developercommunityapi.westus.cloudapp.azure.com/idea/782159/yaml-pipeline-continueonerror-cant-accept-a-variab.html
@@ -68,6 +59,7 @@ steps:
       dotnet test
       src/Tests/${{ parameters.testProject }}
       --configuration Release
+      --no-build
       --framework $(targetFrameworkMoniker)
       --logger trx
       --results-directory ./results
@@ -82,6 +74,7 @@ steps:
       dotnet test
       src/Tests/${{ parameters.testProject }}
       --configuration Release
+      --no-build
       --framework $(targetFrameworkMoniker)
       --logger trx
       --results-directory ./results
