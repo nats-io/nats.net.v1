@@ -28,7 +28,7 @@ parameters:
       natsServerPattern: nats-server-*-windows-amd64.zip
     windows-netfx:
       imageName: windows-2019
-      targetFrameworkMoniker: net46
+      targetFrameworkMoniker: net462
       natsServerPattern: nats-server-*-windows-amd64.zip
 
 jobs:
