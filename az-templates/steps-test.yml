@@ -55,7 +55,9 @@ steps:
       --results-directory ./results
       -p:CollectCoverage=true
       -p:CoverletOutputFormat=cobertura
-      -p:CoverletOutput='./results/'
+      -p:CoverletOutput="../../../results/coverage.xml"
+      --
+      RunConfiguration.DisableAppDomain=true
 
 - task: CmdLine@2
   displayName: Run ${{ parameters.testProject }} (continue on error)
@@ -72,7 +74,9 @@ steps:
       --results-directory ./results
       -p:CollectCoverage=true
       -p:CoverletOutputFormat=cobertura
-      -p:CoverletOutput='./results/'
+      -p:CoverletOutput="../../../results/coverage.xml"
+      --
+      RunConfiguration.DisableAppDomain=true
 
 - task: PublishTestResults@2
   displayName: Publish ${{ parameters.testProject }} results
@@ -97,4 +101,5 @@ steps:
     targetType: inline
     script: |
       # Upload coverage
+      cd ./results
       bash <(curl https://codecov.io/bash) -F ${{ parameters.testProject }} -F $(Agent.OS) -F $(targetFrameworkMoniker)
