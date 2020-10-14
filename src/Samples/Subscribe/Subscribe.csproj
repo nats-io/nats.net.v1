@@ -1,6 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <TargetFrameworks Condition="$(OS) == 'Windows_NT'">netcoreapp3.1;net46</TargetFrameworks>
+    <TargetFramework Condition="$(OS) != 'Windows_NT'">netcoreapp3.1</TargetFramework>
     <OutputType>Exe</OutputType>
     <Title>NATS Subscriber</Title>
     <Description>NATS Subscriber Example</Description>
