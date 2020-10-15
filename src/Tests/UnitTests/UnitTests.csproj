@@ -29,4 +29,6 @@
     <ProjectReference Include="..\..\NATS.Client\NATS.Client.csproj" />
   </ItemGroup>
 
+
+
 </Project>
