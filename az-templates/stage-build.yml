@@ -33,7 +33,7 @@ stages:
 
       - task: PublishPipelineArtifact@1
         displayName: Publish binaries for use in dependent jobs
-        condition: eq(variables['Agent.OS'], 'Windows_NT') # We only use the binaries from the Windows built, it produces net462 and netstandard1.6 DLLs
+        condition: eq(variables['Agent.OS'], 'Windows_NT') # We only use the binaries from the Windows built, it produces net46 and netstandard1.6 DLLs
         inputs:
           targetpath: ./
           artifactname: binaries

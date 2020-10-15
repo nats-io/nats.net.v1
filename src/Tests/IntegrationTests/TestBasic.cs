@@ -1117,7 +1117,7 @@ namespace IntegrationTests
             }
         }
 
-#if NET462
+#if NET46
         // This test method tests mulitiple overlapping requests across many
         // threads.  The responder simulates work, to introduce variablility
         // in the request timing.

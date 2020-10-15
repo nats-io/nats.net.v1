@@ -280,7 +280,7 @@ namespace NATS.Client
             {
                 if (!disposedValue)
                 {
-#if NET462
+#if NET46
                     if (executorTask != null)
                         executorTask.Dispose();
 #endif
@@ -415,7 +415,7 @@ namespace NATS.Client
 
             internal static void close(TcpClient c)
             {
-#if NET462
+#if NET46
                     c?.Close();
 #else
                     c?.Dispose();
@@ -630,7 +630,7 @@ namespace NATS.Client
                     // See Connection.deliverMsgs
                     Channel.close();
                     channelTask.Wait(500);
-#if NET462
+#if NET46
                     channelTask.Dispose();
 #endif
                     channelTask = null;
@@ -1492,7 +1492,7 @@ namespace NATS.Client
 
             if (pending.Length > 0)
             {
-#if NET462
+#if NET46
                 bw.Write(pending.GetBuffer(), 0, (int)pending.Length);
                 bw.Flush();
 #else
