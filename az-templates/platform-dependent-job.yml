@@ -17,19 +17,15 @@ parameters:
     linux-netcore:
       imageName: ubuntu-18.04
       targetFrameworkMoniker: netcoreapp3.1
-      natsServerPattern: nats-server-*-linux-amd64.zip
     mac-netcore:
       imageName: macos-10.15
       targetFrameworkMoniker: netcoreapp3.1
-      natsServerPattern: nats-server-*-darwin-amd64.zip
     windows-netcore:
       imageName: windows-2019
       targetFrameworkMoniker: netcoreapp3.1
-      natsServerPattern: nats-server-*-windows-amd64.zip
     windows-netfx:
       imageName: windows-2019
       targetFrameworkMoniker: net46
-      natsServerPattern: nats-server-*-windows-amd64.zip
 
 jobs:
 - job: ${{ parameters.jobTitle }}
