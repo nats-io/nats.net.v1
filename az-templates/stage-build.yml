@@ -29,7 +29,6 @@ stages:
             --no-incremental
             -p:TreatWarningsAsErrors=true
             -p:Version=$(SemVer)
-            -p:InformationalVersion=$(InfoVer)
 
       - task: CmdLine@2
         displayName: Package NATS.Client
@@ -41,7 +40,6 @@ stages:
             --include-symbols
             --output ./package
             -p:Version=$(SemVer)
-            -p:InformationalVersion=$(InfoVer)
 
       - bash: ls -la
 
