@@ -31,6 +31,19 @@ stages:
             -p:Version=$(SemVer)
             -p:InformationalVersion=$(InfoVer)
 
+      - task: DotNetCoreCLI@2
+        displayName: Package NATS.Client/
+        inputs:
+          command: pack
+          projects: src/NATS.Client/
+          arguments: >-
+            --configuration Release
+            --no-build
+            --include-symbols
+            --output ./package
+            -p:Version=$(SemVer)
+            -p:InformationalVersion=$(InfoVer)
+
       - task: PublishPipelineArtifact@1
         displayName: Publish binaries for use in dependent jobs
         condition: eq(variables['Agent.OS'], 'Windows_NT') # We only use the binaries from the Windows built, it produces net46 and netstandard1.6 DLLs
