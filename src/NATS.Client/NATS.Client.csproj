@@ -12,6 +12,7 @@
     <PackageReleaseNotes>https://github.com/nats-io/nats.net/releases</PackageReleaseNotes>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageTags>CNCF NATS Messaging Cloud Publish Subscribe PubSub</PackageTags>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <DebugType>portable</DebugType>
     <DebugSymbols>true</DebugSymbols>
     <IncludeSymbols>true</IncludeSymbols>
@@ -41,5 +42,6 @@
 
   <ItemGroup>
     <PackageReference Include="System.Collections.Specialized" Version="4.3.0" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All"/>
   </ItemGroup>
 </Project>

@@ -6,7 +6,7 @@
     <Company>CNCF</Company>
     <Authors>The NATS Authors</Authors>
     <Copyright>Copyright © The NATS Authors 2016-$([System.DateTime]::Now.ToString(yyyy))</Copyright>
-    <RepositoryUrl>https://github.com/nats-io/nats.net</RepositoryUrl>
+    <RepositoryUrl>https://github.com/jasper-d/nats.net</RepositoryUrl>
     <RepositoryType>Git</RepositoryType>
   </PropertyGroup>
 </Project>
