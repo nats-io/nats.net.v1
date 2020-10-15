@@ -31,18 +31,19 @@ stages:
             -p:Version=$(SemVer)
             -p:InformationalVersion=$(InfoVer)
 
-      - task: DotNetCoreCLI@2
-        displayName: Package NATS.Client/
+      - task: CmdLine@2
+        displayName: Package NATS.Client
         inputs:
-          command: pack
-          projects: src/NATS.Client/
-          arguments: >-
+          script: >-
+            dotnet pack ./src/NATS.Client/
             --configuration Release
             --no-build
             --include-symbols
             --output ./package
             -p:Version=$(SemVer)
             -p:InformationalVersion=$(InfoVer)
+
+      - bash: ls -la
 
       - task: PublishPipelineArtifact@1
         displayName: Publish binaries for use in dependent jobs
