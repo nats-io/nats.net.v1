@@ -12,9 +12,11 @@ parameters:
   default: []
 
 steps:
+# Just create .git, https://codecov.io/bash appears to depend on it
 - checkout: self
   fetchDepth: 3
 
+# Remove cloned source, not needed
 - bash: rm -rf ./*
 
 - ${{ parameters.preTestSteps }}
@@ -38,8 +40,8 @@ steps:
       src/Tests/${{ parameters.testProject }}
       --no-dependencies
 
-# We cannot set continueOnError dynamically due to Azure Devops limitations
-# As a workaround, we duplicate the tasks and use a condition to switch between a version w/ and w/o continueOnError
+# continueOnError cannot be set dynamically due to Azure Devops limitations
+# Duplicate the task and use a condition to switch between a version w/ and w/o continueOnError as a workaround
 # https://developercommunityapi.westus.cloudapp.azure.com/idea/782159/yaml-pipeline-continueonerror-cant-accept-a-variab.html
 - task: CmdLine@2
   displayName: Run ${{ parameters.testProject }}
@@ -95,11 +97,10 @@ steps:
 
 - task: Bash@3
   displayName: Publish ${{ parameters.testProject }} coverage
-  condition: always()
-  continueOnError: true # TODO: Fix me
+  condition: and(succeeded(), ne('$(targetFrameworkMoniker)', 'net46')) # Coverage collection isn't working for net46
   inputs:
     targetType: inline
     script: |
       # Upload coverage
       cd ./results
-      bash <(curl https://codecov.io/bash) -F ${{ parameters.testProject }} -F $(Agent.OS) -F $(targetFrameworkMoniker)
+      bash <(curl https://codecov.io/bash) -F ${{ parameters.testProject }} -F $(Agent.OS)-$(targetFrameworkMoniker)
