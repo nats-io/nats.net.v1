@@ -904,8 +904,6 @@ namespace IntegrationTests
         {
             using (var server = NATSServer.CreateFastAndVerify())
             {
-                var sw = new Stopwatch();
-
                 var opts = Context.GetTestOptionsWithDefaultTimeout();
                 opts.AllowReconnect = false;
                 opts.UseOldRequestStyle = useOldRequestStyle;
@@ -914,7 +912,6 @@ namespace IntegrationTests
                     // success condition
                     using (var sub = conn.SubscribeAsync("foo", (obj, args) => { args.Message.Respond(new byte[0]); }))
                     {
-                        sw.Start();
                         if (useMsgAPI)
                         {
                             await conn.RequestAsync(new Msg("foo", new byte[0]), 5000);
@@ -923,29 +920,17 @@ namespace IntegrationTests
                         {
                             await conn.RequestAsync("foo", new byte[0], 5000);
                         }
-                        sw.Stop();
-                        Assert.InRange(sw.ElapsedMilliseconds, 0, 5000);
                         sub.Unsubscribe();
                     }
 
                     // valid connection, but no response
                     conn.SubscribeSync("test");
-                    sw.Restart();
                     await Assert.ThrowsAsync<NATSTimeoutException>(() => { return conn.RequestAsync("test", new byte[0], 500); });
-                    sw.Stop();
-                    long elapsed = sw.ElapsedMilliseconds;
-
-                    _outputHelper.WriteLine($"Observed elapsed time: {elapsed}ms");
-
-                    Assert.InRange(elapsed, 500 - TIMER_RESOLUTION, 600);
 
                     // Test an invalid connection
 
                     // no responders
-                    sw.Restart();
                     await Assert.ThrowsAsync<NATSNoRespondersException>(() => { return conn.RequestAsync("nosubs", new byte[0], 10000); });
-                    sw.Stop();
-                    Assert.True(sw.ElapsedMilliseconds < 9000);
 
                     server.Shutdown();
                     conn.Close();
