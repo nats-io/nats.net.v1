@@ -17,9 +17,9 @@ steps:
   fetchDepth: 3
 
 # Remove cloned source, not needed
-- displayName: Remove sources
-  bash: rm -rf ./*
-  
+- bash: rm -rf ./*
+  displayName: Remove sources
+
 - ${{ parameters.preTestSteps }}
 
 - download: current
