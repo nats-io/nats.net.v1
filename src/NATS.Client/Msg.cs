@@ -262,7 +262,7 @@ namespace NATS.Client
                     // Generally more permissive than HTTP.  Allow only printable
                     // characters and include tab (0x9) to cover what's allowed
                     // in quoted strings and comments.
-                    if (c == 9 || c < 32 || c > 126)
+                    if ((c < 32 && c != 9) || c > 126)
                         throw new ArgumentException(string.Format("Invalid character {0:X2} in value.", c));
                 }
             }
