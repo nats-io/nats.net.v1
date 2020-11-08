@@ -54,14 +54,14 @@
   <!--
    Use deterministic build when running on Azure Devops
  -->
-  <PropertyGroup Condition="$(SYSTEM_TEAMFOUNDATIONSERVERURI) == ''">
+  <PropertyGroup Condition="$(SYSTEM_TEAMFOUNDATIONSERVERURI) != ''">
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
 
   <!-- 
     Embed generated AssemblyInfo for SourceLink, see. https://github.com/dotnet/sourcelink/issues/572
   -->
-  <PropertyGroup Condition="$(SYSTEM_TEAMFOUNDATIONSERVERURI) == ''">
+  <PropertyGroup Condition="$(SYSTEM_TEAMFOUNDATIONSERVERURI) != ''">
     <TargetFrameworkMonikerAssemblyAttributesPath>$([System.IO.Path]::Combine('$(IntermediateOutputPath)','$(TargetFrameworkMoniker).AssemblyAttributes$(DefaultLanguageSourceExtension)'))</TargetFrameworkMonikerAssemblyAttributesPath>
   </PropertyGroup>
 
