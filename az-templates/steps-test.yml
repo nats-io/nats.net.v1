@@ -83,11 +83,6 @@ steps:
     testResultsFiles: '**/*.trx'
     testRunTitle: ${{ parameters.testProject }} $(imageName) $(targetFrameworkMoniker)
 
-- publish: ./results
-  displayName: Publish ${{ parameters.testProject }} TRX files manually
-  condition: always()
-  artifact: ${{ parameters.testProject }}-results-$(imageName)-$(targetFrameworkMoniker)
-
 - bash: |
     # Upload coverage
     cd ./results
