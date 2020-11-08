@@ -6,7 +6,6 @@ stages:
     parameters:
       jobTitle: UnitTestBinaries
       displayName: Run unit tests
-      dependsOn: BuildBinaries
       steps:
       - template: steps-test.yml
         parameters:
@@ -16,7 +15,6 @@ stages:
     parameters:
       jobTitle: IntegrationTestBinaries
       displayName: Run integration tests
-      dependsOn: BuildBinaries
       steps:
       - template: steps-test.yml
         parameters:
