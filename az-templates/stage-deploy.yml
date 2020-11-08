@@ -7,6 +7,8 @@ stages:
     environment: Prod
     displayName: Deploys artifacts
     timeoutInMinutes: 10
+    pool:
+      vmImage: ubuntu-18.04
     cancelTimeoutInMinutes: 5
     strategy: 
       runOnce:

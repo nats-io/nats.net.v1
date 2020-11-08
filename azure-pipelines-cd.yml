@@ -13,10 +13,6 @@ trigger:
 
 pr: none
 
-pool:
-  name: Azure Pipelines
-  vmImage: windows-2019
-
 stages:
 - template: az-templates/stage-build.yml
 - tamplate: az-templates/stage-test.yml
