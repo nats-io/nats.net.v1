@@ -22,14 +22,15 @@ steps:
 
 - ${{ parameters.preTestSteps }}
 
-- download: current
+- task: DownloadPipelineArtifact@2
   displayName: Download ${{ parameters.testProject }} binaries
-  patterns: |
-    src/*
-    src/NATS.Client/**/*
-    src/Tests/${{ parameters.testProject }}/**/*
-  path: ./
-  artifact: binaries
+  inputs:
+    targetpath: ./
+    patterns: |
+      src/*
+      src/NATS.Client/**/*
+      src/Tests/${{ parameters.testProject }}/**/*
+    artifactname: binaries
 
 # We need to restore for coverlet.msbuild which isn't copied to the bin directory but only to .nuget
 - script: >-

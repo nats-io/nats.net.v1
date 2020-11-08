@@ -16,11 +16,13 @@ stages:
           steps:
           - checkout: none
 
-          - download: current
+          - task: DownloadPipelineArtifact@2
             displayName: Download Nuget artifacts
-            patterns: package/**/*
-            path: ./
-            artifact: binaries
+            inputs:
+              targetpath: ./
+              patterns: |
+                package/**/*
+              artifactname: binaries
 
           - script: >-
               dotnet nuget push
