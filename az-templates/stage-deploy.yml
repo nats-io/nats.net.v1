@@ -31,5 +31,5 @@ stages:
                 -s https://apiint.nugettest.org/v3/index.json
                 -k $(NUGET_TOKEN)
                 ./package/*
-              env:
-                NUGET_TOKEN: $(nuget_org_push_new_versions)
+            env:
+              NUGET_TOKEN: $(nuget_org_push_new_versions)
