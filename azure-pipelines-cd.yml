@@ -6,7 +6,6 @@ variables:
   InfoVer: $(Build.SourceVersion)
 
 trigger:
-  batch: true
   branches:
     exclude:
     - '*'
