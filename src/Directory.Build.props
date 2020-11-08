@@ -2,11 +2,5 @@
   <PropertyGroup>
     <TargetFrameworks Condition="$(OS) == 'Windows_NT'">netcoreapp3.1;net46</TargetFrameworks>
     <TargetFramework Condition="$(OS) != 'Windows_NT'">netcoreapp3.1</TargetFramework>
-    <Version>0.0.0</Version>
-    <Company>CNCF</Company>
-    <Authors>The NATS Authors</Authors>
-    <Copyright>Copyright © The NATS Authors 2016-$([System.DateTime]::Now.ToString(yyyy))</Copyright>
-    <RepositoryUrl>https://github.com/jasper-d/nats.net</RepositoryUrl>
-    <RepositoryType>Git</RepositoryType>
   </PropertyGroup>
 </Project>

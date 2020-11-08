@@ -12,6 +12,12 @@
     <PackageReleaseNotes>https://github.com/nats-io/nats.net/releases</PackageReleaseNotes>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageTags>CNCF NATS Messaging Cloud Publish Subscribe PubSub</PackageTags>
+    <Version>0.0.0</Version>
+    <Company>CNCF</Company>
+    <Authors>The NATS Authors</Authors>
+    <Copyright>Copyright © The NATS Authors 2016-$([System.DateTime]::Now.ToString(yyyy))</Copyright>
+    <RepositoryUrl>https://github.com/jasper-d/nats.net</RepositoryUrl>
+    <RepositoryType>Git</RepositoryType>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <DebugType>portable</DebugType>
     <DebugSymbols>true</DebugSymbols>
@@ -19,6 +25,22 @@
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
+  <!-- 
+  Embed generated AssemblyInfo for SourceLink, see. https://github.com/dotnet/sourcelink/issues/572
+  -->
+  <PropertyGroup Condition="$(SYSTEM_TEAMFOUNDATIONSERVERURI) != ''">
+    <TargetFrameworkMonikerAssemblyAttributesPath>$([System.IO.Path]::Combine('$(IntermediateOutputPath)','$(TargetFrameworkMoniker).AssemblyAttributes$(DefaultLanguageSourceExtension)'))</TargetFrameworkMonikerAssemblyAttributesPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedFiles Include="$(GeneratedAssemblyInfoFile)"/>
+  </ItemGroup>
+  <!--
+    Use deterministic build when running on Azure Devops
+  -->
+  <PropertyGroup Condition="$(SYSTEM_TEAMFOUNDATIONSERVERURI) != ''">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+  
   <PropertyGroup Condition="$(Configuration) == 'Release'">
     <NoWarn>1591;1701;1702;</NoWarn>
     <DocumentationFile>bin\Release\$(TargetFramework)\NATS.Client.xml</DocumentationFile>
