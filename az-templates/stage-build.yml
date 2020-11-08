@@ -13,36 +13,28 @@ stages:
         windows:
           imageName: windows-2019
       steps:
-      - task: CmdLine@2 # Restore frequently fails when using it
+      - script: dotnet nuget disable source "Microsoft Visual Studio Offline Packages" # Restore frequently fails when using it
         displayName: Disable Nuget source "Microsoft Visual Studio Offline Packages"
         condition: eq(variables['Agent.OS'], 'Windows_NT') # Not an issue on Linux and MacOS obviously
-        inputs:
-          script: dotnet nuget disable source "Microsoft Visual Studio Offline Packages"
 
-      - task: CmdLine@2
+      - script: >-
+          dotnet build ./src/NATS.sln
+          --configuration Release
+          --no-incremental
+          -p:TreatWarningsAsErrors=true
+          -p:Version=$(SemVer)
         displayName: Build solution
-        inputs:
-          script: >-
-            dotnet build ./src/NATS.sln
-            --configuration Release
-            --no-incremental
-            -p:TreatWarningsAsErrors=true
-            -p:Version=$(SemVer)
 
-      - task: CmdLine@2
+      - script: >-
+          dotnet pack ./src/NATS.Client/
+          --configuration Release
+          --no-build
+          --include-symbols
+          --output ./package
+          -p:Version=$(SemVer)
         displayName: Package NATS.Client
-        inputs:
-          script: >-
-            dotnet pack ./src/NATS.Client/
-            --configuration Release
-            --no-build
-            --include-symbols
-            --output ./package
-            -p:Version=$(SemVer)
 
-      - task: PublishPipelineArtifact@1
+      - publish: ./
         displayName: Publish binaries for use in dependent jobs
         condition: eq(variables['Agent.OS'], 'Windows_NT') # We only use the binaries from the Windows built, it produces net46 and netstandard1.6 DLLs
-        inputs:
-          targetpath: ./
-          artifactname: binaries
+        artifact: binaries

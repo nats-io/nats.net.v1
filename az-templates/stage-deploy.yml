@@ -15,21 +15,17 @@ stages:
         deploy:
           steps:
           - checkout: none
-          - task: DownloadPipelineArtifact@2
-            displayName: Download Nuget artifacts
-            inputs:
-              targetpath: ./
-              patterns: |
-                package/**/*
-              artifactname: binaries
 
-          - task: CmdLine@2
+          - download: current
+            displayName: Download Nuget artifacts
+            patterns: package/**/*
+            artifact: binaries
+
+          - script: >-
+              dotnet nuget push
+              -s https://apiint.nugettest.org/v3/index.json
+              -k $(NUGET_TOKEN)
+              ./package/*
             displayName: Push Nuget artifacts
-            inputs:
-              script: >-
-                dotnet nuget push
-                -s https://apiint.nugettest.org/v3/index.json
-                -k $(NUGET_TOKEN)
-                ./package/*
             env:
               NUGET_TOKEN: $(nuget_org_push_new_versions)
