@@ -12,6 +12,8 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace NATS.Client
 {
@@ -36,5 +38,7 @@ namespace NATS.Client
         /// the next message.</param>
         /// <returns>The next <see cref="Msg"/> available to a subscriber.</returns>
         Msg NextMessage(int timeout);
+
+        ValueTask<Msg> NextMessageAsync(CancellationToken cancellationToken = default);
     }
 }

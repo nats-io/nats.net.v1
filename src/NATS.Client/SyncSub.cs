@@ -1,4 +1,4 @@
-﻿// Copyright 2015-2018 The NATS Authors
+// Copyright 2015-2018 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -12,6 +12,8 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace NATS.Client
 {
@@ -20,7 +22,7 @@ namespace NATS.Client
     /// to <see cref="NextMessage()"/> and <see cref="NextMessage(int)"/>. This class should
     /// not be used directly.
     /// </summary>
-    public sealed class SyncSubscription : Subscription, ISyncSubscription, ISubscription 
+    public sealed class SyncSubscription : Subscription, ISyncSubscription, ISubscription
     {
         internal SyncSubscription(Connection conn, string subject, string queue)
             : base(conn, subject, queue)
@@ -108,6 +110,53 @@ namespace NATS.Client
                 msg = localChannel.get(-1);
             }
 
+            if (msg != null)
+            {
+                long d;
+                lock (mu)
+                {
+                    d = tallyDeliveredMessage(msg);
+                }
+                if (d == localMax)
+                {
+                    // Remove subscription if we have reached max.
+                    localConn.removeSubSafe(this);
+                }
+                if (localMax > 0 && d > localMax)
+                {
+                    throw new NATSMaxMessagesException();
+                }
+            }
+
+            return msg;
+        }
+
+        public async ValueTask<Msg> NextMessageAsync(CancellationToken cancellationToken = default)
+        {
+            if (connClosed)
+                throw new NATSConnectionClosedException();
+
+            if (max > 0 && delivered >= max)
+                throw new NATSMaxMessagesException();
+
+            if (closed)
+                throw new NATSBadSubscriptionException();
+
+            if (sc)
+            {
+                sc = false;
+                throw new NATSSlowConsumerException();
+            }
+
+            // snapshot (not necessary?)
+            var localConn = conn;
+            var localChannel = mch;
+            var localMax = max;
+
+            if (localMax > 0 && delivered >= localMax)
+                throw new NATSMaxMessagesException();
+
+            var msg = await localChannel.GetAsync(cancellationToken);
             if (msg != null)
             {
                 long d;
