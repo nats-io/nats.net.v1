@@ -39,5 +39,6 @@
 
   <ItemGroup>
     <PackageReference Include="System.Collections.Specialized" Version="4.3.0" />
+    <PackageReference Include="System.Threading.Channels" Version="4.7.1" />
   </ItemGroup>
 </Project>

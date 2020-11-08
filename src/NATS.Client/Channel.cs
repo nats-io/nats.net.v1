@@ -15,6 +15,8 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Channels;
+using System.Threading.Tasks;
 
 namespace NATS.Client
 {
@@ -86,31 +88,58 @@ namespace NATS.Client
         }
     }
 
+    public class Channel<T> : AsyncChannel<T> { }
+
+
     // This channel class, really a blocking queue, is named the way it is
     // so the code more closely reads with GO.  We implement our own channels 
     // to be lightweight and performant - other concurrent classes do the
     // task but are more heavyweight that what we want.
-    internal sealed class Channel<T>
+    public abstract class ChannelBase<T>
+    {
+        public string Name { get; set; }
+
+        public abstract ValueTask<T> GetAsync(CancellationToken cancellationToken = default);
+
+        internal abstract T get(int timeout);
+
+        // Gets all available items in the queue, up to the size of the input buffer.
+        // Returns the number of items delivered into the buffer.
+        internal abstract int get(int timeout, T[] buffer);
+
+        internal abstract void add(T item);
+
+        internal abstract void close();
+
+        internal abstract int Count { get; }
+
+    } // class Channel
+
+
+    public class SyncChannel<T> : ChannelBase<T>
     {
         readonly Queue<T> q;
         readonly Object qLock = new Object();
 
         bool finished = false;
 
-        public string Name { get; set; }
-
-        internal Channel()
+        internal SyncChannel()
             : this(1024)
         {
         }
 
-        internal Channel(int initialCapacity)
+        internal SyncChannel(int initialCapacity)
         {
             Name = "Unnamed channel " + this.GetHashCode();
             q = new Queue<T>(initialCapacity);
         }
 
-        internal T get(int timeout)
+        public override ValueTask<T> GetAsync(CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal override T get(int timeout)
         {
             var lockWasTaken = false;
 
@@ -167,7 +196,7 @@ namespace NATS.Client
 
         // Gets all available items in the queue, up to the size of the input buffer.
         // Returns the number of items delivered into the buffer.
-        internal int get(int timeout, T[] buffer)
+        internal override int get(int timeout, T[] buffer)
         {
             if (buffer.Length < 1) throw new ArgumentException();
 
@@ -238,7 +267,7 @@ namespace NATS.Client
             }
         } // get
 
-        internal void add(T item)
+        internal override void add(T item)
         {
             var lockWasTaken = false;
 
@@ -293,7 +322,7 @@ namespace NATS.Client
             }
         }
 
-        internal void close()
+        internal override void close()
         {
             var lockWasTaken = false;
 
@@ -314,7 +343,7 @@ namespace NATS.Client
             }
         }
 
-        internal int Count
+        internal override int Count
         {
             get
             {
@@ -335,7 +364,77 @@ namespace NATS.Client
             }
         }
 
-    } // class Channel
+    }
 
+
+    public class AsyncChannel<T> : ChannelBase<T>
+    {
+        readonly ChannelWriter<T> writer;
+        readonly ChannelReader<T> reader;
+
+        internal AsyncChannel()
+        {
+            Name = "Unnamed channel " + this.GetHashCode();
+            var channel = Channel.CreateUnbounded<T>(new UnboundedChannelOptions
+            {
+                SingleWriter = true,
+                SingleReader = true
+            });
+            writer = channel.Writer;
+            reader = channel.Reader;
+        }
+
+        public override ValueTask<T> GetAsync(CancellationToken cancellationToken = default)
+        {
+            var item = reader.ReadAsync(cancellationToken);
+            Interlocked.Decrement(ref count);
+            return item;
+        }
+
+        internal override T get(int timeout)
+        {
+            T item = default;
+            if (SpinWait.SpinUntil(() => reader.TryRead(out item), timeout))
+            {
+                Interlocked.Decrement(ref count);
+                return item;
+            }
+            throw new NATSTimeoutException();
+        }
+
+        // Gets all available items in the queue, up to the size of the input buffer.
+        // Returns the number of items delivered into the buffer.
+        internal override int get(int timeout, T[] buffer)
+        {
+            if (buffer.Length < 1) throw new ArgumentException();
+
+            // only ever called with timeout=-1, so ignoring timeout for simplicity
+
+            // get at least one
+            buffer[0] = get(-1);
+            int delivered = 1;
+            // get more if available
+            for (int ii = 1; ii < buffer.Length && reader.TryRead(out var item); ++ii)
+            {
+                buffer[ii] = item;
+                Interlocked.Decrement(ref count);
+                delivered++;
+            }
+
+            return delivered;
+        }
+
+        internal override void add(T item)
+        {
+            writer.TryWrite(item);
+            Interlocked.Increment(ref count);
+        }
+
+
+        internal override void close() => writer.TryComplete();
+
+        private int count = 0;
+        internal override int Count => count;
+
+    }
 }
-
