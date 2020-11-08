@@ -1,11 +1,11 @@
 stages:
 - stage: Deploy
   condition: and (succeeded(), startsWith( variables['Build.SourceBranch'], 'refs/tags' ))
-  dependsOn: Build
+  dependsOn: Test
   jobs:
   - deployment: DeployArtifacts
-    environment: 'Prod'
-    displayName: 'Deploys artifacts'
+    environment: Prod
+    displayName: Deploys artifacts
     timeoutInMinutes: 10
     cancelTimeoutInMinutes: 5
     strategy: 
@@ -13,11 +13,21 @@ stages:
         deploy:
           steps:
           - checkout: none
-          - task: NuGetCommand@2
-            displayName: 'Push Nupkg to NuGet.Org'
+          - task: DownloadPipelineArtifact@2
+            displayName: Download Nuget artifacts
             inputs:
-              command: push
-              nugetFeedType: external
-              publishFeedCredentials: nuget_org_push_new_versions
-              verbosityPush: Normal
-              packagesToPush: '$(Pipeline.Workspace)/**/*.nupkg;!$(Pipeline.Workspace)/**/*.symbols.nupkg'
+              targetpath: ./
+              patterns: |
+                package/**/*
+              artifactname: binaries
+
+          - task: CmdLine@2
+            displayName: Push Nuget artifacts
+            inputs:
+              script: >-
+                dotnet nuget push
+                -s https://api.nuget.org/v3/index.json
+                -k $(NUGET_TOKEN)
+                ./package/*
+              env:
+                NUGET_TOKEN: $(nuget_org_push_new_versions)

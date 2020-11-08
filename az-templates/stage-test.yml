@@ -1,0 +1,26 @@
+stages:
+- stage: Test
+  dependsOn: Build
+  jobs:
+  - template: platform-dependent-job.yml
+    parameters:
+      jobTitle: UnitTestBinaries
+      displayName: Run unit tests
+      dependsOn: BuildBinaries
+      steps:
+      - template: steps-test.yml
+        parameters:
+          testProject: UnitTests
+  
+  - template: platform-dependent-job.yml
+    parameters:
+      jobTitle: IntegrationTestBinaries
+      displayName: Run integration tests
+      dependsOn: BuildBinaries
+      steps:
+      - template: steps-test.yml
+        parameters:
+          testProject: IntegrationTests
+          mayFailOn: Darwin
+          preTestSteps:
+          - template: install-nats-server.yml
