@@ -5,7 +5,7 @@
     <TargetFramework Condition="$(OS) != 'Windows_NT'">netstandard1.6</TargetFramework>
     <Title>NATS .NET Client</Title>
     <Description>NATS acts as a central nervous system for distributed systems at scale for IoT, edge computing, and cloud native and on-premise applications.  This is the .NET client API.</Description>
-    <PackageId>test-packageid-2A850C7F-0F48-4A42-8F27-206CBC2DB0FF</PackageId>
+    <PackageId>NATS.Client</PackageId>
     <PackageProjectUrl>https://nats.io</PackageProjectUrl>
     <PackageIcon>package-icon.png</PackageIcon>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
