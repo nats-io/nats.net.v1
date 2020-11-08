@@ -41,7 +41,7 @@ namespace NATS.Client
         internal bool closed = false;
         internal bool connClosed = false;
 
-        internal Channel<Msg> mch = null;
+        protected Channel<Msg> mch = null;
         internal bool ownsChannel = true;
 
         // Pending stats, async subscriptions, high-speed etc.
@@ -62,6 +62,19 @@ namespace NATS.Client
             this.conn = conn;
             this.subject = subject;
             this.queue = queue;
+        }
+
+        public void CloseSafe()
+        {
+            if (mch != null)
+            {
+                if (ownsChannel)
+                    mch.close();
+
+                mch = null;
+            }
+
+            closed = true;
         }
 
         internal virtual void close()

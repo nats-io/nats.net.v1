@@ -3917,15 +3917,7 @@ namespace NATS.Client
         internal virtual void removeSub(Subscription s)
         {
             subs.Remove(s.sid);
-            if (s.mch != null)
-            {
-                if (s.ownsChannel)
-                    s.mch.close();
-
-                s.mch = null;
-            }
-
-            s.closed = true;
+            s.CloseSafe();
         }
 
         // FIXME: This is a hack
