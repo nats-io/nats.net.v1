@@ -8,8 +8,11 @@ variables:
 trigger:
   batch: true
   branches:
+    exclude:
+    - '*'
+  tags:
     include:
-    - refs/tags/*
+    - '*'
 
 pr: none
 
