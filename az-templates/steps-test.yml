@@ -28,6 +28,7 @@ steps:
     src/*
     src/NATS.Client/**/*
     src/Tests/${{ parameters.testProject }}/**/*
+  path: ./
   artifact: binaries
 
 # We need to restore for coverlet.msbuild which isn't copied to the bin directory but only to .nuget

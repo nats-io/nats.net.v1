@@ -19,6 +19,7 @@ stages:
           - download: current
             displayName: Download Nuget artifacts
             patterns: package/**/*
+            path: ./
             artifact: binaries
 
           - script: >-
