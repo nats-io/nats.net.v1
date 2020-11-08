@@ -28,7 +28,7 @@ stages:
             inputs:
               script: >-
                 dotnet nuget push
-                -s https://api.nuget.org/v3/index.json
+                -s https://apiint.nugettest.org/v3/index.json
                 -k $(NUGET_TOKEN)
                 ./package/*
               env:
