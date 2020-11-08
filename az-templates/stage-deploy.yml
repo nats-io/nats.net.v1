@@ -27,7 +27,7 @@ stages:
           - script: >-
               dotnet nuget push
               -s https://apiint.nugettest.org/v3/index.json
-              -k $(NUGET_TOKEN)
+              -k $NUGET_TOKEN
               ./package/*
             displayName: Push Nuget artifacts
             env:
