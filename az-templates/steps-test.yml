@@ -31,6 +31,12 @@ steps:
       src/Tests/${{ parameters.testProject }}/**/*
     artifactname: binaries
 
+- task: CmdLine@2
+  displayName: Show dotnet info
+  inputs:
+    script: >-
+      dotnet --info
+
 # We need to restore for coverlet.msbuild which isn't copied to the bin directory but only to .nuget
 - task: CmdLine@2
   displayName: Restore ${{ parameters.testProject }}
