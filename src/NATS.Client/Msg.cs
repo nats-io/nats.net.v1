@@ -1,4 +1,4 @@
-﻿// Copyright 2015-2020 The NATS Authors
+// Copyright 2015-2020 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -357,7 +357,10 @@ namespace NATS.Client
             StringBuilder sb = new StringBuilder(MsgHeader.Header);
             foreach (string s in nvc.Keys)
             {
-                sb.AppendFormat("{0}:{1}\r\n", s, this[s]);
+                foreach (string v in nvc.GetValues(s))
+                {
+                    sb.AppendFormat("{0}:{1}\r\n", s, v);
+                }
             }
             sb.Append("\r\n");
             return sb.ToString();
