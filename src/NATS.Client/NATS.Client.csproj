@@ -5,7 +5,7 @@
     <TargetFramework Condition="$(OS) != 'Windows_NT'">netstandard1.6</TargetFramework>
     <Title>NATS .NET Client</Title>
     <Description>NATS acts as a central nervous system for distributed systems at scale for IoT, edge computing, and cloud native and on-premise applications.  This is the .NET client API.</Description>
-    <PackageId>NATS.Client</PackageId>
+    <PackageId>test-packageid-2A850C7F-0F48-4A42-8F27-206CBC2DB0FF</PackageId>
     <PackageProjectUrl>https://nats.io</PackageProjectUrl>
     <PackageIcon>package-icon.png</PackageIcon>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
@@ -16,7 +16,7 @@
     <Company>CNCF</Company>
     <Authors>The NATS Authors</Authors>
     <Copyright>Copyright © The NATS Authors 2016-$([System.DateTime]::Now.ToString(yyyy))</Copyright>
-    <RepositoryUrl>https://github.com/nats-io/nats.net</RepositoryUrl>
+    <RepositoryUrl>https://github.com/jasper-d/nats.net</RepositoryUrl>
     <RepositoryType>Git</RepositoryType>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <DebugType>portable</DebugType>
