@@ -56,18 +56,8 @@
  -->
   <PropertyGroup Condition="$(SYSTEM_TEAMFOUNDATIONSERVERURI) != ''">
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
   </PropertyGroup>
-
-  <!-- 
-    Embed generated AssemblyInfo for SourceLink, see. https://github.com/dotnet/sourcelink/issues/572
-  -->
-  <PropertyGroup Condition="$(SYSTEM_TEAMFOUNDATIONSERVERURI) != ''">
-    <TargetFrameworkMonikerAssemblyAttributesPath>$([System.IO.Path]::Combine('$(IntermediateOutputPath)','$(TargetFrameworkMoniker).AssemblyAttributes$(DefaultLanguageSourceExtension)'))</TargetFrameworkMonikerAssemblyAttributesPath>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <EmbeddedFiles Include="$(GeneratedAssemblyInfoFile)"/>
-  </ItemGroup>
 
   <!-- 
     Fix coverage for deterministic builds.
