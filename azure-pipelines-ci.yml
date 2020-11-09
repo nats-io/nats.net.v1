@@ -5,7 +5,6 @@ name: $(SemVer)
 # netstandard1.6 + net46            x
 # netstandard1.6                             (x)     (x)
 
-
 # Test Matrix
 # OS/Runtime:   Windows_NT, Linux, Darwin
 # net46             x

@@ -47,19 +47,19 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Collections.Specialized" Version="4.3.0" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All"/>
+    <PackageReference Include="System.Collections.Specialized" Version="4.3.0" />
   </ItemGroup>
 
   <!--
-   Use deterministic build when running on Azure Devops
- -->
+    Use deterministic build when running on Azure Devops
+  -->
   <PropertyGroup Condition="$(SYSTEM_TEAMFOUNDATIONSERVERURI) != ''">
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
   </PropertyGroup>
 
-  <!-- 
+  <!--
     Fix coverage for deterministic builds.
   -->
   <Target Name="CoverletGetPathMap"

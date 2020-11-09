@@ -4,6 +4,8 @@ variables:
   BuildRev: $[counter(format('{0:yyyyMMdd}', pipeline.startTime), 1)]
   SemVer: $[ variables['Build.SourceBranchName'] ]
   InfoVer: $(Build.SourceVersion)
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_NOLOGO: true
 
 trigger:
   branches:
