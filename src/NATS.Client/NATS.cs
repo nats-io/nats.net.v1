@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System;
+using System.Reflection;
 
 /*! \mainpage %NATS .NET client.
  *
@@ -70,7 +71,7 @@ namespace NATS.Client
         /// <summary>
         /// Client version
         /// </summary>
-        public const string Version = "0.0.1";
+        public static string Version = typeof(Defaults).GetTypeInfo().Assembly.GetName().Version.ToString();
 
         /// <summary>
         /// The default NATS connect url ("nats://localhost:4222")
