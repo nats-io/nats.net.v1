@@ -1,4 +1,4 @@
-﻿// Copyright 2015-2018 The NATS Authors
+// Copyright 2015-2018 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -26,6 +26,7 @@ using System.Security.Authentication;
 using System.Globalization;
 using System.Diagnostics;
 using NATS.Client.Internals;
+using System.Threading.Channels;
 
 namespace NATS.Client
 {
@@ -116,7 +117,7 @@ namespace NATS.Client
 
         private readonly List<Thread> wg = new List<Thread>(2);
 
-        private Uri             url     = null;
+        private Uri url = null;
         private ServerPool srvPool = new ServerPool();
 
         // we have a buffered reader for writing, and reading.
@@ -184,16 +185,16 @@ namespace NATS.Client
 
         TCPConnection conn = new TCPConnection();
 
-        SubChannelPool subChannelPool = null;
-
         // One could use a task scheduler, but this is simpler and will
         // likely be easier to port to .NET core.
         private class CallbackScheduler : IDisposable
         {
             private readonly object runningLock = new object();
-            private readonly Channel<Action> tasks = new Channel<Action>() { Name = "Tasks" };
 
-            private Task executorTask     = null;
+            private readonly ChannelWriter<Action> writer;
+            private readonly ChannelReader<Action> reader;
+
+            private Task executorTask = null;
             private bool schedulerRunning = false;
 
             private bool Running
@@ -215,11 +216,22 @@ namespace NATS.Client
                 }
             }
 
-            private void process()
+            public CallbackScheduler()
+            {
+                var channel = Channel.CreateUnbounded<Action>(new UnboundedChannelOptions
+                {
+                    SingleWriter = false,
+                    SingleReader = true
+                });
+                writer = channel.Writer;
+                reader = channel.Reader;
+            }
+
+            private async Task process()
             {
                 while (Running)
                 {
-                    Action action = tasks.get(-1);
+                    Action action = await reader.ReadAsync();
                     try
                     {
                         action();
@@ -244,14 +256,7 @@ namespace NATS.Client
                 }
             }
 
-            internal void Add(Action action)
-            {
-                lock (runningLock)
-                {
-                    if (schedulerRunning)
-                        tasks.add(action);
-                }
-            }
+            internal void Add(Action action) => writer.WriteAsync(action);
 
             internal void ScheduleStop()
             {
@@ -261,7 +266,7 @@ namespace NATS.Client
             private void StopInternal()
             {
                 Running = false;
-                tasks.close();
+                writer.TryComplete();
             }
 
             internal void WaitForCompletion()
@@ -353,12 +358,12 @@ namespace NATS.Client
             ///          ->NetworkStream/SslStream (srvStream)
             ///              ->TCPClient (srvClient);
             /// 
-            object        mu        = new object();
-            TcpClient     client    = null;
-            NetworkStream stream    = null;
-            SslStream     sslStream = null;
+            object mu = new object();
+            TcpClient client = null;
+            NetworkStream stream = null;
+            SslStream sslStream = null;
 
-            string        hostName  = null;
+            string hostName = null;
 
             internal void open(Srv s, int timeoutMillis)
             {
@@ -580,135 +585,6 @@ namespace NATS.Client
             }
             #endregion
         }
-
-        /// <summary>
-        /// The SubChannelPool class is used when the application
-        /// has specified async subscribers will share channels and associated
-        /// processing threads in the connection.  It simply returns a channel 
-        /// that already has a long running task (thread) processing it.  
-        /// Async subscribers use this channel in lieu of their own channel and
-        /// message processing task.
-        /// </summary>
-        internal sealed class SubChannelPool : IDisposable
-        {
-            /// <summary>
-            /// SubChannelProcessor creates a channel and a task to process
-            /// messages on that channel.
-            /// </summary>
-            // TODO:  Investigate reuse of this class in async sub.
-            private sealed class SubChannelProcessor : IDisposable
-            {
-                private readonly Connection connection;
-                private Task channelTask = null;
-
-                internal SubChannelProcessor(Connection c)
-                {
-                    connection = c;
-
-                    Channel = new Channel<Msg>()
-                    {
-                        Name = "SubChannelProcessor " + this.GetHashCode(),
-                    };
-
-                    // Use the default task scheduler and do not let child tasks launched
-                    // when delivering messages to attach to this task (Issue #273)
-                    channelTask = Task.Factory.StartNew(
-                        DeliverMessages, 
-                        CancellationToken.None,
-                        TaskCreationOptions.LongRunning | TaskCreationOptions.DenyChildAttach,
-                        TaskScheduler.Default);
-                }
-
-                internal Channel<Msg> Channel { get; }
-
-                private void DeliverMessages() => connection.deliverMsgs(Channel);
-
-                public void Dispose()
-                {
-                    // closing the channel will end the task, but cap the
-                    // wait just in case things are slow.  
-                    // See Connection.deliverMsgs
-                    Channel.close();
-                    channelTask.Wait(500);
-#if NET46
-                    channelTask.Dispose();
-#endif
-                    channelTask = null;
-                }
-            }
-
-            object pLock = new object();
-            List<SubChannelProcessor> pList = new List<SubChannelProcessor>();
-
-            int current = 0;
-            int maxTasks = 0;
-
-            Connection connection = null;
-
-            internal SubChannelPool(Connection c, int numTasks)
-            {
-                maxTasks = numTasks;
-                connection = c;
-            }
-
-            /// <summary>
-            /// Gets a message channel for use with an async subscriber.
-            /// </summary>
-            /// <returns>
-            /// A channel, already setup with a task processing messages.
-            /// </returns>
-            internal Channel<Msg> getChannel()
-            {
-                // simple round robin, adding Channels/Tasks as necessary.
-                lock (pLock)
-                {
-                    if (current == maxTasks)
-                        current = 0;
-
-                    if (pList.Count == current)
-                        pList.Add(new SubChannelProcessor(connection));
-
-                    return pList[current++].Channel;
-                }
-            }
-
-            public void Dispose()
-            {
-                lock (pLock)
-                {
-                    pList.ForEach((p) => { p.Dispose(); });
-                    pList.Clear();
-                }
-            }
-        }
-
-        /// <summary>
-        /// Gets an available message channel for use with async subscribers.  It will
-        /// setup the message channel pool if configured to do so.
-        /// </summary>
-        /// <returns>
-        /// A channel for use, null if configuration dictates not to use the 
-        /// channel pool.
-        /// </returns>
-        internal Channel<Msg> getMessageChannel()
-        {
-            lock (mu)
-            {
-                if (opts.subscriberDeliveryTaskCount > 0 && subChannelPool == null)
-                {
-                    subChannelPool = new SubChannelPool(this,
-                        opts.subscriberDeliveryTaskCount);
-                }
-
-                if (subChannelPool != null)
-                {
-                    return subChannelPool.getChannel();
-                }
-            }
-
-            return null;
-        }
-
         /// <summary>
         /// Initializes a new instance of the <see cref="Connection"/> class
         /// with the specified <see cref="Options"/>.
@@ -1006,7 +882,7 @@ namespace NATS.Client
                 {
                     clientIp = info.client_ip;
                 }
-                
+
                 return !String.IsNullOrEmpty(clientIp) ? IPAddress.Parse(clientIp) : null;
             }
         }
@@ -1348,7 +1224,7 @@ namespace NATS.Client
                 if (args.SignedNonce == null)
                     throw new NATSConnectionException("Signature Event Handler did not set the SignedNonce.");
 
-                sig = NaCl.CryptoBytes.ToBase64String(args.SignedNonce);               
+                sig = NaCl.CryptoBytes.ToBase64String(args.SignedNonce);
             }
 
             ConnectInfo info = new ConnectInfo(opts.Verbose, opts.Pedantic, userJWT, nkey, sig, user,
@@ -1609,7 +1485,7 @@ namespace NATS.Client
 
                     Monitor.Enter(mu, ref lockWasTaken);
 
-                    if (isClosed())
+                    if (IsClosed)
                         break;
 
                     cur.reconnects++;
@@ -1711,7 +1587,7 @@ namespace NATS.Client
 
             lock (mu)
             {
-                if (isConnecting() || isClosed() || isReconnecting())
+                if (isConnecting() || IsClosed || isReconnecting())
                 {
                     return;
                 }
@@ -1773,48 +1649,6 @@ namespace NATS.Client
                     }
 
                     break;
-                }
-            }
-        }
-
-        // deliverMsgs waits on the delivery channel shared with readLoop and processMsg.
-        // It is used to deliver messages to asynchronous subscribers.
-        internal void deliverMsgs(Channel<Msg> ch)
-        {
-            int batchSize;
-            lock (mu)
-            {
-                batchSize = opts.subscriptionBatchSize;
-            }
-
-            // dispatch buffer
-            Msg[] mm = new Msg[batchSize];
-
-            while (true)
-            {
-                if (isClosed())
-                    return;
-
-                int delivered = ch.get(-1, mm);
-                if (delivered == 0)
-                {
-                    // the channel has been closed, exit silently.
-                    return;
-                }
-
-                // Note, this seems odd message having the sub process itself, 
-                // but this is good for performance.
-                for (int ii = 0; ii < delivered; ++ii)
-                {
-                    Msg m = mm[ii];
-                    mm[ii] = null; // do not hold onto the Msg any longer than we need to
-                    if (!m.sub.processMsg(m))
-                    {
-                        lock (mu)
-                        {
-                            removeSub(m.sub);
-                        }
-                    }
                 }
             }
         }
@@ -2105,7 +1939,7 @@ namespace NATS.Client
                 case 1:
                     return buffer[start] - '0';
                 case 2:
-                    return 10 * (buffer[start] - '0') 
+                    return 10 * (buffer[start] - '0')
                          + (buffer[start + 1] - '0');
                 case 3:
                     return 100 * (buffer[start] - '0')
@@ -2193,10 +2027,10 @@ namespace NATS.Client
 
         // processSlowConsumer will set SlowConsumer state and fire the
         // async error handler if registered.
-        internal void processSlowConsumer(Subscription s)
+        internal void processSlowConsumer(ISubscription s)
         {
             lastEx = new NATSSlowConsumerException();
-            if (!s.sc)
+            if (!s.IsSlow)
             {
                 EventHandler<ErrEventArgs> aseh = opts.AsyncErrorEventHandler;
                 if (aseh != null)
@@ -2206,7 +2040,6 @@ namespace NATS.Client
                     );
                 }
             }
-            s.sc = true;
         }
 
         private void kickFlusher()
@@ -2309,7 +2142,7 @@ namespace NATS.Client
         // processPong is used to process responses to the client's ping
         // messages. We use pings for the flush mechanism as well.
         internal void processPong()
-        { 
+        {
             if (pongs.TryDequeue(out var ch))
                 ch?.add(true);
 
@@ -2548,7 +2381,7 @@ namespace NATS.Client
 
             lock (mu)
             {
-                if (isClosed())
+                if (IsClosed)
                     throw new NATSConnectionClosedException();
 
                 if (isDrainingPubs())
@@ -2793,7 +2626,7 @@ namespace NATS.Client
                     }
                 }
 
-                isClosed = this.isClosed();
+                isClosed = this.IsClosed;
             }
 
             if (!isClosed)
@@ -2844,7 +2677,7 @@ namespace NATS.Client
         {
             if (string.IsNullOrWhiteSpace(subject))
                 throw new NATSBadSubscriptionException();
-            
+
             // a timeout of 0 will never succeed - do not allow it.
             if (timeout == 0)
                 throw new ArgumentException("Timeout must not be 0.", nameof(timeout));
@@ -3641,37 +3474,9 @@ namespace NATS.Client
             }
         }
 
-        private void addSubscription(Subscription s)
-        {
-            s.sid = Interlocked.Increment(ref ssid);
-            subs[s.sid] = s;
-        }
+        private long GetNextSubscriptionId() => Interlocked.Increment(ref ssid);
 
-        // caller must lock
-        // See Options.SubscriberDeliveryTaskCount
-        private void enableSubChannelPooling()
-        {
-            if (subChannelPool != null)
-                return;
-
-            if (opts.subscriberDeliveryTaskCount > 0)
-            {
-                subChannelPool = new SubChannelPool(this,
-                    opts.subscriberDeliveryTaskCount);
-            }
-        }
-
-        // caller must lock.
-        // See Options.SubscriberDeliveryTaskCount
-        private void disableSubChannelPooling()
-        {
-            if (subChannelPool != null)
-            {
-                subChannelPool.Dispose();
-            }
-        }
-
-        internal AsyncSubscription subscribeAsync(string subject, string queue,
+        protected AsyncSubscription subscribeAsync(string subject, string queue,
             EventHandler<MsgHandlerEventArgs> handler)
         {
             if (!Subscription.IsValidSubject(subject))
@@ -3687,16 +3492,13 @@ namespace NATS.Client
 
             lock (mu)
             {
-                if (isClosed())
+                if (IsClosed)
                     throw new NATSConnectionClosedException();
                 if (IsDraining())
                     throw new NATSConnectionDrainingException();
 
-                enableSubChannelPooling();
-
-                s = new AsyncSubscription(this, subject, queue);
-
-                addSubscription(s);
+                s = new AsyncSubscription(this, GetNextSubscriptionId(), subject, queue);
+                subs[s.sid] = s;
 
                 if (handler != null)
                 {
@@ -3725,14 +3527,13 @@ namespace NATS.Client
 
             lock (mu)
             {
-                if (isClosed())
+                if (IsClosed)
                     throw new NATSConnectionClosedException();
                 if (IsDraining())
                     throw new NATSConnectionDrainingException();
 
-                s = new SyncSubscription(this, subject, queue);
-
-                addSubscription(s);
+                s = new SyncSubscription(this, GetNextSubscriptionId(), subject, queue);
+                subs[s.sid] = s;
 
                 // We will send these for all subs when we reconnect
                 // so that we can suppress here.
@@ -3867,16 +3668,16 @@ namespace NATS.Client
 
         // unsubscribe performs the low level unsubscribe to the server.
         // Use Subscription.Unsubscribe()
-        internal Task unsubscribe(Subscription sub, int max, bool drain, int timeout)
+        internal Task unsubscribe(long subscriptionId, int max, bool drain, int timeout)
         {
             var task = CompletedTask.Get();
-            
+
             lock (mu)
             {
-                if (isClosed())
+                if (IsClosed)
                     throw new NATSConnectionClosedException();
 
-                if (!subs.TryGetValue(sub.sid, out var s) || s == null)
+                if (!subs.TryGetValue(subscriptionId, out var s) || s == null)
                     return task;
 
                 if (max > 0)
@@ -3917,7 +3718,7 @@ namespace NATS.Client
         internal virtual void removeSub(Subscription s)
         {
             subs.Remove(s.sid);
-            s.CloseSafe();
+            s.Close();
         }
 
         // FIXME: This is a hack
@@ -3993,7 +3794,7 @@ namespace NATS.Client
             {
                 lock (mu)
                 {
-                    if (isClosed())
+                    if (IsClosed)
                         throw new NATSConnectionClosedException();
 
                     sendPing(ch);
@@ -4052,7 +3853,7 @@ namespace NATS.Client
         {
             lock (mu)
             {
-                if (isClosed())
+                if (IsClosed)
                     throw new NATSConnectionClosedException();
 
                 if (status == ConnState.CONNECTED)
@@ -4079,7 +3880,7 @@ namespace NATS.Client
         // Lock must be held by the caller.
         private void clearPendingFlushCalls()
         {
-            while(pongs.TryDequeue(out var ch))
+            while (pongs.TryDequeue(out var ch))
                 ch?.add(true);
         }
 
@@ -4107,7 +3908,7 @@ namespace NATS.Client
         {
             lock (mu)
             {
-                if (isClosed())
+                if (IsClosed)
                 {
                     status = closeState;
                     return;
@@ -4136,7 +3937,7 @@ namespace NATS.Client
                 // pending NextMsg() calls.
                 foreach (Subscription s in subs.Values)
                 {
-                    s.close();
+                    s.Close();
                 }
 
                 subs.Clear();
@@ -4212,13 +4013,6 @@ namespace NATS.Client
         {
             close(ConnState.CLOSED, true, lastEx);
             callbackScheduler.ScheduleStop();
-            disableSubChannelPooling();
-        }
-
-        // assume the lock is held.
-        private bool isClosed()
-        {
-            return (status == ConnState.CLOSED);
         }
 
         /// <summary>
@@ -4229,19 +4023,13 @@ namespace NATS.Client
         /// closed, otherwise <c>false</c>.</returns>
         /// <seealso cref="Close"/>
         /// <seealso cref="State"/>
-        public bool IsClosed()
-        {
-            lock (mu)
-            {
-                return isClosed();
-            }
-        }
+        public bool IsClosed => status == ConnState.CLOSED;
 
         // This allows us to know that whatever we have in the client pending
         // is correct and the server will not send additional information.
         private void checkDrained(Subscription s, int timeout)
         {
-            if (isClosed() || s == null)
+            if (IsClosed || s == null)
                 return;
 
             // This allows us to know that whatever we have in the client pending
@@ -4253,7 +4041,7 @@ namespace NATS.Client
             var sw = Stopwatch.StartNew();
             while (true)
             {
-                if (IsClosed())
+                if (IsClosed)
                     return;
 
                 Connection c;
@@ -4263,7 +4051,7 @@ namespace NATS.Client
                 // check our subscription state
                 lock (s.mu)
                 {
-                    c = s.conn;
+                    c = s.Connection;
                     closed = s.closed;
                     pMsgs = s.pMsgs;
                 }
@@ -4308,7 +4096,7 @@ namespace NATS.Client
 
             lock (mu)
             {
-                if (isClosed())
+                if (IsClosed)
                     throw new NATSConnectionClosedException();
 
                 // if we're already draining, exit.
@@ -4610,7 +4398,7 @@ namespace NATS.Client
         #region IDisposable Support
 
         // To detect redundant calls
-        private bool disposedValue = false; 
+        private bool disposedValue = false;
 
         /// <summary>
         /// Closes the connection and optionally releases the managed resources.

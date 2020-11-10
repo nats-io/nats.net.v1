@@ -565,7 +565,7 @@ namespace IntegrationTests
             {
                 using (var cn = Context.ConnectionFactory.CreateConnection(opts))
                 {
-                    Assert.False(cn.IsClosed());
+                    Assert.False(cn.IsClosed);
                 }
             }
         }

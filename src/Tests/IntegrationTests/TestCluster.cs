@@ -398,7 +398,7 @@ namespace IntegrationTests
 
                     Assert.True(disconnectHandlerCalled);
                     Assert.True(closedHandlerCalled);
-                    Assert.True(c.IsClosed());
+                    Assert.True(c.IsClosed);
                 }
             }
         }
@@ -466,7 +466,7 @@ namespace IntegrationTests
 
                     Assert.True(disconnectHandlerCalled);
                     Assert.True(closedHandlerCalled);
-                    Assert.True(c.IsClosed());
+                    Assert.True(c.IsClosed);
                 }
             }
         }
@@ -535,7 +535,7 @@ namespace IntegrationTests
 
                     Assert.True(disconnectHandlerCalled);
                     Assert.True(closedHandlerCalled);
-                    Assert.True(c.IsClosed());
+                    Assert.True(c.IsClosed);
                 }
             }
         }

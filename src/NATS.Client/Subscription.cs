@@ -13,6 +13,8 @@
 
 using System;
 using System.Text;
+using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 // disable XML comment warnings
@@ -26,71 +28,52 @@ namespace NATS.Client
     /// </summary>
     public class Subscription : ISubscription, IDisposable
     {
-        readonly  internal  object mu = new object(); // lock
+        readonly internal object mu = new object(); // lock
 
-        internal  long           sid = 0; // subscriber ID.
-        private   long           msgs;
-        internal  long           delivered;
-        private   long           bytes;
-        internal  long           max = -1;
+        private long msgs;
+        protected long delivered;
+        private long bytes;
 
-        // slow consumer
-        internal bool       sc   = false;
+        // this is only ever set in conn.unsubscribe ??
+        internal long max = -1;
 
-        internal Connection conn = null;
-        internal bool closed = false;
-        internal bool connClosed = false;
-
-        protected Channel<Msg> mch = null;
-        internal bool ownsChannel = true;
+        public bool closed { get; protected set; }
+        public bool connClosed { get; protected set; }
 
         // Pending stats, async subscriptions, high-speed etc.
         internal long pMsgs = 0;
-	    internal long pBytes = 0;
-	    internal long pMsgsMax = 0;
-	    internal long pBytesMax = 0;
+        internal long pBytes = 0;
+        internal long pMsgsMax = 0;
+        internal long pBytesMax = 0;
         internal long pMsgsLimit = Defaults.SubPendingMsgsLimit;
-	    internal long pBytesLimit = Defaults.SubPendingBytesLimit;
+        internal long pBytesLimit = Defaults.SubPendingBytesLimit;
         internal long dropped = 0;
 
-        // Subject that represents this subscription. This can be different
-        // than the received subject inside a Msg if this is a wildcard.
-        private string      subject = null;
+        private readonly ChannelWriter<Msg> writer;
+        private readonly ChannelReader<Msg> reader;
 
-        internal Subscription(Connection conn, string subject, string queue)
+        internal Subscription(Connection conn, long subscriptionId, string subject, string queue)
         {
             this.conn = conn;
-            this.subject = subject;
-            this.queue = queue;
-        }
+            sid = subscriptionId;
+            Subject = subject;
+            Queue = queue;
 
-        public void CloseSafe()
-        {
-            if (mch != null)
+            //Name = "Unnamed channel " + this.GetHashCode();
+            var channel = Channel.CreateUnbounded<Msg>(new UnboundedChannelOptions
             {
-                if (ownsChannel)
-                    mch.close();
-
-                mch = null;
-            }
-
-            closed = true;
+                SingleWriter = true,
+                SingleReader = false
+            });
+            writer = channel.Writer;
+            reader = channel.Reader;
         }
+        public long sid { get; }
 
-        internal virtual void close()
-        {
-            close(true);
-        }
-
-        internal void close(bool closeChannel)
+        public virtual void Close()
         {
             lock (mu)
             {
-                if (closeChannel && mch != null)
-                {
-                    mch.close();
-                    mch = null;
-                }
                 closed = true;
                 connClosed = true;
             }
@@ -98,40 +81,33 @@ namespace NATS.Client
 
         /// <summary>
         /// Gets the subject for this subscription.
+        /// Subject that represents this subscription. This can be different
+        /// than the received subject inside a Msg if this is a wildcard.
         /// </summary>
-        public string Subject
-        {
-            get { return subject; }
-        }
-
-        // Optional queue group name. If present, all subscriptions with the
-        // same name will form a distributed queue, and each message will
-        // only be processed by one member of the group.
-        string queue;
+        public string Subject { get; }
 
         /// <summary>
         /// Gets the optional queue group name.
+        /// <para>Optional queue group name. If present, all subscriptions with the
+        /// same name will form a distributed queue, and each message will
+        /// only be processed by one member of the group.
+        /// </para>
         /// </summary>
         /// <remarks>
         /// If present, all subscriptions with the same name will form a distributed queue, and each message will only
         /// be processed by one member of the group.
         /// </remarks>
-        public string Queue
-        {
-            get { return queue; }
-        }
+        public string Queue { get; }
 
         /// <summary>
-        /// Gets the <see cref="Connection"/> associated with this instance.
+        /// Gets the <see cref="conn"/> associated with this instance.
         /// </summary>
-        public Connection Connection
-        {
-            get
-            {
-                return conn;
-            }
-        }
- 
+        protected Connection conn { get; set; }
+        public Connection Connection => conn;
+
+        private int count = 0;
+        public int Count => count;
+
         //caller must lock
         internal bool tallyMessage(long bytes)
         {
@@ -144,24 +120,11 @@ namespace NATS.Client
             return false;
         }
 
-        /// <summary>
-        /// Called by <see cref="NATS.Client.Connection"/> when a <see cref="Msg"/> is received, returning
-        /// a value indicating if the <see cref="NATS.Client.Connection"/> should keep the subscription
-        /// after processing.
-        /// </summary>
-        /// <param name="msg">A <see cref="Msg"/> received by the <see cref="Subscription"/>.</param>
-        /// <returns><c>true</c> if-and-only-if the <see cref="Subscription"/> should remain active;
-        /// otherwise <c>false</c> if the <see cref="NATS.Client.Connection"/> should remove this
-        /// instance.</returns>
-        internal virtual bool processMsg(Msg msg)
-        {
-            return true;
-        }
-
         private void handleSlowConsumer(Msg msg)
         {
             dropped++;
-            conn.processSlowConsumer(this);
+            Connection.processSlowConsumer(this);
+            IsSlow = true;
             pMsgs--;
             pBytes -= msg.Data.Length;
         }
@@ -189,56 +152,71 @@ namespace NATS.Client
         internal bool addMessage(Msg msg, int maxCount)
         {
             // Subscription internal stats
-	        pMsgs++;
-	        if (pMsgs > pMsgsMax)
+            pMsgs++;
+            if (pMsgs > pMsgsMax)
             {
-		        pMsgsMax = pMsgs;
+                pMsgsMax = pMsgs;
             }
-	
-	        pBytes += msg.Data.Length;
-	        if (pBytes > pBytesMax)
+
+            pBytes += msg.Data.Length;
+            if (pBytes > pBytesMax)
             {
-		        pBytesMax = pBytes;
+                pBytesMax = pBytes;
             }
-	
+
             // Check for a Slow Consumer
-	        if ((pMsgsLimit > 0 && pMsgs > pMsgsLimit)
-                || (pBytesLimit > 0 && pBytes > pBytesLimit))
+            if (
+                (pMsgsLimit > 0 && pMsgs > pMsgsLimit) ||
+                (pBytesLimit > 0 && pBytes > pBytesLimit)
+            )
             {
                 // slow consumer
                 handleSlowConsumer(msg);
                 return false;
             }
 
-            if (mch != null)
+            if (!closed)
             {
-                if (mch.Count >= maxCount)
+                if (Count >= maxCount)
                 {
                     handleSlowConsumer(msg);
                     return false;
                 }
                 else
                 {
-                    sc = false;
-                    mch.add(msg);
+                    IsSlow = false;
+                    // on an unbounded Channel this will always succeed
+                    writer.TryWrite(msg);
+                    Interlocked.Increment(ref count);
                 }
             }
             return true;
         }
 
+        protected async ValueTask<Msg> GetMessageAsync(CancellationToken cancellationToken = default)
+        {
+            var msg = await reader.ReadAsync(cancellationToken);
+            Interlocked.Decrement(ref count);
+            return msg;
+        }
+
+        protected Msg GetMessage(int timeout)
+        {
+            Msg item = default;
+            if (SpinWait.SpinUntil(() => reader.TryRead(out item), timeout))
+            {
+                Interlocked.Decrement(ref count);
+                return item;
+            }
+            throw new NATSTimeoutException();
+        }
+
         /// <summary>
         /// Gets a value indicating whether or not the <see cref="Subscription"/> is still valid.
         /// </summary>
-        public bool IsValid
-        {
-            get
-            {
-                lock (mu)
-                {
-                    return (conn != null) && !closed;
-                }
-            }
-        }
+        public bool IsValid => (Connection != null) && !closed;
+
+        public bool IsSlow { get; protected set; }
 
         internal void unsubscribe(bool throwEx)
         {
@@ -246,8 +224,8 @@ namespace NATS.Client
             bool isClosed;
             lock (mu)
             {
-                c = this.conn;
-                isClosed = this.closed;
+                c = Connection;
+                isClosed = closed;
             }
 
             if (c == null)
@@ -258,17 +236,11 @@ namespace NATS.Client
                 return;
             }
 
-            if (c.IsClosed())
-            {
-                if (throwEx)
-                    throw new NATSConnectionClosedException();
-            }
+            if (c.IsClosed && throwEx)
+                throw new NATSConnectionClosedException();
 
-            if (isClosed)
-            {
-                if (throwEx)
-                    throw new NATSBadSubscriptionException();
-            }
+            if (isClosed && throwEx)
+                throw new NATSBadSubscriptionException();
 
             if (c.IsDraining())
             {
@@ -278,67 +250,54 @@ namespace NATS.Client
                 return;
             }
 
-            c.unsubscribe(this, 0, false, 0);
+            c.unsubscribe(sid, 0, false, 0);
         }
 
         /// <summary>
         /// Removes interest in the <see cref="Subject"/>.
         /// </summary>
-        /// <exception cref="NATSBadSubscriptionException">There is no longer an associated <see cref="Connection"/></exception>
-        /// <exception cref="NATSConnectionDrainingException">The <see cref="Connection"/> is draining.
+        /// <exception cref="NATSBadSubscriptionException">There is no longer an associated <see cref="conn"/></exception>
+        /// <exception cref="NATSConnectionDrainingException">The <see cref="conn"/> is draining.
         /// for this <see cref="ISubscription"/>.</exception>
-        public virtual void Unsubscribe()
-        {
-            unsubscribe(true);
-        }
+        public virtual void Unsubscribe() => unsubscribe(true);
 
         /// <summary>
         /// Issues an automatic call to <see cref="Unsubscribe"/> when <paramref name="max"/> messages have been
         /// received.
         /// </summary>
         /// <remarks>This can be useful when sending a request to an unknown number of subscribers.
-        /// <see cref="Connection"/>'s Request methods use this functionality.</remarks>
+        /// <see cref="conn"/>'s Request methods use this functionality.</remarks>
         /// <param name="max">The maximum number of messages to receive on the subscription before calling
         /// <see cref="Unsubscribe"/>. Values less than or equal to zero (<c>0</c>) unsubscribe immediately.</param>
-        /// <exception cref="NATSBadSubscriptionException">There is no longer an associated <see cref="Connection"/>
+        /// <exception cref="NATSBadSubscriptionException">There is no longer an associated <see cref="conn"/>
         /// for this <see cref="ISubscription"/>.</exception>
         public virtual void AutoUnsubscribe(int max)
         {
-            Connection c = null;
+            if (Connection == null)
+                throw new NATSBadSubscriptionException();
 
-            lock (mu)
-            {
-                if (conn == null)
-                    throw new NATSBadSubscriptionException();
+            if (Connection.IsClosed)
+                throw new NATSConnectionClosedException();
 
-                if (conn.IsClosed())
-                    throw new NATSConnectionClosedException();
+            if (closed)
+                throw new NATSBadSubscriptionException();
 
-                if (closed)
-                    throw new NATSBadSubscriptionException();
-
-                c = conn;
-            }
-
-            c.unsubscribe(this, max, false, 0);
+            Connection.unsubscribe(sid, max, false, 0);
         }
 
         /// <summary>
         /// Gets the number of messages remaining in the delivery queue.
         /// </summary>
-        /// <exception cref="NATSBadSubscriptionException">There is no longer an associated <see cref="Connection"/>
+        /// <exception cref="NATSBadSubscriptionException">There is no longer an associated <see cref="conn"/>
         /// for this <see cref="ISubscription"/>.</exception>
         public int QueuedMessageCount
         {
             get
             {
-                lock (mu)
-                {
-                    if (conn == null || closed)
-                        throw new NATSBadSubscriptionException();
+                if (Connection == null || closed)
+                    throw new NATSBadSubscriptionException();
 
-                    return mch.Count;
-                }
+                return Count;
             }
         }
 
@@ -392,21 +351,21 @@ namespace NATS.Client
             StringBuilder sb = new StringBuilder();
 
             sb.Append("{");
-            
+
             sb.AppendFormat("Subject={0};Queue={1};" +
                 "QueuedMessageCount={2};IsValid={3};Type={4}",
-                Subject, (Queue == null ? "null" : Queue), 
-                QueuedMessageCount, IsValid, 
+                Subject, (Queue == null ? "null" : Queue),
+                QueuedMessageCount, IsValid,
                 this.GetType().ToString());
-            
+
             sb.Append("}");
-            
+
             return sb.ToString();
         }
 
         private void checkState()
         {
-            if (conn == null || closed)
+            if (Connection == null || closed)
                 throw new NATSBadSubscriptionException();
         }
 
@@ -442,8 +401,8 @@ namespace NATS.Client
         /// </summary>
         /// <value>The limit must not be zero (<c>0</c>). Negative values indicate there is no
         /// limit on the number of pending bytes.</value>
-        public long PendingByteLimit 
-        { 
+        public long PendingByteLimit
+        {
             get
             {
                 lock (mu)
@@ -509,7 +468,7 @@ namespace NATS.Client
             lock (mu)
             {
                 checkState();
-                pendingBytes    = pBytes;
+                pendingBytes = pBytes;
                 pendingMessages = pMsgs;
             }
         }
@@ -556,7 +515,7 @@ namespace NATS.Client
             lock (mu)
             {
                 checkState();
-                maxPendingBytes    = pBytesMax;
+                maxPendingBytes = pBytesMax;
                 maxPendingMessages = pMsgsMax;
             }
         }
@@ -604,17 +563,10 @@ namespace NATS.Client
 
         internal Task InternalDrain(int timeout)
         {
-            Connection c = null;
+            if (Connection == null || closed)
+                throw new NATSBadSubscriptionException();
 
-            lock (mu)
-            {
-                if (conn == null || closed)
-                    throw new NATSBadSubscriptionException();
-
-                c = conn;
-            }
-
-            return c.unsubscribe(this, 0, true, timeout);
+            return Connection.unsubscribe(sid, 0, true, timeout);
         }
 
         public Task DrainAsync()
@@ -630,10 +582,7 @@ namespace NATS.Client
             return InternalDrain(timeout);
         }
 
-        public void Drain()
-        {
-           Drain(Defaults.DefaultDrainTimeout);
-        }
+        public void Drain() => Drain(Defaults.DefaultDrainTimeout);
 
         public void Drain(int timeout)
         {
@@ -651,16 +600,7 @@ namespace NATS.Client
         /// <summary>
         /// Gets the number of delivered messages for this instance.
         /// </summary>
-        public long Delivered
-        {
-            get
-            {
-                lock (mu)
-                {
-                    return delivered;
-                }
-            }
-        }
+        public long Delivered => delivered;
 
         /// <summary>
         /// Gets the number of known dropped messages for this instance.
@@ -671,20 +611,11 @@ namespace NATS.Client
         /// If the NATS server declares the connection a slow consumer, the count
         /// may not be accurate.
         /// </remarks>
-        public long Dropped
-        {
-            get
-            {
-                lock (mu)
-                {
-                    return dropped;
-                }
-            }
-        }
+        public long Dropped => dropped;
 
         #region validation
 
-        static private readonly char[] invalidSubjectChars = { '\r', '\n', '\t', ' '};
+        static private readonly char[] invalidSubjectChars = { '\r', '\n', '\t', ' ' };
 
         private static bool ContainsInvalidChars(string value)
         {
@@ -737,5 +668,4 @@ namespace NATS.Client
         #endregion
 
     }  // Subscription
-
 }

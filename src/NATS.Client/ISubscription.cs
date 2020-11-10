@@ -1,4 +1,4 @@
-﻿// Copyright 2015-2018 The NATS Authors
+// Copyright 2015-2018 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -70,6 +70,7 @@ namespace NATS.Client
         /// Gets a value indicating whether or not the <see cref="ISubscription"/> is still valid.
         /// </summary>
         bool IsValid { get; }
+        bool IsSlow { get; }
 
         /// <summary>
         /// Removes interest in the <see cref="Subject"/>.

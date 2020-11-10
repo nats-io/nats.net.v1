@@ -24,13 +24,9 @@ namespace NATS.Client
     /// </summary>
     public sealed class SyncSubscription : Subscription, ISyncSubscription, ISubscription
     {
-        internal SyncSubscription(Connection conn, string subject, string queue)
-            : base(conn, subject, queue)
+        internal SyncSubscription(Connection conn, long subscriptionId, string subject, string queue)
+            : base(conn, subscriptionId, subject, queue)
         {
-            mch = new Channel<Msg>()
-            {
-                Name = subject + (String.IsNullOrWhiteSpace(queue) ? "" : " (queue: " + queue + ")"),
-            };
         }
 
         /// <summary>
@@ -67,7 +63,6 @@ namespace NATS.Client
         public Msg NextMessage(int timeout)
         {
             Connection   localConn;
-            Channel<Msg> localChannel;
             long         localMax;
             Msg          msg;
 
@@ -85,14 +80,13 @@ namespace NATS.Client
                 {
                     throw new NATSBadSubscriptionException();
                 }
-                if (sc)
+                if (IsSlow)
                 {
-                    sc = false;
+                    IsSlow = false;
                     throw new NATSSlowConsumerException();
                 }
 
                 localConn = this.conn;
-                localChannel = this.mch;
                 localMax = this.max;
             }
 
@@ -103,11 +97,11 @@ namespace NATS.Client
 
             if (timeout >= 0)
             {
-                msg = localChannel.get(timeout);
+                msg = GetMessage(timeout);
             }
             else
             {
-                msg = localChannel.get(-1);
+                msg = GetMessage(-1);
             }
 
             if (msg != null)
@@ -142,21 +136,20 @@ namespace NATS.Client
             if (closed)
                 throw new NATSBadSubscriptionException();
 
-            if (sc)
+            if (IsSlow)
             {
-                sc = false;
+                IsSlow = false;
                 throw new NATSSlowConsumerException();
             }
 
             // snapshot (not necessary?)
             var localConn = conn;
-            var localChannel = mch;
             var localMax = max;
 
             if (localMax > 0 && delivered >= localMax)
                 throw new NATSMaxMessagesException();
 
-            var msg = await localChannel.GetAsync(cancellationToken);
+            var msg = await GetMessageAsync(cancellationToken);
             if (msg != null)
             {
                 long d;

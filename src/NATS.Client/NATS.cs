@@ -1,4 +1,4 @@
-﻿// Copyright 2015-2018 The NATS Authors
+// Copyright 2015-2018 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -294,40 +294,27 @@ namespace NATS.Client
     /// </summary>
     public class ErrEventArgs : EventArgs
     {
-        private Connection c;
-        private Subscription s;
-        private String err;
-
-        internal ErrEventArgs(Connection c, Subscription s, String err)
+        internal ErrEventArgs(Connection c, ISubscription s, String err)
         {
-            this.c = c;
-            this.s = s;
-            this.err = err;
+            Conn = c;
+            Subscription = s;
+            Error = err;
         }
 
         /// <summary>
         /// Gets the <see cref="Connection"/> associated with the event.
         /// </summary>
-        public Connection Conn
-        {
-            get { return c; }
-        }
+        public Connection Conn { get; }
 
         /// <summary>
         /// Gets the <see cref="NATS.Client.Subscription"/> associated with the event.
         /// </summary>
-        public Subscription Subscription
-        {
-            get { return s; }
-        }
+        public ISubscription Subscription { get; }
 
         /// <summary>
         /// Gets the error message associated with the event.
         /// </summary>
-        public string Error
-        {
-            get { return err; }
-        }
+        public string Error { get; }
     }
 
     /**
@@ -371,13 +358,15 @@ namespace NATS.Client
     {
         internal Msg msg = null;
 
+        public MsgHandlerEventArgs(Msg msg)
+        {
+            this.msg = msg;
+        }
+
         /// <summary>
         /// Retrieves the message.
         /// </summary>
-        public Msg Message
-        {
-            get { return msg; }
-        }
+        public Msg Message => msg;
     }
 
     // Borrowed from:  https://stackoverflow.com/a/7135008

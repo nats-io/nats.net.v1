@@ -633,7 +633,7 @@ namespace NATS.Client
         /// closed, otherwise <c>false</c>.</returns>
         /// <seealso cref="Close"/>
         /// <seealso cref="State"/>
-        bool IsClosed();
+        bool IsClosed { get; }
 
         /// <summary>
         /// Returns a value indicating whether or not the <see cref="IConnection"/>

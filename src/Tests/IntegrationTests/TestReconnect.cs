@@ -341,20 +341,20 @@ namespace IntegrationTests
             {
                 using (var c = Context.ConnectionFactory.CreateConnection(opts))
                 {
-                    Assert.False(c.IsClosed());
+                    Assert.False(c.IsClosed);
 
                     s1.Shutdown();
 
                     Thread.Sleep(100);
-                    Assert.False(c.IsClosed(), string.Format("Invalid state, expecting not closed, received: {0}", c.State));
+                    Assert.False(c.IsClosed, string.Format("Invalid state, expecting not closed, received: {0}", c.State));
 
                     using (NATSServer s2 = NATSServer.Create(Context.Server1.Port))
                     {
                         Thread.Sleep(1000);
-                        Assert.False(c.IsClosed());
+                        Assert.False(c.IsClosed);
 
                         c.Close();
-                        Assert.True(c.IsClosed());
+                        Assert.True(c.IsClosed);
                     }
                 }
             }
@@ -689,7 +689,7 @@ namespace IntegrationTests
                         catch (Exception e)
                         {
                             Assert.IsNotType<NATSConnectionClosedException>(e);
-                            Assert.False(c.IsClosed());
+                            Assert.False(c.IsClosed);
                         }
                     }
                 }
