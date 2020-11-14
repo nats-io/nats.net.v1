@@ -873,7 +873,8 @@ namespace IntegrationTests
                     c.SubscribeSync("timeout");
                     await Assert.ThrowsAsync<NATSTimeoutException>(() => { return c.RequestAsync("timeout", null, 500, miscToken); });
                     sw.Stop();
-                    Assert.True(sw.Elapsed.TotalMilliseconds > 500, "Elapsed millis are: " + sw.ElapsedMilliseconds);
+                    // with 5ms "wiggle room"
+                    Assert.True(sw.Elapsed.TotalMilliseconds > 495, "Elapsed millis are: " + sw.ElapsedMilliseconds);
 
                     // test early cancellation
                     var cts = new CancellationTokenSource();

@@ -1,4 +1,4 @@
-﻿// Copyright 2015-2018 The NATS Authors
+// Copyright 2015-2018 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -848,14 +848,12 @@ namespace IntegrationTests
                     c.Publish("foo", null);
                     c.Flush();
 
-                    while (Interlocked.Read(ref recvCount) != (COUNT))
-                    {
-                        Thread.Sleep(100);
-                    }
+                    bool completed = SpinWait.SpinUntil(() => recvCount == COUNT, 5_000);
 
                     // ensure we are not creating a thread per subscriber.
                     Assert.True(Process.GetCurrentProcess().Threads.Count < 500);
 
+                    Assert.True(completed, $"subscribers took too long: only {recvCount} recieved");
                     subs.ForEach(s =>
                     {
                         s.Unsubscribe();
