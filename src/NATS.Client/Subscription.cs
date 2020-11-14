@@ -34,6 +34,11 @@ namespace NATS.Client
         protected long delivered;
         private long bytes;
 
+        /// <summary>
+        /// Gets the <see cref="conn"/> associated with this instance.
+        /// </summary>
+        protected Connection conn;
+
         // this is only ever set in conn.unsubscribe ??
         internal long max = -1;
 
@@ -70,14 +75,7 @@ namespace NATS.Client
         }
         public long sid { get; }
 
-        public virtual void Close()
-        {
-            lock (mu)
-            {
-                closed = true;
-                connClosed = true;
-            }
-        }
+        public virtual void Close() => closed = true;
 
         /// <summary>
         /// Gets the subject for this subscription.
@@ -99,10 +97,6 @@ namespace NATS.Client
         /// </remarks>
         public string Queue { get; }
 
-        /// <summary>
-        /// Gets the <see cref="conn"/> associated with this instance.
-        /// </summary>
-        protected Connection conn { get; set; }
         public Connection Connection => conn;
 
         private int count = 0;
@@ -123,7 +117,7 @@ namespace NATS.Client
         private void handleSlowConsumer(Msg msg)
         {
             dropped++;
-            Connection.processSlowConsumer(this);
+            conn.processSlowConsumer(this);
             IsSlow = true;
             pMsgs--;
             pBytes -= msg.Data.Length;
@@ -203,7 +197,14 @@ namespace NATS.Client
         protected Msg GetMessage(int timeout)
         {
             Msg item = default;
-            if (SpinWait.SpinUntil(() => reader.TryRead(out item), timeout))
+            if (SpinWait.SpinUntil(() =>
+            {
+                if (closed)
+                    throw new NATSBadSubscriptionException();
+                if (conn.IsClosed)
+                    throw new NATSConnectionClosedException();
+                return reader.TryRead(out item);
+            }, timeout))
             {
                 Interlocked.Decrement(ref count);
                 return item;
@@ -214,7 +215,7 @@ namespace NATS.Client
         /// <summary>
         /// Gets a value indicating whether or not the <see cref="Subscription"/> is still valid.
         /// </summary>
-        public bool IsValid => (Connection != null) && !closed;
+        public bool IsValid => (conn != null) && !closed;
 
         public bool IsSlow { get; protected set; }
 
@@ -273,16 +274,16 @@ namespace NATS.Client
         /// for this <see cref="ISubscription"/>.</exception>
         public virtual void AutoUnsubscribe(int max)
         {
-            if (Connection == null)
+            if (conn == null)
                 throw new NATSBadSubscriptionException();
 
-            if (Connection.IsClosed)
+            if (conn.IsClosed)
                 throw new NATSConnectionClosedException();
 
             if (closed)
                 throw new NATSBadSubscriptionException();
 
-            Connection.unsubscribe(sid, max, false, 0);
+            conn.unsubscribe(sid, max, false, 0);
         }
 
         /// <summary>
@@ -294,7 +295,7 @@ namespace NATS.Client
         {
             get
             {
-                if (Connection == null || closed)
+                if (conn == null || closed)
                     throw new NATSBadSubscriptionException();
 
                 return Count;
@@ -566,7 +567,7 @@ namespace NATS.Client
             if (Connection == null || closed)
                 throw new NATSBadSubscriptionException();
 
-            return Connection.unsubscribe(sid, 0, true, timeout);
+            return conn.unsubscribe(sid, 0, true, timeout);
         }
 
         public Task DrainAsync()

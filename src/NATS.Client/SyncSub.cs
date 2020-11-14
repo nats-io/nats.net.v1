@@ -68,7 +68,7 @@ namespace NATS.Client
 
             lock (mu)
             {
-                if (connClosed)
+                if (conn.IsClosed)
                 {
                     throw new NATSConnectionClosedException();
                 }
@@ -127,7 +127,7 @@ namespace NATS.Client
 
         public async ValueTask<Msg> NextMessageAsync(CancellationToken cancellationToken = default)
         {
-            if (connClosed)
+            if (conn.IsClosed)
                 throw new NATSConnectionClosedException();
 
             if (max > 0 && delivered >= max)
