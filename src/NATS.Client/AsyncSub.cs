@@ -1,4 +1,4 @@
-﻿// Copyright 2015-2018 The NATS Authors
+// Copyright 2015-2018 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -105,20 +105,33 @@ namespace NATS.Client
                     doAsyncProcessing,
                     CancellationToken.None,
                     TaskCreationOptions.LongRunning | TaskCreationOptions.DenyChildAttach,
-                    TaskScheduler.Default);
+                    TaskScheduler.Default)
+                    .Unwrap();
+
+                // ensure task has started
+                if (!SpinWait.SpinUntil(() => msgFeeder.Status == TaskStatus.Running || msgFeeder.Status == TaskStatus.WaitingForActivation, 2_000))
+                    throw new InvalidOperationException($"{nameof(AsyncSubscription)} did not start: {msgFeeder.Status}");
             }
-            started = true;
         }
 
         private async Task doAsyncProcessing()
         {
-            while (started)
+            try
             {
-                if (conn.IsClosed)
-                    return;
+                started = true;
+                await Task.Yield();
+                while (started)
+                {
+                    if (conn.IsClosed)
+                        return;
 
-                var msg = await GetMessageAsync();
-                processMsg(msg);
+                    var msg = await GetMessageAsync();
+                    processMsg(msg);
+                }
+            }
+            finally
+            {
+                started = false;
             }
         }
 
@@ -150,8 +163,8 @@ namespace NATS.Client
             if (conn == null)
                 throw new NATSBadSubscriptionException();
 
-            conn.sendSubscriptionMessage(this);
             enableAsyncProcessing();
+            conn.sendSubscriptionMessage(this);
         }
 
         /// <summary>
