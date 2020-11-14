@@ -2964,82 +2964,51 @@ namespace NATS.Client
             return request(message.Subject, headerBytes, data, 0, count, Timeout.Infinite);
         }
 
-
-        private Task<Msg> oldRequestAsync(string subject, byte[] headers, byte[] data, int offset, int count, int timeout, CancellationToken ct)
+        private async Task<Msg> oldRequestAsync(string subject, byte[] headers, byte[] data, int offset, int count, int timeout, CancellationToken ct)
         {
-            // Simple case without a cancellation token.
-            if (ct == CancellationToken.None)
-                return Task.Run(() => oldRequest(subject, headers, data, offset, count, timeout), ct);
-
             // More complex case, supporting cancellation.
-            return Task.Run(() =>
+            // check if we are already cancelled.
+            ct.ThrowIfCancellationRequested();
+
+            var originalCt = ct;
+            if (timeout > 0)
             {
-                // check if we are already cancelled.
-                ct.ThrowIfCancellationRequested();
+                var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+                cts.CancelAfter(timeout);
+                ct = cts.Token;
+            }
 
-                Msg m = null;
-                string inbox = NewInbox();
+            Msg m = null;
+            string inbox = NewInbox();
 
-                // Use synchronous subscriber to minimize overhead.
-                // An async subscriber would be easier, but creates 
-                // yet another task internally.  The cost is it could
-                // take up to CANCEL_IVL ms to cancel.
-                SyncSubscription s = subscribeSync(inbox, null);
-                s.AutoUnsubscribe(1);
+            // Use synchronous subscriber to minimize overhead.
+            // An async subscriber would be easier, but creates 
+            // yet another task internally.  The cost is it could
+            // take up to CANCEL_IVL ms to cancel.
+            var s = subscribeSync(inbox, null);
+            s.AutoUnsubscribe(1);
 
-                publish(subject, inbox, headers, data, offset, count, true);
+            publish(subject, inbox, headers, data, offset, count, true);
 
-                int timeRemaining = timeout;
-
-                while (m == null && ct.IsCancellationRequested == false)
-                {
-                    if (timeout == Timeout.Infinite)
-                    {
-                        // continue in a loop until cancellation
-                        // is requested.
-                        try
-                        {
-                            m = s.NextMessage(REQ_CANCEL_IVL);
-                        }
-                        catch (NATSTimeoutException) { /* ignore */ };
-                    }
-                    else
-                    {
-                        int waitTime = timeRemaining < REQ_CANCEL_IVL ?
-                            timeRemaining : REQ_CANCEL_IVL;
-
-                        try
-                        {
-                            m = s.NextMessage(waitTime);
-                        }
-                        catch (NATSTimeoutException)
-                        {
-                            timeRemaining -= waitTime;
-                            if (timeRemaining <= 0)
-                            {
-                                s.unsubscribe(false);
-                                throw;
-                            }
-                        }
-
-                        if (IsNoRespondersMsg(m))
-                        {
-                            throw new NATSNoRespondersException();
-                        }
-                    }
-                }
-
-                // we either have a message or have been cancelled.
+            try
+            {
+                m = await s.NextMessageAsync(ct);
+            }
+            catch (OperationCanceledException)
+            {
+                if (originalCt.IsCancellationRequested)
+                    throw;
+                throw new NATSTimeoutException("timedout");
+            }
+            finally
+            {
                 s.unsubscribe(false);
+            }
 
-                // Throw if cancelled.  Note, the cancellation occured
-                // after we've received a message, go ahead and honor 
-                // the cancellation.
-                ct.ThrowIfCancellationRequested();
+            if (IsNoRespondersMsg(m))
+                throw new NATSNoRespondersException();
 
-                return m;
-
-            }, ct);
+            return m;
         }
 
         /// <summary>
