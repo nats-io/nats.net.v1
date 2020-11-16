@@ -71,7 +71,7 @@ namespace NATS.Client
         /// <summary>
         /// Client version
         /// </summary>
-        public static string Version = typeof(Defaults).GetTypeInfo().Assembly.GetName().Version.ToString();
+        public static readonly string Version = typeof(Defaults).GetTypeInfo().Assembly.GetName().Version.ToString();
 
         /// <summary>
         /// The default NATS connect url ("nats://localhost:4222")
