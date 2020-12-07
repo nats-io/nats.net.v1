@@ -2968,14 +2968,6 @@ namespace NATS.Client
             // check if we are already cancelled.
             ct.ThrowIfCancellationRequested();
 
-            var originalCt = ct;
-            if (timeout > 0)
-            {
-                var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-                cts.CancelAfter(timeout);
-                ct = cts.Token;
-            }
-
             Msg m = null;
             string inbox = NewInbox();
 
@@ -2988,8 +2980,16 @@ namespace NATS.Client
 
             publish(subject, inbox, headers, data, offset, count, true);
 
+            var originalCt = ct;
+            CancellationTokenSource cts = null;
             try
             {
+                if (timeout > 0)
+                {
+                    cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+                    cts.CancelAfter(timeout);
+                    ct = cts.Token;
+                }
                 m = await s.NextMessageAsync(ct);
             }
             catch (OperationCanceledException)
@@ -3001,6 +3001,7 @@ namespace NATS.Client
             finally
             {
                 s.unsubscribe(false);
+                cts?.Dispose();
             }
 
             if (IsNoRespondersMsg(m))
