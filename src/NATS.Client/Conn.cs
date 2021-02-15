@@ -25,7 +25,6 @@ using System.Security.Cryptography.X509Certificates;
 using System.Security.Authentication;
 using System.Globalization;
 using System.Diagnostics;
-using System.Runtime.ExceptionServices;
 using NATS.Client.Internals;
 
 namespace NATS.Client
