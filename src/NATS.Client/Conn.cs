@@ -392,8 +392,6 @@ namespace NATS.Client
                         throw new NATSConnectionException("timeout");
                     }
 
-                    Debug.Assert(client.Client.IsBound, "Socket not bound");
-
                     client.NoDelay = false;
 
                     client.ReceiveBufferSize = Defaults.defaultBufSize*2;
