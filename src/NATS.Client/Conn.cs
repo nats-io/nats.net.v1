@@ -1182,6 +1182,8 @@ namespace NATS.Client
             {
                 if (status != ConnState.CONNECTED)
                 {
+                    if (exToThrow is NATSException)
+                        throw exToThrow;
                     if (exToThrow != null)
                         throw new NATSConnectionException("Failed to connect", exToThrow);
                     throw new NATSNoServersException("Unable to connect to a server.");
