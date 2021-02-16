@@ -378,7 +378,7 @@ namespace NATS.Client
                     }
 
                     client = new TcpClient(Socket.OSSupportsIPv6 ? AddressFamily.InterNetworkV6 : AddressFamily.InterNetwork);
-                    if(Socket.OSSupportsIPv6)
+                    if (Socket.OSSupportsIPv6)
                         client.Client.DualMode = true;
 
                     var task = client.ConnectAsync(s.url.Host, s.url.Port);
