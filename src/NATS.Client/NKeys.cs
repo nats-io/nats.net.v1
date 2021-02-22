@@ -339,5 +339,14 @@ namespace NATS.Client
         {
             return CreateSeed(PrefixByteAccount);
         }
+
+        /// <summary>
+        /// Creates a private operator seed String.
+        /// </summary>
+        /// <returns>A NATS Ed25519 Operator Seed</returns>
+        public static string CreateOperatorSeed()
+        {
+            return CreateSeed(PrefixByteOperator);
+        }
     }
 }

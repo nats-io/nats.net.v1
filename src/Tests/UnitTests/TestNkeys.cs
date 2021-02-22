@@ -38,17 +38,23 @@ namespace UnitTests
         {
             string user = Nkeys.CreateUserSeed();
             Assert.NotEmpty(user);
-            NkeyPair uk = Nkeys.FromSeed(user);
-            Assert.NotNull(uk);
+            Assert.NotNull(Nkeys.FromSeed(user));
         }
-        
+
         [Fact]
         public void TestNKEYCreateAccountSeed()
         {
             string acc = Nkeys.CreateAccountSeed();
             Assert.NotEmpty(acc);
-            NkeyPair uk = Nkeys.FromSeed(acc);
-            Assert.NotNull(uk);
+            Assert.NotNull(Nkeys.FromSeed(acc));
+        }
+
+        [Fact]
+        public void TestNKEYCreateOperatorSeed()
+        {
+            string op = Nkeys.CreateOperatorSeed();
+            Assert.NotEmpty(op);
+            Assert.NotNull(Nkeys.FromSeed(op));
         }
     }
     
