@@ -286,7 +286,7 @@ namespace NATS.Client
             }
         }
 
-        internal static string EncodeSeed(byte prefixbyte, byte[] src)
+        internal static string Encode(byte prefixbyte, bool seed, byte[] src)
         {
             if (!IsValidPublicPrefixByte(prefixbyte))
                 throw new NATSException("Invalid prefix");
@@ -294,14 +294,19 @@ namespace NATS.Client
             if (src.Length != 32)
                 throw new NATSException("Invalid seed size");
 
-            // In order to make this human printable for both bytes, we need to do a little
-            // bit manipulation to setup for base32 encoding which takes 5 bits at a time.
-            byte b1 = (byte) (PrefixByteSeed | (prefixbyte >> 5));
-            byte b2 = (byte) ((prefixbyte & 31) << 3); // 31 = 00011111
-
             MemoryStream stream = new MemoryStream();
-            stream.WriteByte(b1);
-            stream.WriteByte(b2);
+
+            if (seed) {
+                // In order to make this human printable for both bytes, we need to do a little
+                // bit manipulation to setup for base32 encoding which takes 5 bits at a time.
+                byte b1 = (byte) (PrefixByteSeed | (prefixbyte >> 5));
+                byte b2 = (byte) ((prefixbyte & 31) << 3); // 31 = 00011111
+
+                stream.WriteByte(b1);
+                stream.WriteByte(b2);
+            } else {
+                stream.WriteByte(prefixbyte);
+            }
 
             // write payload
             stream.Write(src, 0, src.Length);
@@ -319,7 +324,7 @@ namespace NATS.Client
             Random rnd = new Random();
             rnd.NextBytes(rawSeed);
 
-            return EncodeSeed(prefixbyte, rawSeed);
+            return Encode(prefixbyte, true, rawSeed);
         }
 
         /// <summary>
@@ -347,6 +352,24 @@ namespace NATS.Client
         public static string CreateOperatorSeed()
         {
             return CreateSeed(PrefixByteOperator);
+        }
+
+        /// <summary>
+        /// Returns a seed's public key.
+        /// </summary>
+        /// <param name="seed"></param>
+        /// <returns>A the public key corresponding to Seed</returns>
+        public static string PublicKeyFromSeed(string seed)
+        {
+            byte[] s = Nkeys.Decode(seed);
+            if ((s[0] & (31 << 3)) != PrefixByteSeed)
+            {
+                throw new NATSException("Not a seed");
+            }
+            // reconstruct prefix byte
+            byte prefixByte = (byte) ((s[0] & 7) << 5 | ((s[1] >> 3) & 31));
+            byte[] pubKey = Ed25519.PublicKeyFromSeed(DecodeSeed(s));
+            return Encode(prefixByte, false, pubKey);
         }
     }
 }

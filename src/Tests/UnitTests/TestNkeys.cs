@@ -24,12 +24,12 @@ namespace UnitTests
         public void TestNKEYEncodeDecode()
         {
             byte[] a = new Byte[32];
-            byte[] b = Nkeys.DecodeSeed( Nkeys.EncodeSeed(20 << 3, a));
+            byte[] b = Nkeys.DecodeSeed( Nkeys.Encode(20 << 3, true, a));
             Assert.Equal(a, b);
             
             Random rnd = new Random();
             rnd.NextBytes(a);
-            b = Nkeys.DecodeSeed( Nkeys.EncodeSeed(20 << 3, a));
+            b = Nkeys.DecodeSeed( Nkeys.Encode(20 << 3, true, a));
             Assert.Equal(a, b);
         }
         
@@ -39,6 +39,8 @@ namespace UnitTests
             string user = Nkeys.CreateUserSeed();
             Assert.NotEmpty(user);
             Assert.NotNull(Nkeys.FromSeed(user));
+            string pk = Nkeys.PublicKeyFromSeed(user);
+            Assert.Equal('U', pk[0]);
         }
 
         [Fact]
@@ -47,6 +49,8 @@ namespace UnitTests
             string acc = Nkeys.CreateAccountSeed();
             Assert.NotEmpty(acc);
             Assert.NotNull(Nkeys.FromSeed(acc));
+            string pk = Nkeys.PublicKeyFromSeed(acc);
+            Assert.Equal('A', pk[0]);
         }
 
         [Fact]
@@ -55,6 +59,22 @@ namespace UnitTests
             string op = Nkeys.CreateOperatorSeed();
             Assert.NotEmpty(op);
             Assert.NotNull(Nkeys.FromSeed(op));
+            string pk = Nkeys.PublicKeyFromSeed(op);
+            Assert.Equal('O', pk[0]);
+        }
+
+        [Fact]
+        public void TestNKEYPublicKeyFromSeed()
+        {
+            // using nsc generated seeds for testing
+            string pk = Nkeys.PublicKeyFromSeed("SOAELH6NJCEK4HST5644G4HK7TOAFZGRRJHNM4EUKUY7PPNDLIKO5IH4JM");
+            Assert.Equal("ODPWIBQJVIQ42462QAFI2RKJC4RZHCQSIVPRDDHWFCJAP52NRZK6Z2YC", pk);
+
+            pk = Nkeys.PublicKeyFromSeed("SAANWFZ3JINNPERWT3ALE45U7GYT2ZDW6GJUIVPDKUF6GKAX6AISZJMAS4");
+            Assert.Equal("AATEJXG7UX4HFJ6ZPRTP22P6OYZER36YYD3GVBOVW7QHLU32P4QFFTZJ", pk);
+
+            pk = Nkeys.PublicKeyFromSeed("SUAGDLNBWI2SGHDRYBHD63NH5FGZSVJUW2J7GAJZXWANQFLDW6G5SXZESU");
+            Assert.Equal("UBICBTHDKQRB4LIYA6BMIJ7EA2G7YS7FIWMMVKZJE6M3HS5IVCOLKDY2", pk);
         }
     }
     
