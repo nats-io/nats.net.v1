@@ -1962,7 +1962,10 @@ namespace IntegrationTests
         [Fact]
         public void TestServersOption()
         {
-            Assert.ThrowsAny<NATSNoServersException>(() => Context.ConnectionFactory.CreateConnection());
+            var exception = Record.Exception(() => Context.ConnectionFactory.CreateConnection());
+
+            Assert.IsType<NATSConnectionException>(exception);
+            Assert.Equal("timeout", exception.Message);
         }
 
         /// <summary>

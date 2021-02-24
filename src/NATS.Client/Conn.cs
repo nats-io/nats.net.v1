@@ -377,8 +377,10 @@ namespace NATS.Client
                         sslStream = null;
                     }
 
-                    client = new TcpClient(AddressFamily.InterNetworkV6);
-                    client.Client.DualMode = true;
+                    client = new TcpClient(Socket.OSSupportsIPv6 ? AddressFamily.InterNetworkV6 : AddressFamily.InterNetwork);
+                    if (Socket.OSSupportsIPv6)
+                        client.Client.DualMode = true;
+
                     var task = client.ConnectAsync(s.url.Host, s.url.Port);
                     // avoid raising TaskScheduler.UnobservedTaskException if the timeout occurs first
                     task.ContinueWith(t => GC.KeepAlive(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
@@ -811,8 +813,9 @@ namespace NATS.Client
         // createConn will connect to the server and wrap the appropriate
         // bufio structures. It will do the right thing when an existing
         // connection is in place.
-        private bool createConn(Srv s)
+        private bool createConn(Srv s, out Exception ex)
         {
+            ex = null;
             try
             {
                 conn.open(s, opts.Timeout);
@@ -832,8 +835,9 @@ namespace NATS.Client
                 bw = conn.getWriteBufferedStream(Defaults.defaultBufSize);
                 br = conn.getReadBufferedStream();
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                ex = e;
                 return false;
             }
 
@@ -1120,7 +1124,7 @@ namespace NATS.Client
                     {
                         lock (mu)
                         {
-                            if (!createConn(s))
+                            if (!createConn(s, out exToThrow))
                                 return false;
 
                             processConnectInit(s);
@@ -1175,10 +1179,11 @@ namespace NATS.Client
             {
                 if (status != ConnState.CONNECTED)
                 {
-                    if (exToThrow == null)
-                        exToThrow = new NATSNoServersException("Unable to connect to a server.");
-
-                    throw exToThrow;
+                    if (exToThrow is NATSException)
+                        throw exToThrow;
+                    if (exToThrow != null)
+                        throw new NATSConnectionException("Failed to connect", exToThrow);
+                    throw new NATSNoServersException("Unable to connect to a server.");
                 }
             }
         }
@@ -1617,7 +1622,7 @@ namespace NATS.Client
                     try
                     {
                         // try to create a new connection
-                        if(!createConn(cur))
+                        if(!createConn(cur, out lastEx))
                             continue;
                     }
                     catch (Exception)

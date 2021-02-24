@@ -36,7 +36,7 @@ namespace IntegrationTests
             o.NoRandomize = true;
             o.Servers = Context.GetTestServersUrls();
 
-            Assert.ThrowsAny<NATSNoServersException>(() => cf.CreateConnection(o));
+            Assert.ThrowsAny<NATSConnectionException>(() => cf.CreateConnection(o));
             
             // Make sure we can connect to first server if running
             using (NATSServer ns = NATSServer.Create(Context.Server1.Port))
