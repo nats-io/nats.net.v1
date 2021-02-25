@@ -19,7 +19,7 @@ namespace NATS.Client
     /// <see cref="ISyncSubscription"/> provides messages for a subject through calls
     /// to <see cref="NextMessage()"/> and <see cref="NextMessage(int)"/>.
     /// </summary>
-    public interface ISyncSubscription : ISubscription, IDisposable
+    public interface ISyncSubscription : ISubscription
     {
         /// <summary>
         /// Returns the next <see cref="Msg"/> available to a synchronous
