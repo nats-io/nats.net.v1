@@ -2753,7 +2753,7 @@ namespace NATS.Client
         private static bool IsNoRespondersMsg(Msg m)
         {
             return m != null && m.HasHeaders &&
-                MsgHeader.noResponders.Equals(m.Header[MsgHeader.Status]) &&
+                MsgHeader.NoResponders.Equals(m.Header[MsgHeader.Status]) &&
                 m.Data.Length == 0;
         }
 

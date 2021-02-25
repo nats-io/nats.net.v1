@@ -60,8 +60,27 @@ namespace NATS.Client
         internal static readonly byte[] HeaderBytes = Encoding.UTF8.GetBytes(Header);
         internal static readonly int HeaderLen = HeaderBytes.Length;
         internal static readonly int MinimalValidHeaderLen = Encoding.UTF8.GetBytes(Header + "\r\n").Length;
-        internal static readonly string Status = "Status";
-        internal static readonly string noResponders = "503";
+
+
+        /// <summary>
+        /// Status header key.
+        /// </summary>
+        public static readonly string Status = "Status";
+
+        /// <summary>
+        /// Description header key.
+        /// </summary>
+        public static readonly string Description = "Description";
+
+        /// <summary>
+        /// No Responders Status code, 503.
+        /// </summary>
+        public static readonly string NoResponders = "503";
+
+        /// <summary>
+        /// Not Found Status code, 404.
+        /// </summary>
+        public static readonly string NotFound = "404";
 
         // Cache the serialized headers to optimize reuse
         private byte[] bytes = null;
@@ -161,10 +180,36 @@ namespace NATS.Client
                                 end < byteCount - 1 && bytes[end] != '\r' && bytes[end + 1] != '\n';
                                     end++);
 
-                            Add(Status, Encoding.UTF8.GetString(bytes, start, end - start));
+                            string status = Encoding.UTF8.GetString(bytes, start, end - start);
 
-                            // start other kv pairs at end of the status + \r\n.
+                            // set the start for kv pairs at end of the status + \r\n.
                             kvStart = end + 2;
+
+                            // Fastpath - we only have a code...
+                            if (status.Length == 3)
+                            {
+                                Add(Status, status);
+                                break;
+                            }
+
+                            // We can have code and description.
+
+                            // trim any leading whitespace.
+                            status = status.TrimStart();
+
+                            // check for description.
+                            int spaceIdx = status.IndexOf(' ');
+                            if (spaceIdx <= 0)
+                            {
+                                // there was whitespace and no description.
+                                Add(Status, status);
+                            }
+                            else
+                            {
+                                // There is a code and description...
+                                Add(Status, status.Substring(0, spaceIdx));
+                                Add(Description, status.Substring(spaceIdx + 1));
+                            }
 
                             // we're done
                             break;
