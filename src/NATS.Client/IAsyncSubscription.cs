@@ -12,9 +12,6 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace NATS.Client
 {
@@ -26,7 +23,7 @@ namespace NATS.Client
     /// If the <see cref="IAsyncSubscription"/> is created without listening to the <see cref="MessageHandler"/>
     /// event, no messages will be received until <see cref="Start()"/> has been called.
     /// </remarks>
-    public interface IAsyncSubscription : ISubscription, IDisposable
+    public interface IAsyncSubscription : ISubscription
     {
         /// <summary>
         /// Occurs when the <see cref="IAsyncSubscription"/> receives a message from the
