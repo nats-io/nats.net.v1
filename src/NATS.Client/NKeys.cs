@@ -12,6 +12,8 @@
 // limitations under the License.
 using NATS.Client.NaCl;
 using System;
+using System.IO;
+using System.Text;
 
 namespace NATS.Client
 {
@@ -231,8 +233,7 @@ namespace NATS.Client
                 src.Remove(0);
         }
 
-
-        private static byte[] DecodeSeed(byte[] raw)
+        internal static byte[] DecodeSeed(byte[] raw)
         {
             // Need to do the reverse here to get back to internal representation.
             byte b1 = (byte)(raw[0] & 248);  // 248 = 11111000
@@ -261,7 +262,7 @@ namespace NATS.Client
             }
         }
 
-        private static byte[] DecodeSeed(string src)
+        internal static byte[] DecodeSeed(string src)
         {
             return DecodeSeed(Nkeys.Decode(src));
         }
@@ -271,7 +272,7 @@ namespace NATS.Client
         /// </summary>
         /// <param name="seed"></param>
         /// <returns>A NATS Ed25519 Keypair</returns>
-        static public NkeyPair FromSeed(string seed)
+        public static NkeyPair FromSeed(string seed)
         {
             byte[] userSeed = DecodeSeed(seed);
             try
@@ -283,6 +284,92 @@ namespace NATS.Client
             {
                 Wipe(ref userSeed);
             }
+        }
+
+        internal static string Encode(byte prefixbyte, bool seed, byte[] src)
+        {
+            if (!IsValidPublicPrefixByte(prefixbyte))
+                throw new NATSException("Invalid prefix");
+
+            if (src.Length != 32)
+                throw new NATSException("Invalid seed size");
+
+            MemoryStream stream = new MemoryStream();
+
+            if (seed) {
+                // In order to make this human printable for both bytes, we need to do a little
+                // bit manipulation to setup for base32 encoding which takes 5 bits at a time.
+                byte b1 = (byte) (PrefixByteSeed | (prefixbyte >> 5));
+                byte b2 = (byte) ((prefixbyte & 31) << 3); // 31 = 00011111
+
+                stream.WriteByte(b1);
+                stream.WriteByte(b2);
+            } else {
+                stream.WriteByte(prefixbyte);
+            }
+
+            // write payload
+            stream.Write(src, 0, src.Length);
+
+            // Calculate and write crc16 checksum
+            byte[] checksum = BitConverter.GetBytes(Crc16.Checksum(stream.ToArray()));
+            stream.Write(checksum, 0, checksum.Length);
+
+            return Base32.Encode(stream.ToArray());
+        }
+
+        private static string CreateSeed(byte prefixbyte) {
+            byte[] rawSeed = new byte[32];
+
+            Random rnd = new Random();
+            rnd.NextBytes(rawSeed);
+
+            return Encode(prefixbyte, true, rawSeed);
+        }
+
+        /// <summary>
+        /// Creates a private user seed String.
+        /// </summary>
+        /// <returns>A NATS Ed25519 User Seed</returns>
+        public static string CreateUserSeed()
+        {
+            return CreateSeed(PrefixByteUser);
+        }
+
+        /// <summary>
+        /// Creates a private account seed String.
+        /// </summary>
+        /// <returns>A NATS Ed25519 Account Seed</returns>
+        public static string CreateAccountSeed()
+        {
+            return CreateSeed(PrefixByteAccount);
+        }
+
+        /// <summary>
+        /// Creates a private operator seed String.
+        /// </summary>
+        /// <returns>A NATS Ed25519 Operator Seed</returns>
+        public static string CreateOperatorSeed()
+        {
+            return CreateSeed(PrefixByteOperator);
+        }
+
+        /// <summary>
+        /// Returns a seed's public key.
+        /// </summary>
+        /// <param name="seed"></param>
+        /// <returns>A the public key corresponding to Seed</returns>
+        public static string PublicKeyFromSeed(string seed)
+        {
+            byte[] s = Nkeys.Decode(seed);
+            if ((s[0] & (31 << 3)) != PrefixByteSeed)
+            {
+                throw new NATSException("Not a seed");
+            }
+            // reconstruct prefix byte
+            byte prefixByte = (byte) ((s[0] & 7) << 5 | ((s[1] >> 3) & 31));
+            byte[] pubKey = Ed25519.PublicKeyFromSeed(DecodeSeed(s));
+            return Encode(prefixByte, false, pubKey);
         }
     }
 }
