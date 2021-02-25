@@ -74,6 +74,27 @@ namespace UnitTests
             Assert.Equal("bam", mh["baz"]);
             Assert.True(mh.Count == 2);
 
+            // Test inline status and description which will come from the server.
+            hb = Encoding.UTF8.GetBytes($"NATS/1.0 503 an error\r\n\r\n");
+            mh = new MsgHeader(hb, hb.Length);
+            Assert.True(mh.Count == 2);
+            Assert.Equal(MsgHeader.NoResponders, mh[MsgHeader.Status]);
+            Assert.Equal("an error", mh[MsgHeader.Description]);
+
+            // Test inline status and description which will come from the server.
+            hb = Encoding.UTF8.GetBytes($"NATS/1.0    503    an error   \r\n\r\n");
+            mh = new MsgHeader(hb, hb.Length);
+            Assert.True(mh.Count == 2);
+            Assert.Equal(MsgHeader.NoResponders, mh[MsgHeader.Status]);
+            Assert.Equal("   an error   ", mh[MsgHeader.Description]);
+
+            // Test inline status and description which will come from the server.
+            hb = Encoding.UTF8.GetBytes($"NATS/1.0 404 Not Found\r\n\r\n");
+            mh = new MsgHeader(hb, hb.Length);
+            Assert.True(mh.Count == 2);
+            Assert.Equal(MsgHeader.NotFound, mh[MsgHeader.Status]);
+            Assert.Equal("Not Found", mh[MsgHeader.Description]);
+
             // test quoted strings
             hb = Encoding.UTF8.GetBytes($"NATS/1.0\r\nfoo:\"string:with:quotes\"\r\nbaz:no:quotes\r\n\r\n");
             mh = new MsgHeader(hb, hb.Length);
@@ -95,13 +116,21 @@ namespace UnitTests
             hb = Encoding.UTF8.GetBytes($"NATS/1.0 503\r\n\r\n");
             mh = new MsgHeader(hb, hb.Length);
             Assert.True(mh.Count == 1);
-            Assert.Equal(MsgHeader.noResponders, mh[MsgHeader.Status]);
+            Assert.Equal(MsgHeader.NoResponders, mh[MsgHeader.Status]);
 
             // Test inline status with kv pair.
             hb = Encoding.UTF8.GetBytes($"NATS/1.0 503\r\nfoo:bar\r\n\r\n");
             mh = new MsgHeader(hb, hb.Length);
             Assert.True(mh.Count == 2);
-            Assert.Equal(MsgHeader.noResponders, mh[MsgHeader.Status]);
+            Assert.Equal(MsgHeader.NoResponders, mh[MsgHeader.Status]);
+            Assert.Equal("bar", mh["foo"]);
+
+            // Test inline status with kv pair.
+            hb = Encoding.UTF8.GetBytes($"NATS/1.0 503 hello\r\nfoo:bar\r\n\r\n");
+            mh = new MsgHeader(hb, hb.Length);
+            Assert.True(mh.Count == 3);
+            Assert.Equal(MsgHeader.NoResponders, mh[MsgHeader.Status]);
+            Assert.Equal("hello", mh[MsgHeader.Description]);
             Assert.Equal("bar", mh["foo"]);
         }
 
