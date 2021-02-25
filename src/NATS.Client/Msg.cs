@@ -199,7 +199,7 @@ namespace NATS.Client
 
                             // check for description.
                             int spaceIdx = status.IndexOf(' ');
-                            if (spaceIdx <= 0)
+                            if (spaceIdx < 0)
                             {
                                 // there was whitespace and no description.
                                 Add(Status, status);
