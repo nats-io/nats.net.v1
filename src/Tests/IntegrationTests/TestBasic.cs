@@ -1965,7 +1965,6 @@ namespace IntegrationTests
             var exception = Record.Exception(() => Context.ConnectionFactory.CreateConnection());
 
             Assert.IsType<NATSConnectionException>(exception);
-            Assert.Equal("timeout", exception.Message);
         }
 
         /// <summary>
