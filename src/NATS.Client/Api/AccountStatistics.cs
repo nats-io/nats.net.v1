@@ -22,10 +22,10 @@ namespace NATS.Client.Api
 
         public AccountStatistics(string json) : base(json)
         {
-            Memory = JsonNode[ApiConsts.MEMORY].AsLong;
-            Storage = JsonNode[ApiConsts.STORAGE].AsLong;
-            Streams = JsonNode[ApiConsts.STREAMS].AsLong;
-            Consumers = JsonNode[ApiConsts.CONSUMERS].AsLong;
+            Memory = JsonNode[ApiConstants.Memory].AsLong;
+            Storage = JsonNode[ApiConstants.Storage].AsLong;
+            Streams = JsonNode[ApiConstants.Streams].AsLong;
+            Consumers = JsonNode[ApiConstants.Consumers].AsLong;
         }
     }
 }

@@ -16,12 +16,12 @@ using Xunit;
 
 namespace UnitTests.Api
 {
-    public class TestPurgeResponse
+    public class TestPurgeResponse : TestBase
     {
         [Fact]
         public void JsonIsReadProperly()
         {
-            string json = ApiTestUtil.ReadDataFile("PurgeResponse.json");
+            string json = ReadDataFile("PurgeResponse.json");
             PurgeResponse pr = new PurgeResponse(json);
             Assert.True(pr.Success);
             Assert.Equal(5, pr.Purged);

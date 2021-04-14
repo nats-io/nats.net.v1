@@ -37,14 +37,14 @@ namespace NATS.Client.Internals
         }
         
         internal static byte[] AsByteArray(JSONNode node) {
-            return Encoding.ASCII.GetBytes(node.Value);
+            return Encoding.UTF8.GetBytes(node.Value);
         }
         
         internal static DateTime AsDate(JSONNode node)
         {
             try
             {
-                return DateTime.Parse(node.Value);
+                return DateTime.Parse(node.Value).ToUniversalTime();
             }
             catch (Exception)
             {
@@ -52,5 +52,19 @@ namespace NATS.Client.Internals
             }
         }
         
+        internal static string ToString(DateTime dt)
+        {
+            return dt.ToUniversalTime().ToString("O");
+        }
+
+        internal static JSONArray ToArray(List<string> list)
+        {
+            JSONArray arr = new JSONArray();
+            foreach (var s in list)
+            {
+                arr.Add(null, new JSONString(s));
+            }
+            return arr;
+        }
     }
 }

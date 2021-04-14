@@ -24,11 +24,11 @@ namespace NATS.Client.Api
         public long Lag { get; }
 
         internal PeerInfo(JSONNode peerInfoNode) {
-            Name = peerInfoNode[ApiConsts.NAME].Value;
-            Current = peerInfoNode[ApiConsts.CURRENT].AsBool;
-            Offline = peerInfoNode[ApiConsts.OFFLINE].AsBool;
-            Active = Duration.OfNanos(peerInfoNode[ApiConsts.ACTIVE].AsLong);
-            Lag = peerInfoNode[ApiConsts.LAG].AsLong;
+            Name = peerInfoNode[ApiConstants.Name].Value;
+            Current = peerInfoNode[ApiConstants.Current].AsBool;
+            Offline = peerInfoNode[ApiConstants.Offline].AsBool;
+            Active = Duration.OfNanos(peerInfoNode[ApiConstants.Active].AsLong);
+            Lag = peerInfoNode[ApiConstants.Lag].AsLong;
         }
     }
 }

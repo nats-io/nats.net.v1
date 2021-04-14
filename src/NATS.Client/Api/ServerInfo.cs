@@ -43,24 +43,24 @@ namespace NATS.Client.Api
         public ServerInfo(string json)
         {
             var siNode = JSON.Parse(json);
-            ServerId = siNode[ApiConsts.SERVER_ID].Value;
-            ServerName = siNode[ApiConsts.SERVER_NAME].Value;
-            Version = siNode[ApiConsts.VERSION].Value;
-            GoVersion = siNode[ApiConsts.GO].Value;
-            Host = siNode[ApiConsts.HOST].Value;
-            HeadersSupported = siNode[ApiConsts.HEADERS].AsBool;
-            AuthRequired = siNode[ApiConsts.AUTH_REQUIRED].AsBool;
-            Nonce = siNode[ApiConsts.NONCE].Value;
-            TlsRequired = siNode[ApiConsts.TLS].AsBool;
-            LameDuckMode = siNode[ApiConsts.LAME_DUCK_MODE].AsBool;
-            JetStreamAvailable = siNode[ApiConsts.JETSTREAM].AsBool;
-            Port = siNode[ApiConsts.PORT].AsInt;
-            ProtocolVersion = siNode[ApiConsts.PROTO].AsInt;
-            MaxPayload = siNode[ApiConsts.MAX_PAYLOAD].AsLong;
-            ClientId = siNode[ApiConsts.CLIENT_ID].AsInt;
-            ClientIp = siNode[ApiConsts.CLIENT_IP].Value;
-            Cluster = siNode[ApiConsts.CLUSTER].Value;
-            ConnectURLs = siNode[ApiConsts.CONNECT_URLS].Children
+            ServerId = siNode[ApiConstants.ServerId].Value;
+            ServerName = siNode[ApiConstants.ServerName].Value;
+            Version = siNode[ApiConstants.Version].Value;
+            GoVersion = siNode[ApiConstants.Go].Value;
+            Host = siNode[ApiConstants.Host].Value;
+            HeadersSupported = siNode[ApiConstants.Headers].AsBool;
+            AuthRequired = siNode[ApiConstants.AuthRequired].AsBool;
+            Nonce = siNode[ApiConstants.Nonce].Value;
+            TlsRequired = siNode[ApiConstants.Tls].AsBool;
+            LameDuckMode = siNode[ApiConstants.LameDuckMode].AsBool;
+            JetStreamAvailable = siNode[ApiConstants.Jetstream].AsBool;
+            Port = siNode[ApiConstants.Port].AsInt;
+            ProtocolVersion = siNode[ApiConstants.Proto].AsInt;
+            MaxPayload = siNode[ApiConstants.MaxPayload].AsLong;
+            ClientId = siNode[ApiConstants.ClientId].AsInt;
+            ClientIp = siNode[ApiConstants.ClientIp].Value;
+            Cluster = siNode[ApiConstants.Cluster].Value;
+            ConnectURLs = siNode[ApiConstants.ConnectUrls].Children
                 .Where(n => !string.IsNullOrEmpty(n.Value))
                 .Select(n => n.Value)
                 .ToArray();

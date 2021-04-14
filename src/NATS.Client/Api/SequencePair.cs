@@ -22,8 +22,8 @@ namespace NATS.Client.Api
 
         internal SequencePair(JSONNode spNode)
         {
-            ConsumerSeq = spNode[ApiConsts.CONSUMER_SEQ].AsLong;
-            StreamSeq = spNode[ApiConsts.STREAM_SEQ].AsLong;
+            ConsumerSeq = spNode[ApiConstants.ConsumerSeq].AsLong;
+            StreamSeq = spNode[ApiConstants.StreamSeq].AsLong;
         }
     }
 }

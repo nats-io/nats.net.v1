@@ -16,12 +16,12 @@ using Xunit;
 
 namespace UnitTests.Api
 {
-    public class TestConsumerInfo
+    public class TestConsumerInfo : TestBase
     {
         [Fact]
         public void JsonIsReadProperly()
         {
-            string json = ApiTestUtil.ReadDataFile("ConsumerInfo.json");
+            string json = ReadDataFile("ConsumerInfo.json");
             ConsumerInfo ci = new ConsumerInfo(json);
             Assert.Equal("foo-stream", ci.Stream);
             Assert.Equal("foo-consumer", ci.Name);

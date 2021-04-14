@@ -17,12 +17,12 @@ using Xunit;
 
 namespace UnitTests.Api
 {
-    public class TestServerInfo
+    public class TestServerInfo : TestBase
     {
         [Fact]
         public void JsonIsReadProperly()
         {
-            string json = ApiTestUtil.ReadDataFile("ServerInfoJson.txt");
+            string json = ReadDataFile("ServerInfoJson.txt");
 
             ServerInfo info = new ServerInfo(json);
             Assert.Equal("serverId", info.ServerId);
@@ -56,10 +56,10 @@ namespace UnitTests.Api
                           "}";
             ServerInfo info = new ServerInfo(json);
             Assert.Equal("myserver", info.ServerId);
-            Assert.Equal("one", info.ConnectURLs[0]);
-
-            // In the Java parser the empty string gets dropped
-            Assert.Equal(1, info.ConnectURLs.Length);
+            
+            // The empty string gets dropped
+            Assert.Collection(info.ConnectURLs,
+                item => Assert.Equal("one", item));
         }
 
         [Fact]

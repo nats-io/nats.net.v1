@@ -11,6 +11,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using NATS.Client.Internals.SimpleJSON;
+
 namespace NATS.Client.Api
 {
     public sealed class ConsumerCreateRequest
@@ -22,6 +24,15 @@ namespace NATS.Client.Api
         {
             StreamName = streamName;
             Config = config;
+        }
+        
+        internal JSONNode ToJsonNode()
+        {
+            return new JSONObject
+            {
+                [ApiConstants.StreamName] = StreamName,
+                [ApiConstants.Config] = Config.ToJsonNode()
+            };
         }
     }
 }

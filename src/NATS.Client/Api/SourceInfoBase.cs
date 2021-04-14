@@ -24,10 +24,10 @@ namespace NATS.Client.Api
 
         internal SourceInfoBase(JSONNode sourceInfoBaseNode)
         {
-            Name = sourceInfoBaseNode[ApiConsts.NAME].Value;
-            Lag = sourceInfoBaseNode[ApiConsts.LAG].AsLong;
-            Active = Duration.OfNanos(sourceInfoBaseNode[ApiConsts.ACTIVE].AsLong);
-            Error = Error.OptionalInstance(sourceInfoBaseNode[ApiConsts.ERROR]);
+            Name = sourceInfoBaseNode[ApiConstants.Name].Value;
+            Lag = sourceInfoBaseNode[ApiConstants.Lag].AsLong;
+            Active = Duration.OfNanos(sourceInfoBaseNode[ApiConstants.Active].AsLong);
+            Error = Error.OptionalInstance(sourceInfoBaseNode[ApiConstants.Error]);
         }
     }
 }

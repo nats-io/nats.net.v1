@@ -29,9 +29,9 @@ namespace NATS.Client.Api
 
         private ClusterInfo(JSONNode clusterNode)
         {
-            Name = clusterNode[ApiConsts.NAME].Value;
-            Leader = clusterNode[ApiConsts.LEADER].Value;
-            Replicas = Replica.OptionalListOf(clusterNode[ApiConsts.REPLICAS]);
+            Name = clusterNode[ApiConstants.Name].Value;
+            Leader = clusterNode[ApiConstants.Leader].Value;
+            Replicas = Replica.OptionalListOf(clusterNode[ApiConstants.Replicas]);
         }
     }
 }

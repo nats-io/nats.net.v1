@@ -1,9 +1,9 @@
 ﻿namespace NATS.Client.Api
 {
-    public class Duration
+    public sealed class Duration
     {
-        const long NANOS_PER_SECOND = 1_000_000_000L;
-        const long NANOS_PER_MILLI = 1_000_000L;
+        const long NanosPerSecond = 1_000_000_000L;
+        const long NanosPerMilli = 1_000_000L;
 
         internal static Duration ZERO = new Duration(0L);
 
@@ -21,14 +21,24 @@
 
         internal static Duration OfMillis(long millis)
         {
-            return new Duration(millis * NANOS_PER_MILLI);
+            return new Duration(millis * NanosPerMilli);
         } 
 
         internal static Duration OfSeconds(long seconds)
         {
-            return new Duration(seconds * NANOS_PER_SECOND);
+            return new Duration(seconds * NanosPerSecond);
         }
 
+        public bool IsZero()
+        {
+            return Nanos == 0;
+        }
+
+        public bool IsNegative()
+        {
+            return Nanos < 0;
+        }
+        
         public override bool Equals(object obj)
         {
             return Equals(obj as Duration);

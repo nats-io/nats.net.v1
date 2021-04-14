@@ -32,21 +32,21 @@ namespace NATS.Client.Api
         private void Init()
         {
             ThrowOnHasError();
-            Stream = JsonNode[ApiConsts.STREAM].Value;
+            Stream = JsonNode[ApiConstants.Stream].Value;
             if (Stream.Length == 0)
             {
                 // TODO is this the correct exception?
                 throw new NATSException("Invalid JetStream ack.");
             }
 
-            Seq = JsonNode[ApiConsts.SEQ].AsLong;
+            Seq = JsonNode[ApiConstants.Seq].AsLong;
             if (Seq == 0)
             {
                 // TODO is this the correct exception?
                 throw new NATSException("Invalid JetStream ack.");
             }
 
-            Duplicate = JsonNode[ApiConsts.DUPLICATE].AsBool;
+            Duplicate = JsonNode[ApiConstants.Duplicate].AsBool;
         }
     }
 }

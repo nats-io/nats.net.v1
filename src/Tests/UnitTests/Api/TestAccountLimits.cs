@@ -16,12 +16,12 @@ using Xunit;
 
 namespace UnitTests.Api
 {
-    public class TestAccountLimits
+    public class TestAccountLimits : TestBase
     {
         [Fact]
         public void JsonIsReadProperly()
         {
-            string json = ApiTestUtil.ReadDataFile("AccountLimits.json");
+            string json = ReadDataFile("AccountLimits.json");
             AccountLimits al = new AccountLimits(json);
             Assert.Equal(1, al.MaxMemory);
             Assert.Equal(2, al.MaxStorage);

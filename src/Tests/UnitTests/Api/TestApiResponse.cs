@@ -22,11 +22,11 @@ namespace UnitTests.Api
         internal TestingApiResponse(string json) : base(json) {}
     }
     
-    public class TestApiResponse
+    public class TestApiResponse : TestBase
     {
         [Fact]
         public void DoesNotHaveAnError() {
-            string json = ApiTestUtil.ReadDataFile("ConsumerInfo.json");
+            string json = ReadDataFile("ConsumerInfo.json");
             TestingApiResponse jsApiResp = new TestingApiResponse(json);
             Assert.False(jsApiResp.HasError);
             Assert.Null(jsApiResp.Error);
@@ -34,7 +34,7 @@ namespace UnitTests.Api
 
         [Fact]
         public void MiscErrorResponsesAreUnderstood() {
-            string text = ApiTestUtil.ReadDataFile("ErrorResponses.json.txt");
+            string text = ReadDataFile("ErrorResponses.json.txt");
             String[] jsons = text.Split('~');
 
             TestingApiResponse jsApiResp = new TestingApiResponse(jsons[0]);

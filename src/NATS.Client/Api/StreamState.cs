@@ -34,13 +34,13 @@ namespace NATS.Client.Api
 
         private StreamState(JSONNode streamState)
         {
-            Messages = streamState[ApiConsts.MESSAGES].AsLong;
-            Bytes = streamState[ApiConsts.BYTES].AsLong;
-            FirstSeq = streamState[ApiConsts.FIRST_SEQ].AsLong;
-            LastSeq = streamState[ApiConsts.LAST_SEQ].AsLong;
-            ConsumerCount = streamState[ApiConsts.CONSUMER_COUNT].AsLong;
-            FirstTime = JsonUtils.AsDate(streamState[ApiConsts.FIRST_TS]);
-            LastTime = JsonUtils.AsDate(streamState[ApiConsts.LAST_TS]);
+            Messages = streamState[ApiConstants.Messages].AsLong;
+            Bytes = streamState[ApiConstants.Bytes].AsLong;
+            FirstSeq = streamState[ApiConstants.FirstSeq].AsLong;
+            LastSeq = streamState[ApiConstants.LastSeq].AsLong;
+            ConsumerCount = streamState[ApiConstants.ConsumerCount].AsLong;
+            FirstTime = JsonUtils.AsDate(streamState[ApiConstants.FirstTs]);
+            LastTime = JsonUtils.AsDate(streamState[ApiConstants.LastTs]);
         }
     }
 }

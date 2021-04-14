@@ -25,13 +25,13 @@ namespace NATS.Client.Api
         public string FilterSubject { get; }
         public External External { get; }
 
-         internal SourceBase(JSONNode sourceBaseNode)
+        internal SourceBase(JSONNode sourceBaseNode)
         {
-            Name = sourceBaseNode[ApiConsts.NAME].Value;
-            StartSeq = sourceBaseNode[ApiConsts.OPT_START_SEQ].AsLong;
-            StartTime = JsonUtils.AsDate(sourceBaseNode[ApiConsts.OPT_START_TIME]);
-            FilterSubject = sourceBaseNode[ApiConsts.FILTER_SUBJECT].Value;
-            External = External.OptionalInstance(sourceBaseNode[ApiConsts.EXTERNAL]);
+            Name = sourceBaseNode[ApiConstants.Name].Value;
+            StartSeq = sourceBaseNode[ApiConstants.OptStartSeq].AsLong;
+            StartTime = JsonUtils.AsDate(sourceBaseNode[ApiConstants.OptStartTime]);
+            FilterSubject = sourceBaseNode[ApiConstants.FilterSubject].Value;
+            External = External.OptionalInstance(sourceBaseNode[ApiConstants.External]);
         }
     }
 }

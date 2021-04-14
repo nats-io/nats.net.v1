@@ -31,12 +31,12 @@ namespace NATS.Client.Api
         internal ApiResponse(string json)
         {
             JsonNode = JSON.Parse(json);
-            Type = JsonNode[ApiConsts.TYPE].Value;
+            Type = JsonNode[ApiConstants.Type].Value;
             if (string.IsNullOrEmpty(Type))
             {
                 Type = NO_TYPE;
             }
-            Error = Error.OptionalInstance(JsonNode[ApiConsts.ERROR]);
+            Error = Error.OptionalInstance(JsonNode[ApiConstants.Error]);
         }
         
         public void ThrowOnHasError() {

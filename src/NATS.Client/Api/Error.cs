@@ -32,8 +32,8 @@ namespace NATS.Client.Api
         internal Error(JSONNode node)
         {
             _node = node;
-            Code = JsonUtils.AsIntOrMinus1(node, ApiConsts.CODE);
-            Desc = node[ApiConsts.DESCRIPTION];
+            Code = JsonUtils.AsIntOrMinus1(node, ApiConstants.Code);
+            Desc = node[ApiConstants.Description];
         }
 
         public override string ToString()

@@ -30,8 +30,17 @@ namespace NATS.Client.Api
 
         private Placement(JSONNode placementNode)
         {
-            Cluster = placementNode[ApiConsts.CLUSTER].Value;
-            Tags = JsonUtils.OptionalStringList(placementNode, ApiConsts.TAGS);
+            Cluster = placementNode[ApiConstants.Cluster].Value;
+            Tags = JsonUtils.OptionalStringList(placementNode, ApiConstants.Tags);
+        }
+
+        internal JSONNode ToJsonNode()
+        {
+            return new JSONObject
+            {
+                [ApiConstants.Cluster] = Cluster,
+                [ApiConstants.Tags] = JsonUtils.ToArray(Tags)
+            };
         }
     }
 }

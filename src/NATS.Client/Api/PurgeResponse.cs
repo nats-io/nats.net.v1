@@ -26,8 +26,8 @@ namespace NATS.Client.Api
         internal PurgeResponse(string json)
         {
             var purgeNode = JSON.Parse(json);
-            Success = purgeNode[ApiConsts.SUCCESS].AsBool;
-            Purged = purgeNode[ApiConsts.PURGED].AsInt;
+            Success = purgeNode[ApiConstants.Success].AsBool;
+            Purged = purgeNode[ApiConstants.Purged].AsInt;
         }
     }
 }

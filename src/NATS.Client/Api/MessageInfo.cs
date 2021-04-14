@@ -30,9 +30,9 @@ namespace NATS.Client.Api
         public MessageInfo(string json)
         {
             var x = JSON.Parse(json);
-            Subject = x[ApiConsts.SUBJECT].Value;
+            Subject = x[ApiConstants.Subject].Value;
             // Data = x[ApiConsts.DATA].?;
-            Seq = x[ApiConsts.SEQ].AsLong;
+            Seq = x[ApiConstants.Seq].AsLong;
             // Time = x[ApiConsts.TIME].?;
             // Hdrs = x[ApiConsts.HDRS].?;
         }

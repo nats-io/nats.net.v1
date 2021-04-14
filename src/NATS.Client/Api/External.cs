@@ -27,8 +27,8 @@ namespace NATS.Client.Api
 
         private External(JSONNode externalNode)
         {
-            Api = externalNode[ApiConsts.API].Value;
-            Deliver = externalNode[ApiConsts.DELIVER].Value;
+            Api = externalNode[ApiConstants.Api].Value;
+            Deliver = externalNode[ApiConstants.Deliver].Value;
         }
     }
 }

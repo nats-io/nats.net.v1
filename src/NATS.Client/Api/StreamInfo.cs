@@ -33,12 +33,12 @@ namespace NATS.Client.Api
         public StreamInfo(string json)
         {
             var streamInfoNode = JSON.Parse(json);
-            Created = JsonUtils.AsDate(streamInfoNode[ApiConsts.CREATED]);
-            Config = new StreamConfiguration(streamInfoNode[ApiConsts.CONFIG]);
-            State = StreamState.OptionalInstance(streamInfoNode[ApiConsts.STATE]);
-            ClusterInfo = ClusterInfo.OptionalInstance(streamInfoNode[ApiConsts.CLUSTER]);
-            MirrorInfo = MirrorInfo.OptionalInstance(streamInfoNode[ApiConsts.MIRROR]);
-            SourceInfos = SourceInfo.OptionalListOf(streamInfoNode[ApiConsts.SOURCES]);
+            Created = JsonUtils.AsDate(streamInfoNode[ApiConstants.Created]);
+            Config = new StreamConfiguration(streamInfoNode[ApiConstants.Config]);
+            State = StreamState.OptionalInstance(streamInfoNode[ApiConstants.State]);
+            ClusterInfo = ClusterInfo.OptionalInstance(streamInfoNode[ApiConstants.Cluster]);
+            MirrorInfo = MirrorInfo.OptionalInstance(streamInfoNode[ApiConstants.Mirror]);
+            SourceInfos = SourceInfo.OptionalListOf(streamInfoNode[ApiConstants.Sources]);
         }
     }
 }

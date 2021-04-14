@@ -17,12 +17,12 @@ using Xunit;
 
 namespace UnitTests.Api
 {
-    public class TestStreamInfo
+    public class TestStreamInfo : TestBase
     {
         [Fact]
         public void JsonIsReadProperly()
         {
-            string json = ApiTestUtil.ReadDataFile("StreamInfo.json");
+            string json = ReadDataFile("StreamInfo.json");
             StreamInfo si = new StreamInfo(json);
             Assert.Equal(DateTime.Parse("2021-01-25T20:09:10.6225191Z"), si.Created);
             

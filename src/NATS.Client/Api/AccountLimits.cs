@@ -26,10 +26,10 @@ namespace NATS.Client.Api
         public AccountLimits(string json)
         {
             var node = JSON.Parse(json);
-            MaxMemory = JsonUtils.AsLongOrMinus1(node, ApiConsts.MAX_MEMORY);
-            MaxStorage = JsonUtils.AsLongOrMinus1(node, ApiConsts.MAX_STORAGE);
-            MaxStreams = JsonUtils.AsLongOrMinus1(node, ApiConsts.MAX_STREAMS);
-            MaxConsumers = JsonUtils.AsLongOrMinus1(node, ApiConsts.MAX_CONSUMERS);
+            MaxMemory = JsonUtils.AsLongOrMinus1(node, ApiConstants.MaxMemory);
+            MaxStorage = JsonUtils.AsLongOrMinus1(node, ApiConstants.MaxStorage);
+            MaxStreams = JsonUtils.AsLongOrMinus1(node, ApiConstants.MaxStreams);
+            MaxConsumers = JsonUtils.AsLongOrMinus1(node, ApiConstants.MaxConsumers);
         }
     }
 }
