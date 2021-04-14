@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System;
+using NATS.Client.Api;
 
 namespace NATS.Client
 {
@@ -190,5 +191,18 @@ namespace NATS.Client
     public class NATSNoRespondersException : NATSTimeoutException
     {
         public NATSNoRespondersException() : base("No responders are available for the request.") { }
+    }
+
+    public class JetStreamApiException : NATSException
+    {
+        private ApiResponse apiResponse;
+
+        public JetStreamApiException(ApiResponse apiResponse) : base(apiResponse.Error.Desc) {
+            this.apiResponse = apiResponse;
+        }
+
+        public long ErrorCode => apiResponse.ErrorCode;
+        
+        public string ErrorDescription => apiResponse.Description; 
     }
 }

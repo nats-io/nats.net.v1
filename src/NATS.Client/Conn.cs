@@ -12,19 +12,20 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
 using System.IO;
+using System.Net;
+using System.Net.Security;
+using System.Net.Sockets;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Net;
-using System.Net.Sockets;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
-using System.Security.Authentication;
-using System.Globalization;
-using System.Diagnostics;
+using NATS.Client.Api;
 using NATS.Client.Internals;
 
 namespace NATS.Client
@@ -1008,7 +1009,7 @@ namespace NATS.Client
                 string clientIp;
                 lock (mu)
                 {
-                    clientIp = info.client_ip;
+                    clientIp = info.ClientIp;
                 }
                 
                 return !String.IsNullOrEmpty(clientIp) ? IPAddress.Parse(clientIp) : null;
@@ -1028,7 +1029,7 @@ namespace NATS.Client
                     if (status != ConnState.CONNECTED)
                         return IC._EMPTY_;
 
-                    return this.info.server_id;
+                    return this.info.ServerId;
                 }
             }
         }
@@ -1195,11 +1196,11 @@ namespace NATS.Client
         {
             // Check to see if we need to engage TLS
             // Check for mismatch in setups
-            if (Opts.Secure && !info.tls_required)
+            if (Opts.Secure && !info.TlsRequired)
             {
                 throw new NATSSecureConnWantedException();
             }
-            else if (info.tls_required && !Opts.Secure)
+            else if (info.TlsRequired && !Opts.Secure)
             {
                 // If the server asks us to be secure, give it
                 // a shot.
@@ -1340,7 +1341,7 @@ namespace NATS.Client
                     throw new NATSConnectionException("User signature event handle has not been been defined.");
                 }
 
-                var args = new UserSignatureEventArgs(Encoding.ASCII.GetBytes(this.info.nonce));
+                var args = new UserSignatureEventArgs(Encoding.ASCII.GetBytes(this.info.Nonce));
                 try
                 {
                     opts.UserSignatureEventHandler(this, args);
@@ -2338,8 +2339,8 @@ namespace NATS.Client
                 return;
             }
 
-            info = ServerInfo.CreateFromJson(json);
-            var discoveredUrls = info.connect_urls;
+            info = new ServerInfo(json);
+            var discoveredUrls = info.ConnectURLs;
 
             // The discoveredUrls array could be empty/not present on initial
             // connect if advertise is disabled on that server, or servers that
@@ -2363,7 +2364,7 @@ namespace NATS.Client
                 }
             }
 
-            if (notify && info.ldm && opts.LameDuckModeEventHandler != null)
+            if (notify && info.LameDuckMode && opts.LameDuckModeEventHandler != null)
             {
                 scheduleConnEvent(opts.LameDuckModeEventHandler);
             }
@@ -2560,7 +2561,7 @@ namespace NATS.Client
                     throw new NATSConnectionDrainingException();
 
                 // Proactively reject payloads over the threshold set by server.
-                if (count > info.max_payload)
+                if (count > info.MaxPayload)
                     throw new NATSMaxPayloadException();
 
                 if (lastEx != null)
@@ -2575,7 +2576,7 @@ namespace NATS.Client
                 int protoOffset;
                 if (headers != null)
                 {
-                    if (info.headers == false)
+                    if (!info.HeadersSupported)
                     {
                         throw new NATSNotSupportedException("Headers are not supported by the server.");
                     }
@@ -4578,7 +4579,7 @@ namespace NATS.Client
             {
                 lock (mu)
                 {
-                    return info.max_payload;
+                    return info.MaxPayload;
                 }
             }
         }
