@@ -25,8 +25,8 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using NATS.Client.Api;
 using NATS.Client.Internals;
+using NATS.Client.Jetstream.Api;
 
 namespace NATS.Client
 {

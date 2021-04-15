@@ -1,5 +1,5 @@
 ﻿using System;
-using NATS.Client.Api;
+using NATS.Client.Jetstream.Api;
 
 namespace NATS.Client.Internals
 {

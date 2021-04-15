@@ -12,8 +12,8 @@
 // limitations under the License.
 
 using System;
-using NATS.Client.Api;
 using NATS.Client.Internals;
+using NATS.Client.Jetstream.Api;
 using Xunit;
 using static NATS.Client.Internals.NatsJetStreamConstants;
 

@@ -18,7 +18,7 @@ namespace UnitTests
         internal static string ReadDataFile(string name)
         {
             string path = Directory.GetCurrentDirectory();
-            string fileSpec = Path.Combine(path, "..", "..", "..", "Api", "Data", name);
+            string fileSpec = Path.Combine(path, "..", "..", "..", "Jetstream", "Api", "Data", name);
             return File.ReadAllText(fileSpec);
         }
 
