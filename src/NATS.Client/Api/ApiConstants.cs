@@ -71,6 +71,7 @@ namespace NATS.Client.Api
         internal const string MaxStorage = "max_storage";
         internal const string MaxStreams = "max_streams";
         internal const string Memory = "memory";
+        internal const string Message = "message";
         internal const string Messages = "messages";
         internal const string Mirror = "mirror";
         internal const string Name = "name";

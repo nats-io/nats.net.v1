@@ -167,7 +167,7 @@ namespace UnitTests.Api
             Assert.Equal("clstr", sc.Placement.Cluster);
             Assert.Collection(sc.Placement.Tags, item => item.Equals("tag1"), item => item.Equals("tag2"));
 
-            DateTime zdt = DateTime.Parse("2020-11-05T19:33:21.163377Z").ToUniversalTime();
+            DateTime zdt = AsDateTime("2020-11-05T19:33:21.163377Z");
 
             Assert.NotNull(sc.Mirror);
             Assert.Equal("eman", sc.Mirror.Name);

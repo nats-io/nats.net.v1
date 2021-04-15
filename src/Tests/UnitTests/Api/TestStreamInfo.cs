@@ -11,7 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using NATS.Client.Api;
 using Xunit;
 
@@ -24,7 +23,7 @@ namespace UnitTests.Api
         {
             string json = ReadDataFile("StreamInfo.json");
             StreamInfo si = new StreamInfo(json);
-            Assert.Equal(DateTime.Parse("2021-01-25T20:09:10.6225191Z"), si.Created);
+            Assert.Equal(AsDateTime("2021-01-25T20:09:10.6225191Z"), si.Created);
             
             // StreamConfiguration Config
             Assert.Equal("streamName", si.Config.Name);
@@ -53,8 +52,8 @@ namespace UnitTests.Api
             Assert.Equal(13, si.State.FirstSeq);
             Assert.Equal(14, si.State.LastSeq);
             Assert.Equal(15, si.State.ConsumerCount);
-            Assert.Equal(DateTime.Parse("0001-01-01T00:00:00Z"), si.State.FirstTime);
-            Assert.Equal(DateTime.Parse("2021-01-01T00:00:00Z"), si.State.LastTime);
+            Assert.Equal(AsDateTime("0001-01-01T00:00:00Z"), si.State.FirstTime);
+            Assert.Equal(AsDateTime("2021-01-01T00:00:00Z"), si.State.LastTime);
             
             // ClusterInfo ClusterInfo
             Assert.Equal("clustername", si.ClusterInfo.Name);

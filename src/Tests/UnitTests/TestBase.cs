@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace UnitTests
 {
@@ -20,7 +21,12 @@ namespace UnitTests
             string fileSpec = Path.Combine(path, "..", "..", "..", "Api", "Data", name);
             return File.ReadAllText(fileSpec);
         }
- 
+
+        internal static DateTime AsDateTime(string dtString)
+        {
+            return DateTime.Parse(dtString).ToUniversalTime();
+        }
+        
         // ----------------------------------------------------------------------------------------------------
         // data makers
         // ----------------------------------------------------------------------------------------------------

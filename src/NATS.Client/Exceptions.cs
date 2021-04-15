@@ -203,6 +203,6 @@ namespace NATS.Client
 
         public long ErrorCode => apiResponse.ErrorCode;
         
-        public string ErrorDescription => apiResponse.Description; 
+        public string ErrorDescription => apiResponse.ErrorDescription; 
     }
 }

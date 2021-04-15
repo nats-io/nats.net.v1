@@ -12,12 +12,11 @@
 // limitations under the License.
 
 using System;
-using System.Text;
-using NATS.Client.Internals.SimpleJSON;
+using NATS.Client.Internals;
 
 namespace NATS.Client.Api
 {
-    public sealed class MessageInfo
+    public sealed class MessageInfo : ApiResponse
     {
         public string Subject { get; }
         public long Seq { get; }
@@ -25,16 +24,18 @@ namespace NATS.Client.Api
         public DateTime Time { get; }
         public MsgHeader Headers { get; }
 
-        public MessageInfo(Msg msg) : this(Encoding.UTF8.GetString(msg.Data)) { }
-
-        public MessageInfo(string json)
+        public MessageInfo(string json) : base(json)
         {
-            var x = JSON.Parse(json);
-            Subject = x[ApiConstants.Subject].Value;
-            // Data = x[ApiConsts.DATA].?;
-            Seq = x[ApiConstants.Seq].AsLong;
-            // Time = x[ApiConsts.TIME].?;
-            // Hdrs = x[ApiConsts.HDRS].?;
+            var miNode = JsonNode[ApiConstants.Message];
+            Subject = miNode[ApiConstants.Subject].Value;
+            Seq = miNode[ApiConstants.Seq].AsLong;
+            Time = JsonUtils.AsDate(miNode[ApiConstants.Time]);
+            Data = JsonUtils.AsByteArrayFromBase64(miNode[ApiConstants.Data]);
+            byte[] bytes = JsonUtils.AsByteArrayFromBase64(miNode[ApiConstants.Hdrs]);
+            if (bytes != null)
+            {
+                Headers = new MsgHeader(bytes, bytes.Length);
+            }
         }
     }
 }

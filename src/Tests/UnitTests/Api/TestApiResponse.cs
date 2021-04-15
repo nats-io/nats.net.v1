@@ -41,7 +41,7 @@ namespace UnitTests.Api
             Assert.True(jsApiResp.HasError);
             Assert.Equal("code_and_desc_response", jsApiResp.Type);
             Assert.Equal(500, jsApiResp.ErrorCode);
-            Assert.Equal("the description", jsApiResp.Description);
+            Assert.Equal("the description", jsApiResp.ErrorDescription);
             Assert.Equal("the description (500)", jsApiResp.Error.ToString());
             JetStreamApiException jsApiEx = new JetStreamApiException(jsApiResp);
             Assert.Equal(500, jsApiEx.ErrorCode);
@@ -51,7 +51,7 @@ namespace UnitTests.Api
             Assert.True(jsApiResp.HasError);
             Assert.Equal("zero_and_desc_response", jsApiResp.Type);
             Assert.Equal(0, jsApiResp.ErrorCode);
-            Assert.Equal("the description", jsApiResp.Description);
+            Assert.Equal("the description", jsApiResp.ErrorDescription);
             Assert.Equal("the description (0)", jsApiResp.Error.ToString());
             jsApiEx = new JetStreamApiException(jsApiResp);
             Assert.Equal(0, jsApiEx.ErrorCode);
@@ -61,7 +61,7 @@ namespace UnitTests.Api
             Assert.True(jsApiResp.HasError);
             Assert.Equal("non_zero_code_only_response", jsApiResp.Type);
             Assert.Equal(500, jsApiResp.ErrorCode);
-            Assert.Null(jsApiResp.Description);
+            Assert.Null(jsApiResp.ErrorDescription);
             Assert.Equal("Unknown JetStream Error (500)", jsApiResp.Error.ToString());
             jsApiEx = new JetStreamApiException(jsApiResp);
             Assert.Equal(500, jsApiEx.ErrorCode);
@@ -71,7 +71,7 @@ namespace UnitTests.Api
             Assert.True(jsApiResp.HasError);
             Assert.Equal("no_code_response", jsApiResp.Type);
             Assert.Equal(Error.NOT_SET, jsApiResp.ErrorCode);
-            Assert.Equal("no code", jsApiResp.Description);
+            Assert.Equal("no code", jsApiResp.ErrorDescription);
             Assert.Equal("no code (-1)", jsApiResp.Error.ToString());
             jsApiEx = new JetStreamApiException(jsApiResp);
             Assert.Equal(-1, jsApiEx.ErrorCode);
@@ -81,7 +81,7 @@ namespace UnitTests.Api
             Assert.True(jsApiResp.HasError);
             Assert.Equal("empty_response", jsApiResp.Type);
             Assert.Equal(Error.NOT_SET, jsApiResp.ErrorCode);
-            Assert.Empty(jsApiResp.Description);
+            Assert.Empty(jsApiResp.ErrorDescription);
             Assert.StartsWith("Unknown JetStream Error:", jsApiResp.Error.ToString());
             jsApiEx = new JetStreamApiException(jsApiResp);
             Assert.Equal(-1, jsApiEx.ErrorCode);

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client.Internals
@@ -36,8 +35,8 @@ namespace NATS.Client.Internals
             return list.Count == 0 ? null : list;
         }
         
-        internal static byte[] AsByteArray(JSONNode node) {
-            return Encoding.UTF8.GetBytes(node.Value);
+        internal static byte[] AsByteArrayFromBase64(JSONNode node) {
+            return string.IsNullOrEmpty(node.Value) ? null : Convert.FromBase64String(node.Value);
         }
         
         internal static DateTime AsDate(JSONNode node)

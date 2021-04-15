@@ -49,6 +49,6 @@ namespace NATS.Client.Api
 
         public long ErrorCode => Error?.Code ?? -1;
 
-        public string Description => Error?.Desc ?? null;
+        public string ErrorDescription => Error?.Desc ?? null;
     }
 }

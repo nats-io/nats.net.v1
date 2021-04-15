@@ -1,0 +1,1 @@
+﻿{"type":"io.nats.jetstream.api.v1.stream_msg_get_response","message":{"subject":"subject2","seq":2,"time":"2021-04-15T16:53:09.7060039Z"}}
