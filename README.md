@@ -794,6 +794,7 @@ To that end, with any contributions, certainly feel free to code in a more .NET 
 * [X] Update delegates from traditional model to custom
 * [X] NuGet package
 * [X] Strong name the assembly
+* [ ] JetStream
 
 Any suggestions and/or contributions are welcome!
 
