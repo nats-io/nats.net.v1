@@ -1,4 +1,4 @@
-﻿namespace NATS.Client.Api
+﻿namespace NATS.Client.Internals
 {
     public sealed class Duration
     {

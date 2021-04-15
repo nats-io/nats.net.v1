@@ -14,6 +14,7 @@
 using System;
 using System.Collections.Generic;
 using NATS.Client.Api;
+using NATS.Client.Internals;
 using Xunit;
 
 namespace UnitTests.Api

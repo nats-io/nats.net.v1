@@ -13,6 +13,7 @@
 
 using System;
 using NATS.Client.Api;
+using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 using Xunit;
 
