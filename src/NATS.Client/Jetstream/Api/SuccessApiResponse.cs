@@ -11,21 +11,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Text;
-using NATS.Client.Internals.SimpleJSON;
-
 namespace NATS.Client.Jetstream.Api
 {
-    public sealed class StreamStateSuccessApiResponse
+    public sealed class SuccessApiResponse : ApiResponse
     {
-        
+        public bool Success { get; }
 
-        public StreamStateSuccessApiResponse(Msg msg) : this(Encoding.UTF8.GetString(msg.Data)) { }
-
-        public StreamStateSuccessApiResponse(string json)
+        internal SuccessApiResponse(string json) : base(json)
         {
-            var x = JSON.Parse(json);
-            
+            Success = JsonNode[ApiConstants.Success];
         }
     }
 }

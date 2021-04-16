@@ -1,10 +1,14 @@
 ﻿using System;
+using System.Linq;
 using NATS.Client.Jetstream.Api;
 
 namespace NATS.Client.Internals
 {
     internal static class Validator
     {
+        private static char[] DotWildGt = new []{ '*', '>', '.'};
+        private static char[] WildDollarSpaceTab = new[] {'*', '>', '$', ' ', '\t'};
+
         internal static string ValidateMessageSubjectRequired(string s)
         {
             if (string.IsNullOrEmpty(s))
@@ -219,63 +223,22 @@ namespace NATS.Client.Internals
         // ----------------------------------------------------------------------------------------------------
         internal static bool NotNullButEmpty(string s)
         {
-            return s != null && s.Length == 0;
+            return s?.Length == 0;
         }
 
         internal static bool ContainsWhitespace(string s)
         {
-            if (s != null)
-            {
-                for (int i = 0; i < s.Length; i++)
-                {
-                    if (char.IsWhiteSpace(s[i]))
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
+            return s != null && s.Any(char.IsWhiteSpace);
         }
-
+        
         internal static bool ContainsDotWildGt(string s)
         {
-            if (s != null)
-            {
-                for (int i = 0; i < s.Length; i++)
-                {
-                    switch (s[i])
-                    {
-                        case '.':
-                        case '*':
-                        case '>':
-                            return true;
-                    }
-                }
-            }
-
-            return false;
+            return s != null && s.IndexOfAny(DotWildGt) != -1;
         }
 
         internal static bool ContainsWildGtDollarSpaceTab(string s)
         {
-            if (s != null)
-            {
-                for (int i = 0; i < s.Length; i++)
-                {
-                    switch (s[i])
-                    {
-                        case '*':
-                        case '>':
-                        case '$':
-                        case ' ':
-                        case '\t':
-                            return true;
-                    }
-                }
-            }
-
-            return false;
+            return s != null && s.IndexOfAny(WildDollarSpaceTab) != -1;
         }
 
         internal static string EmptyAsNull(string s)

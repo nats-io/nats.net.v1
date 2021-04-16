@@ -17,9 +17,18 @@ namespace UnitTests
 
         internal static string ReadDataFile(string name)
         {
+            return File.ReadAllText(FileSpec(name));
+        }
+
+        internal static string[] ReadDataFileLines(string name)
+        {
+            return File.ReadAllLines(FileSpec(name));
+        }
+
+        private static string FileSpec(string name)
+        {
             string path = Directory.GetCurrentDirectory();
-            string fileSpec = Path.Combine(path, "..", "..", "..", "Jetstream", "Api", "Data", name);
-            return File.ReadAllText(fileSpec);
+            return Path.Combine(path, "..", "..", "..", "Jetstream", "Api", "Data", name);
         }
 
         internal static DateTime AsDateTime(string dtString)

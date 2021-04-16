@@ -15,9 +15,9 @@ namespace NATS.Client.Jetstream.Api
 {
     public sealed class PublishAck : ApiResponse
     {
-        public string Stream { get; set; }
-        public long Seq { get; set; }
-        public bool Duplicate { get; set; }
+        public string Stream { get; private set; }
+        public long Seq { get; private set; }
+        public bool Duplicate { get; private set; }
 
         public PublishAck(Msg msg) : base(msg)
         {

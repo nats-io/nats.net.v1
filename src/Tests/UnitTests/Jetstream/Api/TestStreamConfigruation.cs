@@ -14,6 +14,7 @@
 using System;
 using System.Collections.Generic;
 using NATS.Client.Internals;
+using NATS.Client.Internals.SimpleJSON;
 using NATS.Client.Jetstream.Api;
 using Xunit;
 
@@ -37,6 +38,83 @@ namespace UnitTests.Jetstream.Api
             StreamConfiguration testSc = getTestConfiguration();
             // from json
             Validate(testSc);
+            
+            Validate(new StreamConfiguration(testSc.ToJsonNode()));
+            Validate(new StreamConfiguration(testSc.ToJsonNode().ToString()));
+
+            StreamConfiguration.Builder builder = new StreamConfiguration.Builder(testSc);
+            Validate(builder.Build());
+            
+            builder.Name(testSc.Name)
+                    .Subjects(testSc.Subjects)
+                    .RetentionPolicy(testSc.RetentionPolicy)
+                    .MaxConsumers(testSc.MaxConsumers)
+                    .MaxMessages(testSc.MaxMsgs)
+                    .MaxBytes(testSc.MaxBytes)
+                    .MaxAge(testSc.MaxAge)
+                    .MaxMsgSize(testSc.MaxMsgSize)
+                    .StorageType(testSc.StorageType)
+                    .Replicas(testSc.Replicas)
+                    .NoAck(testSc.NoAck)
+                    .TemplateOwner(testSc.TemplateOwner)
+                    .DiscardPolicy(testSc.DiscardPolicy)
+                    .DuplicateWindow(testSc.DuplicateWindow)
+                    .Placement(testSc.Placement)
+                    .Mirror(testSc.Mirror)
+                    .Sources(testSc.Sources)
+                ;
+            Validate(builder.Build());
+            Validate(builder.AddSources((Source)null).Build());
+
+            List<Source> sources = new List<Source>(testSc.Sources);
+            sources.Add(null);
+            Source copy = new Source(sources[0].ToJsonNode());
+            sources.Add(copy);
+            Validate(builder.AddSources(sources).Build());
+        }
+
+        [Fact]
+        public void TestSourceBaseEquals()
+        {
+            string[] lines = ReadDataFileLines("SourceBaseJson.txt");
+            foreach (string l1 in lines)
+            {
+                Mirror m1 = NATS.Client.Jetstream.Api.Mirror.OptionalInstance(JSON.Parse(l1));
+                Assert.Equal(m1, m1);
+                Assert.NotEqual(m1, (Mirror)null);
+                Assert.NotEqual(m1, new Object());
+                foreach (string l2 in lines) {
+                    Mirror m2 = NATS.Client.Jetstream.Api.Mirror.OptionalInstance(JSON.Parse(l2));
+                    if (l1.Equals(l2)) {
+                        Assert.Equal(m1, m2);
+                    }
+                    else {
+                        Assert.NotEqual(m1, m2);
+                    }
+                }
+            }
+        }
+
+        [Fact]
+        public void TestExternalEquals()
+        {
+            string[] lines = ReadDataFileLines("ExternalJson.txt");
+            foreach (string l1 in lines)
+            {
+                External e1 = External.OptionalInstance(JSON.Parse(l1));
+                Assert.Equal(e1, e1);
+                Assert.NotEqual(e1, (External)null);
+                Assert.NotEqual(e1, new Object());
+                foreach (string l2 in lines) {
+                    External e2 = External.OptionalInstance(JSON.Parse(l2));
+                    if (l1.Equals(l2)) {
+                        Assert.Equal(e1, e2);
+                    }
+                    else {
+                        Assert.NotEqual(e1, e2);
+                    }
+                }
+            }
         }
 
         [Fact]

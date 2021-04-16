@@ -30,5 +30,32 @@ namespace NATS.Client.Jetstream.Api
             Api = externalNode[ApiConstants.Api].Value;
             Deliver = externalNode[ApiConstants.Deliver].Value;
         }
+
+        internal JSONNode ToJsonNode()
+        {
+            return new JSONObject
+            {
+                [ApiConstants.Api] = Api,
+                [ApiConstants.Deliver] = Deliver
+            };
+        }
+
+        private bool Equals(External other)
+        {
+            return Api == other.Api && Deliver == other.Deliver;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return ReferenceEquals(this, obj) || obj is External other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return ((Api != null ? Api.GetHashCode() : 0) * 397) ^ (Deliver != null ? Deliver.GetHashCode() : 0);
+            }
+        }
     }
 }

@@ -33,6 +33,6 @@ namespace NATS.Client.Jetstream.Api
             return list.Count == 0 ? null : list;
         }
 
-        private Source(JSONNode sourceNode) : base(sourceNode) {}
+        internal Source(JSONNode sourceNode) : base(sourceNode) {}
     }
 }

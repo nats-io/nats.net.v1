@@ -87,13 +87,19 @@ namespace NATS.Client.Jetstream.Api
 
         internal JSONNode ToJsonNode()
         {
+            JSONArray sources = new JSONArray();
+            foreach (Source s in Sources)
+            {
+                sources.Add(null, s.ToJsonNode());
+            }
+
             return new JSONObject
             {
-                [ApiConstants.DeliverPolicy] = RetentionPolicy.GetString(),
+                [ApiConstants.Retention] = RetentionPolicy.GetString(),
                 [ApiConstants.Storage] = StorageType.GetString(),
                 [ApiConstants.Discard] = DiscardPolicy.GetString(),
                 [ApiConstants.Name] = Name,
-                [ApiConstants.Subjects] = JsonUtils.ToArray(Subjects)
+                [ApiConstants.Subjects] = JsonUtils.ToArray(Subjects),
                 [ApiConstants.MaxConsumers] = MaxConsumers,
                 [ApiConstants.MaxMsgs] = MaxMsgs,
                 [ApiConstants.MaxBytes] = MaxBytes,
@@ -103,7 +109,9 @@ namespace NATS.Client.Jetstream.Api
                 [ApiConstants.NoAck] = NoAck,
                 [ApiConstants.TemplateOwner] = TemplateOwner,
                 [ApiConstants.DuplicateWindow] = DuplicateWindow.Nanos,
-                [ApiConstants.Placement] = Placement.ToJsonNode()
+                [ApiConstants.Placement] = Placement.ToJsonNode(),
+                [ApiConstants.Mirror] = Mirror.ToJsonNode(),
+                [ApiConstants.Sources] = sources
             };
         }
 
@@ -147,7 +155,7 @@ namespace NATS.Client.Jetstream.Api
                 _duplicateWindow = sc.DuplicateWindow;
                 _placement = sc.Placement;
                 _mirror = sc.Mirror;
-                _sources = sc.Sources;
+                Sources(sc.Sources);
             }
 
         /// <summary>
