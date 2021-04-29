@@ -1,0 +1,1 @@
+﻿{"type":"io.nats.jetstream.api.v1.stream_msg_get_response","error":{"code":404,"description":"no message found"}}
