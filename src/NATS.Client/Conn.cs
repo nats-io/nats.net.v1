@@ -26,7 +26,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NATS.Client.Internals;
-using NATS.Client.Jetstream.Api;
+using NATS.Client.JetStream;
 
 namespace NATS.Client
 {
