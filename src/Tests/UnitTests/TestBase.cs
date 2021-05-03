@@ -28,7 +28,7 @@ namespace UnitTests
         private static string FileSpec(string name)
         {
             string path = Directory.GetCurrentDirectory();
-            return Path.Combine(path, "..", "..", "..", "Jetstream", "Api", "Data", name);
+            return Path.Combine(path, "..", "..", "..", "Jetstream", "Data", name);
         }
 
         internal static DateTime AsDateTime(string dtString)

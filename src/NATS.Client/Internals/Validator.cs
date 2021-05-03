@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-using NATS.Client.Jetstream.Api;
+using NATS.Client.JetStream;
 
 namespace NATS.Client.Internals
 {

@@ -12,7 +12,7 @@
 // limitations under the License.
 
 using System;
-using NATS.Client.Jetstream.Api;
+using NATS.Client.JetStream;
 
 namespace NATS.Client
 {
