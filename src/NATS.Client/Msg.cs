@@ -12,9 +12,9 @@
 // limitations under the License.
 
 using System;
-using System.Text;
 using System.Collections;
 using System.Collections.Specialized;
+using System.Text;
 
 namespace NATS.Client
 {
@@ -398,11 +398,13 @@ namespace NATS.Client
 
         private string ToHeaderString()
         {
-            // TODO:  optimize based on perf testing
             StringBuilder sb = new StringBuilder(MsgHeader.Header);
             foreach (string s in nvc.Keys)
             {
-                sb.AppendFormat("{0}:{1}\r\n", s, this[s]);
+                foreach (string v in nvc.GetValues(s))
+                {
+                    sb.AppendFormat("{0}:{1}\r\n", s, v);
+                }
             }
             sb.Append("\r\n");
             return sb.ToString();
