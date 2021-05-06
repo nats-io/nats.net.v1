@@ -131,26 +131,29 @@ namespace NATS.Client.JetStream
 
             public Builder(ConsumerConfiguration cc)
             {
-                _durable = cc.Durable;
-                _deliverPolicy = cc.DeliverPolicy;
-                _startSeq = cc.StartSeq;
-                _startTime = cc.StartTime;
-                _ackPolicy = cc.AckPolicy;
-                _ackWait = cc.AckWait;
-                _maxDeliver = cc.MaxDeliver;
-                _filterSubject = cc.FilterSubject;
-                _replayPolicy = cc.ReplayPolicy;
-                _sampleFrequency = cc.SampleFrequency;
-                _rateLimit = cc.RateLimit;
-                _deliverSubject = cc.DeliverSubject;
-                _maxAckPending = cc.MaxAckPending;
+                if (cc != null)
+                {
+                    _durable = cc.Durable;
+                    _deliverPolicy = cc.DeliverPolicy;
+                    _startSeq = cc.StartSeq;
+                    _startTime = cc.StartTime;
+                    _ackPolicy = cc.AckPolicy;
+                    _ackWait = cc.AckWait;
+                    _maxDeliver = cc.MaxDeliver;
+                    _filterSubject = cc.FilterSubject;
+                    _replayPolicy = cc.ReplayPolicy;
+                    _sampleFrequency = cc.SampleFrequency;
+                    _rateLimit = cc.RateLimit;
+                    _deliverSubject = cc.DeliverSubject;
+                    _maxAckPending = cc.MaxAckPending;
+                }
             }
 
             /// <summary>
             /// Sets the name of the durable subscription.
             /// </summary>
             /// <param name="durable">name of the durable subscription.</param>
-            public Builder Durable(String durable)
+            public Builder Durable(string durable)
             {
                 _durable = durable;
                 return this;
@@ -170,7 +173,7 @@ namespace NATS.Client.JetStream
             /// Sets the subject to deliver messages to.
             /// </summary>
             /// <param name="subject">the delivery subject.</param>
-            public Builder DeliverSubject(String subject)
+            public Builder DeliverSubject(string subject)
             {
                 _deliverSubject = subject;
                 return this;
@@ -230,7 +233,7 @@ namespace NATS.Client.JetStream
             /// Sets the filter subject of the ConsumerConfiguration.
             /// </summary>
             /// <param name="filterSubject">the filter subject</param>
-            public Builder FilterSubject(String filterSubject)
+            public Builder FilterSubject(string filterSubject)
             {
                 _filterSubject = filterSubject;
                 return this;
@@ -250,7 +253,7 @@ namespace NATS.Client.JetStream
             /// Sets the sample frequency of the ConsumerConfiguration.
             /// </summary>
             /// <param name="frequency">the frequency</param>
-            public Builder SampleFrequency(String frequency)
+            public Builder SampleFrequency(string frequency)
             {
                 _sampleFrequency = frequency;
                 return this;

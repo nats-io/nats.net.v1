@@ -11,7 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Text;
 using NATS.Client.Internals.SimpleJSON;
 
@@ -19,7 +18,7 @@ namespace NATS.Client.JetStream
 {
     public abstract class ApiResponse
     {
-        public const String NO_TYPE = "io.nats.jetstream.api.v1.no_type";
+        public const string NO_TYPE = "io.nats.jetstream.api.v1.no_type";
 
         public string Type { get; }
         public Error Error { get; }
