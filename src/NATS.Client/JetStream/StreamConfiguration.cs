@@ -123,14 +123,14 @@ namespace NATS.Client.JetStream
             private long _maxConsumers = -1;
             private long _maxMsgs = -1;
             private long _maxBytes = -1;
-            private Duration _maxAge = Duration.ZERO;
+            private Duration _maxAge = Duration.Zero;
             private long _maxMsgSize = -1;
             private StorageType _storageType = JetStream.StorageType.File;
             private int _replicas = -1;
             private bool _noAck;
             private string _templateOwner;
             private DiscardPolicy _discardPolicy = JetStream.DiscardPolicy.Old;
-            private Duration _duplicateWindow = Duration.ZERO;
+            private Duration _duplicateWindow = Duration.Zero;
             private Placement _placement;
             private Mirror _mirror;
             private List<Source> _sources = new List<Source>();

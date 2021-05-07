@@ -17,54 +17,112 @@ namespace NATS.Client.JetStream
 {
     public sealed class PushSubscribeOptions
     {
-        public string Stream { get; }
-        public ConsumerConfiguration ConsumerConfig { get; }
-        public string Durable => ConsumerConfig.Durable;
-        public string DeliverSubject => ConsumerConfig.DeliverSubject;
+        private readonly string _stream;
+        private readonly ConsumerConfiguration _consumerConfiguration;
 
-        private PushSubscribeOptions(string stream, ConsumerConfiguration consumerConfig)
+        /// <summary>
+        /// Gets the stream name
+        /// </summary>
+        public string Stream { get => _stream; }
+
+        /// <summary>
+        /// Gets the ConsumerConfiguration
+        /// </summary>
+        public ConsumerConfiguration ConsumerConfiguration { get => _consumerConfiguration; }
+        
+        /// <summary>
+        /// Gets the durable name
+        /// </summary>
+        public string Durable => ConsumerConfiguration.Durable;
+
+        /// <summary>
+        /// Gets the deliver subject
+        /// </summary>
+        public string DeliverSubject => ConsumerConfiguration.DeliverSubject;
+
+        private PushSubscribeOptions(string stream, ConsumerConfiguration consumerConfiguration)
         {
-            Stream = stream;
-            ConsumerConfig = consumerConfig;
+            _stream = stream;
+            _consumerConfiguration = consumerConfiguration;
         }
 
+        /// <summary>
+        /// Create PushSubscribeOptions where you are binding to
+        /// a specific stream, which could be a stream or a mirror
+        /// </summary>
+        /// <param name="stream">the stream name to bind to</param>
+        /// <returns>the PushSubscribeOptions</returns>
         public static PushSubscribeOptions Bind(string stream) {
-            return new Builder().Stream(stream).Build();
+            return new PushSubscribeOptionsBuilder().WithStream(stream).Build();
         }
 
-        public sealed class Builder
+        /// <summary>
+        /// Gets the PushSubscribeOptions builder.
+        /// </summary>
+        /// <returns>
+        /// The builder
+        /// </returns>
+        public static PushSubscribeOptionsBuilder Builder() {
+            return new PushSubscribeOptionsBuilder();
+        }
+
+        public sealed class PushSubscribeOptionsBuilder
         {
             private string _stream;
             private string _durable;
             private ConsumerConfiguration _consumerConfig;
             private string _deliverSubject;
 
-            public Builder Stream(string stream)
+            /// <summary>
+            /// Set the stream name
+            /// </summary>
+            /// <param name="stream">the stream value</param>
+            /// <returns>The PushSubscribeOptionsBuilder</returns>
+            public PushSubscribeOptionsBuilder WithStream(string stream)
             {
                 _stream = stream;
                 return this;
             }
 
-            public Builder Durable(string durable)
+            /// <summary>
+            /// Set the durable
+            /// </summary>
+            /// <param name="durable">the durable value</param>
+            /// <returns>The PushSubscribeOptionsBuilder</returns>
+            public PushSubscribeOptionsBuilder WithDurable(string durable)
             {
                 _durable = durable;
                 return this;
             }
 
-            public Builder DeliverSubject(string deliverSubject)
+            /// <summary>
+            /// Set the deliver subject 
+            /// </summary>
+            /// <param name="deliverSubject">the deliver subject value</param>
+            /// <returns>The PushSubscribeOptionsBuilder</returns>
+            public PushSubscribeOptionsBuilder WithDeliverSubject(string deliverSubject)
             {
                 _deliverSubject = deliverSubject;
                 return this;
             }
 
-            public Builder Configuration(ConsumerConfiguration consumerConfig)
+            /// <summary>
+            /// Set the ConsumerConfiguration
+            /// </summary>
+            /// <param name="consumerConfiguration">the ConsumerConfiguration object</param>
+            /// <returns>The PushSubscribeOptionsBuilder</returns>
+            public PushSubscribeOptionsBuilder WithConfiguration(ConsumerConfiguration consumerConfiguration)
             {
-                _consumerConfig = consumerConfig;
+                _consumerConfig = consumerConfiguration;
                 return this;
             }
 
+            /// <summary>
+            /// Builds the PushSubscribeOptions
+            /// </summary>
+            /// <returns>The PushSubscribeOptions object.</returns>
             public PushSubscribeOptions Build() {
-                Validator.ValidateStreamNameOrEmptyAsNull(_stream);
+                _stream = Validator.ValidateStreamNameOrEmptyAsNull(_stream);
 
                 _durable = Validator.ValidateDurableOrEmptyAsNull(_durable);
                 if (_durable == null && _consumerConfig != null) {

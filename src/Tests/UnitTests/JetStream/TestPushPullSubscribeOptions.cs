@@ -22,23 +22,23 @@ namespace UnitTests.JetStream
         [Fact]
         public void TestPushAffirmative()
         {
-            PushSubscribeOptions so = new PushSubscribeOptions.Builder().Build();
+            PushSubscribeOptions so = PushSubscribeOptions.Builder().Build();
 
             // starts out all null which is fine
             Assert.Null(so.Stream);
             Assert.Null(so.Durable);
             Assert.Null(so.DeliverSubject);
 
-            so = new PushSubscribeOptions.Builder()
-                .Stream(STREAM).Durable(DURABLE).DeliverSubject(DELIVER).Build();
+            so = PushSubscribeOptions.Builder()
+                .WithStream(STREAM).WithDurable(DURABLE).WithDeliverSubject(DELIVER).Build();
 
             Assert.Equal(STREAM, so.Stream);
             Assert.Equal(DURABLE, so.Durable);
             Assert.Equal(DELIVER, so.DeliverSubject);
 
             // demonstrate that you can clear the builder
-            so = new PushSubscribeOptions.Builder()
-                .Stream(null).DeliverSubject(null).Durable(null).Build();
+            so = PushSubscribeOptions.Builder()
+                .WithStream(null).WithDeliverSubject(null).WithDurable(null).Build();
             Assert.Null(so.Stream);
             Assert.Null(so.Durable);
             Assert.Null(so.DeliverSubject);
@@ -47,11 +47,12 @@ namespace UnitTests.JetStream
         [Fact]
         public void TestPullAffirmative() 
         {
-            PullSubscribeOptions.Builder builder = new PullSubscribeOptions.Builder()
-                .Stream(STREAM)
-                .Durable(DURABLE);
-
-            PullSubscribeOptions so = builder.Build();
+            PullSubscribeOptions so = PullSubscribeOptions.Builder()
+                .WithStream(STREAM)
+                .WithDurable(DURABLE)
+                .Build();
+            Console.WriteLine(so.Stream);
+            Console.WriteLine(so.Durable);
             Assert.Equal(STREAM, so.Stream);
             Assert.Equal(DURABLE, so.Durable);
         }
@@ -59,45 +60,45 @@ namespace UnitTests.JetStream
         [Fact]
         public void TestPushFieldValidation() 
         {
-            PushSubscribeOptions.Builder builder = new PushSubscribeOptions.Builder();
-            Assert.Throws<ArgumentException>(() => builder.Stream(HasDot).Build());
-            Assert.Throws<ArgumentException>(() => builder.Durable(HasDot).Build());
+            PushSubscribeOptions.PushSubscribeOptionsBuilder builder = PushSubscribeOptions.Builder();
+            Assert.Throws<ArgumentException>(() => builder.WithStream(HasDot).Build());
+            Assert.Throws<ArgumentException>(() => builder.WithDurable(HasDot).Build());
 
             ConsumerConfiguration ccBadDur = new ConsumerConfiguration.Builder().Durable(HasDot).Build();
-            Assert.Throws<ArgumentException>(() => builder.Configuration(ccBadDur).Build());
+            Assert.Throws<ArgumentException>(() => builder.WithConfiguration(ccBadDur).Build());
 
             // durable directly
-            new PushSubscribeOptions.Builder().Durable(DURABLE).Build();
+            PushSubscribeOptions.Builder().WithDurable(DURABLE).Build();
 
             // in configuration
             ConsumerConfiguration cc = new ConsumerConfiguration.Builder().Durable(DURABLE).Build();
-            new PushSubscribeOptions.Builder().Configuration(cc).Build();
+            PushSubscribeOptions.Builder().WithConfiguration(cc).Build();
         }
 
         [Fact]
         public void TestPullValidation() 
         {
-            PullSubscribeOptions.Builder builder1 = new PullSubscribeOptions.Builder();
-            Assert.Throws<ArgumentException>(() => builder1.Stream(HasDot).Build());
-            Assert.Throws<ArgumentException>(() => builder1.Durable(HasDot).Build());
+            PullSubscribeOptions.PullSubscribeOptionsBuilder builder1 = PullSubscribeOptions.Builder();
+            Assert.Throws<ArgumentException>(() => builder1.WithStream(HasDot).Build());
+            Assert.Throws<ArgumentException>(() => builder1.WithDurable(HasDot).Build());
 
             ConsumerConfiguration ccBadDur = new ConsumerConfiguration.Builder().Durable(HasDot).Build();
-            Assert.Throws<ArgumentException>(() => builder1.Configuration(ccBadDur).Build());
+            Assert.Throws<ArgumentException>(() => builder1.WithConfiguration(ccBadDur).Build());
 
             // durable required direct or in configuration
-            PullSubscribeOptions.Builder builder2 = new PullSubscribeOptions.Builder();
+            PullSubscribeOptions.PullSubscribeOptionsBuilder builder2 = PullSubscribeOptions.Builder();
 
             Assert.Throws<ArgumentException>(() => builder2.Build());
 
             ConsumerConfiguration ccNoDur = new ConsumerConfiguration.Builder().Build();
-            Assert.Throws<ArgumentException>(() => builder2.Configuration(ccNoDur).Build());
+            Assert.Throws<ArgumentException>(() => builder2.WithConfiguration(ccNoDur).Build());
 
             // durable directly
-            new PullSubscribeOptions.Builder().Durable(DURABLE).Build();
+            PullSubscribeOptions.Builder().WithDurable(DURABLE).Build();
 
             // in configuration
             ConsumerConfiguration cc = new ConsumerConfiguration.Builder().Durable(DURABLE).Build();
-            new PullSubscribeOptions.Builder().Configuration(cc).Build();
+            PullSubscribeOptions.Builder().WithConfiguration(cc).Build();
         }
     }
 }

@@ -52,23 +52,23 @@ namespace UnitTests.Internals
         [Fact]
         public void TestValidateStreamName()
         {
-            Allowed(Validator.ValidateStreamName, null, Empty, Plain, HasSpace, HasDash);
-            NotAllowed(Validator.ValidateStreamName, HasDot, HasStar, HasGt);
+            Allowed(Validator.ValidateStreamName, null, Empty, Plain, HasDash);
+            NotAllowed(Validator.ValidateStreamName, HasDot, HasStar, HasGt, HasSpace);
         }
 
         [Fact]
         public void TestValidateStreamNameRequired()
         {
-            Allowed(Validator.ValidateStreamNameRequired, Plain, HasSpace, HasDash);
-            NotAllowed(Validator.ValidateStreamNameRequired, null, Empty, HasDot, HasStar, HasGt);
+            Allowed(Validator.ValidateStreamNameRequired, Plain, HasDash);
+            NotAllowed(Validator.ValidateStreamNameRequired, null, Empty, HasDot, HasStar, HasGt, HasSpace);
         }
 
         [Fact]
         public void TestValidateStreamNameOrEmptyAsNull()
         {
-            Allowed(Validator.ValidateStreamNameOrEmptyAsNull, Plain, HasSpace, HasDash);
+            Allowed(Validator.ValidateStreamNameOrEmptyAsNull, Plain, HasDash);
             AllowedEmptyAsNull(Validator.ValidateStreamNameOrEmptyAsNull, null, Empty);
-            NotAllowed(Validator.ValidateStreamNameOrEmptyAsNull, HasDot, HasStar, HasGt);
+            NotAllowed(Validator.ValidateStreamNameOrEmptyAsNull, HasDot, HasStar, HasGt, HasSpace);
         }
 
         [Fact]
@@ -159,10 +159,10 @@ namespace UnitTests.Internals
         [Fact]
         public void TestValidateDurationNotRequiredGtOrEqZero()
         {
-            Assert.Equal(Duration.ZERO, Validator.ValidateDurationNotRequiredGtOrEqZero(null));
-            Assert.Equal(Duration.ZERO, Validator.ValidateDurationNotRequiredGtOrEqZero(null));
-            Assert.Equal(Duration.ZERO, Validator.ValidateDurationNotRequiredGtOrEqZero(Duration.ZERO));
-            Assert.Equal(Duration.ZERO, Validator.ValidateDurationNotRequiredGtOrEqZero(Duration.ZERO));
+            Assert.Equal(Duration.Zero, Validator.ValidateDurationNotRequiredGtOrEqZero(null));
+            Assert.Equal(Duration.Zero, Validator.ValidateDurationNotRequiredGtOrEqZero(null));
+            Assert.Equal(Duration.Zero, Validator.ValidateDurationNotRequiredGtOrEqZero(Duration.Zero));
+            Assert.Equal(Duration.Zero, Validator.ValidateDurationNotRequiredGtOrEqZero(Duration.Zero));
             Assert.Equal(Duration.OfNanos(1), Validator.ValidateDurationNotRequiredGtOrEqZero(Duration.OfNanos(1)));
             Assert.Equal(Duration.OfSeconds(1), Validator.ValidateDurationNotRequiredGtOrEqZero(Duration.OfSeconds(1)));
             Assert.Throws<ArgumentException>(() => Validator.ValidateDurationNotRequiredGtOrEqZero(

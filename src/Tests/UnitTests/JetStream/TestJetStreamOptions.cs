@@ -24,32 +24,48 @@ namespace UnitTests.JetStream
         [Fact]
         public void TestPushAffirmative()
         {
-            JetStreamOptions jso = new JetStreamOptions.Builder().Build();
+            JetStreamOptions jso = JetStreamOptions.Builder().Build();
             Assert.Equal(NatsJetStreamConstants.JsapiPrefix, jso.Prefix);
             Assert.Equal(Duration.OfMillis(Defaults.Timeout), jso.RequestTimeout);
 
-            jso = new JetStreamOptions.Builder()
-                .Prefix("pre")
-                .RequestTimeout(Duration.OfSeconds(42))
+            jso = JetStreamOptions.Builder(jso).Build();
+            Assert.Equal(NatsJetStreamConstants.JsapiPrefix, jso.Prefix);
+            Assert.Equal(Duration.OfMillis(Defaults.Timeout), jso.RequestTimeout);
+
+            jso = JetStreamOptions.Builder()
+                .WithPrefix("pre")
+                .WithRequestTimeout(Duration.OfSeconds(42))
                 .Build();
             Assert.Equal("pre.", jso.Prefix);
             Assert.Equal(Duration.OfSeconds(42), jso.RequestTimeout);
-            Assert.False(jso.PublishNoAck);
+            Assert.False(jso.IsPublishNoAck);
 
-            jso = new JetStreamOptions.Builder()
-                .Prefix("pre.")
-                .PublishNoAck(true)
+            jso = JetStreamOptions.Builder(jso).Build();
+            Assert.Equal("pre.", jso.Prefix);
+            Assert.Equal(Duration.OfSeconds(42), jso.RequestTimeout);
+            Assert.False(jso.IsPublishNoAck);
+            
+            jso = JetStreamOptions.Builder()
+                .WithPrefix("pre.")
+                .WithPublishNoAck(true)
+                .WithRequestTimeout(42000)
                 .Build();
             Assert.Equal("pre.", jso.Prefix);
-            Assert.True(jso.PublishNoAck);
+            Assert.Equal(Duration.OfSeconds(42), jso.RequestTimeout);
+            Assert.True(jso.IsPublishNoAck);
+
+            jso = JetStreamOptions.Builder(jso).Build();
+            Assert.Equal("pre.", jso.Prefix);
+            Assert.Equal(Duration.OfSeconds(42), jso.RequestTimeout);
+            Assert.True(jso.IsPublishNoAck);
         }
     
         [Fact]
         public void TestInvalidPrefix() 
         {
-            Assert.Throws<ArgumentException>(() => new JetStreamOptions.Builder().Prefix(HasStar).Build());
-            Assert.Throws<ArgumentException>(() => new JetStreamOptions.Builder().Prefix(HasGt).Build());
-            Assert.Throws<ArgumentException>(() => new JetStreamOptions.Builder().Prefix(HasDollar).Build());
+            Assert.Throws<ArgumentException>(() => JetStreamOptions.Builder().WithPrefix(HasStar).Build());
+            Assert.Throws<ArgumentException>(() => JetStreamOptions.Builder().WithPrefix(HasGt).Build());
+            Assert.Throws<ArgumentException>(() => JetStreamOptions.Builder().WithPrefix(HasDollar).Build());
         }
     }
 }

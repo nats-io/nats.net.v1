@@ -7,6 +7,7 @@ namespace NATS.Client.Internals
     internal static class Validator
     {
         private static char[] DotWildGt = new []{ '*', '>', '.'};
+        private static char[] DotWildGtSpace = new []{ '*', '>', '.', ' '};
         private static char[] WildDollarSpaceTab = new[] {'*', '>', '$', ' ', '\t'};
 
         internal static string ValidateMessageSubjectRequired(string s)
@@ -51,9 +52,9 @@ namespace NATS.Client.Internals
 
         internal static string ValidateStreamName(string s)
         {
-            if (ContainsDotWildGt(s))
+            if (ContainsDotWildGtSpace(s))
             {
-                throw new ArgumentException("Stream cannot contain a '.', '*' or '>' [" + s + "]");
+                throw new ArgumentException("Stream cannot contain a '.', '*', '>' or Space [" + s + "]");
             }
 
             return s;
@@ -167,7 +168,7 @@ namespace NATS.Client.Internals
         {
             if (d == null)
             {
-                return Duration.ZERO;
+                return Duration.Zero;
             }
 
             if (d.IsNegative())
@@ -208,6 +209,16 @@ namespace NATS.Client.Internals
             return s;
         }
 
+        internal static string ValidateNotEmpty(string s, string fieldName)
+        {
+            if (s != null && s.Length == 0)
+            {
+                throw new ArgumentException(fieldName + " cannot be empty");
+            }
+
+            return s;
+        }
+
         internal static long ValidateGtZeroOrMinus1(long l, string label)
         {
             if (ZeroOrLtMinus1(l))
@@ -215,6 +226,14 @@ namespace NATS.Client.Internals
                 throw new ArgumentException(label + " must be greater than zero or -1 for unlimited");
             }
 
+            return l;
+        }
+
+        internal static long ValidateNotNegative(long l, String label) {
+            if (l < 0) 
+            {
+                throw new ArgumentException(label + " cannot be negative");
+            }
             return l;
         }
 
@@ -234,6 +253,11 @@ namespace NATS.Client.Internals
         internal static bool ContainsDotWildGt(string s)
         {
             return s != null && s.IndexOfAny(DotWildGt) != -1;
+        }
+        
+        internal static bool ContainsDotWildGtSpace(string s)
+        {
+            return s != null && s.IndexOfAny(DotWildGtSpace) != -1;
         }
 
         internal static bool ContainsWildGtDollarSpaceTab(string s)

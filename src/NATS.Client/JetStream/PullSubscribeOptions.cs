@@ -17,42 +17,85 @@ namespace NATS.Client.JetStream
 {
     public sealed class PullSubscribeOptions
     {
-        public string Stream { get; }
-        public ConsumerConfiguration ConsumerConfig { get; }
-        public string Durable => ConsumerConfig.Durable;
+        private readonly string _stream;
+        private readonly ConsumerConfiguration _consumerConfiguration;
 
-        private PullSubscribeOptions(string stream, ConsumerConfiguration consumerConfig)
+        /// <summary>
+        /// Gets the stream name
+        /// </summary>
+        public string Stream { get => _stream; }
+
+        /// <summary>
+        /// Gets the ConsumerConfiguration
+        /// </summary>
+        public ConsumerConfiguration ConsumerConfiguration { get => _consumerConfiguration; }
+        
+        /// <summary>
+        /// Gets the Durable name
+        /// </summary>
+        public string Durable => ConsumerConfiguration.Durable;
+
+        private PullSubscribeOptions(string stream, ConsumerConfiguration consumerConfiguration)
         {
-            Stream = stream;
-            ConsumerConfig = consumerConfig;
+            _stream = stream;
+            _consumerConfiguration = consumerConfiguration;
         }
         
-        public sealed class Builder
+        /// <summary>
+        /// Gets the PullSubscribeOptions builder.
+        /// </summary>
+        /// <returns>
+        /// The builder
+        /// </returns>
+        public static PullSubscribeOptionsBuilder Builder() {
+            return new PullSubscribeOptionsBuilder();
+        }
+
+        public sealed class PullSubscribeOptionsBuilder
         {
             private string _stream;
             private string _durable;
             private ConsumerConfiguration _consumerConfig;
 
-            public Builder Stream(string stream)
+            /// <summary>
+            /// Set the stream name
+            /// </summary>
+            /// <param name="stream">the stream value</param>
+            /// <returns>The PullSubscribeOptionsBuilder</returns>
+            public PullSubscribeOptionsBuilder WithStream(string stream)
             {
                 _stream = stream;
                 return this;
             }
 
-            public Builder Durable(string durable)
+            /// <summary>
+            /// Set the durable
+            /// </summary>
+            /// <param name="durable">the durable value</param>
+            /// <returns>The PullSubscribeOptionsBuilder</returns>
+            public PullSubscribeOptionsBuilder WithDurable(string durable)
             {
                 _durable = durable;
                 return this;
             }
 
-            public Builder Configuration(ConsumerConfiguration consumerConfig)
+            /// <summary>
+            /// Set the ConsumerConfiguration
+            /// </summary>
+            /// <param name="consumerConfiguration">the ConsumerConfiguration object</param>
+            /// <returns>The PullSubscribeOptionsBuilder</returns>
+            public PullSubscribeOptionsBuilder WithConfiguration(ConsumerConfiguration consumerConfig)
             {
                 _consumerConfig = consumerConfig;
                 return this;
             }
 
+            /// <summary>
+            /// Builds the PullSubscribeOptions
+            /// </summary>
+            /// <returns>The PullSubscribeOptions object.</returns>
             public PullSubscribeOptions Build() {
-                Validator.ValidateStreamNameOrEmptyAsNull(_stream);
+                _stream = Validator.ValidateStreamNameOrEmptyAsNull(_stream);
 
                 _durable = Validator.ValidateDurableRequired(_durable, _consumerConfig);
 

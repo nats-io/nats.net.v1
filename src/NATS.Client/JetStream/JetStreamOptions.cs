@@ -19,47 +19,123 @@ namespace NATS.Client.JetStream
     {
         internal static readonly Duration DefaultTimeout = Duration.OfMillis(Defaults.Timeout);
 
-        public string Prefix { get; }
-        public Duration RequestTimeout { get; }
-        public bool PublishNoAck { get; }
+        private readonly string _prefix;
+        private readonly Duration _requestTimeout;
+        private readonly bool _publishNoAck;
 
-        public JetStreamOptions(string prefix, Duration requestTimeout, bool publishNoAck)
+        private JetStreamOptions(string prefix, Duration requestTimeout, bool publishNoAck)
         {
-            Prefix = prefix;
-            RequestTimeout = requestTimeout;
-            PublishNoAck = publishNoAck;
+            _prefix = prefix;
+            _requestTimeout = requestTimeout;
+            _publishNoAck = publishNoAck;
         }
 
-        public sealed class Builder
+        /// <summary>
+        /// Gets the prefix.
+        /// </summary>
+        public string Prefix { get => _prefix; }
+
+        /// <summary>
+        /// Gets the request timeout
+        /// </summary>
+        public Duration RequestTimeout { get => _requestTimeout; }
+        
+        /// <summary>
+        /// Gets is publish should be done in no ack (core) style
+        /// </summary>
+        public bool IsPublishNoAck { get => _publishNoAck; }
+        
+        /// <summary>
+        /// Gets the JetStreamOptions builder.
+        /// </summary>
+        /// <returns>
+        /// The builder
+        /// </returns>
+        public static JetStreamOptionsBuilder Builder()
+        {
+            return new JetStreamOptionsBuilder();
+        }
+        
+        /// <summary>
+        /// Gets the JetStreamOptions builder based on an existing JetStreamOptions object.
+        /// </summary>
+        /// <param name="jso">an existing JetStreamOptions object</param>
+        /// <returns>The builder</returns>
+        public static JetStreamOptionsBuilder Builder(JetStreamOptions jso)
+        {
+            return new JetStreamOptionsBuilder(jso);
+        }
+
+        public sealed class JetStreamOptionsBuilder
         {
             private string _prefix;
             private Duration _requestTimeout;
             private bool _publishNoAck;
-            
-            public Builder JetStreamOptions(JetStreamOptions jso) {
-                if (jso == null) return this;
-                _prefix = jso.Prefix;
-                _requestTimeout = jso.RequestTimeout;
-                _publishNoAck = jso.PublishNoAck;
-                return this;
+
+            /// <summary>
+            /// Construct a builder
+            /// </summary>
+            public JetStreamOptionsBuilder() {}
+
+            /// <summary>
+            /// Construct a builder from an existing JetStreamOptions object
+            /// </summary>
+            /// <param name="jso">an existing JetStreamOptions object</param>
+            public JetStreamOptionsBuilder(JetStreamOptions jso) {
+                if (jso != null)
+                {
+                    _prefix = jso.Prefix;
+                    _requestTimeout = jso.RequestTimeout;
+                    _publishNoAck = jso.IsPublishNoAck;
+                }
             }
             
-            public Builder Prefix(string prefix) {
+            /// <summary>
+            /// Sets the prefix for JetStream subjects. A prefix can be used in conjunction with
+            /// user permissions to restrict access to certain JetStream instances.  This must
+            /// match the prefix used in the server.
+            /// </summary>
+            /// <param name="prefix">The prefix.</param>
+            /// <returns>The JetStreamOptionsBuilder</returns>
+            public JetStreamOptionsBuilder WithPrefix(string prefix) {
                 _prefix = prefix;
                 return this;
             }
 
-            public Builder RequestTimeout(Duration requestTimeout) {
+            /// <summary>
+            /// Sets the request timeout
+            /// </summary>
+            /// <param name="requestTimeout">The request timeout as Duration.</param>
+            /// <returns>The JetStreamOptionsBuilder</returns>
+            public JetStreamOptionsBuilder WithRequestTimeout(Duration requestTimeout) {
                 _requestTimeout = requestTimeout;
                 return this;
             }
 
-            public Builder PublishNoAck(bool publishNoAck)
+            /// <summary>
+            /// Sets the request timeout
+            /// </summary>
+            /// <param name="requestTimeoutMillis">The request timeout in millis.</param>
+            /// <returns>The JetStreamOptionsBuilder</returns>
+            public JetStreamOptionsBuilder WithRequestTimeout(long requestTimeoutMillis) {
+                _requestTimeout = Duration.OfMillis(requestTimeoutMillis);
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the Publish No Ack Flag
+            /// </summary>
+            /// <returns>The JetStreamOptionsBuilder</returns>
+            public JetStreamOptionsBuilder WithPublishNoAck(bool publishNoAck)
             {
                 _publishNoAck = publishNoAck;
                 return this;
             }
 
+            /// <summary>
+            /// Builds the JetStreamOptions
+            /// </summary>
+            /// <returns>The JetStreamOptions object.</returns>
             public JetStreamOptions Build()
             {
                 _prefix = JsPrefixManager.AddPrefix(_prefix);

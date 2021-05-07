@@ -17,123 +17,176 @@ namespace NATS.Client.JetStream
 {
     public sealed class PublishOptions
     {
-        // Use this variable for timeout in publish options.
-        internal static readonly Duration DefaultTimeout = Duration.OfMillis(Defaults.Timeout);
+        /// <summary>
+        /// The default timeout (2000ms)
+        /// </summary>
+        public static readonly Duration DefaultTimeout = Duration.OfMillis(Defaults.Timeout);
 
-        // Use this variable to unset a stream in publish options.
-        internal const string UnsetStream = null;
+        /// <summary>
+        /// The default stream name (unset)
+        /// </summary>
+        public const string DefaultStream = null;
 
-        // Use this variable to unset a sequence number in publish options.
-        internal const long UnsetLastSequence = -1;
+        /// <summary>
+        /// Default Last Sequence Number (unset)
+        /// </summary>
+        public const long DefaultLastSequence = -1;
 
-        public string Stream { get; }
-        public Duration StreamTimeout { get; }
-        public string ExpectedStream { get; }
-        public string ExpectedLastMsgId { get; }
-        public long ExpectedLastSeq { get; }
-        public string MessageId { get; }
+        private readonly string _stream = DefaultStream;
+        private readonly Duration _streamTimeout = DefaultTimeout;
+        private readonly string _expectedStream = null;
+        private readonly string _expectedLastMsgId = null;
+        private readonly long _expectedLastSeq = DefaultLastSequence;
+        private readonly string _messageId = null;
 
-        public PublishOptions(string stream, Duration streamTimeout, string expectedStream, string expectedLastId, long expectedLastSeq, string msgId)
+        /// <summary>
+        /// Gets the stream name.
+        /// </summary>
+        public string Stream { get => _stream; }
+
+        /// <summary>
+        /// Gets the stream timeout.
+        /// </summary>
+        public Duration StreamTimeout { get => _streamTimeout; }
+        
+        /// <summary>
+        /// Gets the Expected Stream.
+        /// </summary>
+        public string ExpectedStream { get => _expectedStream; }
+        
+        /// <summary>
+        /// Gets the Expected Last Message Id.
+        /// </summary>
+        public string ExpectedLastMsgId { get => _expectedLastMsgId; }
+        
+        /// <summary>
+        /// Gets the Expected Last Sequence.
+        /// </summary>
+        public long ExpectedLastSeq { get => _expectedLastSeq; }
+        
+        /// <summary>
+        /// Gets the Expected Message Id.
+        /// </summary>
+        public string MessageId { get => _messageId; }
+
+        private PublishOptions(string stream, Duration streamTimeout, string expectedStream, string expectedLastMsgId, long expectedLastSeq, string messageId)
         {
-            Stream = stream;
-            StreamTimeout = streamTimeout;
-            ExpectedStream = expectedStream;
-            ExpectedLastMsgId = expectedLastId;
-            ExpectedLastSeq = expectedLastSeq;
-            MessageId = msgId;
+            _stream = stream;
+            _streamTimeout = streamTimeout;
+            _expectedStream = expectedStream;
+            _expectedLastMsgId = expectedLastMsgId;
+            _expectedLastSeq = expectedLastSeq;
+            _messageId = messageId;
         }
-
-        public sealed class Builder
+        
+        /// <summary>
+        /// Gets the publish options builder.
+        /// </summary>
+        /// <returns>
+        /// The builder
+        /// </returns>
+        public static PublishOptionsBuilder Builder()
         {
-            private string _stream = UnsetStream;
+            return new PublishOptionsBuilder();
+        }
+        
+        public sealed class PublishOptionsBuilder
+        {
+            private string _stream = DefaultStream;
             private Duration _streamTimeout = DefaultTimeout;
             private string _expectedStream;
-            private string _expectedLastId;
-            private long _expectedLastSeq = UnsetLastSequence;
-            private string _msgId;
+            private string _expectedLastMsgId;
+            private long _expectedLastSeq = DefaultLastSequence;
+            private string _messageId;
             
-            /**
-             * Sets the stream name for publishing.  The default is undefined.
-             * @param stream The name of the stream.
-             * @return Builder
-             */
-            public Builder Stream(string stream) {
-                _stream = string.IsNullOrEmpty(stream) ? UnsetStream : Validator.ValidateStreamName(stream);
+            /// <summary>
+            /// Set the stream name.
+            /// </summary>
+            /// <param name="stream">Name of the stream</param>
+            /// <returns>The Builder</returns>
+            public PublishOptionsBuilder WithStream(string stream) {
+                _stream = string.IsNullOrEmpty(stream) ? DefaultStream : Validator.ValidateStreamName(stream);
                 return this;
             }
 
-            /**
-             * Sets the timeout to wait for a publish acknowledgement from a JetStream
-             * enabled NATS server.
-             * @param timeout the publish timeout.
-             * @return Builder
-             */
-            public Builder StreamTimeout(Duration timeout) {
+            /// <summary>
+            /// Set the stream timeout with a Duration
+            /// </summary>
+            /// <param name="timeout">The publish acknowledgement timeout.</param>
+            /// <returns>The PublishOptionsBuilder</returns>
+            public PublishOptionsBuilder WithTimeout(Duration timeout) {
                 _streamTimeout = timeout ?? DefaultTimeout;
                 return this;
             }
 
-            /**
-             * Sets the expected stream of the publish. If the 
-             * stream does not match the server will not save the message.
-             * @param stream expected stream
-             * @return builder
-             */
-            public Builder ExpectedStream(string stream) {
+            /// <summary>
+            /// Set the stream timeout in milliseconds
+            /// </summary>
+            /// <param name="timeout">The publish acknowledgement timeout.</param>
+            /// <returns>The PublishOptionsBuilder</returns>
+            public PublishOptionsBuilder WithTimeout(long timeoutMillis) {
+                _streamTimeout = timeoutMillis < 1 ? DefaultTimeout : Duration.OfMillis(timeoutMillis);
+                return this;
+            }
+
+            /// <summary>
+            /// Set the message id.
+            /// </summary>
+            /// <param name="msgID">The message ID of these options.</param>
+            /// <returns>The PublishOptionsBuilder</returns>
+            public PublishOptionsBuilder WithMessageId(string msgId) {
+                _messageId = Validator.ValidateNotEmpty(msgId, nameof(msgId));
+                return this;
+            }
+
+            /// <summary>
+            /// Set the expected stream name.
+            /// </summary>
+            /// <param name="stream">The expected stream name.</param>
+            /// <returns>The PublishOptionsBuilder</returns>
+            public PublishOptionsBuilder WithExpectedStream(string stream) {
                 _expectedStream = stream;
                 return this;
             }
 
-            /**
-             * Sets the expected last ID of the previously published message.  If the 
-             * message ID does not match the server will not save the message.
-             * @param lastMsgId the stream
-             * @return builder
-             */
-            public Builder ExpectedLastMsgId(string lastMsgId) {
-                _expectedLastId = lastMsgId;
+            /// <summary>
+            /// Set the expected last message ID.
+            /// </summary>
+            /// <param name="lastMessageID">The expected last message ID.</param>
+            /// <returns>The PublishOptionsBuilder</returns>
+            public PublishOptionsBuilder WithExpectedLastMsgId(string lastMessageID) {
+                _expectedLastMsgId = Validator.ValidateNotEmpty(lastMessageID, nameof(lastMessageID));
                 return this;
             }        
 
-            /**
-             * Sets the expected message ID of the publish
-             * @param sequence the expected last sequence number
-             * @return builder
-             */
-            public Builder ExpectedLastSequence(long sequence) {
-                _expectedLastSeq = sequence;
+            /// <summary>
+            /// Set the expected stream name.
+            /// </summary>
+            /// <param name="lastSequence">The expected sequence.</param>
+            /// <returns>The PublishOptionsBuilder</returns>
+            public PublishOptionsBuilder WithExpectedLastSequence(long lastSequence) {
+                _expectedLastSeq = Validator.ValidateNotNegative(lastSequence, nameof(lastSequence));
                 return this;
             }
 
-            /**
-             * Sets the message id. Message IDs are used for de-duplication
-             * and should be unique to each message payload.
-             * @param msgId the unique message id.
-             * @return publish options
-             */
-            public Builder MessageId(string msgId) {
-                _msgId = msgId;
+            /// <summary>
+            /// Clears the expected so the build can be re-used.
+            /// Clears the expectedLastId, expectedLastSequence and messageId fields.
+            /// </summary>
+            /// <returns>The PublishOptionsBuilder</returns>
+            public PublishOptionsBuilder ClearExpected() {
+                _expectedLastMsgId = null;
+                _expectedLastSeq = DefaultLastSequence;
+                _messageId = null;
                 return this;
             }
 
-            /**
-             * Clears the expected so the build can be re-used.
-             * Clears the expectedLastId, expectedLastSequence and messageId fields.
-             * @return publish options
-             */
-            public Builder ClearExpected() {
-                _expectedLastId = null;
-                _expectedLastSeq = UnsetLastSequence;
-                _msgId = null;
-                return this;
-            }
-
-            /**
-             * Builds the publish options.
-             * @return publish options
-             */
+            /// <summary>
+            /// Builds the PublishOptions
+            /// </summary>
+            /// <returns>The PublishOptions object.</returns>
             public PublishOptions Build() {
-                return new PublishOptions(_stream, _streamTimeout, _expectedStream, _expectedLastId, _expectedLastSeq, _msgId);
+                return new PublishOptions(_stream, _streamTimeout, _expectedStream, _expectedLastMsgId, _expectedLastSeq, _messageId);
             }
         }
     }

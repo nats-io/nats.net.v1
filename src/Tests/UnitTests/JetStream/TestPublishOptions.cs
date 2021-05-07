@@ -11,54 +11,80 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using Xunit;
 
 namespace UnitTests.JetStream
 {
-    public class TestPublishOptions : TestBase
+    public class TestPublishOptions
     {
         [Fact]
-        public void TestBuilder()
+        public void TestDefaultBuilder()
         {
-            PublishOptions.Builder builder = new PublishOptions.Builder();
-            PublishOptions po = builder.Build();
-            Assert.Equal(PublishOptions.UnsetStream, po.Stream);
+            var po = PublishOptions.Builder().Build();
+            Assert.Equal(PublishOptions.DefaultLastSequence, po.ExpectedLastSeq);
+            Assert.Equal(PublishOptions.DefaultStream, po.ExpectedStream);
             Assert.Equal(PublishOptions.DefaultTimeout, po.StreamTimeout);
-            Assert.Equal(PublishOptions.UnsetLastSequence, po.ExpectedLastSeq);
-
-            po = builder
-                .Stream(STREAM)
-                .StreamTimeout(Duration.OfSeconds(99))
-                .ExpectedLastMsgId("1")
-                .ExpectedStream("bar")
-                .ExpectedLastSequence(42)
-                .MessageId("msgId")
-                .Build();
-
-            Assert.Equal(STREAM, po.Stream);
-            Assert.Equal(Duration.OfSeconds(99), po.StreamTimeout);
-            Assert.Equal("1", po.ExpectedLastMsgId);
-            Assert.Equal(42, po.ExpectedLastSeq);
-            Assert.Equal("bar", po.ExpectedStream);
-            Assert.Equal("msgId", po.MessageId);
-
-            po = builder.ClearExpected().Build();
             Assert.Null(po.ExpectedLastMsgId);
-            Assert.Equal(PublishOptions.UnsetLastSequence, po.ExpectedLastSeq);
-            Assert.Equal("bar", po.ExpectedStream);
             Assert.Null(po.MessageId);
+            Assert.Null(po.Stream);
+        }
 
-            po = builder.Stream(null).StreamTimeout(null).Build();
-            Assert.Equal(PublishOptions.UnsetStream, po.Stream);
-            Assert.Equal(PublishOptions.DefaultTimeout, po.StreamTimeout);
+        [Fact]
+        public void TestValidBuilderArgs()
+        {
+            var po = PublishOptions.Builder().
+                WithExpectedStream("expectedstream").
+                WithExpectedLastMsgId("expectedmsgid").
+                WithExpectedLastSequence(42).
+                WithMessageId("msgid").
+                WithStream("stream").
+                WithTimeout(5150).
+                Build();
 
-            po = builder.Stream(STREAM).Build();
-            Assert.Equal(STREAM, po.Stream);
+            Assert.Equal("expectedstream", po.ExpectedStream);
+            Assert.Equal("expectedmsgid", po.ExpectedLastMsgId);
+            Assert.Equal(42, po.ExpectedLastSeq);
+            Assert.Equal("msgid", po.MessageId);
+            Assert.Equal("stream", po.Stream);
+            Assert.Equal(5150, po.StreamTimeout.Millis);
 
-            po = builder.Stream("").Build();
-            Assert.Equal(PublishOptions.UnsetStream, po.Stream);
+            po = PublishOptions.Builder().
+                WithTimeout(Duration.OfMillis(5150)).
+                Build();
+
+            Assert.Equal(Duration.OfMillis(5150), po.StreamTimeout);
+
+            // check to allow -
+            PublishOptions.Builder().
+                WithExpectedStream("test-stream").
+                Build();
+        }
+
+        [Fact]
+        public void TestInvalidBuilderArgs()
+        {
+            Assert.Throws<ArgumentException>(() => PublishOptions.Builder().
+                WithExpectedLastSequence(-1).
+                Build());
+
+            Assert.Throws<ArgumentException>(() => PublishOptions.Builder().
+                WithMessageId("").
+                Build());
+
+            Assert.Throws<ArgumentException>(() => PublishOptions.Builder().
+                WithStream("stream.*").
+                Build());
+
+            Assert.Throws<ArgumentException>(() => PublishOptions.Builder().
+                WithStream("stream.>").
+                Build());
+
+            Assert.Throws<ArgumentException>(() => PublishOptions.Builder().
+                WithStream("stream.one").
+                Build());
         }
     }
 }
