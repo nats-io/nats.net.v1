@@ -17,7 +17,6 @@ namespace NATS.Client.JetStream
 {
     public sealed class PublishOptions
     {
-       
         // Use this variable for timeout in publish options.
         internal static readonly Duration DefaultTimeout = Duration.OfMillis(Defaults.Timeout);
 
