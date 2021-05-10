@@ -173,6 +173,7 @@ namespace NATS.Client.JetStream
         /// Sets the name of the stream.
         /// </summary>
         /// <param name="name">name of the stream.</param>
+        /// <returns>The StreamConfigurationBuilder</returns>
         public StreamConfigurationBuilder Name(string name) {
             _name = name;
             return this;
@@ -182,6 +183,7 @@ namespace NATS.Client.JetStream
         /// Sets the subjects in the StreamConfiguration.
         /// </summary>
         /// <param name="subjects">the stream's subjects</param>
+        /// <returns>The StreamConfigurationBuilder</returns>
         public StreamConfigurationBuilder Subjects(params string[] subjects) {
             _subjects.Clear();
             return AddSubjects(subjects);
@@ -191,6 +193,7 @@ namespace NATS.Client.JetStream
         /// Sets the subjects in the StreamConfiguration.
         /// </summary>
         /// <param name="subjects">the stream's subjects</param>
+        /// <returns>The StreamConfigurationBuilder</returns>
         public StreamConfigurationBuilder Subjects(List<string> subjects) {
             _subjects.Clear();
             return AddSubjects(subjects);
@@ -200,6 +203,7 @@ namespace NATS.Client.JetStream
         /// Sets the subjects in the StreamConfiguration.
         /// </summary>
         /// <param name="subjects">the stream's subjects</param>
+        /// <returns>The StreamConfigurationBuilder</returns>
         public StreamConfigurationBuilder AddSubjects(params string[] subjects) {
             if (subjects != null) {
                 foreach (string sub in subjects) {
@@ -215,6 +219,7 @@ namespace NATS.Client.JetStream
         /// Sets the subjects in the StreamConfiguration.
         /// </summary>
         /// <param name="subjects">the stream's subjects</param>
+        /// <returns>The StreamConfigurationBuilder</returns>
         public StreamConfigurationBuilder AddSubjects(List<string> subjects) {
             if (subjects != null) {
                 foreach (string sub in subjects) {
@@ -230,6 +235,7 @@ namespace NATS.Client.JetStream
         /// Sets the retention policy in the StreamConfiguration.
         /// </summary>
         /// <param name="policy">the retention policy of the StreamConfiguration</param>
+        /// <returns>The StreamConfigurationBuilder</returns>
         public StreamConfigurationBuilder RetentionPolicy(RetentionPolicy? policy) {
             _retentionPolicy = policy ?? JetStream.RetentionPolicy.Limits;
             return this;
@@ -239,6 +245,7 @@ namespace NATS.Client.JetStream
         /// Sets the maximum number of consumers in the StreamConfiguration.
         /// </summary>
         /// <param name="maxConsumers">the maximum number of consumers</param>
+        /// <returns>The StreamConfigurationBuilder</returns>
         public StreamConfigurationBuilder MaxConsumers(long maxConsumers) {
             _maxConsumers = Validator.ValidateMaxConsumers(maxConsumers);
             return this;
@@ -248,6 +255,7 @@ namespace NATS.Client.JetStream
         /// Sets the maximum number of consumers in the StreamConfiguration.
         /// </summary>
         /// <param name="maxMsgs">the maximum number of messages</param>
+        /// <returns>The StreamConfigurationBuilder</returns>
         public StreamConfigurationBuilder MaxMessages(long maxMsgs) {
             _maxMsgs = Validator.ValidateMaxMessages(maxMsgs);
             return this;
@@ -257,6 +265,7 @@ namespace NATS.Client.JetStream
         /// Sets the maximum number of bytes in the StreamConfiguration.
         /// </summary>
         /// <param name="maxBytes">the maximum number of bytes</param>
+        /// <returns>The StreamConfigurationBuilder</returns>
         public StreamConfigurationBuilder MaxBytes(long maxBytes) {
             _maxBytes = Validator.ValidateMaxBytes(maxBytes);
             return this;
@@ -266,6 +275,7 @@ namespace NATS.Client.JetStream
         /// Sets the maximum age in the StreamConfiguration.
         /// </summary>
         /// <param name="maxAge">the maximum message age</param>
+        /// <returns>The StreamConfigurationBuilder</returns>
         public StreamConfigurationBuilder MaxAge(Duration maxAge) {
             _maxAge = Validator.ValidateDurationNotRequiredGtOrEqZero(maxAge);
             return this;
@@ -275,6 +285,7 @@ namespace NATS.Client.JetStream
         /// Sets the maximum message size in the StreamConfiguration.
         /// </summary>
         /// <param name="maxMsgSize">the maximum message size</param>
+        /// <returns>The StreamConfigurationBuilder</returns>
         public StreamConfigurationBuilder MaxMsgSize(long maxMsgSize) {
             _maxMsgSize = Validator.ValidateMaxMessageSize(maxMsgSize);
             return this;
@@ -284,6 +295,7 @@ namespace NATS.Client.JetStream
         /// Sets the storage type in the StreamConfiguration.
         /// </summary>
         /// <param name="storageType">the storage type</param>
+        /// <returns>The StreamConfigurationBuilder</returns>
         public StreamConfigurationBuilder StorageType(StorageType? storageType) {
             _storageType = storageType?? JetStream.StorageType.File;
             return this;
@@ -293,6 +305,7 @@ namespace NATS.Client.JetStream
         /// Sets the number of replicas a message must be stored on in the StreamConfiguration.
         /// </summary>
         /// <param name="replicas">the number of replicas to store this message on</param>
+        /// <returns>The StreamConfigurationBuilder</returns>
         public StreamConfigurationBuilder Replicas(int replicas) {
             _replicas = Validator.ValidateNumberOfReplicas(replicas);
             return this;
@@ -303,6 +316,7 @@ namespace NATS.Client.JetStream
         /// set, then acknowledgements are not sent back to the client.  The default is false.
         /// </summary>
         /// <param name="noAck">true to disable acknowledgements.</param>
+        /// <returns>The StreamConfigurationBuilder</returns>
         public StreamConfigurationBuilder NoAck(bool noAck) {
             _noAck = noAck;
             return this;
@@ -312,6 +326,7 @@ namespace NATS.Client.JetStream
         /// Sets the template a stream in the form of raw JSON.
         /// </summary>
         /// <param name="templateOwner">the stream template of the stream.</param>
+        /// <returns>The StreamConfigurationBuilder</returns>
         public StreamConfigurationBuilder TemplateOwner(string templateOwner) {
             _templateOwner = Validator.EmptyAsNull(templateOwner);
             return this;
@@ -321,6 +336,7 @@ namespace NATS.Client.JetStream
         /// Sets the discard policy in the StreamConfiguration.
         /// </summary>
         /// <param name="policy">the discard policy of the StreamConfiguration</param>
+        /// <returns>The StreamConfigurationBuilder</returns>
         public StreamConfigurationBuilder DiscardPolicy(DiscardPolicy? policy) {
             _discardPolicy = policy?? JetStream.DiscardPolicy.Old;
             return this;
@@ -331,6 +347,7 @@ namespace NATS.Client.JetStream
         /// disables duplicate checking.  Duplicate checking is disabled by default.
         /// </summary>
         /// <param name="window">duration to hold message ids for duplicate checking.</param>
+        /// <returns>The StreamConfigurationBuilder</returns>
         public StreamConfigurationBuilder DuplicateWindow(Duration window) {
             _duplicateWindow = Validator.ValidateDurationNotRequiredGtOrEqZero(window);
             return this;
@@ -340,6 +357,7 @@ namespace NATS.Client.JetStream
         /// Sets the placement directive object
         /// </summary>
         /// <param name="placement">the placement directive object</param>
+        /// <returns>The StreamConfigurationBuilder</returns>
         public StreamConfigurationBuilder Placement(Placement placement) {
             _placement = placement;
             return this;
@@ -349,6 +367,7 @@ namespace NATS.Client.JetStream
         /// Sets the mirror  object
         /// </summary>
         /// <param name="mirror">the mirror object</param>
+        /// <returns>The StreamConfigurationBuilder</returns>
         public StreamConfigurationBuilder Mirror(Mirror mirror) {
             _mirror = mirror;
             return this;
@@ -358,6 +377,7 @@ namespace NATS.Client.JetStream
         /// Sets the sources in the StreamConfiguration.
         /// </summary>
         /// <param name="sources">the stream's sources</param>
+        /// <returns>The StreamConfigurationBuilder</returns>
         public StreamConfigurationBuilder Sources(params Source[] sources) {
             _sources.Clear();
             return AddSources(sources);
@@ -367,6 +387,7 @@ namespace NATS.Client.JetStream
         /// Sets the sources in the StreamConfiguration.
         /// </summary>
         /// <param name="sources">the stream's sources</param>
+        /// <returns>The StreamConfigurationBuilder</returns>
         public StreamConfigurationBuilder Sources(List<Source> sources) {
             _sources.Clear();
             return AddSources(sources);
@@ -376,6 +397,7 @@ namespace NATS.Client.JetStream
         /// Sets the sources in the StreamConfiguration.
         /// </summary>
         /// <param name="sources">the stream's sources</param>
+        /// <returns>The StreamConfigurationBuilder</returns>
         public StreamConfigurationBuilder AddSources(params Source[] sources) {
             if (sources != null) {
                 foreach (Source source in sources) {
@@ -391,6 +413,7 @@ namespace NATS.Client.JetStream
         /// Sets the sources in the StreamConfiguration.
         /// </summary>
         /// <param name="sources">the stream's sources</param>
+        /// <returns>The StreamConfigurationBuilder</returns>
         public StreamConfigurationBuilder AddSources(List<Source> sources) {
             if (sources != null) {
                 foreach (Source source in sources) {
@@ -405,6 +428,7 @@ namespace NATS.Client.JetStream
         /// <summary>
         /// Builds the ConsumerConfiguration
         /// </summary>
+        /// <returns>The StreamConfiguration</returns>
         public StreamConfiguration Build() {
             return new StreamConfiguration(
                 _name,

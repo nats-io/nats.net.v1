@@ -44,9 +44,7 @@ namespace NATS.Client.JetStream
         /// <summary>
         /// Gets the PullSubscribeOptions builder.
         /// </summary>
-        /// <returns>
-        /// The builder
-        /// </returns>
+        /// <returns>The PullSubscribeOptionsBuilder</returns>
         public static PullSubscribeOptionsBuilder Builder() {
             return new PullSubscribeOptionsBuilder();
         }
@@ -84,9 +82,9 @@ namespace NATS.Client.JetStream
             /// </summary>
             /// <param name="consumerConfiguration">the ConsumerConfiguration object</param>
             /// <returns>The PullSubscribeOptionsBuilder</returns>
-            public PullSubscribeOptionsBuilder WithConfiguration(ConsumerConfiguration consumerConfig)
+            public PullSubscribeOptionsBuilder WithConfiguration(ConsumerConfiguration consumerConfiguration)
             {
-                _consumerConfig = consumerConfig;
+                _consumerConfig = consumerConfiguration;
                 return this;
             }
 
@@ -99,7 +97,7 @@ namespace NATS.Client.JetStream
 
                 _durable = Validator.ValidateDurableRequired(_durable, _consumerConfig);
 
-                _consumerConfig = new ConsumerConfiguration.Builder(_consumerConfig)
+                _consumerConfig = ConsumerConfiguration.Builder(_consumerConfig)
                     .Durable(_durable)
                     .Build();
 
