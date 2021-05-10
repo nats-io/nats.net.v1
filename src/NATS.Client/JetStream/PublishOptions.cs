@@ -1,4 +1,4 @@
-﻿// Copyright 2021 The NATS Authors
+// Copyright 2021 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at:
@@ -11,81 +11,67 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Text.RegularExpressions;
+using NATS.Client.Internals;
 
 namespace NATS.Client.JetStream
 {
-    /// <summary>
-    /// The PublishOptions class specifies the options for publishing with JetStream enabled servers.
-    /// Options are created using the <see cref="PublishOptions.Builder"/>.
-    /// </summary>
-    public class PublishOptions
+    public sealed class PublishOptions
     {
-        private readonly string stream = DefaultStream;
-        private readonly long streamTimeout = DefaultTimeout;
-        private readonly string expectedStream = null;
-        private readonly string expectedLastId = null;
-        private readonly long expectedLastSeq = DefaultLastSequence;
-        private readonly string msgId = null;
-
         /// <summary>
         /// The default timeout (2000ms)
         /// </summary>
-        public static readonly long DefaultTimeout = Defaults.Timeout;
+        public static readonly Duration DefaultTimeout = Duration.OfMillis(Defaults.Timeout);
 
         /// <summary>
         /// The default stream name (unset)
         /// </summary>
-        public static readonly string DefaultStream = null;
+        public const string DefaultStream = null;
 
         /// <summary>
         /// Default Last Sequence Number (unset)
         /// </summary>
-        public static readonly long DefaultLastSequence = -1;
+        public const long DefaultLastSequence = -1;
 
         /// <summary>
-        /// Gets the stream name.
+        /// The stream name.
         /// </summary>
-        public string Stream { get => stream; }
+        public string Stream { get; }
 
         /// <summary>
-        /// Gets the stream timeout.
+        /// The stream timeout.
         /// </summary>
-        public long StreamTimeout { get => streamTimeout; }
-
+        public Duration StreamTimeout { get; }
+        
         /// <summary>
-        /// Gets the Expected Stream.
+        /// The Expected Stream.
         /// </summary>
-        public string ExpectedStream { get => expectedStream; }
-
+        public string ExpectedStream { get; }
+        
         /// <summary>
-        /// Gets the Expected Stream.
+        /// The Expected Last Message Id.
         /// </summary>
-        public string ExpectedLastId { get => expectedLastId; }
-
+        public string ExpectedLastMsgId { get; }
+        
         /// <summary>
-        /// Gets the Expected Stream.
+        /// The Expected Last Sequence.
         /// </summary>
-        public long ExpectedLastSeq { get => expectedLastSeq; }
-
+        public long ExpectedLastSeq { get; }
+        
         /// <summary>
-        /// Gets the Message ID.
+        /// The Expected Message Id.
         /// </summary>
-        public string MsgId { get => msgId; }
+        public string MessageId { get; }
 
-        private PublishOptions(
-            string stream, long streamTimeout, string expectedStream,
-            string expectedLastId, long expectedLastSeq, string msgId)
+        private PublishOptions(string stream, Duration streamTimeout, string expectedStream, string expectedLastMsgId, long expectedLastSeq, string messageId)
         {
-            this.stream = stream;
-            this.streamTimeout = streamTimeout;
-            this.expectedStream = expectedStream;
-            this.expectedLastId = expectedLastId;
-            this.expectedLastSeq = expectedLastSeq;
-            this.msgId = msgId;
+            Stream = stream;
+            StreamTimeout = streamTimeout;
+            ExpectedStream = expectedStream;
+            ExpectedLastMsgId = expectedLastMsgId;
+            ExpectedLastSeq = expectedLastSeq;
+            MessageId = messageId;
         }
-
+        
         /// <summary>
         /// Gets the publish options builder.
         /// </summary>
@@ -96,81 +82,53 @@ namespace NATS.Client.JetStream
         {
             return new PublishOptionsBuilder();
         }
-
-        /// <summary>
-        /// Builds a PublishOptions object.
-        /// </summary>
-        public class PublishOptionsBuilder
+        
+        public sealed class PublishOptionsBuilder
         {
-            string stream = DefaultStream;
-            long streamTimeout = DefaultTimeout;
-            string expectedStream = null;
-            string expectedLastId = null;
-            long expectedLastSeq = DefaultLastSequence;
-            string msgId = null;
-
-            /// <summary>
-            /// Builds the PublishOptions
-            /// </summary>
-            /// <returns>
-            /// The PublishOptions object.
-            /// </returns>
-            public PublishOptions Build()
-            {
-                return new PublishOptions(stream, streamTimeout,
-                    expectedStream, expectedLastId, expectedLastSeq,
-                    msgId);
-            }
-
-            private static readonly Regex regex = new Regex("^[a-zA-Z0-9-]*$");
-
-            private string checkStreamName(string stream)
-            {
-                if (stream == null)
-                    return null;
-
-                if (stream.Length == 0)
-                    return null;
-
-                if (regex.IsMatch(stream))
-                    return stream;
-
-                throw new ArgumentException("stream cannot contain *, >, whitespace, or .");
-            }
-
+            private string _stream = DefaultStream;
+            private Duration _streamTimeout = DefaultTimeout;
+            private string _expectedStream;
+            private string _expectedLastMsgId;
+            private long _expectedLastSeq = DefaultLastSequence;
+            private string _messageId;
+            
             /// <summary>
             /// Set the stream name.
             /// </summary>
             /// <param name="stream">Name of the stream</param>
-            /// <returns></returns>
-            public PublishOptionsBuilder WithStream(string stream)
-            {
-                this.stream = checkStreamName(stream);
+            /// <returns>The Builder</returns>
+            public PublishOptionsBuilder WithStream(string stream) {
+                _stream = string.IsNullOrEmpty(stream) ? DefaultStream : Validator.ValidateStreamName(stream);
                 return this;
             }
 
             /// <summary>
-            /// Set the stream timeout.
+            /// Set the stream timeout with a Duration
             /// </summary>
             /// <param name="timeout">The publish acknowledgement timeout.</param>
-            /// <returns></returns>
-            public PublishOptionsBuilder WithTimeout(int timeout)
-            {
-                this.streamTimeout = timeout;
+            /// <returns>The PublishOptionsBuilder</returns>
+            public PublishOptionsBuilder WithTimeout(Duration timeout) {
+                _streamTimeout = timeout ?? DefaultTimeout;
                 return this;
             }
 
             /// <summary>
-            /// Set the message ID.
+            /// Set the stream timeout in milliseconds
+            /// </summary>
+            /// <param name="timeout">The publish acknowledgement timeout.</param>
+            /// <returns>The PublishOptionsBuilder</returns>
+            public PublishOptionsBuilder WithTimeout(long timeoutMillis) {
+                _streamTimeout = timeoutMillis < 1 ? DefaultTimeout : Duration.OfMillis(timeoutMillis);
+                return this;
+            }
+
+            /// <summary>
+            /// Set the message id.
             /// </summary>
             /// <param name="msgID">The message ID of these options.</param>
-            /// <returns></returns>
-            public PublishOptionsBuilder WithMsgId(string msgID)
-            {
-                if (string.IsNullOrEmpty(msgID))
-                    throw new ArgumentException("Cannot be null or empty", nameof(msgID));
-
-                this.msgId = msgID;
+            /// <returns>The PublishOptionsBuilder</returns>
+            public PublishOptionsBuilder WithMessageId(string msgId) {
+                _messageId = Validator.ValidateNotEmpty(msgId, nameof(msgId));
                 return this;
             }
 
@@ -178,42 +136,51 @@ namespace NATS.Client.JetStream
             /// Set the expected stream name.
             /// </summary>
             /// <param name="stream">The expected stream name.</param>
-            /// <returns></returns>
-            public PublishOptionsBuilder WithExpectedStream(string stream)
-            {
-                this.expectedStream = checkStreamName(stream);
+            /// <returns>The PublishOptionsBuilder</returns>
+            public PublishOptionsBuilder WithExpectedStream(string stream) {
+                _expectedStream = stream;
                 return this;
             }
 
             /// <summary>
-            /// Set the expected stream name.
+            /// Set the expected last message ID.
             /// </summary>
-            /// <param name="msgID">The expected previous message ID.</param>
-            /// <returns></returns>
-            public PublishOptionsBuilder WithLastExpectedMsgID(string msgID)
-            {
-                if (string.IsNullOrEmpty(msgID))
-                    throw new ArgumentException("cannot be null or empty", nameof(msgID));
-
-                this.expectedLastId = msgID;
+            /// <param name="lastMessageID">The expected last message ID.</param>
+            /// <returns>The PublishOptionsBuilder</returns>
+            public PublishOptionsBuilder WithExpectedLastMsgId(string lastMessageID) {
+                _expectedLastMsgId = Validator.ValidateNotEmpty(lastMessageID, nameof(lastMessageID));
                 return this;
-            }
+            }        
 
             /// <summary>
             /// Set the expected stream name.
             /// </summary>
-            /// <param name="msgID">The expected previous message ID.</param>
-            /// <returns></returns>
-            public PublishOptionsBuilder WithLastExpectedSequence(long sequence)
-            {
-                if (sequence < 0)
-                {
-                    throw new ArgumentException("cannot be negative", nameof(sequence));
-                }
-                this.expectedLastSeq = sequence;
+            /// <param name="lastSequence">The expected sequence.</param>
+            /// <returns>The PublishOptionsBuilder</returns>
+            public PublishOptionsBuilder WithExpectedLastSequence(long lastSequence) {
+                _expectedLastSeq = Validator.ValidateNotNegative(lastSequence, nameof(lastSequence));
                 return this;
+            }
+
+            /// <summary>
+            /// Clears the expected so the build can be re-used.
+            /// Clears the expectedLastId, expectedLastSequence and messageId fields.
+            /// </summary>
+            /// <returns>The PublishOptionsBuilder</returns>
+            public PublishOptionsBuilder ClearExpected() {
+                _expectedLastMsgId = null;
+                _expectedLastSeq = DefaultLastSequence;
+                _messageId = null;
+                return this;
+            }
+
+            /// <summary>
+            /// Builds the PublishOptions
+            /// </summary>
+            /// <returns>The PublishOptions object.</returns>
+            public PublishOptions Build() {
+                return new PublishOptions(_stream, _streamTimeout, _expectedStream, _expectedLastMsgId, _expectedLastSeq, _messageId);
             }
         }
     }
-
 }

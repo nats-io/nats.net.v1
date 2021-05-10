@@ -11,7 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Collections.Generic;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
@@ -21,7 +20,7 @@ namespace NATS.Client.JetStream
     public sealed class Placement
     {
         public string Cluster { get; }
-        public List<String> Tags { get; }
+        public List<string> Tags { get; }
 
         internal static Placement OptionalInstance(JSONNode placementNode)
         {

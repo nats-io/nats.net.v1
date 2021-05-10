@@ -12,9 +12,11 @@
 // limitations under the License.
 
 using System;
-using Xunit;
+using NATS.Client.Internals;
 using NATS.Client.JetStream;
-namespace UnitTests
+using Xunit;
+
+namespace UnitTests.JetStream
 {
     public class TestPublishOptions
     {
@@ -24,10 +26,9 @@ namespace UnitTests
             var po = PublishOptions.Builder().Build();
             Assert.Equal(PublishOptions.DefaultLastSequence, po.ExpectedLastSeq);
             Assert.Equal(PublishOptions.DefaultStream, po.ExpectedStream);
-
             Assert.Equal(PublishOptions.DefaultTimeout, po.StreamTimeout);
-            Assert.Null(po.ExpectedLastId);
-            Assert.Null(po.MsgId);
+            Assert.Null(po.ExpectedLastMsgId);
+            Assert.Null(po.MessageId);
             Assert.Null(po.Stream);
         }
 
@@ -36,19 +37,25 @@ namespace UnitTests
         {
             var po = PublishOptions.Builder().
                 WithExpectedStream("expectedstream").
-                WithLastExpectedMsgID("expectedmsgid").
-                WithLastExpectedSequence(42).
-                WithMsgId("msgid").
+                WithExpectedLastMsgId("expectedmsgid").
+                WithExpectedLastSequence(42).
+                WithMessageId("msgid").
                 WithStream("stream").
                 WithTimeout(5150).
                 Build();
 
             Assert.Equal("expectedstream", po.ExpectedStream);
-            Assert.Equal("expectedmsgid", po.ExpectedLastId);
+            Assert.Equal("expectedmsgid", po.ExpectedLastMsgId);
             Assert.Equal(42, po.ExpectedLastSeq);
-            Assert.Equal("msgid", po.MsgId);
+            Assert.Equal("msgid", po.MessageId);
             Assert.Equal("stream", po.Stream);
-            Assert.Equal(5150, po.StreamTimeout);
+            Assert.Equal(5150, po.StreamTimeout.Millis);
+
+            po = PublishOptions.Builder().
+                WithTimeout(Duration.OfMillis(5150)).
+                Build();
+
+            Assert.Equal(Duration.OfMillis(5150), po.StreamTimeout);
 
             // check to allow -
             PublishOptions.Builder().
@@ -60,11 +67,11 @@ namespace UnitTests
         public void TestInvalidBuilderArgs()
         {
             Assert.Throws<ArgumentException>(() => PublishOptions.Builder().
-                WithLastExpectedSequence(-1).
+                WithExpectedLastSequence(-1).
                 Build());
 
             Assert.Throws<ArgumentException>(() => PublishOptions.Builder().
-                WithMsgId("").
+                WithMessageId("").
                 Build());
 
             Assert.Throws<ArgumentException>(() => PublishOptions.Builder().
@@ -77,14 +84,6 @@ namespace UnitTests
 
             Assert.Throws<ArgumentException>(() => PublishOptions.Builder().
                 WithStream("stream.one").
-                Build());
-
-            Assert.Throws<ArgumentException>(() => PublishOptions.Builder().
-                WithTimeout(0).
-                Build());
-
-            Assert.Throws<ArgumentException>(() => PublishOptions.Builder().
-                WithTimeout(-1).
                 Build());
         }
     }
