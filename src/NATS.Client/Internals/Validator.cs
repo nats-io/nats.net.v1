@@ -1,116 +1,99 @@
 ﻿using System;
-using System.Linq;
 using NATS.Client.JetStream;
 
 namespace NATS.Client.Internals
 {
     internal static class Validator
     {
-        private static char[] DotWildGt = new []{ '*', '>', '.'};
-        private static char[] DotWildGtSpace = new []{ '*', '>', '.', ' '};
-        private static char[] WildDollarSpaceTab = new[] {'*', '>', '$', ' ', '\t'};
+        private static char[] WildGt = new []{ '*', '>'};
+        private static char[] WildGtDot = new []{ '*', '>', '.'};
+        private static char[] WildGtDollar = new[] {'*', '>', '$'};
 
-        internal static string ValidateMessageSubjectRequired(string s)
+        internal static string ValidateSubject(string s, bool required)
         {
-            if (string.IsNullOrEmpty(s))
-            {
-                throw new ArgumentException("Subject cannot be null or empty [" + s + "]");
-            }
-
-            return s;
+            return ValidatePrintable(s, "Subject", required);
         }
 
-        internal static string ValidateJsSubscribeSubjectRequired(string s)
-        {
-            if (string.IsNullOrEmpty(s) || ContainsWhitespace(s))
-            {
-                throw new ArgumentException("Subject cannot have whitespace if provided [" + s + "]");
-            }
-
-            return s;
+        public static string ValidateReplyTo(String s, bool required) {
+            return ValidatePrintableExceptWildGt(s, "Reply To", required);
         }
 
-        internal static string ValidateQueueNameRequired(string s)
-        {
-            if (string.IsNullOrEmpty(s) || ContainsWhitespace(s))
-            {
-                throw new ArgumentException("Queue have whitespace [" + s + "]");
-            }
-
-            return EmptyAsNull(s);
+        public static string ValidateQueueName(String s, bool required) {
+            return ValidatePrintableExceptWildDotGt(s, "Queue", required);
         }
 
-        internal static string ValidateReplyToNullButNotEmpty(string s)
-        {
-            if (NotNullButEmpty(s))
-            {
-                throw new ArgumentException("ReplyTo cannot be blank when provided [" + s + "]");
-            }
-
-            return s;
+        public static string ValidateStreamName(String s, bool required) {
+            return ValidatePrintableExceptWildDotGt(s, "Stream", required);
         }
 
-        internal static string ValidateStreamName(string s)
-        {
-            if (ContainsDotWildGtSpace(s))
-            {
-                throw new ArgumentException("Stream cannot contain a '.', '*', '>' or Space [" + s + "]");
-            }
-
-            return s;
-        }
-
-        internal static string ValidateStreamNameOrEmptyAsNull(string s)
-        {
-            return EmptyAsNull(ValidateStreamName(s));
-        }
-
-        internal static string ValidateStreamNameRequired(string s)
-        {
-            if (string.IsNullOrEmpty(s))
-            {
-                throw new ArgumentException(
-                    "Stream cannot be null or empty and cannot contain a '.', '*' or '>' [" + s + "]");
-            }
-
-            return ValidateStreamName(s);
-        }
-
-        internal static string ValidateDurableOrEmptyAsNull(string s)
-        {
-            if (ContainsDotWildGt(s))
-            {
-                throw new ArgumentException("Durable cannot contain a '.', '*' or '>' [" + s + "]");
-            }
-
-            return EmptyAsNull(s);
+        public static string ValidateDurable(String s, bool required) {
+            return ValidatePrintableExceptWildDotGt(s, "Durable", required);
         }
 
         internal static string ValidateDurableRequired(string durable, ConsumerConfiguration cc)
         {
-            if (durable == null)
-            {
-                if (cc == null)
-                {
-                    throw new ArgumentException(
-                        "Durable is required and cannot contain a '.', '*' or '>' [null]");
-                }
+            if (durable != null) return ValidateDurable(durable, true);
+            if (cc != null) return ValidateDurable(cc.Durable, true);
 
-                return ValidateDurableRequired(cc.Durable);
-            }
-
-            return ValidateDurableRequired(durable);
+            throw new ArgumentException(
+                "Durable is required and cannot contain a '.', '*' or '>' [null]");
         }
 
-        internal static string ValidateDurableRequired(string s)
-        {
-            if (string.IsNullOrEmpty(s) || ContainsDotWildGt(s))
-            {
-                throw new ArgumentException("Durable is required and cannot contain a '.', '*' or '>' [" + s +
-                                                   "]");
+        public static String Validate(String s, String label, bool required, Func<string, string, string> check) {
+            if (required) {
+                if (string.IsNullOrEmpty(s)) {
+                    throw new ArgumentException(label + " cannot be null or empty [" + s + "]");
+                }
+            }
+            else if (EmptyAsNull(s) == null) {
+                return null;
             }
 
-            return s;
+            return check.Invoke(s, label);
+        }
+
+        public static String ValidateJetStreamPrefix(String s) {
+            return ValidatePrintableExceptWildGtDollar(s, "Prefix", false);
+        }
+
+        public static string ValidatePrintable(string s, String label , bool required)
+        {
+            return Validate(s, label, required, (ss, ll) => {
+                if (NotPrintable(s)) {
+                    throw new ArgumentException(label + " must be in the printable ASCII range [" + s + "]");
+                }
+                return s;
+            });
+        }
+
+        public static string ValidatePrintableExceptWildDotGt(string s, string label, bool required)
+        {
+            return Validate(s, label, required, (ss, ll) => {
+                if (NotPrintableOrHasWildGtDot(s)) {
+                    throw new ArgumentException(label + " must be in the printable ASCII range and cannot include `*`, `.` or `>` [" + s + "]");
+                }
+                return s;
+            });
+        }
+
+        public static string ValidatePrintableExceptWildGt(string s, string label, bool required)
+        {
+            return Validate(s, label, required, (ss, ll) => {
+                if (NotPrintableOrHasWildGt(s)) {
+                    throw new ArgumentException(label + " must be in the printable ASCII range and cannot include `*`, `>` or `$` [" + s + "]");
+                }
+                return s;
+            });
+        }
+
+        public static string ValidatePrintableExceptWildGtDollar(string s, string label, bool required)
+        {
+            return Validate(s, label, required, (ss, ll) => {
+                if (NotPrintableOrHasWildGtDollar(s)) {
+                    throw new ArgumentException(label + " must be in the printable ASCII range and cannot include `*`, `>` or `$` [" + s + "]");
+                }
+                return s;
+            });
         }
 
         internal static int ValidatePullBatchSize(int pullBatchSize)
@@ -179,16 +162,6 @@ namespace NATS.Client.Internals
             return d;
         }
 
-        internal static string ValidateJetStreamPrefix(string s)
-        {
-            if (ContainsWildGtDollarSpaceTab(s))
-            {
-                throw new ArgumentException("Prefix cannot contain a wildcard or dollar sign [" + s + "]");
-            }
-
-            return s;
-        }
-
         internal static object ValidateNotNull(object o, string fieldName)
         {
             if (o == null)
@@ -240,29 +213,42 @@ namespace NATS.Client.Internals
         // ----------------------------------------------------------------------------------------------------
         // Helpers
         // ----------------------------------------------------------------------------------------------------
-        internal static bool NotNullButEmpty(string s)
-        {
-            return s?.Length == 0;
+
+        public static bool NotPrintable(String s) {
+            for (int x = 0; x < s.Length; x++) {
+                char c = s[x];
+                if (c < 33 || c > 126) {
+                    return true;
+                }
+            }
+            return false;
         }
 
-        internal static bool ContainsWhitespace(string s)
-        {
-            return s != null && s.Any(char.IsWhiteSpace);
-        }
-        
-        internal static bool ContainsDotWildGt(string s)
-        {
-            return s != null && s.IndexOfAny(DotWildGt) != -1;
-        }
-        
-        internal static bool ContainsDotWildGtSpace(string s)
-        {
-            return s != null && s.IndexOfAny(DotWildGtSpace) != -1;
+        public static bool NotPrintableOrHasChars(String s, char[] charsToNotHave) {
+            for (int x = 0; x < s.Length; x++) {
+                char c = s[x];
+                if (c < 33 || c > 126) {
+                    return true;
+                }
+                foreach (char cx in charsToNotHave) {
+                    if (c == cx) {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
-        internal static bool ContainsWildGtDollarSpaceTab(string s)
-        {
-            return s != null && s.IndexOfAny(WildDollarSpaceTab) != -1;
+        private static bool NotPrintableOrHasWildGt(String s) {
+            return NotPrintableOrHasChars(s, WildGt);
+        }
+
+        private static bool NotPrintableOrHasWildGtDot(String s) {
+            return NotPrintableOrHasChars(s, WildGtDot);
+        }
+
+        private static bool NotPrintableOrHasWildGtDollar(String s) {
+            return NotPrintableOrHasChars(s, WildGtDollar);
         }
 
         internal static string EmptyAsNull(string s)

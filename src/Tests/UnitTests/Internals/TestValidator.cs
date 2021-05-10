@@ -21,75 +21,85 @@ namespace UnitTests.Internals
 {
     public class TestValidator : TestBase
     {
+        private readonly string[] _utfOnlyStrings;
+        
+        public TestValidator()
+        {
+            _utfOnlyStrings = ReadDataFileLines("utf8-only-no-ws-test-strings.txt");
+        }
+
         [Fact]
         public void TestValidateMessageSubjectRequired()
         {
-            Allowed(Validator.ValidateMessageSubjectRequired, Plain, HasSpace, HasDash, HasDot, HasStar, HasGt);
-            NotAllowed(Validator.ValidateMessageSubjectRequired, null, Empty);
-        }
+            AllowedRequired(Validator.ValidateSubject, Plain, HasPrintable, HasDot, HasStar, HasGt, HasDollar);
+            NotAllowedRequired(Validator.ValidateSubject, null, String.Empty, HasSpace, HasLow, Has127);
+            NotAllowedRequired(Validator.ValidateSubject, _utfOnlyStrings);
+            AllowedNotRequiredEmptyAsNull(Validator.ValidateSubject, null, String.Empty);
 
-        [Fact]
-        public void TestValidateJsSubscribeSubjectRequired()
-        {
-            Allowed(Validator.ValidateJsSubscribeSubjectRequired, Plain, HasDash, HasDot, HasStar, HasGt);
-            NotAllowed(Validator.ValidateJsSubscribeSubjectRequired, null, Empty, HasSpace);
-        }
-
-        [Fact]
-        public void TestValidateQueueNameRequired()
-        {
-            Allowed(Validator.ValidateQueueNameRequired, Plain, HasDash, HasDot, HasStar, HasGt);
-            NotAllowed(Validator.ValidateQueueNameRequired, null, Empty, HasSpace);
+            NotAllowedRequired(Validator.ValidateSubject, null, String.Empty, HasSpace, HasLow, Has127);
+            AllowedNotRequiredEmptyAsNull(Validator.ValidateSubject, null, String.Empty);
         }
 
         [Fact]
         public void TestValidateReplyTo()
         {
-            Allowed(Validator.ValidateReplyToNullButNotEmpty, null, Plain, HasSpace, HasDash, HasDot, HasStar, HasGt);
-            NotAllowed(Validator.ValidateReplyToNullButNotEmpty, Empty);
+            AllowedRequired(Validator.ValidateReplyTo, Plain, HasPrintable, HasDot, HasDollar);
+            NotAllowedRequired(Validator.ValidateReplyTo, null, String.Empty, HasSpace, HasStar, HasGt, HasLow, Has127);
+            NotAllowedRequired(Validator.ValidateReplyTo, _utfOnlyStrings);
+            AllowedNotRequiredEmptyAsNull(Validator.ValidateReplyTo, null, String.Empty);
+        }
+
+        [Fact]
+        public void TestValidateQueueNameRequired()
+        {
+            AllowedRequired(Validator.ValidateQueueName, Plain, HasPrintable, HasDollar);
+            NotAllowedRequired(Validator.ValidateQueueName, null, String.Empty, HasSpace, HasDot, HasStar, HasGt, HasLow, Has127);
+            NotAllowedRequired(Validator.ValidateQueueName, _utfOnlyStrings);
+            AllowedNotRequiredEmptyAsNull(Validator.ValidateQueueName, null, String.Empty);
         }
 
         [Fact]
         public void TestValidateStreamName()
         {
-            Allowed(Validator.ValidateStreamName, null, Empty, Plain, HasDash);
-            NotAllowed(Validator.ValidateStreamName, HasDot, HasStar, HasGt, HasSpace);
+            AllowedRequired(Validator.ValidateStreamName, Plain, HasPrintable, HasDollar);
+            NotAllowedRequired(Validator.ValidateStreamName, null, String.Empty, HasSpace, HasDot, HasStar, HasGt, HasLow, Has127);
+            NotAllowedRequired(Validator.ValidateStreamName, _utfOnlyStrings);
+            AllowedNotRequiredEmptyAsNull(Validator.ValidateStreamName, null, String.Empty);
         }
 
         [Fact]
-        public void TestValidateStreamNameRequired()
+        public void TestValidateDurable()
         {
-            Allowed(Validator.ValidateStreamNameRequired, Plain, HasDash);
-            NotAllowed(Validator.ValidateStreamNameRequired, null, Empty, HasDot, HasStar, HasGt, HasSpace);
-        }
-
-        [Fact]
-        public void TestValidateStreamNameOrEmptyAsNull()
-        {
-            Allowed(Validator.ValidateStreamNameOrEmptyAsNull, Plain, HasDash);
-            AllowedEmptyAsNull(Validator.ValidateStreamNameOrEmptyAsNull, null, Empty);
-            NotAllowed(Validator.ValidateStreamNameOrEmptyAsNull, HasDot, HasStar, HasGt, HasSpace);
-        }
-
-        [Fact]
-        public void TestValidateDurableOrEmptyAsNull()
-        {
-            Allowed(Validator.ValidateDurableOrEmptyAsNull, Plain, HasSpace, HasDash);
-            AllowedEmptyAsNull(Validator.ValidateDurableOrEmptyAsNull, null, Empty);
-            NotAllowed(Validator.ValidateDurableOrEmptyAsNull, HasDot, HasStar, HasGt);
+            AllowedRequired(Validator.ValidateDurable, Plain, HasPrintable, HasDollar);
+            NotAllowedRequired(Validator.ValidateDurable, null, String.Empty, HasSpace, HasDot, HasStar, HasGt, HasLow, Has127);
+            NotAllowedRequired(Validator.ValidateDurable, _utfOnlyStrings);
+            AllowedNotRequiredEmptyAsNull(Validator.ValidateDurable, null, String.Empty);
         }
 
         [Fact]
         public void TestValidateDurableRequired()
         {
-            Allowed(Validator.ValidateDurableRequired, Plain, HasSpace, HasDash);
-            NotAllowed(Validator.ValidateDurableRequired, null, Empty, HasDot, HasStar, HasGt);
-            Assert.Throws<ArgumentException>(() => Validator.ValidateDurableRequired(null, null));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateDurableRequired(HasDot, null));
-            ConsumerConfiguration cc1 = new ConsumerConfiguration.Builder().Build();
-            Assert.Throws<ArgumentException>(() => Validator.ValidateDurableRequired(null, cc1));
-            ConsumerConfiguration cc2 = new ConsumerConfiguration.Builder().Durable(HasDot).Build();
-            Assert.Throws<ArgumentException>(() => Validator.ValidateDurableRequired(null, cc2));
+            AllowedRequired((s, r) => Validator.ValidateDurableRequired(s, null), Plain, HasPrintable);
+            NotAllowedRequired((s, r) => Validator.ValidateDurableRequired(s, null), null, string.Empty, HasSpace, HasDot, HasStar, HasGt, HasLow, Has127);
+            NotAllowedRequired((s, r) => Validator.ValidateDurableRequired(s, null), _utfOnlyStrings);
+
+            foreach (var data in new []{Plain, HasPrintable, HasDollar})
+            {
+                ConsumerConfiguration ccAllowed = ConsumerConfiguration.Builder().Durable(data).Build();
+                Assert.Equal(data, Validator.ValidateDurableRequired(null, ccAllowed));
+            }
+
+            foreach (var data in new []{null, string.Empty, HasSpace, HasDot, HasStar, HasGt, HasLow, Has127})
+            {
+                ConsumerConfiguration cc = ConsumerConfiguration.Builder().Durable(data).Build();
+                NotAllowedRequired((s, r) => Validator.ValidateDurableRequired(null, cc));
+            }
+
+            foreach (var data in _utfOnlyStrings)
+            {
+                ConsumerConfiguration cc = ConsumerConfiguration.Builder().Durable(data).Build();
+                NotAllowedRequired((s, r) => Validator.ValidateDurableRequired(null, cc));
+            }
         }
 
         [Fact]
@@ -178,7 +188,7 @@ namespace UnitTests.Internals
             Assert.Throws<ArgumentException>(() => Validator.ValidateJetStreamPrefix(HasGt));
             Assert.Throws<ArgumentException>(() => Validator.ValidateJetStreamPrefix(HasDollar));
             Assert.Throws<ArgumentException>(() => Validator.ValidateJetStreamPrefix(HasSpace));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateJetStreamPrefix(HasTab));
+            Assert.Throws<ArgumentException>(() => Validator.ValidateJetStreamPrefix(HasLow));
         }
 
         [Fact]
@@ -203,44 +213,25 @@ namespace UnitTests.Internals
             Assert.False(Validator.ZeroOrLtMinus1(-1));
         }
 
-        [Fact]
-        public void TestContainsWhitespace()
-        {
-            Assert.True(Validator.ContainsWhitespace(HasSpace));
-            Assert.False(Validator.ContainsWhitespace(Plain));
-            Assert.False(Validator.ContainsWhitespace(null));
-        }
-
-        [Fact]
-        public void TestContainsWildGtDollarSpaceTab()
-        {
-            Assert.True(Validator.ContainsWildGtDollarSpaceTab(HasStar));
-            Assert.True(Validator.ContainsWildGtDollarSpaceTab(HasGt));
-            Assert.True(Validator.ContainsWildGtDollarSpaceTab(HasDollar));
-            Assert.True(Validator.ContainsWildGtDollarSpaceTab(HasTab));
-            Assert.False(Validator.ContainsWildGtDollarSpaceTab(Plain));
-            Assert.False(Validator.ContainsWildGtDollarSpaceTab(null));
-        }
-
-        private void Allowed(Func<string, string> test, params String[] strings)
+        private void AllowedRequired(Func<string, bool, string> test, params String[] strings)
         {
             foreach (string s in strings) {
-                Assert.Equal(s, test.Invoke(s));
+                Assert.Equal(s, test.Invoke(s, true));
             }
         }
 
-        private void AllowedEmptyAsNull(Func<string, string> test, params String[] strings)
+        private void AllowedNotRequiredEmptyAsNull(Func<string, bool, string> test, params String[] strings)
         {
             foreach (string s in strings) {
-                Assert.Null(test.Invoke(s));
+                Assert.Null(test.Invoke(s, false));
             }
         }
 
-        private void NotAllowed(Func<string, string> test, params String[] strings)
+        private void NotAllowedRequired(Func<string, bool, string> test, params String[] strings)
         {
             foreach (string s in strings)
             {
-                Assert.Throws<ArgumentException>(() => test.Invoke(s));
+                Assert.Throws<ArgumentException>(() => test.Invoke(s, true));
             }
         }
     }

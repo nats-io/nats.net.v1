@@ -5,15 +5,15 @@ namespace UnitTests
 {
     public class TestBase
     {
-        internal const string Empty     = "";
-        internal const string Plain     = "plain";
-        internal const string HasSpace  = "has space";
-        internal const string HasDash   = "has-dash";
-        internal const string HasDot    = "has.dot";
-        internal const string HasStar   = "has*star";
-        internal const string HasGt     = "has>gt";
-        internal const string HasDollar = "has$dollar";
-        internal const string HasTab    = "has\tgt";
+        internal const string Plain        = "plain";
+        internal const string HasSpace     = "has space";
+        internal const string HasPrintable = "has-print!able";
+        internal const string HasDot       = "has.dot";
+        internal const string HasStar      = "has*star";
+        internal const string HasGt        = "has>gt";
+        internal const string HasDollar    = "has$dollar";
+        internal const string HasLow       = "has\tlower\rthan\nspace";
+        internal static readonly string Has127 = "has" + (char)127 + "127";
 
         internal static string ReadDataFile(string name)
         {
@@ -28,7 +28,7 @@ namespace UnitTests
         private static string FileSpec(string name)
         {
             string path = Directory.GetCurrentDirectory();
-            return Path.Combine(path, "..", "..", "..", "Jetstream", "Data", name);
+            return Path.Combine(path, "..", "..", "..", "Data", name);
         }
 
         internal static DateTime AsDateTime(string dtString)

@@ -91,7 +91,17 @@ namespace NATS.Client.JetStream
             };
         }
 
-        public sealed class Builder
+        public static ConsumerConfigurationBuilder Builder()
+        {
+            return new ConsumerConfigurationBuilder();
+        }
+        
+        public static ConsumerConfigurationBuilder Builder(ConsumerConfiguration cc)
+        {
+            return new ConsumerConfigurationBuilder(cc);
+        }
+
+        public sealed class ConsumerConfigurationBuilder
         {
             private DeliverPolicy _deliverPolicy;
             private AckPolicy _ackPolicy;
@@ -107,53 +117,37 @@ namespace NATS.Client.JetStream
             private long _rateLimit;
             private long _maxAckPending;
 
-            public string GetDurable()
-            {
-                return _durable;
-            }
+            public string Durable() => _durable;
+            public string DeliverSubject() => _deliverSubject;
+            public long MaxAckPending() => _maxAckPending;
+            public AckPolicy AckPolicy() => _ackPolicy;
 
-            public string GetDeliverSubject()
-            {
-                return _deliverSubject;
-            }
+            public ConsumerConfigurationBuilder() {}
 
-            public long GetMaxAckPending()
+            public ConsumerConfigurationBuilder(ConsumerConfiguration cc)
             {
-                return _maxAckPending;
-            }
-
-            public AckPolicy GetAckPolicy()
-            {
-                return _ackPolicy;
-            }
-
-            public Builder() {}
-
-            public Builder(ConsumerConfiguration cc)
-            {
-                if (cc != null)
-                {
-                    _durable = cc.Durable;
-                    _deliverPolicy = cc.DeliverPolicy;
-                    _startSeq = cc.StartSeq;
-                    _startTime = cc.StartTime;
-                    _ackPolicy = cc.AckPolicy;
-                    _ackWait = cc.AckWait;
-                    _maxDeliver = cc.MaxDeliver;
-                    _filterSubject = cc.FilterSubject;
-                    _replayPolicy = cc.ReplayPolicy;
-                    _sampleFrequency = cc.SampleFrequency;
-                    _rateLimit = cc.RateLimit;
-                    _deliverSubject = cc.DeliverSubject;
-                    _maxAckPending = cc.MaxAckPending;
-                }
+                if (cc == null) return;
+                _durable = cc.Durable;
+                _deliverPolicy = cc.DeliverPolicy;
+                _startSeq = cc.StartSeq;
+                _startTime = cc.StartTime;
+                _ackPolicy = cc.AckPolicy;
+                _ackWait = cc.AckWait;
+                _maxDeliver = cc.MaxDeliver;
+                _filterSubject = cc.FilterSubject;
+                _replayPolicy = cc.ReplayPolicy;
+                _sampleFrequency = cc.SampleFrequency;
+                _rateLimit = cc.RateLimit;
+                _deliverSubject = cc.DeliverSubject;
+                _maxAckPending = cc.MaxAckPending;
             }
 
             /// <summary>
             /// Sets the name of the durable subscription.
             /// </summary>
             /// <param name="durable">name of the durable subscription.</param>
-            public Builder Durable(string durable)
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder Durable(string durable)
             {
                 _durable = durable;
                 return this;
@@ -163,7 +157,8 @@ namespace NATS.Client.JetStream
             /// Sets the delivery policy of the ConsumerConfiguration.
             /// </summary>
             /// <param name="policy">the delivery policy.</param>
-            public Builder DeliverPolicy(DeliverPolicy policy)
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder DeliverPolicy(DeliverPolicy policy)
             {
                 _deliverPolicy = policy;
                 return this;
@@ -173,7 +168,8 @@ namespace NATS.Client.JetStream
             /// Sets the subject to deliver messages to.
             /// </summary>
             /// <param name="subject">the delivery subject.</param>
-            public Builder DeliverSubject(string subject)
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder DeliverSubject(string subject)
             {
                 _deliverSubject = subject;
                 return this;
@@ -183,7 +179,8 @@ namespace NATS.Client.JetStream
             /// Sets the start sequence of the ConsumerConfiguration.
             /// </summary>
             /// <param name="sequence">the start sequence</param>
-            public Builder StartSequence(long sequence)
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder StartSequence(long sequence)
             {
                 _startSeq = sequence;
                 return this;
@@ -193,7 +190,8 @@ namespace NATS.Client.JetStream
             /// Sets the start time of the ConsumerConfiguration.
             /// </summary>
             /// <param name="startTime">the start time</param>
-            public Builder StartTime(DateTime startTime)
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder StartTime(DateTime startTime)
             {
                 _startTime = startTime;
                 return this;
@@ -203,7 +201,8 @@ namespace NATS.Client.JetStream
             /// Sets the acknowledgement policy of the ConsumerConfiguration.
             /// </summary>
             /// <param name="policy">the acknowledgement policy.</param>
-            public Builder AckPolicy(AckPolicy policy)
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder AckPolicy(AckPolicy policy)
             {
                 _ackPolicy = policy;
                 return this;
@@ -213,7 +212,8 @@ namespace NATS.Client.JetStream
             /// Sets the acknowledgement wait duration of the ConsumerConfiguration.
             /// </summary>
             /// <param name="timeout">the wait timeout</param>
-            public Builder AckWait(Duration timeout)
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder AckWait(Duration timeout)
             {
                 _ackWait = timeout;
                 return this;
@@ -223,7 +223,8 @@ namespace NATS.Client.JetStream
             /// Sets the maximum delivery amount of the ConsumerConfiguration.
             /// </summary>
             /// <param name="maxDeliver">the maximum delivery amount</param>
-            public Builder MaxDeliver(long maxDeliver)
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder MaxDeliver(long maxDeliver)
             {
                 _maxDeliver = maxDeliver;
                 return this;
@@ -233,7 +234,8 @@ namespace NATS.Client.JetStream
             /// Sets the filter subject of the ConsumerConfiguration.
             /// </summary>
             /// <param name="filterSubject">the filter subject</param>
-            public Builder FilterSubject(string filterSubject)
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder FilterSubject(string filterSubject)
             {
                 _filterSubject = filterSubject;
                 return this;
@@ -243,7 +245,8 @@ namespace NATS.Client.JetStream
             /// Sets the replay policy of the ConsumerConfiguration.
             /// </summary>
             /// <param name="policy">the replay policy.</param>
-            public Builder ReplayPolicy(ReplayPolicy policy)
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder ReplayPolicy(ReplayPolicy policy)
             {
                 _replayPolicy = policy;
                 return this;
@@ -253,7 +256,8 @@ namespace NATS.Client.JetStream
             /// Sets the sample frequency of the ConsumerConfiguration.
             /// </summary>
             /// <param name="frequency">the frequency</param>
-            public Builder SampleFrequency(string frequency)
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder SampleFrequency(string frequency)
             {
                 _sampleFrequency = frequency;
                 return this;
@@ -263,7 +267,8 @@ namespace NATS.Client.JetStream
             /// Set the rate limit of the ConsumerConfiguration.
             /// </summary>
             /// <param name="msgsPerSecond">messages per second to deliver</param>
-            public Builder RateLimit(int msgsPerSecond)
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder RateLimit(int msgsPerSecond)
             {
                 _rateLimit = msgsPerSecond;
                 return this;
@@ -273,7 +278,8 @@ namespace NATS.Client.JetStream
             /// Sets the maximum ack pending.
             /// </summary>
             /// <param name="maxAckPending">maximum pending acknowledgements.</param>
-            public Builder MaxAckPending(long maxAckPending)
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder MaxAckPending(long maxAckPending)
             {
                 _maxAckPending = maxAckPending;
                 return this;
@@ -282,6 +288,7 @@ namespace NATS.Client.JetStream
             /// <summary>
             /// Builds the ConsumerConfiguration
             /// </summary>
+            /// <returns>The ConsumerConfiguration</returns>
             public ConsumerConfiguration Build()
             {
                 return new ConsumerConfiguration(

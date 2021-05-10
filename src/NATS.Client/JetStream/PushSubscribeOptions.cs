@@ -122,14 +122,14 @@ namespace NATS.Client.JetStream
             /// </summary>
             /// <returns>The PushSubscribeOptions object.</returns>
             public PushSubscribeOptions Build() {
-                _stream = Validator.ValidateStreamNameOrEmptyAsNull(_stream);
+                _stream = Validator.ValidateStreamName(_stream, false);
 
-                _durable = Validator.ValidateDurableOrEmptyAsNull(_durable);
+                _durable = Validator.ValidateDurable(_durable, false);
                 if (_durable == null && _consumerConfig != null) {
-                    _durable = Validator.ValidateDurableOrEmptyAsNull(_consumerConfig.Durable);
+                    _durable = Validator.ValidateDurable(_consumerConfig.Durable, false);
                 }
 
-                _consumerConfig = new ConsumerConfiguration.Builder(_consumerConfig)
+                _consumerConfig = ConsumerConfiguration.Builder(_consumerConfig)
                     .Durable(_durable)
                     .DeliverSubject(Validator.EmptyAsNull(_deliverSubject))
                     .Build();

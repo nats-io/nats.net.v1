@@ -64,14 +64,14 @@ namespace UnitTests.JetStream
             Assert.Throws<ArgumentException>(() => builder.WithStream(HasDot).Build());
             Assert.Throws<ArgumentException>(() => builder.WithDurable(HasDot).Build());
 
-            ConsumerConfiguration ccBadDur = new ConsumerConfiguration.Builder().Durable(HasDot).Build();
+            ConsumerConfiguration ccBadDur = ConsumerConfiguration.Builder().Durable(HasDot).Build();
             Assert.Throws<ArgumentException>(() => builder.WithConfiguration(ccBadDur).Build());
 
             // durable directly
             PushSubscribeOptions.Builder().WithDurable(DURABLE).Build();
 
             // in configuration
-            ConsumerConfiguration cc = new ConsumerConfiguration.Builder().Durable(DURABLE).Build();
+            ConsumerConfiguration cc = ConsumerConfiguration.Builder().Durable(DURABLE).Build();
             PushSubscribeOptions.Builder().WithConfiguration(cc).Build();
         }
 
@@ -82,7 +82,7 @@ namespace UnitTests.JetStream
             Assert.Throws<ArgumentException>(() => builder1.WithStream(HasDot).Build());
             Assert.Throws<ArgumentException>(() => builder1.WithDurable(HasDot).Build());
 
-            ConsumerConfiguration ccBadDur = new ConsumerConfiguration.Builder().Durable(HasDot).Build();
+            ConsumerConfiguration ccBadDur = ConsumerConfiguration.Builder().Durable(HasDot).Build();
             Assert.Throws<ArgumentException>(() => builder1.WithConfiguration(ccBadDur).Build());
 
             // durable required direct or in configuration
@@ -90,14 +90,14 @@ namespace UnitTests.JetStream
 
             Assert.Throws<ArgumentException>(() => builder2.Build());
 
-            ConsumerConfiguration ccNoDur = new ConsumerConfiguration.Builder().Build();
+            ConsumerConfiguration ccNoDur = ConsumerConfiguration.Builder().Build();
             Assert.Throws<ArgumentException>(() => builder2.WithConfiguration(ccNoDur).Build());
 
             // durable directly
             PullSubscribeOptions.Builder().WithDurable(DURABLE).Build();
 
             // in configuration
-            ConsumerConfiguration cc = new ConsumerConfiguration.Builder().Durable(DURABLE).Build();
+            ConsumerConfiguration cc = ConsumerConfiguration.Builder().Durable(DURABLE).Build();
             PullSubscribeOptions.Builder().WithConfiguration(cc).Build();
         }
     }
