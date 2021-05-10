@@ -32,51 +32,44 @@ namespace NATS.Client.JetStream
         /// </summary>
         public const long DefaultLastSequence = -1;
 
-        private readonly string _stream = DefaultStream;
-        private readonly Duration _streamTimeout = DefaultTimeout;
-        private readonly string _expectedStream = null;
-        private readonly string _expectedLastMsgId = null;
-        private readonly long _expectedLastSeq = DefaultLastSequence;
-        private readonly string _messageId = null;
+        /// <summary>
+        /// The stream name.
+        /// </summary>
+        public string Stream { get; }
 
         /// <summary>
-        /// Gets the stream name.
+        /// The stream timeout.
         /// </summary>
-        public string Stream { get => _stream; }
-
-        /// <summary>
-        /// Gets the stream timeout.
-        /// </summary>
-        public Duration StreamTimeout { get => _streamTimeout; }
+        public Duration StreamTimeout { get; }
         
         /// <summary>
-        /// Gets the Expected Stream.
+        /// The Expected Stream.
         /// </summary>
-        public string ExpectedStream { get => _expectedStream; }
+        public string ExpectedStream { get; }
         
         /// <summary>
-        /// Gets the Expected Last Message Id.
+        /// The Expected Last Message Id.
         /// </summary>
-        public string ExpectedLastMsgId { get => _expectedLastMsgId; }
+        public string ExpectedLastMsgId { get; }
         
         /// <summary>
-        /// Gets the Expected Last Sequence.
+        /// The Expected Last Sequence.
         /// </summary>
-        public long ExpectedLastSeq { get => _expectedLastSeq; }
+        public long ExpectedLastSeq { get; }
         
         /// <summary>
-        /// Gets the Expected Message Id.
+        /// The Expected Message Id.
         /// </summary>
-        public string MessageId { get => _messageId; }
+        public string MessageId { get; }
 
         private PublishOptions(string stream, Duration streamTimeout, string expectedStream, string expectedLastMsgId, long expectedLastSeq, string messageId)
         {
-            _stream = stream;
-            _streamTimeout = streamTimeout;
-            _expectedStream = expectedStream;
-            _expectedLastMsgId = expectedLastMsgId;
-            _expectedLastSeq = expectedLastSeq;
-            _messageId = messageId;
+            Stream = stream;
+            StreamTimeout = streamTimeout;
+            ExpectedStream = expectedStream;
+            ExpectedLastMsgId = expectedLastMsgId;
+            ExpectedLastSeq = expectedLastSeq;
+            MessageId = messageId;
         }
         
         /// <summary>
