@@ -98,7 +98,7 @@ namespace NATS.Client.JetStream
             /// <param name="stream">Name of the stream</param>
             /// <returns>The Builder</returns>
             public PublishOptionsBuilder WithStream(string stream) {
-                _stream = string.IsNullOrEmpty(stream) ? DefaultStream : Validator.ValidateStreamName(stream);
+                _stream = Validator.ValidateStreamName(stream, false);
                 return this;
             }
 
@@ -115,7 +115,7 @@ namespace NATS.Client.JetStream
             /// <summary>
             /// Set the stream timeout in milliseconds
             /// </summary>
-            /// <param name="timeout">The publish acknowledgement timeout.</param>
+            /// <param name="timeoutMillis">The publish acknowledgement timeout.</param>
             /// <returns>The PublishOptionsBuilder</returns>
             public PublishOptionsBuilder WithTimeout(long timeoutMillis) {
                 _streamTimeout = timeoutMillis < 1 ? DefaultTimeout : Duration.OfMillis(timeoutMillis);

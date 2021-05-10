@@ -26,7 +26,7 @@ namespace UnitTests.JetStream
         {
             DateTime dt = DateTime.UtcNow;
 
-            ConsumerConfiguration c = new ConsumerConfiguration.Builder()
+            ConsumerConfiguration c = ConsumerConfiguration.Builder()
                 .AckPolicy(AckPolicy.Explicit)
                 .AckWait(Duration.OfSeconds(99))
                 .DeliverPolicy(DeliverPolicy.ByStartSequence)

@@ -93,7 +93,7 @@ namespace NATS.Client.JetStream
             /// </summary>
             /// <returns>The PullSubscribeOptions object.</returns>
             public PullSubscribeOptions Build() {
-                _stream = Validator.ValidateStreamNameOrEmptyAsNull(_stream);
+                _stream = Validator.ValidateStreamName(_stream, false);
 
                 _durable = Validator.ValidateDurableRequired(_durable, _consumerConfig);
 
