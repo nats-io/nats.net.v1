@@ -42,7 +42,7 @@ namespace UnitTests.JetStream
             Validate(new StreamConfiguration(testSc.ToJsonNode()));
             Validate(new StreamConfiguration(testSc.ToJsonNode().ToString()));
 
-            StreamConfiguration.Builder builder = new StreamConfiguration.Builder(testSc);
+            StreamConfiguration.StreamConfigurationBuilder builder = StreamConfiguration.Builder(testSc);
             Validate(builder.Build());
             
             builder.Name(testSc.Name)
@@ -119,7 +119,7 @@ namespace UnitTests.JetStream
 
         [Fact]
         public void TestSubjects() {
-            StreamConfiguration.Builder builder = new StreamConfiguration.Builder();
+            StreamConfiguration.StreamConfigurationBuilder builder = StreamConfiguration.Builder();
 
             // subjects(...) replaces
             builder.Subjects(Subject(0));
@@ -185,7 +185,7 @@ namespace UnitTests.JetStream
         [Fact]
         public void TestRetentionPolicy()
         {
-            StreamConfiguration.Builder builder = new StreamConfiguration.Builder();
+            StreamConfiguration.StreamConfigurationBuilder builder = StreamConfiguration.Builder();
             Assert.Equal(RetentionPolicy.Limits, builder.Build().RetentionPolicy);
 
             builder.RetentionPolicy(RetentionPolicy.Interest);
@@ -200,7 +200,7 @@ namespace UnitTests.JetStream
 
         [Fact]
         public void TestStorageType() {
-            StreamConfiguration.Builder builder = new StreamConfiguration.Builder();
+            StreamConfiguration.StreamConfigurationBuilder builder = StreamConfiguration.Builder();
             Assert.Equal(StorageType.File, builder.Build().StorageType);
 
             builder.StorageType(StorageType.Memory);
@@ -212,7 +212,7 @@ namespace UnitTests.JetStream
 
         [Fact]
         public void TestDiscardPolicy() {
-            StreamConfiguration.Builder builder = new StreamConfiguration.Builder();
+            StreamConfiguration.StreamConfigurationBuilder builder = StreamConfiguration.Builder();
             Assert.Equal(DiscardPolicy.Old, builder.Build().DiscardPolicy);
 
             builder.DiscardPolicy(DiscardPolicy.New);
