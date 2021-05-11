@@ -64,14 +64,14 @@ namespace UnitTests.JetStream
             Assert.Throws<ArgumentException>(() => builder.WithStream(HasDot).Build());
             Assert.Throws<ArgumentException>(() => builder.WithDurable(HasDot).Build());
 
-            ConsumerConfiguration ccBadDur = ConsumerConfiguration.Builder().Durable(HasDot).Build();
+            ConsumerConfiguration ccBadDur = ConsumerConfiguration.Builder().WithDurable(HasDot).Build();
             Assert.Throws<ArgumentException>(() => builder.WithConfiguration(ccBadDur).Build());
 
             // durable directly
             PushSubscribeOptions.Builder().WithDurable(DURABLE).Build();
 
             // in configuration
-            ConsumerConfiguration cc = ConsumerConfiguration.Builder().Durable(DURABLE).Build();
+            ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithDurable(DURABLE).Build();
             PushSubscribeOptions.Builder().WithConfiguration(cc).Build();
         }
 
@@ -82,7 +82,7 @@ namespace UnitTests.JetStream
             Assert.Throws<ArgumentException>(() => builder1.WithStream(HasDot).Build());
             Assert.Throws<ArgumentException>(() => builder1.WithDurable(HasDot).Build());
 
-            ConsumerConfiguration ccBadDur = ConsumerConfiguration.Builder().Durable(HasDot).Build();
+            ConsumerConfiguration ccBadDur = ConsumerConfiguration.Builder().WithDurable(HasDot).Build();
             Assert.Throws<ArgumentException>(() => builder1.WithConfiguration(ccBadDur).Build());
 
             // durable required direct or in configuration
@@ -97,7 +97,7 @@ namespace UnitTests.JetStream
             PullSubscribeOptions.Builder().WithDurable(DURABLE).Build();
 
             // in configuration
-            ConsumerConfiguration cc = ConsumerConfiguration.Builder().Durable(DURABLE).Build();
+            ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithDurable(DURABLE).Build();
             PullSubscribeOptions.Builder().WithConfiguration(cc).Build();
         }
     }

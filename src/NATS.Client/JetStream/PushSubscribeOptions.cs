@@ -130,8 +130,8 @@ namespace NATS.Client.JetStream
                 }
 
                 _consumerConfig = ConsumerConfiguration.Builder(_consumerConfig)
-                    .Durable(_durable)
-                    .DeliverSubject(Validator.EmptyAsNull(_deliverSubject))
+                    .WithDurable(_durable)
+                    .WithDeliverSubject(Validator.EmptyAsNull(_deliverSubject))
                     .Build();
 
                 return new PushSubscribeOptions(_stream, _consumerConfig);

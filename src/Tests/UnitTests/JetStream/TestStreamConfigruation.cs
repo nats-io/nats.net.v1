@@ -45,19 +45,19 @@ namespace UnitTests.JetStream
             StreamConfiguration.StreamConfigurationBuilder builder = StreamConfiguration.Builder(testSc);
             Validate(builder.Build());
             
-            builder.Name(testSc.Name)
-                    .Subjects(testSc.Subjects)
-                    .RetentionPolicy(testSc.RetentionPolicy)
-                    .MaxConsumers(testSc.MaxConsumers)
-                    .MaxMessages(testSc.MaxMsgs)
-                    .MaxBytes(testSc.MaxBytes)
-                    .MaxAge(testSc.MaxAge)
-                    .MaxMsgSize(testSc.MaxMsgSize)
-                    .StorageType(testSc.StorageType)
-                    .Replicas(testSc.Replicas)
-                    .NoAck(testSc.NoAck)
-                    .TemplateOwner(testSc.TemplateOwner)
-                    .DiscardPolicy(testSc.DiscardPolicy)
+            builder.WithName(testSc.Name)
+                    .WithSubjects(testSc.Subjects)
+                    .WithRetentionPolicy(testSc.RetentionPolicy)
+                    .WithMaxConsumers(testSc.MaxConsumers)
+                    .WithMaxMessages(testSc.MaxMsgs)
+                    .WithMaxBytes(testSc.MaxBytes)
+                    .WithMaxAge(testSc.MaxAge)
+                    .WithMaxMsgSize(testSc.MaxMsgSize)
+                    .WithStorageType(testSc.StorageType)
+                    .WithReplicas(testSc.Replicas)
+                    .WithNoAck(testSc.NoAck)
+                    .WithTemplateOwner(testSc.TemplateOwner)
+                    .WithDiscardPolicy(testSc.DiscardPolicy)
                     .DuplicateWindow(testSc.DuplicateWindow)
                     .Placement(testSc.Placement)
                     .Mirror(testSc.Mirror)
@@ -122,34 +122,34 @@ namespace UnitTests.JetStream
             StreamConfiguration.StreamConfigurationBuilder builder = StreamConfiguration.Builder();
 
             // subjects(...) replaces
-            builder.Subjects(Subject(0));
+            builder.WithSubjects(Subject(0));
             AssertSubjects(builder.Build(), 0);
 
             // subjects(...) replaces
-            builder.Subjects();
+            builder.WithSubjects();
             AssertSubjects(builder.Build());
 
             // subjects(...) replaces
-            builder.Subjects(Subject(1));
+            builder.WithSubjects(Subject(1));
             AssertSubjects(builder.Build(), 1);
 
             // Subjects(...) replaces
-            builder.Subjects((String)null);
+            builder.WithSubjects((String)null);
             AssertSubjects(builder.Build());
 
             // Subjects(...) replaces
-            builder.Subjects(Subject(2), Subject(3));
+            builder.WithSubjects(Subject(2), Subject(3));
             AssertSubjects(builder.Build(), 2, 3);
 
             // Subjects(...) replaces
-            builder.Subjects(Subject(101), null, Subject(102));
+            builder.WithSubjects(Subject(101), null, Subject(102));
             AssertSubjects(builder.Build(), 101, 102);
 
             // Subjects(...) replaces
             List<String> list45 = new List<String>();
             list45.Add(Subject(4));
             list45.Add(Subject(5));
-            builder.Subjects(list45);
+            builder.WithSubjects(list45);
             AssertSubjects(builder.Build(), 4, 5);
 
             // AddSubjects(...) adds unique
@@ -188,13 +188,13 @@ namespace UnitTests.JetStream
             StreamConfiguration.StreamConfigurationBuilder builder = StreamConfiguration.Builder();
             Assert.Equal(RetentionPolicy.Limits, builder.Build().RetentionPolicy);
 
-            builder.RetentionPolicy(RetentionPolicy.Interest);
+            builder.WithRetentionPolicy(RetentionPolicy.Interest);
             Assert.Equal(RetentionPolicy.Interest, builder.Build().RetentionPolicy);
 
-            builder.RetentionPolicy(RetentionPolicy.WorkQueue);
+            builder.WithRetentionPolicy(RetentionPolicy.WorkQueue);
             Assert.Equal(RetentionPolicy.WorkQueue, builder.Build().RetentionPolicy);
 
-            builder.RetentionPolicy(null);
+            builder.WithRetentionPolicy(null);
             Assert.Equal(RetentionPolicy.Limits, builder.Build().RetentionPolicy);
         }
 
@@ -203,10 +203,10 @@ namespace UnitTests.JetStream
             StreamConfiguration.StreamConfigurationBuilder builder = StreamConfiguration.Builder();
             Assert.Equal(StorageType.File, builder.Build().StorageType);
 
-            builder.StorageType(StorageType.Memory);
+            builder.WithStorageType(StorageType.Memory);
             Assert.Equal(StorageType.Memory, builder.Build().StorageType);
 
-            builder.StorageType(null);
+            builder.WithStorageType(null);
             Assert.Equal(StorageType.File, builder.Build().StorageType);
         }
 
@@ -215,10 +215,10 @@ namespace UnitTests.JetStream
             StreamConfiguration.StreamConfigurationBuilder builder = StreamConfiguration.Builder();
             Assert.Equal(DiscardPolicy.Old, builder.Build().DiscardPolicy);
 
-            builder.DiscardPolicy(DiscardPolicy.New);
+            builder.WithDiscardPolicy(DiscardPolicy.New);
             Assert.Equal(DiscardPolicy.New, builder.Build().DiscardPolicy);
 
-            builder.DiscardPolicy(null);
+            builder.WithDiscardPolicy(null);
             Assert.Equal(DiscardPolicy.Old, builder.Build().DiscardPolicy);
         }
 
