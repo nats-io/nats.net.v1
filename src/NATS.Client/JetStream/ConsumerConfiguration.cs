@@ -33,6 +33,7 @@ namespace NATS.Client.JetStream
         public long RateLimit { get; }
         public long MaxAckPending { get; }
         public Duration IdleHeartbeat { get; }
+        public bool FlowControl { get; }
 
         internal ConsumerConfiguration(string json) : this(JSON.Parse(json)) {}
 
@@ -52,11 +53,13 @@ namespace NATS.Client.JetStream
             RateLimit = ccNode[ApiConstants.RateLimitBps].AsLong;
             MaxAckPending = ccNode[ApiConstants.MaxAckPending].AsLong;
             IdleHeartbeat = Duration.OfNanos(ccNode[ApiConstants.IdleHeartbeat]);
+            FlowControl = ccNode[ApiConstants.FlowControl].AsBool;
         }
 
         internal ConsumerConfiguration(string durable, DeliverPolicy deliverPolicy, long startSeq, DateTime startTime,
             AckPolicy ackPolicy, Duration ackWait, long maxDeliver, string filterSubject, ReplayPolicy replayPolicy,
-            string sampleFrequency, long rateLimit, string deliverSubject, long maxAckPending, Duration idleHeartbeat)
+            string sampleFrequency, long rateLimit, string deliverSubject, long maxAckPending, 
+            Duration idleHeartbeat, bool flowControl)
         {
             Durable = durable;
             DeliverPolicy = deliverPolicy;
@@ -72,6 +75,7 @@ namespace NATS.Client.JetStream
             DeliverSubject = deliverSubject;
             MaxAckPending = maxAckPending;
             IdleHeartbeat = idleHeartbeat;
+            FlowControl = flowControl;
         }
 
         internal JSONNode ToJsonNode()
@@ -91,7 +95,8 @@ namespace NATS.Client.JetStream
                 [ApiConstants.SampleFreq] = SampleFrequency,
                 [ApiConstants.RateLimitBps] = RateLimit,
                 [ApiConstants.MaxAckPending] = MaxAckPending,
-                [ApiConstants.IdleHeartbeat] = IdleHeartbeat.Nanos
+                [ApiConstants.IdleHeartbeat] = IdleHeartbeat.Nanos,
+                [ApiConstants.FlowControl] = FlowControl,
             };
         }
 
@@ -121,6 +126,7 @@ namespace NATS.Client.JetStream
             private long _rateLimit;
             private long _maxAckPending;
             private Duration _idleHeartbeat = Duration.Zero;
+            private bool _flowControl;
 
             public string Durable() => _durable;
             public string DeliverSubject() => _deliverSubject;
@@ -146,6 +152,7 @@ namespace NATS.Client.JetStream
                 _deliverSubject = cc.DeliverSubject;
                 _maxAckPending = cc.MaxAckPending;
                 _idleHeartbeat = cc.IdleHeartbeat;
+                _flowControl = cc.FlowControl;
             }
 
             /// <summary>
@@ -303,6 +310,16 @@ namespace NATS.Client.JetStream
             }
 
             /// <summary>
+            /// Sets the flow control mode of the ConsumerConfiguration
+            /// </summary>
+            /// <param name="flowControl">true to enable flow control.</param>
+            /// <returns>The ConsumerConfiguration</returns>
+            public ConsumerConfigurationBuilder WithFlowControl(bool flowControl) {
+                _flowControl = flowControl;
+                return this;
+            }
+
+            /// <summary>
             /// Builds the ConsumerConfiguration
             /// </summary>
             /// <returns>The ConsumerConfiguration</returns>
@@ -322,7 +339,8 @@ namespace NATS.Client.JetStream
                     _rateLimit,
                     _deliverSubject,
                     _maxAckPending,
-                    _idleHeartbeat
+                    _idleHeartbeat,
+                    _flowControl
                 );
             }
         }

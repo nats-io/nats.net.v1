@@ -41,6 +41,7 @@ namespace UnitTests.JetStream
                 .WithStartSequence(2001)
                 .WithStartTime(dt)
                 .WithDeliverSubject("deliver")
+                .WithFlowControl(true)
                 .Build();
 
             Assert.Equal(AckPolicy.Explicit, c.AckPolicy);
@@ -56,6 +57,7 @@ namespace UnitTests.JetStream
             Assert.Equal(ReplayPolicy.Original, c.ReplayPolicy);
             Assert.Equal(2001, c.StartSeq);
             Assert.Equal(dt, c.StartTime);
+            Assert.True(c.FlowControl);
 
             ConsumerCreateRequest ccr = new ConsumerCreateRequest("stream", c);
             Assert.Equal("stream", ccr.StreamName);
@@ -75,6 +77,7 @@ namespace UnitTests.JetStream
             Assert.Equal(ReplayPolicy.Original, c.ReplayPolicy);
             Assert.Equal(2001, c.StartSeq);
             Assert.Equal(dt, c.StartTime);
+            Assert.True(c.FlowControl);
         }
 
         [Fact]
@@ -96,6 +99,7 @@ namespace UnitTests.JetStream
             Assert.Equal("foo-filter", c.FilterSubject);
             Assert.Equal(42, c.MaxAckPending);
             Assert.Equal("sample_freq-value", c.SampleFrequency);
+            Assert.True(c.FlowControl);
         }
     }
 }
