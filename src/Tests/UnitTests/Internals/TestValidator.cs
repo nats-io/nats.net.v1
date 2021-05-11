@@ -85,19 +85,19 @@ namespace UnitTests.Internals
 
             foreach (var data in new []{Plain, HasPrintable, HasDollar})
             {
-                ConsumerConfiguration ccAllowed = ConsumerConfiguration.Builder().Durable(data).Build();
+                ConsumerConfiguration ccAllowed = ConsumerConfiguration.Builder().WithDurable(data).Build();
                 Assert.Equal(data, Validator.ValidateDurableRequired(null, ccAllowed));
             }
 
             foreach (var data in new []{null, string.Empty, HasSpace, HasDot, HasStar, HasGt, HasLow, Has127})
             {
-                ConsumerConfiguration cc = ConsumerConfiguration.Builder().Durable(data).Build();
+                ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithDurable(data).Build();
                 NotAllowedRequired((s, r) => Validator.ValidateDurableRequired(null, cc));
             }
 
             foreach (var data in _utfOnlyStrings)
             {
-                ConsumerConfiguration cc = ConsumerConfiguration.Builder().Durable(data).Build();
+                ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithDurable(data).Build();
                 NotAllowedRequired((s, r) => Validator.ValidateDurableRequired(null, cc));
             }
         }

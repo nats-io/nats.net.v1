@@ -27,23 +27,25 @@ namespace UnitTests.JetStream
             DateTime dt = DateTime.UtcNow;
 
             ConsumerConfiguration c = ConsumerConfiguration.Builder()
-                .AckPolicy(AckPolicy.Explicit)
-                .AckWait(Duration.OfSeconds(99))
-                .DeliverPolicy(DeliverPolicy.ByStartSequence)
-                .Durable("durable")
-                .FilterSubject("fs")
-                .MaxDeliver(5555)
-                .MaxAckPending(6666)
-                .RateLimit(4242)
-                .ReplayPolicy(ReplayPolicy.Original)
-                .SampleFrequency("10s")
-                .StartSequence(2001)
-                .StartTime(dt)
-                .DeliverSubject("deliver")
+                .WithAckPolicy(AckPolicy.Explicit)
+                .WithAckWait(Duration.OfSeconds(99))
+                .WithDeliverPolicy(DeliverPolicy.ByStartSequence)
+                .WithDurable("durable")
+                .WithFilterSubject("fs")
+                .WithMaxDeliver(5555)
+                .WithMaxAckPending(6666)
+                .WithIdleHeartbeat(Duration.OfSeconds(66))
+                .WithRateLimit(4242)
+                .WithReplayPolicy(ReplayPolicy.Original)
+                .WithSampleFrequency("10s")
+                .WithStartSequence(2001)
+                .WithStartTime(dt)
+                .WithDeliverSubject("deliver")
                 .Build();
 
             Assert.Equal(AckPolicy.Explicit, c.AckPolicy);
             Assert.Equal(Duration.OfSeconds(99), c.AckWait);
+            Assert.Equal(Duration.OfSeconds(66), c.IdleHeartbeat);
             Assert.Equal(DeliverPolicy.ByStartSequence, c.DeliverPolicy);
             Assert.Equal("deliver", c.DeliverSubject);
             Assert.Equal("durable", c.Durable);
@@ -60,10 +62,10 @@ namespace UnitTests.JetStream
             Assert.NotNull(ccr.Config);
 
             JSONNode node = ccr.ToJsonNode();
-            c = new ConsumerConfiguration(node[ApiConstants.Config].ToString());
             c = new ConsumerConfiguration(node[ApiConstants.Config]);
             Assert.Equal(AckPolicy.Explicit, c.AckPolicy);
             Assert.Equal(Duration.OfSeconds(99), c.AckWait);
+            Assert.Equal(Duration.OfSeconds(66), c.IdleHeartbeat);
             Assert.Equal(DeliverPolicy.ByStartSequence, c.DeliverPolicy);
             Assert.Equal("deliver", c.DeliverSubject);
             Assert.Equal("durable", c.Durable);
@@ -83,6 +85,7 @@ namespace UnitTests.JetStream
             Assert.Equal(DeliverPolicy.All, c.DeliverPolicy);
             Assert.Equal(AckPolicy.All, c.AckPolicy);
             Assert.Equal(Duration.OfSeconds(30), c.AckWait);
+            Assert.Equal(Duration.OfSeconds(20), c.IdleHeartbeat);
             Assert.Equal(10, c.MaxDeliver);
             Assert.Equal(73, c.RateLimit);
             Assert.Equal(ReplayPolicy.Original, c.ReplayPolicy);

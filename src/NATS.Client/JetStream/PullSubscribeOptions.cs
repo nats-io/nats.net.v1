@@ -98,7 +98,7 @@ namespace NATS.Client.JetStream
                 _durable = Validator.ValidateDurableRequired(_durable, _consumerConfig);
 
                 _consumerConfig = ConsumerConfiguration.Builder(_consumerConfig)
-                    .Durable(_durable)
+                    .WithDurable(_durable)
                     .Build();
 
                 return new PullSubscribeOptions(_stream, _consumerConfig);

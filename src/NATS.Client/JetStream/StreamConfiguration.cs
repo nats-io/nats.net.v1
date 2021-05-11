@@ -129,17 +129,17 @@ namespace NATS.Client.JetStream
         {
             private string _name;
             private readonly List<string> _subjects = new List<string>();
-            private RetentionPolicy _retentionPolicy = JetStream.RetentionPolicy.Limits;
+            private RetentionPolicy _retentionPolicy = RetentionPolicy.Limits;
             private long _maxConsumers = -1;
             private long _maxMsgs = -1;
             private long _maxBytes = -1;
             private Duration _maxAge = Duration.Zero;
             private long _maxMsgSize = -1;
-            private StorageType _storageType = JetStream.StorageType.File;
+            private StorageType _storageType = StorageType.File;
             private int _replicas = -1;
             private bool _noAck;
             private string _templateOwner;
-            private DiscardPolicy _discardPolicy = JetStream.DiscardPolicy.Old;
+            private DiscardPolicy _discardPolicy = DiscardPolicy.Old;
             private Duration _duplicateWindow = Duration.Zero;
             private Placement _placement;
             private Mirror _mirror;
@@ -151,7 +151,7 @@ namespace NATS.Client.JetStream
             {
                 if (sc == null) return;
                 _name = sc.Name;
-                Subjects(sc.Subjects);
+                WithSubjects(sc.Subjects);
                 _retentionPolicy = sc.RetentionPolicy;
                 _maxConsumers = sc.MaxConsumers;
                 _maxMsgs = sc.MaxMsgs;
@@ -174,7 +174,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="name">name of the stream.</param>
         /// <returns>The StreamConfigurationBuilder</returns>
-        public StreamConfigurationBuilder Name(string name) {
+        public StreamConfigurationBuilder WithName(string name) {
             _name = name;
             return this;
         }
@@ -184,7 +184,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="subjects">the stream's subjects</param>
         /// <returns>The StreamConfigurationBuilder</returns>
-        public StreamConfigurationBuilder Subjects(params string[] subjects) {
+        public StreamConfigurationBuilder WithSubjects(params string[] subjects) {
             _subjects.Clear();
             return AddSubjects(subjects);
         }
@@ -194,7 +194,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="subjects">the stream's subjects</param>
         /// <returns>The StreamConfigurationBuilder</returns>
-        public StreamConfigurationBuilder Subjects(List<string> subjects) {
+        public StreamConfigurationBuilder WithSubjects(List<string> subjects) {
             _subjects.Clear();
             return AddSubjects(subjects);
         }
@@ -236,8 +236,8 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="policy">the retention policy of the StreamConfiguration</param>
         /// <returns>The StreamConfigurationBuilder</returns>
-        public StreamConfigurationBuilder RetentionPolicy(RetentionPolicy? policy) {
-            _retentionPolicy = policy ?? JetStream.RetentionPolicy.Limits;
+        public StreamConfigurationBuilder WithRetentionPolicy(RetentionPolicy? policy) {
+            _retentionPolicy = policy ?? RetentionPolicy.Limits;
             return this;
         }
 
@@ -246,7 +246,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="maxConsumers">the maximum number of consumers</param>
         /// <returns>The StreamConfigurationBuilder</returns>
-        public StreamConfigurationBuilder MaxConsumers(long maxConsumers) {
+        public StreamConfigurationBuilder WithMaxConsumers(long maxConsumers) {
             _maxConsumers = Validator.ValidateMaxConsumers(maxConsumers);
             return this;
         }
@@ -256,7 +256,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="maxMsgs">the maximum number of messages</param>
         /// <returns>The StreamConfigurationBuilder</returns>
-        public StreamConfigurationBuilder MaxMessages(long maxMsgs) {
+        public StreamConfigurationBuilder WithMaxMessages(long maxMsgs) {
             _maxMsgs = Validator.ValidateMaxMessages(maxMsgs);
             return this;
         }
@@ -266,7 +266,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="maxBytes">the maximum number of bytes</param>
         /// <returns>The StreamConfigurationBuilder</returns>
-        public StreamConfigurationBuilder MaxBytes(long maxBytes) {
+        public StreamConfigurationBuilder WithMaxBytes(long maxBytes) {
             _maxBytes = Validator.ValidateMaxBytes(maxBytes);
             return this;
         }
@@ -276,7 +276,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="maxAge">the maximum message age</param>
         /// <returns>The StreamConfigurationBuilder</returns>
-        public StreamConfigurationBuilder MaxAge(Duration maxAge) {
+        public StreamConfigurationBuilder WithMaxAge(Duration maxAge) {
             _maxAge = Validator.ValidateDurationNotRequiredGtOrEqZero(maxAge);
             return this;
         }
@@ -286,7 +286,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="maxMsgSize">the maximum message size</param>
         /// <returns>The StreamConfigurationBuilder</returns>
-        public StreamConfigurationBuilder MaxMsgSize(long maxMsgSize) {
+        public StreamConfigurationBuilder WithMaxMsgSize(long maxMsgSize) {
             _maxMsgSize = Validator.ValidateMaxMessageSize(maxMsgSize);
             return this;
         }
@@ -296,8 +296,8 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="storageType">the storage type</param>
         /// <returns>The StreamConfigurationBuilder</returns>
-        public StreamConfigurationBuilder StorageType(StorageType? storageType) {
-            _storageType = storageType?? JetStream.StorageType.File;
+        public StreamConfigurationBuilder WithStorageType(StorageType? storageType) {
+            _storageType = storageType ?? StorageType.File;
             return this;
         }
 
@@ -306,7 +306,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="replicas">the number of replicas to store this message on</param>
         /// <returns>The StreamConfigurationBuilder</returns>
-        public StreamConfigurationBuilder Replicas(int replicas) {
+        public StreamConfigurationBuilder WithReplicas(int replicas) {
             _replicas = Validator.ValidateNumberOfReplicas(replicas);
             return this;
         }
@@ -317,7 +317,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="noAck">true to disable acknowledgements.</param>
         /// <returns>The StreamConfigurationBuilder</returns>
-        public StreamConfigurationBuilder NoAck(bool noAck) {
+        public StreamConfigurationBuilder WithNoAck(bool noAck) {
             _noAck = noAck;
             return this;
         }
@@ -327,7 +327,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="templateOwner">the stream template of the stream.</param>
         /// <returns>The StreamConfigurationBuilder</returns>
-        public StreamConfigurationBuilder TemplateOwner(string templateOwner) {
+        public StreamConfigurationBuilder WithTemplateOwner(string templateOwner) {
             _templateOwner = Validator.EmptyAsNull(templateOwner);
             return this;
         }
@@ -337,8 +337,8 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="policy">the discard policy of the StreamConfiguration</param>
         /// <returns>The StreamConfigurationBuilder</returns>
-        public StreamConfigurationBuilder DiscardPolicy(DiscardPolicy? policy) {
-            _discardPolicy = policy?? JetStream.DiscardPolicy.Old;
+        public StreamConfigurationBuilder WithDiscardPolicy(DiscardPolicy? policy) {
+            _discardPolicy = policy ?? DiscardPolicy.Old;
             return this;
         }
 

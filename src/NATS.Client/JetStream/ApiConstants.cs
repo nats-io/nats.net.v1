@@ -52,6 +52,7 @@ namespace NATS.Client.JetStream
         internal const string Hdrs = "hdrs";
         internal const string Headers = "headers";
         internal const string Host = "host";
+        internal const string IdleHeartbeat = "idle_heartbeat";
         internal const string Jetstream = "jetstream";
         internal const string Lag = "lag";
         internal const string LameDuckMode = "ldm";
@@ -90,7 +91,7 @@ namespace NATS.Client.JetStream
         internal const string Port = "port";
         internal const string Proto = "proto";
         internal const string Purged = "purged";
-        internal const string RateLimit = "rate_limit";
+        internal const string RateLimitBps = "rate_limit_bps";
         internal const string ReplayPolicy = "replay_policy";
         internal const string Replica = "replica";
         internal const string Replicas = "replicas";
