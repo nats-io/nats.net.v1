@@ -72,6 +72,30 @@ namespace IntegrationTests
         public static NATSServer CreateFast(int port, string args = null)
             => new NATSServer(TimeSpan.Zero, port, args);
 
+        public static NATSServer CreateJetStreamFast(string args = null)
+            => CreateJetStreamFast(Defaults.Port, args);
+
+        public static NATSServer CreateJetStreamFast(int port, string args = null)
+        {
+            args = args == null
+                ? $"-js"
+                : $"{args} -js";
+
+            return new NATSServer(TimeSpan.Zero, port, args); 
+        }
+
+        public static NATSServer CreateJetStreamFastAndVerify(string args = null)
+            => CreateFastAndVerify(Defaults.Port, args);
+
+        public static NATSServer CreateJetStreamFastAndVerify(int port, string args = null)
+        {
+            args = args == null
+                ? $"-js"
+                : $"{args} -js";
+
+            return CreateFastAndVerify(port, args);
+        }
+
         public static NATSServer CreateFastAndVerify(string args = null)
             => CreateFastAndVerify(Defaults.Port, args);
 
