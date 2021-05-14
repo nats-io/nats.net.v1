@@ -85,7 +85,7 @@ namespace IntegrationTests
         }
 
         public static NATSServer CreateJetStreamFastAndVerify(string args = null)
-            => CreateFastAndVerify(Defaults.Port, args);
+            => CreateJetStreamFastAndVerify(Defaults.Port, args);
 
         public static NATSServer CreateJetStreamFastAndVerify(int port, string args = null)
         {
