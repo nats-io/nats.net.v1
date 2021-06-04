@@ -22,8 +22,8 @@ namespace NATS.Client.JetStream
         public DeliverPolicy DeliverPolicy { get; }
         public AckPolicy AckPolicy { get; }
         public ReplayPolicy ReplayPolicy { get; }
-        public string Durable { get; }
-        public string DeliverSubject { get; }
+        public string Durable { get; internal set; }
+        public string DeliverSubject { get; internal set; }
         public long StartSeq { get; }
         public DateTime StartTime { get; }
         public Duration AckWait { get; }
@@ -113,7 +113,7 @@ namespace NATS.Client.JetStream
         public sealed class ConsumerConfigurationBuilder
         {
             private DeliverPolicy _deliverPolicy = DeliverPolicy.All;
-            private AckPolicy _ackPolicy = JetStream.AckPolicy.Explicit;
+            private AckPolicy _ackPolicy = AckPolicy.Explicit;
             private ReplayPolicy _replayPolicy = ReplayPolicy.Instant;
             private string _durable;
             private string _deliverSubject;
@@ -131,7 +131,7 @@ namespace NATS.Client.JetStream
             public string Durable() => _durable;
             public string DeliverSubject() => _deliverSubject;
             public long MaxAckPending() => _maxAckPending;
-            public AckPolicy AckPolicy() => _ackPolicy;
+            public AckPolicy AcknowedgmementPolicy() => _ackPolicy;
 
             public ConsumerConfigurationBuilder() {}
 
@@ -217,7 +217,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithAckPolicy(AckPolicy? policy)
             {
-                _ackPolicy = policy ?? JetStream.AckPolicy.Explicit;
+                _ackPolicy = policy ?? AckPolicy.Explicit;
                 return this;
             }
 

@@ -31,6 +31,11 @@ namespace NATS.Client.JetStream
         }
 
         /// <summary>
+        /// The default JetStream prefix
+        /// </summary>
+        public static readonly string DefaultPrefix = NatsJetStreamConstants.JsapiPrefix;
+
+        /// <summary>
         /// Gets the prefix.
         /// </summary>
         public string Prefix { get => _prefix; }
@@ -68,9 +73,9 @@ namespace NATS.Client.JetStream
 
         public sealed class JetStreamOptionsBuilder
         {
-            private string _prefix;
-            private Duration _requestTimeout;
-            private bool _publishNoAck;
+            private string _prefix = JetStreamOptions.DefaultPrefix;
+            private Duration _requestTimeout = JetStreamOptions.DefaultTimeout;
+            private bool _publishNoAck = false;
 
             /// <summary>
             /// Construct a builder

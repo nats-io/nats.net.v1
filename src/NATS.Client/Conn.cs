@@ -2846,7 +2846,7 @@ namespace NATS.Client
             return request;
         }
 
-        private Msg requestSync(string subject, byte[] headers, byte[] data, int offset, int count, int timeout)
+        internal Msg requestSync(string subject, byte[] headers, byte[] data, int offset, int count, int timeout)
         {
             if (string.IsNullOrWhiteSpace(subject))
                 throw new NATSBadSubscriptionException();

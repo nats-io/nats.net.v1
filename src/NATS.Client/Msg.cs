@@ -82,6 +82,26 @@ namespace NATS.Client
         /// </summary>
         public static readonly string NotFound = "404";
 
+        /// <summary>
+        /// JetStream expected last sequence header name.
+        /// </summary>
+        public static readonly string ExpLastSeqHeader = "Nats-Expected-Last-Sequence";
+
+        /// <summary>
+        /// JetStream expected last message ID header Name.
+        /// </summary>
+        public static readonly string ExpLastIdHeader = "Nats-Expected-Last-Msg-Id";
+
+        /// <summary>
+        /// JetStream expected streame header name.
+        /// </summary>
+        public static readonly string ExpStreamHeader = "Nats-Expected-Stream";
+
+        /// <summary>
+        /// JetStream expected message ID header name.
+        /// </summary>
+        public static readonly string MsgIdHeader = "Nats-Msg-Id";
+
         // Cache the serialized headers to optimize reuse
         private byte[] bytes = null;
 
@@ -450,7 +470,7 @@ namespace NATS.Client
     /// payload, optional header, and subscription information, sent or
     /// received by the client application.
     /// </summary>
-    public sealed class Msg
+    public class Msg
     {
         private static readonly byte[] Empty = new byte[0];
         private string subject;
@@ -719,5 +739,68 @@ namespace NATS.Client
                 return header?.Count > 0;
             }
         }
+
+        #region JetStream
+
+        /// <summary>
+        /// Gets the metadata associated with a JetStream message.
+        /// </summary>
+        public virtual JetStream.MetaData Metadata { get { return null; } }
+
+        /// <summary>
+        /// Acknowledges a JetStream messages received from a Consumer,
+        /// indicating the message will not be resent.
+        /// </summary>
+        /// <remarks>
+        /// This is a NOOP for standard NATS messages.
+        /// </remarks>
+        public virtual void Ack() { /* noop */ }
+
+        /// <summary>
+        /// Acknowledges a JetStream message received from a Consumer,
+        /// indicating the message should not be received again later.
+        /// A timeout of zero does not confirm the acknowledgement.
+        /// </summary>
+        /// <param name="timeout">the duration to wait for an ack
+        /// confirmation</param>
+        /// <remarks>
+        /// This is a NOOP for standard NATS messages.
+        /// </remarks>
+        public virtual void AckSync(int timeout) { /* noop */ }
+
+        /// <summary>
+        /// Acknowledges a JetStream message has been received but indicates
+        /// that the message is not completely processed and should be sent
+        /// again later.
+        /// </summary>
+        /// <remarks>
+        /// This is a NOOP for standard NATS messages.
+        /// </remarks>
+        public virtual void Nak() { /* noop */ }
+
+        /// <summary>
+        /// Prevents this message from ever being delivered regardless of
+        /// maxDeliverCount.
+        /// </summary>
+        /// <remarks>
+        /// This is a NOOP for standard NATS messages.
+        /// </remarks>
+        public virtual void Term() {  /* noop */ }
+
+        /// <summary>
+        /// Indicates that this message is being worked on and reset redelivery timer in the server.
+        /// </summary>
+        /// <remarks>
+        /// This is a NOOP for standard NATS messages.
+        /// </remarks>
+        public virtual void InProgress() {  /* noop */ }
+
+        /// <summary>
+        /// Checks if a message is from Jetstream or is a standard message.
+        /// </summary>
+        /// <returns>True if this is a JetStream Message.</returns>
+        public virtual bool IsJetStream { get { return false; } }
+
+        #endregion
     }
 }

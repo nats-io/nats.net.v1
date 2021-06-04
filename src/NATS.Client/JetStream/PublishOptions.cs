@@ -16,7 +16,7 @@ using NATS.Client.Internals;
 namespace NATS.Client.JetStream
 {
     public sealed class PublishOptions
-    {
+    {          
         /// <summary>
         /// The default timeout (2000ms)
         /// </summary>
@@ -62,7 +62,8 @@ namespace NATS.Client.JetStream
         /// </summary>
         public string MessageId { get; }
 
-        private PublishOptions(string stream, Duration streamTimeout, string expectedStream, string expectedLastMsgId, long expectedLastSeq, string messageId)
+        private PublishOptions(string stream, Duration streamTimeout, string expectedStream,
+            string expectedLastMsgId, long expectedLastSeq, string messageId)
         {
             Stream = stream;
             StreamTimeout = streamTimeout;
@@ -82,7 +83,10 @@ namespace NATS.Client.JetStream
         {
             return new PublishOptionsBuilder();
         }
-        
+
+        /// <summary>
+        /// The PublishOptionsBuilder builds PublishOptions
+        /// </summary>
         public sealed class PublishOptionsBuilder
         {
             private string _stream = DefaultStream;
