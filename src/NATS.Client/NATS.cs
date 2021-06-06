@@ -456,14 +456,14 @@ namespace NATS.Client
                 nextChar = (byte)((b << bitsRemaining) & 31);
             }
 
-            //if we didn't end with a full char
-            if (arrayIndex != charCount)
+            // if we didn't end with a full char
+            if (arrayIndex < charCount)
             {
                 returnArray[arrayIndex++] = ValueToChar(nextChar);
-                while (arrayIndex != charCount) returnArray[arrayIndex++] = '='; //padding
+                // NOTE: Base32 padding omitted
             }
 
-            return new string(returnArray);
+            return new string(returnArray, 0, arrayIndex);
         }
 
         private static int CharToValue(char c)

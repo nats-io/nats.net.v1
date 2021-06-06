@@ -38,6 +38,7 @@ namespace UnitTests
         {
             string user = Nkeys.CreateUserSeed();
             Assert.NotEmpty(user);
+            Assert.False(user.EndsWith("=", StringComparison.Ordinal));
             Assert.NotNull(Nkeys.FromSeed(user));
             string pk = Nkeys.PublicKeyFromSeed(user);
             Assert.Equal('U', pk[0]);
@@ -48,6 +49,7 @@ namespace UnitTests
         {
             string acc = Nkeys.CreateAccountSeed();
             Assert.NotEmpty(acc);
+            Assert.False(acc.EndsWith("=", StringComparison.Ordinal));
             Assert.NotNull(Nkeys.FromSeed(acc));
             string pk = Nkeys.PublicKeyFromSeed(acc);
             Assert.Equal('A', pk[0]);
@@ -58,6 +60,7 @@ namespace UnitTests
         {
             string op = Nkeys.CreateOperatorSeed();
             Assert.NotEmpty(op);
+            Assert.False(op.EndsWith("=", StringComparison.Ordinal));
             Assert.NotNull(Nkeys.FromSeed(op));
             string pk = Nkeys.PublicKeyFromSeed(op);
             Assert.Equal('O', pk[0]);
