@@ -26,7 +26,7 @@ namespace NATS.Client.JetStream
         /// <summary>
         /// Gets the metadata associated with a JetStream message.
         /// </summary>
-        public MetaData MetaData { get; }
+        public override MetaData Metadata { get; }
 
 
         private IConnection Connection { get; }
@@ -45,6 +45,7 @@ namespace NATS.Client.JetStream
                 return false;
             }
 
+            // TODO - is this valid?
             if (replySubj[0] != '$' ||
                 replySubj[1] != 'J' ||
                 replySubj[2] != 'S' ||
@@ -72,7 +73,7 @@ namespace NATS.Client.JetStream
         internal JetStreamMsg(IConnection conn, string subject, string reply, byte[]data) : base(subject, reply, data)
         {
             Connection = conn;
-            MetaData = new MetaData(reply);
+            Metadata = new MetaData(reply);
         }
 
         internal JetStream CheckReply(out bool isPullMode)
@@ -146,6 +147,12 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <returns></returns>
         public override bool IsJetStream { get { return true; } }
+
+        /// <summary>
+        /// A JetStream message does not have a reply that is presented
+        /// to the application.
+        /// </summary>
+        public new string Reply { get { return null; } }
     }
 
     /// <summary>
@@ -218,7 +225,7 @@ namespace NATS.Client.JetStream
         internal MetaData(string metaData)
         {
             string[] tokens = metaData?.Split('.');
-            if (tokens.Length != 9)
+            if (tokens.Length != 8)
             {
                 throw new NATSException($"Invalid MetaData: {metaData}");
             }
@@ -227,7 +234,7 @@ namespace NATS.Client.JetStream
             Consumer = tokens[3];
             NumDelivered = ulong.Parse(tokens[4]);
             Sequence = new Sequence(ulong.Parse(tokens[5]), ulong.Parse(tokens[6]));
-            TimestampNanos = ulong.Parse(tokens[6]);
+            TimestampNanos = ulong.Parse(tokens[7]);
             Timestamp = epochTime.AddTicks((long)TimestampNanos/100);
         }
 

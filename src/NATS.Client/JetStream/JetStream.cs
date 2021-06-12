@@ -21,15 +21,16 @@ namespace NATS.Client.JetStream
         public string Prefix { get; }
         public JetStreamOptions Options { get; }
         public IConnection Connection { get; }
+        public int Timeout { get; }
 
-        private readonly int timeout;
+        private static readonly PublishOptions defaultPubOpts = PublishOptions.Builder().Build();
 
         internal JetStream(IConnection connection, JetStreamOptions options)
         {
             Prefix = options.Prefix;
             Connection = connection;
             Options = options;
-            timeout = (int)options.RequestTimeout.Millis;
+            Timeout = (int)options.RequestTimeout.Millis;
         }
 
         internal JetStream(IConnection connection) : this(connection, JetStreamOptions.Builder().Build()) { }
@@ -67,31 +68,21 @@ namespace NATS.Client.JetStream
             return mh;
         }
 
-        MsgHeader ProcessOpts(MsgHeader mh, PublishOptions opts)
-        {
-
-        }
-
         private PublishAck PublishSync(string subject, byte[] data, PublishOptions opts)
-        {
-            Msg response;
-
-            MsgHeader mh = MergeHeaders(null, opts);
-            if (mh != null)
-            {
-                // TODO:  use internal connection API to avoid creating message
-                response = Connection.Request(new Msg(subject, null, mh, data));
-            }
-            else
-            {
-                response = Connection.Request(subject, data);
-            }
-            return new PublishAck(response);
-        }
+            => PublishSync(new Msg(subject, null, MergeHeaders(null, opts), data), opts);
+     
 
         private PublishAck PublishSync(Msg msg, PublishOptions opts)
         {
-            // TODO process options
+            if (msg.HasHeaders)
+            {
+                MergeHeaders(msg.header, opts);
+            }
+            else
+            {
+                msg.header = MergeHeaders(null, opts);
+            }
+
             return new PublishAck(Connection.Request(msg));
         }
 
@@ -101,7 +92,7 @@ namespace NATS.Client.JetStream
 
         PublishAck IJetStream.Publish(Msg message)
         {
-            throw new NotImplementedException();
+            return PublishSync(message, defaultPubOpts);
         }
 
         PublishAck IJetStream.Publish(Msg message, PublishOptions publishOptions)

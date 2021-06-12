@@ -47,7 +47,7 @@ namespace NATS.Client.JetStream
         /// <param name="stream">the stream name to bind to</param>
         /// <returns>the PushSubscribeOptions</returns>
         public static PushSubscribeOptions Bind(string stream) {
-            return (PushSubscribeOptions)new PushSubscribeOptionsBuilder().WithStream(stream).Build();
+            return new PushSubscribeOptionsBuilder().WithStream(stream).Build();
         }
 
         /// <summary>
@@ -62,10 +62,10 @@ namespace NATS.Client.JetStream
 
         public sealed class PushSubscribeOptionsBuilder
         {
-            private string _durable;
-            private string _deliverSubject;
-            private string _stream;
-            private ConsumerConfiguration _config;
+            private string _durable = null;
+            private string _deliverSubject = null;
+            private string _stream = null;
+            private ConsumerConfiguration _config = null;
 
             /// <summary>
             /// Set the stream name
