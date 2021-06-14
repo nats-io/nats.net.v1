@@ -193,25 +193,37 @@ namespace UnitTests
         }
 
         [Fact]
+        public void TestHeaderMultiValueSerialization()
+        {
+            string headers = $"NATS/1.0\r\nfoo:bar\r\nfoo:baz,comma\r\n\r\n";
+            byte[] headerBytes = Encoding.UTF8.GetBytes(headers);
+            var mh = new MsgHeader(headerBytes, headerBytes.Length);
+
+            byte[] bytes = mh.ToByteArray();
+            Assert.True(bytes.Length == headerBytes.Length);
+            for (int i = 0; i < bytes.Length; i++)
+            {
+                Assert.True(headerBytes[i] == bytes[i]);
+            }
+        }
+
+        [Fact]
         public void TestHeaderMultiValues()
         {
             var mh = new MsgHeader();
             mh.Add("foo", "bar");
-            mh.Add("foo", "baz");
+            mh.Add("foo", "baz,comma");
 
-            Assert.Equal("bar,baz", mh["foo"]);
-
-            // Test the GetValues API, don't make assumpions about
-            // order.
+            // Test the GetValues API, don't make assumptions about order.
             string []values = mh.GetValues("foo");
             Assert.True(values.Length == 2);
             List<string> results = new List<string>(values);
             Assert.Contains("bar", results);
-            Assert.Contains("baz", results);
+            Assert.Contains("baz,comma", results);
 
             byte[] bytes = mh.ToByteArray();
             var mh2 = new MsgHeader(bytes, bytes.Length);
-            Assert.Equal("bar,baz", mh2["foo"]);
+            Assert.Equal("bar,baz,comma", mh2["foo"]);
 
             // test the API on a single value key
             mh = new MsgHeader();
