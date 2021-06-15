@@ -13,6 +13,7 @@
 
 using System;
 using System.Threading.Tasks;
+using NATS.Client.Internals;
 
 namespace NATS.Client.JetStream
 {
@@ -27,13 +28,45 @@ namespace NATS.Client.JetStream
 
         internal JetStream(IConnection connection, JetStreamOptions options)
         {
-            Prefix = options.Prefix;
             Connection = connection;
-            Options = options;
-            Timeout = (int)options.RequestTimeout.Millis;
+            Options = (options != null) ? options : JetStreamOptions.Builder().Build();
+            Prefix = Options.Prefix;
+            Timeout = (int)Options.RequestTimeout.Millis;
+
+            CheckJetStream();
         }
 
-        internal JetStream(IConnection connection) : this(connection, JetStreamOptions.Builder().Build()) { }
+        private string AddPrefix(string subject) => Prefix + subject;
+
+        private Msg JSRequest(String subject, byte[] bytes, int timeout)
+        {
+            return Connection.Request(AddPrefix(subject), bytes, timeout);
+        }
+
+        public void CheckJetStream()
+        {
+            try
+            {
+                Msg m = JSRequest(JetStreamConstants.JsapiAccountInfo, null, Timeout);
+                var s = new AccountStatistics(m);
+                if (s.ErrorCode == 503)
+                {
+                    throw new NATSJetStreamException(s.ErrorDescription);
+                }
+            }
+            catch (NATSNoRespondersException nre)
+            {
+                throw new NATSJetStreamException("JetStream is not available.", nre);
+            }
+            catch (NATSTimeoutException te)
+            {
+                throw new NATSJetStreamException("JetStream did not respond.", te);
+            }
+            catch (Exception e)
+            {
+                throw new NATSJetStreamException("An exception occurred communicating with JetStream.", e);
+            }
+        }
 
         // Build the headers.  Take care not to unnecessarily allocate, we're
         // in the fastpath here.
@@ -70,7 +103,7 @@ namespace NATS.Client.JetStream
 
         private PublishAck PublishSync(string subject, byte[] data, PublishOptions opts)
             => PublishSync(new Msg(subject, null, MergeHeaders(null, opts), data), opts);
-     
+
 
         private PublishAck PublishSync(Msg msg, PublishOptions opts)
         {

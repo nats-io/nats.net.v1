@@ -15,6 +15,7 @@ using System;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using NATS.Client.JetStream;
 
 namespace NATS.Client
 {
@@ -752,5 +753,13 @@ namespace NATS.Client
         /// </summary>
         int SubscriptionCount { get; }
 
+
+        /// <summary>
+        /// Gets a context for publishing and subscribing to subjects
+        /// backed by Jetstream streams and consumers.
+        /// </summary>
+        /// <param name="options">Optional JetStream options.</param>
+        /// <returns></returns>
+        IJetStream CreateJetStreamContext(JetStreamOptions options = null);
     }
 }

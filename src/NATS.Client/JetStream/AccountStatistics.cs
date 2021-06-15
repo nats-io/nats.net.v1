@@ -20,6 +20,14 @@ namespace NATS.Client.JetStream
         public long Streams { get; }
         public long Consumers { get; }
 
+        public AccountStatistics(Msg m) : base(m)
+        {
+            if (m == null)
+            {
+                throw new NATSJetStreamException("Null message");
+            }
+        }
+
         public AccountStatistics(string json) : base(json)
         {
             Memory = JsonNode[ApiConstants.Memory].AsLong;

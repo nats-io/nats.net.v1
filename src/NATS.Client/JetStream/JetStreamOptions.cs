@@ -33,7 +33,7 @@ namespace NATS.Client.JetStream
         /// <summary>
         /// The default JetStream prefix
         /// </summary>
-        public static readonly string DefaultPrefix = NatsJetStreamConstants.JsapiPrefix;
+        public static readonly string DefaultPrefix = JetStreamConstants.JsapiPrefix;
 
         /// <summary>
         /// Gets the prefix.

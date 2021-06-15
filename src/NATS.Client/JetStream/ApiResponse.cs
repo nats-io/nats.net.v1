@@ -16,7 +16,7 @@ using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client.JetStream
 {
-    public abstract class ApiResponse
+    public class ApiResponse
     {
         public const string NO_TYPE = "io.nats.jetstream.api.v1.no_type";
 
@@ -40,7 +40,7 @@ namespace NATS.Client.JetStream
         
         public void ThrowOnHasError() {
             if (HasError) {
-                throw new JetStreamApiException(this);
+                throw new NATSJetStreamException(this);
             }
         }
 

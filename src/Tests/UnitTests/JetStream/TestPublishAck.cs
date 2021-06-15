@@ -39,7 +39,7 @@ namespace UnitTests.JetStream
                          "  }" +
                          "}";
 
-            JetStreamApiException jsapi = Assert.Throws<JetStreamApiException>(
+            NATSJetStreamException jsapi = Assert.Throws<NATSJetStreamException>(
                 () => new PublishAck(json).ThrowOnHasError());
             Assert.Equal(500, jsapi.ErrorCode);
             Assert.Equal("the description", jsapi.ErrorDescription);

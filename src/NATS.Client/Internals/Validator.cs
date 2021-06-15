@@ -98,9 +98,9 @@ namespace NATS.Client.Internals
 
         internal static int ValidatePullBatchSize(int pullBatchSize)
         {
-            if (pullBatchSize < 1 || pullBatchSize > NatsJetStreamConstants.MaxPullSize)
+            if (pullBatchSize < 1 || pullBatchSize > JetStreamConstants.MaxPullSize)
             {
-                throw new ArgumentException("Pull Batch Size must be between 1 and " + NatsJetStreamConstants.MaxPullSize +
+                throw new ArgumentException("Pull Batch Size must be between 1 and " + JetStreamConstants.MaxPullSize +
                                                    " inclusive [" + pullBatchSize + "]");
             }
 

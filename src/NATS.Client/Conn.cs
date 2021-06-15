@@ -4669,5 +4669,14 @@ namespace NATS.Client
         }
 
         #endregion
+
+        #region JetStream
+
+        public IJetStream CreateJetStreamContext(JetStreamOptions options = null)
+        {
+            return new JetStream.JetStream(this, options);
+        }
+
+        #endregion
     } // class Conn
 }

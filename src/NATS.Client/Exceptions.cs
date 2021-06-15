@@ -87,7 +87,7 @@ namespace NATS.Client
     public class NATSSecureConnRequiredException : NATSException
     {
         public NATSSecureConnRequiredException() : base("A secure connection is required.") { }
-        public NATSSecureConnRequiredException(String s) : base(s) { }
+        public NATSSecureConnRequiredException(string s) : base(s) { }
     }
 
     /// <summary>
@@ -151,7 +151,7 @@ namespace NATS.Client
     public class NATSTimeoutException : NATSException
     {
         public NATSTimeoutException() : base("Timeout occurred.") { }
-        public NATSTimeoutException(String s) : base(s) { }
+        public NATSTimeoutException(string s) : base(s) { }
     }
 
     /// <summary>
@@ -161,7 +161,7 @@ namespace NATS.Client
     public class NATSNotSupportedException : NATSException
     {
         public NATSNotSupportedException() : base("Operation not supported.") { }
-        public NATSNotSupportedException(String s) : base(s) { }
+        public NATSNotSupportedException(string s) : base(s) { }
     }
 
     /// <summary>
@@ -170,7 +170,7 @@ namespace NATS.Client
     public class NATSInvalidHeaderException : NATSException
     {
         public NATSInvalidHeaderException() : base("Invalid message header.") { }
-        public NATSInvalidHeaderException(String s) : base(s) { }
+        public NATSInvalidHeaderException(string s) : base(s) { }
     }
 
     /// <summary>
@@ -191,18 +191,5 @@ namespace NATS.Client
     public class NATSNoRespondersException : NATSTimeoutException
     {
         public NATSNoRespondersException() : base("No responders are available for the request.") { }
-    }
-
-    public class JetStreamApiException : NATSException
-    {
-        private ApiResponse apiResponse;
-
-        public JetStreamApiException(ApiResponse apiResponse) : base(apiResponse.Error.Desc) {
-            this.apiResponse = apiResponse;
-        }
-
-        public long ErrorCode => apiResponse.ErrorCode;
-        
-        public string ErrorDescription => apiResponse.ErrorDescription; 
     }
 }

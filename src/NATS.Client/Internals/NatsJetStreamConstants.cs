@@ -1,6 +1,6 @@
 ﻿namespace NATS.Client.Internals
 {
-    public sealed class NatsJetStreamConstants
+    public sealed class JetStreamConstants
     {
         public const int MaxPullSize = 256;
         

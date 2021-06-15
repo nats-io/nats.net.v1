@@ -22,8 +22,8 @@ namespace NATS.Client.JetStream
         private static ConcurrentDictionary<string, string> JsPrefixes = new ConcurrentDictionary<string, string>();
         
         internal static string AddPrefix(string prefix) {
-            if (string.IsNullOrEmpty(prefix) || prefix.Equals(NatsJetStreamConstants.JsapiPrefix)) {
-                return NatsJetStreamConstants.JsapiPrefix;
+            if (string.IsNullOrEmpty(prefix) || prefix.Equals(JetStreamConstants.JsapiPrefix)) {
+                return JetStreamConstants.JsapiPrefix;
             }
 
             prefix = Validator.ValidateJetStreamPrefix(prefix);
@@ -37,7 +37,7 @@ namespace NATS.Client.JetStream
         internal static bool HasPrefix(string replyTo) {
             if (replyTo == null) return false;
             
-            return replyTo.StartsWith(NatsJetStreamConstants.JsapiPrefix) || 
+            return replyTo.StartsWith(JetStreamConstants.JsapiPrefix) || 
                    JsPrefixes.Keys.Any(replyTo.StartsWith);
         }
 

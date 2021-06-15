@@ -15,7 +15,7 @@ using System;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using Xunit;
-using static NATS.Client.Internals.NatsJetStreamConstants;
+using static NATS.Client.Internals.JetStreamConstants;
 
 namespace UnitTests.Internals
 {
