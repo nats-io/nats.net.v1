@@ -14,6 +14,7 @@ using NATS.Client.NaCl;
 using System;
 using System.IO;
 using System.Text;
+using System.Security.Cryptography;
 
 namespace NATS.Client
 {
@@ -318,11 +319,14 @@ namespace NATS.Client
             return Base32.Encode(stream.ToArray());
         }
 
-        private static string CreateSeed(byte prefixbyte) {
+        private static string CreateSeed(byte prefixbyte)
+        {
             byte[] rawSeed = new byte[32];
 
-            Random rnd = new Random();
-            rnd.NextBytes(rawSeed);
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(rawSeed);
+            }
 
             return Encode(prefixbyte, true, rawSeed);
         }
