@@ -41,7 +41,7 @@ namespace NATS.Client.JetStream
         /// <param name="subject">The subject to publish <paramref name="data"/> to over
         /// the current connection.</param>
         /// <param name="data">An array of type <see cref="Byte"/> that contains the data to publish
-        /// to the connected NATS server.</param></param>
+        /// to the connected NATS server.</param>
         /// <returns>PublishAck</returns>
         PublishAck Publish(string subject, byte[] data);
 
@@ -99,7 +99,7 @@ namespace NATS.Client.JetStream
         /// <param name="subject">The subject to publish <paramref name="data"/> to over
         /// the current connection.</param>
         /// <param name="data">An array of type <see cref="Byte"/> that contains the data to publish
-        /// to the connected NATS server.</param></param>
+        /// to the connected NATS server.</param>
         /// <returns>PublishAck</returns>
         Task<PublishAck> PublishAsync(string subject, byte[] data);
 
