@@ -27,6 +27,14 @@ namespace NATS.Client.JetStream
 
         internal ApiResponse(Msg msg) : this(Encoding.UTF8.GetString(msg.Data)) { }
 
+        internal ApiResponse(Msg msg, bool throwOnError) : this(Encoding.UTF8.GetString(msg.Data))
+        {
+            if (throwOnError)
+            {
+                ThrowOnHasError();
+            }
+        }
+
         internal ApiResponse(string json)
         {
             JsonNode = JSON.Parse(json);

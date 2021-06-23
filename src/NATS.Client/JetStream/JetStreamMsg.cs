@@ -33,6 +33,7 @@ namespace NATS.Client.JetStream
 
         // fastpath check to see if this is a valid JS message.
         // Speed is of the essence here.
+        // Example subject:  $JS.ACK.test-stream.test-consumer.1.2.3.1605139610113260000
         static internal bool IsJS(string replySubj)
         {
             if (replySubj == null)
@@ -58,15 +59,18 @@ namespace NATS.Client.JetStream
                 return false;
             }
 
-            int i;
-            for (i = 8; i < len; i++)
+            int j = 0;
+            for (int i = 8; i < len; i++)
             {
                 if (replySubj[i] == '.')
                 {
-                    i++;
+                    // count tokens
+                    j++;
                 }
             }
-            return i == 7;
+
+            // total should be 7, we have two already counted above
+            return j == 5;
         }
 
         // Take the reply and parse it into the metadata.
@@ -78,16 +82,15 @@ namespace NATS.Client.JetStream
 
         internal JetStream CheckReply(out bool isPullMode)
         {
-            // TODO: Implement;
-            if ((sub is JetStreamSubscription) == false)
+            if (sub is JetStreamSubscription jsSub)
             {
                 // Not a Jetstream enabled connection.
-                isPullMode = false;
-                return null;
+                isPullMode = jsSub is JetStreamPullSubscription;
+                return jsSub.JS;
             }
 
-            isPullMode = (sub is JetStreamPullSubscription);
-            return ((JetStreamSubscription)sub).JS;
+            isPullMode = false;
+            return null;
         }
 
         private void AckReply(byte[] ackType, int timeout)
@@ -225,7 +228,7 @@ namespace NATS.Client.JetStream
         internal MetaData(string metaData)
         {
             string[] tokens = metaData?.Split('.');
-            if (tokens.Length != 8)
+            if (tokens?.Length != 8)
             {
                 throw new NATSException($"Invalid MetaData: {metaData}");
             }

@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System.Collections.Generic;
+using System.Text;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 
@@ -92,7 +93,6 @@ namespace NATS.Client.JetStream
             {
                 sources.Add(null, s.ToJsonNode());
             }
-
             return new JSONObject
             {
                 [ApiConstants.Retention] = RetentionPolicy.GetString(),
@@ -109,10 +109,15 @@ namespace NATS.Client.JetStream
                 [ApiConstants.NoAck] = NoAck,
                 [ApiConstants.TemplateOwner] = TemplateOwner,
                 [ApiConstants.DuplicateWindow] = DuplicateWindow.Nanos,
-                [ApiConstants.Placement] = Placement.ToJsonNode(),
-                [ApiConstants.Mirror] = Mirror.ToJsonNode(),
+                [ApiConstants.Placement] = Placement?.ToJsonNode(),
+                [ApiConstants.Mirror] = Mirror?.ToJsonNode(),
                 [ApiConstants.Sources] = sources
             };
+        }
+
+        internal byte[] Serialize()
+        {
+            return Encoding.ASCII.GetBytes(ToJsonNode().ToString());
         }
 
         public static StreamConfigurationBuilder Builder()
@@ -430,6 +435,11 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <returns>The StreamConfiguration</returns>
         public StreamConfiguration Build() {
+            if (_subjects == null)
+            {
+                throw new NATSException("At least one subject is required.");
+            }
+
             return new StreamConfiguration(
                 _name,
                 _subjects,

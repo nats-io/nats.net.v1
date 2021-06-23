@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Text;
 using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client.JetStream
@@ -33,6 +34,11 @@ namespace NATS.Client.JetStream
                 [ApiConstants.StreamName] = StreamName,
                 [ApiConstants.Config] = Config.ToJsonNode()
             };
+        }
+
+        internal byte[] Serialize()
+        {
+            return Encoding.ASCII.GetBytes(ToJsonNode().ToString());
         }
     }
 }

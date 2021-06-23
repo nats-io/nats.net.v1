@@ -38,7 +38,7 @@ namespace NATS.Client.JetStream
             return new JSONObject
             {
                 [ApiConstants.Cluster] = Cluster,
-                [ApiConstants.Tags] = JsonUtils.ToArray(Tags)
+                [ApiConstants.Tags] = JsonUtils.ToArray(Tags),
             };
         }
     }

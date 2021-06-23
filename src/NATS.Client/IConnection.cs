@@ -761,5 +761,12 @@ namespace NATS.Client
         /// <param name="options">Optional JetStream options.</param>
         /// <returns></returns>
         IJetStream CreateJetStreamContext(JetStreamOptions options = null);
+
+        /// <summary>
+        /// Gets a context for administrating JetStream.
+        /// </summary>
+        /// <param name="options">Optional JetStream options.</param>
+        /// <returns></returns>
+        IJetStreamManagement CreateJetStreamManagementContext(JetStreamOptions options = null);
     }
 }

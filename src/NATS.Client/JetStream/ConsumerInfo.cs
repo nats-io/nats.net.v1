@@ -33,19 +33,20 @@ namespace NATS.Client.JetStream
 
         internal ConsumerInfo(Msg msg) : this(Encoding.UTF8.GetString(msg.Data)) { }
 
-        internal ConsumerInfo(string json)
+        internal ConsumerInfo(JSONNode jsonNode)
         {
-            var ciNode = JSON.Parse(json);
-            Stream = ciNode[ApiConstants.StreamName].Value;
-            Configuration = new ConsumerConfiguration(ciNode[ApiConstants.Config]);
-            Name = ciNode[ApiConstants.Name].Value;
-            Created = JsonUtils.AsDate(ciNode[ApiConstants.Created]);
-            Delivered = new SequencePair(ciNode[ApiConstants.Delivered]);
-            AckFloor = new SequencePair(ciNode[ApiConstants.AckFloor]);
-            NumPending = ciNode[ApiConstants.NumPending].AsLong;
-            NumWaiting = ciNode[ApiConstants.NumWaiting].AsLong;
-            NumAckPending = ciNode[ApiConstants.NumAckPending].AsLong;
-            NumRedelivered = ciNode[ApiConstants.NumRedelivered].AsLong;
+            Stream = jsonNode[ApiConstants.StreamName].Value;
+            Configuration = new ConsumerConfiguration(jsonNode[ApiConstants.Config]);
+            Name = jsonNode[ApiConstants.Name].Value;
+            Created = JsonUtils.AsDate(jsonNode[ApiConstants.Created]);
+            Delivered = new SequencePair(jsonNode[ApiConstants.Delivered]);
+            AckFloor = new SequencePair(jsonNode[ApiConstants.AckFloor]);
+            NumPending = jsonNode[ApiConstants.NumPending].AsLong;
+            NumWaiting = jsonNode[ApiConstants.NumWaiting].AsLong;
+            NumAckPending = jsonNode[ApiConstants.NumAckPending].AsLong;
+            NumRedelivered = jsonNode[ApiConstants.NumRedelivered].AsLong;
         }
+
+        public ConsumerInfo(string json) : this(JSON.Parse(json)) { }
     }
 }

@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System;
+using System.Text;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 
@@ -34,6 +35,8 @@ namespace NATS.Client.JetStream
         public long MaxAckPending { get; }
         public Duration IdleHeartbeat { get; }
         public bool FlowControl { get; }
+
+        internal string StreamName { get;  set; }
 
         internal ConsumerConfiguration(string json) : this(JSON.Parse(json)) {}
 
@@ -100,6 +103,11 @@ namespace NATS.Client.JetStream
             };
         }
 
+        internal byte[] Serialize()
+        {
+            return Encoding.ASCII.GetBytes(ToJsonNode().ToString());
+        }
+
         public static ConsumerConfigurationBuilder Builder()
         {
             return new ConsumerConfigurationBuilder();
@@ -118,7 +126,7 @@ namespace NATS.Client.JetStream
             private string _durable;
             private string _deliverSubject;
             private long _startSeq;
-            private DateTime _startTime;
+            private DateTime _startTime = DateTime.MinValue; 
             private Duration _ackWait = Duration.OfSeconds(30);
             private long _maxDeliver;
             private string _filterSubject;

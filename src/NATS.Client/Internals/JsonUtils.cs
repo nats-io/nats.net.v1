@@ -53,12 +53,20 @@ namespace NATS.Client.Internals
         
         internal static string ToString(DateTime dt)
         {
+            // Assume MinValue is Unset
+            if (dt.Equals(DateTime.MinValue))
+                return null;
+
             return dt.ToUniversalTime().ToString("O");
         }
 
         internal static JSONArray ToArray(List<string> list)
         {
             JSONArray arr = new JSONArray();
+            if (list == null)
+            {
+                return arr;
+            }
             foreach (var s in list)
             {
                 arr.Add(null, new JSONString(s));

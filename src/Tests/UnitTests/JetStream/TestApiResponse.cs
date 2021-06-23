@@ -65,7 +65,7 @@ namespace UnitTests.JetStream
             Assert.Equal("Unknown JetStream Error (500)", jsApiResp.Error.ToString());
             jsApiEx = new NATSJetStreamException(jsApiResp);
             Assert.Equal(500, jsApiEx.ErrorCode);
-            Assert.Equal("Exception of type 'NATS.Client.JetStreamException' was thrown.", jsApiEx.ErrorDescription);
+            Assert.Equal("Exception of type 'NATS.Client.JetStream.NATSJetStreamException' was thrown.", jsApiEx.ErrorDescription);
 
             jsApiResp = new TestingApiResponse(jsons[3]);
             Assert.True(jsApiResp.HasError);

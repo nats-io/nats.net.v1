@@ -1012,6 +1012,10 @@ namespace NATS.Client.Internals.SimpleJSON
                 aMode = JSONTextMode.Compact;
             foreach (var k in m_Dict)
             {
+                // Special NATS case: ignore null values or negative numbers.
+                if (k.Value.Value == null || k.Value.AsInt < 0)
+                    continue;
+
                 if (!first)
                     aSB.Append(',');
                 first = false;

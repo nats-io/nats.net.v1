@@ -30,15 +30,16 @@ namespace NATS.Client.JetStream
 
         public StreamInfo(Msg msg) : this(Encoding.UTF8.GetString(msg.Data)) { }
 
-        public StreamInfo(string json)
+        internal StreamInfo(JSONNode jsonNode)
         {
-            var streamInfoNode = JSON.Parse(json);
-            Created = JsonUtils.AsDate(streamInfoNode[ApiConstants.Created]);
-            Config = new StreamConfiguration(streamInfoNode[ApiConstants.Config]);
-            State = StreamState.OptionalInstance(streamInfoNode[ApiConstants.State]);
-            ClusterInfo = ClusterInfo.OptionalInstance(streamInfoNode[ApiConstants.Cluster]);
-            MirrorInfo = MirrorInfo.OptionalInstance(streamInfoNode[ApiConstants.Mirror]);
-            SourceInfos = SourceInfo.OptionalListOf(streamInfoNode[ApiConstants.Sources]);
+            Created = JsonUtils.AsDate(jsonNode[ApiConstants.Created]);
+            Config = new StreamConfiguration(jsonNode[ApiConstants.Config]);
+            State = StreamState.OptionalInstance(jsonNode[ApiConstants.State]);
+            ClusterInfo = ClusterInfo.OptionalInstance(jsonNode[ApiConstants.Cluster]);
+            MirrorInfo = MirrorInfo.OptionalInstance(jsonNode[ApiConstants.Mirror]);
+            SourceInfos = SourceInfo.OptionalListOf(jsonNode[ApiConstants.Sources]);
         }
+
+        public StreamInfo(string json) : this(JSON.Parse(json)) { }
     }
 }

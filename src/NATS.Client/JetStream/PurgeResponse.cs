@@ -23,11 +23,12 @@ namespace NATS.Client.JetStream
 
         internal PurgeResponse(Msg msg) : this(Encoding.UTF8.GetString(msg.Data)) { }
 
-        internal PurgeResponse(string json)
+        internal PurgeResponse(JSONNode jsonNode)
         {
-            var purgeNode = JSON.Parse(json);
-            Success = purgeNode[ApiConstants.Success].AsBool;
-            Purged = purgeNode[ApiConstants.Purged].AsInt;
+            Success = jsonNode[ApiConstants.Success].AsBool;
+            Purged = jsonNode[ApiConstants.Purged].AsInt;
         }
+
+        internal PurgeResponse(string json) : this(JSON.Parse(json)) { }
     }
 }
