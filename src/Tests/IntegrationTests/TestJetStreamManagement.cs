@@ -10,94 +10,91 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 using NATS.Client.JetStream;
 using Xunit;
+using static UnitTests.TestBase;
 
 namespace IntegrationTests
 {
-    public class TestJetStreamManagement : TestSuite<ConnectionSuiteContext>
+    public class TestJetStreamManagement : TestSuite<JetStreamManagementSuiteContext>
     {
-        public TestJetStreamManagement(ConnectionSuiteContext context) : base(context) { }
+        public TestJetStreamManagement(JetStreamManagementSuiteContext context) : base(context) { }
 
         [Fact]
         public void TestBasicStreamManagement()
         {
-            using (var s = NATSServer.CreateJetStreamFastAndVerify(Context.Server1.Port))
-            {
-                using var c = Context.OpenConnection(Context.Server1.Port);
-                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
-                var sc = StreamConfiguration.Builder().WithName("foo").WithStorageType(StorageType.Memory).WithSubjects("foo").Build();
+            Context.RunInJsServer(c =>
+                {
+                    IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                    var sc = StreamConfiguration.Builder()
+                        .WithName(STREAM)
+                        .WithStorageType(StorageType.Memory)
+                        .WithSubjects(Subject(1)).Build();
 
-                StreamInfo si = jsm.AddStream(sc);
-                Assert.Equal("foo", si.Config.Name);
-                Assert.Equal("foo", si.Config.Subjects[0]);
-                Assert.Equal(0, si.State.Messages);
+                    StreamInfo si = jsm.AddStream(sc);
+                    Assert.Equal(STREAM, si.Config.Name);
+                    Assert.Equal(Subject(1), si.Config.Subjects[0]);
+                    Assert.Equal(0, si.State.Messages);
 
-                sc = StreamConfiguration.Builder().WithName("foo").WithStorageType(StorageType.Memory).WithSubjects("foo", "bar").Build();
-                si = jsm.UpdateStream(sc);
-                Assert.Contains("foo", si.Config.Subjects);
-                Assert.Contains("bar", si.Config.Subjects);
+                    sc = StreamConfiguration.Builder()
+                        .WithName(STREAM)
+                        .WithStorageType(StorageType.Memory)
+                        .WithSubjects(Subject(1), Subject(2))
+                        .Build();
+                    si = jsm.UpdateStream(sc);
+                    Assert.Contains(Subject(1), si.Config.Subjects);
+                    Assert.Contains(Subject(2), si.Config.Subjects);
 
-                si = jsm.GetStreamInfo("foo");
-                Assert.Contains("foo", si.Config.Subjects);
-                Assert.Contains("bar", si.Config.Subjects);
+                    si = jsm.GetStreamInfo(STREAM);
+                    Assert.Contains(Subject(1), si.Config.Subjects);
+                    Assert.Contains(Subject(2), si.Config.Subjects);
 
-                Assert.True(jsm.DeleteStream("foo"));
-                Assert.False(jsm.DeleteStream("garbage"));
+                    Assert.True(jsm.DeleteStream(STREAM));
+                    Assert.False(jsm.DeleteStream(Stream(999)));
 
-                Assert.Throws<NATSJetStreamException>(() => jsm.GetStreamInfo("foo"));
-                Assert.Throws<NATSJetStreamException>(() => jsm.UpdateStream(sc));
-            }
+                    Assert.Throws<NATSJetStreamException>(() => jsm.GetStreamInfo(STREAM));
+                    Assert.Throws<NATSJetStreamException>(() => jsm.UpdateStream(sc));
+
+                });
 
             // check for failure.
-            using (var s = NATSServer.CreateFastAndVerify(Context.Server1.Port))
-            {
-                using var c = Context.OpenConnection(Context.Server1.Port);
-                // see if it fails.
-                Assert.Throws<NATSJetStreamException>(() => c.CreateJetStreamManagementContext());
-            }
+            Context.RunInServer(c => 
+                Assert.Throws<NATSJetStreamException>(() => 
+                    c.CreateJetStreamManagementContext()));
         }
 
         [Fact]
         public void TestBasicConsumerManagement()
         {
-            using (var s = NATSServer.CreateJetStreamFastAndVerify(Context.Server1.Port))
-            {
-                using var c = Context.OpenConnection(Context.Server1.Port);
-                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+            Context.RunInJsServer(c =>
+                {
+                    IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
 
-                jsm.AddStream(StreamConfiguration.Builder().
-                    WithName("foo").
-                    WithStorageType(StorageType.Memory).
-                    WithSubjects("foo").
-                    Build());
+                    jsm.AddStream(StreamConfiguration.Builder().
+                        WithName(STREAM).
+                        WithStorageType(StorageType.Memory).
+                        WithSubjects(SUBJECT).
+                        Build());
 
-                ConsumerConfiguration cc = ConsumerConfiguration.Builder().
-                    WithDeliverSubject("bar").
-                    WithDurable("dur").
-                    Build();
+                    ConsumerConfiguration cc = ConsumerConfiguration.Builder().
+                        WithDeliverSubject(DELIVER).
+                        WithDurable(DURABLE).
+                        Build();
 
-                ConsumerInfo ci = jsm.AddConsumer("foo", cc);
-                Assert.Equal("dur", ci.Configuration.Durable);
-                Assert.Equal("bar", ci.Configuration.DeliverSubject);
+                    ConsumerInfo ci = jsm.AddConsumer(STREAM, cc);
+                    Assert.Equal(DURABLE, ci.Configuration.Durable);
+                    Assert.Equal(DELIVER, ci.Configuration.DeliverSubject);
 
-                ci = jsm.GetConsumerInfo("foo", "dur");
-                Assert.Equal("dur", ci.Configuration.Durable);
-                Assert.Equal("bar", ci.Configuration.DeliverSubject);
+                    ci = jsm.GetConsumerInfo(STREAM, DURABLE);
+                    Assert.Equal(DURABLE, ci.Configuration.Durable);
+                    Assert.Equal(DELIVER, ci.Configuration.DeliverSubject);
 
-                Assert.True(jsm.DeleteConsumer("foo", "dur"));
-                Assert.False(jsm.DeleteConsumer("foo", "dur"));
-                Assert.False(jsm.DeleteConsumer("garbage", "garbage"));
-                Assert.Throws<NATSJetStreamException>(() => jsm.GetConsumerInfo("foo", "dur"));
-            }
-
-            // check for failure.
-            using (var s = NATSServer.CreateFastAndVerify(Context.Server1.Port))
-            {
-                using var c = Context.OpenConnection(Context.Server1.Port);
-                // see if it fails.
-                Assert.Throws<NATSJetStreamException>(() => c.CreateJetStreamManagementContext());
-            }
+                    Assert.True(jsm.DeleteConsumer(STREAM, DURABLE));
+                    Assert.False(jsm.DeleteConsumer(STREAM, DURABLE));
+                    Assert.False(jsm.DeleteConsumer(Stream(999), Durable(999)));
+                    Assert.Throws<NATSJetStreamException>(() => jsm.GetConsumerInfo(STREAM, DURABLE));
+                });
         }
     }
 }

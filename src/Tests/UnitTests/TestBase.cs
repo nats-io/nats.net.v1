@@ -1,26 +1,29 @@
 ﻿using System;
 using System.IO;
+using System.Text;
+using NATS.Client;
+using NATS.Client.JetStream;
 
 namespace UnitTests
 {
     public class TestBase
     {
-        internal const string Plain        = "plain";
-        internal const string HasSpace     = "has space";
-        internal const string HasPrintable = "has-print!able";
-        internal const string HasDot       = "has.dot";
-        internal const string HasStar      = "has*star";
-        internal const string HasGt        = "has>gt";
-        internal const string HasDollar    = "has$dollar";
-        internal const string HasLow       = "has\tlower\rthan\nspace";
-        internal static readonly string Has127 = "has" + (char)127 + "127";
+        public const string Plain        = "plain";
+        public const string HasSpace     = "has space";
+        public const string HasPrintable = "has-print!able";
+        public const string HasDot       = "has.dot";
+        public const string HasStar      = "has*star";
+        public const string HasGt        = "has>gt";
+        public const string HasDollar    = "has$dollar";
+        public const string HasLow       = "has\tlower\rthan\nspace";
+        public static readonly string Has127 = "has" + (char)127 + "127";
 
-        internal static string ReadDataFile(string name)
+        public static string ReadDataFile(string name)
         {
             return File.ReadAllText(FileSpec(name));
         }
 
-        internal static string[] ReadDataFileLines(string name)
+        public static string[] ReadDataFileLines(string name)
         {
             return File.ReadAllLines(FileSpec(name));
         }
@@ -31,7 +34,7 @@ namespace UnitTests
             return Path.Combine(path, "..", "..", "..", "Data", name);
         }
 
-        internal static DateTime AsDateTime(string dtString)
+        public static DateTime AsDateTime(string dtString)
         {
             return DateTime.Parse(dtString).ToUniversalTime();
         }
@@ -39,56 +42,75 @@ namespace UnitTests
         // ----------------------------------------------------------------------------------------------------
         // data makers
         // ----------------------------------------------------------------------------------------------------
-        internal const string STREAM = "stream";
-        internal const string MIRROR = "mirror";
-        internal const string SOURCE = "source";
-        internal const string SUBJECT = "subject";
-        internal const string SUBJECT_STAR = SUBJECT + ".*";
-        internal const string SUBJECT_GT = SUBJECT + ".>";
-        internal const string QUEUE = "queue";
-        internal const string DURABLE = "durable";
-        internal const string DELIVER = "deliver";
-        internal const string MESSAGE_ID = "mid";
-        internal const string DATA = "data";
+        public const string STREAM = "stream";
+        public const string MIRROR = "mirror";
+        public const string SOURCE = "source";
+        public const string SUBJECT = "subject";
+        public const string SUBJECT_STAR = SUBJECT + ".*";
+        public const string SUBJECT_GT = SUBJECT + ".>";
+        public const string QUEUE = "queue";
+        public const string DURABLE = "durable";
+        public const string DELIVER = "deliver";
+        public const string MESSAGE_ID = "mid";
+        public const string DATA = "data";
 
-        internal static string Stream(int seq) {
+        public static string Stream(int seq) {
             return STREAM + "-" + seq;
         }
 
-        internal static string Mirror(int seq) {
+        public static string Mirror(int seq) {
             return MIRROR + "-" + seq;
         }
 
-        internal static string Source(int seq) {
+        public static string Source(int seq) {
             return SOURCE + "-" + seq;
         }
 
-        internal static string Subject(int seq) {
+        public static string Subject(int seq) {
             return SUBJECT + "-" + seq;
         }
 
-        internal static string Queue(int seq) {
+        public static string Queue(int seq) {
             return QUEUE + "-" + seq;
         }
 
-        internal static string Durable(int seq) {
+        public static string Durable(int seq) {
             return DURABLE + "-" + seq;
         }
 
-        internal static string Durable(string vary, int seq) {
+        public static string Durable(string vary, int seq) {
             return DURABLE + "-" + vary + "-" + seq;
         }
 
-        internal static string Deliver(int seq) {
+        public static string Deliver(int seq) {
             return DELIVER + "-" + seq;
         }
 
-        internal static string MessageId(int seq) {
+        public static string MessageId(int seq) {
             return MESSAGE_ID + "-" + seq;
         }
 
-        internal static string Data(int seq) {
+        public static string Data(int seq) {
             return DATA + "-" + seq;
+        }
+
+        public static byte[] DataBytes() {
+            return Encoding.ASCII.GetBytes(DATA);
+        }
+
+        public static byte[] DataBytes(int seq) {
+            return Encoding.ASCII.GetBytes(DATA + "-" + seq);
+        }
+
+        public static void CreateMemoryStream(IConnection c, string streamName, params string[] subjects)
+        {
+            var jsm = c.CreateJetStreamManagementContext();
+            var sc = StreamConfiguration.Builder()
+                .WithName(streamName)
+                .WithStorageType(StorageType.Memory)
+                .WithSubjects(subjects)
+                .Build();
+            jsm.AddStream(sc);
         }
     }
 }
