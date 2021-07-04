@@ -15,6 +15,7 @@ using System;
 using System.Collections;
 using System.Collections.Specialized;
 using System.Text;
+using NATS.Client.Internals;
 
 namespace NATS.Client
 {
@@ -56,11 +57,6 @@ namespace NATS.Client
         // e.g. MATS/1.0\r\nkey1:value1\r\nkey2:value2\r\n\r\n
 
         // Define message header version string and size.
-        internal static readonly string Header = "NATS/1.0\r\n";
-        internal static readonly byte[] HeaderBytes = Encoding.UTF8.GetBytes(Header);
-        internal static readonly int HeaderLen = HeaderBytes.Length;
-        internal static readonly int MinimalValidHeaderLen = Encoding.UTF8.GetBytes(Header + "\r\n").Length;
-
 
         /// <summary>
         /// Status header key.
@@ -71,36 +67,6 @@ namespace NATS.Client
         /// Description header key.
         /// </summary>
         public const string Description = "Description";
-
-        /// <summary>
-        /// No Responders Status code, 503.
-        /// </summary>
-        public const string NoResponders = "503";
-
-        /// <summary>
-        /// Not Found Status code, 404.
-        /// </summary>
-        public const string NotFound = "404";
-
-        /// <summary>
-        /// JetStream expected last sequence header name.
-        /// </summary>
-        public const string ExpLastSeqHeader = "Nats-Expected-Last-Sequence";
-
-        /// <summary>
-        /// JetStream expected last message ID header Name.
-        /// </summary>
-        public const string ExpLastIdHeader = "Nats-Expected-Last-Msg-Id";
-
-        /// <summary>
-        /// JetStream expected streame header name.
-        /// </summary>
-        public const string ExpStreamHeader = "Nats-Expected-Stream";
-
-        /// <summary>
-        /// JetStream expected message ID header name.
-        /// </summary>
-        public const string MsgIdHeader = "Nats-Msg-Id";
 
         // Cache the serialized headers to optimize reuse
         private byte[] bytes = null;
@@ -249,7 +215,7 @@ namespace NATS.Client
 
         private string ToHeaderString()
         {
-            StringBuilder sb = new StringBuilder(MsgHeader.Header);
+            StringBuilder sb = new StringBuilder(NatsConstants.HeaderVersionBytesPlusCrlf);
             foreach (string s in nvc.Keys)
             {
                 foreach (string v in nvc.GetValues(s))

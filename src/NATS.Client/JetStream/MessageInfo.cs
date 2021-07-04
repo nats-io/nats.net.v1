@@ -34,7 +34,7 @@ namespace NATS.Client.JetStream
             byte[] bytes = JsonUtils.AsByteArrayFromBase64(miNode[ApiConstants.Hdrs]);
             if (bytes != null)
             {
-                Headers = Msg.ReadHeaderStatusBytes(bytes, bytes.Length);
+                Headers = new HeaderStatusReader(bytes, bytes.Length).Header;
             }
         }
     }

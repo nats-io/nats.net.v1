@@ -2753,9 +2753,7 @@ namespace NATS.Client
 
         private static bool IsNoRespondersMsg(Msg m)
         {
-            return m != null && m.HasHeaders &&
-                MsgHeader.NoResponders.Equals(m.Header[MsgHeader.Status]) &&
-                m.Data.Length == 0;
+            return m != null && m.HasStatus && m.Status.IsNoResponders();
         }
 
         private void RequestResponseHandler(object sender, MsgHandlerEventArgs args)

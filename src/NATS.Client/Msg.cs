@@ -13,6 +13,7 @@
 
 using System;
 using System.Text;
+using NATS.Client.Internals;
 
 namespace NATS.Client
 {
@@ -29,6 +30,7 @@ namespace NATS.Client
         private byte[] data;
         internal Subscription sub;
         internal MsgHeader header;
+        internal MsgStatus status;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Msg"/> class without any
@@ -103,7 +105,9 @@ namespace NATS.Client
 
             if (arg.hdr > 0)
             {
-                header = ReadHeaderStatusBytes(payload, arg.hdr);
+                HeaderStatusReader hsr = new HeaderStatusReader(payload, arg.hdr);
+                header = hsr.Header;
+                status = hsr.Status;
             }
 
             // make a deep copy of the bytes for this message.
@@ -257,7 +261,6 @@ namespace NATS.Client
             return sb.ToString();
         }
 
-
         /// <summary>
         /// Gets or sets the <see cref="MsgHeader"/> of the message.
         /// </summary>
@@ -283,11 +286,21 @@ namespace NATS.Client
         /// <summary>
         /// Returns true if there is a <see cref="MsgHeader"/> with fields set.
         /// </summary>
-        public bool HasHeaders
+        public bool HasHeaders => header?.Count > 0;
+
+        /// <summary>
+        /// Gets or sets the <see cref="MsgStatus"/> of the message.
+        /// </summary>
+        public MsgStatus Status => status;
+
+        /// <summary>
+        /// Returns true if there is a <see cref="MsgStatus"/> with fields set.
+        /// </summary>
+        public bool HasStatus
         {
             get
             {
-                return header?.Count > 0;
+                return status != null;
             }
         }
 
@@ -353,175 +366,5 @@ namespace NATS.Client
         public virtual bool IsJetStream { get { return false; } }
 
         #endregion
-
-        /// <summary>
-        /// Initializes a new instance of the MsgHeader class.
-        /// </summary>
-        /// <param name="bytes">A byte array of a serialized MsgHeader class.</param>
-        /// <param name="byteCount">Count of bytes in the serialized array.</param>
-        internal static MsgHeader ReadHeaderStatusBytes(byte[] bytes, int byteCount) {
-            if (byteCount < 1)
-            {
-                throw new NATSException("invalid byte count");
-            }
-            if (bytes == null)
-            {
-                throw new NATSException("invalid byte array");
-            }
-            if (bytes.Length < byteCount)
-            {
-                throw new NATSException("count exceeds byte array length");
-            }
-            if (byteCount < MsgHeader.MinimalValidHeaderLen)
-            {
-                throw new NATSInvalidHeaderException();
-            }
-
-            // check for the trailing \r\n\r\n
-            if (bytes[byteCount-4] != '\r' || bytes[byteCount - 3] != '\n' ||
-                bytes[byteCount-2] != '\r' || bytes[byteCount - 1] != '\n')
-            {
-                ThrowInvalidHeaderException(bytes, byteCount);
-            }
-
-            MsgHeader msgHeader = new MsgHeader();
-            
-            // normally, start KV pairs after the standard header.
-            // this may change with inlined status.
-            int kvStart = MsgHeader.HeaderLen;
-
-            // We need to be fast so do a byte comparison.
-            int i;
-            for (i = 0; i < MsgHeader.HeaderLen; i++)
-            {
-                if (bytes[i] != MsgHeader.HeaderBytes[i])
-                {
-                    // check for inlined status:  e.g. "NATS/1.0 503\r\n\r\n"
-                    if (bytes[i] == ' ')
-                    {
-                        try
-                        {
-                            // could assume three digits, but want to be a bit more
-                            // future proof in case we someday insert something
-                            // else there.  So find the \r\n
-                            int start = i + 1;
-                            int end; 
-                            for (end = start;
-                                end < byteCount - 1 && bytes[end] != '\r' && bytes[end + 1] != '\n';
-                                    end++);
-
-                            string status = Encoding.UTF8.GetString(bytes, start, end - start);
-
-                            // set the start for kv pairs at end of the status + \r\n.
-                            kvStart = end + 2;
-
-                            // Fastpath - we only have a code...
-                            if (status.Length == 3)
-                            {
-                                msgHeader.Add(MsgHeader.Status, status);
-                                break;
-                            }
-
-                            // We can have code and description.
-
-                            // trim any leading whitespace.
-                            status = status.TrimStart();
-
-                            // check for description.
-                            int spaceIdx = status.IndexOf(' ');
-                            if (spaceIdx < 0)
-                            {
-                                // there was whitespace and no description.
-                                msgHeader.Add(MsgHeader.Status, status);
-                            }
-                            else
-                            {
-                                // There is a code and description...
-                                msgHeader.Add(MsgHeader.Status, status.Substring(0, spaceIdx));
-                                msgHeader.Add(MsgHeader.Description, status.Substring(spaceIdx + 1));
-                            }
-
-                            // we're done
-                            break;
-                        }
-                        catch
-                        {
-                            ThrowInvalidHeaderException(bytes, byteCount);
-                        }
-                    }
-                    else
-                    {
-                        ThrowInvalidHeaderException(bytes, byteCount);
-
-                    }
-                }
-            }
-
-            int loc = 0;
-            string key = null;
-            char[] stringBuf = new char[64];
-
-            // must start on a key
-            for (i = kvStart; i < byteCount - 2; i++)
-            {
-                if (bytes[i] == ':' && key == null)
-                {
-                    if (loc == 0)
-                    {
-                        // empty key
-                        throw new NATSInvalidHeaderException("Missing key");
-                    }
-                    key = new string(stringBuf, 0, loc).TrimEnd();
-                    loc = 0;
-                }
-                else if (bytes[i] == '\r' && bytes[i + 1] == '\n')
-                {
-                    if (key == null)
-                    {
-                        throw new NATSInvalidHeaderException("Missing key.");
-                    }
-                    // empty value
-                    if (loc == 0)
-                    {
-                        // empty value
-                        msgHeader.Add(key, "");
-                    }
-                    else
-                    {
-                        msgHeader.Add(key, new string(stringBuf, 0, loc));
-                    }
-
-                    // reset the key, buffer location, and skip past the \n.
-                    key = null;
-                    loc = 0;
-                    i++;
-                }
-                else
-                {
-                    // it's a key or value
-
-                    // check our header length and resize if need be.
-                    if (loc > stringBuf.Length - 1)
-                    {
-                        // For simplicity, just resize it to the entire header kv size.
-                        char[] buf = new char[byteCount - MsgHeader.HeaderLen];
-                        Array.Copy(stringBuf, buf, stringBuf.Length);
-                        stringBuf = buf;
-                    }
-
-                    // copy the key or value byte into our buffer.
-                    stringBuf[loc] = (char)bytes[i];
-                    loc++;
-                }
-            }
-
-            return msgHeader;
-        }
-
-        private static void ThrowInvalidHeaderException(byte[] bytes, int byteCount)
-        {
-            throw new NATSInvalidHeaderException("Invalid header: " +
-                                                 Encoding.UTF8.GetString(bytes, 0, byteCount));
-        }
     }
 }

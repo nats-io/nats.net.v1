@@ -81,22 +81,22 @@ namespace NATS.Client.JetStream
             if (!string.IsNullOrEmpty(opts.ExpectedLastMsgId))
             {
                 mh = mh ?? new MsgHeader();
-                mh.Set(MsgHeader.ExpLastIdHeader, opts.ExpectedLastMsgId);
+                mh.Set(JetStreamConstants.ExpLastIdHeader, opts.ExpectedLastMsgId);
             }
             if (opts.ExpectedLastSeq >= 0)
             {
                 mh = mh ?? new MsgHeader();
-                mh.Set(MsgHeader.ExpLastSeqHeader, opts.ExpectedLastSeq.ToString());
+                mh.Set(JetStreamConstants.ExpLastSeqHeader, opts.ExpectedLastSeq.ToString());
             }
             if (!string.IsNullOrEmpty(opts.ExpectedStream))
             {
                 mh = mh ?? new MsgHeader();
-                mh.Set(MsgHeader.ExpStreamHeader, opts.ExpectedStream);
+                mh.Set(JetStreamConstants.ExpStreamHeader, opts.ExpectedStream);
             }
             if (!string.IsNullOrEmpty(opts.MessageId))
             {
                 mh = mh ?? new MsgHeader();
-                mh.Set(MsgHeader.MsgIdHeader, opts.MessageId);
+                mh.Set(JetStreamConstants.MsgIdHeader, opts.MessageId);
             }
 
             return mh;
