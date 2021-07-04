@@ -156,7 +156,7 @@ namespace NATS.Client.JetStream
             {
                 if (sc == null) return;
                 _name = sc.Name;
-                WithSubjects(sc.Subjects);
+                WithSubjects(sc.Subjects); // handles null
                 _retentionPolicy = sc.RetentionPolicy;
                 _maxConsumers = sc.MaxConsumers;
                 _maxMsgs = sc.MaxMsgs;
@@ -435,11 +435,6 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <returns>The StreamConfiguration</returns>
         public StreamConfiguration Build() {
-            if (_subjects == null)
-            {
-                throw new NATSException("At least one subject is required.");
-            }
-
             return new StreamConfiguration(
                 _name,
                 _subjects,

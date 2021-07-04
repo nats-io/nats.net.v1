@@ -296,7 +296,7 @@ namespace NATS.Client
         /// <summary>
         /// Gets the metadata associated with a JetStream message.
         /// </summary>
-        public virtual JetStream.MetaData Metadata { get { return null; } }
+        public virtual JetStream.MetaData MetaData { get { return null; } }
 
         /// <summary>
         /// Acknowledges a JetStream messages received from a Consumer,

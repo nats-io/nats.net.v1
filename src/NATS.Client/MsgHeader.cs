@@ -65,42 +65,42 @@ namespace NATS.Client
         /// <summary>
         /// Status header key.
         /// </summary>
-        public static readonly string Status = "Status";
+        public const string Status = "Status";
 
         /// <summary>
         /// Description header key.
         /// </summary>
-        public static readonly string Description = "Description";
+        public const string Description = "Description";
 
         /// <summary>
         /// No Responders Status code, 503.
         /// </summary>
-        public static readonly string NoResponders = "503";
+        public const string NoResponders = "503";
 
         /// <summary>
         /// Not Found Status code, 404.
         /// </summary>
-        public static readonly string NotFound = "404";
+        public const string NotFound = "404";
 
         /// <summary>
         /// JetStream expected last sequence header name.
         /// </summary>
-        public static readonly string ExpLastSeqHeader = "Nats-Expected-Last-Sequence";
+        public const string ExpLastSeqHeader = "Nats-Expected-Last-Sequence";
 
         /// <summary>
         /// JetStream expected last message ID header Name.
         /// </summary>
-        public static readonly string ExpLastIdHeader = "Nats-Expected-Last-Msg-Id";
+        public const string ExpLastIdHeader = "Nats-Expected-Last-Msg-Id";
 
         /// <summary>
         /// JetStream expected streame header name.
         /// </summary>
-        public static readonly string ExpStreamHeader = "Nats-Expected-Stream";
+        public const string ExpStreamHeader = "Nats-Expected-Stream";
 
         /// <summary>
         /// JetStream expected message ID header name.
         /// </summary>
-        public static readonly string MsgIdHeader = "Nats-Msg-Id";
+        public const string MsgIdHeader = "Nats-Msg-Id";
 
         // Cache the serialized headers to optimize reuse
         private byte[] bytes = null;

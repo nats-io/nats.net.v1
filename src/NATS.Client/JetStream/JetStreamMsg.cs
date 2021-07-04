@@ -19,14 +19,14 @@ namespace NATS.Client.JetStream
     public sealed class JetStreamMsg : Msg
     {
         static readonly private byte[] ackAck = Encoding.ASCII.GetBytes("+ACK");
-	    static readonly private byte[] ackNak = Encoding.ASCII.GetBytes("-NAK");
-	    static readonly private byte[] ackProgress = Encoding.ASCII.GetBytes("+WPI");
-	    static readonly private byte[] ackTerm = Encoding.ASCII.GetBytes("+TERM");
+        static readonly private byte[] ackNak = Encoding.ASCII.GetBytes("-NAK");
+        static readonly private byte[] ackProgress = Encoding.ASCII.GetBytes("+WPI");
+        static readonly private byte[] ackTerm = Encoding.ASCII.GetBytes("+TERM");
 
         /// <summary>
         /// Gets the metadata associated with a JetStream message.
         /// </summary>
-        public override MetaData Metadata { get; }
+        public override MetaData MetaData { get; }
 
 
         private IConnection Connection { get; }
@@ -35,7 +35,7 @@ namespace NATS.Client.JetStream
         internal JetStreamMsg(IConnection conn, string subject, string reply, byte[]data) : base(subject, reply, data)
         {
             Connection = conn;
-            Metadata = new MetaData(reply);
+            MetaData = new MetaData(reply);
         }
 
         internal JetStream CheckReply(out bool isPullMode)

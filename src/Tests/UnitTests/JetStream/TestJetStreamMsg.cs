@@ -28,7 +28,7 @@ namespace UnitTests.JetStream
 
             Assert.True(jsm.IsJetStream);
 
-            MetaData jsmd = jsm.Metadata;
+            MetaData jsmd = jsm.MetaData;
             Assert.NotNull(jsmd);
             Assert.Equal("test-stream", jsmd.Stream);
             Assert.Equal("test-consumer", jsmd.Consumer);
