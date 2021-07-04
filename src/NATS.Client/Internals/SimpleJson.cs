@@ -126,6 +126,7 @@
  * SOFTWARE.
  * 
  * * * * */
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -1012,8 +1013,8 @@ namespace NATS.Client.Internals.SimpleJSON
                 aMode = JSONTextMode.Compact;
             foreach (var k in m_Dict)
             {
-                // Special NATS case: ignore null values or negative numbers.
-                if (k.Value.Value == null || k.Value.AsInt < 0)
+                // Special NATS case: ignore null values.
+                if (k.Value.Value == null)
                     continue;
 
                 if (!first)

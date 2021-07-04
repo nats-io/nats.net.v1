@@ -38,8 +38,8 @@ namespace UnitTests.JetStream
             StreamConfiguration testSc = getTestConfiguration();
             // from json
             Validate(testSc);
-            
-            Validate(new StreamConfiguration(testSc.ToJsonNode()));
+
+            // Validate(new StreamConfiguration(testSc.ToJsonNode()));
             Validate(new StreamConfiguration(testSc.ToJsonNode().ToString()));
 
             StreamConfiguration.StreamConfigurationBuilder builder = StreamConfiguration.Builder(testSc);

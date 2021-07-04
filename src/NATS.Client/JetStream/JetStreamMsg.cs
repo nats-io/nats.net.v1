@@ -31,48 +31,6 @@ namespace NATS.Client.JetStream
 
         private IConnection Connection { get; }
 
-        // fastpath check to see if this is a valid JS message.
-        // Speed is of the essence here.
-        // Example subject:  $JS.ACK.test-stream.test-consumer.1.2.3.1605139610113260000
-        static internal bool IsJS(string replySubj)
-        {
-            if (replySubj == null)
-                return false;
-
-            int len = replySubj.Length;
-            if (len < 9)
-            {
-                // quick and dirty check
-                return false;
-            }
-
-            // TODO - is this valid?
-            if (replySubj[0] != '$' ||
-                replySubj[1] != 'J' ||
-                replySubj[2] != 'S' ||
-                replySubj[3] != '.' ||
-                replySubj[4] != 'A' ||
-                replySubj[5] != 'C' ||
-                replySubj[6] != 'K' ||
-                replySubj[7] != '.')
-            {
-                return false;
-            }
-
-            int j = 0;
-            for (int i = 8; i < len; i++)
-            {
-                if (replySubj[i] == '.')
-                {
-                    // count tokens
-                    j++;
-                }
-            }
-
-            // total should be 7, we have two already counted above
-            return j == 5;
-        }
-
         // Take the reply and parse it into the metadata.
         internal JetStreamMsg(IConnection conn, string subject, string reply, byte[]data) : base(subject, reply, data)
         {
@@ -182,7 +140,7 @@ namespace NATS.Client.JetStream
     }
 
     /// <summary>
-    /// JetStream essage MetaData
+    /// JetStream message MetaData
     /// </summary>
     public sealed class MetaData
     {

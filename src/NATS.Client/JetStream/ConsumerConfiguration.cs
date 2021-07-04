@@ -139,7 +139,7 @@ namespace NATS.Client.JetStream
             public string Durable() => _durable;
             public string DeliverSubject() => _deliverSubject;
             public long MaxAckPending() => _maxAckPending;
-            public AckPolicy AcknowedgmementPolicy() => _ackPolicy;
+            public AckPolicy AcknowledgementPolicy() => _ackPolicy;
 
             public ConsumerConfigurationBuilder() {}
 

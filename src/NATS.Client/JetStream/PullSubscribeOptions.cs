@@ -22,11 +22,8 @@ namespace NATS.Client.JetStream
         /// </summary>
         public string Durable => ConsumerConfiguration.Durable;
 
-        private PullSubscribeOptions(string stream,
-            ConsumerConfiguration config, string durable) : base(stream, config)
-        {
-            ConsumerConfiguration.Durable = Validator.ValidateDurableRequired(durable, config);
-        }
+        // Validation is done by the builder Build()
+        private PullSubscribeOptions(string stream, ConsumerConfiguration config) : base(stream, config) {}
 
         /// <summary>
         /// Gets the PullSubscribeOptions builder.
@@ -82,7 +79,15 @@ namespace NATS.Client.JetStream
             /// <returns>The PullSubscribeOptions object.</returns>
             public PullSubscribeOptions Build()
             {
-                return new PullSubscribeOptions(_stream, _config, _durable);
+                _stream = Validator.ValidateStreamName(_stream, false);
+
+                _durable = Validator.ValidateDurableRequired(_durable, _config);
+
+                _config = ConsumerConfiguration.Builder(_config)
+                    .WithDurable(_durable)
+                    .Build();
+
+                return new PullSubscribeOptions(_stream, _config);
             }
         }
     }

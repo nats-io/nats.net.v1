@@ -11,8 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using NATS.Client.Internals;
-
 namespace NATS.Client.JetStream
 {
     /// <summary>
@@ -26,8 +24,9 @@ namespace NATS.Client.JetStream
 
         internal SubscribeOptions(string stream, ConsumerConfiguration configuration)
         {
-            Stream = Validator.ValidateStreamName(stream, false);
-            ConsumerConfiguration = ConsumerConfiguration.Builder(configuration).Build();
+            // THESE ARE ALREADY BE VALIDATED BY PRIVATE CONSTRUCTORS THAT CALL THIS base METHOD!
+            Stream = stream;
+            ConsumerConfiguration = configuration;
         }
     }
 }

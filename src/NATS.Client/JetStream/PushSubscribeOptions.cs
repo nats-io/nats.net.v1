@@ -27,18 +27,8 @@ namespace NATS.Client.JetStream
         /// </summary>
         public string DeliverSubject => ConsumerConfiguration.DeliverSubject;
 
-        private PushSubscribeOptions(string stream,
-            ConsumerConfiguration consumerConfiguration,
-            string durable,
-            string deliverSubject) : base(stream, consumerConfiguration)
-        {
-            string d = Validator.ValidateDurable(durable, false);
-            if (d == null && consumerConfiguration != null)
-            {
-                consumerConfiguration.Durable = Validator.ValidateDurable(consumerConfiguration.Durable, false);
-            }
-            consumerConfiguration.DeliverSubject = deliverSubject;
-        }
+        // Validation is done by the builder Build()
+        private PushSubscribeOptions(string stream, ConsumerConfiguration config) : base(stream, config) {}
 
         /// <summary>
         /// Create PushSubscribeOptions where you are binding to
@@ -115,8 +105,22 @@ namespace NATS.Client.JetStream
             /// Builds the PushSubscribeOptions
             /// </summary>
             /// <returns>The PushSubscribeOptions object.</returns>
-            public PushSubscribeOptions Build() {
-                return new PushSubscribeOptions(_stream, _config, _durable, _deliverSubject);
+            public PushSubscribeOptions Build()
+            {
+                _stream = Validator.ValidateStreamName(_stream, false);
+                
+                _durable = Validator.ValidateDurable(_durable, false);
+                if (_durable == null && _config != null)
+                {
+                    _durable = Validator.ValidateDurable(_config.Durable, false);
+                }
+
+                _config = ConsumerConfiguration.Builder(_config)
+                    .WithDurable(_durable)
+                    .WithDeliverSubject(_deliverSubject)
+                    .Build();
+
+                return new PushSubscribeOptions(_stream, _config);
             }
         }
     }
