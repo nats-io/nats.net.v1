@@ -2158,7 +2158,7 @@ namespace NATS.Client
         // appropriate channel for processing. All subscribers have their
         // their own channel. If the channel is full, the connection is
         // considered a slow subscriber.
-        internal void processMsg(byte[] msg, long length)
+        internal void processMsg(byte[] msgBytes, long length)
         {
             bool maxReached = false;
             Subscription s;
@@ -2186,7 +2186,11 @@ namespace NATS.Client
                     maxReached = s.tallyMessage(length);
                     if (maxReached == false)
                     {
-                        s.addMessage(new Msg(msgArgs, s, msg, length), opts.subChanLen);
+                        Msg msg = JsPrefixManager.HasPrefix(msgArgs.reply)
+                            ? new JetStreamMsg(this, msgArgs, s, msgBytes, length)
+                            : new Msg(msgArgs, s, msgBytes, length);
+                        
+                        s.addMessage(msg, opts.subChanLen);
                     } // maxreached == false
 
                 } // lock s.mu

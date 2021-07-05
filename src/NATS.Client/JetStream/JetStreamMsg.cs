@@ -38,6 +38,14 @@ namespace NATS.Client.JetStream
             MetaData = new MetaData(reply);
         }
 
+        // Take the reply and parse it into the metadata.
+        internal JetStreamMsg(IConnection conn, MsgArg arg, Subscription s, byte[] payload, long totalLen) : 
+            base(arg, s, payload, totalLen)
+        {
+            Connection = conn;
+            MetaData = new MetaData(reply);
+        }
+
         internal JetStream CheckReply(out bool isPullMode)
         {
             if (sub is JetStreamSubscription jsSub)

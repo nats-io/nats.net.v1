@@ -24,10 +24,10 @@ namespace NATS.Client
     /// </summary>
     public class Msg
     {
-        private static readonly byte[] Empty = new byte[0];
-        private string subject;
-        private string reply;
-        private byte[] data;
+        protected static readonly byte[] Empty = new byte[0];
+        protected string subject;
+        protected string reply;
+        protected byte[] data;
         internal Subscription sub;
         internal MsgHeader header;
         internal MsgStatus status;
@@ -115,7 +115,7 @@ namespace NATS.Client
             if (payloadLen > 0)
             {
                 data = new byte[payloadLen];
-                Array.Copy(payload, (int)arg.hdr, data, 0, (int)(totalLen - arg.hdr));
+                Array.Copy(payload, arg.hdr, data, 0, (int)(totalLen - arg.hdr));
             }
             else
             {
