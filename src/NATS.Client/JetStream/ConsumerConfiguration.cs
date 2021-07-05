@@ -126,7 +126,7 @@ namespace NATS.Client.JetStream
             private string _durable;
             private string _deliverSubject;
             private long _startSeq;
-            private DateTime _startTime = DateTime.MinValue; 
+            private DateTime _startTime; 
             private Duration _ackWait = Duration.OfSeconds(30);
             private long _maxDeliver;
             private string _filterSubject;
@@ -136,10 +136,10 @@ namespace NATS.Client.JetStream
             private Duration _idleHeartbeat = Duration.Zero;
             private bool _flowControl;
 
-            public string Durable() => _durable;
-            public string DeliverSubject() => _deliverSubject;
-            public long MaxAckPending() => _maxAckPending;
-            public AckPolicy AcknowledgementPolicy() => _ackPolicy;
+            public string Durable => _durable;
+            public string DeliverSubject => _deliverSubject;
+            public long MaxAckPending => _maxAckPending;
+            public AckPolicy AcknowledgementPolicy => _ackPolicy;
 
             public ConsumerConfigurationBuilder() {}
 
