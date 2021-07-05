@@ -68,7 +68,7 @@ namespace UnitTests
         [Fact]
         public void TestHeaderDeserialization()
         {
-            byte[] hb = Encoding.UTF8.GetBytes("NATS/1.0\r\nfoo:bar\r\nbaz:bam\r\n\r\n");
+            byte[] hb = Encoding.ASCII.GetBytes("NATS/1.0\r\nfoo:bar\r\nbaz:bam\r\n\r\n");
 
             var hsr = new HeaderStatusReader(hb, hb.Length);
             Assert.Equal(2, hsr.Header.Count);
@@ -77,7 +77,7 @@ namespace UnitTests
             Assert.Equal("bam", hsr.Header["baz"]);
 
             // Test inline status and description which will come from the server.
-            hb = Encoding.UTF8.GetBytes("NATS/1.0 503 an error\r\n\r\n");
+            hb = Encoding.ASCII.GetBytes("NATS/1.0 503 an error\r\n\r\n");
             hsr = new HeaderStatusReader(hb, hb.Length);
             Assert.Equal(0, hsr.Header.Count);
             Assert.NotNull(hsr.Status);;
@@ -85,7 +85,7 @@ namespace UnitTests
             Assert.Equal("an error", hsr.Status.Message);
 
             // Test inline status and description which will come from the server.
-            hb = Encoding.UTF8.GetBytes("NATS/1.0    503    an error   \r\n\r\n");
+            hb = Encoding.ASCII.GetBytes("NATS/1.0    503    an error   \r\n\r\n");
             hsr = new HeaderStatusReader(hb, hb.Length);
             Assert.Equal(0, hsr.Header.Count);
             Assert.NotNull(hsr.Status);;
@@ -93,7 +93,7 @@ namespace UnitTests
             Assert.Equal("an error", hsr.Status.Message);
 
             // Test inline status and description which will come from the server.
-            hb = Encoding.UTF8.GetBytes("NATS/1.0 404 Not Found\r\n\r\n");
+            hb = Encoding.ASCII.GetBytes("NATS/1.0 404 Not Found\r\n\r\n");
             hsr = new HeaderStatusReader(hb, hb.Length);
             Assert.Equal(0, hsr.Header.Count);
             Assert.NotNull(hsr.Status);;
@@ -101,7 +101,7 @@ namespace UnitTests
             Assert.Equal("Not Found", hsr.Status.Message);
 
             // test quoted strings
-            hb = Encoding.UTF8.GetBytes("NATS/1.0\r\nfoo:\"string:with:quotes\"\r\nbaz:no:quotes\r\n\r\n");
+            hb = Encoding.ASCII.GetBytes("NATS/1.0\r\nfoo:\"string:with:quotes\"\r\nbaz:no:quotes\r\n\r\n");
             hsr = new HeaderStatusReader(hb, hb.Length);
             Assert.Equal(2, hsr.Header.Count);
             Assert.True(hsr.Status == null);
@@ -110,21 +110,21 @@ namespace UnitTests
 
             // Test unquoted strings.  Technically not to spec, but
             // support anyhow.
-            hb = Encoding.UTF8.GetBytes("NATS/1.0\r\nfoo::::\r\n\r\n");
+            hb = Encoding.ASCII.GetBytes("NATS/1.0\r\nfoo::::\r\n\r\n");
             hsr = new HeaderStatusReader(hb, hb.Length);
             Assert.Equal(1, hsr.Header.Count);
             Assert.True(hsr.Status == null);
             Assert.Equal(":::", hsr.Header["foo"]);
 
             // Test inline status which will come from the server.
-            hb = Encoding.UTF8.GetBytes("NATS/1.0 503\r\n\r\n");
+            hb = Encoding.ASCII.GetBytes("NATS/1.0 503\r\n\r\n");
             hsr = new HeaderStatusReader(hb, hb.Length);
             Assert.Equal(0, hsr.Header.Count);
             Assert.NotNull(hsr.Status);;
             Assert.Equal(NatsConstants.NoRespondersCode, hsr.Status.Code);
 
             // Test inline status with kv pair.
-            hb = Encoding.UTF8.GetBytes("NATS/1.0 123\r\nfoo:bar\r\n\r\n");
+            hb = Encoding.ASCII.GetBytes("NATS/1.0 123\r\nfoo:bar\r\n\r\n");
             hsr = new HeaderStatusReader(hb, hb.Length);
             Assert.True(hsr.Header.Count == 1);
             Assert.NotNull(hsr.Status);;
@@ -133,7 +133,7 @@ namespace UnitTests
             Assert.Equal("Server Status Message: 123", hsr.Status.Message);
                 
             // Test inline status with kv pair.
-            hb = Encoding.UTF8.GetBytes("NATS/1.0 503 hello\r\nfoo:bar\r\n\r\n");
+            hb = Encoding.ASCII.GetBytes("NATS/1.0 503 hello\r\nfoo:bar\r\n\r\n");
             hsr = new HeaderStatusReader(hb, hb.Length);
             Assert.True(hsr.Header.Count == 1);
             Assert.NotNull(hsr.Status);;
@@ -146,7 +146,7 @@ namespace UnitTests
         public void TestHeaderSerialization()
         {
             string headers = "NATS/1.0\r\nfoo:bar\r\n\r\n";
-            byte[] headerBytes = System.Text.Encoding.UTF8.GetBytes(headers);
+            byte[] headerBytes = Encoding.ASCII.GetBytes(headers);
 
             // can only test with one because order isn't guaranteed
             var mh = new MsgHeader();
@@ -203,8 +203,8 @@ namespace UnitTests
         [Fact]
         public void TestHeaderMultiValueSerialization()
         {
-            string headers = $"NATS/1.0\r\nfoo:bar\r\nfoo:baz,comma\r\n\r\n";
-            byte[] headerBytes = Encoding.UTF8.GetBytes(headers);
+            string headers = "NATS/1.0\r\nfoo:bar\r\nfoo:baz,comma\r\n\r\n";
+            byte[] headerBytes = Encoding.ASCII.GetBytes(headers);
             var mh = new HeaderStatusReader(headerBytes, headerBytes.Length).Header;
 
             byte[] bytes = mh.ToByteArray();
@@ -252,27 +252,27 @@ namespace UnitTests
 
             Assert.Throws<ArgumentNullException>(() => new MsgHeader(null));
 
-            byte[] b = Encoding.UTF8.GetBytes("GARBAGE");
+            byte[] b = Encoding.ASCII.GetBytes("GARBAGE");
             Assert.Throws<NATSInvalidHeaderException>(() => new HeaderStatusReader(b, b.Length));
 
             // No headers
-            b = Encoding.UTF8.GetBytes("NATS/1.0");
+            b = Encoding.ASCII.GetBytes("NATS/1.0");
             Assert.Throws<NATSInvalidHeaderException>(() => new HeaderStatusReader(b, b.Length));
 
             // No headers
-            b = Encoding.UTF8.GetBytes("NATS/1.0\r\n");
+            b = Encoding.ASCII.GetBytes("NATS/1.0\r\n");
             Assert.Throws<NATSInvalidHeaderException>(() => new HeaderStatusReader(b, b.Length));
 
             // Missing last \r\n
-            b = Encoding.UTF8.GetBytes("NATS/1.0\r\nk1:v1\r\n");
+            b = Encoding.ASCII.GetBytes("NATS/1.0\r\nk1:v1\r\n");
             Assert.Throws<NATSInvalidHeaderException>(() => new HeaderStatusReader(b, b.Length));
 
             // invalid headers
-            b = Encoding.UTF8.GetBytes("NATS/1.0\r\ngarbage\r\n\r\n");
+            b = Encoding.ASCII.GetBytes("NATS/1.0\r\ngarbage\r\n\r\n");
             Assert.Throws<NATSInvalidHeaderException>(() => new HeaderStatusReader(b, b.Length));
 
             // missing key
-            b = Encoding.UTF8.GetBytes("NATS/1.0\r\n:value\r\n\r\n");
+            b = Encoding.ASCII.GetBytes("NATS/1.0\r\n:value\r\n\r\n");
             Assert.Throws<NATSInvalidHeaderException>(() => new HeaderStatusReader(b, b.Length));
 
             // test invalid characters
@@ -308,7 +308,7 @@ namespace UnitTests
 
         private void shouldNATSInvalidHeaderException(string s)
         {
-            byte[] b = Encoding.UTF8.GetBytes(s);
+            byte[] b = Encoding.ASCII.GetBytes(s);
             Assert.Throws<NATSInvalidHeaderException>(() => new HeaderStatusReader(b, b.Length));
         }
 
