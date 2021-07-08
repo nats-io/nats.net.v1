@@ -43,6 +43,7 @@ namespace NATS.Client.JetStream
         internal const string Duplicate = "duplicate";
         internal const string DuplicateWindow = "duplicate_window";
         internal const string DurableName = "durable_name";
+        internal const string ErrCode = "err_code";
         internal const string Error = "error";
         internal const string External = "external";
         internal const string FilterSubject = "filter_subject";

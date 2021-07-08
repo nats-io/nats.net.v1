@@ -33,8 +33,6 @@ namespace NATS.Client.JetStream
             Options = options ?? JetStreamOptions.Builder().Build();
             Prefix = Options.Prefix;
             Timeout = (int)Options.RequestTimeout.Millis;
-
-            CheckJetStream();
         }
 
         private string AddPrefix(string subject) => Prefix + subject;
@@ -50,7 +48,7 @@ namespace NATS.Client.JetStream
             {
                 Msg m = JSRequest(JetStreamConstants.JsapiAccountInfo, null, Timeout);
                 var s = new AccountStatistics(m);
-                if (s.ErrorCode == 503)
+                if (s.ErrorCode == NatsConstants.NoRespondersCode)
                 {
                     throw new NATSJetStreamException(s.ErrorDescription);
                 }
@@ -71,68 +69,75 @@ namespace NATS.Client.JetStream
 
         // Build the headers.  Take care not to unnecessarily allocate, we're
         // in the fastpath here.
-        private MsgHeader MergeHeaders(MsgHeader headers, PublishOptions opts)
+        private MsgHeader MergePublishOptions(MsgHeader headers, PublishOptions opts)
         {
-            if (opts == null)
-                return null;
+            // never touch the user's original headers
+            MsgHeader merged = headers == null ? null : new MsgHeader(headers);
 
-            MsgHeader mh = headers;
-
-            if (!string.IsNullOrEmpty(opts.ExpectedLastMsgId))
+            if (opts != null)
             {
-                mh = mh ?? new MsgHeader();
-                mh.Set(JetStreamConstants.ExpLastIdHeader, opts.ExpectedLastMsgId);
-            }
-            if (opts.ExpectedLastSeq >= 0)
-            {
-                mh = mh ?? new MsgHeader();
-                mh.Set(JetStreamConstants.ExpLastSeqHeader, opts.ExpectedLastSeq.ToString());
-            }
-            if (!string.IsNullOrEmpty(opts.ExpectedStream))
-            {
-                mh = mh ?? new MsgHeader();
-                mh.Set(JetStreamConstants.ExpStreamHeader, opts.ExpectedStream);
-            }
-            if (!string.IsNullOrEmpty(opts.MessageId))
-            {
-                mh = mh ?? new MsgHeader();
-                mh.Set(JetStreamConstants.MsgIdHeader, opts.MessageId);
+                merged = MergeNum(merged, JetStreamConstants.ExpLastSeqHeader, opts.ExpectedLastSeq);
+                merged = MergeString(merged, JetStreamConstants.ExpLastIdHeader, opts.ExpectedLastMsgId);
+                merged = MergeString(merged, JetStreamConstants.ExpStreamHeader, opts.ExpectedStream);
+                merged = MergeString(merged, JetStreamConstants.MsgIdHeader, opts.MessageId);
             }
 
-            return mh;
+            return merged;
         }
 
-        private PublishAck PublishSync(string subject, byte[] data, PublishOptions opts)
-            => PublishSync(new Msg(subject, null, data), opts);
-
-
-        private PublishAck PublishSync(Msg msg, PublishOptions opts)
-        {
-            if (msg.HasHeaders)
-            {
-                MergeHeaders(msg.header, opts);
+        private MsgHeader MergeNum(MsgHeader h, String key, long value) {
+            if (value > 0) {
+                if (h == null) {
+                    h = new MsgHeader(h);
+                }
+                h.Set(key, value.ToString());
             }
-            else
-            {
-                msg.header = MergeHeaders(null, opts);
+            return h;
+        }
+
+        private MsgHeader MergeString(MsgHeader h, String key, String value) {
+            if (!string.IsNullOrWhiteSpace(value)) {
+                if (h == null) {
+                    h = new MsgHeader(h);
+                }
+                h.Set(key, value);
+            }
+            return h;
+        }
+
+        private PublishAck ProcessPublishResponse(Msg resp, PublishOptions options) {
+            if (resp.HasStatus) {
+                throw new NATSJetStreamException("Error Publishing: " + resp.Status.Message);
             }
 
-            return new PublishAck(Connection.Request(msg));
+            PublishAck ack = new PublishAck(resp);
+            String ackStream = ack.Stream;
+            String pubStream = options?.Stream;
+            // stream specified in options but different than ack should not happen but...
+            if (pubStream != null && !pubStream.Equals(ackStream)) {
+                throw new NATSJetStreamException("Expected ack from stream " + pubStream + ", received from: " + ackStream);
+            }
+            return ack;
         }
 
-        public PublishAck Publish(string subject, byte[] data) => PublishSync(subject, data, null);
-
-        public PublishAck Publish(string subject, byte[] data, PublishOptions options) => PublishSync(subject, data, options);
-
-        public PublishAck Publish(Msg message)
+        private PublishAck PublishSyncInternal(string subject, byte[] data, MsgHeader hdr, PublishOptions options)
         {
-            return PublishSync(message, defaultPubOpts);
+            MsgHeader merged = MergePublishOptions(hdr, options);
+            Msg msg = new Msg(subject, null, merged, data);
+            return ProcessPublishResponse(Connection.Request(msg), options);
         }
 
-        public PublishAck Publish(Msg message, PublishOptions publishOptions)
-        {
-            throw new NotImplementedException();
-        }
+        public PublishAck Publish(string subject, byte[] data) 
+            => PublishSyncInternal(subject, data, null, null);
+
+        public PublishAck Publish(string subject, byte[] data, PublishOptions options) 
+            => PublishSyncInternal(subject, data, null, options);
+
+        public PublishAck Publish(Msg msg)
+            => PublishSyncInternal(msg.Subject, msg.Data, msg.Header, null);
+
+        public PublishAck Publish(Msg msg, PublishOptions publishOptions)
+            => PublishSyncInternal(msg.Subject, msg.Data, msg.Header, publishOptions);
 
         public Task<PublishAck> PublishAsync(string subject, byte[] data)
         {
@@ -164,7 +169,7 @@ namespace NATS.Client.JetStream
             throw new NotImplementedException();
         }
 
-        public IJetStreamSyncSubscription SyncSubsribe(string subject, SubscribeOptions options)
+        public IJetStreamSyncSubscription SyncSubscribe(string subject, SubscribeOptions options)
         {
             throw new NotImplementedException();
         }
@@ -189,17 +194,17 @@ namespace NATS.Client.JetStream
             throw new NotImplementedException();
         }
 
-        public IJetStreamSyncSubscription SyncSubsribe(string subject)
+        public IJetStreamSyncSubscription SyncSubscribe(string subject)
         {
             throw new NotImplementedException();
         }
 
-        public IJetStreamSyncSubscription SyncSubsribe(string subject, string queue)
+        public IJetStreamSyncSubscription SyncSubscribe(string subject, string queue)
         {
             throw new NotImplementedException();
         }
 
-        public IJetStreamSyncSubscription SyncSubsribe(string subject, string queue, SubscribeOptions options)
+        public IJetStreamSyncSubscription SyncSubscribe(string subject, string queue, SubscribeOptions options)
         {
             throw new NotImplementedException();
         }
@@ -244,24 +249,15 @@ namespace NATS.Client.JetStream
             throw new NotImplementedException();
         }
 
-
         #region JetStreamManagement
 
         public StreamInfo AddStream(StreamConfiguration config)
-        {
-            if (config == null)
-            {
-                throw new ArgumentNullException(nameof(config));
-            }
-
-            var m = JSRequest(
-                string.Format(JetStreamConstants.JsapiStreamCreate, config.Name),
-                config.Serialize(), Timeout);
-
-            return new StreamInfo(new ApiResponse(m, true).JsonNode);
-        }
+            => AddOrUpdateStream(config, JetStreamConstants.JsapiStreamCreate);
 
         public StreamInfo UpdateStream(StreamConfiguration config)
+            => AddOrUpdateStream(config, JetStreamConstants.JsapiStreamUpdate);
+
+        private StreamInfo AddOrUpdateStream(StreamConfiguration config, string template)
         {
             if (config == null)
             {
@@ -269,7 +265,7 @@ namespace NATS.Client.JetStream
             }
 
             var m = JSRequest(
-                string.Format(JetStreamConstants.JsapiStreamUpdate, config.Name),
+                string.Format(template, config.Name),
                 config.Serialize(),
                 Timeout);
 

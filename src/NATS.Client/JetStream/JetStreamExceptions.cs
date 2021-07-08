@@ -21,7 +21,8 @@ namespace NATS.Client.JetStream
     /// </summary>
     public class NATSJetStreamException : NATSException
     {
-        private long _ErrorCode = ErrorCodeUnspecified;
+        private int _errorCode = ErrorCodeUnspecified;
+        private int _apiErrorCode = ErrorCodeUnspecified;
 
         /// <summary>
         /// Unspecified error code.
@@ -32,7 +33,13 @@ namespace NATS.Client.JetStream
         /// Gets the error code returned by JetStream.  Returns ErrorCodeUnspecified
         /// if the error is local.
         /// </summary>
-        public long ErrorCode { get { return _ErrorCode; } }
+        public int ErrorCode { get { return _errorCode; } }
+
+        /// <summary>
+        /// Gets the error code returned by JetStream.  Returns ErrorCodeUnspecified
+        /// if the error is local.
+        /// </summary>
+        public int ApiErrorCode { get { return _errorCode; } }
 
         /// <summary>
         /// Returns the description of the error.
@@ -45,7 +52,8 @@ namespace NATS.Client.JetStream
         /// <param name="apiResponse"></param>
         public NATSJetStreamException(ApiResponse apiResponse) : base(apiResponse.Error.Desc)
         {
-            _ErrorCode = apiResponse.ErrorCode;
+            _errorCode = apiResponse.ErrorCode;
+            _apiErrorCode = apiResponse.ApiErrorCode;
         }
 
         /// <summary>

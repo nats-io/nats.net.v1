@@ -195,9 +195,6 @@ namespace UnitTests
 
             var mh2 = new MsgHeader(mh);
             Assert.Equal("bar", mh2["foo"]);
-
-            Assert.Throws<ArgumentNullException>(() => new MsgHeader(null));
-            Assert.Throws<ArgumentException>(() => new MsgHeader(new MsgHeader()));
         }
 
         [Fact]
@@ -249,8 +246,6 @@ namespace UnitTests
             Assert.Throws<NATSInvalidHeaderException>(() => new HeaderStatusReader(null, 1));
             Assert.Throws<NATSInvalidHeaderException>(() => new HeaderStatusReader(new byte[16], 0));
             Assert.Throws<NATSInvalidHeaderException>(() => new HeaderStatusReader(new byte[16], -1));
-
-            Assert.Throws<ArgumentNullException>(() => new MsgHeader(null));
 
             byte[] b = Encoding.ASCII.GetBytes("GARBAGE");
             Assert.Throws<NATSInvalidHeaderException>(() => new HeaderStatusReader(b, b.Length));

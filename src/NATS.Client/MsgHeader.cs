@@ -88,17 +88,12 @@ namespace NATS.Client
         /// <param name="header">the NATS message header to copy.</param>
         public MsgHeader(MsgHeader header)
         {
-            if (header == null)
+            if (header != null)
             {
-                throw new ArgumentNullException("header");
-            }
-            if (header.Count == 0)
-            {
-                throw new ArgumentException("header", "header cannot be empty");
-            }
-            foreach (string s in header.Keys)
-            {
-                nvc[s] = header[s];
+                foreach (string s in header.Keys)
+                {
+                    nvc[s] = header[s];
+                }
             }
         }
 

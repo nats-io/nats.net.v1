@@ -57,11 +57,6 @@ namespace IntegrationTests
                     Assert.Throws<NATSJetStreamException>(() => jsm.UpdateStream(sc));
 
                 });
-
-            // check for failure.
-            Context.RunInServer(c => 
-                Assert.Throws<NATSJetStreamException>(() => 
-                    c.CreateJetStreamManagementContext()));
         }
 
         [Fact]

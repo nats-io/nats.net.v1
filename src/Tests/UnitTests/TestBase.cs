@@ -1,8 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Text;
-using NATS.Client;
-using NATS.Client.JetStream;
 
 namespace UnitTests
 {
@@ -100,17 +98,6 @@ namespace UnitTests
 
         public static byte[] DataBytes(int seq) {
             return Encoding.ASCII.GetBytes(DATA + "-" + seq);
-        }
-
-        public static void CreateMemoryStream(IConnection c, string streamName, params string[] subjects)
-        {
-            var jsm = c.CreateJetStreamManagementContext();
-            var sc = StreamConfiguration.Builder()
-                .WithName(streamName)
-                .WithStorageType(StorageType.Memory)
-                .WithSubjects(subjects)
-                .Build();
-            jsm.AddStream(sc);
         }
     }
 }

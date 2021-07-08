@@ -54,7 +54,9 @@ namespace NATS.Client.JetStream
 
         public bool HasError => Error != null;
 
-        public long ErrorCode => Error?.Code ?? -1;
+        public int ErrorCode => Error?.Code ?? -1;
+
+        public int ApiErrorCode => Error?.ApiErrorCode ?? -1;
 
         public string ErrorDescription => Error?.Desc ?? null;
     }

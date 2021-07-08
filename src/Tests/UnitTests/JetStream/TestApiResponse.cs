@@ -12,7 +12,6 @@
 // limitations under the License.
 
 using System;
-using NATS.Client;
 using NATS.Client.JetStream;
 using Xunit;
 
@@ -61,18 +60,16 @@ namespace UnitTests.JetStream
             Assert.True(jsApiResp.HasError);
             Assert.Equal("non_zero_code_only_response", jsApiResp.Type);
             Assert.Equal(500, jsApiResp.ErrorCode);
-            Assert.Null(jsApiResp.ErrorDescription);
             Assert.Equal("Unknown JetStream Error (500)", jsApiResp.Error.ToString());
             jsApiEx = new NATSJetStreamException(jsApiResp);
             Assert.Equal(500, jsApiEx.ErrorCode);
-            Assert.Equal("Exception of type 'NATS.Client.JetStream.NATSJetStreamException' was thrown.", jsApiEx.ErrorDescription);
 
             jsApiResp = new TestingApiResponse(jsons[3]);
             Assert.True(jsApiResp.HasError);
             Assert.Equal("no_code_response", jsApiResp.Type);
             Assert.Equal(Error.NOT_SET, jsApiResp.ErrorCode);
             Assert.Equal("no code", jsApiResp.ErrorDescription);
-            Assert.Equal("no code (-1)", jsApiResp.Error.ToString());
+            Assert.Equal("no code", jsApiResp.Error.ToString());
             jsApiEx = new NATSJetStreamException(jsApiResp);
             Assert.Equal(-1, jsApiEx.ErrorCode);
             Assert.Equal("no code", jsApiEx.ErrorDescription);
@@ -82,9 +79,9 @@ namespace UnitTests.JetStream
             Assert.Equal("empty_response", jsApiResp.Type);
             Assert.Equal(Error.NOT_SET, jsApiResp.ErrorCode);
             Assert.Empty(jsApiResp.ErrorDescription);
-            Assert.StartsWith("Unknown JetStream Error:", jsApiResp.Error.ToString());
             jsApiEx = new NATSJetStreamException(jsApiResp);
             Assert.Equal(-1, jsApiEx.ErrorCode);
+            Assert.Equal(-1, jsApiEx.ApiErrorCode);
             Assert.Empty(jsApiEx.ErrorDescription);
 
             jsApiResp = new TestingApiResponse(jsons[5]);

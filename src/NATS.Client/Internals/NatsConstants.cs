@@ -7,7 +7,7 @@ namespace NATS.Client.Internals
         internal const string HeaderVersion = "NATS/1.0";
         internal const string HeaderVersionBytesPlusCrlf = "NATS/1.0\r\n";
         internal static readonly byte[] HeaderVersionBytes = Encoding.ASCII.GetBytes(HeaderVersion);
-        internal static int HeaderVersionBytesLen = HeaderVersionBytes.Length;
+        internal static readonly int HeaderVersionBytesLen = HeaderVersionBytes.Length;
         internal static readonly int MinimalValidHeaderLen = HeaderVersionBytesLen + 2; // 2 is crlf
 
         /// <summary>
