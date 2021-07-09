@@ -18,12 +18,14 @@ namespace NATS.Client.JetStream
 {
     public class ApiResponse
     {
-        public const string NO_TYPE = "io.nats.jetstream.api.v1.no_type";
+        public const string NoType = "io.nats.jetstream.api.v1.no_type";
 
         public string Type { get; }
         public Error Error { get; }
 
         internal JSONNode JsonNode { get; }
+
+        internal ApiResponse() {}
 
         internal ApiResponse(Msg msg, bool throwOnError = false) : 
             this(Encoding.UTF8.GetString(msg.Data), throwOnError) {}
@@ -34,7 +36,7 @@ namespace NATS.Client.JetStream
             Type = JsonNode[ApiConstants.Type].Value;
             if (string.IsNullOrEmpty(Type))
             {
-                Type = NO_TYPE;
+                Type = NoType;
             }
             Error = Error.OptionalInstance(JsonNode[ApiConstants.Error]);
 

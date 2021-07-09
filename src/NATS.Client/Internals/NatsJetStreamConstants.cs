@@ -60,7 +60,7 @@
         /// <summary>
         /// JSAPI_STREAMS can lookup a stream by subject.
         /// </summary>
-        public const string JsapiStreams = "STREAM.NAMES";
+        public const string JsapiStreamNames = "STREAM.NAMES";
 
         /// <summary>
         /// JSAPI_STREAM_CREATE is the endpoint to create new streams.
@@ -86,11 +86,6 @@
         /// JSAPI_STREAM_PURGE is the endpoint to purge streams.
         /// </summary>
         public const string JsapiStreamPurge = "STREAM.PURGE.{0}";
-
-        /// <summary>
-        /// JSAPI_STREAM_NAMES is the endpoint that will return a list of stream names
-        /// </summary>
-        public const string JsapiStreamNames = "STREAM.NAMES";
 
         /// <summary>
         /// JSAPI_STREAM_LIST is the endpoint that will return all detailed stream information

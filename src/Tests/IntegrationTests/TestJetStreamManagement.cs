@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using Xunit;
@@ -235,7 +236,7 @@ namespace IntegrationTests
                 StreamInfo si = jsm.GetStreamInfo(STREAM);
                 Assert.Equal(0, si.State.Messages);                
 
-                JetStreamTestBase.JsPublish(c, SUBJECT, 1);
+                JsPublish(c, SUBJECT, 1);
                 si = jsm.GetStreamInfo(STREAM);
                 Assert.Equal(1, si.State.Messages);
 
@@ -253,8 +254,75 @@ namespace IntegrationTests
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
                 CreateMemoryStream(c, STREAM, Subject(0), Subject(1));
                 
-                // TODO ...
+                List<ConsumerInfo> list = jsm.GetConsumers(STREAM);
+                Assert.Empty(list);
+
+                // Assert.Throws<ArgumentException>(() => 
+                ConsumerConfiguration cc = ConsumerConfiguration.Builder().Build();
+                Assert.Throws<ArgumentException>(() => jsm.AddOrUpdateConsumer(null, cc));
+                Assert.Throws<ArgumentNullException>(() => jsm.AddOrUpdateConsumer(STREAM, null));
+                Assert.Throws<ArgumentNullException>(() => jsm.AddOrUpdateConsumer(STREAM, cc));
+
+                ConsumerConfiguration cc0 = ConsumerConfiguration.Builder()
+                        .WithDurable(Durable(0))
+                        .Build();
+                ConsumerInfo ci = jsm.AddOrUpdateConsumer(STREAM, cc0);
+                Assert.Equal(Durable(0), ci.Name);
+                Assert.Equal(Durable(0), ci.Configuration.Durable);
+                Assert.Empty(ci.Configuration.DeliverSubject);
+                
+                ConsumerConfiguration cc1 = ConsumerConfiguration.Builder()
+                        .WithDurable(Durable(1))
+                        .WithDeliverSubject(Deliver(1))
+                        .Build();
+                ci = jsm.AddOrUpdateConsumer(STREAM, cc1);
+                Assert.Equal(Durable(1), ci.Name);
+                Assert.Equal(Durable(1), ci.Configuration.Durable);
+                Assert.Equal(Deliver(1), ci.Configuration.DeliverSubject);
+                
+                List<String> consumers = jsm.GetConsumerNames(STREAM);
+                Assert.Equal(2, consumers.Count);
+                Assert.True(jsm.DeleteConsumer(STREAM, cc1.Durable));
+                consumers = jsm.GetConsumerNames(STREAM);
+                Assert.Single(consumers);
+                Assert.Throws<NATSJetStreamException>(() => jsm.DeleteConsumer(STREAM, cc1.Durable));
             });
+        }
+
+        [Fact]
+        public void TestGetConsumers() 
+        {
+            Context.RunInJsServer(c => {
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                CreateMemoryStream(c, STREAM, Subject(0), Subject(1));
+
+                AddConsumers(jsm, STREAM, 600, "A", null); // getConsumers pages at 256
+
+                List<ConsumerInfo> list = jsm.GetConsumers(STREAM);
+                Assert.Equal(600, list.Count);
+
+                AddConsumers(jsm, STREAM, 500, "B", null); // getConsumerNames pages at 1024
+                List<string> names = jsm.GetConsumerNames(STREAM);
+                Assert.Equal(1100, names.Count);
+            });
+        }
+
+        private List<ConsumerInfo> AddConsumers(IJetStreamManagement jsm, String stream, int count, String durableVary, String filterSubject)
+        {
+            List<ConsumerInfo> consumers = new List<ConsumerInfo>();
+            for (int x = 0; x < count; x++) {
+                String dur = Durable(durableVary, x + 1);
+                ConsumerConfiguration cc = ConsumerConfiguration.Builder()
+                        .WithDurable(dur)
+                        .WithFilterSubject(filterSubject)
+                        .Build();
+                ConsumerInfo ci = jsm.AddOrUpdateConsumer(stream, cc);
+                consumers.Add(ci);
+                Assert.Equal(dur, ci.Name);
+                Assert.Equal(dur, ci.Configuration.Durable);
+                Assert.Empty(ci.Configuration.DeliverSubject);
+            }
+            return consumers;
         }
     }
 }

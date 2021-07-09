@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using NATS.Client.Internals;
 
 namespace NATS.Client.JetStream
@@ -41,7 +42,7 @@ namespace NATS.Client.JetStream
             }
 
             string subj = string.Format(addUpdateTemplate, config.Name);
-            var m = RequestResponseRequired(subj, config.Serialize(), Timeout);
+            Msg m = RequestResponseRequired(subj, config.Serialize(), Timeout);
             return new StreamInfo(m, true);
         }
         
@@ -49,7 +50,7 @@ namespace NATS.Client.JetStream
         {
             Validator.ValidateNotNull(streamName, nameof(streamName));
             string subj = string.Format(JetStreamConstants.JsapiStreamDelete, streamName);
-            var m = RequestResponseRequired(subj, null, Timeout);
+            Msg m = RequestResponseRequired(subj, null, Timeout);
             return new SuccessApiResponse(m, true).Success;
         }
 
@@ -57,7 +58,7 @@ namespace NATS.Client.JetStream
         {
             Validator.ValidateNotNull(streamName, nameof(streamName));
             string subj = string.Format(JetStreamConstants.JsapiStreamInfo, streamName);
-            var m = RequestResponseRequired(subj, null, Timeout);
+            Msg m = RequestResponseRequired(subj, null, Timeout);
             return new StreamInfo(m, true);
         }
 
@@ -65,11 +66,11 @@ namespace NATS.Client.JetStream
         {
             Validator.ValidateNotNull(streamName, nameof(streamName));
             string subj = string.Format(JetStreamConstants.JsapiStreamPurge, streamName);
-            var m = RequestResponseRequired(subj, null, Timeout);
+            Msg m = RequestResponseRequired(subj, null, Timeout);
             return new PurgeResponse(m, true);
         }
 
-        public ConsumerInfo AddConsumer(string streamName, ConsumerConfiguration config)
+        public ConsumerInfo AddOrUpdateConsumer(string streamName, ConsumerConfiguration config)
         {
             Validator.ValidateStreamName(streamName, true);
             Validator.ValidateNotNull(config, nameof(config));
@@ -82,7 +83,7 @@ namespace NATS.Client.JetStream
             Validator.ValidateNotNull(streamName, nameof(streamName));
             Validator.ValidateNotNull(consumer, nameof(consumer));
             string subj = string.Format(JetStreamConstants.JsapiConsumerDelete, streamName, consumer);
-            var m = RequestResponseRequired(subj, null, Timeout);
+            Msg m = RequestResponseRequired(subj, null, Timeout);
             return new SuccessApiResponse(m, true).Success;
         }
 
@@ -93,24 +94,46 @@ namespace NATS.Client.JetStream
             return GetConsumerInfoInternal(streamName, consumer);
         }
 
-        public string[] GetConsumerNames(string streamName)
+        public List<string> GetConsumerNames(string streamName)
         {
-            throw new NotImplementedException();
+            ConsumerNamesReader cnr = new ConsumerNamesReader();
+            while (cnr.HasMore()) {
+                string subj = string.Format(JetStreamConstants.JsapiConsumerNames, streamName);
+                Msg m = RequestResponseRequired(subj, cnr.NextJson(), Timeout);
+                cnr.Process(m);
+            }
+            return cnr.Strings;
         }
 
-        public ConsumerInfo[] GetConsumers(string streamName)
+        public List<ConsumerInfo> GetConsumers(string streamName)
         {
-            throw new NotImplementedException();
+            ConsumerListReader clr = new ConsumerListReader();
+            while (clr.HasMore()) {
+                string subj = string.Format(JetStreamConstants.JsapiConsumerList, streamName);
+                Msg m = RequestResponseRequired(subj, clr.NextJson(), Timeout);
+                clr.Process(m);
+            }
+            return clr.Consumers;
         }
 
-        public string[] GetStreamNames()
+        public List<string> GetStreamNames()
         {
-            throw new NotImplementedException();
+            StreamNamesReader snr = new StreamNamesReader();
+            while (snr.HasMore()) {
+                Msg m = RequestResponseRequired(JetStreamConstants.JsapiStreamNames, snr.NextJson(), Timeout);
+                snr.Process(m);
+            }
+            return snr.Strings;
         }
 
-        public StreamInfo[] GetStreams()
+        public List<StreamInfo> GetStreams()
         {
-            throw new NotImplementedException();
+            StreamListReader slr = new StreamListReader();
+            while (slr.HasMore()) {
+                Msg m = RequestResponseRequired(JetStreamConstants.JsapiStreamList, slr.NextJson(), Timeout);
+                slr.Process(m);
+            }
+            return slr.Streams;
         }
 
         public MessageInfo GetMessage(string streamName, long sequence)
@@ -123,7 +146,7 @@ namespace NATS.Client.JetStream
             Validator.ValidateNotNull(streamName, nameof(streamName));
             string subj = string.Format(JetStreamConstants.JsapiMsgDelete, streamName);
             byte[] bytes = JsonUtils.SimpleMessageBody(ApiConstants.Seq, sequence);
-            var m = RequestResponseRequired(subj, bytes, Timeout);
+            Msg m = RequestResponseRequired(subj, bytes, Timeout);
             return new SuccessApiResponse(m, true).Success;
         }
     }

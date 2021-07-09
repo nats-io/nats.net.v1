@@ -11,6 +11,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
+
 namespace NATS.Client.JetStream
 {
     /// <summary>
@@ -61,14 +63,13 @@ namespace NATS.Client.JetStream
         /// <returns>The result of the purge.</returns>
         PurgeResponse PurgeStream(string streamName);
 
-
         /// <summary>
         /// Adds or updates a consumer.
         /// </summary>
         /// <param name="streamName">The name of the stream the consumer is attached to.</param>
         /// <param name="config">The consumer configuration to use.</param>
         /// <returns></returns>
-        ConsumerInfo AddConsumer(string streamName, ConsumerConfiguration config);
+        ConsumerInfo AddOrUpdateConsumer(string streamName, ConsumerConfiguration config);
 
         /// <summary>
         /// Deletes a consumer.
@@ -92,26 +93,26 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="streamName">The name of the stream.</param>
         /// <returns>An array of consumer names.</returns>
-        string[] GetConsumerNames(string streamName);
+        List<string> GetConsumerNames(string streamName);
 
         /// <summary>
         /// Get consumer information for all consumers on a stream.
         /// </summary>
         /// <param name="streamName">The name of the stream.</param>
         /// <returns>An array of consumer information objects.</returns>
-        ConsumerInfo[] GetConsumers(string streamName);
+        List<ConsumerInfo> GetConsumers(string streamName);
 
         /// <summary>
         /// Gets the names of all streams.
         /// </summary>
         /// <returns>An array of stream names.</returns>
-        string[] GetStreamNames();
+        List<string> GetStreamNames();
 
         /// <summary>
         /// Gets stream information about all streams.
         /// </summary>
         /// <returns>An array of stream information objects.</returns>
-        StreamInfo[] GetStreams();
+        List<StreamInfo> GetStreams();
 
 
         /// <summary>

@@ -37,6 +37,11 @@ namespace NATS.Client.JetStream
             Init(JsonNode);
         }
 
+        internal StreamInfo(JSONNode jsonNode)
+        {
+            Init(jsonNode);
+        }
+
         private void Init(JSONNode jsonNode)
         {
             Created = JsonUtils.AsDate(jsonNode[ApiConstants.Created]);

@@ -40,6 +40,11 @@ namespace NATS.Client.JetStream
             Init(JsonNode);
         }
 
+        internal ConsumerInfo(JSONNode jsonNode)
+        {
+            Init(jsonNode);
+        }
+
         private void Init(JSONNode jsonNode)
         {
             Stream = jsonNode[ApiConstants.StreamName].Value;

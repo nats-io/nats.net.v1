@@ -111,93 +111,78 @@ namespace NATS.Client.JetStream
             throw new NotImplementedException();
         }
 
-        public IJetStreamPullSubscription PullSubscribe(string subject, SubscribeOptions options)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IJetStreamPushSubscription Subscribe(string subject, EventHandler<MsgHandlerEventArgs> handler, PullSubscribeOptions options)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IJetStreamSyncSubscription SyncSubscribe(string subject, SubscribeOptions options)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IJetStreamPullSubscription PullSubscribe(string subject)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IJetStreamPushSubscription Subscribe(string subject, EventHandler<MsgHandlerEventArgs> handler)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IJetStreamPushSubscription Subscribe(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IJetStreamPushSubscription Subscribe(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler, PullSubscribeOptions options)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IJetStreamSyncSubscription SyncSubscribe(string subject)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IJetStreamSyncSubscription SyncSubscribe(string subject, string queue)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IJetStreamSyncSubscription SyncSubscribe(string subject, string queue, SubscribeOptions options)
-        {
-            throw new NotImplementedException();
-        }
-
         public IJetStreamPullSubscription SubscribePull(string subject)
         {
+            Validator.ValidateSubject(subject, true);
             throw new NotImplementedException();
         }
 
         public IJetStreamPullSubscription SubscribePull(string subject, PullSubscribeOptions options)
         {
+            Validator.ValidateSubject(subject, true);
+            throw new NotImplementedException();
+        }
+
+        public IJetStreamPushSubscription Subscribe(string subject, EventHandler<MsgHandlerEventArgs> handler)
+        {
+            Validator.ValidateSubject(subject, true);
+            Validator.ValidateNotNull(handler, nameof(handler));
+            throw new NotImplementedException();
+        }
+
+        public IJetStreamPushSubscription Subscribe(string subject, EventHandler<MsgHandlerEventArgs> handler, PullSubscribeOptions options)
+        {
+            Validator.ValidateSubject(subject, true);
+            Validator.ValidateNotNull(handler, nameof(handler));
+            throw new NotImplementedException();
+        }
+
+        public IJetStreamPushSubscription Subscribe(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler)
+        {
+            Validator.ValidateSubject(subject, true);
+            queue = Validator.ValidateQueueName(queue, false);
+            Validator.ValidateNotNull(handler, nameof(handler));
             throw new NotImplementedException();
         }
 
         public IJetStreamPushSubscription Subscribe(string subject, EventHandler<MsgHandlerEventArgs> handler, PushSubscribeOptions options)
         {
+            Validator.ValidateSubject(subject, true);
+            Validator.ValidateNotNull(handler, nameof(handler));
             throw new NotImplementedException();
         }
 
         public IJetStreamPushSubscription Subscribe(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler, PushSubscribeOptions options)
         {
+            Validator.ValidateSubject(subject, true);
+            queue = Validator.ValidateQueueName(queue, false);
+            Validator.ValidateNotNull(handler, nameof(handler));
             throw new NotImplementedException();
         }
 
         public IJetStreamSyncSubscription SubscribeSync(string subject)
         {
+            Validator.ValidateSubject(subject, true);
             throw new NotImplementedException();
         }
 
-        public IJetStreamSyncSubscription SubscribeSync(string subject, SubscribeOptions options)
+        public IJetStreamSyncSubscription SubscribeSync(string subject, PushSubscribeOptions options)
         {
+            Validator.ValidateSubject(subject, true);
             throw new NotImplementedException();
         }
 
         public IJetStreamSyncSubscription SubscribeSync(string subject, string queue)
         {
+            Validator.ValidateSubject(subject, true);
+            queue = Validator.ValidateQueueName(queue, false);
             throw new NotImplementedException();
         }
 
-        public IJetStreamSyncSubscription SubscribeSync(string subject, string queue, SubscribeOptions options)
+        public IJetStreamSyncSubscription SubscribeSync(string subject, string queue, PushSubscribeOptions options)
         {
+            Validator.ValidateSubject(subject, true);
+            queue = Validator.ValidateQueueName(queue, false);
             throw new NotImplementedException();
         }
     }

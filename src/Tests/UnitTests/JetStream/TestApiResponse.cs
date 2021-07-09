@@ -86,8 +86,8 @@ namespace UnitTests.JetStream
 
             jsApiResp = new TestingApiResponse(jsons[5]);
             Assert.True(jsApiResp.HasError);
-            Assert.Equal(ApiResponse.NO_TYPE, jsApiResp.Type);
-            Assert.Equal(ApiResponse.NO_TYPE, jsApiResp.Type); // coverage!
+            Assert.Equal(ApiResponse.NoType, jsApiResp.Type);
+            Assert.Equal(ApiResponse.NoType, jsApiResp.Type); // coverage!
         }
     }
 }

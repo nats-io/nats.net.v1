@@ -40,7 +40,7 @@ namespace NATS.Client.JetStream
         /// </remarks>
         /// <param name="subject">The subject to publish <paramref name="data"/> to over
         /// the current connection.</param>
-        /// <param name="data">An array of type <see cref="Byte"/> that contains the data to publish
+        /// <param name="data">An array of type <see cref="byte"/> that contains the data to publish
         /// to the connected NATS server.</param>
         /// <returns>PublishAck</returns>
         PublishAck Publish(string subject, byte[] data);
@@ -98,7 +98,7 @@ namespace NATS.Client.JetStream
         /// </remarks>
         /// <param name="subject">The subject to publish <paramref name="data"/> to over
         /// the current connection.</param>
-        /// <param name="data">An array of type <see cref="Byte"/> that contains the data to publish
+        /// <param name="data">An array of type <see cref="byte"/> that contains the data to publish
         /// to the connected NATS server.</param>
         /// <returns>PublishAck</returns>
         Task<PublishAck> PublishAsync(string subject, byte[] data);
@@ -123,7 +123,6 @@ namespace NATS.Client.JetStream
         /// <param name="publishOptions">Options for publishing.</param>
         /// <returns>PublishAck</returns>
         Task<PublishAck> PublishAsync(string subject, byte[] data, PublishOptions publishOptions);
-
 
         /// FIX Comments for rest of async
 
@@ -267,7 +266,7 @@ namespace NATS.Client.JetStream
         /// from the NATS Server on the given <paramref name="subject"/>, as part of 
         /// the given queue group.</returns>
         /// <seealso cref="ISubscription.Subject"/>
-        IJetStreamSyncSubscription SubscribeSync(string subject, SubscribeOptions options);
+        IJetStreamSyncSubscription SubscribeSync(string subject, PushSubscribeOptions options);
 
         /// <summary>
         /// Creates a synchronous JetStream queue subscriber on the given <paramref name="subject"/>.
@@ -298,6 +297,6 @@ namespace NATS.Client.JetStream
         /// the given queue group.</returns>
         /// <seealso cref="ISubscription.Subject"/>
         /// <seealso cref="ISubscription.Queue"/>
-        IJetStreamSyncSubscription SubscribeSync(string subject, string queue, SubscribeOptions options);
+        IJetStreamSyncSubscription SubscribeSync(string subject, string queue, PushSubscribeOptions options);
     }
 }
