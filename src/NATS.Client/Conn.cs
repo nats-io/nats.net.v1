@@ -4681,7 +4681,7 @@ namespace NATS.Client
 
         public IJetStreamManagement CreateJetStreamManagementContext(JetStreamOptions options = null)
         {
-            return new JetStream.JetStream(this, options);
+            return new JetStream.JetStreamManagement(this, options);
         }
 
         #endregion

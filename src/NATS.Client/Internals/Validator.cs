@@ -5,9 +5,9 @@ namespace NATS.Client.Internals
 {
     internal static class Validator
     {
-        private static char[] WildGt = new []{ '*', '>'};
-        private static char[] WildGtDot = new []{ '*', '>', '.'};
-        private static char[] WildGtDollar = new[] {'*', '>', '$'};
+        private static readonly char[] WildGt = { '*', '>'};
+        private static readonly char[] WildGtDot = { '*', '>', '.'};
+        private static readonly char[] WildGtDollar = {'*', '>', '$'};
 
         internal static string ValidateSubject(string s, bool required)
         {
@@ -42,7 +42,7 @@ namespace NATS.Client.Internals
         public static String Validate(String s, String label, bool required, Func<string, string, string> check) {
             if (required) {
                 if (string.IsNullOrEmpty(s)) {
-                    throw new ArgumentException(label + " cannot be null or empty [" + s + "]");
+                    throw new ArgumentException($"{label} cannot be null or empty [" + s + "]");
                 }
             }
             else if (EmptyAsNull(s) == null) {
@@ -60,7 +60,7 @@ namespace NATS.Client.Internals
         {
             return Validate(s, label, required, (ss, ll) => {
                 if (NotPrintable(s)) {
-                    throw new ArgumentException(label + " must be in the printable ASCII range [" + s + "]");
+                    throw new ArgumentException($"{label} must be in the printable ASCII range [" + s + "]");
                 }
                 return s;
             });
@@ -70,7 +70,7 @@ namespace NATS.Client.Internals
         {
             return Validate(s, label, required, (ss, ll) => {
                 if (NotPrintableOrHasWildGtDot(s)) {
-                    throw new ArgumentException(label + " must be in the printable ASCII range and cannot include `*`, `.` or `>` [" + s + "]");
+                    throw new ArgumentException($"{label} must be in the printable ASCII range and cannot include `*`, `.` or `>` [" + s + "]");
                 }
                 return s;
             });
@@ -80,7 +80,7 @@ namespace NATS.Client.Internals
         {
             return Validate(s, label, required, (ss, ll) => {
                 if (NotPrintableOrHasWildGt(s)) {
-                    throw new ArgumentException(label + " must be in the printable ASCII range and cannot include `*`, `>` or `$` [" + s + "]");
+                    throw new ArgumentException($"{label} must be in the printable ASCII range and cannot include `*`, `>` or `$` [" + s + "]");
                 }
                 return s;
             });
@@ -90,7 +90,7 @@ namespace NATS.Client.Internals
         {
             return Validate(s, label, required, (ss, ll) => {
                 if (NotPrintableOrHasWildGtDollar(s)) {
-                    throw new ArgumentException(label + " must be in the printable ASCII range and cannot include `*`, `>` or `$` [" + s + "]");
+                    throw new ArgumentException($"{label} must be in the printable ASCII range and cannot include `*`, `>` or `$` [" + s + "]");
                 }
                 return s;
             });
@@ -100,8 +100,8 @@ namespace NATS.Client.Internals
         {
             if (pullBatchSize < 1 || pullBatchSize > JetStreamConstants.MaxPullSize)
             {
-                throw new ArgumentException("Pull Batch Size must be between 1 and " + JetStreamConstants.MaxPullSize +
-                                                   " inclusive [" + pullBatchSize + "]");
+                throw new ArgumentException(
+                    $"Pull Batch Size must be between 1 and {JetStreamConstants.MaxPullSize} inclusive [{pullBatchSize}]");
             }
 
             return pullBatchSize;
@@ -162,11 +162,12 @@ namespace NATS.Client.Internals
             return d;
         }
 
+        
         internal static object ValidateNotNull(object o, string fieldName)
         {
             if (o == null)
             {
-                throw new ArgumentException(fieldName + " cannot be null");
+                throw new ArgumentNullException($"{fieldName} cannot be null");
             }
 
             return o;
@@ -176,7 +177,7 @@ namespace NATS.Client.Internals
         {
             if (s == null)
             {
-                throw new ArgumentException(fieldName + " cannot be null");
+                throw new ArgumentNullException($"{fieldName} cannot be null");
             }
 
             return s;
@@ -186,7 +187,7 @@ namespace NATS.Client.Internals
         {
             if (s != null && s.Length == 0)
             {
-                throw new ArgumentException(fieldName + " cannot be empty");
+                throw new ArgumentException($"{fieldName} cannot be empty");
             }
 
             return s;
@@ -196,7 +197,7 @@ namespace NATS.Client.Internals
         {
             if (ZeroOrLtMinus1(l))
             {
-                throw new ArgumentException(label + " must be greater than zero or -1 for unlimited");
+                throw new ArgumentException($"{label} must be greater than zero or -1 for unlimited");
             }
 
             return l;
@@ -205,7 +206,7 @@ namespace NATS.Client.Internals
         internal static long ValidateNotNegative(long l, String label) {
             if (l < 0) 
             {
-                throw new ArgumentException(label + " cannot be negative");
+                throw new ArgumentException($"{label} cannot be negative");
             }
             return l;
         }

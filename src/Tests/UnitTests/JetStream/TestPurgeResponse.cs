@@ -22,7 +22,7 @@ namespace UnitTests.JetStream
         public void JsonIsReadProperly()
         {
             string json = ReadDataFile("PurgeResponse.json");
-            PurgeResponse pr = new PurgeResponse(json);
+            PurgeResponse pr = new PurgeResponse(json, false);
             Assert.True(pr.Success);
             Assert.Equal(5, pr.Purged);
         }

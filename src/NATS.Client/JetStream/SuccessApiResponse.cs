@@ -11,15 +11,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Text;
-
 namespace NATS.Client.JetStream
 {
     public sealed class SuccessApiResponse : ApiResponse
     {
         public bool Success { get; }
 
-        internal SuccessApiResponse(string json) : base(json)
+        internal SuccessApiResponse(Msg msg, bool throwOnError) : base(msg, throwOnError)
+        {
+            Success = JsonNode[ApiConstants.Success];
+        }
+
+        internal SuccessApiResponse(string json, bool throwOnError) : base(json, throwOnError)
         {
             Success = JsonNode[ApiConstants.Success];
         }

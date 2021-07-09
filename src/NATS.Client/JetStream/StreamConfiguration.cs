@@ -141,7 +141,7 @@ namespace NATS.Client.JetStream
             private Duration _maxAge = Duration.Zero;
             private long _maxMsgSize = -1;
             private StorageType _storageType = StorageType.File;
-            private int _replicas = -1;
+            private int _replicas = 1;
             private bool _noAck;
             private string _templateOwner;
             private DiscardPolicy _discardPolicy = DiscardPolicy.Old;
@@ -171,7 +171,7 @@ namespace NATS.Client.JetStream
                 _duplicateWindow = sc.DuplicateWindow;
                 _placement = sc.Placement;
                 _mirror = sc.Mirror;
-                Sources(sc.Sources);
+                WithSources(sc.Sources);
             }
 
         /// <summary>
@@ -353,7 +353,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="window">duration to hold message ids for duplicate checking.</param>
         /// <returns>The StreamConfigurationBuilder</returns>
-        public StreamConfigurationBuilder DuplicateWindow(Duration window) {
+        public StreamConfigurationBuilder WithDuplicateWindow(Duration window) {
             _duplicateWindow = Validator.ValidateDurationNotRequiredGtOrEqZero(window);
             return this;
         }
@@ -363,7 +363,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="placement">the placement directive object</param>
         /// <returns>The StreamConfigurationBuilder</returns>
-        public StreamConfigurationBuilder Placement(Placement placement) {
+        public StreamConfigurationBuilder WithPlacement(Placement placement) {
             _placement = placement;
             return this;
         }
@@ -373,7 +373,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="mirror">the mirror object</param>
         /// <returns>The StreamConfigurationBuilder</returns>
-        public StreamConfigurationBuilder Mirror(Mirror mirror) {
+        public StreamConfigurationBuilder WithMirror(Mirror mirror) {
             _mirror = mirror;
             return this;
         }
@@ -383,7 +383,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="sources">the stream's sources</param>
         /// <returns>The StreamConfigurationBuilder</returns>
-        public StreamConfigurationBuilder Sources(params Source[] sources) {
+        public StreamConfigurationBuilder WithSources(params Source[] sources) {
             _sources.Clear();
             return AddSources(sources);
         }
@@ -393,7 +393,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="sources">the stream's sources</param>
         /// <returns>The StreamConfigurationBuilder</returns>
-        public StreamConfigurationBuilder Sources(List<Source> sources) {
+        public StreamConfigurationBuilder WithSources(List<Source> sources) {
             _sources.Clear();
             return AddSources(sources);
         }

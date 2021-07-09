@@ -58,10 +58,10 @@ namespace UnitTests.JetStream
                     .WithNoAck(testSc.NoAck)
                     .WithTemplateOwner(testSc.TemplateOwner)
                     .WithDiscardPolicy(testSc.DiscardPolicy)
-                    .DuplicateWindow(testSc.DuplicateWindow)
-                    .Placement(testSc.Placement)
-                    .Mirror(testSc.Mirror)
-                    .Sources(testSc.Sources)
+                    .WithDuplicateWindow(testSc.DuplicateWindow)
+                    .WithPlacement(testSc.Placement)
+                    .WithMirror(testSc.Mirror)
+                    .WithSources(testSc.Sources)
                 ;
             Validate(builder.Build());
             Validate(builder.AddSources((Source)null).Build());

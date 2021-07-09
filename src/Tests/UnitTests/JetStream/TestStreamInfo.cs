@@ -22,7 +22,7 @@ namespace UnitTests.JetStream
         public void JsonIsReadProperly()
         {
             string json = ReadDataFile("StreamInfo.json");
-            StreamInfo si = new StreamInfo(json);
+            StreamInfo si = new StreamInfo(json, false);
             Assert.Equal(AsDateTime("2021-01-25T20:09:10.6225191Z"), si.Created);
             
             // StreamConfiguration Config

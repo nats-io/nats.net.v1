@@ -23,7 +23,7 @@ namespace UnitTests.JetStream
         public void JsonIsReadProperly()
         {
             string json = ReadDataFile("ConsumerInfo.json");
-            ConsumerInfo ci = new ConsumerInfo(json);
+            ConsumerInfo ci = new ConsumerInfo(json, false);
             Assert.Equal("foo-stream", ci.Stream);
             Assert.Equal("foo-consumer", ci.Name);
 

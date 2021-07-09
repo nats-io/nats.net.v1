@@ -2,8 +2,11 @@
 {
     public sealed class Duration
     {
-        const long NanosPerSecond = 1_000_000_000L;
         const long NanosPerMilli = 1_000_000L;
+        const long NanosPerSecond = 1_000_000_000L;
+        const long NanosPerMinute = NanosPerSecond * 60L;
+        const long NanosPerHour = NanosPerMinute * 60L;
+        const long NanosPerDay = NanosPerHour * 24L;
 
         public static readonly Duration Zero = new Duration(0L);
 
@@ -39,11 +42,35 @@
         } 
 
         /// <summary>
-        /// Create a Duration from a seconds
+        /// Create a Duration from seconds
         /// </summary>
         public static Duration OfSeconds(long seconds)
         {
             return new Duration(seconds * NanosPerSecond);
+        }
+
+        /// <summary>
+        /// Create a Duration from minutes
+        /// </summary>
+        public static Duration OfMinutes(long minutes)
+        {
+            return new Duration(minutes * NanosPerMinute);
+        }
+
+        /// <summary>
+        /// Create a Duration from hours
+        /// </summary>
+        public static Duration OfHours(long hours)
+        {
+            return new Duration(hours * NanosPerHour);
+        }
+
+        /// <summary>
+        /// Create a Duration from days
+        /// </summary>
+        public static Duration OfDays(long days)
+        {
+            return new Duration(days * NanosPerDay);
         }
 
         /// <summary>

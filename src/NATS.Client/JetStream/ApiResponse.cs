@@ -25,17 +25,10 @@ namespace NATS.Client.JetStream
 
         internal JSONNode JsonNode { get; }
 
-        internal ApiResponse(Msg msg) : this(Encoding.UTF8.GetString(msg.Data)) { }
+        internal ApiResponse(Msg msg, bool throwOnError = false) : 
+            this(Encoding.UTF8.GetString(msg.Data), throwOnError) {}
 
-        internal ApiResponse(Msg msg, bool throwOnError) : this(Encoding.UTF8.GetString(msg.Data))
-        {
-            if (throwOnError)
-            {
-                ThrowOnHasError();
-            }
-        }
-
-        internal ApiResponse(string json)
+        internal ApiResponse(string json, bool throwOnError = false)
         {
             JsonNode = JSON.Parse(json);
             Type = JsonNode[ApiConstants.Type].Value;
@@ -44,6 +37,11 @@ namespace NATS.Client.JetStream
                 Type = NO_TYPE;
             }
             Error = Error.OptionalInstance(JsonNode[ApiConstants.Error]);
+
+            if (throwOnError)
+            {
+                ThrowOnHasError();
+            }
         }
         
         public void ThrowOnHasError() {

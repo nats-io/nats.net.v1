@@ -196,8 +196,8 @@ namespace UnitTests.Internals
         {
             object o1 = null;
             string s1 = null;
-            Assert.Throws<ArgumentException>(() => Validator.ValidateNotNull(o1, "fieldName"));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateNotNull(s1, "fieldName"));
+            Assert.Throws<ArgumentNullException>(() => Validator.ValidateNotNull(o1, "fieldName"));
+            Assert.Throws<ArgumentNullException>(() => Validator.ValidateNotNull(s1, "fieldName"));
             object o2 = new object();
             string s2 = "";
             Assert.Equal(o2, Validator.ValidateNotNull(o2, "fieldName"));

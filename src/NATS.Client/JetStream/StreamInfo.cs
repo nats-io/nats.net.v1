@@ -13,24 +13,31 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client.JetStream
 {
-    public sealed class StreamInfo
+    public sealed class StreamInfo : ApiResponse
     {
-        public DateTime Created { get; }
-        public StreamConfiguration Config { get; }
-        public StreamState State { get; }
-        public ClusterInfo ClusterInfo { get; }
-        public MirrorInfo MirrorInfo { get; }
-        public List<SourceInfo> SourceInfos { get; }
+        public DateTime Created { get; private set; }
+        public StreamConfiguration Config { get; private set; }
+        public StreamState State { get; private set; }
+        public ClusterInfo ClusterInfo { get; private set; }
+        public MirrorInfo MirrorInfo { get; private set; }
+        public List<SourceInfo> SourceInfos { get; private set; }
 
-        public StreamInfo(Msg msg) : this(Encoding.UTF8.GetString(msg.Data)) { }
+        internal StreamInfo(Msg msg, bool throwOnError) : base(msg, throwOnError)
+        {
+            Init(JsonNode);
+        }
 
-        internal StreamInfo(JSONNode jsonNode)
+        public StreamInfo(string json, bool throwOnError) : base(json, throwOnError)
+        {
+            Init(JsonNode);
+        }
+
+        private void Init(JSONNode jsonNode)
         {
             Created = JsonUtils.AsDate(jsonNode[ApiConstants.Created]);
             Config = new StreamConfiguration(jsonNode[ApiConstants.Config]);
@@ -39,7 +46,5 @@ namespace NATS.Client.JetStream
             MirrorInfo = MirrorInfo.OptionalInstance(jsonNode[ApiConstants.Mirror]);
             SourceInfos = SourceInfo.OptionalListOf(jsonNode[ApiConstants.Sources]);
         }
-
-        public StreamInfo(string json) : this(JSON.Parse(json)) { }
     }
 }

@@ -278,6 +278,10 @@ namespace NATS.Client.Internals.SimpleJSON
         public virtual bool IsArray { get { return false; } }
         public virtual bool IsObject { get { return false; } }
 
+        // Allows Nodes types to specify when to write,
+        // for instance NATS null or empty strings don't need to write
+        public virtual bool ShouldWrite { get { return true; } }
+
         public virtual bool Inline { get { return false; } set { } }
 
         public virtual void Add(string aKey, JSONNode aItem)
@@ -1013,23 +1017,24 @@ namespace NATS.Client.Internals.SimpleJSON
                 aMode = JSONTextMode.Compact;
             foreach (var k in m_Dict)
             {
-                // Special NATS case: ignore null values.
-                if (k.Value.Value == null)
-                    continue;
-
-                if (!first)
-                    aSB.Append(',');
-                first = false;
-                if (aMode == JSONTextMode.Indent)
-                    aSB.AppendLine();
-                if (aMode == JSONTextMode.Indent)
-                    aSB.Append(' ', aIndent + aIndentInc);
-                aSB.Append('\"').Append(Escape(k.Key)).Append('\"');
-                if (aMode == JSONTextMode.Compact)
-                    aSB.Append(':');
-                else
-                    aSB.Append(" : ");
-                k.Value.WriteToStringBuilder(aSB, aIndent + aIndentInc, aIndentInc, aMode);
+                // ShouldWrite allows Nodes types to specify when to write,
+                // for instance NATS null or empty strings don't need to write
+                if (k.Value.ShouldWrite)
+                {
+                    if (!first)
+                        aSB.Append(',');
+                    first = false;
+                    if (aMode == JSONTextMode.Indent)
+                        aSB.AppendLine();
+                    if (aMode == JSONTextMode.Indent)
+                        aSB.Append(' ', aIndent + aIndentInc);
+                    aSB.Append('\"').Append(Escape(k.Key)).Append('\"');
+                    if (aMode == JSONTextMode.Compact)
+                        aSB.Append(':');
+                    else
+                        aSB.Append(" : ");
+                    k.Value.WriteToStringBuilder(aSB, aIndent + aIndentInc, aIndentInc, aMode);
+                }
             }
             if (aMode == JSONTextMode.Indent)
                 aSB.AppendLine().Append(' ', aIndent);
@@ -1045,6 +1050,7 @@ namespace NATS.Client.Internals.SimpleJSON
 
         public override JSONNodeType Tag { get { return JSONNodeType.String; } }
         public override bool IsString { get { return true; } }
+        public override bool ShouldWrite { get { return !string.IsNullOrEmpty(m_Data); } }
 
         public override Enumerator GetEnumerator() { return new Enumerator(); }
 
@@ -1067,6 +1073,7 @@ namespace NATS.Client.Internals.SimpleJSON
         {
             aSB.Append('\"').Append(Escape(m_Data)).Append('\"');
         }
+        
         public override bool Equals(object obj)
         {
             if (base.Equals(obj))
@@ -1089,14 +1096,23 @@ namespace NATS.Client.Internals.SimpleJSON
     internal partial class JSONNumber : JSONNode
     {
         private double m_Data;
+        private bool _valueAsLong = true;
 
         public override JSONNodeType Tag { get { return JSONNodeType.Number; } }
         public override bool IsNumber { get { return true; } }
         public override Enumerator GetEnumerator() { return new Enumerator(); }
 
+        public void ValueAsLong(bool asLong)
+        {
+            _valueAsLong = asLong;
+        } 
+
         public override string Value
         {
-            get { return m_Data.ToString(CultureInfo.InvariantCulture); }
+            get { return _valueAsLong 
+                ? AsLong.ToString()
+                : m_Data.ToString(CultureInfo.InvariantCulture); 
+            }
             set
             {
                 double v;

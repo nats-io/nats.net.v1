@@ -15,7 +15,7 @@ using NATS.Client;
 using NATS.Client.JetStream;
 using Xunit;
 using static UnitTests.TestBase;
-using static IntegrationTests.JetStreamTestUtils;
+using static IntegrationTests.JetStreamTestBase;
 
 namespace IntegrationTests
 {
@@ -28,9 +28,9 @@ namespace IntegrationTests
         {
             Context.RunInJsServer(c =>
             {
-                c.CreateJetStreamContext();
-                // TODO
-                // c.CreateJetStreamManagementContext().GetAccountStatistics()
+                CreateTestStream(c); // tries management functions
+                c.CreateJetStreamManagementContext().GetAccountStatistics(); // another management
+                c.CreateJetStreamContext().Publish(SUBJECT, DataBytes(1));
             });
         }
 
@@ -40,8 +40,10 @@ namespace IntegrationTests
             Context.RunInServer(c =>
             {
                 // TODO
-                // AssertThrows<???>(() => c.CreateJetStreamContext().Subscribe(SUBJECT));
-                // AssertThrows<???>(() => c.CreateJetStreamManagementContext().GetAccountStatistics());
+                // Assert.Throws<NATSNoRespondersException>(() => c.CreateJetStreamContext().Subscribe(SUBJECT));
+
+                Assert.Throws<NATSNoRespondersException>(() => 
+                    c.CreateJetStreamManagementContext().GetAccountStatistics());
             });
         }
 

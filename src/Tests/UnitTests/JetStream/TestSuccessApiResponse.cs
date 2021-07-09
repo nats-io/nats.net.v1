@@ -21,12 +21,12 @@ namespace UnitTests.JetStream
         [Fact]
         public void JsonIsReadProperly() {
             string json = ReadDataFile("SuccessApiResponse1.json");
-            SuccessApiResponse sar = new SuccessApiResponse(json);
+            SuccessApiResponse sar = new SuccessApiResponse(json, false);
             Assert.True(sar.Success);
             Assert.Null(sar.Error);
 
             json = ReadDataFile("SuccessApiResponse2.json");
-            sar = new SuccessApiResponse(json);
+            sar = new SuccessApiResponse(json, false);
             Assert.False(sar.Success);
             Assert.NotNull(sar.Error);
             Assert.Equal(404, sar.Error.Code);

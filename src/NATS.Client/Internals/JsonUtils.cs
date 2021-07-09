@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client.Internals
@@ -72,6 +73,11 @@ namespace NATS.Client.Internals
                 arr.Add(null, new JSONString(s));
             }
             return arr;
+        }
+ 
+        public static byte[] SimpleMessageBody(string name, object value)
+        {
+            return Encoding.ASCII.GetBytes("{\"" + name + "\":" + value.ToString() + "}");
         }
     }
 }

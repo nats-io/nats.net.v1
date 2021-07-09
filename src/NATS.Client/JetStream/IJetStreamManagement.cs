@@ -16,9 +16,15 @@ namespace NATS.Client.JetStream
     /// <summary>
     /// This is the JetStream management API to programatically create, delete,
     /// and update various JetStream objects.
-    /// </summary>
+    /// <summary>
     public interface IJetStreamManagement
     {
+        /// <summary>
+        /// Gets the account statistics for the logged in account.
+        /// <returns>account statistics</returns>
+        /// <summary>
+        AccountStatistics GetAccountStatistics();
+
         /// <summary>
         /// Loads or creates a stream.
         /// </summary>

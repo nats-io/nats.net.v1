@@ -11,24 +11,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Text;
 using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client.JetStream
 {
-    public sealed class PurgeResponse
+    public sealed class PurgeResponse : ApiResponse
     {
-        public bool Success { get; }
-        public int Purged { get; }
+        public bool Success { get; private set; }
+        public int Purged { get; private set; }
 
-        internal PurgeResponse(Msg msg) : this(Encoding.UTF8.GetString(msg.Data)) { }
+        internal PurgeResponse(Msg msg, bool throwOnError) : base(msg, throwOnError)
+        {
+            Init(JsonNode);
+        }
 
-        internal PurgeResponse(JSONNode jsonNode)
+        internal PurgeResponse(string json, bool throwOnError) : base(json, throwOnError)
+        {
+            Init(JsonNode);
+        }
+
+        private void Init(JSONNode jsonNode)
         {
             Success = jsonNode[ApiConstants.Success].AsBool;
             Purged = jsonNode[ApiConstants.Purged].AsInt;
         }
-
-        internal PurgeResponse(string json) : this(JSON.Parse(json)) { }
     }
 }

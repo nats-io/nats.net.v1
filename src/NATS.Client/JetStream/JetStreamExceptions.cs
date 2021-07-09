@@ -39,7 +39,7 @@ namespace NATS.Client.JetStream
         /// Gets the error code returned by JetStream.  Returns ErrorCodeUnspecified
         /// if the error is local.
         /// </summary>
-        public int ApiErrorCode { get { return _errorCode; } }
+        public int ApiErrorCode { get { return _apiErrorCode; } }
 
         /// <summary>
         /// Returns the description of the error.
