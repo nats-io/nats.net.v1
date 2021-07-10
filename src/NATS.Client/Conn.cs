@@ -38,7 +38,7 @@ namespace NATS.Client
         /// The <see cref="IConnection"/> is disconnected.
         /// </summary>
         DISCONNECTED = 0,
-        
+
         /// <summary>
         /// The <see cref="IConnection"/> is connected to a NATS Server.
         /// </summary>
@@ -76,7 +76,7 @@ namespace NATS.Client
     internal enum ClientProtcolVersion
     {
         // clientProtoZero is the original client protocol from 2009.
- 	    // http://nats.io/documentation/internals/nats-protocol/
+        // http://nats.io/documentation/internals/nats-protocol/
         ClientProtoZero = 0,
 
         // ClientProtoInfo signals a client can receive more then the original INFO block.
@@ -96,15 +96,11 @@ namespace NATS.Client
     // interfaces.
     public class Connection : IConnection, IDisposable
     {
-        Statistics stats = new Statistics();
+        internal static Random random = new Random();
+        private static readonly int REQ_CANCEL_IVL = 100;
 
-        // NOTE: We aren't using Mutex here to support enterprises using
-        // .NET 4.0.
-        private readonly object mu = new Object();
-
-        private readonly Nuid _nuid = new Nuid();
-
-        Options opts = new Options();
+        // 60 second default flush timeout
+        private static readonly int DEFAULT_FLUSH_TIMEOUT = 10000;
 
         /// <summary>
         /// Gets the configuration options for this instance.
@@ -113,42 +109,49 @@ namespace NATS.Client
         {
             get { return opts; }
         }
+        internal MsgArg msgArgs = new MsgArg();
+
+        internal ConnState status = ConnState.CLOSED;
+
+        internal Exception lastEx;
+        private Statistics stats = new Statistics();
+
+        // NOTE: We aren't using Mutex here to support enterprises using
+        // .NET 4.0.
+        private readonly object mu = new object();
+
+        private readonly Nuid _nuid = new Nuid();
+
+        private Options opts = new Options();
+
 
         private readonly List<Thread> wg = new List<Thread>(2);
 
-        private Uri             url     = null;
+        private Uri url = null;
         private ServerPool srvPool = new ServerPool();
 
         // we have a buffered reader for writing, and reading.
         // This is for both performance, and having to work around
         // interlinked read/writes (supported by the underlying network
         // stream, but not the BufferedStream).
-        private Stream  bw      = null;
-        private Stream  br      = null;
-        private MemoryStream    pending = null;
+        private Stream bw = null;
+        private Stream br = null;
+        private MemoryStream pending = null;
 
-        Object flusherLock     = new Object();
-        bool   flusherKicked = false;
-        bool   flusherDone     = false;
+        private Object flusherLock = new Object();
+        private bool flusherKicked = false;
+        private bool flusherDone = false;
 
-        private ServerInfo     info = null;
-        private Int64          ssid = 0;
+        private ServerInfo info = null;
+        private Int64 ssid = 0;
 
-        private Dictionary<Int64, Subscription> subs = 
+        private Dictionary<Int64, Subscription> subs =
             new Dictionary<Int64, Subscription>();
-        
+
         private readonly ConcurrentQueue<SingleUseChannel<bool>> pongs = new ConcurrentQueue<SingleUseChannel<bool>>();
 
-        internal MsgArg   msgArgs = new MsgArg();
-
-        internal ConnState status = ConnState.CLOSED;
-
-        internal Exception lastEx;
-
-        Timer               ptmr = null;
-        int                 pout = 0;
-
-        internal static Random random = new Random();
+        private Timer ptmr = null;
+        private int pout = 0;
 
         private AsyncSubscription globalRequestSubscription;
         private readonly string globalRequestInbox;
@@ -161,30 +164,25 @@ namespace NATS.Client
 
         // Prepare protocol messages for efficiency
         private byte[] PING_P_BYTES = null;
-        private int    PING_P_BYTES_LEN;
+        private int PING_P_BYTES_LEN;
 
         private byte[] PONG_P_BYTES = null;
-        private int    PONG_P_BYTES_LEN;
+        private int PONG_P_BYTES_LEN;
 
         private byte[] PUB_P_BYTES = null;
-        private int    PUB_P_BYTES_LEN = 0;
+        private int PUB_P_BYTES_LEN = 0;
 
         private byte[] HPUB_P_BYTES = null;
-        private int    HPUB_P_BYTES_LEN = 0;
+        private int HPUB_P_BYTES_LEN = 0;
 
         private byte[] CRLF_BYTES = null;
-        private int    CRLF_BYTES_LEN = 0;
+        private int CRLF_BYTES_LEN = 0;
 
-        byte[] pubProtoBuf = null;
+        private byte[] pubProtoBuf = null;
 
-        static readonly int REQ_CANCEL_IVL = 100;
+        private TCPConnection conn = new TCPConnection();
 
-        // 60 second default flush timeout
-        static readonly int DEFAULT_FLUSH_TIMEOUT = 10000;
-
-        TCPConnection conn = new TCPConnection();
-
-        SubChannelPool subChannelPool = null;
+        private SubChannelPool subChannelPool = null;
 
         // One could use a task scheduler, but this is simpler and will
         // likely be easier to port to .NET core.
@@ -193,7 +191,7 @@ namespace NATS.Client
             private readonly object runningLock = new object();
             private readonly Channel<Action> tasks = new Channel<Action>() { Name = "Tasks" };
 
-            private Task executorTask     = null;
+            private Task executorTask = null;
             private bool schedulerRunning = false;
 
             private bool Running
@@ -208,7 +206,7 @@ namespace NATS.Client
 
                 set
                 {
-                    lock  (runningLock)
+                    lock (runningLock)
                     {
                         schedulerRunning = value;
                     }
@@ -237,7 +235,7 @@ namespace NATS.Client
                     // Use the default task scheduler and do not let child tasks launched
                     // when running actions to attach to this task (Issue #273)
                     executorTask = Task.Factory.StartNew(
-                        process, 
+                        process,
                         CancellationToken.None,
                         TaskCreationOptions.LongRunning | TaskCreationOptions.DenyChildAttach,
                         TaskScheduler.Default);
@@ -296,7 +294,7 @@ namespace NATS.Client
             #endregion
         }
 
-        CallbackScheduler callbackScheduler = new CallbackScheduler();
+        private CallbackScheduler callbackScheduler = new CallbackScheduler();
 
         internal class Control
         {
@@ -353,12 +351,12 @@ namespace NATS.Client
             ///          ->NetworkStream/SslStream (srvStream)
             ///              ->TCPClient (srvClient);
             /// 
-            object        mu        = new object();
-            TcpClient     client    = null;
-            NetworkStream stream    = null;
-            SslStream     sslStream = null;
+            object mu = new object();
+            TcpClient client = null;
+            NetworkStream stream = null;
+            SslStream sslStream = null;
 
-            string        hostName  = null;
+            string hostName = null;
 
             internal void open(Srv s, int timeoutMillis)
             {
@@ -393,9 +391,9 @@ namespace NATS.Client
 
                     client.NoDelay = false;
 
-                    client.ReceiveBufferSize = Defaults.defaultBufSize*2;
-                    client.SendBufferSize    = Defaults.defaultBufSize;
-                    
+                    client.ReceiveBufferSize = Defaults.defaultBufSize * 2;
+                    client.SendBufferSize = Defaults.defaultBufSize;
+
                     stream = client.GetStream();
 
                     // save off the hostname
@@ -420,7 +418,7 @@ namespace NATS.Client
 #if NET46
                     c?.Close();
 #else
-                    c?.Dispose();
+                c?.Dispose();
 #endif
                 c = null;
             }
@@ -468,7 +466,7 @@ namespace NATS.Client
             {
                 get
                 {
-                    if(client == null)
+                    if (client == null)
                         throw new InvalidOperationException("Connection not properly initialized.");
 
                     return client.ReceiveTimeout;
@@ -615,7 +613,7 @@ namespace NATS.Client
                     // Use the default task scheduler and do not let child tasks launched
                     // when delivering messages to attach to this task (Issue #273)
                     channelTask = Task.Factory.StartNew(
-                        DeliverMessages, 
+                        DeliverMessages,
                         CancellationToken.None,
                         TaskCreationOptions.LongRunning | TaskCreationOptions.DenyChildAttach,
                         TaskScheduler.Default);
@@ -952,7 +950,8 @@ namespace NATS.Client
             // Ensure threads are started before we continue with
             // ManualResetEvents.
             ManualResetEvent readLoopStartEvent = new ManualResetEvent(false);
-            t = new Thread(() => {
+            t = new Thread(() =>
+            {
                 readLoopStartEvent.Set();
                 readLoop();
             });
@@ -962,7 +961,8 @@ namespace NATS.Client
             wg.Add(t);
 
             ManualResetEvent flusherStartEvent = new ManualResetEvent(false);
-            t = new Thread(() => {
+            t = new Thread(() =>
+            {
                 flusherStartEvent.Set();
                 flusher();
             });
@@ -1010,7 +1010,7 @@ namespace NATS.Client
                 {
                     clientIp = info.client_ip;
                 }
-                
+
                 return !String.IsNullOrEmpty(clientIp) ? IPAddress.Parse(clientIp) : null;
             }
         }
@@ -1090,7 +1090,7 @@ namespace NATS.Client
             }
             finally
             {
-                if(conn.isSetup())
+                if (conn.isSetup())
                     conn.ReceiveTimeout = orgTimeout;
             }
 
@@ -1118,7 +1118,7 @@ namespace NATS.Client
 
                 NATSConnectionException natsAuthEx = null;
 
-                for(var i = 0; i < 6; i++) //Precaution to not end up in server returning ExTypeA, ExTypeB, ExTypeA etc.
+                for (var i = 0; i < 6; i++) //Precaution to not end up in server returning ExTypeA, ExTypeB, ExTypeA etc.
                 {
                     try
                     {
@@ -1171,7 +1171,8 @@ namespace NATS.Client
 
             setupServerPool();
 
-            srvPool.ConnectToAServer((s) => {
+            srvPool.ConnectToAServer((s) =>
+            {
                 return connect(s, out exToThrow);
             });
 
@@ -1334,7 +1335,8 @@ namespace NATS.Client
             {
                 if (opts.UserSignatureEventHandler == null)
                 {
-                    if (userJWT == null) {
+                    if (userJWT == null)
+                    {
                         throw new NATSConnectionException("Nkey defined without a user signature event handler");
                     }
                     throw new NATSConnectionException("User signature event handle has not been been defined.");
@@ -1353,7 +1355,7 @@ namespace NATS.Client
                 if (args.SignedNonce == null)
                     throw new NATSConnectionException("Signature Event Handler did not set the SignedNonce.");
 
-                sig = NaCl.CryptoBytes.ToBase64String(args.SignedNonce);               
+                sig = NaCl.CryptoBytes.ToBase64String(args.SignedNonce);
             }
 
             ConnectInfo info = new ConnectInfo(opts.Verbose, opts.Pedantic, userJWT, nkey, sig, user,
@@ -1622,7 +1624,7 @@ namespace NATS.Client
                     try
                     {
                         // try to create a new connection
-                        if(!createConn(cur, out lastEx))
+                        if (!createConn(cur, out lastEx))
                             continue;
                     }
                     catch (Exception)
@@ -1700,7 +1702,7 @@ namespace NATS.Client
             }
             finally
             {
-                if(lockWasTaken)
+                if (lockWasTaken)
                     Monitor.Exit(mu);
             }
         }
@@ -1838,7 +1840,7 @@ namespace NATS.Client
 
             for (int i = 0; i < length; i++)
             {
-                buffer[i+offset] = (byte)value[i];
+                buffer[i + offset] = (byte)value[i];
             }
 
             return end;
@@ -1959,7 +1961,7 @@ namespace NATS.Client
                     itr -= 3;
                     int temp_v = value / radix_cube;
                     int temp_off = 3 * (value - (temp_v * radix_cube));
-                    buffer[itr]     = rev_3digit_lut[temp_off];
+                    buffer[itr] = rev_3digit_lut[temp_off];
                     buffer[itr + 1] = rev_3digit_lut[temp_off + 1];
                     buffer[itr + 2] = rev_3digit_lut[temp_off + 2];
                     value = temp_v;
@@ -1970,7 +1972,7 @@ namespace NATS.Client
                     itr -= 2;
                     int temp_v = value / radix_sqr;
                     int temp_off = 2 * (value - (temp_v * radix_sqr));
-                    buffer[itr]     = rev_2digit_lut[temp_off];
+                    buffer[itr] = rev_2digit_lut[temp_off];
                     buffer[itr + 1] = rev_2digit_lut[temp_off + 1];
                     value = temp_v;
                 }
@@ -2005,7 +2007,7 @@ namespace NATS.Client
             int i = 0;
 
             // We support up to 5 elements in this protocol version
-            for ( ; i < length && count < 5; i++)
+            for (; i < length && count < 5; i++)
             {
                 convertToStrBuf[i] = (char)buffer[i];
                 if (buffer[i] == ' ')
@@ -2110,7 +2112,7 @@ namespace NATS.Client
                 case 1:
                     return buffer[start] - '0';
                 case 2:
-                    return 10 * (buffer[start] - '0') 
+                    return 10 * (buffer[start] - '0')
                          + (buffer[start + 1] - '0');
                 case 3:
                     return 100 * (buffer[start] - '0')
@@ -2314,7 +2316,7 @@ namespace NATS.Client
         // processPong is used to process responses to the client's ping
         // messages. We use pings for the flush mechanism as well.
         internal void processPong()
-        { 
+        {
             if (pongs.TryDequeue(out var ch))
                 ch?.add(true);
 
@@ -2468,7 +2470,7 @@ namespace NATS.Client
             // " TOTALSIZE"
             dst[index] = (byte)' ';
             index++;
-            index = writeInt32ToBuffer(dst, index, msgSize+headerSize);
+            index = writeInt32ToBuffer(dst, index, msgSize + headerSize);
 
             // "\r\n"
             dst[index] = CRLF_BYTES[0];
@@ -2525,7 +2527,7 @@ namespace NATS.Client
             }
             index += CRLF_BYTES_LEN;
 
-            length = index-1;
+            length = index - 1;
             offset = 1;
         }
 
@@ -2849,7 +2851,7 @@ namespace NATS.Client
         {
             if (string.IsNullOrWhiteSpace(subject))
                 throw new NATSBadSubscriptionException();
-            
+
             // a timeout of 0 will never succeed - do not allow it.
             if (timeout == 0)
                 throw new ArgumentException("Timeout must not be 0.", nameof(timeout));
@@ -3875,7 +3877,7 @@ namespace NATS.Client
         internal Task unsubscribe(Subscription sub, int max, bool drain, int timeout)
         {
             var task = CompletedTask.Get();
-            
+
             lock (mu)
             {
                 if (isClosed())
@@ -4092,7 +4094,7 @@ namespace NATS.Client
         // Lock must be held by the caller.
         private void clearPendingFlushCalls()
         {
-            while(pongs.TryDequeue(out var ch))
+            while (pongs.TryDequeue(out var ch))
                 ch?.add(true);
         }
 
@@ -4623,7 +4625,7 @@ namespace NATS.Client
         #region IDisposable Support
 
         // To detect redundant calls
-        private bool disposedValue = false; 
+        private bool disposedValue = false;
 
         /// <summary>
         /// Closes the connection and optionally releases the managed resources.
