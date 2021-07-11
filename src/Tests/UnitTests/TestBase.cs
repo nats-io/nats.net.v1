@@ -68,6 +68,10 @@ namespace UnitTests
             return SUBJECT + "-" + seq;
         }
 
+        public static String SubjectDot(String field) {
+            return SUBJECT + "." + field;
+        }
+
         public static string Queue(int seq) {
             return QUEUE + "-" + seq;
         }

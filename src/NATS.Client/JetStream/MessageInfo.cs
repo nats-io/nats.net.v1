@@ -13,20 +13,31 @@
 
 using System;
 using NATS.Client.Internals;
+using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client.JetStream
 {
     public sealed class MessageInfo : ApiResponse
     {
-        public string Subject { get; }
-        public long Seq { get; }
-        public byte[] Data { get; }
-        public DateTime Time { get; }
-        public MsgHeader Headers { get; }
+        public string Subject { get; private set; }
+        public long Seq { get; private set; }
+        public byte[] Data { get; private set; }
+        public DateTime Time { get; private set; }
+        public MsgHeader Headers { get; private set; }
+
+        internal MessageInfo(Msg msg, bool throwOnError) : base(msg, throwOnError)
+        {
+            Init();
+        }
 
         public MessageInfo(string json) : base(json)
         {
-            var miNode = JsonNode[ApiConstants.Message];
+            Init();
+        }
+
+        private void Init()
+        {
+            JSONNode miNode = JsonNode[ApiConstants.Message];
             Subject = miNode[ApiConstants.Subject].Value;
             Seq = miNode[ApiConstants.Seq].AsLong;
             Time = JsonUtils.AsDate(miNode[ApiConstants.Time]);

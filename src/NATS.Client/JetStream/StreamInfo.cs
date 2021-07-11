@@ -37,19 +37,19 @@ namespace NATS.Client.JetStream
             Init(JsonNode);
         }
 
-        internal StreamInfo(JSONNode jsonNode)
+        internal StreamInfo(JSONNode siNode)
         {
-            Init(jsonNode);
+            Init(siNode);
         }
 
-        private void Init(JSONNode jsonNode)
+        private void Init(JSONNode siNode)
         {
-            Created = JsonUtils.AsDate(jsonNode[ApiConstants.Created]);
-            Config = new StreamConfiguration(jsonNode[ApiConstants.Config]);
-            State = StreamState.OptionalInstance(jsonNode[ApiConstants.State]);
-            ClusterInfo = ClusterInfo.OptionalInstance(jsonNode[ApiConstants.Cluster]);
-            MirrorInfo = MirrorInfo.OptionalInstance(jsonNode[ApiConstants.Mirror]);
-            SourceInfos = SourceInfo.OptionalListOf(jsonNode[ApiConstants.Sources]);
+            Created = JsonUtils.AsDate(siNode[ApiConstants.Created]);
+            Config = new StreamConfiguration(siNode[ApiConstants.Config]);
+            State = StreamState.OptionalInstance(siNode[ApiConstants.State]);
+            ClusterInfo = ClusterInfo.OptionalInstance(siNode[ApiConstants.Cluster]);
+            MirrorInfo = MirrorInfo.OptionalInstance(siNode[ApiConstants.Mirror]);
+            SourceInfos = SourceInfo.OptionalListOf(siNode[ApiConstants.Sources]);
         }
     }
 }

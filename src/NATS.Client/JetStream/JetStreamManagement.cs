@@ -138,7 +138,11 @@ namespace NATS.Client.JetStream
 
         public MessageInfo GetMessage(string streamName, long sequence)
         {
-            throw new NotImplementedException();
+            Validator.ValidateNotNull(streamName, nameof(streamName));
+            string subj = string.Format(JetStreamConstants.JsapiMsgGet, streamName);
+            byte[] bytes = JsonUtils.SimpleMessageBody(ApiConstants.Seq, sequence);
+            Msg m = RequestResponseRequired(subj, bytes, Timeout);
+            return new MessageInfo(m, true);
         }
 
         public bool DeleteMessage(string streamName, long sequence)

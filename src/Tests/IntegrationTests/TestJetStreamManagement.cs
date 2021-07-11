@@ -13,6 +13,7 @@
 
 using System;
 using System.Collections.Generic;
+using NATS.Client;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using Xunit;
@@ -252,7 +253,7 @@ namespace IntegrationTests
             Context.RunInJsServer(c =>
             {
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
-                CreateMemoryStream(c, STREAM, Subject(0), Subject(1));
+                CreateMemoryStream(jsm, STREAM, Subject(0), Subject(1));
                 
                 List<ConsumerInfo> list = jsm.GetConsumers(STREAM);
                 Assert.Empty(list);
@@ -290,11 +291,133 @@ namespace IntegrationTests
         }
 
         [Fact]
+        public void TestInvalidConsumerUpdates()
+        {
+            Context.RunInJsServer(c =>
+            {
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                CreateMemoryStream(jsm, STREAM, SUBJECT_GT);
+
+                ConsumerConfiguration cc = ConsumerConfiguration.Builder()
+                    .WithDurable(Durable(1))
+                    .WithAckPolicy(AckPolicy.Explicit)
+                    .WithDeliverSubject(Deliver(1))
+                    .WithMaxDeliver(3)
+                    .WithFilterSubject(SUBJECT_GT)
+                    .Build();
+
+                AssertValidAddOrUpdate(jsm, cc);
+
+                cc = ConsumerConfiguration.Builder(cc).WithDeliverSubject(Deliver(2)).Build();
+                AssertValidAddOrUpdate(jsm, cc);
+
+                cc = ConsumerConfiguration.Builder(cc).WithDeliverPolicy(DeliverPolicy.New).Build();
+                AssertInvalidConsumerUpdate(jsm, cc);
+
+                cc = ConsumerConfiguration.Builder(cc).WithAckWait(Duration.OfSeconds(5)).Build();
+                AssertInvalidConsumerUpdate(jsm, cc);
+
+                cc = ConsumerConfiguration.Builder(cc).WithFilterSubject(SUBJECT_STAR).Build();
+                AssertInvalidConsumerUpdate(jsm, cc);
+
+                cc = ConsumerConfiguration.Builder(cc).WithRateLimit(100).Build();
+                AssertInvalidConsumerUpdate(jsm, cc);
+
+                cc = ConsumerConfiguration.Builder(cc).WithMaxAckPending(100).Build();
+                AssertInvalidConsumerUpdate(jsm, cc);
+
+                cc = ConsumerConfiguration.Builder(cc).WithIdleHeartbeat(Duration.OfMillis(111)).Build();
+                AssertInvalidConsumerUpdate(jsm, cc);
+
+                cc = ConsumerConfiguration.Builder(cc).WithFlowControl(true).Build();
+                AssertInvalidConsumerUpdate(jsm, cc);
+
+                cc = ConsumerConfiguration.Builder(cc).WithMaxDeliver(4).Build();
+                AssertInvalidConsumerUpdate(jsm, cc);
+            });
+        }
+
+        private void AssertInvalidConsumerUpdate(IJetStreamManagement jsm, ConsumerConfiguration cc) {
+            NATSJetStreamException e = Assert.Throws<NATSJetStreamException>(() => jsm.AddOrUpdateConsumer(STREAM, cc));
+            // 10013 consumer name already in use
+            // 10105 consumer already exists and is still active
+            Assert.True(e.ApiErrorCode == 10013 || e.ApiErrorCode == 10105);
+        }
+
+        private void AssertValidAddOrUpdate(IJetStreamManagement jsm, ConsumerConfiguration cc) {
+            ConsumerInfo ci = jsm.AddOrUpdateConsumer(STREAM, cc);
+            ConsumerConfiguration cicc = ci.Configuration;
+            Assert.Equal(cc.Durable, ci.Name);
+            Assert.Equal(cc.Durable, cicc.Durable);
+            Assert.Equal(cc.DeliverSubject, cicc.DeliverSubject);
+            Assert.Equal(cc.MaxDeliver, cicc.MaxDeliver);
+            Assert.Equal(cc.DeliverPolicy, cicc.DeliverPolicy);
+
+            List<String> consumers = jsm.GetConsumerNames(STREAM);
+            Assert.Single(consumers);
+            Assert.Equal(cc.Durable, consumers[0]);
+        }
+
+        [Fact]
+        public void TestCreateConsumersWithFilters()
+        {
+            Context.RunInJsServer(c => {
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+
+                // plain subject
+                CreateMemoryStream(jsm, STREAM, SUBJECT);
+                
+                ConsumerConfiguration.ConsumerConfigurationBuilder builder = ConsumerConfiguration.Builder().WithDurable(DURABLE);
+                jsm.AddOrUpdateConsumer(STREAM, builder.WithFilterSubject(SUBJECT).Build());
+                
+                Assert.Throws<NATSJetStreamException>(() => jsm.AddOrUpdateConsumer(STREAM,
+                    builder.WithFilterSubject(SubjectDot("not-match")).Build()));
+
+                // wildcard subject
+                jsm.DeleteStream(STREAM);
+                CreateMemoryStream(jsm, STREAM, SUBJECT_STAR);
+
+                jsm.AddOrUpdateConsumer(STREAM, builder.WithFilterSubject(SubjectDot("A")).Build());
+                
+                Assert.Throws<NATSJetStreamException>(() => jsm.AddOrUpdateConsumer(STREAM,
+                    builder.WithFilterSubject(SubjectDot("not-match")).Build()));
+
+                // gt subject
+                jsm.DeleteStream(STREAM);
+                CreateMemoryStream(jsm, STREAM, SUBJECT_GT);
+
+                jsm.AddOrUpdateConsumer(STREAM, builder.WithFilterSubject(SubjectDot("A")).Build());
+                
+                Assert.Throws<NATSJetStreamException>(() => jsm.AddOrUpdateConsumer(STREAM,
+                    builder.WithFilterSubject(SubjectDot("not-match")).Build()));
+            });
+        }
+        
+
+        [Fact]
+        public void TestGetConsumerInfo() 
+        {
+            Context.RunInJsServer(c => {
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                CreateMemoryStream(jsm, STREAM, SUBJECT);
+                Assert.Throws<NATSJetStreamException>(() => jsm.DeleteConsumer(STREAM, DURABLE));
+                ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithDurable(DURABLE).Build();
+                ConsumerInfo ci = jsm.AddOrUpdateConsumer(STREAM, cc);
+                Assert.Equal(STREAM, ci.Stream);
+                Assert.Equal(DURABLE, ci.Name);
+                ci = jsm.GetConsumerInfo(STREAM, DURABLE);
+                Assert.Equal(STREAM, ci.Stream);
+                Assert.Equal(DURABLE, ci.Name);
+                Assert.Throws<NATSJetStreamException>(() => jsm.GetConsumerInfo(STREAM, Durable(999)));
+            });
+        }
+
+        [Fact]
         public void TestGetConsumers() 
         {
             Context.RunInJsServer(c => {
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
-                CreateMemoryStream(c, STREAM, Subject(0), Subject(1));
+                CreateMemoryStream(jsm, STREAM, Subject(0), Subject(1));
 
                 AddConsumers(jsm, STREAM, 600, "A", null); // getConsumers pages at 256
 
@@ -307,9 +430,8 @@ namespace IntegrationTests
             });
         }
 
-        private List<ConsumerInfo> AddConsumers(IJetStreamManagement jsm, String stream, int count, String durableVary, String filterSubject)
+        private void AddConsumers(IJetStreamManagement jsm, String stream, int count, String durableVary, String filterSubject)
         {
-            List<ConsumerInfo> consumers = new List<ConsumerInfo>();
             for (int x = 0; x < count; x++) {
                 String dur = Durable(durableVary, x + 1);
                 ConsumerConfiguration cc = ConsumerConfiguration.Builder()
@@ -317,12 +439,72 @@ namespace IntegrationTests
                         .WithFilterSubject(filterSubject)
                         .Build();
                 ConsumerInfo ci = jsm.AddOrUpdateConsumer(stream, cc);
-                consumers.Add(ci);
                 Assert.Equal(dur, ci.Name);
                 Assert.Equal(dur, ci.Configuration.Durable);
                 Assert.Empty(ci.Configuration.DeliverSubject);
             }
-            return consumers;
+        }
+
+        [Fact]
+        public void TestGetStreams()
+        {
+            Context.RunInJsServer(c => {
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+
+                AddStreams(jsm, 600, 0); // getStreams pages at 256
+
+                List<StreamInfo> list = jsm.GetStreams();
+                Assert.Equal(600, list.Count);
+
+                AddStreams(jsm, 500, 600); // getStreamNames pages at 1024
+                List<string> names = jsm.GetStreamNames();
+                Assert.Equal(1100, names.Count);
+            });
+        }
+
+        private void AddStreams(IJetStreamManagement jsm, int count, int adj) {
+            for (int x = 0; x < count; x++) {
+                CreateMemoryStream(jsm, Stream(x + adj), Subject(x + adj));
+            }
+        }
+
+        [Fact]
+        public void TestGetAndDeleteMessage() {
+            Context.RunInJsServer(c => {
+                CreateMemoryStream(c, STREAM, SUBJECT);
+                IJetStream js = c.CreateJetStreamContext();
+
+                MsgHeader h = new MsgHeader();
+                h.Add("foo", "bar");
+
+                DateTime beforeCreated = DateTime.Now;
+                js.Publish(new Msg(SUBJECT, null, h, DataBytes(1)));
+                js.Publish(new Msg(SUBJECT, null));
+
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+
+                MessageInfo mi = jsm.GetMessage(STREAM, 1);
+                Assert.Equal(SUBJECT, mi.Subject);
+                Assert.Equal(Data(1), System.Text.Encoding.ASCII.GetString(mi.Data));
+                Assert.Equal(1, mi.Seq);
+                Assert.True(mi.Time >= beforeCreated);
+                Assert.NotNull(mi.Headers);
+                Assert.Equal("bar", mi.Headers["foo"]);
+
+                mi = jsm.GetMessage(STREAM, 2);
+                Assert.Equal(SUBJECT, mi.Subject);
+                Assert.Null(mi.Data);
+                Assert.Equal(2, mi.Seq);
+                Assert.True(mi.Time >= beforeCreated);
+                Assert.Null(mi.Headers);
+
+                Assert.True(jsm.DeleteMessage(STREAM, 1));
+                Assert.Throws<NATSJetStreamException>(() => jsm.DeleteMessage(STREAM, 1));
+                Assert.Throws<NATSJetStreamException>(() => jsm.GetMessage(STREAM, 1));
+                Assert.Throws<NATSJetStreamException>(() => jsm.GetMessage(STREAM, 3));
+                Assert.Throws<NATSJetStreamException>(() => jsm.DeleteMessage(Stream(999), 1));
+                Assert.Throws<NATSJetStreamException>(() => jsm.GetMessage(Stream(999), 1));
+            });
         }
     }
 }

@@ -10,9 +10,17 @@ namespace IntegrationTests
         public static void CreateTestStream(IConnection c)
             => CreateMemoryStream(c, STREAM, SUBJECT);
 
+        public static void CreateTestStream(IJetStreamManagement jsm)
+            => CreateMemoryStream(jsm, STREAM, SUBJECT);
+
         public static void CreateMemoryStream(IConnection c, string streamName, params string[] subjects)
         {
             var jsm = c.CreateJetStreamManagementContext();
+            CreateMemoryStream(jsm, streamName, subjects);
+        }
+
+        public static void CreateMemoryStream(IJetStreamManagement jsm, string streamName, params string[] subjects)
+        {
             var sc = StreamConfiguration.Builder()
                 .WithName(streamName)
                 .WithStorageType(StorageType.Memory)
@@ -20,6 +28,7 @@ namespace IntegrationTests
                 .Build();
             jsm.AddStream(sc);
         }
+
         // ----------------------------------------------------------------------------------------------------
         // Publish / Read
         // ----------------------------------------------------------------------------------------------------
