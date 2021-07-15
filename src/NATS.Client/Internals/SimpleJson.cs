@@ -417,6 +417,21 @@ namespace NATS.Client.Internals.SimpleJSON
             }
         }
 
+        public virtual ulong AsUlong
+        {
+            get
+            {
+                ulong val = 0;
+                if (ulong.TryParse(Value, out val))
+                    return val;
+                return 0L;
+            }
+            set
+            {
+                Value = value.ToString();
+            }
+        }
+
         public virtual JSONArray AsArray
         {
             get

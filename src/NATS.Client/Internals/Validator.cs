@@ -277,7 +277,7 @@ namespace NATS.Client.Internals
 
         }
 
-        internal static Duration EnsureNotLessThanMin(long providedMillis, Duration dflt, long minMillis)
+        internal static Duration EnsureDurationNotLessThanMin(long providedMillis, Duration dflt, long minMillis)
         {
             return providedMillis < minMillis ? dflt : Duration.OfMillis(providedMillis);
 

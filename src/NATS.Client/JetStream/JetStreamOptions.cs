@@ -127,7 +127,7 @@ namespace NATS.Client.JetStream
             /// <returns>The JetStreamOptionsBuilder</returns>
             public JetStreamOptionsBuilder WithRequestTimeout(long requestTimeoutMillis) 
             {
-                _requestTimeout = Validator.EnsureNotLessThanMin(requestTimeoutMillis, DefaultTimeout, 0);
+                _requestTimeout = Validator.EnsureDurationNotLessThanMin(requestTimeoutMillis, DefaultTimeout, 0);
                 return this;
             }
 

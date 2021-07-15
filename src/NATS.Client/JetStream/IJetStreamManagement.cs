@@ -121,7 +121,7 @@ namespace NATS.Client.JetStream
         /// <param name="streamName">The name of the stream.</param>
         /// <param name="sequence">The stream sequence number of the message.</param>
         /// <returns>Message information.</returns>
-        MessageInfo GetMessage(string streamName, long sequence);
+        MessageInfo GetMessage(string streamName, ulong sequence);
 
         /// <summary>
         /// Permanantly deletes a message from a stream.
@@ -129,6 +129,6 @@ namespace NATS.Client.JetStream
         /// <param name="streamName">The name of the stream.</param>
         /// <param name="sequence">The stream sequence number of the message.</param>
         /// <returns>True if the message was deleted.</returns>
-        bool DeleteMessage(string streamName, long sequence);
+        bool DeleteMessage(string streamName, ulong sequence);
     }
 }

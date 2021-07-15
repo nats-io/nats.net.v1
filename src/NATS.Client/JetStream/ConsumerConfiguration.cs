@@ -27,7 +27,7 @@ namespace NATS.Client.JetStream
         public ReplayPolicy ReplayPolicy { get; }
         public string Durable { get; internal set; }
         public string DeliverSubject { get; internal set; }
-        public long StartSeq { get; }
+        public ulong StartSeq { get; }
         public DateTime StartTime { get; }
         public Duration AckWait { get; }
         public long MaxDeliver { get; }
@@ -38,8 +38,6 @@ namespace NATS.Client.JetStream
         public Duration IdleHeartbeat { get; }
         public bool FlowControl { get; }
 
-        internal string StreamName { get;  set; }
-
         internal ConsumerConfiguration(string json) : this(JSON.Parse(json)) {}
 
         internal ConsumerConfiguration(JSONNode ccNode)
@@ -49,7 +47,7 @@ namespace NATS.Client.JetStream
             ReplayPolicy = ApiEnums.GetValueOrDefault(ccNode[ApiConstants.ReplayPolicy], ReplayPolicy.Instant);
             Durable = ccNode[ApiConstants.DurableName].Value;
             DeliverSubject = ccNode[ApiConstants.DeliverSubject].Value;
-            StartSeq = ccNode[ApiConstants.OptStartSeq].AsLong;
+            StartSeq = ccNode[ApiConstants.OptStartSeq].AsUlong;
             StartTime = JsonUtils.AsDate(ccNode[ApiConstants.OptStartTime]);
             AckWait = Duration.OfNanos(ccNode[ApiConstants.AckWait]);
             MaxDeliver = JsonUtils.AsLongOrMinus1(ccNode, ApiConstants.MaxDeliver);
@@ -61,7 +59,7 @@ namespace NATS.Client.JetStream
             FlowControl = ccNode[ApiConstants.FlowControl].AsBool;
         }
 
-        internal ConsumerConfiguration(string durable, DeliverPolicy deliverPolicy, long startSeq, DateTime startTime,
+        internal ConsumerConfiguration(string durable, DeliverPolicy deliverPolicy, ulong startSeq, DateTime startTime,
             AckPolicy ackPolicy, Duration ackWait, long maxDeliver, string filterSubject, ReplayPolicy replayPolicy,
             string sampleFrequency, long rateLimit, string deliverSubject, long maxAckPending, 
             Duration idleHeartbeat, bool flowControl)
@@ -127,7 +125,7 @@ namespace NATS.Client.JetStream
             private ReplayPolicy _replayPolicy = ReplayPolicy.Instant;
             private string _durable;
             private string _deliverSubject;
-            private long _startSeq;
+            private ulong _startSeq;
             private DateTime _startTime; 
             private Duration _ackWait = Duration.OfSeconds(30);
             private long _maxDeliver;
@@ -204,7 +202,7 @@ namespace NATS.Client.JetStream
             /// </summary>
             /// <param name="sequence">the start sequence</param>
             /// <returns>The ConsumerConfigurationBuilder</returns>
-            public ConsumerConfigurationBuilder WithStartSequence(long sequence)
+            public ConsumerConfigurationBuilder WithStartSequence(ulong sequence)
             {
                 _startSeq = sequence;
                 return this;
@@ -250,7 +248,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithAckWait(long timeoutMillis)
             {
-                _ackWait = Validator.EnsureNotLessThanMin(timeoutMillis, DefaultAckWait, 1); 
+                _ackWait = Validator.EnsureDurationNotLessThanMin(timeoutMillis, DefaultAckWait, 1);
                 return this;
             }
 
@@ -338,7 +336,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithIdleHeartbeat(long idleHeartbeatMillis)
             {
-                _idleHeartbeat = Validator.EnsureNotLessThanMin(idleHeartbeatMillis, Duration.Zero, 0); 
+                _idleHeartbeat = Validator.EnsureDurationNotLessThanMin(idleHeartbeatMillis, Duration.Zero, 0); 
                 return this;
             }
 

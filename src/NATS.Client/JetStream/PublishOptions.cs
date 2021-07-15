@@ -125,7 +125,7 @@ namespace NATS.Client.JetStream
             /// <returns>The PublishOptionsBuilder</returns>
             public PublishOptionsBuilder WithTimeout(long timeoutMillis)
             {
-                _streamTimeout = Validator.EnsureNotLessThanMin(timeoutMillis, DefaultTimeout, 1);
+                _streamTimeout = Validator.EnsureDurationNotLessThanMin(timeoutMillis, DefaultTimeout, 1);
                 return this;
             }
 

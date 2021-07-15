@@ -198,15 +198,12 @@ namespace NATS.Client.JetStream
 
             // 4. create the subscription
             Subscription sub;
-            int subTypeHint = 0;
             if (isPullMode)
             {
                 sub = ((Connection) Conn).subscribeSync(inbox, queueName, PullSubDelegate);
-                subTypeHint = 1;
             }
             else if (handler == null) {
                 sub = ((Connection) Conn).subscribeSync(inbox, queueName, PushSyncSubDelegate);
-                subTypeHint = 2;
             }
             else if (autoAck)
             {
@@ -307,34 +304,34 @@ namespace NATS.Client.JetStream
             return (IJetStreamPullSubscription) CreateSubscription(subject, null, null, false, null, options);
         }
 
-        public IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler)
+        public IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler, bool autoAck)
         {
             Validator.ValidateSubject(subject, true);
             Validator.ValidateNotNull(handler, nameof(handler));
-            return (IJetStreamPushAsyncSubscription) CreateSubscription(subject, null, handler, false, null, null);
+            return (IJetStreamPushAsyncSubscription) CreateSubscription(subject, null, handler, autoAck, null, null);
         }
 
-        public IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler)
+        public IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler, bool autoAck)
         {
             Validator.ValidateSubject(subject, true);
             queue = Validator.ValidateQueueName(queue, false);
             Validator.ValidateNotNull(handler, nameof(handler));
-            return (IJetStreamPushAsyncSubscription) CreateSubscription(subject, queue, handler, false, null, null);
+            return (IJetStreamPushAsyncSubscription) CreateSubscription(subject, queue, handler, autoAck, null, null);
         }
 
-        public IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler, PushSubscribeOptions options)
+        public IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler, bool autoAck, PushSubscribeOptions options)
         {
             Validator.ValidateSubject(subject, true);
             Validator.ValidateNotNull(handler, nameof(handler));
-            return (IJetStreamPushAsyncSubscription) CreateSubscription(subject, null, handler, false, options, null);
+            return (IJetStreamPushAsyncSubscription) CreateSubscription(subject, null, handler, autoAck, options, null);
         }
 
-        public IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler, PushSubscribeOptions options)
+        public IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler, bool autoAck, PushSubscribeOptions options)
         {
             Validator.ValidateSubject(subject, true);
             queue = Validator.ValidateQueueName(queue, false);
             Validator.ValidateNotNull(handler, nameof(handler));
-            return (IJetStreamPushAsyncSubscription) CreateSubscription(subject, queue, handler, false, options, null);
+            return (IJetStreamPushAsyncSubscription) CreateSubscription(subject, queue, handler, autoAck, options, null);
         }
 
         public IJetStreamPushSyncSubscription PushSubscribeSync(string subject)

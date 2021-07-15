@@ -180,7 +180,7 @@ namespace NATS.Client.JetStream
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
         /// <seealso cref="ISubscription.Subject"/>
         /// <returns>A JetStream push subscription</returns>
-        IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler);
+        IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler, bool autoAck);
 
         /// <summary>
         /// Creates a push subscriber on the given <paramref name="subject"/>, and begins delivering
@@ -200,7 +200,7 @@ namespace NATS.Client.JetStream
         /// <returns>An <see cref="IJetStreamPushAsyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
         /// <seealso cref="ISubscription.Subject"/>
-        IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler, PushSubscribeOptions options);
+        IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler, bool autoAck, PushSubscribeOptions options);
 
         /// <summary>
         /// Creates an subscriber on the given <paramref name="subject"/>, and begins delivering
@@ -222,7 +222,7 @@ namespace NATS.Client.JetStream
         /// <seealso cref="ISubscription.Subject"/>
         /// <seealso cref="ISubscription.Queue"/>
         /// <returns>A JetStream push subscription</returns>
-        IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler);
+        IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler, bool autoAck);
 
         /// <summary>
         /// Creates an subscriber on the given <paramref name="subject"/>, and begins delivering
@@ -245,7 +245,7 @@ namespace NATS.Client.JetStream
         /// <seealso cref="ISubscription.Queue"/>
         /// <param name="options">JetStream pull subscription options.</param>
         /// <returns>A JetStream push subscription</returns>
-        IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler, PushSubscribeOptions options);
+        IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler, bool autoAck, PushSubscribeOptions options);
 
         /// <summary>
         /// Creates a synchronous JetStream subscriber on the given <paramref name="subject"/>.

@@ -136,7 +136,7 @@ namespace NATS.Client.JetStream
             return slr.Streams;
         }
 
-        public MessageInfo GetMessage(string streamName, long sequence)
+        public MessageInfo GetMessage(string streamName, ulong sequence)
         {
             Validator.ValidateNotNull(streamName, nameof(streamName));
             string subj = string.Format(JetStreamConstants.JsapiMsgGet, streamName);
@@ -145,7 +145,7 @@ namespace NATS.Client.JetStream
             return new MessageInfo(m, true);
         }
 
-        public bool DeleteMessage(string streamName, long sequence)
+        public bool DeleteMessage(string streamName, ulong sequence)
         {
             Validator.ValidateNotNull(streamName, nameof(streamName));
             string subj = string.Format(JetStreamConstants.JsapiMsgDelete, streamName);

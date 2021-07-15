@@ -79,7 +79,12 @@ namespace NATS.Client.Internals
         {
             return Encoding.ASCII.GetBytes("{\"" + name + "\":" + value + "}");
         }
- 
+
+        public static byte[] SimpleMessageBody(string name, ulong value)
+        {
+            return Encoding.ASCII.GetBytes("{\"" + name + "\":" + value + "}");
+        }
+
         public static byte[] SimpleMessageBody(string name, string value)
         {
             return Encoding.ASCII.GetBytes("{\"" + name + "\":\"" + value + "\"}");
