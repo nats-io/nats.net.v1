@@ -73,9 +73,9 @@ namespace NATS.Client.JetStream
 
         public sealed class JetStreamOptionsBuilder
         {
-            private string _prefix = JetStreamOptions.DefaultPrefix;
-            private Duration _requestTimeout = JetStreamOptions.DefaultTimeout;
-            private bool _publishNoAck = false;
+            private string _prefix = DefaultPrefix;
+            private Duration _requestTimeout = DefaultTimeout;
+            private bool _publishNoAck;
 
             /// <summary>
             /// Construct a builder
@@ -86,7 +86,8 @@ namespace NATS.Client.JetStream
             /// Construct a builder from an existing JetStreamOptions object
             /// </summary>
             /// <param name="jso">an existing JetStreamOptions object</param>
-            public JetStreamOptionsBuilder(JetStreamOptions jso) {
+            public JetStreamOptionsBuilder(JetStreamOptions jso) 
+            {
                 if (jso != null)
                 {
                     _prefix = jso.Prefix;
@@ -102,7 +103,8 @@ namespace NATS.Client.JetStream
             /// </summary>
             /// <param name="prefix">The prefix.</param>
             /// <returns>The JetStreamOptionsBuilder</returns>
-            public JetStreamOptionsBuilder WithPrefix(string prefix) {
+            public JetStreamOptionsBuilder WithPrefix(string prefix) 
+            {
                 _prefix = prefix;
                 return this;
             }
@@ -112,8 +114,9 @@ namespace NATS.Client.JetStream
             /// </summary>
             /// <param name="requestTimeout">The request timeout as Duration.</param>
             /// <returns>The JetStreamOptionsBuilder</returns>
-            public JetStreamOptionsBuilder WithRequestTimeout(Duration requestTimeout) {
-                _requestTimeout = requestTimeout;
+            public JetStreamOptionsBuilder WithRequestTimeout(Duration requestTimeout)
+            {
+                _requestTimeout = Validator.EnsureNotNullAndNotLessThanMin(requestTimeout, DefaultTimeout, 0);
                 return this;
             }
 
@@ -122,8 +125,9 @@ namespace NATS.Client.JetStream
             /// </summary>
             /// <param name="requestTimeoutMillis">The request timeout in millis.</param>
             /// <returns>The JetStreamOptionsBuilder</returns>
-            public JetStreamOptionsBuilder WithRequestTimeout(long requestTimeoutMillis) {
-                _requestTimeout = Duration.OfMillis(requestTimeoutMillis);
+            public JetStreamOptionsBuilder WithRequestTimeout(long requestTimeoutMillis) 
+            {
+                _requestTimeout = Validator.EnsureNotLessThanMin(requestTimeoutMillis, DefaultTimeout, 0);
                 return this;
             }
 
@@ -144,7 +148,7 @@ namespace NATS.Client.JetStream
             public JetStreamOptions Build()
             {
                 _prefix = JsPrefixManager.AddPrefix(_prefix);
-                _requestTimeout = _requestTimeout ?? DefaultTimeout;
+                // _requestTimeout defaulted in WithRequestTimeout
                 return new JetStreamOptions(_prefix, _requestTimeout, _publishNoAck);
             }
         }

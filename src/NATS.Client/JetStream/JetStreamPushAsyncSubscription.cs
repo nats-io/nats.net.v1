@@ -11,18 +11,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-
 namespace NATS.Client.JetStream
 {
-    public class JetStreamPullSubscription : SyncSubscription, IJetStreamPullSubscription, IJetStreamSubscriptionInternal
+    public class JetStreamPushAsyncSubscription : AsyncSubscription, IJetStreamPushAsyncSubscription, IJetStreamSubscriptionInternal
     {
         protected JetStream _js;
         protected string _consumer;
         protected string _stream;
         protected string _deliver;
 
-        internal JetStreamPullSubscription(Connection conn, string subject, string queue)
+        internal JetStreamPushAsyncSubscription(Connection conn, string subject, string queue)
             : base(conn, subject, queue) {}
 
         void IJetStreamSubscriptionInternal.SetupJetStream(JetStream js, string consumer, string stream, string deliver) {
@@ -35,7 +33,7 @@ namespace NATS.Client.JetStream
         public string Consumer => _consumer;
         public string Stream => _stream;
         public string DeliverSubject => _deliver;
-        
+
         public JetStream GetContext() => _js;
 
         public ConsumerInfo GetConsumerInformation()
@@ -45,32 +43,7 @@ namespace NATS.Client.JetStream
 
         public bool IsPullMode()
         {
-            return true;
-        }
-
-        public JetStreamMsg[] Pull()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Pull(int batchSize)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void PullExpiresIn(int batchSize, TimeSpan expiresIn)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void PullNoWait(int batchSize)
-        {
-            throw new NotImplementedException();
-        }
-
-        public JetStreamMsg[] Fetch(int batchSize, long maxWaitMillis)
-        {
-            throw new NotImplementedException();
+            return false;
         }
     }
 }

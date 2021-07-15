@@ -28,7 +28,8 @@ namespace NATS.Client.JetStream
         public string DeliverSubject => ConsumerConfiguration.DeliverSubject;
 
         // Validation is done by the builder Build()
-        private PushSubscribeOptions(string stream, ConsumerConfiguration config) : base(stream, config) {}
+        private PushSubscribeOptions(string stream, bool direct, ConsumerConfiguration config) 
+            : base(stream, direct, config) {}
 
         /// <summary>
         /// Create PushSubscribeOptions where you are binding to
@@ -38,6 +39,17 @@ namespace NATS.Client.JetStream
         /// <returns>the PushSubscribeOptions</returns>
         public static PushSubscribeOptions Bind(string stream) {
             return new PushSubscribeOptionsBuilder().WithStream(stream).Build();
+        }
+
+        /// <summary>
+        /// Create PushSubscribeOptions where you are binding to
+        /// a specific stream, specific durable and are using direct mode
+        /// </summary>
+        /// <param name="stream">the stream name to bind to</param>
+        /// <param name="durable">the durable name</param>
+        /// <returns>the PushSubscribeOptions</returns>
+        public static PushSubscribeOptions DirectBind(string stream, string durable) {
+            return new PushSubscribeOptionsBuilder().WithStream(stream).WithDurable(durable).Direct().Build();
         }
 
         /// <summary>
@@ -52,10 +64,11 @@ namespace NATS.Client.JetStream
 
         public sealed class PushSubscribeOptionsBuilder
         {
-            private string _durable = null;
-            private string _deliverSubject = null;
-            private string _stream = null;
-            private ConsumerConfiguration _config = null;
+            private string _durable;
+            private string _deliverSubject;
+            private string _stream;
+            private bool _direct;
+            private ConsumerConfiguration _config;
 
             /// <summary>
             /// Set the stream name
@@ -65,6 +78,16 @@ namespace NATS.Client.JetStream
             public PushSubscribeOptionsBuilder WithStream(string stream)
             {
                 _stream = stream;
+                return this;
+            }
+
+            /// <summary>
+            /// Set as a direct subscribe
+            /// </summary>
+            /// <returns>The builder</returns>
+            public PushSubscribeOptionsBuilder Direct()
+            {
+                _direct = true;
                 return this;
             }
 
@@ -120,7 +143,7 @@ namespace NATS.Client.JetStream
                     .WithDeliverSubject(_deliverSubject)
                     .Build();
 
-                return new PushSubscribeOptions(_stream, _config);
+                return new PushSubscribeOptions(_stream, _direct, _config);
             }
         }
     }

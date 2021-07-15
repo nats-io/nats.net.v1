@@ -150,7 +150,7 @@ namespace NATS.Client.JetStream
         /// <param name="subject">The subject on which to listen for messages.
         /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).</param>
         /// <returns>a JetStreamPullSubscription</returns>
-        IJetStreamPullSubscription SubscribePull(string subject);
+        IJetStreamPullSubscription PullSubscribe(string subject);
 
         /// <summary>
         /// Creates a JetStream pull subscription.  Pull subscriptions fetch messages
@@ -160,7 +160,7 @@ namespace NATS.Client.JetStream
         /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).</param>
         /// <param name="options">Pull Subcribe options for this subscription.</param>
         /// <returns>a JetStreamPullSubscription</returns>
-        IJetStreamPullSubscription SubscribePull(string subject, PullSubscribeOptions options);
+        IJetStreamPullSubscription PullSubscribe(string subject, PullSubscribeOptions options);
 
         /// <summary>
         /// Creates a push subscriber on the given <paramref name="subject"/>, and begins delivering
@@ -180,7 +180,7 @@ namespace NATS.Client.JetStream
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
         /// <seealso cref="ISubscription.Subject"/>
         /// <returns>A JetStream push subscription</returns>
-        IJetStreamPushSubscription Subscribe(string subject, EventHandler<MsgHandlerEventArgs> handler);
+        IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler);
 
         /// <summary>
         /// Creates a push subscriber on the given <paramref name="subject"/>, and begins delivering
@@ -195,12 +195,12 @@ namespace NATS.Client.JetStream
         /// <param name="subject">The subject on which to listen for messages.
         /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).</param>
         /// <param name="handler">The <see cref="EventHandler{MsgHandlerEventArgs}"/> invoked when messages are received 
-        /// on the returned <see cref="IJetStreamPushSubscription"/>.</param>
+        /// on the returned <see cref="IJetStreamPushAsyncSubscription"/>.</param>
         /// <param name="options">Pull Subcribe options for this subscription.</param>
-        /// <returns>An <see cref="IJetStreamPushSubscription"/> to use to read any messages received
+        /// <returns>An <see cref="IJetStreamPushAsyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
         /// <seealso cref="ISubscription.Subject"/>
-        IJetStreamPushSubscription Subscribe(string subject, EventHandler<MsgHandlerEventArgs> handler, PushSubscribeOptions options);
+        IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler, PushSubscribeOptions options);
 
         /// <summary>
         /// Creates an subscriber on the given <paramref name="subject"/>, and begins delivering
@@ -222,7 +222,7 @@ namespace NATS.Client.JetStream
         /// <seealso cref="ISubscription.Subject"/>
         /// <seealso cref="ISubscription.Queue"/>
         /// <returns>A JetStream push subscription</returns>
-        IJetStreamPushSubscription Subscribe(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler);
+        IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler);
 
         /// <summary>
         /// Creates an subscriber on the given <paramref name="subject"/>, and begins delivering
@@ -245,28 +245,28 @@ namespace NATS.Client.JetStream
         /// <seealso cref="ISubscription.Queue"/>
         /// <param name="options">JetStream pull subscription options.</param>
         /// <returns>A JetStream push subscription</returns>
-        IJetStreamPushSubscription Subscribe(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler, PushSubscribeOptions options);
+        IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler, PushSubscribeOptions options);
 
         /// <summary>
         /// Creates a synchronous JetStream subscriber on the given <paramref name="subject"/>.
         /// </summary>
         /// <param name="subject">The subject on which to listen for messages.</param>
-        /// <returns>An <see cref="IJetStreamSyncSubscription"/> to use to read any messages received
+        /// <returns>An <see cref="IJetStreamPushSyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>, as part of 
         /// the given queue group.</returns>
         /// <seealso cref="ISubscription.Subject"/>
-        IJetStreamSyncSubscription SubscribeSync(string subject);
+        IJetStreamPushSyncSubscription PushSubscribeSync(string subject);
 
         /// <summary>
         /// Creates a synchronous JetStream subscriber on the given <paramref name="subject"/>.
         /// </summary>
         /// <param name="subject">The subject on which to listen for messages.</param>
         /// <param name="options">JetStream subscription options.</param>
-        /// <returns>An <see cref="IJetStreamSyncSubscription"/> to use to read any messages received
+        /// <returns>An <see cref="IJetStreamPushSyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>, as part of 
         /// the given queue group.</returns>
         /// <seealso cref="ISubscription.Subject"/>
-        IJetStreamSyncSubscription SubscribeSync(string subject, PushSubscribeOptions options);
+        IJetStreamPushSyncSubscription PushSubscribeSync(string subject, PushSubscribeOptions options);
 
         /// <summary>
         /// Creates a synchronous JetStream queue subscriber on the given <paramref name="subject"/>.
@@ -276,12 +276,12 @@ namespace NATS.Client.JetStream
         /// synchronously.</remarks>
         /// <param name="subject">The subject on which to listen for messages.</param>
         /// <param name="queue">The name of the queue group in which to participate.</param>
-        /// <returns>An <see cref="IJetStreamSyncSubscription"/> to use to read any messages received
+        /// <returns>An <see cref="IJetStreamPushSyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>, as part of 
         /// the given queue group.</returns>
         /// <seealso cref="ISubscription.Subject"/>
         /// <seealso cref="ISubscription.Queue"/>
-        IJetStreamSyncSubscription SubscribeSync(string subject, string queue);
+        IJetStreamPushSyncSubscription PushSubscribeSync(string subject, string queue);
 
         /// <summary>
         /// Creates a synchronous JetStream queue subscriber on the given <paramref name="subject"/>.
@@ -292,11 +292,11 @@ namespace NATS.Client.JetStream
         /// <param name="subject">The subject on which to listen for messages.</param>
         /// <param name="queue">The name of the queue group in which to participate.</param>
         /// <param name="options">JetStream subscription options.</param>
-        /// <returns>An <see cref="IJetStreamSyncSubscription"/> to use to read any messages received
+        /// <returns>An <see cref="IJetStreamPushSyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>, as part of 
         /// the given queue group.</returns>
         /// <seealso cref="ISubscription.Subject"/>
         /// <seealso cref="ISubscription.Queue"/>
-        IJetStreamSyncSubscription SubscribeSync(string subject, string queue, PushSubscribeOptions options);
+        IJetStreamPushSyncSubscription PushSubscribeSync(string subject, string queue, PushSubscribeOptions options);
     }
 }

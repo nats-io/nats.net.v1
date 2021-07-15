@@ -18,61 +18,40 @@ namespace NATS.Client.JetStream
 {
     public sealed class JetStreamMsg : Msg
     {
-        static readonly private byte[] ackAck = Encoding.ASCII.GetBytes("+ACK");
-        static readonly private byte[] ackNak = Encoding.ASCII.GetBytes("-NAK");
-        static readonly private byte[] ackProgress = Encoding.ASCII.GetBytes("+WPI");
-        static readonly private byte[] ackTerm = Encoding.ASCII.GetBytes("+TERM");
+        private static readonly byte[] AckAck = Encoding.ASCII.GetBytes("+ACK");
+        private static readonly byte[] AckNak = Encoding.ASCII.GetBytes("-NAK");
+        private static readonly byte[] AckProgress = Encoding.ASCII.GetBytes("+WPI");
+        private static readonly byte[] AckTerm = Encoding.ASCII.GetBytes("+TERM");
 
         /// <summary>
         /// Gets the metadata associated with a JetStream message.
         /// </summary>
         public override MetaData MetaData { get; }
 
-
         private IConnection Connection { get; }
-
-        // Take the reply and parse it into the metadata.
-        internal JetStreamMsg(IConnection conn, string subject, string reply, byte[]data) : base(subject, reply, data)
-        {
-            Connection = conn;
-            MetaData = new MetaData(reply);
-        }
 
         // Take the reply and parse it into the metadata.
         internal JetStreamMsg(IConnection conn, MsgArg arg, Subscription s, byte[] payload, long totalLen) : 
             base(arg, s, payload, totalLen)
         {
             Connection = conn;
-            MetaData = new MetaData(reply);
-        }
-
-        internal JetStream CheckReply(out bool isPullMode)
-        {
-            if (sub is JetStreamSubscription jsSub)
-            {
-                // Not a Jetstream enabled connection.
-                isPullMode = jsSub is JetStreamPullSubscription;
-                return jsSub.JS;
-            }
-
-            isPullMode = false;
-            return null;
+            MetaData = new MetaData(_reply);
         }
 
         private void AckReply(byte[] ackType, int timeout)
         {
+            // very important, must use _reply variable, not public Reply property
             if (timeout > 0)
             {
-                Connection.Request(Reply, ackType, timeout);
+                Connection.Request(_reply, ackType, timeout);
             }
             else
             {     
-                Connection.Publish(Reply, ackType);
+                Connection.Publish(_reply, ackType);
             }
         }
 
         private void AckReply(byte[] ackType) => AckReply(ackType, 0);
-
 
         /// <summary>
         /// Acknowledges a JetStream messages received from a Consumer,
@@ -80,7 +59,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         public override void Ack()
         {
-            AckReply(ackAck);
+            AckReply(AckAck);
         }
 
         /// <summary>
@@ -90,7 +69,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="timeout">the duration to wait for an ack in milliseconds
         /// confirmation</param>
-        public override void AckSync(int timeout) =>  AckReply(ackAck, timeout);
+        public override void AckSync(int timeout) => AckReply(AckAck, timeout);
         
 
         /// <summary>
@@ -98,53 +77,30 @@ namespace NATS.Client.JetStream
         /// that the message is not completely processed and should be sent
         /// again later.
         /// </summary>
-        public override void Nak() => AckReply(ackNak);
+        public override void Nak() => AckReply(AckNak);
 
         /// <summary>
         /// Prevents this message from ever being delivered regardless of
         /// maxDeliverCount.
         /// </summary>
-        public override void Term() => AckReply(ackTerm);
+        public override void Term() => AckReply(AckTerm);
 
         /// <summary>
         /// Indicates that this message is being worked on and reset redelivery timer in the server.
         /// </summary>
-        public override void InProgress() => AckReply(ackProgress);
+        public override void InProgress() => AckReply(AckProgress);
 
         /// <summary>
         /// Checks if a message is from Jetstream or is a standard message.
         /// </summary>
         /// <returns></returns>
-        public override bool IsJetStream { get { return true; } }
+        public override bool IsJetStream => true;
 
         /// <summary>
         /// A JetStream message does not have a reply that is presented
         /// to the application.
         /// </summary>
-        public new string Reply { get { return null; } }
-    }
-
-    /// <summary>
-    /// Represents a pair of sequence numbers held by a stream and consumer.
-    /// </summary>
-    public sealed class Sequence
-    {
-        /// <summary>
-        /// Gets the Stream sequence number.
-        /// </summary>
-        public ulong StreamSequence { get; }
-
-        /// <summary>
-        /// Gets the Consumer sequence number.
-        /// </summary>
-        public ulong ConsumerSequence { get; }
-
-        internal Sequence(ulong streamSeq, ulong consSeq)
-        {
-            StreamSequence = streamSeq;
-            ConsumerSequence = consSeq;
-        }
-
+        public new string Reply => null;
     }
 
     /// <summary>
@@ -153,26 +109,6 @@ namespace NATS.Client.JetStream
     public sealed class MetaData
     {
         static readonly DateTime epochTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-
-        /// <summary>
-        /// Number of delivered messages
-        /// </summary>
-        public ulong NumDelivered { get; }
-
-        /// <summary>
-        /// Number of pending messages
-        /// </summary>
-        public ulong NumPending { get;  }
-
-        /// <summary>
-        /// Gets the timestamp of the message.
-        /// </summary>
-        public DateTime Timestamp { get; }
-
-        /// <summary>
-        /// Gets the raw nanosecond timestamp of the message.
-        /// </summary>
-        public ulong TimestampNanos { get; }
 
         /// <summary>
         /// Gets the stream name.
@@ -185,27 +121,61 @@ namespace NATS.Client.JetStream
         public string Consumer { get;  }
 
         /// <summary>
-        /// Gets the consumer sequence number of the message.
+        /// Number of delivered messages
         /// </summary>
-        public Sequence Sequence { get; }
+        public ulong NumDelivered { get; }
 
+        /// <summary>
+        /// Gets the Stream sequence number.
+        /// </summary>
+        public ulong StreamSequence { get; }
+
+        /// <summary>
+        /// Gets the Consumer sequence number.
+        /// </summary>
+        public ulong ConsumerSequence { get; }
+
+        /// <summary>
+        /// Gets the timestamp of the message.
+        /// </summary>
+        public DateTime Timestamp { get; }
+
+        /// <summary>
+        /// Gets the raw nanosecond timestamp of the message.
+        /// </summary>
+        public ulong TimestampNanos { get; }
+
+        /// <summary>
+        /// Number of pending messages
+        /// </summary>
+        public ulong NumPending { get;  }
 
         // Caller must ensure this is a JS message
         internal MetaData(string metaData)
         {
-            string[] tokens = metaData?.Split('.');
-            if (tokens?.Length != 8)
+            string[] parts = metaData?.Split('.');
+            if (parts?.Length < 8 || parts?.Length > 9 || !"ACK".Equals(parts?[1]))
             {
                 throw new NATSException($"Invalid MetaData: {metaData}");
             }
 
-            Stream = tokens[2];
-            Consumer = tokens[3];
-            NumDelivered = ulong.Parse(tokens[4]);
-            Sequence = new Sequence(ulong.Parse(tokens[5]), ulong.Parse(tokens[6]));
-            TimestampNanos = ulong.Parse(tokens[7]);
+            Stream = parts[2];
+            Consumer = parts[3];
+            NumDelivered = ulong.Parse(parts[4]);
+            StreamSequence = ulong.Parse(parts[5]);
+            ConsumerSequence = ulong.Parse(parts[6]);
+            TimestampNanos = ulong.Parse(parts[7]);
             Timestamp = epochTime.AddTicks((long)TimestampNanos/100);
+
+            if (parts.Length == 9)
+            {
+                NumPending = ulong.Parse(parts[8]);
+            }
         }
 
+        public override string ToString()
+        {
+            return $"Stream: {Stream}, Consumer: {Consumer}, NumDelivered: {NumDelivered}, StreamSequence: {StreamSequence}, ConsumerSequence: {ConsumerSequence}, Timestamp: {Timestamp}, NumPending: {NumPending}";
+        }
     }
 }

@@ -11,18 +11,88 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+
 namespace NATS.Client.JetStream
 {
+    internal interface IJetStreamSubscriptionInternal
+    {
+        void SetupJetStream(JetStream js, string consumer, string stream, string deliver);
+    }
+
     public interface IJetStreamSubscription : ISubscription
     {
         /// <summary>
         /// Get the JetStream Context
         /// </summary>
-        JetStream JS { get; }
+        JetStream GetContext();
 
         /// <summary>
         /// Gets the ConsumerInformation for this Subscription.
         /// </summary>
-        ConsumerInfo ConsumerInformation { get; }
+        ConsumerInfo GetConsumerInformation();
+
+        string Consumer { get; }
+        string Stream { get; }
+        string DeliverSubject { get; }
+
+        bool IsPullMode();
+    }
+
+    public interface IJetStreamPushSyncSubscription : IJetStreamSubscription, ISyncSubscription
+    {
+    }
+
+    public interface IJetStreamPushAsyncSubscription : IJetStreamSubscription, IAsyncSubscription
+    {
+    }
+    
+    /// <summary>
+    /// Pull Subscription on a JetStream context.
+    /// </summary>
+    public interface IJetStreamPullSubscription : IJetStreamSubscription, ISyncSubscription
+    {
+        /// <summary>
+        /// Polls for new messages, overriding the default batch size for this pull only.
+        /// </summary>
+        /// <remarks>
+        /// When true a response with a 404 status header will be returned
+        /// when no messages are available.
+        /// </remarks>
+        /// <param name="batchSize">the size of the batch</param>
+        void Pull(int batchSize);
+
+        /// <summary>
+        /// Do a pull in noWait mode with the specified batch size.
+        /// </summary>
+        /// <remarks>
+        /// When true a response with a 404 status header will be returned
+        /// when no messages are available.
+        /// </remarks>
+        /// <param name="batchSize">the size of the batch</param>
+        void PullNoWait(int batchSize);
+
+        /// <summary>
+        /// Initiate pull for all messages available before expiration.
+        /// </summary>
+        /// <remarks>
+        /// Multiple 408 status messages may come. Each one indicates a
+        /// missing item from the previous batch and can be discarded.
+        /// </remarks>
+        /// <param name="batchSize">the size of the batch</param>
+        /// <param name="expiresIn">how long from now the server should expire this request</param>
+        void PullExpiresIn(int batchSize, TimeSpan expiresIn);
+
+        /// <summary>
+        /// Fetch a list of messages up to the batch size, waiting no longer than maxWait.
+        /// </summary>
+        /// <remarks>
+        /// This uses <code>pullExpiresIn</code> under the covers, and manages all responses
+        /// from<code> sub.NextMessage(...)</code> to only return regular JetStream messages.
+        /// </remarks>
+        /// <param name="batchSize">the size of the batch</param>
+        /// <param name="maxWaitMillis">The maximum time to wait for the first message.</param>
+        /// <returns></returns>
+        JetStreamMsg[] Fetch(int batchSize, long maxWaitMillis);
     }
 }

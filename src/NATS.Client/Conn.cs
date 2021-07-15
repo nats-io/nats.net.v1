@@ -3679,8 +3679,11 @@ namespace NATS.Client
             }
         }
 
+        internal delegate SyncSubscription CreateSyncSubscriptionDelegate(Connection conn, string subject, string queue);
+        internal delegate AsyncSubscription CreateAsyncSubscriptionDelegate(Connection conn, string subject, string queue);
+
         internal AsyncSubscription subscribeAsync(string subject, string queue,
-            EventHandler<MsgHandlerEventArgs> handler)
+            EventHandler<MsgHandlerEventArgs> handler, CreateAsyncSubscriptionDelegate createAsyncSubscriptionDelegate = null)
         {
             if (!Subscription.IsValidSubject(subject))
             {
@@ -3702,7 +3705,9 @@ namespace NATS.Client
 
                 enableSubChannelPooling();
 
-                s = new AsyncSubscription(this, subject, queue);
+                s = createAsyncSubscriptionDelegate == null 
+                    ? new AsyncSubscription(this, subject, queue)
+                    : createAsyncSubscriptionDelegate(this, subject, queue);
 
                 addSubscription(s);
 
@@ -3715,10 +3720,11 @@ namespace NATS.Client
 
             return s;
         }
-
+        
         // subscribe is the internal subscribe 
         // function that indicates interest in a subject.
-        private SyncSubscription subscribeSync(string subject, string queue)
+        internal SyncSubscription subscribeSync(string subject, string queue, 
+            CreateSyncSubscriptionDelegate createSyncSubscriptionDelegate = null)
         {
             if (!Subscription.IsValidSubject(subject))
             {
@@ -3738,7 +3744,9 @@ namespace NATS.Client
                 if (IsDraining())
                     throw new NATSConnectionDrainingException();
 
-                s = new SyncSubscription(this, subject, queue);
+                s = createSyncSubscriptionDelegate == null 
+                    ? new SyncSubscription(this, subject, queue) 
+                    : createSyncSubscriptionDelegate(this, subject, queue);
 
                 addSubscription(s);
 

@@ -23,7 +23,19 @@ namespace NATS.Client.JetStream
         public string Durable => ConsumerConfiguration.Durable;
 
         // Validation is done by the builder Build()
-        private PullSubscribeOptions(string stream, ConsumerConfiguration config) : base(stream, config) {}
+        private PullSubscribeOptions(string stream, bool direct, ConsumerConfiguration config) 
+            : base(stream, direct, config) {}
+
+        /// <summary>
+        /// Create PushSubscribeOptions where you are binding to
+        /// a specific stream, specific durable and are using direct mode
+        /// </summary>
+        /// <param name="stream">the stream name to bind to</param>
+        /// <param name="durable">the durable name</param>
+        /// <returns>the PushSubscribeOptions</returns>
+        public static PullSubscribeOptions DirectBind(string stream, string durable) {
+            return new PullSubscribeOptionsBuilder().WithStream(stream).WithDurable(durable).Direct().Build();
+        }
 
         /// <summary>
         /// Gets the PullSubscribeOptions builder.
@@ -38,6 +50,7 @@ namespace NATS.Client.JetStream
         {
             private string _durable;
             private string _stream;
+            private bool _direct;
             private ConsumerConfiguration _config;
 
             /// <summary>
@@ -59,6 +72,16 @@ namespace NATS.Client.JetStream
             public PullSubscribeOptionsBuilder WithStream(string stream)
             {
                 _stream = stream;
+                return this;
+            }
+
+            /// <summary>
+            /// Set as a direct subscribe
+            /// </summary>
+            /// <returns>The builder</returns>
+            public PullSubscribeOptionsBuilder Direct()
+            {
+                _direct = true;
                 return this;
             }
 
@@ -87,7 +110,7 @@ namespace NATS.Client.JetStream
                     .WithDurable(_durable)
                     .Build();
 
-                return new PullSubscribeOptions(_stream, _config);
+                return new PullSubscribeOptions(_stream, _direct, _config);
             }
         }
     }

@@ -34,10 +34,11 @@ namespace NATS.Client.JetStream
             return JsPrefixes.GetOrAdd(prefix, prefix);
         }
 
-        internal static bool HasPrefix(string replyTo) {
+        internal static bool HasPrefix(string replyTo)
+        {
             if (replyTo == null) return false;
             
-            return replyTo.StartsWith(JetStreamConstants.JsapiPrefix) || 
+            return replyTo.StartsWith(JetStreamConstants.JsPrefix) || 
                    JsPrefixes.Keys.Any(replyTo.StartsWith);
         }
 

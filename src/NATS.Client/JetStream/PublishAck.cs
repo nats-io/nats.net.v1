@@ -48,5 +48,10 @@ namespace NATS.Client.JetStream
 
             Duplicate = JsonNode[ApiConstants.Duplicate].AsBool;
         }
+
+        public override string ToString()
+        {
+            return $"Stream: {Stream}, Seq: {Seq}, Duplicate: {Duplicate}";
+        }
     }
 }

@@ -28,7 +28,7 @@ namespace NATS.Client
     /// If the <see cref="AsyncSubscription"/> is created without listening to the <see cref="MessageHandler"/>
     /// event, no messages will be received until <see cref="Start()"/> has been called.
     /// </remarks>
-    public sealed class AsyncSubscription : Subscription, IAsyncSubscription, ISubscription
+    public class AsyncSubscription : Subscription, IAsyncSubscription, ISubscription
     {
         /// <summary>
         /// Occurs when the <see cref="AsyncSubscription"/> receives a message from the

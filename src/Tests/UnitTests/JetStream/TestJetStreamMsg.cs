@@ -11,7 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using NATS.Client;
 using NATS.Client.JetStream;
 using Xunit;
 
@@ -22,26 +21,33 @@ namespace UnitTests.JetStream
         [Fact]
         public void MetaDataTests()
         {
-            string ReplyTo = "$JS.ACK.test-stream.test-consumer.1.2.3.1605139610113260000";
-            IConnection conn = null;
-            JetStreamMsg jsm = new JetStreamMsg(conn, "foo", ReplyTo, null);
-
-            Assert.True(jsm.IsJetStream);
-
-            MetaData jsmd = jsm.MetaData;
+            string reply = "$JS.ACK.test-stream.test-consumer.1.2.3.1605139610113260000";
+            MetaData jsmd = new MetaData(reply);
             Assert.NotNull(jsmd);
             Assert.Equal("test-stream", jsmd.Stream);
             Assert.Equal("test-consumer", jsmd.Consumer);
             Assert.True(1 == jsmd.NumDelivered);
-            Assert.True(2 == jsmd.Sequence.StreamSequence);
-            Assert.True(3 == jsmd.Sequence.ConsumerSequence);
+            Assert.True(2 == jsmd.StreamSequence);
+            Assert.True(3 == jsmd.ConsumerSequence);
             Assert.True(2020 == jsmd.Timestamp.Year);
             Assert.True(6 == jsmd.Timestamp.Minute);
             Assert.True(113 == jsmd.Timestamp.Millisecond);
             Assert.True(1605139610113260000 == jsmd.TimestampNanos);
+            Assert.True(0 == jsmd.NumPending);
 
-            Assert.Null(jsm.Reply);
-            Assert.Equal("foo", jsm.Subject);
+            reply = "$JS.ACK.test-stream.test-consumer.1.2.3.1605139610113260000.4";
+            jsmd = new MetaData(reply);
+            Assert.NotNull(jsmd);
+            Assert.Equal("test-stream", jsmd.Stream);
+            Assert.Equal("test-consumer", jsmd.Consumer);
+            Assert.True(1 == jsmd.NumDelivered);
+            Assert.True(2 == jsmd.StreamSequence);
+            Assert.True(3 == jsmd.ConsumerSequence);
+            Assert.True(2020 == jsmd.Timestamp.Year);
+            Assert.True(6 == jsmd.Timestamp.Minute);
+            Assert.True(113 == jsmd.Timestamp.Millisecond);
+            Assert.True(1605139610113260000 == jsmd.TimestampNanos);
+            Assert.True(4 == jsmd.NumPending);
         }
     }
 }

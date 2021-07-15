@@ -20,6 +20,8 @@ namespace NATS.Client.JetStream
 {
     public sealed class ConsumerConfiguration
     {
+        private static readonly Duration DefaultAckWait = Duration.OfSeconds(30);
+
         public DeliverPolicy DeliverPolicy { get; }
         public AckPolicy AckPolicy { get; }
         public ReplayPolicy ReplayPolicy { get; }
@@ -138,6 +140,7 @@ namespace NATS.Client.JetStream
 
             public string Durable => _durable;
             public string DeliverSubject => _deliverSubject;
+            public string FilterSubject => _filterSubject;
             public long MaxAckPending => _maxAckPending;
             public AckPolicy AcknowledgementPolicy => _ackPolicy;
 
@@ -232,11 +235,22 @@ namespace NATS.Client.JetStream
             /// <summary>
             /// Sets the acknowledgement wait duration of the ConsumerConfiguration.
             /// </summary>
-            /// <param name="timeout">the wait timeout</param>
+            /// <param name="timeout">the wait timeout as a duration</param>
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithAckWait(Duration timeout)
             {
-                _ackWait = timeout ?? Duration.OfSeconds(30);
+                _ackWait = Validator.EnsureNotNullAndNotLessThanMin(timeout, DefaultAckWait, 1); 
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the acknowledgement wait duration of the ConsumerConfiguration.
+            /// </summary>
+            /// <param name="timeoutMillis">the wait timeout as millis</param>
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder WithAckWait(long timeoutMillis)
+            {
+                _ackWait = Validator.EnsureNotLessThanMin(timeoutMillis, DefaultAckWait, 1); 
                 return this;
             }
 
@@ -309,11 +323,22 @@ namespace NATS.Client.JetStream
             /// <summary>
             /// Sets the idle heart beat wait time.
             /// </summary>
-            /// <param name="idleHeartbeat">the wait timeout</param>
+            /// <param name="idleHeartbeat">the wait timeout as a Duration</param>
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithIdleHeartbeat(Duration idleHeartbeat)
             {
-                _idleHeartbeat = idleHeartbeat ?? Duration.Zero;
+                _idleHeartbeat = Validator.EnsureNotNullAndNotLessThanMin(idleHeartbeat, Duration.Zero, 0); 
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the idle heart beat wait time.
+            /// </summary>
+            /// <param name="idleHeartbeatMillis">the wait timeout as a Duration</param>
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder WithIdleHeartbeat(long idleHeartbeatMillis)
+            {
+                _idleHeartbeat = Validator.EnsureNotLessThanMin(idleHeartbeatMillis, Duration.Zero, 0); 
                 return this;
             }
 

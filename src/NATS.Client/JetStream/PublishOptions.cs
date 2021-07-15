@@ -101,7 +101,8 @@ namespace NATS.Client.JetStream
             /// </summary>
             /// <param name="stream">Name of the stream</param>
             /// <returns>The Builder</returns>
-            public PublishOptionsBuilder WithStream(string stream) {
+            public PublishOptionsBuilder WithStream(string stream)
+            {
                 _stream = Validator.ValidateStreamName(stream, false);
                 return this;
             }
@@ -109,29 +110,32 @@ namespace NATS.Client.JetStream
             /// <summary>
             /// Set the stream timeout with a Duration
             /// </summary>
-            /// <param name="timeout">The publish acknowledgement timeout.</param>
+            /// <param name="timeout">The publish acknowledgement timeout as a Duration.</param>
             /// <returns>The PublishOptionsBuilder</returns>
-            public PublishOptionsBuilder WithTimeout(Duration timeout) {
-                _streamTimeout = timeout ?? DefaultTimeout;
+            public PublishOptionsBuilder WithTimeout(Duration timeout)
+            {
+                _streamTimeout = Validator.EnsureNotNullAndNotLessThanMin(timeout, DefaultTimeout, 1);
                 return this;
             }
 
             /// <summary>
             /// Set the stream timeout in milliseconds
             /// </summary>
-            /// <param name="timeoutMillis">The publish acknowledgement timeout.</param>
+            /// <param name="timeoutMillis">The publish acknowledgement timeout as millis</param>
             /// <returns>The PublishOptionsBuilder</returns>
-            public PublishOptionsBuilder WithTimeout(long timeoutMillis) {
-                _streamTimeout = timeoutMillis < 1 ? DefaultTimeout : Duration.OfMillis(timeoutMillis);
+            public PublishOptionsBuilder WithTimeout(long timeoutMillis)
+            {
+                _streamTimeout = Validator.EnsureNotLessThanMin(timeoutMillis, DefaultTimeout, 1);
                 return this;
             }
 
             /// <summary>
             /// Set the message id.
             /// </summary>
-            /// <param name="msgID">The message ID of these options.</param>
+            /// <param name="msgId">The message ID of these options.</param>
             /// <returns>The PublishOptionsBuilder</returns>
-            public PublishOptionsBuilder WithMessageId(string msgId) {
+            public PublishOptionsBuilder WithMessageId(string msgId) 
+            {
                 _messageId = Validator.ValidateNotEmpty(msgId, nameof(msgId));
                 return this;
             }
@@ -141,7 +145,8 @@ namespace NATS.Client.JetStream
             /// </summary>
             /// <param name="stream">The expected stream name.</param>
             /// <returns>The PublishOptionsBuilder</returns>
-            public PublishOptionsBuilder WithExpectedStream(string stream) {
+            public PublishOptionsBuilder WithExpectedStream(string stream)
+            {
                 _expectedStream = stream;
                 return this;
             }
@@ -149,10 +154,11 @@ namespace NATS.Client.JetStream
             /// <summary>
             /// Set the expected last message ID.
             /// </summary>
-            /// <param name="lastMessageID">The expected last message ID.</param>
+            /// <param name="lastMessageId">The expected last message ID.</param>
             /// <returns>The PublishOptionsBuilder</returns>
-            public PublishOptionsBuilder WithExpectedLastMsgId(string lastMessageID) {
-                _expectedLastMsgId = Validator.ValidateNotEmpty(lastMessageID, nameof(lastMessageID));
+            public PublishOptionsBuilder WithExpectedLastMsgId(string lastMessageId)
+            {
+                _expectedLastMsgId = Validator.ValidateNotEmpty(lastMessageId, nameof(lastMessageId));
                 return this;
             }        
 
@@ -161,7 +167,8 @@ namespace NATS.Client.JetStream
             /// </summary>
             /// <param name="lastSequence">The expected sequence.</param>
             /// <returns>The PublishOptionsBuilder</returns>
-            public PublishOptionsBuilder WithExpectedLastSequence(long lastSequence) {
+            public PublishOptionsBuilder WithExpectedLastSequence(long lastSequence)
+            {
                 _expectedLastSeq = Validator.ValidateNotNegative(lastSequence, nameof(lastSequence));
                 return this;
             }
@@ -171,7 +178,8 @@ namespace NATS.Client.JetStream
             /// Clears the expectedLastId, expectedLastSequence and messageId fields.
             /// </summary>
             /// <returns>The PublishOptionsBuilder</returns>
-            public PublishOptionsBuilder ClearExpected() {
+            public PublishOptionsBuilder ClearExpected() 
+            {
                 _expectedLastMsgId = null;
                 _expectedLastSeq = DefaultLastSequence;
                 _messageId = null;
@@ -182,7 +190,8 @@ namespace NATS.Client.JetStream
             /// Builds the PublishOptions
             /// </summary>
             /// <returns>The PublishOptions object.</returns>
-            public PublishOptions Build() {
+            public PublishOptions Build() 
+            {
                 return new PublishOptions(_stream, _streamTimeout, _expectedStream, _expectedLastMsgId, _expectedLastSeq, _messageId);
             }
         }

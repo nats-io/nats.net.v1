@@ -20,12 +20,14 @@ namespace NATS.Client.JetStream
     public class SubscribeOptions
     {
         internal string Stream { get; }
+        internal bool Direct { get;  }
         internal ConsumerConfiguration ConsumerConfiguration { get;}
 
-        internal SubscribeOptions(string stream, ConsumerConfiguration configuration)
+        internal SubscribeOptions(string stream, bool direct, ConsumerConfiguration configuration)
         {
             // THESE ARE ALREADY BE VALIDATED BY PRIVATE CONSTRUCTORS THAT CALL THIS base METHOD!
             Stream = stream;
+            Direct = direct;
             ConsumerConfiguration = configuration;
         }
     }

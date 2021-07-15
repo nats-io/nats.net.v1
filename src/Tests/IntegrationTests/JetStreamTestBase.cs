@@ -1,12 +1,17 @@
-﻿using System.Text;
+﻿using System.Collections.Generic;
+using System.Text;
 using NATS.Client;
 using NATS.Client.JetStream;
+using Xunit;
 using static UnitTests.TestBase;
 
 namespace IntegrationTests
 {
     public static class JetStreamTestBase
     {
+        public const string JsReplyTo = "$JS.ACK.test-stream.test-consumer.1.2.3.1605139610113260000";
+        public static readonly int DefaultTimeout = 500; // millis
+
         public static void CreateTestStream(IConnection c)
             => CreateMemoryStream(c, STREAM, SUBJECT);
 
@@ -35,7 +40,7 @@ namespace IntegrationTests
         public static void JsPublish(IJetStream js, string subject, string prefix, int count) {
             for (int x = 1; x <= count; x++) {
                 string data = prefix + x;
-                js.Publish(new Msg(SUBJECT, Encoding.ASCII.GetBytes(data)));
+                js.Publish(new Msg(subject, Encoding.ASCII.GetBytes(data)));
             }
         }
 
@@ -59,6 +64,71 @@ namespace IntegrationTests
 
         public static PublishAck JsPublish(JetStream js) {
             return js.Publish(new Msg(SUBJECT, DataBytes()));
+        }
+
+        public static List<Msg> ReadMessagesAck(ISyncSubscription sub)
+        {
+            List<Msg> messages = new List<Msg>();
+            try
+            {
+                Msg msg = sub.NextMessage(DefaultTimeout);
+                while (msg != null) {
+                    messages.Add(msg);
+                    if (msg.IsJetStream) {
+                        msg.Ack();
+                    }
+                    msg = sub.NextMessage(DefaultTimeout);
+                }
+            }
+            catch (NATSTimeoutException)
+            {
+                // it's fine, just end
+            }
+
+            return messages;
+        }
+
+        // ----------------------------------------------------------------------------------------------------
+        // Validate / Assert
+        // ----------------------------------------------------------------------------------------------------
+        public static void ValidateRedAndTotal(int expectedRed, int actualRed, int expectedTotal, int actualTotal) {
+            ValidateRead(expectedRed, actualRed);
+            ValidateTotal(expectedTotal, actualTotal);
+        }
+
+        public static void ValidateTotal(int expectedTotal, int actualTotal) {
+            Assert.Equal(expectedTotal, actualTotal);
+        }
+
+        public static void ValidateRead(int expectedRed, int actualRed) {
+            Assert.Equal(expectedRed, actualRed);
+        }
+
+        public static void AssertSubscription(IJetStreamSubscription sub, string stream, string consumer, string deliver, bool isPullMode) {
+            Assert.Equal(stream, sub.Stream);
+            if (consumer == null)
+            {
+                Assert.NotNull(sub.Consumer);
+            }
+            else
+            {
+                Assert.Equal(consumer, sub.Consumer);
+            }
+
+            if (deliver != null) {
+                Assert.Equal(deliver, sub.DeliverSubject);
+            }
+            Assert.Equal(isPullMode, sub.IsPullMode());
+        }
+
+        public static void AssertSameMessages(List<Msg> l1, List<Msg> l2) {
+            Assert.Equal(l1.Count, l2.Count);
+            for (int x = 0; x < l1.Count; x++)
+            {
+                string data1 = Encoding.ASCII.GetString(l1[x].Data);
+                string data2 = Encoding.ASCII.GetString(l2[x].Data);
+                Assert.Equal(data1, data2);
+            }
         }
     }
 }

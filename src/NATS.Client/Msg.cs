@@ -26,7 +26,7 @@ namespace NATS.Client
     {
         protected static readonly byte[] Empty = new byte[0];
         protected string subject;
-        protected string reply;
+        protected string _reply;
         protected byte[] data;
         internal Subscription sub;
         internal MsgHeader header;
@@ -39,7 +39,7 @@ namespace NATS.Client
         public Msg()
         {
             subject = null;
-            reply = null;
+            _reply = null;
             data = null;
             sub = null;
             header = null;
@@ -100,7 +100,7 @@ namespace NATS.Client
         internal Msg(MsgArg arg, Subscription s, byte[] payload, long totalLen)
         {
             subject = arg.subject;
-            reply = arg.reply;
+            _reply = arg.reply;
             sub = s;
 
             if (arg.hdr > 0)
@@ -137,8 +137,8 @@ namespace NATS.Client
         /// </summary>
         public string Reply
         {
-            get { return reply; }
-            set { reply = value; }
+            get { return _reply; }
+            set { _reply = value; }
         }
 
         /// <summary>
@@ -241,7 +241,7 @@ namespace NATS.Client
                 sb.AppendFormat("Header={0};", header.ToString());
             }
             sb.AppendFormat("Subject={0};Reply={1};Payload=<", Subject,
-                Reply != null ? reply : "null");
+                Reply != null ? _reply : "null");
 
             int len = data.Length;
             int i;
@@ -309,7 +309,7 @@ namespace NATS.Client
         /// <summary>
         /// Gets the metadata associated with a JetStream message.
         /// </summary>
-        public virtual JetStream.MetaData MetaData { get { return null; } }
+        public virtual JetStream.MetaData MetaData => null;
 
         /// <summary>
         /// Acknowledges a JetStream messages received from a Consumer,

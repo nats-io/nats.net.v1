@@ -279,10 +279,20 @@ namespace NATS.Client.JetStream
         /// <summary>
         /// Sets the maximum age in the StreamConfiguration.
         /// </summary>
-        /// <param name="maxAge">the maximum message age</param>
+        /// <param name="maxAge">the maximum message age as a Duration</param>
         /// <returns>The StreamConfigurationBuilder</returns>
         public StreamConfigurationBuilder WithMaxAge(Duration maxAge) {
             _maxAge = Validator.ValidateDurationNotRequiredGtOrEqZero(maxAge);
+            return this;
+        }
+
+        /// <summary>
+        /// Sets the maximum age in the StreamConfiguration.
+        /// </summary>
+        /// <param name="maxAgeMillis">the maximum message age as millis</param>
+        /// <returns>The StreamConfigurationBuilder</returns>
+        public StreamConfigurationBuilder WithMaxAge(long maxAgeMillis) {
+            _maxAge = Validator.ValidateDurationNotRequiredGtOrEqZero(maxAgeMillis);
             return this;
         }
 
@@ -355,6 +365,17 @@ namespace NATS.Client.JetStream
         /// <returns>The StreamConfigurationBuilder</returns>
         public StreamConfigurationBuilder WithDuplicateWindow(Duration window) {
             _duplicateWindow = Validator.ValidateDurationNotRequiredGtOrEqZero(window);
+            return this;
+        }
+
+        /// <summary>
+        /// Sets the duplicate checking window in the the StreamConfiguration.  A Duration.Zero
+        /// disables duplicate checking.  Duplicate checking is disabled by default.
+        /// </summary>
+        /// <param name="windowMillis">duration to hold message ids for duplicate checking.</param>
+        /// <returns>The StreamConfigurationBuilder</returns>
+        public StreamConfigurationBuilder WithDuplicateWindow(long windowMillis) {
+            _duplicateWindow = Validator.ValidateDurationNotRequiredGtOrEqZero(windowMillis);
             return this;
         }
 

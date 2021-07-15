@@ -18,28 +18,28 @@ namespace NATS.Client.JetStream
     public class JetStreamBase
     {
         public string Prefix { get; }
-        public JetStreamOptions Options { get; }
-        public IConnection Connection { get; }
+        public JetStreamOptions JetStreamOptions { get; }
+        public IConnection Conn { get; }
         public int Timeout { get; }
 
         protected JetStreamBase(IConnection connection, JetStreamOptions options)
         {
-            Connection = connection;
-            Options = options ?? JetStreamOptions.Builder().Build();
-            Prefix = Options.Prefix;
-            Timeout = (int) Options.RequestTimeout.Millis;
+            Conn = connection;
+            JetStreamOptions = options ?? JetStreamOptions.Builder().Build();
+            Prefix = JetStreamOptions.Prefix;
+            Timeout = (int) JetStreamOptions.RequestTimeout.Millis;
         }
         
         // ----------------------------------------------------------------------------------------------------
         // Management that is also needed by regular context
         // ----------------------------------------------------------------------------------------------------
-        protected ConsumerInfo GetConsumerInfoInternal(string streamName, string consumer) {
+        internal ConsumerInfo GetConsumerInfoInternal(string streamName, string consumer) {
             string subj = string.Format(JetStreamConstants.JsapiConsumerInfo, streamName, consumer);
             var m = RequestResponseRequired(subj, null, Timeout);
             return new ConsumerInfo(m, true);
         }
 
-        protected ConsumerInfo AddOrUpdateConsumerInternal(string streamName, ConsumerConfiguration config)
+        internal ConsumerInfo AddOrUpdateConsumerInternal(string streamName, ConsumerConfiguration config)
         {
             string subj = config.Durable == null
                 ? string.Format(JetStreamConstants.JsapiConsumerCreate, streamName)
@@ -55,9 +55,9 @@ namespace NATS.Client.JetStream
         // ----------------------------------------------------------------------------------------------------
         private string PrependPrefix(string subject) => Prefix + subject;
     
-        protected Msg RequestResponseRequired(string subject, byte[] bytes, int timeout)
+        public Msg RequestResponseRequired(string subject, byte[] bytes, int timeout)
         {
-            Msg msg = Connection.Request(PrependPrefix(subject), bytes, timeout);
+            Msg msg = Conn.Request(PrependPrefix(subject), bytes, timeout);
             if (msg == null)
             {
                 throw new NATSJetStreamException("Timeout or no response waiting for NATS JetStream server");

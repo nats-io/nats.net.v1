@@ -75,9 +75,14 @@ namespace NATS.Client.Internals
             return arr;
         }
  
-        public static byte[] SimpleMessageBody(string name, object value)
+        public static byte[] SimpleMessageBody(string name, long value)
         {
-            return Encoding.ASCII.GetBytes("{\"" + name + "\":" + value.ToString() + "}");
+            return Encoding.ASCII.GetBytes("{\"" + name + "\":" + value + "}");
+        }
+ 
+        public static byte[] SimpleMessageBody(string name, string value)
+        {
+            return Encoding.ASCII.GetBytes("{\"" + name + "\":\"" + value + "\"}");
         }
     }
 }

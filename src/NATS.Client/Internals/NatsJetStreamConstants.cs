@@ -121,5 +121,7 @@
         /// JetStream expected last message ID header Name.
         /// </summary>
         public const string ExpLastIdHeader = "Nats-Expected-Last-Msg-Id";
+
+        public const int JsConsumerNotFoundErr = 10014;
     }
 }

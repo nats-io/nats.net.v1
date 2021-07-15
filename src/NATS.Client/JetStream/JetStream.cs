@@ -14,6 +14,8 @@
 using System;
 using System.Threading.Tasks;
 using NATS.Client.Internals;
+using static NATS.Client.Connection;
+using static NATS.Client.JetStream.ConsumerConfiguration;
 
 namespace NATS.Client.JetStream
 {
@@ -76,7 +78,14 @@ namespace NATS.Client.JetStream
         {
             MsgHeader merged = MergePublishOptions(hdr, options);
             Msg msg = new Msg(subject, null, merged, data);
-            return ProcessPublishResponse(Connection.Request(msg), options);
+
+            if (JetStreamOptions.IsPublishNoAck)
+            {
+                Conn.Publish(msg);
+                return null;
+            }
+            
+            return ProcessPublishResponse(Conn.Request(msg), options);
         }
 
         public PublishAck Publish(string subject, byte[] data) 
@@ -110,80 +119,248 @@ namespace NATS.Client.JetStream
         {
             throw new NotImplementedException();
         }
-
-        public IJetStreamPullSubscription SubscribePull(string subject)
+        
+        // ----------------------------------------------------------------------------------------------------
+        // Subscribe
+        // ----------------------------------------------------------------------------------------------------
+        Subscription CreateSubscription(string subject, string queueName,
+            EventHandler<MsgHandlerEventArgs> handler, bool autoAck,
+            PushSubscribeOptions pushOpts, 
+            PullSubscribeOptions pullOpts)
         {
-            Validator.ValidateSubject(subject, true);
-            throw new NotImplementedException();
+            // first things first...
+            bool isPullMode = pullOpts != null;
+
+            // setup the configuration, use a default.
+            string stream;
+            ConsumerConfigurationBuilder ccBuilder;
+            SubscribeOptions so;
+
+            if (isPullMode) {
+                so = pullOpts;
+                stream = pullOpts.Stream;
+                ccBuilder = Builder(pullOpts.ConsumerConfiguration);
+                ccBuilder.WithDeliverSubject(null); // pull mode can't have a deliver subject
+            }
+            else {
+                so = pushOpts == null
+                    ? PushSubscribeOptions.Builder().Build()
+                    : pushOpts;
+                stream = so.Stream; // might be null, that's ok (see direct)
+                ccBuilder = Builder(so.ConsumerConfiguration);
+            }
+
+            //
+            bool direct = so.Direct;
+
+            string durable = ccBuilder.Durable;
+            string inbox = ccBuilder.DeliverSubject;
+            string filterSubject = ccBuilder.FilterSubject;
+
+            bool createConsumer = true;
+
+            // 1. Did they tell me what stream? No? look it up.
+            // subscribe options will have already validated that stream is present for direct mode
+            if (stream == null) {
+                stream = LookupStreamBySubject(subject);
+            }
+            
+            // 2. Is this a durable or ephemeral
+            if (durable != null) {
+                ConsumerInfo consumerInfo = 
+                    LookupConsumerInfo(stream, durable);
+
+                if (consumerInfo != null) { // the consumer for that durable already exists
+                    createConsumer = false;
+                    ConsumerConfiguration cc = consumerInfo.Configuration;
+
+                    // durable already exists, make sure the filter subject matches
+                    string existingFilterSubject = cc.FilterSubject;
+                    if (filterSubject != null && !filterSubject.Equals(existingFilterSubject)) {
+                        throw new ArgumentException(
+                            $"Subject {subject} mismatches consumer configuration {filterSubject}.");
+                    }
+
+                    filterSubject = existingFilterSubject;
+
+                    // use the deliver subject as the inbox. It may be null, that's ok
+                    inbox = cc.DeliverSubject;
+                }
+                else if (direct) {
+                    throw new ArgumentException("Consumer not found for durable. Required in direct mode.");
+                }
+            }
+
+            // 3. If no deliver subject (inbox) provided or found, make an inbox.
+            if (inbox == null) {
+                inbox = Conn.NewInbox();
+            }
+
+            // 4. create the subscription
+            Subscription sub;
+            int subTypeHint = 0;
+            if (isPullMode)
+            {
+                sub = ((Connection) Conn).subscribeSync(inbox, queueName, PullSubDelegate);
+                subTypeHint = 1;
+            }
+            else if (handler == null) {
+                sub = ((Connection) Conn).subscribeSync(inbox, queueName, PushSyncSubDelegate);
+                subTypeHint = 2;
+            }
+            else if (autoAck)
+            {
+                void AutoAckHandler(object sender, MsgHandlerEventArgs args)
+                {
+                    args.Message.Ack();
+                    handler.Invoke(sender, args);
+                }
+
+                sub = ((Connection) Conn).subscribeAsync(inbox, queueName, AutoAckHandler, PushAsyncSubDelegate);
+            }
+            else {
+                sub = ((Connection) Conn).subscribeAsync(inbox, queueName, handler, PushAsyncSubDelegate);
+            }
+
+            // 5-Consumer didn't exist. It's either ephemeral or a durable that didn't already exist.
+            if (createConsumer) {
+                // Defaults should set the right ack pending.
+                // if we have acks and the maxAckPending is not set, set it
+                // to the internal Max.
+                // TODO: too high value?
+                if (ccBuilder.MaxAckPending == 0
+                    && ccBuilder.AcknowledgementPolicy != AckPolicy.None) {
+                    ccBuilder.WithMaxAckPending(sub.PendingMessageLimit);
+                }
+
+                // Pull mode doesn't maintain a deliver subject. It's actually an error if we send it.
+                if (!isPullMode) {
+                    ccBuilder.WithDeliverSubject(inbox);
+                }
+
+                // being discussed if this is correct, but leave it for now.
+                ccBuilder.WithFilterSubject(filterSubject == null ? subject : filterSubject);
+
+                // createOrUpdateConsumer can fail for security reasons, maybe other reasons?
+                ConsumerInfo ci;
+                try {
+                    ci = AddOrUpdateConsumerInternal(stream, ccBuilder.Build());
+                } 
+                catch (NATSJetStreamException)
+                {
+                    sub.Unsubscribe();
+                    throw;
+                }
+                ((IJetStreamSubscriptionInternal)sub).SetupJetStream(this, ci.Name, ci.Stream, inbox);
+            }
+            // 5-Consumer did exist.
+            else {
+                ((IJetStreamSubscriptionInternal)sub).SetupJetStream(this, durable, stream, inbox);
+            }
+
+            return sub;
         }
 
-        public IJetStreamPullSubscription SubscribePull(string subject, PullSubscribeOptions options)
-        {
-            Validator.ValidateSubject(subject, true);
-            throw new NotImplementedException();
+        private CreateSyncSubscriptionDelegate PullSubDelegate =
+            (conn, subject, queue) => new JetStreamPullSubscription(conn, subject, queue);
+
+        private CreateSyncSubscriptionDelegate PushSyncSubDelegate =
+            (conn, subject, queue) => new JetStreamPushSyncSubscription(conn, subject, queue);
+
+        private CreateAsyncSubscriptionDelegate PushAsyncSubDelegate =
+            (conn, subject, queue) => new JetStreamPushAsyncSubscription(conn, subject, queue);
+            
+        internal ConsumerInfo LookupConsumerInfo(string lookupStream, string lookupConsumer) {
+            try {
+                return GetConsumerInfoInternal(lookupStream, lookupConsumer);
+            }
+            catch (NATSJetStreamException e) {
+                if (e.ApiErrorCode == JetStreamConstants.JsConsumerNotFoundErr) {
+                    return null;
+                }
+                throw;
+            }
         }
 
-        public IJetStreamPushSubscription Subscribe(string subject, EventHandler<MsgHandlerEventArgs> handler)
+        internal string LookupStreamBySubject(string subject)
+        {
+            byte[] body = JsonUtils.SimpleMessageBody(ApiConstants.Subject, subject); 
+            Msg resp = RequestResponseRequired(JetStreamConstants.JsapiStreamNames, body, Timeout);
+            StreamNamesReader snr = new StreamNamesReader();
+            snr.Process(resp);
+            if (snr.Strings.Count != 1) {
+                throw new NATSJetStreamException($"No matching streams for subject: {subject}");
+            }
+
+            return snr.Strings[0];
+        }
+
+        public IJetStreamPullSubscription PullSubscribe(string subject)
+        {
+            Validator.ValidateSubject(subject, true);
+            return (IJetStreamPullSubscription) CreateSubscription(subject, null, null, false, null, null);
+        }
+
+        public IJetStreamPullSubscription PullSubscribe(string subject, PullSubscribeOptions options)
+        {
+            Validator.ValidateSubject(subject, true);
+            return (IJetStreamPullSubscription) CreateSubscription(subject, null, null, false, null, options);
+        }
+
+        public IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler)
         {
             Validator.ValidateSubject(subject, true);
             Validator.ValidateNotNull(handler, nameof(handler));
-            throw new NotImplementedException();
+            return (IJetStreamPushAsyncSubscription) CreateSubscription(subject, null, handler, false, null, null);
         }
 
-        public IJetStreamPushSubscription Subscribe(string subject, EventHandler<MsgHandlerEventArgs> handler, PullSubscribeOptions options)
-        {
-            Validator.ValidateSubject(subject, true);
-            Validator.ValidateNotNull(handler, nameof(handler));
-            throw new NotImplementedException();
-        }
-
-        public IJetStreamPushSubscription Subscribe(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler)
+        public IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler)
         {
             Validator.ValidateSubject(subject, true);
             queue = Validator.ValidateQueueName(queue, false);
             Validator.ValidateNotNull(handler, nameof(handler));
-            throw new NotImplementedException();
+            return (IJetStreamPushAsyncSubscription) CreateSubscription(subject, queue, handler, false, null, null);
         }
 
-        public IJetStreamPushSubscription Subscribe(string subject, EventHandler<MsgHandlerEventArgs> handler, PushSubscribeOptions options)
+        public IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler, PushSubscribeOptions options)
         {
             Validator.ValidateSubject(subject, true);
             Validator.ValidateNotNull(handler, nameof(handler));
-            throw new NotImplementedException();
+            return (IJetStreamPushAsyncSubscription) CreateSubscription(subject, null, handler, false, options, null);
         }
 
-        public IJetStreamPushSubscription Subscribe(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler, PushSubscribeOptions options)
+        public IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler, PushSubscribeOptions options)
         {
             Validator.ValidateSubject(subject, true);
             queue = Validator.ValidateQueueName(queue, false);
             Validator.ValidateNotNull(handler, nameof(handler));
-            throw new NotImplementedException();
+            return (IJetStreamPushAsyncSubscription) CreateSubscription(subject, queue, handler, false, options, null);
         }
 
-        public IJetStreamSyncSubscription SubscribeSync(string subject)
+        public IJetStreamPushSyncSubscription PushSubscribeSync(string subject)
         {
             Validator.ValidateSubject(subject, true);
-            throw new NotImplementedException();
+            return (IJetStreamPushSyncSubscription) CreateSubscription(subject, null, null, false, null, null);
         }
 
-        public IJetStreamSyncSubscription SubscribeSync(string subject, PushSubscribeOptions options)
+        public IJetStreamPushSyncSubscription PushSubscribeSync(string subject, PushSubscribeOptions options)
         {
             Validator.ValidateSubject(subject, true);
-            throw new NotImplementedException();
+            return (IJetStreamPushSyncSubscription) CreateSubscription(subject, null, null, false, options, null);
         }
 
-        public IJetStreamSyncSubscription SubscribeSync(string subject, string queue)
-        {
-            Validator.ValidateSubject(subject, true);
-            queue = Validator.ValidateQueueName(queue, false);
-            throw new NotImplementedException();
-        }
-
-        public IJetStreamSyncSubscription SubscribeSync(string subject, string queue, PushSubscribeOptions options)
+        public IJetStreamPushSyncSubscription PushSubscribeSync(string subject, string queue)
         {
             Validator.ValidateSubject(subject, true);
             queue = Validator.ValidateQueueName(queue, false);
-            throw new NotImplementedException();
+            return (IJetStreamPushSyncSubscription) CreateSubscription(subject, queue, null, false, null, null);
+        }
+
+        public IJetStreamPushSyncSubscription PushSubscribeSync(string subject, string queue, PushSubscribeOptions options)
+        {
+            Validator.ValidateSubject(subject, true);
+            queue = Validator.ValidateQueueName(queue, false);
+            return (IJetStreamPushSyncSubscription) CreateSubscription(subject, queue, null, false, options, null);
         }
     }
 }

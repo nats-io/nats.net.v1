@@ -162,6 +162,15 @@ namespace NATS.Client.Internals
             return d;
         }
 
+        internal static Duration ValidateDurationNotRequiredGtOrEqZero(long millis)
+        {
+            if (millis < 0)
+            {
+                throw new ArgumentException("Duration must be greater than or equal to 0.");
+            }
+
+            return Duration.OfMillis(millis);
+        }
         
         internal static object ValidateNotNull(object o, string fieldName)
         {
@@ -260,6 +269,18 @@ namespace NATS.Client.Internals
         internal static bool ZeroOrLtMinus1(long l)
         {
             return l == 0 || l < -1;
+        }
+
+        internal static Duration EnsureNotNullAndNotLessThanMin(Duration provided, Duration dflt, long minMillis)
+        {
+            return provided == null || provided.Millis < minMillis ? dflt : provided;
+
+        }
+
+        internal static Duration EnsureNotLessThanMin(long providedMillis, Duration dflt, long minMillis)
+        {
+            return providedMillis < minMillis ? dflt : Duration.OfMillis(providedMillis);
+
         }
     }
 }
