@@ -89,5 +89,10 @@ namespace NATS.Client.Internals
         {
             return Encoding.ASCII.GetBytes("{\"" + name + "\":\"" + value + "\"}");
         }
+        
+        public static byte[] Serialize(JSONNode node)
+        {
+            return Encoding.ASCII.GetBytes(node.ToString());
+        }
     }
 }

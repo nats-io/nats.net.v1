@@ -53,7 +53,7 @@ namespace NATS.Client.JetStream
         // ----------------------------------------------------------------------------------------------------
         // Request Utils
         // ----------------------------------------------------------------------------------------------------
-        private string PrependPrefix(string subject) => Prefix + subject;
+        internal string PrependPrefix(string subject) => Prefix + subject;
     
         public Msg RequestResponseRequired(string subject, byte[] bytes, int timeout)
         {

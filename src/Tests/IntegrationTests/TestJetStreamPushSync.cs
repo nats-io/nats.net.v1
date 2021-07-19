@@ -22,9 +22,9 @@ using static IntegrationTests.JetStreamTestBase;
 
 namespace IntegrationTests
 {
-    public class TestJetStreamPushSync : TestSuite<JetStreamSuiteContext>
+    public class TestJetStreamPushSync : TestSuite<JetStreamPushSyncSuiteContext>
     {
-        public TestJetStreamPushSync(JetStreamSuiteContext context) : base(context)
+        public TestJetStreamPushSync(JetStreamPushSyncSuiteContext context) : base(context)
         {
         }
 
@@ -170,7 +170,7 @@ namespace IntegrationTests
                 Assert.Equal("NAK1", Encoding.ASCII.GetString(m.Data));
                 m.Ack();
                 
-                Assert.Empty(ReadMessagesAck(sub));
+                AssertNoMoreMessages(sub);
 
                 // TERM
                 JsPublish(js, SUBJECT, "TERM", 1);
@@ -180,7 +180,7 @@ namespace IntegrationTests
                 Assert.Equal("TERM1", Encoding.ASCII.GetString(m.Data));
                 m.Term();
                 
-                Assert.Empty(ReadMessagesAck(sub));
+                AssertNoMoreMessages(sub);
 
                 // Ack Wait timeout
                 JsPublish(js, SUBJECT, "WAIT", 1);
@@ -211,7 +211,7 @@ namespace IntegrationTests
                 Thread.Sleep(750);
                 m.Ack();
                 
-                Assert.Empty(ReadMessagesAck(sub));
+                AssertNoMoreMessages(sub);
 
                 // ACK Sync
                 JsPublish(js, SUBJECT, "ACKSYNC", 1);
@@ -220,7 +220,7 @@ namespace IntegrationTests
                 Assert.Equal("ACKSYNC1", Encoding.ASCII.GetString(m.Data));
                 m.AckSync(DefaultTimeout);
                 
-                Assert.Empty(ReadMessagesAck(sub));
+                AssertNoMoreMessages(sub);
             });
         }
     }

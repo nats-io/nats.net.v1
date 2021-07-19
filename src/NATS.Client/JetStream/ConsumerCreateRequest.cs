@@ -11,12 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Text;
 using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client.JetStream
 {
-    public sealed class ConsumerCreateRequest
+    public sealed class ConsumerCreateRequest : JsonSerializable
     {
         public string StreamName { get; }
         public ConsumerConfiguration Config { get; }
@@ -27,18 +26,13 @@ namespace NATS.Client.JetStream
             Config = config;
         }
         
-        internal JSONNode ToJsonNode()
+        internal override JSONNode ToJsonNode()
         {
             return new JSONObject
             {
                 [ApiConstants.StreamName] = StreamName,
                 [ApiConstants.Config] = Config.ToJsonNode()
             };
-        }
-
-        internal byte[] Serialize()
-        {
-            return Encoding.ASCII.GetBytes(ToJsonNode().ToString());
         }
     }
 }

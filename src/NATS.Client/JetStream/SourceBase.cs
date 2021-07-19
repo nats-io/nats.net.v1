@@ -17,7 +17,7 @@ using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client.JetStream
 {
-    public abstract class SourceBase
+    public abstract class SourceBase : JsonSerializable
     {
         public string Name { get; }
         public long StartSeq { get; }
@@ -34,7 +34,7 @@ namespace NATS.Client.JetStream
             External = External.OptionalInstance(sourceBaseNode[ApiConstants.External]);
         }
 
-        internal JSONNode ToJsonNode()
+        internal override JSONNode ToJsonNode()
         {
             return new JSONObject
             {
@@ -55,7 +55,7 @@ namespace NATS.Client.JetStream
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
+            if (obj.GetType() != GetType()) return false;
             return Equals((SourceBase) obj);
         }
 

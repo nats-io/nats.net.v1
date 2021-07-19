@@ -20,9 +20,9 @@ using static IntegrationTests.JetStreamTestBase;
 
 namespace IntegrationTests
 {
-    public class TestJetStreamPushAsync : TestSuite<JetStreamSuiteContext>
+    public class TestJetStreamPushAsync : TestSuite<JetStreamPushAsyncSuiteContext>
     {
-        public TestJetStreamPushAsync(JetStreamSuiteContext context) : base(context) {}
+        public TestJetStreamPushAsync(JetStreamPushAsyncSuiteContext context) : base(context) {}
 
         [Fact]
         public void TestHandlerSub()
@@ -99,7 +99,7 @@ namespace IntegrationTests
                 
                 // check that all the messages were read by the durable
                 IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(SUBJECT, pso1);
-                Assert.Empty(ReadMessagesAck(sub));
+                AssertNoMoreMessages(sub);
                 
                 // 2. auto ack false
                 CountdownEvent latch2 = new CountdownEvent(10);

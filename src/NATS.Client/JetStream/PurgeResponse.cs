@@ -16,7 +16,7 @@ namespace NATS.Client.JetStream
     public sealed class PurgeResponse : ApiResponse
     {
         public bool Success { get; private set; }
-        public int Purged { get; private set; }
+        public ulong Purged { get; private set; }
 
         internal PurgeResponse(Msg msg, bool throwOnError) : base(msg, throwOnError)
         {
@@ -31,7 +31,7 @@ namespace NATS.Client.JetStream
         private void Init()
         {
             Success = JsonNode[ApiConstants.Success].AsBool;
-            Purged = JsonNode[ApiConstants.Purged].AsInt;
+            Purged = JsonNode[ApiConstants.Purged].AsUlong;
         }
     }
 }

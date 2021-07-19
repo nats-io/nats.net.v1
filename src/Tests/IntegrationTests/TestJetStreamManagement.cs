@@ -243,7 +243,7 @@ namespace IntegrationTests
 
                 PurgeResponse pr = jsm.PurgeStream(STREAM);
                 Assert.True(pr.Success);
-                Assert.Equal(1, pr.Purged);
+                Assert.Equal(1ul, pr.Purged);
             });
         }
 

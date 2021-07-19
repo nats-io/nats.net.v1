@@ -88,6 +88,19 @@ namespace IntegrationTests
             return messages;
         }
 
+        public static void AssertNoMoreMessages(ISyncSubscription sub)
+        {
+            Assert.Empty(ReadMessagesAck(sub));
+        } 
+        
+        public static void AckAll(List<Msg> messages)
+        {
+            foreach (Msg m in messages)
+            {
+                m.Ack();                        
+            }
+        }
+
         // ----------------------------------------------------------------------------------------------------
         // Validate / Assert
         // ----------------------------------------------------------------------------------------------------
@@ -129,6 +142,46 @@ namespace IntegrationTests
                 string data2 = Encoding.ASCII.GetString(l2[x].Data);
                 Assert.Equal(data1, data2);
             }
+        }
+
+        public static void AssertAllJetStream(List<Msg> messages) {
+            foreach (Msg m in messages) {
+                AssertIsJetStream(m);
+            }
+        }
+
+        public static void AssertIsJetStream(Msg m) {
+            Assert.True(m.IsJetStream);
+            Assert.False(m.HasStatus);
+        }
+
+        public static void AssertLastIsStatus(List<Msg> messages, int code) {
+            int lastIndex = messages.Count - 1;
+            for (int x = 0; x < lastIndex; x++) {
+                Msg m = messages[x];
+                Assert.True(m.IsJetStream);
+            }
+            AssertIsStatus(messages[lastIndex], code);
+        }
+
+        public static void AssertStarts408(List<Msg> messages, int count408, int expectedJs) {
+            for (int x = 0; x < count408; x++) {
+                AssertIsStatus(messages[x], 408);
+            }
+            int countedJs = 0;
+            int lastIndex = messages.Count - 1;
+            for (int x = count408; x <= lastIndex; x++) {
+                Msg m = messages[x];
+                Assert.True(m.IsJetStream);
+                countedJs++;
+            }
+            Assert.Equal(expectedJs, countedJs);
+        }
+
+        private static void AssertIsStatus(Msg statusMsg, int code) {
+            Assert.False(statusMsg.IsJetStream);
+            Assert.True(statusMsg.HasStatus);
+            Assert.Equal(code, statusMsg.Status.Code);
         }
     }
 }

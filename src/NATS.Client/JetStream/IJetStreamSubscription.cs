@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
+using System.Collections.Generic;
 
 namespace NATS.Client.JetStream
 {
@@ -80,8 +80,8 @@ namespace NATS.Client.JetStream
         /// missing item from the previous batch and can be discarded.
         /// </remarks>
         /// <param name="batchSize">the size of the batch</param>
-        /// <param name="expiresIn">how long from now the server should expire this request</param>
-        void PullExpiresIn(int batchSize, TimeSpan expiresIn);
+        /// <param name="expiresInMillis">how long from now the server should expire this request</param>
+        void PullExpiresIn(int batchSize, int expiresInMillis);
 
         /// <summary>
         /// Fetch a list of messages up to the batch size, waiting no longer than maxWait.
@@ -93,6 +93,6 @@ namespace NATS.Client.JetStream
         /// <param name="batchSize">the size of the batch</param>
         /// <param name="maxWaitMillis">The maximum time to wait for the first message.</param>
         /// <returns></returns>
-        JetStreamMsg[] Fetch(int batchSize, long maxWaitMillis);
+        List<Msg> Fetch(int batchSize, int maxWaitMillis);
     }
 }

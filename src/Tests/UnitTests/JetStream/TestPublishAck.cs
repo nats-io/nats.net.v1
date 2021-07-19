@@ -25,7 +25,7 @@ namespace UnitTests.JetStream
             String json = "{\"stream\":\"test\",\"seq\":42, \"duplicate\" : true }";
             PublishAck ack = new PublishAck(json);
             Assert.Equal("test", ack.Stream);
-            Assert.Equal(42, ack.Seq);
+            Assert.Equal(42ul, ack.Seq);
             Assert.True(ack.Duplicate);
         }
       

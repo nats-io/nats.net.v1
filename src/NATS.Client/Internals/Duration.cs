@@ -90,6 +90,15 @@
         {
             return Nanos < 0;
         }
+
+        /// <summary>
+        /// Is the value positive (greater than zero)
+        /// </summary>
+        /// <returns>true if value is positive</returns>
+        public bool IsPositive()
+        {
+            return Nanos > 0;
+        }
         
         public override bool Equals(object obj)
         {

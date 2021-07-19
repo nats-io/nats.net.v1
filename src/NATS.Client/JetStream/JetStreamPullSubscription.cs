@@ -11,7 +11,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
+using System.Collections.Generic;
+using NATS.Client.Internals;
+using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client.JetStream
 {
@@ -48,29 +50,87 @@ namespace NATS.Client.JetStream
             return true;
         }
 
-        public JetStreamMsg[] Pull()
-        {
-            throw new NotImplementedException();
-        }
-
         public void Pull(int batchSize)
         {
-            throw new NotImplementedException();
+            PullInternal(batchSize, false, null);
         }
 
-        public void PullExpiresIn(int batchSize, TimeSpan expiresIn)
+        public void PullExpiresIn(int batchSize, Duration expiresIn)
         {
-            throw new NotImplementedException();
+            PullInternal(batchSize, false, expiresIn);
+        }
+
+        public void PullExpiresIn(int batchSize, int expiresInMillis)
+        {
+            PullInternal(batchSize, false, Duration.OfMillis(expiresInMillis));
         }
 
         public void PullNoWait(int batchSize)
         {
-            throw new NotImplementedException();
+            PullInternal(batchSize, true, null);
         }
 
-        public JetStreamMsg[] Fetch(int batchSize, long maxWaitMillis)
+        private void PullInternal(int batchSize, bool noWait, Duration expiresIn) {
+            int batch = Validator.ValidatePullBatchSize(batchSize);
+            string subj = string.Format(JetStreamConstants.JsapiConsumerMsgNext, Stream, Consumer);
+            string publishSubject = GetContext().PrependPrefix(subj);
+            Connection.Publish(publishSubject, Subject, GetPullJson(batch, noWait, expiresIn));
+            Connection.FlushBuffer();
+        }
+
+        private byte[] GetPullJson(int batch, bool noWait, Duration expiresIn)
         {
-            throw new NotImplementedException();
+            JSONObject jso = new JSONObject {["batch"] = batch};
+            if (noWait)
+            {
+                jso["no_wait"] = true;
+            }
+            if (expiresIn != null && expiresIn.IsPositive())
+            {
+                jso["expires"] = expiresIn.Nanos;
+            }
+
+            return JsonUtils.Serialize(jso);
+        }
+
+        public List<Msg> Fetch(int batchSize, int maxWaitMillis)
+        {
+            List<Msg> messages = new List<Msg>(batchSize);
+
+            PullNoWait(batchSize);
+            Read(batchSize, maxWaitMillis, messages);
+            if (messages.Count == 0) {
+                PullExpiresIn(batchSize, Duration.OfMillis(maxWaitMillis - 10));
+                Read(batchSize, maxWaitMillis, messages);
+            }
+
+            return messages;
+        }
+
+        private const int SubsequentWaits = 500;
+
+        private void Read(int batchSize, int maxWaitMillis, List<Msg> messages) {
+            try
+            {
+                Msg msg = NextMessage(maxWaitMillis);
+                while (msg != null)
+                {
+                    if (msg.IsJetStream)
+                    {
+                        messages.Add(msg);
+                        if (messages.Count == batchSize)
+                        {
+                            break;
+                        }
+                    }
+
+                    msg = NextMessage(SubsequentWaits);
+                }
+            }
+            catch (NATSTimeoutException)
+            {
+                // it's fine, just end
+            }
         }
     }
 }

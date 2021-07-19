@@ -20,9 +20,9 @@ using static IntegrationTests.JetStreamTestBase;
 
 namespace IntegrationTests
 {
-    public class TestJetStreamPublish : TestSuite<JetStreamSuiteContext>
+    public class TestJetStreamPublish : TestSuite<JetStreamPublishSuiteContext>
     {
-        public TestJetStreamPublish(JetStreamSuiteContext context) : base(context) {}
+        public TestJetStreamPublish(JetStreamPublishSuiteContext context) : base(context) {}
 
         [Fact]
         public void TestJetStreamSimplePublish()
@@ -171,16 +171,14 @@ namespace IntegrationTests
             });
         }
 
-        private void AssertPublishAck(PublishAck pa, int seqno) {
+        private void AssertPublishAck(PublishAck pa, ulong seqno) {
             Assert.Equal(STREAM, pa.Stream);
-            if (seqno != -1) {
-                Assert.Equal(seqno, pa.Seq);
-            }
+            Assert.Equal(seqno, pa.Seq);
             Assert.False(pa.Duplicate);
         }
 
-        [Fact]
-        public void TestPublishNoAck()
+        // TODO [Fact] public
+        private void TestPublishNoAck()
         {
             Context.RunInJsServer(c =>
             {
@@ -198,7 +196,7 @@ namespace IntegrationTests
                 IJetStream js = c.CreateJetStreamContext();
                 
                 string data1 = "noackdata1";
-                string data2 = "noackdata2";
+                // string data2 = "noackdata2";
 
                 PublishAck pa = js.Publish(SUBJECT, Encoding.ASCII.GetBytes(data1));
                 Assert.Null(pa);

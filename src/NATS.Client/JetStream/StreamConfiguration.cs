@@ -12,13 +12,12 @@
 // limitations under the License.
 
 using System.Collections.Generic;
-using System.Text;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client.JetStream
 {
-    public sealed class StreamConfiguration
+    public sealed class StreamConfiguration : JsonSerializable
     {
         public string Name { get; }
         public List<string> Subjects { get; }
@@ -86,7 +85,7 @@ namespace NATS.Client.JetStream
             Sources = sources;
         }
 
-        internal JSONNode ToJsonNode()
+        internal override JSONNode ToJsonNode()
         {
             JSONArray sources = new JSONArray();
             foreach (Source s in Sources)
@@ -113,11 +112,6 @@ namespace NATS.Client.JetStream
                 [ApiConstants.Mirror] = Mirror?.ToJsonNode(),
                 [ApiConstants.Sources] = sources
             };
-        }
-
-        internal byte[] Serialize()
-        {
-            return Encoding.ASCII.GetBytes(ToJsonNode().ToString());
         }
 
         public static StreamConfigurationBuilder Builder()

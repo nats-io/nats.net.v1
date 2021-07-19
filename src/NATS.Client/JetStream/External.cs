@@ -15,7 +15,7 @@ using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client.JetStream
 {
-    public sealed class External
+    public sealed class External : JsonSerializable
     {
         public string Api { get; }
         public string Deliver { get; }
@@ -31,7 +31,7 @@ namespace NATS.Client.JetStream
             Deliver = externalNode[ApiConstants.Deliver].Value;
         }
 
-        internal JSONNode ToJsonNode()
+        internal override JSONNode ToJsonNode()
         {
             return new JSONObject
             {

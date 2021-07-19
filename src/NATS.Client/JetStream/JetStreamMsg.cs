@@ -175,7 +175,7 @@ namespace NATS.Client.JetStream
 
         public override string ToString()
         {
-            return $"Stream: {Stream}, Consumer: {Consumer}, NumDelivered: {NumDelivered}, StreamSequence: {StreamSequence}, ConsumerSequence: {ConsumerSequence}, Timestamp: {Timestamp}, NumPending: {NumPending}";
+            return $"Stream={Stream}, Consumer={Consumer}, NumDelivered={NumDelivered}, StreamSequence={StreamSequence}, ConsumerSequence={ConsumerSequence}, Timestamp={Timestamp}, NumPending={NumPending}";
         }
     }
 }

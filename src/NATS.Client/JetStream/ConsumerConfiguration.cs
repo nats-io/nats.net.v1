@@ -12,21 +12,23 @@
 // limitations under the License.
 
 using System;
-using System.Text;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client.JetStream
 {
-    public sealed class ConsumerConfiguration
+    public sealed class ConsumerConfiguration : JsonSerializable
     {
+        private static readonly long MinAckWaitMillis = 1;
+        private static readonly long MinIdleHeartbeatMillis = 0;
         private static readonly Duration DefaultAckWait = Duration.OfSeconds(30);
+        private static readonly Duration DefaultIdleHeartbeat = Duration.Zero;
 
         public DeliverPolicy DeliverPolicy { get; }
         public AckPolicy AckPolicy { get; }
         public ReplayPolicy ReplayPolicy { get; }
-        public string Durable { get; internal set; }
-        public string DeliverSubject { get; internal set; }
+        public string Durable { get; }
+        public string DeliverSubject { get; }
         public ulong StartSeq { get; }
         public DateTime StartTime { get; }
         public Duration AckWait { get; }
@@ -81,7 +83,7 @@ namespace NATS.Client.JetStream
             FlowControl = flowControl;
         }
 
-        internal JSONNode ToJsonNode()
+        internal override JSONNode ToJsonNode()
         {
             return new JSONObject
             {
@@ -101,11 +103,6 @@ namespace NATS.Client.JetStream
                 [ApiConstants.IdleHeartbeat] = IdleHeartbeat.Nanos,
                 [ApiConstants.FlowControl] = FlowControl,
             };
-        }
-
-        internal byte[] Serialize()
-        {
-            return Encoding.ASCII.GetBytes(ToJsonNode().ToString());
         }
 
         public static ConsumerConfigurationBuilder Builder()
@@ -237,7 +234,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithAckWait(Duration timeout)
             {
-                _ackWait = Validator.EnsureNotNullAndNotLessThanMin(timeout, DefaultAckWait, 1); 
+                _ackWait = Validator.EnsureNotNullAndNotLessThanMin(timeout, DefaultAckWait, MinAckWaitMillis); 
                 return this;
             }
 
@@ -248,7 +245,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithAckWait(long timeoutMillis)
             {
-                _ackWait = Validator.EnsureDurationNotLessThanMin(timeoutMillis, DefaultAckWait, 1);
+                _ackWait = Validator.EnsureDurationNotLessThanMin(timeoutMillis, DefaultAckWait, MinAckWaitMillis);
                 return this;
             }
 
@@ -325,7 +322,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithIdleHeartbeat(Duration idleHeartbeat)
             {
-                _idleHeartbeat = Validator.EnsureNotNullAndNotLessThanMin(idleHeartbeat, Duration.Zero, 0); 
+                _idleHeartbeat = Validator.EnsureNotNullAndNotLessThanMin(idleHeartbeat, DefaultIdleHeartbeat, MinIdleHeartbeatMillis); 
                 return this;
             }
 
@@ -336,7 +333,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithIdleHeartbeat(long idleHeartbeatMillis)
             {
-                _idleHeartbeat = Validator.EnsureDurationNotLessThanMin(idleHeartbeatMillis, Duration.Zero, 0); 
+                _idleHeartbeat = Validator.EnsureDurationNotLessThanMin(idleHeartbeatMillis, DefaultIdleHeartbeat, MinIdleHeartbeatMillis); 
                 return this;
             }
 

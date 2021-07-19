@@ -52,6 +52,10 @@ namespace IntegrationTests
         public const int ConnectionIpV6Suite = 11519; //1pc
         public const int JetStreamSuite = 11520; //1pc
         public const int JetStreamManagementSuite = 11521; //1pc
+        public const int JetStreamPublishSuite = 11522; //1pc
+        public const int JetStreamPushAsyncSuite = 11523; //1pc
+        public const int JetStreamPushSyncSuite = 11524; //1pc
+        public const int JetStreamPullSuite = 11525; //1pc
     }
 
     public abstract class SuiteContext
@@ -286,6 +290,26 @@ namespace IntegrationTests
     public class JetStreamManagementSuiteContext : OneServerSuiteContext
     {
         public JetStreamManagementSuiteContext() : base(TestSeedPorts.JetStreamManagementSuite) {}
+    }
+
+    public class JetStreamPublishSuiteContext : OneServerSuiteContext
+    {
+        public JetStreamPublishSuiteContext() : base(TestSeedPorts.JetStreamPublishSuite) {}
+    }
+
+    public class JetStreamPushAsyncSuiteContext : OneServerSuiteContext
+    {
+        public JetStreamPushAsyncSuiteContext() : base(TestSeedPorts.JetStreamPushAsyncSuite) {}
+    }
+
+    public class JetStreamPushSyncSuiteContext : OneServerSuiteContext
+    {
+        public JetStreamPushSyncSuiteContext() : base(TestSeedPorts.JetStreamPushSyncSuite) {}
+    }
+
+    public class JetStreamPullSuiteContext : OneServerSuiteContext
+    {
+        public JetStreamPullSuiteContext() : base(TestSeedPorts.JetStreamPullSuite) {}
     }
 
     public class OneServerSuiteContext : SuiteContext
