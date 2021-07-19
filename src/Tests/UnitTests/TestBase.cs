@@ -101,7 +101,7 @@ namespace UnitTests
         }
 
         public static byte[] DataBytes(int seq) {
-            return Encoding.ASCII.GetBytes(DATA + "-" + seq);
+            return Encoding.ASCII.GetBytes(Data(seq));
         }
     }
 }

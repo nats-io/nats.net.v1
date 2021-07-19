@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using NATS.Client.Internals;
 using static NATS.Client.Connection;
@@ -88,6 +89,24 @@ namespace NATS.Client.JetStream
             return ProcessPublishResponse(Conn.Request(msg), options);
         }
 
+        private Task<PublishAck> PublishAsyncInternal(string subject, byte[] data, MsgHeader hdr, PublishOptions options)
+        {
+            MsgHeader merged = MergePublishOptions(hdr, options);
+            Msg msg = new Msg(subject, null, merged, data);
+
+            if (JetStreamOptions.IsPublishNoAck)
+            {
+                Conn.Publish(msg);
+                return null;
+            }
+
+            Duration timeout = options == null ? JetStreamOptions.RequestTimeout : options.StreamTimeout;
+
+            return Conn.RequestAsync(msg, timeout.Millis)
+                .ContinueWith(async antecedent => ProcessPublishResponse(antecedent.Result, options), CancellationToken.None)
+                .Unwrap();
+        }
+
         public PublishAck Publish(string subject, byte[] data) 
             => PublishSyncInternal(subject, data, null, null);
 
@@ -101,24 +120,16 @@ namespace NATS.Client.JetStream
             => PublishSyncInternal(msg.Subject, msg.Data, msg.Header, publishOptions);
 
         public Task<PublishAck> PublishAsync(string subject, byte[] data)
-        {
-            throw new NotImplementedException();
-        }
+            => PublishAsyncInternal(subject, data, null, null);
 
         public Task<PublishAck> PublishAsync(string subject, byte[] data, PublishOptions publishOptions)
-        {
-            throw new NotImplementedException();
-        }
+            => PublishAsyncInternal(subject, data, null, publishOptions);
 
-        public Task<PublishAck> PublishAsync(Msg message)
-        {
-            throw new NotImplementedException();
-        }
+        public Task<PublishAck> PublishAsync(Msg msg)
+            => PublishAsyncInternal(msg.Subject, msg.Data, msg.Header, null);
 
-        public Task<PublishAck> PublishAsync(Msg message, PublishOptions publishOptions)
-        {
-            throw new NotImplementedException();
-        }
+        public Task<PublishAck> PublishAsync(Msg msg, PublishOptions publishOptions)
+            => PublishAsyncInternal(msg.Subject, msg.Data, msg.Header, publishOptions);
         
         // ----------------------------------------------------------------------------------------------------
         // Subscribe

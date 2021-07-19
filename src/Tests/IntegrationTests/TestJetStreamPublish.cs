@@ -11,10 +11,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 using NATS.Client;
 using NATS.Client.JetStream;
 using Xunit;
+using Xunit.Abstractions;
 using static UnitTests.TestBase;
 using static IntegrationTests.JetStreamTestBase;
 
@@ -22,7 +26,13 @@ namespace IntegrationTests
 {
     public class TestJetStreamPublish : TestSuite<JetStreamPublishSuiteContext>
     {
-        public TestJetStreamPublish(JetStreamPublishSuiteContext context) : base(context) {}
+        private readonly ITestOutputHelper output;
+
+        // public TestJetStreamPublish(JetStreamPublishSuiteContext context) : base(context) {}
+        public TestJetStreamPublish(ITestOutputHelper output, JetStreamPublishSuiteContext context) : base(context)
+        {
+            this.output = output;
+        }
 
         [Fact]
         public void TestJetStreamSimplePublish()
@@ -103,7 +113,80 @@ namespace IntegrationTests
         [Fact]
         public void TestPublishAsyncVarieties()
         {
-            // TODO
+            Context.RunInJsServer(c =>
+            {
+                CreateTestStream(c);
+                IJetStream js = c.CreateJetStreamContext();
+
+                IList<Task<PublishAck>> tasks = new List<Task<PublishAck>>();
+                
+                tasks.Add(js.PublishAsync(SUBJECT, DataBytes(1)));
+
+                Msg msg = new Msg(SUBJECT, DataBytes(2));
+                tasks.Add(js.PublishAsync(msg));
+
+                PublishOptions po = PublishOptions.Builder().Build();
+                tasks.Add(js.PublishAsync(SUBJECT, DataBytes(3), po));
+
+                msg = new Msg(SUBJECT, DataBytes(4));
+                tasks.Add(js.PublishAsync(msg, po));
+
+                IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(SUBJECT);
+                IList<Msg> list = ReadMessagesAck(sub);
+                AssertContainsMessagesExact(list, 4);
+
+                IList<ulong> seqnos = new List<ulong> {1, 2, 3, 4};
+                foreach (var task in tasks)
+                {
+                    AssertContainsPublishAck(task.Result, seqnos);
+                }
+
+                AssertTaskException(js.PublishAsync(Subject(999), null));
+                AssertTaskException(js.PublishAsync(new Msg(Subject(999))));
+
+                PublishOptions pox = PublishOptions.Builder().WithExpectedLastMsgId(MessageId(999)).Build();
+                AssertTaskException(js.PublishAsync(Subject(999), null, pox));
+                AssertTaskException(js.PublishAsync(new Msg(Subject(999)), pox));
+                
+            });
+        }
+
+        private void AssertTaskException(Task<PublishAck> task)
+        {
+            try
+            {
+                var r = task.Result;
+            }
+            catch (Exception e)
+            {
+                Assert.NotNull(e.InnerException?.InnerException as NATSNoRespondersException);
+            }
+        }
+        
+        private void AssertContainsPublishAck(PublishAck pa, IList<ulong> seqnos) {
+            Assert.Equal(STREAM, pa.Stream);
+            Assert.False(pa.Duplicate);
+            Assert.True(seqnos.Contains(pa.Seq));
+            seqnos.Remove(pa.Seq);
+        }
+
+        private void AssertContainsMessagesExact(IList<Msg> list, int count)
+        {
+            Assert.Equal(4, list.Count);
+            for (int x = 1; x <= count; x++)
+            {
+                bool found = false;
+                string data = Data(x);
+                foreach (var msg in list)
+                {
+                    if (data.Equals(Encoding.ASCII.GetString(msg.Data)))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                Assert.True(found);
+            }
         }
 
         [Fact]

@@ -1,4 +1,6 @@
-﻿namespace NATS.Client.Internals
+﻿using System;
+
+namespace NATS.Client.Internals
 {
     public sealed class Duration
     {
@@ -18,7 +20,7 @@
         /// <summary>
         /// Gets the value of the duration in milliseconds, truncating any nano portion
         /// </summary>
-        public long Millis { get => Nanos / NanosPerMilli; }
+        public int Millis => Convert.ToInt32(Nanos / NanosPerMilli);
 
         private Duration(long nanos)
         {
