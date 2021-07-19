@@ -66,9 +66,9 @@ namespace IntegrationTests
             return js.Publish(new Msg(SUBJECT, DataBytes()));
         }
 
-        public static List<Msg> ReadMessagesAck(ISyncSubscription sub)
+        public static IList<Msg> ReadMessagesAck(ISyncSubscription sub)
         {
-            List<Msg> messages = new List<Msg>();
+            IList<Msg> messages = new List<Msg>();
             try
             {
                 Msg msg = sub.NextMessage(DefaultTimeout);
@@ -93,7 +93,7 @@ namespace IntegrationTests
             Assert.Empty(ReadMessagesAck(sub));
         } 
         
-        public static void AckAll(List<Msg> messages)
+        public static void AckAll(IList<Msg> messages)
         {
             foreach (Msg m in messages)
             {
@@ -134,7 +134,7 @@ namespace IntegrationTests
             Assert.Equal(isPullMode, sub.IsPullMode());
         }
 
-        public static void AssertSameMessages(List<Msg> l1, List<Msg> l2) {
+        public static void AssertSameMessages(IList<Msg> l1, IList<Msg> l2) {
             Assert.Equal(l1.Count, l2.Count);
             for (int x = 0; x < l1.Count; x++)
             {
@@ -144,7 +144,7 @@ namespace IntegrationTests
             }
         }
 
-        public static void AssertAllJetStream(List<Msg> messages) {
+        public static void AssertAllJetStream(IList<Msg> messages) {
             foreach (Msg m in messages) {
                 AssertIsJetStream(m);
             }
@@ -155,7 +155,7 @@ namespace IntegrationTests
             Assert.False(m.HasStatus);
         }
 
-        public static void AssertLastIsStatus(List<Msg> messages, int code) {
+        public static void AssertLastIsStatus(IList<Msg> messages, int code) {
             int lastIndex = messages.Count - 1;
             for (int x = 0; x < lastIndex; x++) {
                 Msg m = messages[x];
@@ -164,7 +164,7 @@ namespace IntegrationTests
             AssertIsStatus(messages[lastIndex], code);
         }
 
-        public static void AssertStarts408(List<Msg> messages, int count408, int expectedJs) {
+        public static void AssertStarts408(IList<Msg> messages, int count408, int expectedJs) {
             for (int x = 0; x < count408; x++) {
                 AssertIsStatus(messages[x], 408);
             }

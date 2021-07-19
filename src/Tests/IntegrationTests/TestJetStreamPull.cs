@@ -53,7 +53,7 @@ namespace IntegrationTests
                 AssertSubscription(sub, STREAM, DURABLE, null, true);
                 c.Flush(DefaultTimeout); // flush outgoing communication with/to the server
                 
-                List<Msg> messages = sub.Fetch(10, 3000);
+                IList<Msg> messages = sub.Fetch(10, 3000);
                 ValidateRead(0, messages.Count);
                 AckAll(messages);
 
@@ -123,7 +123,7 @@ namespace IntegrationTests
                 sub.Pull(10);
 
                 // read what is available, expect 4
-                List<Msg> messages = ReadMessagesAck(sub);
+                IList<Msg> messages = ReadMessagesAck(sub);
                 int total = messages.Count;
                 ValidateRedAndTotal(4, messages.Count, 4, total);
 
@@ -205,7 +205,7 @@ namespace IntegrationTests
                 // no wait, batch size 10, there are 10 messages, we will read them all and not trip nowait
                 JsPublish(js, SUBJECT, "A", 10);
                 sub.PullNoWait(10);
-                List<Msg> messages = ReadMessagesAck(sub);
+                IList<Msg> messages = ReadMessagesAck(sub);
                 Assert.Equal(10, messages.Count);
                 AssertAllJetStream(messages);
 
@@ -270,7 +270,7 @@ namespace IntegrationTests
                 // publish 10 messages
                 JsPublish(js, SUBJECT, "A", 5);
                 sub.PullExpiresIn(10, expires);
-                List<Msg> messages = ReadMessagesAck(sub);
+                IList<Msg> messages = ReadMessagesAck(sub);
                 Assert.Equal(5, messages.Count);
                 AssertAllJetStream(messages);
                 Thread.Sleep(expires); // make sure the pull actually expires

@@ -93,6 +93,6 @@ namespace NATS.Client.JetStream
         /// <param name="batchSize">the size of the batch</param>
         /// <param name="maxWaitMillis">The maximum time to wait for the first message.</param>
         /// <returns></returns>
-        List<Msg> Fetch(int batchSize, int maxWaitMillis);
+        IList<Msg> Fetch(int batchSize, int maxWaitMillis);
     }
 }

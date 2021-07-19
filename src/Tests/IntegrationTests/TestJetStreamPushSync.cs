@@ -54,12 +54,12 @@ namespace IntegrationTests
                 AssertSubscription(sub, STREAM, null, deliverSubject, false);
                 c.Flush(DefaultTimeout); // flush outgoing communication with/to the server
 
-                List<Msg> messages1 = ReadMessagesAck(sub);
+                IList<Msg> messages1 = ReadMessagesAck(sub);
                 int total = messages1.Count;
                 ValidateRedAndTotal(5, messages1.Count, 5, total);
 
                 // read again, nothing should be there
-                List<Msg> messages0 = ReadMessagesAck(sub);
+                IList<Msg> messages0 = ReadMessagesAck(sub);
                 total += messages0.Count;
                 ValidateRedAndTotal(0, messages0.Count, 5, total);
 
@@ -68,7 +68,7 @@ namespace IntegrationTests
                 c.Flush(DefaultTimeout); // flush outgoing communication with/to the server
 
                 // read what is available, same messages
-                List<Msg> messages2 = ReadMessagesAck(sub);
+                IList<Msg> messages2 = ReadMessagesAck(sub);
                 total = messages2.Count;
                 ValidateRedAndTotal(5, messages2.Count, 5, total);
 
@@ -113,7 +113,7 @@ namespace IntegrationTests
                 c.Flush(DefaultTimeout); // flush outgoing communication with/to the server
 
                 // read what is available
-                List<Msg> messages = ReadMessagesAck(sub);
+                IList<Msg> messages = ReadMessagesAck(sub);
                 int total = messages.Count;
                 ValidateRedAndTotal(5, messages.Count, 5, total);
 

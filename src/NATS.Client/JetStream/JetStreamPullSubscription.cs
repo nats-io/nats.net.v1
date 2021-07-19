@@ -93,9 +93,9 @@ namespace NATS.Client.JetStream
             return JsonUtils.Serialize(jso);
         }
 
-        public List<Msg> Fetch(int batchSize, int maxWaitMillis)
+        public IList<Msg> Fetch(int batchSize, int maxWaitMillis)
         {
-            List<Msg> messages = new List<Msg>(batchSize);
+            IList<Msg> messages = new List<Msg>(batchSize);
 
             PullNoWait(batchSize);
             Read(batchSize, maxWaitMillis, messages);
@@ -109,7 +109,7 @@ namespace NATS.Client.JetStream
 
         private const int SubsequentWaits = 500;
 
-        private void Read(int batchSize, int maxWaitMillis, List<Msg> messages) {
+        private void Read(int batchSize, int maxWaitMillis, IList<Msg> messages) {
             try
             {
                 Msg msg = NextMessage(maxWaitMillis);
