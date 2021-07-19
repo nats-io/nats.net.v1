@@ -93,26 +93,26 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="streamName">The name of the stream.</param>
         /// <returns>An array of consumer names.</returns>
-        List<string> GetConsumerNames(string streamName);
+        IList<string> GetConsumerNames(string streamName);
 
         /// <summary>
         /// Get consumer information for all consumers on a stream.
         /// </summary>
         /// <param name="streamName">The name of the stream.</param>
         /// <returns>An array of consumer information objects.</returns>
-        List<ConsumerInfo> GetConsumers(string streamName);
+        IList<ConsumerInfo> GetConsumers(string streamName);
 
         /// <summary>
         /// Gets the names of all streams.
         /// </summary>
         /// <returns>An array of stream names.</returns>
-        List<string> GetStreamNames();
+        IList<string> GetStreamNames();
 
         /// <summary>
         /// Gets stream information about all streams.
         /// </summary>
         /// <returns>An array of stream information objects.</returns>
-        List<StreamInfo> GetStreams();
+        IList<StreamInfo> GetStreams();
 
 
         /// <summary>

@@ -26,12 +26,21 @@ namespace IntegrationTests
 
         public static void CreateMemoryStream(IJetStreamManagement jsm, string streamName, params string[] subjects)
         {
-            var sc = StreamConfiguration.Builder()
+            try
+            {
+                jsm.DeleteStream(streamName); // since the server is re-used, we want a fresh stream
+            }
+            catch (NATSJetStreamException)
+            {
+                // it's might not have existed
+            }
+
+            jsm.AddStream(StreamConfiguration.Builder()
                 .WithName(streamName)
                 .WithStorageType(StorageType.Memory)
                 .WithSubjects(subjects)
-                .Build();
-            jsm.AddStream(sc);
+                .Build()
+            );
         }
 
         // ----------------------------------------------------------------------------------------------------

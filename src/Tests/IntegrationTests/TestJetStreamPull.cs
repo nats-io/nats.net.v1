@@ -39,7 +39,6 @@ namespace IntegrationTests
                 // Create our JetStream context to receive JetStream messages.
                 IJetStream js = c.CreateJetStreamContext();
 
-
                 ConsumerConfiguration cc = ConsumerConfiguration.Builder()
                     .WithAckWait(2500)
                     .Build();

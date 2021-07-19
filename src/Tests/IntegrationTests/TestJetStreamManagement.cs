@@ -255,7 +255,7 @@ namespace IntegrationTests
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
                 CreateMemoryStream(jsm, STREAM, Subject(0), Subject(1));
                 
-                List<ConsumerInfo> list = jsm.GetConsumers(STREAM);
+                IList<ConsumerInfo> list = jsm.GetConsumers(STREAM);
                 Assert.Empty(list);
 
                 // Assert.Throws<ArgumentException>(() => 
@@ -281,7 +281,7 @@ namespace IntegrationTests
                 Assert.Equal(Durable(1), ci.Configuration.Durable);
                 Assert.Equal(Deliver(1), ci.Configuration.DeliverSubject);
                 
-                List<String> consumers = jsm.GetConsumerNames(STREAM);
+                IList<String> consumers = jsm.GetConsumerNames(STREAM);
                 Assert.Equal(2, consumers.Count);
                 Assert.True(jsm.DeleteConsumer(STREAM, cc1.Durable));
                 consumers = jsm.GetConsumerNames(STREAM);
@@ -353,7 +353,7 @@ namespace IntegrationTests
             Assert.Equal(cc.MaxDeliver, cicc.MaxDeliver);
             Assert.Equal(cc.DeliverPolicy, cicc.DeliverPolicy);
 
-            List<String> consumers = jsm.GetConsumerNames(STREAM);
+            IList<String> consumers = jsm.GetConsumerNames(STREAM);
             Assert.Single(consumers);
             Assert.Equal(cc.Durable, consumers[0]);
         }
@@ -421,11 +421,11 @@ namespace IntegrationTests
 
                 AddConsumers(jsm, STREAM, 600, "A", null); // getConsumers pages at 256
 
-                List<ConsumerInfo> list = jsm.GetConsumers(STREAM);
+                IList<ConsumerInfo> list = jsm.GetConsumers(STREAM);
                 Assert.Equal(600, list.Count);
 
                 AddConsumers(jsm, STREAM, 500, "B", null); // getConsumerNames pages at 1024
-                List<string> names = jsm.GetConsumerNames(STREAM);
+                IList<string> names = jsm.GetConsumerNames(STREAM);
                 Assert.Equal(1100, names.Count);
             });
         }
@@ -453,11 +453,11 @@ namespace IntegrationTests
 
                 AddStreams(jsm, 600, 0); // getStreams pages at 256
 
-                List<StreamInfo> list = jsm.GetStreams();
+                IList<StreamInfo> list = jsm.GetStreams();
                 Assert.Equal(600, list.Count);
 
                 AddStreams(jsm, 500, 600); // getStreamNames pages at 1024
-                List<string> names = jsm.GetStreamNames();
+                IList<string> names = jsm.GetStreamNames();
                 Assert.Equal(1100, names.Count);
             });
         }

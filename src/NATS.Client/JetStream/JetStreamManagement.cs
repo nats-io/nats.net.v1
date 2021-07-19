@@ -94,7 +94,7 @@ namespace NATS.Client.JetStream
             return GetConsumerInfoInternal(streamName, consumer);
         }
 
-        public List<string> GetConsumerNames(string streamName)
+        public IList<string> GetConsumerNames(string streamName)
         {
             ConsumerNamesReader cnr = new ConsumerNamesReader();
             while (cnr.HasMore()) {
@@ -105,7 +105,7 @@ namespace NATS.Client.JetStream
             return cnr.Strings;
         }
 
-        public List<ConsumerInfo> GetConsumers(string streamName)
+        public IList<ConsumerInfo> GetConsumers(string streamName)
         {
             ConsumerListReader clr = new ConsumerListReader();
             while (clr.HasMore()) {
@@ -116,7 +116,7 @@ namespace NATS.Client.JetStream
             return clr.Consumers;
         }
 
-        public List<string> GetStreamNames()
+        public IList<string> GetStreamNames()
         {
             StreamNamesReader snr = new StreamNamesReader();
             while (snr.HasMore()) {
@@ -126,7 +126,7 @@ namespace NATS.Client.JetStream
             return snr.Strings;
         }
 
-        public List<StreamInfo> GetStreams()
+        public IList<StreamInfo> GetStreams()
         {
             StreamListReader slr = new StreamListReader();
             while (slr.HasMore()) {
