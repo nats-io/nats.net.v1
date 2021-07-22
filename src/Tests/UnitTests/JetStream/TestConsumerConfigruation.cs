@@ -55,7 +55,7 @@ namespace UnitTests.JetStream
             Assert.Equal(6666, c.MaxAckPending);
             Assert.Equal(4242, c.RateLimit);
             Assert.Equal(ReplayPolicy.Original, c.ReplayPolicy);
-            Assert.Equal(2001, c.StartSeq);
+            Assert.Equal(2001ul, c.StartSeq);
             Assert.Equal(dt, c.StartTime);
             Assert.True(c.FlowControl);
 
@@ -75,7 +75,7 @@ namespace UnitTests.JetStream
             Assert.Equal(5555, c.MaxDeliver);
             Assert.Equal(4242, c.RateLimit);
             Assert.Equal(ReplayPolicy.Original, c.ReplayPolicy);
-            Assert.Equal(2001, c.StartSeq);
+            Assert.Equal(2001ul, c.StartSeq);
             Assert.Equal(dt, c.StartTime);
             Assert.True(c.FlowControl);
         }
@@ -100,6 +100,7 @@ namespace UnitTests.JetStream
             Assert.Equal(42, c.MaxAckPending);
             Assert.Equal("sample_freq-value", c.SampleFrequency);
             Assert.True(c.FlowControl);
+            Assert.Equal(128, c.MaxPullWaiting);
         }
     }
 }

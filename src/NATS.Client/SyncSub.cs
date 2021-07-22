@@ -20,7 +20,7 @@ namespace NATS.Client
     /// to <see cref="NextMessage()"/> and <see cref="NextMessage(int)"/>. This class should
     /// not be used directly.
     /// </summary>
-    public sealed class SyncSubscription : Subscription, ISyncSubscription, ISubscription 
+    public class SyncSubscription : Subscription, ISyncSubscription, ISubscription 
     {
         internal SyncSubscription(Connection conn, string subject, string queue)
             : base(conn, subject, queue)

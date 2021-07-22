@@ -21,6 +21,7 @@ namespace NATS.Client.JetStream
         public const int NOT_SET = -1;
 
         public int Code { get; }
+        public int ApiErrorCode { get; }
         public string Desc { get; }
         private JSONNode _node;
         
@@ -33,18 +34,28 @@ namespace NATS.Client.JetStream
         {
             _node = node;
             Code = JsonUtils.AsIntOrMinus1(node, ApiConstants.Code);
-            Desc = node[ApiConstants.Description];
+            ApiErrorCode = JsonUtils.AsIntOrMinus1(node, ApiConstants.ErrCode);
+            string temp = node[ApiConstants.Description];
+            Desc = temp ?? "Unknown JetStream Error";
         }
 
         public override string ToString()
         {
-            if (string.IsNullOrEmpty(Desc)) {
-                return Code == NOT_SET
-                    ? "Unknown JetStream Error: " + _node.ToString()
-                    : "Unknown JetStream Error (" + Code + ")";
+            if (Code == NOT_SET) 
+            {
+                if (ApiErrorCode == NOT_SET) 
+                {
+                    return Desc;
+                }
+                return $"{Desc} [{ApiErrorCode}]";
             }
 
-            return Desc + " (" + Code + ")";
+            if (ApiErrorCode == NOT_SET) 
+            {
+                return $"{Desc} ({Code})";
+            }
+
+            return $"{Desc} ({Code}) [{ApiErrorCode}]";
         }
     }
 }

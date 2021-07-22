@@ -28,7 +28,7 @@ namespace NATS.Client.JetStream
             Name = peerInfoNode[ApiConstants.Name].Value;
             Current = peerInfoNode[ApiConstants.Current].AsBool;
             Offline = peerInfoNode[ApiConstants.Offline].AsBool;
-            Active = Duration.OfNanos(peerInfoNode[ApiConstants.Active].AsLong);
+            Active = JsonUtils.AsDuration(peerInfoNode, ApiConstants.Active, Duration.Zero);
             Lag = peerInfoNode[ApiConstants.Lag].AsLong;
         }
     }

@@ -16,7 +16,7 @@ namespace NATS.Client.JetStream
     public sealed class PublishAck : ApiResponse
     {
         public string Stream { get; private set; }
-        public long Seq { get; private set; }
+        public ulong Seq { get; private set; }
         public bool Duplicate { get; private set; }
 
         public PublishAck(Msg msg) : base(msg)
@@ -39,7 +39,7 @@ namespace NATS.Client.JetStream
                 throw new NATSException("Invalid JetStream ack.");
             }
 
-            Seq = JsonNode[ApiConstants.Seq].AsLong;
+            Seq = JsonNode[ApiConstants.Seq].AsUlong;
             if (Seq == 0)
             {
                 // TODO is this the correct exception?
@@ -47,6 +47,11 @@ namespace NATS.Client.JetStream
             }
 
             Duplicate = JsonNode[ApiConstants.Duplicate].AsBool;
+        }
+
+        public override string ToString()
+        {
+            return $"Stream: {Stream}, Seq: {Seq}, Duplicate: {Duplicate}";
         }
     }
 }

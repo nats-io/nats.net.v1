@@ -2158,7 +2158,7 @@ namespace NATS.Client
         // appropriate channel for processing. All subscribers have their
         // their own channel. If the channel is full, the connection is
         // considered a slow subscriber.
-        internal void processMsg(byte[] msg, long length)
+        internal void processMsg(byte[] msgBytes, long length)
         {
             bool maxReached = false;
             Subscription s;
@@ -2186,7 +2186,11 @@ namespace NATS.Client
                     maxReached = s.tallyMessage(length);
                     if (maxReached == false)
                     {
-                        s.addMessage(new Msg(msgArgs, s, msg, length), opts.subChanLen);
+                        Msg msg = JsPrefixManager.HasPrefix(msgArgs.reply)
+                            ? new JetStreamMsg(this, msgArgs, s, msgBytes, length)
+                            : new Msg(msgArgs, s, msgBytes, length);
+                        
+                        s.addMessage(msg, opts.subChanLen);
                     } // maxreached == false
 
                 } // lock s.mu
@@ -2753,9 +2757,7 @@ namespace NATS.Client
 
         private static bool IsNoRespondersMsg(Msg m)
         {
-            return m != null && m.HasHeaders &&
-                MsgHeader.NoResponders.Equals(m.Header[MsgHeader.Status]) &&
-                m.Data.Length == 0;
+            return m != null && m.HasStatus && m.Status.IsNoResponders();
         }
 
         private void RequestResponseHandler(object sender, MsgHandlerEventArgs args)
@@ -2846,7 +2848,7 @@ namespace NATS.Client
             return request;
         }
 
-        private Msg requestSync(string subject, byte[] headers, byte[] data, int offset, int count, int timeout)
+        internal Msg requestSync(string subject, byte[] headers, byte[] data, int offset, int count, int timeout)
         {
             if (string.IsNullOrWhiteSpace(subject))
                 throw new NATSBadSubscriptionException();
@@ -3677,8 +3679,11 @@ namespace NATS.Client
             }
         }
 
+        internal delegate SyncSubscription CreateSyncSubscriptionDelegate(Connection conn, string subject, string queue);
+        internal delegate AsyncSubscription CreateAsyncSubscriptionDelegate(Connection conn, string subject, string queue);
+
         internal AsyncSubscription subscribeAsync(string subject, string queue,
-            EventHandler<MsgHandlerEventArgs> handler)
+            EventHandler<MsgHandlerEventArgs> handler, CreateAsyncSubscriptionDelegate createAsyncSubscriptionDelegate = null)
         {
             if (!Subscription.IsValidSubject(subject))
             {
@@ -3700,7 +3705,9 @@ namespace NATS.Client
 
                 enableSubChannelPooling();
 
-                s = new AsyncSubscription(this, subject, queue);
+                s = createAsyncSubscriptionDelegate == null 
+                    ? new AsyncSubscription(this, subject, queue)
+                    : createAsyncSubscriptionDelegate(this, subject, queue);
 
                 addSubscription(s);
 
@@ -3713,10 +3720,11 @@ namespace NATS.Client
 
             return s;
         }
-
+        
         // subscribe is the internal subscribe 
         // function that indicates interest in a subject.
-        private SyncSubscription subscribeSync(string subject, string queue)
+        internal SyncSubscription subscribeSync(string subject, string queue, 
+            CreateSyncSubscriptionDelegate createSyncSubscriptionDelegate = null)
         {
             if (!Subscription.IsValidSubject(subject))
             {
@@ -3736,7 +3744,9 @@ namespace NATS.Client
                 if (IsDraining())
                     throw new NATSConnectionDrainingException();
 
-                s = new SyncSubscription(this, subject, queue);
+                s = createSyncSubscriptionDelegate == null 
+                    ? new SyncSubscription(this, subject, queue) 
+                    : createSyncSubscriptionDelegate(this, subject, queue);
 
                 addSubscription(s);
 
@@ -4666,6 +4676,20 @@ namespace NATS.Client
         {
             Dispose(true);
             GC.SuppressFinalize(this);
+        }
+
+        #endregion
+
+        #region JetStream
+
+        public IJetStream CreateJetStreamContext(JetStreamOptions options = null)
+        {
+            return new JetStream.JetStream(this, options);
+        }
+
+        public IJetStreamManagement CreateJetStreamManagementContext(JetStreamOptions options = null)
+        {
+            return new JetStream.JetStreamManagement(this, options);
         }
 
         #endregion

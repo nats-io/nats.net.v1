@@ -25,11 +25,11 @@ namespace UnitTests.JetStream
         public void TestPushAffirmative()
         {
             JetStreamOptions jso = JetStreamOptions.Builder().Build();
-            Assert.Equal(NatsJetStreamConstants.JsapiPrefix, jso.Prefix);
+            Assert.Equal(JetStreamConstants.JsapiPrefix, jso.Prefix);
             Assert.Equal(Duration.OfMillis(Defaults.Timeout), jso.RequestTimeout);
 
             jso = JetStreamOptions.Builder(jso).Build();
-            Assert.Equal(NatsJetStreamConstants.JsapiPrefix, jso.Prefix);
+            Assert.Equal(JetStreamConstants.JsapiPrefix, jso.Prefix);
             Assert.Equal(Duration.OfMillis(Defaults.Timeout), jso.RequestTimeout);
 
             jso = JetStreamOptions.Builder()

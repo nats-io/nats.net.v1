@@ -15,21 +15,8 @@ using NATS.Client.Internals;
 
 namespace NATS.Client.JetStream
 {
-    public sealed class PushSubscribeOptions
+    public sealed class PushSubscribeOptions : SubscribeOptions
     {
-        private readonly string _stream;
-        private readonly ConsumerConfiguration _consumerConfiguration;
-
-        /// <summary>
-        /// Gets the stream name
-        /// </summary>
-        public string Stream { get => _stream; }
-
-        /// <summary>
-        /// Gets the ConsumerConfiguration
-        /// </summary>
-        public ConsumerConfiguration ConsumerConfiguration { get => _consumerConfiguration; }
-        
         /// <summary>
         /// Gets the durable name
         /// </summary>
@@ -40,11 +27,9 @@ namespace NATS.Client.JetStream
         /// </summary>
         public string DeliverSubject => ConsumerConfiguration.DeliverSubject;
 
-        private PushSubscribeOptions(string stream, ConsumerConfiguration consumerConfiguration)
-        {
-            _stream = stream;
-            _consumerConfiguration = consumerConfiguration;
-        }
+        // Validation is done by the builder Build()
+        private PushSubscribeOptions(string stream, bool direct, ConsumerConfiguration config) 
+            : base(stream, direct, config) {}
 
         /// <summary>
         /// Create PushSubscribeOptions where you are binding to
@@ -54,6 +39,17 @@ namespace NATS.Client.JetStream
         /// <returns>the PushSubscribeOptions</returns>
         public static PushSubscribeOptions Bind(string stream) {
             return new PushSubscribeOptionsBuilder().WithStream(stream).Build();
+        }
+
+        /// <summary>
+        /// Create PushSubscribeOptions where you are binding to
+        /// a specific stream, specific durable and are using direct mode
+        /// </summary>
+        /// <param name="stream">the stream name to bind to</param>
+        /// <param name="durable">the durable name</param>
+        /// <returns>the PushSubscribeOptions</returns>
+        public static PushSubscribeOptions DirectBind(string stream, string durable) {
+            return new PushSubscribeOptionsBuilder().WithStream(stream).WithDurable(durable).Direct().Build();
         }
 
         /// <summary>
@@ -68,19 +64,41 @@ namespace NATS.Client.JetStream
 
         public sealed class PushSubscribeOptionsBuilder
         {
-            private string _stream;
             private string _durable;
-            private ConsumerConfiguration _consumerConfig;
             private string _deliverSubject;
+            private string _stream;
+            private bool _direct;
+            private ConsumerConfiguration _config;
 
             /// <summary>
             /// Set the stream name
             /// </summary>
-            /// <param name="stream">the stream value</param>
-            /// <returns>The PushSubscribeOptionsBuilder</returns>
+            /// <param name="stream">the stream name</param>
+            /// <returns>The builder</returns>
             public PushSubscribeOptionsBuilder WithStream(string stream)
             {
                 _stream = stream;
+                return this;
+            }
+
+            /// <summary>
+            /// Set as a direct subscribe
+            /// </summary>
+            /// <returns>The builder</returns>
+            public PushSubscribeOptionsBuilder Direct()
+            {
+                _direct = true;
+                return this;
+            }
+
+            /// <summary>
+            /// Set the ConsumerConfiguration
+            /// </summary>
+            /// <param name="consumerConfiguration">the ConsumerConfiguration object</param>
+            /// <returns>The builder</returns>
+            public PushSubscribeOptionsBuilder WithConfiguration(ConsumerConfiguration configuration)
+            {
+                _config = configuration;
                 return this;
             }
 
@@ -107,34 +125,25 @@ namespace NATS.Client.JetStream
             }
 
             /// <summary>
-            /// Set the ConsumerConfiguration
-            /// </summary>
-            /// <param name="consumerConfiguration">the ConsumerConfiguration object</param>
-            /// <returns>The PushSubscribeOptionsBuilder</returns>
-            public PushSubscribeOptionsBuilder WithConfiguration(ConsumerConfiguration consumerConfiguration)
-            {
-                _consumerConfig = consumerConfiguration;
-                return this;
-            }
-
-            /// <summary>
             /// Builds the PushSubscribeOptions
             /// </summary>
             /// <returns>The PushSubscribeOptions object.</returns>
-            public PushSubscribeOptions Build() {
+            public PushSubscribeOptions Build()
+            {
                 _stream = Validator.ValidateStreamName(_stream, false);
-
+                
                 _durable = Validator.ValidateDurable(_durable, false);
-                if (_durable == null && _consumerConfig != null) {
-                    _durable = Validator.ValidateDurable(_consumerConfig.Durable, false);
+                if (_durable == null && _config != null)
+                {
+                    _durable = Validator.ValidateDurable(_config.Durable, false);
                 }
 
-                _consumerConfig = ConsumerConfiguration.Builder(_consumerConfig)
+                _config = ConsumerConfiguration.Builder(_config)
                     .WithDurable(_durable)
-                    .WithDeliverSubject(Validator.EmptyAsNull(_deliverSubject))
+                    .WithDeliverSubject(_deliverSubject)
                     .Build();
 
-                return new PushSubscribeOptions(_stream, _consumerConfig);
+                return new PushSubscribeOptions(_stream, _direct, _config);
             }
         }
     }

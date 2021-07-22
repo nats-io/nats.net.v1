@@ -15,12 +15,22 @@ namespace NATS.Client.JetStream
 {
     public sealed class AccountStatistics : ApiResponse
     {
-        public long Memory { get; }
-        public long Storage { get; }
-        public long Streams { get; }
-        public long Consumers { get; }
+        public long Memory { get; private set; }
+        public long Storage { get; private set; }
+        public long Streams { get; private set; }
+        public long Consumers { get; private set; }
 
-        public AccountStatistics(string json) : base(json)
+        public AccountStatistics(Msg msg, bool throwOnError) : base(msg, throwOnError)
+        {
+            Init();
+        }
+
+        public AccountStatistics(string json, bool throwOnError) : base(json, throwOnError)
+        {
+            Init();
+        }
+
+        private void Init()
         {
             Memory = JsonNode[ApiConstants.Memory].AsLong;
             Storage = JsonNode[ApiConstants.Storage].AsLong;

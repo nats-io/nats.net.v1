@@ -43,6 +43,7 @@ namespace NATS.Client.JetStream
         internal const string Duplicate = "duplicate";
         internal const string DuplicateWindow = "duplicate_window";
         internal const string DurableName = "durable_name";
+        internal const string ErrCode = "err_code";
         internal const string Error = "error";
         internal const string External = "external";
         internal const string FilterSubject = "filter_subject";
@@ -72,6 +73,7 @@ namespace NATS.Client.JetStream
         internal const string MaxPayload = "max_payload";
         internal const string MaxStorage = "max_storage";
         internal const string MaxStreams = "max_streams";
+        internal const string MaxWaiting = "max_waiting";
         internal const string Memory = "memory";
         internal const string Message = "message";
         internal const string Messages = "messages";

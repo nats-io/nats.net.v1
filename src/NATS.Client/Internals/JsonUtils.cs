@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client.Internals
@@ -10,12 +11,25 @@ namespace NATS.Client.Internals
 
         internal static int AsIntOrMinus1(JSONNode node, String field)
         {
-            return node.GetValueOrDefault(field, MinusOne);
+            JSONNode possible = node[field];
+            return possible.IsNumber ? possible.AsInt : -1;
         }
 
         internal static long AsLongOrMinus1(JSONNode node, String field)
         {
-            return node.GetValueOrDefault(field, MinusOne);
+            JSONNode possible = node[field];
+            return possible.IsNumber ? possible.AsLong : -1;
+        }
+
+        internal static ulong AsUlongOrZero(JSONNode node, String field)
+        {
+            JSONNode possible = node[field];
+            return possible.IsNumber ? possible.AsUlong : 0;
+        }
+
+        internal static Duration AsDuration(JSONNode node, String field, Duration dflt)
+        {
+            return Duration.OfNanos(node.GetValueOrDefault(field, dflt.Nanos).AsLong);
         }
 
         internal static List<string> StringList(JSONNode node, String field)
@@ -53,17 +67,45 @@ namespace NATS.Client.Internals
         
         internal static string ToString(DateTime dt)
         {
+            // Assume MinValue is Unset
+            if (dt.Equals(DateTime.MinValue))
+                return null;
+
             return dt.ToUniversalTime().ToString("O");
         }
 
         internal static JSONArray ToArray(List<string> list)
         {
             JSONArray arr = new JSONArray();
+            if (list == null)
+            {
+                return arr;
+            }
             foreach (var s in list)
             {
                 arr.Add(null, new JSONString(s));
             }
             return arr;
+        }
+ 
+        public static byte[] SimpleMessageBody(string name, long value)
+        {
+            return Encoding.ASCII.GetBytes("{\"" + name + "\":" + value + "}");
+        }
+
+        public static byte[] SimpleMessageBody(string name, ulong value)
+        {
+            return Encoding.ASCII.GetBytes("{\"" + name + "\":" + value + "}");
+        }
+
+        public static byte[] SimpleMessageBody(string name, string value)
+        {
+            return Encoding.ASCII.GetBytes("{\"" + name + "\":\"" + value + "\"}");
+        }
+        
+        public static byte[] Serialize(JSONNode node)
+        {
+            return Encoding.ASCII.GetBytes(node.ToString());
         }
     }
 }

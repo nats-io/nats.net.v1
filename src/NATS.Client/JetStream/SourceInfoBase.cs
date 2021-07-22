@@ -27,7 +27,7 @@ namespace NATS.Client.JetStream
         {
             Name = sourceInfoBaseNode[ApiConstants.Name].Value;
             Lag = sourceInfoBaseNode[ApiConstants.Lag].AsLong;
-            Active = Duration.OfNanos(sourceInfoBaseNode[ApiConstants.Active].AsLong);
+            Active = JsonUtils.AsDuration(sourceInfoBaseNode, ApiConstants.Active, Duration.Zero);
             Error = Error.OptionalInstance(sourceInfoBaseNode[ApiConstants.Error]);
         }
     }

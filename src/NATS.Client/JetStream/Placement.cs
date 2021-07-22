@@ -17,7 +17,7 @@ using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client.JetStream
 {
-    public sealed class Placement
+    public sealed class Placement : JsonSerializable
     {
         public string Cluster { get; }
         public List<string> Tags { get; }
@@ -33,12 +33,12 @@ namespace NATS.Client.JetStream
             Tags = JsonUtils.OptionalStringList(placementNode, ApiConstants.Tags);
         }
 
-        internal JSONNode ToJsonNode()
+        internal override JSONNode ToJsonNode()
         {
             return new JSONObject
             {
                 [ApiConstants.Cluster] = Cluster,
-                [ApiConstants.Tags] = JsonUtils.ToArray(Tags)
+                [ApiConstants.Tags] = JsonUtils.ToArray(Tags),
             };
         }
     }

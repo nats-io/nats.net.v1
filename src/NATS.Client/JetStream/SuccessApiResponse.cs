@@ -17,7 +17,12 @@ namespace NATS.Client.JetStream
     {
         public bool Success { get; }
 
-        internal SuccessApiResponse(string json) : base(json)
+        internal SuccessApiResponse(Msg msg, bool throwOnError) : base(msg, throwOnError)
+        {
+            Success = JsonNode[ApiConstants.Success];
+        }
+
+        internal SuccessApiResponse(string json, bool throwOnError) : base(json, throwOnError)
         {
             Success = JsonNode[ApiConstants.Success];
         }

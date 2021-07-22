@@ -126,6 +126,7 @@
  * SOFTWARE.
  * 
  * * * * */
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -277,6 +278,10 @@ namespace NATS.Client.Internals.SimpleJSON
         public virtual bool IsArray { get { return false; } }
         public virtual bool IsObject { get { return false; } }
 
+        // Allows Nodes types to specify when to write,
+        // for instance NATS null or empty strings don't need to write
+        public virtual bool ShouldWrite { get { return true; } }
+
         public virtual bool Inline { get { return false; } set { } }
 
         public virtual void Add(string aKey, JSONNode aItem)
@@ -343,6 +348,7 @@ namespace NATS.Client.Internals.SimpleJSON
             WriteToStringBuilder(sb, 0, aIndent, JSONTextMode.Indent);
             return sb.ToString();
         }
+        
         internal abstract void WriteToStringBuilder(StringBuilder aSB, int aIndent, int aIndentInc, JSONTextMode aMode);
 
         public abstract Enumerator GetEnumerator();
@@ -354,80 +360,45 @@ namespace NATS.Client.Internals.SimpleJSON
 
         #region typecasting properties
 
-
         public virtual double AsDouble
         {
-            get
-            {
-                double v = 0.0;
-                if (double.TryParse(Value,NumberStyles.Float, CultureInfo.InvariantCulture, out v))
-                    return v;
-                return 0.0;
-            }
-            set
-            {
-                Value = value.ToString(CultureInfo.InvariantCulture);
-            }
+            get => double.TryParse(Value,NumberStyles.Float, CultureInfo.InvariantCulture, out var v) ? v : 0.0;
+            set => Value = value.ToString(CultureInfo.InvariantCulture);
         }
 
         public virtual int AsInt
         {
-            get { return (int)AsDouble; }
-            set { AsDouble = value; }
+            get => int.TryParse(Value, out var val) ? val : 0;
+            set => Value = value.ToString();
         }
 
         public virtual float AsFloat
         {
-            get { return (float)AsDouble; }
-            set { AsDouble = value; }
+            get => float.TryParse(Value,NumberStyles.Float, CultureInfo.InvariantCulture, out var v) ? v : 0.0f;
+            set => Value = value.ToString(CultureInfo.InvariantCulture);
         }
 
         public virtual bool AsBool
         {
-            get
-            {
-                bool v = false;
-                if (bool.TryParse(Value, out v))
-                    return v;
-                return !string.IsNullOrEmpty(Value);
-            }
-            set
-            {
-                Value = (value) ? "true" : "false";
-            }
+            get => bool.TryParse(Value, out var v) ? v : false;
+            set => Value = (value) ? "true" : "false";
         }
 
         public virtual long AsLong
         {
-            get
-            {
-                long val = 0;
-                if (long.TryParse(Value, out val))
-                    return val;
-                return 0L;
-            }
-            set
-            {
-                Value = value.ToString();
-            }
+            get => long.TryParse(Value, out var val) ? val : 0L;
+            set => Value = value.ToString();
         }
 
-        public virtual JSONArray AsArray
+        public virtual ulong AsUlong
         {
-            get
-            {
-                return this as JSONArray;
-            }
+            get => ulong.TryParse(Value, out var val) ? val : 0UL;
+            set => Value = value.ToString();
         }
 
-        public virtual JSONObject AsObject
-        {
-            get
-            {
-                return this as JSONObject;
-            }
-        }
+        public virtual JSONArray AsArray => this as JSONArray;
 
+        public virtual JSONObject AsObject => this as JSONObject;
 
         #endregion typecasting properties
 
@@ -475,9 +446,20 @@ namespace NATS.Client.Internals.SimpleJSON
                 return new JSONString(n.ToString());
             return new JSONNumber(n);
         }
+
+        public static implicit operator JSONNode(ulong n)
+        {
+            if (longAsString)
+                return new JSONString(n.ToString());
+            return new JSONNumber(n);
+        }
         public static implicit operator long(JSONNode d)
         {
             return (d == null) ? 0L : d.AsLong;
+        }
+        public static implicit operator ulong(JSONNode d)
+        {
+            return (d == null) ? 0L : d.AsUlong;
         }
 
         public static implicit operator JSONNode(bool b)
@@ -582,17 +564,28 @@ namespace NATS.Client.Internals.SimpleJSON
         private static JSONNode ParseElement(string token, bool quoted)
         {
             if (quoted)
+            {
                 return token;
+            }
+            
             string tmp = token.ToLower();
             if (tmp == "false" || tmp == "true")
+            {
                 return tmp == "true";
+            }
+
             if (tmp == "null")
+            {
                 return JSONNull.CreateOrGet();
-            double val;
-            if (double.TryParse(token, NumberStyles.Float, CultureInfo.InvariantCulture, out val))
-                return val;
-            else
-                return token;
+            }
+
+            JSONNumber jsonNumber = new JSONNumber(token);
+            if (jsonNumber.IsNumber)
+            {
+                return jsonNumber;
+            }
+            
+            return token;
         }
 
         public static JSONNode Parse(string aJSON)
@@ -727,9 +720,7 @@ namespace NATS.Client.Internals.SimpleJSON
                                 case 'u':
                                     {
                                         string s = aJSON.Substring(i + 1, 4);
-                                        Token.Append((char)int.Parse(
-                                            s,
-                                            System.Globalization.NumberStyles.AllowHexSpecifier));
+                                        Token.Append((char)int.Parse(s, NumberStyles.AllowHexSpecifier));
                                         i += 4;
                                         break;
                                     }
@@ -1012,19 +1003,24 @@ namespace NATS.Client.Internals.SimpleJSON
                 aMode = JSONTextMode.Compact;
             foreach (var k in m_Dict)
             {
-                if (!first)
-                    aSB.Append(',');
-                first = false;
-                if (aMode == JSONTextMode.Indent)
-                    aSB.AppendLine();
-                if (aMode == JSONTextMode.Indent)
-                    aSB.Append(' ', aIndent + aIndentInc);
-                aSB.Append('\"').Append(Escape(k.Key)).Append('\"');
-                if (aMode == JSONTextMode.Compact)
-                    aSB.Append(':');
-                else
-                    aSB.Append(" : ");
-                k.Value.WriteToStringBuilder(aSB, aIndent + aIndentInc, aIndentInc, aMode);
+                // ShouldWrite allows Nodes types to specify when to write,
+                // for instance NATS null or empty strings don't need to write
+                if (k.Value.ShouldWrite)
+                {
+                    if (!first)
+                        aSB.Append(',');
+                    first = false;
+                    if (aMode == JSONTextMode.Indent)
+                        aSB.AppendLine();
+                    if (aMode == JSONTextMode.Indent)
+                        aSB.Append(' ', aIndent + aIndentInc);
+                    aSB.Append('\"').Append(Escape(k.Key)).Append('\"');
+                    if (aMode == JSONTextMode.Compact)
+                        aSB.Append(':');
+                    else
+                        aSB.Append(" : ");
+                    k.Value.WriteToStringBuilder(aSB, aIndent + aIndentInc, aIndentInc, aMode);
+                }
             }
             if (aMode == JSONTextMode.Indent)
                 aSB.AppendLine().Append(' ', aIndent);
@@ -1040,6 +1036,7 @@ namespace NATS.Client.Internals.SimpleJSON
 
         public override JSONNodeType Tag { get { return JSONNodeType.String; } }
         public override bool IsString { get { return true; } }
+        public override bool ShouldWrite { get { return !string.IsNullOrEmpty(m_Data); } }
 
         public override Enumerator GetEnumerator() { return new Enumerator(); }
 
@@ -1062,6 +1059,7 @@ namespace NATS.Client.Internals.SimpleJSON
         {
             aSB.Append('\"').Append(Escape(m_Data)).Append('\"');
         }
+        
         public override bool Equals(object obj)
         {
             if (base.Equals(obj))
@@ -1081,50 +1079,145 @@ namespace NATS.Client.Internals.SimpleJSON
     }
     // End of JSONString
 
+    internal enum JSONNumberType {I, L, U, D, X}
     internal partial class JSONNumber : JSONNode
     {
-        private double m_Data;
+        private JSONNumberType numberType = JSONNumberType.X;
+        private int intData;
+        private long longData;
+        private ulong ulongData;
+        private double doubleData;
 
-        public override JSONNodeType Tag { get { return JSONNodeType.Number; } }
-        public override bool IsNumber { get { return true; } }
+        public override JSONNodeType Tag => JSONNodeType.Number;
+        public override bool IsNumber => numberType != JSONNumberType.X;
         public override Enumerator GetEnumerator() { return new Enumerator(); }
 
         public override string Value
         {
-            get { return m_Data.ToString(CultureInfo.InvariantCulture); }
-            set
-            {
-                double v;
-                if (double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out v))
-                    m_Data = v;
+            get {
+                switch (numberType)
+                {
+                    case JSONNumberType.L: return longData.ToString(); 
+                    case JSONNumberType.U: return ulongData.ToString(); 
+                    case JSONNumberType.D: return doubleData.ToString(CultureInfo.InvariantCulture); 
+                }
+
+                return intData.ToString();
             }
+            set => InitString(value);
+        }
+        
+        public override int AsInt
+        {
+            get => intData;
+            set => InitInt(value);
+        }
+        
+        public override long AsLong
+        {
+            get => longData;
+            set => InitLong(value);
+        }
+
+        public override ulong AsUlong
+        {
+            get => ulongData;
+            set => InitUlong(value);
         }
 
         public override double AsDouble
         {
-            get { return m_Data; }
-            set { m_Data = value; }
+            get => doubleData;
+            set => InitDouble(value);
         }
-        public override long AsLong
+        
+        public JSONNumber(int aData)
         {
-            get { return (long)m_Data; }
-            set { m_Data = value; }
+            InitInt(aData);
+        }
+
+        public JSONNumber(long aData)
+        {
+            InitLong(aData);
+        }
+
+        public JSONNumber(ulong aData)
+        {
+            InitUlong(aData);
         }
 
         public JSONNumber(double aData)
         {
-            m_Data = aData;
+            InitDouble(aData);
         }
 
         public JSONNumber(string aData)
         {
-            Value = aData;
+            InitString(aData);
+        }
+
+        private void InitInt(int aData)
+        {
+            numberType = JSONNumberType.I;
+            intData = aData;
+            longData = intData;
+            ulongData = (ulong) intData;
+            doubleData = intData;
+        }
+
+        private void InitLong(long aData)
+        {
+            numberType = JSONNumberType.L;
+            intData = 0;
+            longData = aData;
+            ulongData = (ulong) longData;
+            doubleData = longData;
+        }
+
+        private void InitUlong(ulong aData)
+        {
+            numberType = JSONNumberType.U;
+            intData = 0;
+            longData = 0;
+            ulongData = aData;
+            doubleData = ulongData;
+        }
+
+        private void InitDouble(double aData)
+        {
+            numberType = JSONNumberType.D;
+            intData = 0;
+            longData = 0;
+            ulongData = 0;
+            doubleData = aData;
+        }
+
+        private void InitString(string aData)
+        {
+            numberType = JSONNumberType.X;
+            if (int.TryParse(aData, out var iVal) && iVal.ToString().Equals(aData))
+            {
+                InitInt(iVal);
+            }
+            else if (long.TryParse(aData, out var lVal) && lVal.ToString().Equals(aData))
+            {
+                InitLong(lVal);
+            }
+            else if (ulong.TryParse(aData, out var uVal) && uVal.ToString().Equals(aData))
+            {
+                InitUlong(uVal);
+            }
+            else if (double.TryParse(aData, NumberStyles.Float, CultureInfo.InvariantCulture, out var dVal))
+            {
+                InitDouble(dVal);
+            }
         }
 
         internal override void WriteToStringBuilder(StringBuilder aSB, int aIndent, int aIndentInc, JSONTextMode aMode)
         {
             aSB.Append(Value);
         }
+        
         private static bool IsNumeric(object value)
         {
             return value is int || value is uint
@@ -1134,22 +1227,47 @@ namespace NATS.Client.Internals.SimpleJSON
                 || value is short || value is ushort
                 || value is sbyte || value is byte;
         }
+        
         public override bool Equals(object obj)
         {
             if (obj == null)
+            {
                 return false;
-            if (base.Equals(obj))
+            }
+            if (base.Equals(obj)) 
+            {
                 return true;
-            JSONNumber s2 = obj as JSONNumber;
-            if (s2 != null)
-                return m_Data == s2.m_Data;
-            if (IsNumeric(obj))
-                return Convert.ToDouble(obj) == m_Data;
-            return false;
+            }
+
+            JSONNumber o2 = obj as JSONNumber;
+            if (o2 != null)
+            {
+                if (o2.numberType != numberType)
+                {
+                    return false;
+                }
+
+                switch (numberType)
+                {
+                    case JSONNumberType.L: return o2.longData == longData; 
+                    case JSONNumberType.U: return o2.ulongData == ulongData; 
+                    case JSONNumberType.D: return o2.doubleData == doubleData; 
+                }
+                return o2.intData == intData;
+            }
+
+            return IsNumeric(obj) && Convert.ToDouble(obj) == doubleData;
         }
+        
         public override int GetHashCode()
         {
-            return m_Data.GetHashCode();
+            switch (numberType)
+            {
+                case JSONNumberType.L: return longData.GetHashCode();
+                case JSONNumberType.U: return ulongData.GetHashCode(); 
+                case JSONNumberType.D: return doubleData.GetHashCode(); 
+            }
+            return intData.GetHashCode();
         }
     }
     // End of JSONNumber

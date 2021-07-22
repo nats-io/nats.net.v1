@@ -12,30 +12,41 @@
 // limitations under the License.
 
 using System;
-using System.Text;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client.JetStream
 {
-    public sealed class ConsumerInfo
+    public sealed class ConsumerInfo : ApiResponse
     {
-        public string Stream { get; }
-        public string Name { get; }
-        public ConsumerConfiguration Configuration { get; }
-        public DateTime Created { get; }
-        public SequencePair Delivered { get; }
-        public SequencePair AckFloor { get; }
-        public long NumPending { get; }
-        public long NumWaiting { get; }
-        public long NumAckPending { get; }
-        public long NumRedelivered { get; }
+        public string Stream { get; private set; }
+        public string Name { get; private set; }
+        public ConsumerConfiguration Configuration { get; private set; }
+        public DateTime Created { get; private set; }
+        public SequencePair Delivered { get; private set; }
+        public SequencePair AckFloor { get; private set; }
+        public long NumPending { get; private set; }
+        public long NumWaiting { get; private set; }
+        public long NumAckPending { get; private set; }
+        public long NumRedelivered { get; private set; }
 
-        internal ConsumerInfo(Msg msg) : this(Encoding.UTF8.GetString(msg.Data)) { }
-
-        internal ConsumerInfo(string json)
+        internal ConsumerInfo(Msg msg, bool throwOnError) : base(msg, throwOnError)
         {
-            var ciNode = JSON.Parse(json);
+            Init(JsonNode);
+        }
+
+        internal ConsumerInfo(string json, bool throwOnError) : base(json, throwOnError)
+        {
+            Init(JsonNode);
+        }
+
+        internal ConsumerInfo(JSONNode ciNode)
+        {
+            Init(ciNode);
+        }
+
+        private void Init(JSONNode ciNode)
+        {
             Stream = ciNode[ApiConstants.StreamName].Value;
             Configuration = new ConsumerConfiguration(ciNode[ApiConstants.Config]);
             Name = ciNode[ApiConstants.Name].Value;

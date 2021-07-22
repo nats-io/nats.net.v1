@@ -1,0 +1,18 @@
+{
+  "imin": -2147483648,
+  "iminusone": -1,
+  "izero": 0,
+  "ione": 1,
+  "imax": 2147483647,
+  "lmin": -9223372036854775808,
+  "lminusone": -1,
+  "lzero": 0,
+  "lone": 1,
+  "lmax": 9223372036854775807,
+  "uzero": 0,
+  "uone": 1,
+  "unotmax": 18446744073709551614,
+  "umax": 18446744073709551615,
+  "btrue": true,
+  "bfalse": false
+}

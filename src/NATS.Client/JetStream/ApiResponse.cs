@@ -16,37 +16,47 @@ using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client.JetStream
 {
-    public abstract class ApiResponse
+    public class ApiResponse
     {
-        public const string NO_TYPE = "io.nats.jetstream.api.v1.no_type";
+        public const string NoType = "io.nats.jetstream.api.v1.no_type";
 
         public string Type { get; }
         public Error Error { get; }
 
         internal JSONNode JsonNode { get; }
 
-        internal ApiResponse(Msg msg) : this(Encoding.UTF8.GetString(msg.Data)) { }
+        internal ApiResponse() {}
 
-        internal ApiResponse(string json)
+        internal ApiResponse(Msg msg, bool throwOnError = false) : 
+            this(Encoding.UTF8.GetString(msg.Data), throwOnError) {}
+
+        internal ApiResponse(string json, bool throwOnError = false)
         {
             JsonNode = JSON.Parse(json);
             Type = JsonNode[ApiConstants.Type].Value;
             if (string.IsNullOrEmpty(Type))
             {
-                Type = NO_TYPE;
+                Type = NoType;
             }
             Error = Error.OptionalInstance(JsonNode[ApiConstants.Error]);
+
+            if (throwOnError)
+            {
+                ThrowOnHasError();
+            }
         }
         
         public void ThrowOnHasError() {
             if (HasError) {
-                throw new JetStreamApiException(this);
+                throw new NATSJetStreamException(this);
             }
         }
 
         public bool HasError => Error != null;
 
-        public long ErrorCode => Error?.Code ?? -1;
+        public int ErrorCode => Error?.Code ?? -1;
+
+        public int ApiErrorCode => Error?.ApiErrorCode ?? -1;
 
         public string ErrorDescription => Error?.Desc ?? null;
     }

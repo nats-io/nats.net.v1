@@ -38,8 +38,8 @@ namespace UnitTests.JetStream
             StreamConfiguration testSc = getTestConfiguration();
             // from json
             Validate(testSc);
-            
-            Validate(new StreamConfiguration(testSc.ToJsonNode()));
+
+            // Validate(new StreamConfiguration(testSc.ToJsonNode()));
             Validate(new StreamConfiguration(testSc.ToJsonNode().ToString()));
 
             StreamConfiguration.StreamConfigurationBuilder builder = StreamConfiguration.Builder(testSc);
@@ -58,10 +58,10 @@ namespace UnitTests.JetStream
                     .WithNoAck(testSc.NoAck)
                     .WithTemplateOwner(testSc.TemplateOwner)
                     .WithDiscardPolicy(testSc.DiscardPolicy)
-                    .DuplicateWindow(testSc.DuplicateWindow)
-                    .Placement(testSc.Placement)
-                    .Mirror(testSc.Mirror)
-                    .Sources(testSc.Sources)
+                    .WithDuplicateWindow(testSc.DuplicateWindow)
+                    .WithPlacement(testSc.Placement)
+                    .WithMirror(testSc.Mirror)
+                    .WithSources(testSc.Sources)
                 ;
             Validate(builder.Build());
             Validate(builder.AddSources((Source)null).Build());

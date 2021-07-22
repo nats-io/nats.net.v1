@@ -22,13 +22,13 @@ namespace UnitTests.JetStream
         public void JsonIsReadProperly()
         {
             string json = ReadDataFile("AccountStatistics.json");
-            AccountStatistics stat = new AccountStatistics(json);
+            AccountStatistics stat = new AccountStatistics(json, false);
             Assert.Equal(1, stat.Memory);
             Assert.Equal(2, stat.Storage);
             Assert.Equal(3, stat.Streams);
             Assert.Equal(4, stat.Consumers);
 
-            stat = new AccountStatistics("{}");
+            stat = new AccountStatistics("{}", false);
             Assert.Equal(0, stat.Memory);
             Assert.Equal(0, stat.Storage);
             Assert.Equal(0, stat.Streams);

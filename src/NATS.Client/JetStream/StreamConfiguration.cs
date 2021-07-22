@@ -17,7 +17,7 @@ using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client.JetStream
 {
-    public sealed class StreamConfiguration
+    public sealed class StreamConfiguration : JsonSerializable
     {
         public string Name { get; }
         public List<string> Subjects { get; }
@@ -49,12 +49,12 @@ namespace NATS.Client.JetStream
             MaxConsumers = scNode[ApiConstants.MaxConsumers].AsLong;
             MaxMsgs = scNode[ApiConstants.MaxMsgs].AsLong;
             MaxBytes = scNode[ApiConstants.MaxBytes].AsLong;
-            MaxAge = Duration.OfNanos(scNode[ApiConstants.MaxAge].AsLong);
+            MaxAge = JsonUtils.AsDuration(scNode, ApiConstants.MaxAge, Duration.Zero);
             MaxMsgSize = scNode[ApiConstants.MaxMsgSize].AsLong;
             Replicas = scNode[ApiConstants.NumReplicas].AsInt;
             NoAck = scNode[ApiConstants.NoAck].AsBool;
             TemplateOwner = scNode[ApiConstants.TemplateOwner].Value;
-            DuplicateWindow = Duration.OfNanos(scNode[ApiConstants.DuplicateWindow].AsLong);
+            DuplicateWindow = JsonUtils.AsDuration(scNode, ApiConstants.DuplicateWindow, Duration.Zero);
             Placement = Placement.OptionalInstance(scNode[ApiConstants.Placement]);
             Mirror = Mirror.OptionalInstance(scNode[ApiConstants.Mirror]);
             Sources = Source.OptionalListOf(scNode[ApiConstants.Sources]);
@@ -85,14 +85,13 @@ namespace NATS.Client.JetStream
             Sources = sources;
         }
 
-        internal JSONNode ToJsonNode()
+        internal override JSONNode ToJsonNode()
         {
             JSONArray sources = new JSONArray();
             foreach (Source s in Sources)
             {
                 sources.Add(null, s.ToJsonNode());
             }
-
             return new JSONObject
             {
                 [ApiConstants.Retention] = RetentionPolicy.GetString(),
@@ -109,8 +108,8 @@ namespace NATS.Client.JetStream
                 [ApiConstants.NoAck] = NoAck,
                 [ApiConstants.TemplateOwner] = TemplateOwner,
                 [ApiConstants.DuplicateWindow] = DuplicateWindow.Nanos,
-                [ApiConstants.Placement] = Placement.ToJsonNode(),
-                [ApiConstants.Mirror] = Mirror.ToJsonNode(),
+                [ApiConstants.Placement] = Placement?.ToJsonNode(),
+                [ApiConstants.Mirror] = Mirror?.ToJsonNode(),
                 [ApiConstants.Sources] = sources
             };
         }
@@ -136,7 +135,7 @@ namespace NATS.Client.JetStream
             private Duration _maxAge = Duration.Zero;
             private long _maxMsgSize = -1;
             private StorageType _storageType = StorageType.File;
-            private int _replicas = -1;
+            private int _replicas = 1;
             private bool _noAck;
             private string _templateOwner;
             private DiscardPolicy _discardPolicy = DiscardPolicy.Old;
@@ -151,7 +150,7 @@ namespace NATS.Client.JetStream
             {
                 if (sc == null) return;
                 _name = sc.Name;
-                WithSubjects(sc.Subjects);
+                WithSubjects(sc.Subjects); // handles null
                 _retentionPolicy = sc.RetentionPolicy;
                 _maxConsumers = sc.MaxConsumers;
                 _maxMsgs = sc.MaxMsgs;
@@ -166,7 +165,7 @@ namespace NATS.Client.JetStream
                 _duplicateWindow = sc.DuplicateWindow;
                 _placement = sc.Placement;
                 _mirror = sc.Mirror;
-                Sources(sc.Sources);
+                WithSources(sc.Sources);
             }
 
         /// <summary>
@@ -274,10 +273,20 @@ namespace NATS.Client.JetStream
         /// <summary>
         /// Sets the maximum age in the StreamConfiguration.
         /// </summary>
-        /// <param name="maxAge">the maximum message age</param>
+        /// <param name="maxAge">the maximum message age as a Duration</param>
         /// <returns>The StreamConfigurationBuilder</returns>
         public StreamConfigurationBuilder WithMaxAge(Duration maxAge) {
             _maxAge = Validator.ValidateDurationNotRequiredGtOrEqZero(maxAge);
+            return this;
+        }
+
+        /// <summary>
+        /// Sets the maximum age in the StreamConfiguration.
+        /// </summary>
+        /// <param name="maxAgeMillis">the maximum message age as millis</param>
+        /// <returns>The StreamConfigurationBuilder</returns>
+        public StreamConfigurationBuilder WithMaxAge(long maxAgeMillis) {
+            _maxAge = Validator.ValidateDurationNotRequiredGtOrEqZero(maxAgeMillis);
             return this;
         }
 
@@ -348,8 +357,19 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="window">duration to hold message ids for duplicate checking.</param>
         /// <returns>The StreamConfigurationBuilder</returns>
-        public StreamConfigurationBuilder DuplicateWindow(Duration window) {
+        public StreamConfigurationBuilder WithDuplicateWindow(Duration window) {
             _duplicateWindow = Validator.ValidateDurationNotRequiredGtOrEqZero(window);
+            return this;
+        }
+
+        /// <summary>
+        /// Sets the duplicate checking window in the the StreamConfiguration.  A Duration.Zero
+        /// disables duplicate checking.  Duplicate checking is disabled by default.
+        /// </summary>
+        /// <param name="windowMillis">duration to hold message ids for duplicate checking.</param>
+        /// <returns>The StreamConfigurationBuilder</returns>
+        public StreamConfigurationBuilder WithDuplicateWindow(long windowMillis) {
+            _duplicateWindow = Validator.ValidateDurationNotRequiredGtOrEqZero(windowMillis);
             return this;
         }
 
@@ -358,7 +378,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="placement">the placement directive object</param>
         /// <returns>The StreamConfigurationBuilder</returns>
-        public StreamConfigurationBuilder Placement(Placement placement) {
+        public StreamConfigurationBuilder WithPlacement(Placement placement) {
             _placement = placement;
             return this;
         }
@@ -368,7 +388,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="mirror">the mirror object</param>
         /// <returns>The StreamConfigurationBuilder</returns>
-        public StreamConfigurationBuilder Mirror(Mirror mirror) {
+        public StreamConfigurationBuilder WithMirror(Mirror mirror) {
             _mirror = mirror;
             return this;
         }
@@ -378,7 +398,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="sources">the stream's sources</param>
         /// <returns>The StreamConfigurationBuilder</returns>
-        public StreamConfigurationBuilder Sources(params Source[] sources) {
+        public StreamConfigurationBuilder WithSources(params Source[] sources) {
             _sources.Clear();
             return AddSources(sources);
         }
@@ -388,7 +408,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="sources">the stream's sources</param>
         /// <returns>The StreamConfigurationBuilder</returns>
-        public StreamConfigurationBuilder Sources(List<Source> sources) {
+        public StreamConfigurationBuilder WithSources(List<Source> sources) {
             _sources.Clear();
             return AddSources(sources);
         }

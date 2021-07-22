@@ -17,14 +17,18 @@ using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client.JetStream
 {
-    public sealed class ConsumerConfiguration
+    public sealed class ConsumerConfiguration : JsonSerializable
     {
+        private static readonly Duration MinAckWait = Duration.One;
+        private static readonly Duration MinDefaultIdleHeartbeat = Duration.Zero;
+        private static readonly Duration DefaultAckWait = Duration.OfSeconds(30);
+
         public DeliverPolicy DeliverPolicy { get; }
         public AckPolicy AckPolicy { get; }
         public ReplayPolicy ReplayPolicy { get; }
         public string Durable { get; }
         public string DeliverSubject { get; }
-        public long StartSeq { get; }
+        public ulong StartSeq { get; }
         public DateTime StartTime { get; }
         public Duration AckWait { get; }
         public long MaxDeliver { get; }
@@ -34,6 +38,7 @@ namespace NATS.Client.JetStream
         public long MaxAckPending { get; }
         public Duration IdleHeartbeat { get; }
         public bool FlowControl { get; }
+        public long MaxPullWaiting { get; }
 
         internal ConsumerConfiguration(string json) : this(JSON.Parse(json)) {}
 
@@ -44,22 +49,23 @@ namespace NATS.Client.JetStream
             ReplayPolicy = ApiEnums.GetValueOrDefault(ccNode[ApiConstants.ReplayPolicy], ReplayPolicy.Instant);
             Durable = ccNode[ApiConstants.DurableName].Value;
             DeliverSubject = ccNode[ApiConstants.DeliverSubject].Value;
-            StartSeq = ccNode[ApiConstants.OptStartSeq].AsLong;
+            StartSeq = ccNode[ApiConstants.OptStartSeq].AsUlong;
             StartTime = JsonUtils.AsDate(ccNode[ApiConstants.OptStartTime]);
-            AckWait = Duration.OfNanos(ccNode[ApiConstants.AckWait]);
+            AckWait = JsonUtils.AsDuration(ccNode, ApiConstants.AckWait, DefaultAckWait);
             MaxDeliver = JsonUtils.AsLongOrMinus1(ccNode, ApiConstants.MaxDeliver);
             FilterSubject = ccNode[ApiConstants.FilterSubject].Value;
             SampleFrequency = ccNode[ApiConstants.SampleFreq].Value;
             RateLimit = ccNode[ApiConstants.RateLimitBps].AsLong;
             MaxAckPending = ccNode[ApiConstants.MaxAckPending].AsLong;
-            IdleHeartbeat = Duration.OfNanos(ccNode[ApiConstants.IdleHeartbeat]);
+            IdleHeartbeat = JsonUtils.AsDuration(ccNode, ApiConstants.IdleHeartbeat, MinDefaultIdleHeartbeat);
             FlowControl = ccNode[ApiConstants.FlowControl].AsBool;
+            MaxPullWaiting = JsonUtils.AsLongOrMinus1(ccNode, ApiConstants.MaxWaiting);
         }
 
-        internal ConsumerConfiguration(string durable, DeliverPolicy deliverPolicy, long startSeq, DateTime startTime,
+        internal ConsumerConfiguration(string durable, DeliverPolicy deliverPolicy, ulong startSeq, DateTime startTime,
             AckPolicy ackPolicy, Duration ackWait, long maxDeliver, string filterSubject, ReplayPolicy replayPolicy,
             string sampleFrequency, long rateLimit, string deliverSubject, long maxAckPending, 
-            Duration idleHeartbeat, bool flowControl)
+            Duration idleHeartbeat, bool flowControl, long maxPullWaiting)
         {
             Durable = durable;
             DeliverPolicy = deliverPolicy;
@@ -76,9 +82,10 @@ namespace NATS.Client.JetStream
             MaxAckPending = maxAckPending;
             IdleHeartbeat = idleHeartbeat;
             FlowControl = flowControl;
+            MaxPullWaiting = maxPullWaiting;
         }
 
-        internal JSONNode ToJsonNode()
+        internal override JSONNode ToJsonNode()
         {
             return new JSONObject
             {
@@ -97,6 +104,7 @@ namespace NATS.Client.JetStream
                 [ApiConstants.MaxAckPending] = MaxAckPending,
                 [ApiConstants.IdleHeartbeat] = IdleHeartbeat.Nanos,
                 [ApiConstants.FlowControl] = FlowControl,
+                [ApiConstants.MaxWaiting] = MaxPullWaiting
             };
         }
 
@@ -113,12 +121,12 @@ namespace NATS.Client.JetStream
         public sealed class ConsumerConfigurationBuilder
         {
             private DeliverPolicy _deliverPolicy = DeliverPolicy.All;
-            private AckPolicy _ackPolicy = JetStream.AckPolicy.Explicit;
+            private AckPolicy _ackPolicy = AckPolicy.Explicit;
             private ReplayPolicy _replayPolicy = ReplayPolicy.Instant;
             private string _durable;
             private string _deliverSubject;
-            private long _startSeq;
-            private DateTime _startTime;
+            private ulong _startSeq;
+            private DateTime _startTime; 
             private Duration _ackWait = Duration.OfSeconds(30);
             private long _maxDeliver;
             private string _filterSubject;
@@ -127,11 +135,13 @@ namespace NATS.Client.JetStream
             private long _maxAckPending;
             private Duration _idleHeartbeat = Duration.Zero;
             private bool _flowControl;
+            private long _maxPullWaiting;
 
-            public string Durable() => _durable;
-            public string DeliverSubject() => _deliverSubject;
-            public long MaxAckPending() => _maxAckPending;
-            public AckPolicy AckPolicy() => _ackPolicy;
+            public string Durable => _durable;
+            public string DeliverSubject => _deliverSubject;
+            public string FilterSubject => _filterSubject;
+            public long MaxAckPending => _maxAckPending;
+            public AckPolicy AcknowledgementPolicy => _ackPolicy;
 
             public ConsumerConfigurationBuilder() {}
 
@@ -153,6 +163,7 @@ namespace NATS.Client.JetStream
                 _maxAckPending = cc.MaxAckPending;
                 _idleHeartbeat = cc.IdleHeartbeat;
                 _flowControl = cc.FlowControl;
+                _maxPullWaiting = cc.MaxPullWaiting;
             }
 
             /// <summary>
@@ -193,7 +204,7 @@ namespace NATS.Client.JetStream
             /// </summary>
             /// <param name="sequence">the start sequence</param>
             /// <returns>The ConsumerConfigurationBuilder</returns>
-            public ConsumerConfigurationBuilder WithStartSequence(long sequence)
+            public ConsumerConfigurationBuilder WithStartSequence(ulong sequence)
             {
                 _startSeq = sequence;
                 return this;
@@ -217,18 +228,29 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithAckPolicy(AckPolicy? policy)
             {
-                _ackPolicy = policy ?? JetStream.AckPolicy.Explicit;
+                _ackPolicy = policy ?? AckPolicy.Explicit;
                 return this;
             }
 
             /// <summary>
             /// Sets the acknowledgement wait duration of the ConsumerConfiguration.
             /// </summary>
-            /// <param name="timeout">the wait timeout</param>
+            /// <param name="timeout">the wait timeout as a duration</param>
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithAckWait(Duration timeout)
             {
-                _ackWait = timeout ?? Duration.OfSeconds(30);
+                _ackWait = Validator.EnsureNotNullAndNotLessThanMin(timeout, MinAckWait, DefaultAckWait); 
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the acknowledgement wait duration of the ConsumerConfiguration.
+            /// </summary>
+            /// <param name="timeoutMillis">the wait timeout as millis</param>
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder WithAckWait(long timeoutMillis)
+            {
+                _ackWait = Validator.EnsureDurationNotLessThanMin(timeoutMillis, MinAckWait, DefaultAckWait);
                 return this;
             }
 
@@ -301,11 +323,22 @@ namespace NATS.Client.JetStream
             /// <summary>
             /// Sets the idle heart beat wait time.
             /// </summary>
-            /// <param name="idleHeartbeat">the wait timeout</param>
+            /// <param name="idleHeartbeat">the wait timeout as a Duration</param>
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithIdleHeartbeat(Duration idleHeartbeat)
             {
-                _idleHeartbeat = idleHeartbeat ?? Duration.Zero;
+                _idleHeartbeat = Validator.EnsureNotNullAndNotLessThanMin(idleHeartbeat, MinDefaultIdleHeartbeat, MinDefaultIdleHeartbeat); 
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the idle heart beat wait time.
+            /// </summary>
+            /// <param name="idleHeartbeatMillis">the wait timeout as a Duration</param>
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder WithIdleHeartbeat(long idleHeartbeatMillis)
+            {
+                _idleHeartbeat = Validator.EnsureDurationNotLessThanMin(idleHeartbeatMillis, MinDefaultIdleHeartbeat, MinDefaultIdleHeartbeat); 
                 return this;
             }
 
@@ -316,6 +349,17 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfiguration</returns>
             public ConsumerConfigurationBuilder WithFlowControl(bool flowControl) {
                 _flowControl = flowControl;
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the maximum pull waiting.
+            /// </summary>
+            /// <param name="maxPullWaiting">the maximum delivery amount</param>
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder WithMaxPullWaiting(long maxPullWaiting)
+            {
+                _maxPullWaiting = maxPullWaiting;
                 return this;
             }
 
@@ -340,7 +384,8 @@ namespace NATS.Client.JetStream
                     _deliverSubject,
                     _maxAckPending,
                     _idleHeartbeat,
-                    _flowControl
+                    _flowControl,
+                    _maxPullWaiting
                 );
             }
         }
