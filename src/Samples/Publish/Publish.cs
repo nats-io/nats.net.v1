@@ -12,11 +12,10 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
-using System.Collections.Generic;
 using NATS.Client;
-
 
 namespace NATSExamples
 {
@@ -76,7 +75,7 @@ namespace NATSExamples
         {
             Console.Error.WriteLine(
                 "Usage:  Publish [-url url] [-subject subject] " +
-                "-count [count] -creds [file] [-payload payload]");
+                "[-count count] [-creds file] [-payload payload]");
 
             Environment.Exit(-1);
         }

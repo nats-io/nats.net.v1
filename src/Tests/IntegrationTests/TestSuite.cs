@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Linq;
 using NATS.Client;
 using Xunit;
@@ -49,6 +50,12 @@ namespace IntegrationTests
         public const int RxSuite = 11517; //1pc
         public const int AsyncAwaitDeadlocksSuite = 11518; //1pc
         public const int ConnectionIpV6Suite = 11519; //1pc
+        public const int JetStreamSuite = 11520; //1pc
+        public const int JetStreamManagementSuite = 11521; //1pc
+        public const int JetStreamPublishSuite = 11522; //1pc
+        public const int JetStreamPushAsyncSuite = 11523; //1pc
+        public const int JetStreamPushSyncSuite = 11524; //1pc
+        public const int JetStreamPullSuite = 11525; //1pc
     }
 
     public abstract class SuiteContext
@@ -85,6 +92,28 @@ namespace IntegrationTests
             var opts = GetTestOptionsWithDefaultTimeout(port);
 
             return ConnectionFactory.CreateEncodedConnection(opts);
+        }
+
+        public void RunInServer(Action<IConnection> test, TestServerInfo testServerInfo)
+        {
+            using (var s = NATSServer.CreateFastAndVerify(testServerInfo.Port))
+            {
+                using (var c = OpenConnection(testServerInfo.Port))
+                {
+                    test(c);
+                }
+            }
+        }
+
+        public void RunInJsServer(Action<IConnection> test, TestServerInfo testServerInfo)
+        {
+            using (var s = NATSServer.CreateJetStreamFastAndVerify(testServerInfo.Port))
+            {
+                using (var c = OpenConnection(testServerInfo.Port))
+                {
+                    test(c);
+                }
+            }
         }
     }
 
@@ -251,6 +280,56 @@ namespace IntegrationTests
         public readonly TestServerInfo Server1 = new TestServerInfo(SeedPort);
         public readonly TestServerInfo Server2 = new TestServerInfo(SeedPort + 1);
         public readonly TestServerInfo Server3 = new TestServerInfo(SeedPort + 2);
+    }
+
+    public class JetStreamSuiteContext : OneServerSuiteContext
+    {
+        public JetStreamSuiteContext() : base(TestSeedPorts.JetStreamSuite) {}
+    }
+
+    public class JetStreamManagementSuiteContext : OneServerSuiteContext
+    {
+        public JetStreamManagementSuiteContext() : base(TestSeedPorts.JetStreamManagementSuite) {}
+    }
+
+    public class JetStreamPublishSuiteContext : OneServerSuiteContext
+    {
+        public JetStreamPublishSuiteContext() : base(TestSeedPorts.JetStreamPublishSuite) {}
+    }
+
+    public class JetStreamPushAsyncSuiteContext : OneServerSuiteContext
+    {
+        public JetStreamPushAsyncSuiteContext() : base(TestSeedPorts.JetStreamPushAsyncSuite) {}
+    }
+
+    public class JetStreamPushSyncSuiteContext : OneServerSuiteContext
+    {
+        public JetStreamPushSyncSuiteContext() : base(TestSeedPorts.JetStreamPushSyncSuite) {}
+    }
+
+    public class JetStreamPullSuiteContext : OneServerSuiteContext
+    {
+        public JetStreamPullSuiteContext() : base(TestSeedPorts.JetStreamPullSuite) {}
+    }
+
+    public class OneServerSuiteContext : SuiteContext
+    {
+        public readonly TestServerInfo Server1;
+
+        public OneServerSuiteContext(int seedPort)
+        {
+            Server1 = new TestServerInfo(seedPort);
+        }
+
+        public void RunInJsServer(Action<IConnection> test)
+        {
+            base.RunInJsServer(test, Server1);
+        }
+
+        public void RunInServer(Action<IConnection> test)
+        {
+            base.RunInServer(test, Server1);
+        }
     }
 
     public sealed class SkipPlatformsWithoutSignals : FactAttribute

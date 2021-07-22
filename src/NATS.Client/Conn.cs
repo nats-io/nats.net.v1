@@ -12,20 +12,21 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
 using System.IO;
+using System.Net;
+using System.Net.Security;
+using System.Net.Sockets;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Net;
-using System.Net.Sockets;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
-using System.Security.Authentication;
-using System.Globalization;
-using System.Diagnostics;
 using NATS.Client.Internals;
+using NATS.Client.JetStream;
 
 namespace NATS.Client
 {
@@ -1008,7 +1009,7 @@ namespace NATS.Client
                 string clientIp;
                 lock (mu)
                 {
-                    clientIp = info.client_ip;
+                    clientIp = info.ClientIp;
                 }
                 
                 return !String.IsNullOrEmpty(clientIp) ? IPAddress.Parse(clientIp) : null;
@@ -1028,7 +1029,7 @@ namespace NATS.Client
                     if (status != ConnState.CONNECTED)
                         return IC._EMPTY_;
 
-                    return this.info.server_id;
+                    return this.info.ServerId;
                 }
             }
         }
@@ -1195,11 +1196,11 @@ namespace NATS.Client
         {
             // Check to see if we need to engage TLS
             // Check for mismatch in setups
-            if (Opts.Secure && !info.tls_required)
+            if (Opts.Secure && !info.TlsRequired)
             {
                 throw new NATSSecureConnWantedException();
             }
-            else if (info.tls_required && !Opts.Secure)
+            else if (info.TlsRequired && !Opts.Secure)
             {
                 // If the server asks us to be secure, give it
                 // a shot.
@@ -1340,7 +1341,7 @@ namespace NATS.Client
                     throw new NATSConnectionException("User signature event handle has not been been defined.");
                 }
 
-                var args = new UserSignatureEventArgs(Encoding.ASCII.GetBytes(this.info.nonce));
+                var args = new UserSignatureEventArgs(Encoding.ASCII.GetBytes(this.info.Nonce));
                 try
                 {
                     opts.UserSignatureEventHandler(this, args);
@@ -2157,7 +2158,7 @@ namespace NATS.Client
         // appropriate channel for processing. All subscribers have their
         // their own channel. If the channel is full, the connection is
         // considered a slow subscriber.
-        internal void processMsg(byte[] msg, long length)
+        internal void processMsg(byte[] msgBytes, long length)
         {
             bool maxReached = false;
             Subscription s;
@@ -2185,7 +2186,11 @@ namespace NATS.Client
                     maxReached = s.tallyMessage(length);
                     if (maxReached == false)
                     {
-                        s.addMessage(new Msg(msgArgs, s, msg, length), opts.subChanLen);
+                        Msg msg = JsPrefixManager.HasPrefix(msgArgs.reply)
+                            ? new JetStreamMsg(this, msgArgs, s, msgBytes, length)
+                            : new Msg(msgArgs, s, msgBytes, length);
+                        
+                        s.addMessage(msg, opts.subChanLen);
                     } // maxreached == false
 
                 } // lock s.mu
@@ -2338,8 +2343,8 @@ namespace NATS.Client
                 return;
             }
 
-            info = ServerInfo.CreateFromJson(json);
-            var discoveredUrls = info.connect_urls;
+            info = new ServerInfo(json);
+            var discoveredUrls = info.ConnectURLs;
 
             // The discoveredUrls array could be empty/not present on initial
             // connect if advertise is disabled on that server, or servers that
@@ -2363,7 +2368,7 @@ namespace NATS.Client
                 }
             }
 
-            if (notify && info.ldm && opts.LameDuckModeEventHandler != null)
+            if (notify && info.LameDuckMode && opts.LameDuckModeEventHandler != null)
             {
                 scheduleConnEvent(opts.LameDuckModeEventHandler);
             }
@@ -2560,7 +2565,7 @@ namespace NATS.Client
                     throw new NATSConnectionDrainingException();
 
                 // Proactively reject payloads over the threshold set by server.
-                if (count > info.max_payload)
+                if (count > info.MaxPayload)
                     throw new NATSMaxPayloadException();
 
                 if (lastEx != null)
@@ -2575,7 +2580,7 @@ namespace NATS.Client
                 int protoOffset;
                 if (headers != null)
                 {
-                    if (info.headers == false)
+                    if (!info.HeadersSupported)
                     {
                         throw new NATSNotSupportedException("Headers are not supported by the server.");
                     }
@@ -2752,9 +2757,7 @@ namespace NATS.Client
 
         private static bool IsNoRespondersMsg(Msg m)
         {
-            return m != null && m.HasHeaders &&
-                MsgHeader.NoResponders.Equals(m.Header[MsgHeader.Status]) &&
-                m.Data.Length == 0;
+            return m != null && m.HasStatus && m.Status.IsNoResponders();
         }
 
         private void RequestResponseHandler(object sender, MsgHandlerEventArgs args)
@@ -2845,7 +2848,7 @@ namespace NATS.Client
             return request;
         }
 
-        private Msg requestSync(string subject, byte[] headers, byte[] data, int offset, int count, int timeout)
+        internal Msg requestSync(string subject, byte[] headers, byte[] data, int offset, int count, int timeout)
         {
             if (string.IsNullOrWhiteSpace(subject))
                 throw new NATSBadSubscriptionException();
@@ -3676,8 +3679,11 @@ namespace NATS.Client
             }
         }
 
+        internal delegate SyncSubscription CreateSyncSubscriptionDelegate(Connection conn, string subject, string queue);
+        internal delegate AsyncSubscription CreateAsyncSubscriptionDelegate(Connection conn, string subject, string queue);
+
         internal AsyncSubscription subscribeAsync(string subject, string queue,
-            EventHandler<MsgHandlerEventArgs> handler)
+            EventHandler<MsgHandlerEventArgs> handler, CreateAsyncSubscriptionDelegate createAsyncSubscriptionDelegate = null)
         {
             if (!Subscription.IsValidSubject(subject))
             {
@@ -3699,7 +3705,9 @@ namespace NATS.Client
 
                 enableSubChannelPooling();
 
-                s = new AsyncSubscription(this, subject, queue);
+                s = createAsyncSubscriptionDelegate == null 
+                    ? new AsyncSubscription(this, subject, queue)
+                    : createAsyncSubscriptionDelegate(this, subject, queue);
 
                 addSubscription(s);
 
@@ -3712,10 +3720,11 @@ namespace NATS.Client
 
             return s;
         }
-
+        
         // subscribe is the internal subscribe 
         // function that indicates interest in a subject.
-        private SyncSubscription subscribeSync(string subject, string queue)
+        internal SyncSubscription subscribeSync(string subject, string queue, 
+            CreateSyncSubscriptionDelegate createSyncSubscriptionDelegate = null)
         {
             if (!Subscription.IsValidSubject(subject))
             {
@@ -3735,7 +3744,9 @@ namespace NATS.Client
                 if (IsDraining())
                     throw new NATSConnectionDrainingException();
 
-                s = new SyncSubscription(this, subject, queue);
+                s = createSyncSubscriptionDelegate == null 
+                    ? new SyncSubscription(this, subject, queue) 
+                    : createSyncSubscriptionDelegate(this, subject, queue);
 
                 addSubscription(s);
 
@@ -4578,7 +4589,7 @@ namespace NATS.Client
             {
                 lock (mu)
                 {
-                    return info.max_payload;
+                    return info.MaxPayload;
                 }
             }
         }
@@ -4665,6 +4676,20 @@ namespace NATS.Client
         {
             Dispose(true);
             GC.SuppressFinalize(this);
+        }
+
+        #endregion
+
+        #region JetStream
+
+        public IJetStream CreateJetStreamContext(JetStreamOptions options = null)
+        {
+            return new JetStream.JetStream(this, options);
+        }
+
+        public IJetStreamManagement CreateJetStreamManagementContext(JetStreamOptions options = null)
+        {
+            return new JetStream.JetStreamManagement(this, options);
         }
 
         #endregion

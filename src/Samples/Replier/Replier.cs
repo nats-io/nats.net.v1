@@ -12,12 +12,11 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.Threading;
-using System.Collections.Generic;
 using NATS.Client;
-
 
 namespace NATSExamples
 {
@@ -149,7 +148,7 @@ namespace NATSExamples
         {
             Console.Error.WriteLine(
                 "Usage:  Replier [-url url] [-subject subject] " +
-                "-count [count] -creds [file] [-sync] [-verbose]");
+                "[-count count] [-creds file] [-sync] [-verbose]");
 
             Environment.Exit(-1);
         }

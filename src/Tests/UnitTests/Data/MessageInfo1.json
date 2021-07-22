@@ -1,0 +1,1 @@
+﻿{"type":"io.nats.jetstream.api.v1.stream_msg_get_response","message":{"subject":"subject","seq":1,"hdrs":"TkFUUy8xLjANCmZvbzpiYXINCg0K","data":"ZGF0YS0x","time":"2021-04-15T16:12:20.8339608Z"}}

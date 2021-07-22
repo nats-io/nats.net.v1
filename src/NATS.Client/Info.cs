@@ -11,63 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Linq;
 using System.Text;
 using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client
 {
-    internal class ServerInfo
-    {
-        public string server_id { get; private set; }
-
-        public string client_ip { get; private set; }
-
-        public string host { get; private set; }
-
-        public int port { get; private set; }
-
-        public string version { get; private set; }
-
-        public bool auth_required { get; private set; }
-
-        public bool tls_required { get; private set; }
-
-        public bool headers { get; private set; }
-
-        public long max_payload { get; private set; }
-
-        public string[] connect_urls { get; private set; }
-
-        public string nonce { get; private set; }
-
-        public int proto { get; private set; }
-
-        public bool ldm { get; private set; }
-
-        public static ServerInfo CreateFromJson(string json)
-        {
-            var x = JSON.Parse(json);
-
-            return new ServerInfo
-            {
-                server_id = x["server_id"].Value,
-                client_ip = x["client_ip"].Value,
-                host = x["host"].Value,
-                port = x["port"].AsInt,
-                version = x["version"].Value,
-                auth_required = x["auth_required"].AsBool,
-                tls_required = x["tls_required"].AsBool,
-                max_payload = x["max_payload"].AsLong,
-                connect_urls = x["connect_urls"].Children.Select(n => n.Value).ToArray(),
-                nonce = x["nonce"].Value,
-                proto = x["proto"].AsInt,
-                headers = x["headers"].AsBool,
-                ldm = x["ldm"].AsBool,
-            };
-        }
-    }
-    
     internal class ConnectInfo
     {
         public bool verbose { get; private set; }

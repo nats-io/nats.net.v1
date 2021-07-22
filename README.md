@@ -81,7 +81,7 @@ First, reference the NATS.Client assembly so you can use it in your code.  Be su
 
 Below is some code demonstrating basic API usage.  Note that this is example code, not functional as a whole (e.g. requests will fail without a subscriber to reply).
 
-```C#
+```c#
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -94,7 +94,7 @@ using NATS.Client;
 
 Here are example snippets of using the API to create a connection, subscribe, publish, and request data.
 
-```C#
+```c#
             // Create a new connection factory to create
             // a connection.
             ConnectionFactory cf = new ConnectionFactory();
@@ -235,7 +235,7 @@ serializing objects using the BinaryFormatter, but methods used to serialize and
 objects can be overridden.  The NATS core version does not have serialization
 defaults and they must be specified.
 
-```C#
+```c#
         using (IEncodedConnection c = new ConnectionFactory().CreateEncodedConnection())
         {
             EventHandler<EncodedMessageEventArgs> eh = (sender, args) =>
@@ -267,7 +267,7 @@ Optionally, one can override serialization.  Depending on the level of support o
 third party packages used, objects can be serialized to JSON, SOAP, or a custom
 scheme.  XML was chosen as the example here as it is natively supported by .NET 4.6.
 
-```C#
+```c#
         // Example XML serialization.
         byte[] serializeToXML(Object obj)
         {
@@ -304,7 +304,7 @@ scheme.  XML was chosen as the example here as it is natively supported by .NET 
 One can also use `Data Contract` to serialize objects.  Below are simple example
  overrides that work with .NET core:
 
-```C#
+```c#
 [DataContract]
 public class JsonObject
 {
@@ -395,23 +395,23 @@ c.Publish("foo.bar.baz", null);
 
 All subscriptions with the same queue name will form a queue group. Each message will be delivered to only one subscriber per queue group, using queue sematics. You can have as many queue groups as you wish. Normal subscribers will continue to work as expected.
 
-```C#
+```c#
 ISyncSubscription s1 = c.SubscribeSync("foo", "job_workers");
 ```
 
 or
 
-```C#
+```c#
 IAsyncSubscription s = c.SubscribeAsync("foo", "job_workers", myHandler);
 ```
 
 To unsubscribe, call the ISubscriber Unsubscribe method:
-```C#
+```c#
 s.Unsubscribe();
 ```
 
 When finished with NATS, close the connection.
-```C#
+```c#
 c.Close();
 ```
 
@@ -420,7 +420,7 @@ c.Close();
 
 Connection and Subscriber objects implement IDisposable and can be created in a using statement.  Here is all the code required to connect to a default server, receive ten messages, and clean up, unsubcribing and closing the connection when finished.
 
-```C#
+```c#
             using (IConnection c = new ConnectionFactory().CreateConnection())
             {
                 using (ISyncSubscription s = c.SubscribeSync("foo"))
@@ -436,7 +436,7 @@ Connection and Subscriber objects implement IDisposable and can be created in a 
 
 Or to publish ten messages:
 
-```C#
+```c#
             using (IConnection c = new ConnectionFactory().CreateConnection())
             {
                 for (int i = 0; i < 10; i++)
@@ -448,7 +448,7 @@ Or to publish ten messages:
 
 Flush a connection to the server - this call returns when all messages have been processed.  Optionally, a timeout in milliseconds can be passed.
 
-```C#
+```c#
 c.Flush();
 
 c.Flush(1000);
@@ -456,7 +456,7 @@ c.Flush(1000);
 
 Setup a subscriber to auto-unsubscribe after ten messsages.
 
-```C#
+```c#
         IAsyncSubscription s = c.SubscribeAsync("foo");
         s.MessageHandler += (sender, args) =>
         {
@@ -470,7 +470,7 @@ Setup a subscriber to auto-unsubscribe after ten messsages.
 Note that an anonymous function was used.  This is for brevity here - in practice, delegate functions can be used as well.  
 
 Other events can be assigned delegate methods through the options object.
-```C#
+```c#
             Options opts = ConnectionFactory.GetDefaultOptions();
 
             opts.AsyncErrorEventHandler += (sender, args) =>
@@ -504,7 +504,7 @@ Other events can be assigned delegate methods through the options object.
 
 After version 0.5.0, the C# .NET client supports async Requests.
 
-```C#
+```c#
 public async void MyRequestDataMethod(IConnection c)
 {
     var m = await c.RequestAsync("foo", null);
@@ -531,7 +531,7 @@ The NATS .NET client supports the cluster discovery protocol.  The list of serve
 
 ## Clustered Usage
 
-```C#
+```c#
             string[] servers = new string[] {
                 "nats://localhost:1222",
                 "nats://localhost:1224"
@@ -551,7 +551,7 @@ The NATS .NET client supports TLS 1.2.  Set the secure option, add
 the certificate, and connect.  Note that .NET requires both the
 private key and certificate to be present in the same certificate file.
 
-```C#
+```c#
         Options opts = ConnectionFactory.GetDefaultOptions();
         opts.Secure = true;
 
@@ -572,7 +572,7 @@ when using self-signed certificates) to override server certificate
 validation.  This is achieved by overriding the remove certificate
 validation callback through the NATS client options.
 
-```C#
+```c#
 
     private bool verifyServerCert(object sender,
         X509Certificate certificate, X509Chain chain,
@@ -606,7 +606,7 @@ This requires server with version >= 2.0.0
 
 NATS servers have a new security and authentication mechanism to authenticate with user credentials and Nkeys. The simplest form is to use the helper method UserCredentials(credsFilepath).
 
-```C#
+```c#
 IConnection c = new ConnectionFactory().CreateConnection("nats://127.0.0.1", "user.creds")
 ```
 
@@ -617,13 +617,13 @@ and wipe and erase memory it uses for each connect or reconnect.
 
 The helper also can take two entries, one for the JWT and one for the NKey seed file.
 
-```C#
+```c#
 IConnection c = new ConnectionFactory().CreateConnection("nats://127.0.0.1", "user.jwt", "user.nk");
 ```
 
 You can also set the event handlers directly and manage challenge signing directly.
 
-```C#
+```c#
 EventHandler<UserJWTEventArgs> jwtEh = (sender, args) =>
 {
     // Obtain a user JWT...
@@ -663,7 +663,7 @@ This is a helper function which will load and decode and do the proper signing f
 server nonce.  It will clear memory in between invocations. You can choose to use the
 low level option and provide the public key and a signature callback on your own.
 
-```C#
+```c#
 Options opts = ConnectionFactory.GetDefaultOptions();
 opts.SetNkey("UCKKTOZV72L3NITTGNOCRDZUI5H632XCT4ZWPJBC2X3VEY72KJUWEZ2Z",
 "./config/certs/user.nk");
@@ -679,7 +679,7 @@ Message headers are represented as a string name value pair just as HTTP headers
 
 ### Setting Message Headers
 
-```C#
+```c#
 IConnection c = new new ConnectionFactory().CreateConnection();
 
 Msg m = new Msg();
@@ -690,7 +690,7 @@ c.Publish(m);
 
 ### Getting Message Headers
 
-```C#
+```c#
 IConnection c = new new ConnectionFactory().CreateConnection();
 var s = c.SubscribeSync("foo")
 
@@ -713,6 +713,238 @@ The NATS .NET client can throw the following exceptions:
 * NATSMaxPayloadException - The exception that is thrown when a message payload exceeds what the maximum configured.
 * NATSBadSubscriptionException - The exception that is thrown when a subscriber operation is performed on an invalid subscriber.
 * NATSTimeoutException - The exception that is thrown when a NATS operation times out.
+
+## JetStream
+
+__JetStream IS CURRENTLY IN BETA / PRE-RELEASE AND IS SUBJECT TO CHANGE__
+
+Publishing and subscribing to JetStream enabled servers is straightforward.  A
+JetStream enabled application will connect to a server, establish a JetStream
+context, and then publish or subscribe.  This can be mixed and matched with standard
+NATS subject, and JetStream subscribers, depending on configuration, receive messages
+from both streams and directly from other NATS producers.
+
+### The JetStream Context
+
+After establishing a connection as described above, create a JetStream Context.
+
+   ```c#
+   IJetStream js = c.CreateJetStreamContext();
+   ```
+
+You can pass options to configure the JetStream client, although the defaults should
+suffice for most users.  See the `JetStreamOptions` class.
+
+There is no limit to the number of contexts used, although normally one would only
+require a single context.  Contexts may be prefixed to be used in conjunction with
+NATS authorization.
+
+### Publishing
+
+To publish messages, use the `IJetStream.Publish(...)` API.  A stream must be established
+before publishing. You can publish in either a synchronous or asynchronous manner.
+
+**Synchronous:**
+
+```c#
+       // create a typical NATS message
+       Msg msg = new Msg("foo", Encoding.UTF8.GetBytes("hello"));
+       PublishAck pa = js.Publish(msg);
+```
+
+See `JetStreamPublish` in the JetStream samples for a detailed and runnable sample.
+
+If there is a problem an exception will be thrown, and the message may not have been
+persisted.  Otherwise, the stream name and sequence number is returned in the publish
+acknowledgement.
+
+There are a variety of publish options that can be set when publishing.  When duplicate
+checking has been enabled on the stream, a message ID should be set. One set of options
+are expectations.  You can set a publish expectation such as a particular stream name,
+previous message ID, or previous sequence number.  These are hints to the server that
+it should reject messages where these are not met, primarily for enforcing your ordering
+or ensuring messages are not stored on the wrong stream.
+
+The PublishOptions are immutable, but the builder an be re-used for expectations by clearing the expected.
+
+For example:
+
+```c#
+      PublishOptions.PublishOptionsBuilder builder = PublishOptions.Builder()
+          .WithExpectedStream(stream)
+          .WithMessageId("mid1");
+
+      PublishAck pa = js.Publish("foo", null, builder.Build());
+      
+      pubOptsBuilder.ClearExpected()
+          .WithExpectedLastSequence("mid1")
+          .WithMessageId("mid2");
+      pa = js.Publish("foo", null, pubOptsBuilder.build());
+```
+
+See `JetStreamPublishWithOptionsUseCases` in the JetStream samples for a detailed and runnable sample.
+
+**Asynchronous:**
+
+```c#
+
+      IList<Task<PublishAck>> tasks = new new List<Task<PublishAck>>();
+      for (int x = 1; x < roundCount; x++) {
+          // create a typical NATS message
+          Msg msg = new Msg("foo", Encoding.UTF8.GetBytes("hello"));
+
+          // Publish a message
+          tasks.Add(js.PublishAsync(msg));
+     }
+
+     foreach (Task<PublishAck> task in tasks) {
+         ... process the task
+     }
+```
+
+See the `JetStreamPublishAsync` in the JetStream samples for a detailed and runnable sample.
+
+#### ReplyTo When Publishing
+
+The Message object allows you to set a replyTo, but in publish requests,
+the replyTo is reserved for internal use as the address for the
+server to respond to the client with the PublishAck.
+
+### Subscribing
+
+There are three methods of subscribing, **Push Async**, **Push Sync** and **Pull** with each variety having its own set of options and abilities.
+
+Push subscriptions can be synchronous or asynchronous. The server *pushes* messages to the client.
+
+### Push Async Subscribing
+
+```c#
+        void MyHandler(object sender, MsgHandlerEventArgs args)
+        {
+            // Process the message.
+            // Ack the message depending on the ack model
+        }
+
+        PushSubscribeOptions pso = PushSubscribeOptions.Builder()
+            .WithDurable("optional-durable-name")
+            .build();
+        
+        boolean autoAck = ...
+        
+        // Subscribe using the handler
+        IJetStreamPushAsyncSubscription sub = 
+            js.PushSubscribeAsync("subject", MyHandler, false, pso);
+```
+
+See the `JetStreamPushSubcribeAsync` (TODO) in the JetStream samples for a detailed and runnable sample.
+
+### Push Sync Subscribing
+
+```c#
+        PushSubscribeOptions pso = PushSubscribeOptions.Builder()
+            .WithDurable("optional-durable-name")
+            .build();
+        
+        // Subscribe 
+        IJetStreamPushSyncSubscription sub = 
+                js.PushSubscribeSync("subject", pso);
+```
+
+See `JetStreamPushSubcribeSync` in the JetStream samples for a detailed and runnable sample.
+
+### Pull Subscribing
+
+Pull subscriptions are always synchronous. The server organizes messages into a batch
+which it sends when requested.
+
+```c#
+        PullSubscribeOptions options = PullSubscribeOptions.Builder()
+            .WithDurable("durable-name-is-required")
+            .Build();
+
+        IJetStreamPullSubscription sub = js.PullSubscribe("subject", options);
+```
+
+**Fetch:**
+
+```c#
+        List<Msg> message = sub.Fetch(100, 1000); // 100 messages, 1000 millis timeout
+        for (Msg m : messages) {
+            // process message
+            m.Ack();
+        }
+```
+
+The fetch pull is a *macro* pull that uses advanced pulls under the covers to return a list of messages.
+The list may be empty or contain at most the batch size. All status messages are handled for you.
+The client can provide a timeout to wait for the first message in a batch.
+The fetch call returns when the batch is ready.
+The timeout may be exceeded if the server sent messages very near the end of the timeout period.
+
+See `JetStreamPullSubscribeFetch` (TODO) and `JetStreamPullSubscribeFetchUseCases` (TODO)
+in the JetStream samples for a detailed and runnable sample.
+
+**Batch Size:**
+
+```c#
+        sub.Pull(100); // 100 messages
+        ...
+        Msg m = sub.NextMessage(1000);
+```
+
+An advanced version of pull specifies a batch size. When asked, the server will send whatever
+messages it has up to the batch size. If it has no messages it will wait until it has some to send.
+The client may time out before that time. If there are less than the batch size available,
+you can ask for more later. Once the entire batch size has been filled, you must make another pull request.
+
+See `JetStreamPullSubBatchSize` (TODO) and `JetStreamPullSubBatchSizeUseCases` (TODO)
+in the JetStream samples for detailed and runnable samples.
+
+**No Wait and Batch Size:**
+
+```c#
+        sub.PullNoWait(100); // 100 messages
+        ...
+        Msg m = sub.NextMessage(1000);
+```
+
+An advanced version of pull also specifies a batch size. When asked, the server will send whatever
+messages it has up to the batch size, but will never wait for the batch to fill and the client
+will return immediately. If there are less than the batch size available, you will get what is
+available and a 404 status message indicating the server did not have enough messages.
+You must make a pull request every time. **This is an advanced api**
+
+See the `JetStreamPullSubNoWaitUseCases` (TODO) in the JetStream samples for a detailed and runnable sample.
+
+**Expires In and Batch Size:**
+
+```c#
+        sub.PullExpiresIn(100, 3000); // 100 messages, expires in 3000 millis
+        ...
+        Msg m = sub.NextMessage(4000);
+```
+
+Another advanced version of pull specifies a maximum time to wait for the batch to fill.
+The server returns messages when either the batch is filled or the time expires. It's important to
+set your client's timeout to be longer than the time you've asked the server to expire in.
+You must make a pull request every time. In subsequent pulls, you will receive multiple 408 status
+messages, one for each message the previous batch was short. You can just ignore these.
+**This is an advanced api**
+
+See `JetStreamPullSubExpire` (TODO) and `JetStreamPullSubExpireUseCases` (TODO)
+in the JetStream samples for detailed and runnable samples.
+
+### Message Acknowledgements
+
+There are multiple types of acknowledgements in JetStream:
+
+* `Msg.Ack()`: Acknowledges a message.
+* `Msg.AckSync(timeout)`: Acknowledges a message and waits for a confirmation. When used with deduplications this creates exactly once delivery guarantees (within the deduplication window).  This may significantly impact performance of the system.
+* `Msg.Nak()`: A negative acknowledgment indicating processing failed and the message should be resent later.
+* `Msg.Term()`: Never send this message again, regardless of configuration.
+* `Msg.InProgress()`:  The message is being processed and reset the redelivery timer in the server.  The message must be acknowledged later when processing is complete.
+
+Note that exactly once delivery guarantee can be achieved by using a consumer with explicit ack mode attached to stream setup with a deduplication window and using the `ackSync` to acknowledge messages.  The guarantee is only valid for the duration of the deduplication window.
 
 ## Benchmarking the NATS .NET Client
 
@@ -794,6 +1026,7 @@ To that end, with any contributions, certainly feel free to code in a more .NET 
 * [X] Update delegates from traditional model to custom
 * [X] NuGet package
 * [X] Strong name the assembly
+* [ ] JetStream
 
 Any suggestions and/or contributions are welcome!
 

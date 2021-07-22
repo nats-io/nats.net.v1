@@ -12,14 +12,13 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NATS.Client;
-using System.Diagnostics;
 using Xunit;
-using System.Collections.Generic;
-
 
 namespace IntegrationTests
 {
@@ -819,6 +818,7 @@ namespace IntegrationTests
                     sw.Stop();
                     Assert.True(sw.Elapsed.TotalMilliseconds > 500, "Elapsed millis are: " + sw.ElapsedMilliseconds);
 
+                    
                     // test early cancellation
                     var cts = new CancellationTokenSource();
                     var ct = cts.Token;
@@ -2000,7 +2000,7 @@ namespace IntegrationTests
         /// 
         /// </summary>
         [Fact(Skip = "Manual")]
-        public void TestJetstreamSubjectHandling()
+        public void TestJetStreamSubjectHandling()
         {
             // Start a NATS server with experimental -js feature and create a stream and consumer
             // as described in issue https://github.com/nats-io/nats.net/issues/364
