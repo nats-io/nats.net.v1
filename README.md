@@ -786,6 +786,8 @@ See `JetStreamPublishWithOptionsUseCases` in the JetStream samples for a detaile
 
 **Asynchronous:**
 
+TODO This is not available yet.
+
 ```c#
 
       IList<Task<PublishAck>> tasks = new new List<Task<PublishAck>>();
