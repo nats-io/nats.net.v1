@@ -46,7 +46,7 @@ namespace UnitTests.JetStream
 
             Assert.Equal("expectedstream", po.ExpectedStream);
             Assert.Equal("expectedmsgid", po.ExpectedLastMsgId);
-            Assert.Equal(42, po.ExpectedLastSeq);
+            Assert.Equal(42ul, po.ExpectedLastSeq);
             Assert.Equal("msgid", po.MessageId);
             Assert.Equal("stream", po.Stream);
             Assert.Equal(5150, po.StreamTimeout.Millis);
@@ -66,10 +66,6 @@ namespace UnitTests.JetStream
         [Fact]
         public void TestInvalidBuilderArgs()
         {
-            Assert.Throws<ArgumentException>(() => PublishOptions.Builder().
-                WithExpectedLastSequence(-1).
-                Build());
-
             Assert.Throws<ArgumentException>(() => PublishOptions.Builder().
                 WithMessageId("").
                 Build());
