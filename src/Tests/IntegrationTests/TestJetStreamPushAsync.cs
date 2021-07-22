@@ -15,6 +15,7 @@ using System.Threading;
 using NATS.Client;
 using NATS.Client.JetStream;
 using Xunit;
+using Xunit.Abstractions;
 using static UnitTests.TestBase;
 using static IntegrationTests.JetStreamTestBase;
 
@@ -22,7 +23,12 @@ namespace IntegrationTests
 {
     public class TestJetStreamPushAsync : TestSuite<JetStreamPushAsyncSuiteContext>
     {
-        public TestJetStreamPushAsync(JetStreamPushAsyncSuiteContext context) : base(context) {}
+        private readonly ITestOutputHelper output;
+
+        public TestJetStreamPushAsync(ITestOutputHelper output, JetStreamPushAsyncSuiteContext context) : base(context)
+        {
+            this.output = output;
+        }
 
         [Fact]
         public void TestHandlerSub()
@@ -43,7 +49,8 @@ namespace IntegrationTests
                 
                 void TestHandler(object sender, MsgHandlerEventArgs args)
                 {
-                    Interlocked.Increment(ref received);
+                    received++;
+
                     if (args.Message.IsJetStream)
                     {
                         args.Message.Ack();
@@ -83,9 +90,9 @@ namespace IntegrationTests
                 // create our message handler, does not ack
                 void Handler1(object sender, MsgHandlerEventArgs args)
                 {
-                    Interlocked.Increment(ref handlerReceived1);
+                    handlerReceived1++;
                     latch1.Signal();
-                }
+            }
 
                 // subscribe using the handler, auto ack true
                 PushSubscribeOptions pso1 = PushSubscribeOptions.Builder()
@@ -108,7 +115,7 @@ namespace IntegrationTests
                 // create our message handler, also does not ack
                 void Handler2(object sender, MsgHandlerEventArgs args)
                 {
-                    Interlocked.Increment(ref handlerReceived2);
+                    handlerReceived2++;
                     latch2.Signal();
                 }
 

@@ -28,7 +28,6 @@ namespace IntegrationTests
     {
         private readonly ITestOutputHelper output;
 
-        // public TestJetStreamPublish(JetStreamPublishSuiteContext context) : base(context) {}
         public TestJetStreamPublish(ITestOutputHelper output, JetStreamPublishSuiteContext context) : base(context)
         {
             this.output = output;
