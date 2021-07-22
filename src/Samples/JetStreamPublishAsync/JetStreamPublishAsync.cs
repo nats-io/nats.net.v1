@@ -12,15 +12,17 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 using NATS.Client;
 using NATS.Client.JetStream;
 
 namespace NATSExamples
 {
-    class JetStreamPublish
+    class JetStreamPublishAsync
     {
-        const string Usage = "Usage: JetStreamPublish [-url url] [-creds file] [-stream stream] " +
+        const string Usage = "Usage: JetStreamPublishAsync [-url url] [-creds file] [-stream stream] " +
                                    "[-subject subject] [-count count] [-payload payload] [-header key:value]" +
                                    "\n\nDefault Values:" +
                                    "\n   [-stream]   example-stream" +
@@ -58,6 +60,8 @@ namespace NATSExamples
 
                 IJetStream js = c.CreateJetStreamContext();
 
+                IList<Task<PublishAck>> tasks = new List<Task<PublishAck>>();
+                
                 byte[] data = Encoding.UTF8.GetBytes(payload);
 
                 int stop = count < 2 ? 2 : count + 1;
@@ -76,9 +80,32 @@ namespace NATSExamples
                     // to constrain publishing to certain streams, expect sequence numbers and
                     // more. See the JetStreamPublishWithOptionsUseCases example for details.
                     // An exception will be thrown if there is a failure.
-                    PublishAck pa = js.Publish(msg);
-                    Console.WriteLine("Published message {0} on subject {1}, stream {2}, seqno {3}.",
-                        Encoding.UTF8.GetString(data), subject, pa.Stream, pa.Seq);
+                    tasks.Add(js.PublishAsync(msg));
+
+                    while (tasks.Count > 0)
+                    {
+                        Task<PublishAck> task = tasks[0];
+                        tasks.RemoveAt(0);
+
+                        if (task.IsCompleted)
+                        {
+                            try
+                            {
+                                PublishAck pa = task.Result;
+                                Console.WriteLine("Published message {0} on subject {1}, stream {2}, seqno {3}.",
+                                    Encoding.UTF8.GetString(data), subject, pa.Stream, pa.Seq);
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine("Publish Failed: " + e);
+                            }
+                        }
+                        else
+                        {
+                            // re queue so will be checked for completed again
+                            tasks.Add(task);
+                        }
+                    }
                 }
             }
         }
@@ -152,7 +179,7 @@ namespace NATSExamples
 
         void Banner()
         {
-            Console.WriteLine("JetStream Publishing Example");
+            Console.WriteLine("JetStream Publishing Async Example");
             Console.WriteLine("  Url: {0}", url);
             Console.WriteLine("  Stream: {0}", stream);
             Console.WriteLine("  Subject: {0}", subject);
@@ -165,7 +192,7 @@ namespace NATSExamples
         {
             try
             {
-                new JetStreamPublish().Run(args);
+                new JetStreamPublishAsync().Run(args);
             }
             catch (Exception ex)
             {

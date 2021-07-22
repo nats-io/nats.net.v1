@@ -348,6 +348,7 @@ namespace NATS.Client.Internals.SimpleJSON
             WriteToStringBuilder(sb, 0, aIndent, JSONTextMode.Indent);
             return sb.ToString();
         }
+        
         internal abstract void WriteToStringBuilder(StringBuilder aSB, int aIndent, int aIndentInc, JSONTextMode aMode);
 
         public abstract Enumerator GetEnumerator();
@@ -579,8 +580,12 @@ namespace NATS.Client.Internals.SimpleJSON
             }
 
             JSONNumber jsonNumber = new JSONNumber(token);
+            if (jsonNumber.IsNumber)
+            {
+                return jsonNumber;
+            }
             
-            return jsonNumber.IsNumber ? jsonNumber : token;
+            return token;
         }
 
         public static JSONNode Parse(string aJSON)

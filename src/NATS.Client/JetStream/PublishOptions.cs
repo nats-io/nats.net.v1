@@ -30,7 +30,7 @@ namespace NATS.Client.JetStream
         /// <summary>
         /// Default Last Sequence Number (unset)
         /// </summary>
-        public const long DefaultLastSequence = -1;
+        public const ulong DefaultLastSequence = 0;
 
         /// <summary>
         /// The stream name.
@@ -55,7 +55,7 @@ namespace NATS.Client.JetStream
         /// <summary>
         /// The Expected Last Sequence.
         /// </summary>
-        public long ExpectedLastSeq { get; }
+        public ulong ExpectedLastSeq { get; }
         
         /// <summary>
         /// The Expected Message Id.
@@ -63,7 +63,7 @@ namespace NATS.Client.JetStream
         public string MessageId { get; }
 
         private PublishOptions(string stream, Duration streamTimeout, string expectedStream,
-            string expectedLastMsgId, long expectedLastSeq, string messageId)
+            string expectedLastMsgId, ulong expectedLastSeq, string messageId)
         {
             Stream = stream;
             StreamTimeout = streamTimeout;
@@ -93,7 +93,7 @@ namespace NATS.Client.JetStream
             private Duration _streamTimeout = DefaultTimeout;
             private string _expectedStream;
             private string _expectedLastMsgId;
-            private long _expectedLastSeq = DefaultLastSequence;
+            private ulong _expectedLastSeq = DefaultLastSequence;
             private string _messageId;
             
             /// <summary>
@@ -114,7 +114,7 @@ namespace NATS.Client.JetStream
             /// <returns>The PublishOptionsBuilder</returns>
             public PublishOptionsBuilder WithTimeout(Duration timeout)
             {
-                _streamTimeout = Validator.EnsureNotNullAndNotLessThanMin(timeout, DefaultTimeout, 1);
+                _streamTimeout = Validator.EnsureNotNullAndNotLessThanMin(timeout, Duration.One, DefaultTimeout);
                 return this;
             }
 
@@ -125,7 +125,7 @@ namespace NATS.Client.JetStream
             /// <returns>The PublishOptionsBuilder</returns>
             public PublishOptionsBuilder WithTimeout(long timeoutMillis)
             {
-                _streamTimeout = Validator.EnsureDurationNotLessThanMin(timeoutMillis, DefaultTimeout, 1);
+                _streamTimeout = Validator.EnsureDurationNotLessThanMin(timeoutMillis, Duration.One, DefaultTimeout);
                 return this;
             }
 
@@ -167,9 +167,9 @@ namespace NATS.Client.JetStream
             /// </summary>
             /// <param name="lastSequence">The expected sequence.</param>
             /// <returns>The PublishOptionsBuilder</returns>
-            public PublishOptionsBuilder WithExpectedLastSequence(long lastSequence)
+            public PublishOptionsBuilder WithExpectedLastSequence(ulong lastSequence)
             {
-                _expectedLastSeq = Validator.ValidateNotNegative(lastSequence, nameof(lastSequence));
+                _expectedLastSeq = lastSequence;
                 return this;
             }
 

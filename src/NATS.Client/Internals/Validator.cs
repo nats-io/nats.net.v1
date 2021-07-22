@@ -271,16 +271,14 @@ namespace NATS.Client.Internals
             return l == 0 || l < -1;
         }
 
-        internal static Duration EnsureNotNullAndNotLessThanMin(Duration provided, Duration dflt, long minMillis)
+        internal static Duration EnsureNotNullAndNotLessThanMin(Duration provided, Duration minimum, Duration dflt)
         {
-            return provided == null || provided.Millis < minMillis ? dflt : provided;
-
+            return provided == null || provided.Nanos < minimum.Nanos ? dflt : provided;
         }
 
-        internal static Duration EnsureDurationNotLessThanMin(long providedMillis, Duration dflt, long minMillis)
+        internal static Duration EnsureDurationNotLessThanMin(long providedMillis, Duration minimum, Duration dflt)
         {
-            return providedMillis < minMillis ? dflt : Duration.OfMillis(providedMillis);
-
+            return EnsureNotNullAndNotLessThanMin(Duration.OfMillis(providedMillis), minimum, dflt);
         }
     }
 }

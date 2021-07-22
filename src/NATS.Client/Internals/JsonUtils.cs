@@ -11,12 +11,25 @@ namespace NATS.Client.Internals
 
         internal static int AsIntOrMinus1(JSONNode node, String field)
         {
-            return node.GetValueOrDefault(field, MinusOne);
+            JSONNode possible = node[field];
+            return possible.IsNumber ? possible.AsInt : -1;
         }
 
         internal static long AsLongOrMinus1(JSONNode node, String field)
         {
-            return node.GetValueOrDefault(field, MinusOne);
+            JSONNode possible = node[field];
+            return possible.IsNumber ? possible.AsLong : -1;
+        }
+
+        internal static ulong AsUlongOrZero(JSONNode node, String field)
+        {
+            JSONNode possible = node[field];
+            return possible.IsNumber ? possible.AsUlong : 0;
+        }
+
+        internal static Duration AsDuration(JSONNode node, String field, Duration dflt)
+        {
+            return Duration.OfNanos(node.GetValueOrDefault(field, dflt.Nanos).AsLong);
         }
 
         internal static List<string> StringList(JSONNode node, String field)

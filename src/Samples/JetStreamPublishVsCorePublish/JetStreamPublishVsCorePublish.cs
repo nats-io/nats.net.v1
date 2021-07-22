@@ -18,27 +18,18 @@ using NATS.Client.JetStream;
 
 namespace NATSExamples
 {
-    class JetStreamPublish
+    class JetStreamPublishVsCorePublish
     {
-        const string Usage = "Usage: JetStreamPublish [-url url] [-creds file] [-stream stream] " +
-                                   "[-subject subject] [-count count] [-payload payload] [-header key:value]" +
-                                   "\n\nDefault Values:" +
-                                   "\n   [-stream]   example-stream" +
-                                   "\n   [-subject]  example-subject" +
-                                   "\n   [-count]    10" +
-                                   "\n   [-payload]  Hello" +
-                                   "\n\nRun Notes:" +
-                                   "\n   - count < 1 is the same as 1" +
-                                   "\n   - quote multi word payload" +
-                                   "\n   - headers are optional, quote multi word value, no ':' in value please";
+        private const string Usage = "Usage: JetStreamPublishVsCorePublish [-url url] [-creds file] [-stream stream] " +
+                                     "[-subject subject]" +
+                                     "\n\nDefault Values:" +
+                                     "\n   [-stream]   js-vs-reg-stream" +
+                                     "\n   [-subject]  js-vs-reg-subject";
         
         string url = Defaults.Url;
         string creds;
-        string stream = "example-stream";
-        string subject = "example-subject";
-        string payload = "Hello";
-        MsgHeader header = new MsgHeader();
-        int count = 10;
+        string stream = "js-vs-reg-stream";
+        string subject = "js-vs-reg-subject";
 
         void Run(string[] args)
         {
@@ -58,28 +49,37 @@ namespace NATSExamples
 
                 IJetStream js = c.CreateJetStreamContext();
 
-                byte[] data = Encoding.UTF8.GetBytes(payload);
+                // Regular Nats publish is straightforward
+                c.Publish(subject, Encoding.ASCII.GetBytes("regular-message"));
 
-                int stop = count < 2 ? 2 : count + 1;
-                for (int x = 1; x < stop; x++)
-                {
-                    // make unique message data if you want more than 1 message
-                    if (count > 1)
-                    {
-                        data = Encoding.UTF8.GetBytes(payload + "-" + x);
-                    }
+                // A JetStream publish allows you to set publish options
+                // that a regular publish does not.
+                // A JetStream publish returns an ack of the publish. There
+                // is no ack in a regular message.
+                Msg msg = new Msg(subject, Encoding.ASCII.GetBytes("js-message"));
 
-                    // Publish a message and print the results of the publish acknowledgement.
-                    Msg msg = new Msg(subject, null, header, data);
+                PublishOptions po = PublishOptions.Builder()
+                    // .WithExpectedLastSequence(...)
+                    // .WithExpectedLastMsgId(...)
+                    // .WithExpectedStream(...)
+                    // .WithMessageId()
+                    .Build();
 
-                    // We'll use the defaults for this simple example, but there are options
-                    // to constrain publishing to certain streams, expect sequence numbers and
-                    // more. See the JetStreamPublishWithOptionsUseCases example for details.
-                    // An exception will be thrown if there is a failure.
-                    PublishAck pa = js.Publish(msg);
-                    Console.WriteLine("Published message {0} on subject {1}, stream {2}, seqno {3}.",
-                        Encoding.UTF8.GetString(data), subject, pa.Stream, pa.Seq);
-                }
+                PublishAck pa = js.Publish(msg, po);
+                Console.WriteLine(pa);
+
+                // set up the subscription
+                IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(subject);
+                c.Flush(500); // flush outgoing communication with/to the server
+                
+                // Both messages appear in the stream
+                msg = sub.NextMessage(500);
+                msg.Ack();
+                Console.WriteLine("Received Data: " + Encoding.ASCII.GetString(msg.Data) + "\n         Meta: " + msg.MetaData);
+
+                msg = sub.NextMessage(500);
+                msg.Ack();
+                Console.WriteLine("Received Data: " + Encoding.ASCII.GetString(msg.Data) + "\n         Meta: " + msg.MetaData);
             }
         }
 
@@ -132,40 +132,23 @@ namespace NATSExamples
                     case "-subject": 
                         subject = args[i + 1];
                         break;
-
-                    case "-payload": 
-                        payload = args[i + 1];
-                        break;
-
-                    case "-count": 
-                        count = Convert.ToInt32(args[i + 1]);
-                        break;
-
-                    case "-header": 
-                        string[] split = args[i + 1].Split(':');
-                        if (split.Length != 2) { UsageThenExit(); }
-                        header.Add(split[0], split[1]);
-                        break;
                 }
             }
         }
 
         void Banner()
         {
-            Console.WriteLine("JetStream Publishing Example");
+            Console.WriteLine("JetStream Publishing Versus Core Publishing Example");
             Console.WriteLine("  Url: {0}", url);
             Console.WriteLine("  Stream: {0}", stream);
             Console.WriteLine("  Subject: {0}", subject);
-            Console.WriteLine("  Count: {0}", count);
-            Console.WriteLine("  Payload is \"{0}\"", payload);
-            Console.WriteLine("  Headers: {0}", header.Count == 0 ? "No" : "Yes");
         }
 
         public static void Main(string[] args)
         {
             try
             {
-                new JetStreamPublish().Run(args);
+                new JetStreamPublishVsCorePublish().Run(args);
             }
             catch (Exception ex)
             {

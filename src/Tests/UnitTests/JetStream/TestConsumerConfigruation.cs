@@ -100,6 +100,7 @@ namespace UnitTests.JetStream
             Assert.Equal(42, c.MaxAckPending);
             Assert.Equal("sample_freq-value", c.SampleFrequency);
             Assert.True(c.FlowControl);
+            Assert.Equal(128, c.MaxPullWaiting);
         }
     }
 }

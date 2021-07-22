@@ -175,14 +175,13 @@ namespace NATSExamples
 
         void Banner()
         {
-            Console.WriteLine("JetStream Publishing Example");
+            Console.WriteLine("JetStream Push Subscribe Sync Example");
             Console.WriteLine("  Url: {0}", url);
             Console.WriteLine("  Stream: {0}", stream);
             Console.WriteLine("  Subject: {0}", subject);
             Console.WriteLine("  Durable: {0}", durable ?? "N/A");
             Console.WriteLine("  Deliver: {0}", deliver ?? "N/A");
             Console.WriteLine("  Count: {0}", count);
-            Console.WriteLine();
         }
 
         public static void Main(string[] args)

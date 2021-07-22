@@ -49,12 +49,12 @@ namespace NATS.Client.JetStream
             MaxConsumers = scNode[ApiConstants.MaxConsumers].AsLong;
             MaxMsgs = scNode[ApiConstants.MaxMsgs].AsLong;
             MaxBytes = scNode[ApiConstants.MaxBytes].AsLong;
-            MaxAge = Duration.OfNanos(scNode[ApiConstants.MaxAge].AsLong);
+            MaxAge = JsonUtils.AsDuration(scNode, ApiConstants.MaxAge, Duration.Zero);
             MaxMsgSize = scNode[ApiConstants.MaxMsgSize].AsLong;
             Replicas = scNode[ApiConstants.NumReplicas].AsInt;
             NoAck = scNode[ApiConstants.NoAck].AsBool;
             TemplateOwner = scNode[ApiConstants.TemplateOwner].Value;
-            DuplicateWindow = Duration.OfNanos(scNode[ApiConstants.DuplicateWindow].AsLong);
+            DuplicateWindow = JsonUtils.AsDuration(scNode, ApiConstants.DuplicateWindow, Duration.Zero);
             Placement = Placement.OptionalInstance(scNode[ApiConstants.Placement]);
             Mirror = Mirror.OptionalInstance(scNode[ApiConstants.Mirror]);
             Sources = Source.OptionalListOf(scNode[ApiConstants.Sources]);

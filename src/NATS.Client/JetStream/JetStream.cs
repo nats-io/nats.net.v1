@@ -40,17 +40,13 @@ namespace NATS.Client.JetStream
             return merged;
         }
 
-        private MsgHeader MergeNum(MsgHeader h, String key, long value) {
-            if (value > 0) {
-                if (h == null) {
-                    h = new MsgHeader(h);
-                }
-                h.Set(key, value.ToString());
-            }
-            return h;
+        private MsgHeader MergeNum(MsgHeader h, String key, ulong value)
+        {
+            return value > 0 ? MergeString(h, key, value.ToString()) : h;
         }
 
-        private MsgHeader MergeString(MsgHeader h, String key, String value) {
+        private MsgHeader MergeString(MsgHeader h, String key, String value) 
+        {
             if (!string.IsNullOrWhiteSpace(value)) {
                 if (h == null) {
                     h = new MsgHeader(h);

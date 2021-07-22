@@ -11,6 +11,7 @@ namespace NATS.Client.Internals
         const long NanosPerDay = NanosPerHour * 24L;
 
         public static readonly Duration Zero = new Duration(0L);
+        public static readonly Duration One = new Duration(1L);
 
         /// <summary>
         /// Gets the value of the duration in nanoseconds
