@@ -85,7 +85,7 @@ namespace NATS.Client.JetStream
             return ProcessPublishResponse(Conn.Request(msg), options);
         }
 
-        private Task<PublishAck> PublishAsyncInternal(string subject, byte[] data, MsgHeader hdr, PublishOptions options)
+        private async Task<PublishAck> PublishAsyncInternal(string subject, byte[] data, MsgHeader hdr, PublishOptions options)
         {
             MsgHeader merged = MergePublishOptions(hdr, options);
             Msg msg = new Msg(subject, null, merged, data);
@@ -98,8 +98,11 @@ namespace NATS.Client.JetStream
 
             Duration timeout = options == null ? JetStreamOptions.RequestTimeout : options.StreamTimeout;
 
-            return Conn.RequestAsync(msg, timeout.Millis)
-                .ContinueWith(async antecedent => ProcessPublishResponse(antecedent.Result, options), CancellationToken.None)
+            async Task<PublishAck> ContinuationFunction(Task<Msg> antecedent) 
+                => ProcessPublishResponse(antecedent.Result, options);
+
+            return await Conn.RequestAsync(msg, timeout.Millis)
+                .ContinueWith(ContinuationFunction, CancellationToken.None)
                 .Unwrap();
         }
 

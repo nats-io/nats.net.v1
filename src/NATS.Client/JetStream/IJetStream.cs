@@ -176,6 +176,7 @@ namespace NATS.Client.JetStream
         /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).</param>
         /// <param name="handler">The <see cref="EventHandler{MsgHandlerEventArgs}"/> invoked when messages are received 
         /// on the returned <see cref="IAsyncSubscription"/>.</param>
+        /// <param name="autoAck">Whether or not to auto ack the message</param>
         /// <returns>An <see cref="IAsyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
         /// <seealso cref="ISubscription.Subject"/>
@@ -196,6 +197,7 @@ namespace NATS.Client.JetStream
         /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).</param>
         /// <param name="handler">The <see cref="EventHandler{MsgHandlerEventArgs}"/> invoked when messages are received 
         /// on the returned <see cref="IJetStreamPushAsyncSubscription"/>.</param>
+        /// <param name="autoAck">Whether or not to auto ack the message</param>
         /// <param name="options">Pull Subcribe options for this subscription.</param>
         /// <returns>An <see cref="IJetStreamPushAsyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
@@ -217,6 +219,7 @@ namespace NATS.Client.JetStream
         /// <param name="queue">The name of the queue group in which to participate.</param>
         /// <param name="handler">The <see cref="EventHandler{MsgHandlerEventArgs}"/> invoked when messages are received 
         /// on the returned <see cref="IAsyncSubscription"/>.</param>
+        /// <param name="autoAck">Whether or not to auto ack the message</param>
         /// <returns>An <see cref="IAsyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
         /// <seealso cref="ISubscription.Subject"/>
@@ -243,6 +246,7 @@ namespace NATS.Client.JetStream
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
         /// <seealso cref="ISubscription.Subject"/>
         /// <seealso cref="ISubscription.Queue"/>
+        /// <param name="autoAck">Whether or not to auto ack the message</param>
         /// <param name="options">JetStream pull subscription options.</param>
         /// <returns>A JetStream push subscription</returns>
         IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler, bool autoAck, PushSubscribeOptions options);

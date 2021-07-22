@@ -88,7 +88,7 @@ namespace NATS.Client.JetStream
             /// <summary>
             /// Set the ConsumerConfiguration
             /// </summary>
-            /// <param name="consumerConfiguration">the ConsumerConfiguration object</param>
+            /// <param name="configuration">the ConsumerConfiguration object</param>
             /// <returns>The builder</returns>
             public PullSubscribeOptionsBuilder WithConfiguration(ConsumerConfiguration configuration)
             {
