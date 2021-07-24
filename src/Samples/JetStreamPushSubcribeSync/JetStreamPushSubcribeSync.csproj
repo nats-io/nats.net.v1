@@ -2,7 +2,9 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <Title>NATS JetStream Push Subscribe Sync</Title>
+        <Description>NATS JetStream Push Subscribe Sync Example</Description>
+        <IsPackable>false</IsPackable>
     </PropertyGroup>
 
     <ItemGroup>

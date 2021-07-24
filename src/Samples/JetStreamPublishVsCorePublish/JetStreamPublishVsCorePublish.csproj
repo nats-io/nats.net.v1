@@ -2,7 +2,9 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <Title>NATS JetStream Publish Versus Core Publish</Title>
+        <Description>NATS JetStream Publish Versus Core Publish Example</Description>
+        <IsPackable>false</IsPackable>
     </PropertyGroup>
 
     <ItemGroup>

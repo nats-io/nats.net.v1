@@ -64,7 +64,7 @@ stages:
         rerunFailedTests: True
         rerunMaxAttempts: 2
         testRunTitle: 'IntegrationTests .Net4.6'
-  
+        
     - task: DotNetCoreCLI@2
       displayName: 'Pack Nupkg'
       inputs:

@@ -129,7 +129,7 @@ namespace IntegrationTests
                 latch2.Wait();
                 Assert.Equal(10, handlerReceived2);
                 
-                Thread.Sleep(1000); // just give it time for the server to realize the messages are not ack'ed
+                Thread.Sleep(2000); // just give it time for the server to realize the messages are not ack'ed
                 
                 // check that we get all the messages again
                 sub = js.PushSubscribeSync(SUBJECT, pso2);
