@@ -2168,18 +2168,8 @@ namespace NATS.Client
                 stats.inMsgs++;
                 stats.inBytes += length;
 
-                // In regular message processing, the key should be present,
-                // so optimize by using an an exception to handle a missing key.
-                // (as opposed to checking with Contains or TryGetValue)
-                try
-                {
-                    s = subs[msgArgs.sid];
-                }
-                catch (Exception)
-                {
-                    // this can happen when a subscriber is unsubscribing.
-                    return;
-                }
+                if (!subs.TryGetValue(msgArgs.sid, out s))
+                    return; // this can happen when a subscriber is unsubscribing.
 
                 lock (s.mu)
                 {
