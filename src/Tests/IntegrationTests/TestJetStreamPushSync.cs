@@ -223,5 +223,104 @@ namespace IntegrationTests
                 AssertNoMoreMessages(sub);
             });
         }
+
+        [Fact]
+        public void TestDeliveryPolicy()
+        {
+            Context.RunInJsServer(c =>
+            {
+                // create the stream.
+                CreateMemoryStream(c, STREAM, SUBJECT_STAR);
+
+                // Create our JetStream context to receive JetStream messages.
+                IJetStream js = c.CreateJetStreamContext();
+
+                string subjectA = SubjectDot("A");
+                string subjectB = SubjectDot("B");
+
+                js.Publish(subjectA, DataBytes(1));
+                js.Publish(subjectA, DataBytes(2));
+                Thread.Sleep(1500);
+                js.Publish(subjectA, DataBytes(3));
+                js.Publish(subjectB, DataBytes(91));
+                js.Publish(subjectB, DataBytes(92));
+
+                // DeliverPolicy.All
+                PushSubscribeOptions pso = PushSubscribeOptions.Builder()
+                        .WithConfiguration(ConsumerConfiguration.Builder().WithDeliverPolicy(DeliverPolicy.All).Build())
+                        .Build();
+                IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(subjectA, pso);
+                Msg m1 = sub.NextMessage(1000);
+                AssertMessage(m1, 1);
+                Msg m2 = sub.NextMessage(1000);
+                AssertMessage(m2, 2);
+                Msg m3 = sub.NextMessage(1000);
+                AssertMessage(m3, 3);
+
+                // DeliverPolicy.Last
+                pso = PushSubscribeOptions.Builder()
+                        .WithConfiguration(ConsumerConfiguration.Builder().WithDeliverPolicy(DeliverPolicy.Last).Build())
+                        .Build();
+                sub = js.PushSubscribeSync(subjectA, pso);
+                Msg m = sub.NextMessage(1000);
+                AssertMessage(m, 3);
+                AssertNoMoreMessages(sub);
+
+                // DeliverPolicy.New - No new messages between subscribe and next message
+                pso = PushSubscribeOptions.Builder()
+                        .WithConfiguration(ConsumerConfiguration.Builder().WithDeliverPolicy(DeliverPolicy.New).Build())
+                        .Build();
+                sub = js.PushSubscribeSync(subjectA, pso);
+                AssertNoMoreMessages(sub);
+
+                // DeliverPolicy.New - New message between subscribe and next message
+                sub = js.PushSubscribeSync(subjectA, pso);
+                js.Publish(subjectA, DataBytes(4));
+                m = sub.NextMessage(1000);
+                AssertMessage(m, 4);
+
+                // DeliverPolicy.ByStartSequence
+                pso = PushSubscribeOptions.Builder()
+                        .WithConfiguration(ConsumerConfiguration.Builder()
+                                .WithDeliverPolicy(DeliverPolicy.ByStartSequence)
+                                .WithStartSequence(3)
+                                .Build())
+                        .Build();
+                sub = js.PushSubscribeSync(subjectA, pso);
+                m = sub.NextMessage(1000);
+                AssertMessage(m, 3);
+                m = sub.NextMessage(1000);
+                AssertMessage(m, 4);
+
+                // DeliverPolicy.ByStartTime
+                pso = PushSubscribeOptions.Builder()
+                        .WithConfiguration(ConsumerConfiguration.Builder()
+                                .WithDeliverPolicy(DeliverPolicy.ByStartTime)
+                                .WithStartTime(m3.MetaData.Timestamp.AddSeconds(-1))
+                                .Build())
+                        .Build();
+                sub = js.PushSubscribeSync(subjectA, pso);
+                m = sub.NextMessage(1000);
+                AssertMessage(m, 3);
+                m = sub.NextMessage(1000);
+                AssertMessage(m, 4);
+
+                // DeliverPolicy.LastPerSubject
+                pso = PushSubscribeOptions.Builder()
+                        .WithConfiguration(ConsumerConfiguration.Builder()
+                                .WithDeliverPolicy(DeliverPolicy.LastPerSubject)
+                                .WithFilterSubject(subjectA)
+                                .Build())
+                        .Build();
+                sub = js.PushSubscribeSync(subjectA, pso);
+                m = sub.NextMessage(1000);
+                AssertMessage(m, 4);            
+            });
+        }
+        
+        private void AssertMessage(Msg m, int i) {
+            Assert.NotNull(m);
+            Assert.Equal(Data(i), Encoding.UTF8.GetString(m.Data));
+        }
     }
 }

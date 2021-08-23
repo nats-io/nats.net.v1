@@ -15,7 +15,7 @@ namespace NATS.Client.JetStream
 {
     public enum AckPolicy { None, All, Explicit }
 
-    public enum DeliverPolicy { All, Last, New, ByStartSequence, ByStartTime }
+    public enum DeliverPolicy { All, Last, New, ByStartSequence, ByStartTime, LastPerSubject }
 
     public enum DiscardPolicy { New, Old }
 
@@ -47,6 +47,7 @@ namespace NATS.Client.JetStream
                 case DeliverPolicy.New:             return "new";
                 case DeliverPolicy.ByStartSequence: return "by_start_sequence";
                 case DeliverPolicy.ByStartTime:     return "by_start_time";
+                case DeliverPolicy.LastPerSubject:  return "last_per_subject";
             }
             return null;
         }
