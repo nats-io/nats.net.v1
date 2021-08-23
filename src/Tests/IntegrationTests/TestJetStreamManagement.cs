@@ -58,8 +58,8 @@ namespace IntegrationTests
 
                 Assert.NotNull(si.State);
                 Assert.Equal(-1, sc.MaxConsumers);
-                Assert.Equal(-1, sc.MaxMsgs);
-                Assert.Equal(-1, sc.MaxBytes);
+                Assert.Equal(0u, sc.MaxMsgs);
+                Assert.Equal(0u, sc.MaxBytes);
                 Assert.Equal(-1, sc.MaxMsgSize);
                 Assert.Equal(1, sc.Replicas);
 
@@ -69,11 +69,11 @@ namespace IntegrationTests
                 Assert.Empty(sc.TemplateOwner);
 
                 StreamState ss = si.State;
-                Assert.Equal(0, ss.Messages);
-                Assert.Equal(0, ss.Bytes);
-                Assert.Equal(0, ss.FirstSeq);
-                Assert.Equal(0, ss.LastSeq);
-                Assert.Equal(0, ss.ConsumerCount);
+                Assert.Equal(0u, ss.Messages);
+                Assert.Equal(0u, ss.Bytes);
+                Assert.Equal(0u, ss.FirstSeq);
+                Assert.Equal(0u, ss.LastSeq);
+                Assert.Equal(0u, ss.ConsumerCount);
             });
         }
 
@@ -91,8 +91,8 @@ namespace IntegrationTests
                 Assert.Equal(2, sc.Subjects.Count);
                 Assert.Equal(Subject(0), sc.Subjects[0]);
                 Assert.Equal(Subject(1), sc.Subjects[1]);
-                Assert.Equal(-1, sc.MaxBytes);
-                Assert.Equal(-1, sc.MaxMsgSize);
+                Assert.Equal(0u, sc.MaxBytes);
+                Assert.Equal(0u, sc.MaxMsgSize);
                 Assert.Equal(Duration.Zero, sc.MaxAge);
                 Assert.Equal(StorageType.Memory, sc.StorageType);
                 Assert.Equal(DiscardPolicy.Old, sc.DiscardPolicy);
@@ -123,7 +123,7 @@ namespace IntegrationTests
                 Assert.Equal(Subject(0), sc.Subjects[0]);
                 Assert.Equal(Subject(1), sc.Subjects[1]);
                 Assert.Equal(Subject(2), sc.Subjects[2]);
-                Assert.Equal(43, sc.MaxBytes);
+                Assert.Equal(43u, sc.MaxBytes);
                 Assert.Equal(44, sc.MaxMsgSize);
                 Assert.Equal(Duration.OfDays(100), sc.MaxAge);
                 Assert.Equal(StorageType.Memory, sc.StorageType);
@@ -235,15 +235,15 @@ namespace IntegrationTests
                 CreateTestStream(c);
 
                 StreamInfo si = jsm.GetStreamInfo(STREAM);
-                Assert.Equal(0, si.State.Messages);                
+                Assert.Equal(0u, si.State.Messages);                
 
                 JsPublish(c, SUBJECT, 1);
                 si = jsm.GetStreamInfo(STREAM);
-                Assert.Equal(1, si.State.Messages);
+                Assert.Equal(1u, si.State.Messages);
 
                 PurgeResponse pr = jsm.PurgeStream(STREAM);
                 Assert.True(pr.Success);
-                Assert.Equal(1ul, pr.Purged);
+                Assert.Equal(1u, pr.Purged);
             });
         }
 

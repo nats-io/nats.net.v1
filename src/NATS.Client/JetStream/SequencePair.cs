@@ -17,13 +17,13 @@ namespace NATS.Client.JetStream
 {
     public sealed class SequencePair
     {
-        public long ConsumerSeq { get; }
-        public long StreamSeq { get; }
+        public ulong ConsumerSeq { get; }
+        public ulong StreamSeq { get; }
 
         internal SequencePair(JSONNode spNode)
         {
-            ConsumerSeq = spNode[ApiConstants.ConsumerSeq].AsLong;
-            StreamSeq = spNode[ApiConstants.StreamSeq].AsLong;
+            ConsumerSeq = spNode[ApiConstants.ConsumerSeq].AsUlong;
+            StreamSeq = spNode[ApiConstants.StreamSeq].AsUlong;
         }
     }
 }

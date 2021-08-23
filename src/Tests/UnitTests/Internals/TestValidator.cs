@@ -121,22 +121,6 @@ namespace UnitTests.Internals
         }
 
         [Fact]
-        public void TestValidateMaxMessages()
-        {
-            Assert.Equal(1, Validator.ValidateMaxMessages(1));
-            Assert.Equal(-1, Validator.ValidateMaxMessages(-1));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxMessages(0));
-        }
-
-        [Fact]
-        public void TestValidateMaxBytes()
-        {
-            Assert.Equal(1, Validator.ValidateMaxBytes(1));
-            Assert.Equal(-1, Validator.ValidateMaxBytes(-1));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxBytes(0));
-        }
-
-        [Fact]
         public void TestValidateMaxMessageSize()
         {
             Assert.Equal(1, Validator.ValidateMaxMessageSize(1));

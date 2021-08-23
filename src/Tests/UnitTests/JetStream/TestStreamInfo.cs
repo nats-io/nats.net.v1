@@ -33,8 +33,8 @@ namespace UnitTests.JetStream
             Assert.Equal("x.>", si.Config.Subjects[2]);
             Assert.Equal(RetentionPolicy.Limits, si.Config.RetentionPolicy);
             Assert.Equal(1, si.Config.MaxConsumers);
-            Assert.Equal(2, si.Config.MaxMsgs);
-            Assert.Equal(3, si.Config.MaxBytes);
+            Assert.Equal(2u, si.Config.MaxMsgs);
+            Assert.Equal(3u, si.Config.MaxBytes);
             Assert.Equal(DiscardPolicy.Old, si.Config.DiscardPolicy);
             Assert.Equal(100000000000, si.Config.MaxAge.Nanos);
             Assert.Equal(4, si.Config.MaxMsgSize);
@@ -47,10 +47,10 @@ namespace UnitTests.JetStream
             Assert.Equal("ptag2", si.Config.Placement.Tags[1]);
             
             // StreamState State
-            Assert.Equal(11, si.State.Messages);
-            Assert.Equal(12, si.State.Bytes);
-            Assert.Equal(13, si.State.FirstSeq);
-            Assert.Equal(14, si.State.LastSeq);
+            Assert.Equal(11ul, si.State.Messages);
+            Assert.Equal(12ul, si.State.Bytes);
+            Assert.Equal(13ul, si.State.FirstSeq);
+            Assert.Equal(14ul, si.State.LastSeq);
             Assert.Equal(15, si.State.ConsumerCount);
             Assert.Equal(AsDateTime("0001-01-01T00:00:00Z"), si.State.FirstTime);
             Assert.Equal(AsDateTime("2021-01-01T00:00:00Z"), si.State.LastTime);
@@ -72,16 +72,16 @@ namespace UnitTests.JetStream
             
             // MirrorInfo MirrorInfo
             Assert.Equal("mname", si.MirrorInfo.Name);
-            Assert.Equal(16, si.MirrorInfo.Lag);
+            Assert.Equal(16u, si.MirrorInfo.Lag);
             Assert.Equal(160000000000, si.MirrorInfo.Active.Nanos);
             
             // List<SourceInfo> SourceInfos
             Assert.Equal(2, si.SourceInfos.Count);
             Assert.Equal("sname17", si.SourceInfos[0].Name);
-            Assert.Equal(17, si.SourceInfos[0].Lag);
+            Assert.Equal(17u, si.SourceInfos[0].Lag);
             Assert.Equal(170000000000, si.SourceInfos[0].Active.Nanos);
             Assert.Equal("sname18", si.SourceInfos[1].Name);
-            Assert.Equal(18, si.SourceInfos[1].Lag);
+            Assert.Equal(18u, si.SourceInfos[1].Lag);
             Assert.Equal(180000000000, si.SourceInfos[1].Active.Nanos);
         }
     }

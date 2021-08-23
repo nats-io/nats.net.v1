@@ -41,17 +41,20 @@ namespace NATS.Client.JetStream
 
         private MsgHeader MergeNum(MsgHeader h, String key, ulong value)
         {
-            return value > 0 ? MergeString(h, key, value.ToString()) : h;
+            return value > 0 ? _MergeString(h, key, value.ToString()) : h;
         }
 
         private MsgHeader MergeString(MsgHeader h, String key, String value) 
         {
-            if (!string.IsNullOrWhiteSpace(value)) {
-                if (h == null) {
-                    h = new MsgHeader(h);
-                }
-                h.Set(key, value);
+            return string.IsNullOrWhiteSpace(value) ? h : _MergeString(h, key, value);
+        }
+
+        private MsgHeader _MergeString(MsgHeader h, String key, String value) 
+        {
+            if (h == null) {
+                h = new MsgHeader();
             }
+            h.Set(key, value);
             return h;
         }
 
@@ -240,8 +243,18 @@ namespace NATS.Client.JetStream
             {
                 void AutoAckHandler(object sender, MsgHandlerEventArgs args)
                 {
-                    args.Message.Ack();
-                    handler.Invoke(sender, args);
+                    try
+                    {
+                        handler.Invoke(sender, args);
+                        if (args.Message.IsJetStream)
+                        {
+                            args.Message.Ack();
+                        } 
+                    }
+                    catch (Exception e)
+                    {
+                        // todo send to error listener
+                    }
                 }
 
                 sub = ((Connection) Conn).subscribeAsync(inbox, queueName, AutoAckHandler, PushAsyncSubDelegate);
@@ -252,15 +265,6 @@ namespace NATS.Client.JetStream
 
             // 5-Consumer didn't exist. It's either ephemeral or a durable that didn't already exist.
             if (createConsumer) {
-                // Defaults should set the right ack pending.
-                // if we have acks and the maxAckPending is not set, set it
-                // to the internal Max.
-                // TODO: too high value?
-                if (ccBuilder.MaxAckPending == 0
-                    && ccBuilder.AcknowledgementPolicy != AckPolicy.None) {
-                    ccBuilder.WithMaxAckPending(sub.PendingMessageLimit);
-                }
-
                 // Pull mode doesn't maintain a deliver subject. It's actually an error if we send it.
                 if (!isPullMode) {
                     ccBuilder.WithDeliverSubject(inbox);

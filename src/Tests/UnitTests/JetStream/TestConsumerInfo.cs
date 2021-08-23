@@ -27,12 +27,12 @@ namespace UnitTests.JetStream
             Assert.Equal("foo-stream", ci.Stream);
             Assert.Equal("foo-consumer", ci.Name);
 
-            Assert.Equal(1, ci.Delivered.ConsumerSeq);
-            Assert.Equal(2, ci.Delivered.StreamSeq);
-            Assert.Equal(3, ci.AckFloor.ConsumerSeq);
-            Assert.Equal(4, ci.AckFloor.StreamSeq);
+            Assert.Equal(1u, ci.Delivered.ConsumerSeq);
+            Assert.Equal(2u, ci.Delivered.StreamSeq);
+            Assert.Equal(3u, ci.AckFloor.ConsumerSeq);
+            Assert.Equal(4u, ci.AckFloor.StreamSeq);
 
-            Assert.Equal(24, ci.NumPending);
+            Assert.Equal(24u, ci.NumPending);
             Assert.Equal(42, ci.NumAckPending);
             Assert.Equal(42, ci.NumRedelivered);
 
