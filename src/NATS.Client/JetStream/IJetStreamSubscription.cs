@@ -58,6 +58,8 @@ namespace NATS.Client.JetStream
         /// <remarks>
         /// When true a response with a 404 status header will be returned
         /// when no messages are available.
+        ///
+        /// Primitive API for Advanced use only. Prefer Fetch 
         /// </remarks>
         /// <param name="batchSize">the size of the batch</param>
         void Pull(int batchSize);
@@ -68,6 +70,8 @@ namespace NATS.Client.JetStream
         /// <remarks>
         /// When true a response with a 404 status header will be returned
         /// when no messages are available.
+        ///
+        /// Primitive API for Advanced use only. Prefer Fetch 
         /// </remarks>
         /// <param name="batchSize">the size of the batch</param>
         void PullNoWait(int batchSize);
@@ -78,6 +82,8 @@ namespace NATS.Client.JetStream
         /// <remarks>
         /// Multiple 408 status messages may come. Each one indicates a
         /// missing item from the previous batch and can be discarded.
+        ///
+        /// Primitive API for Advanced use only. Prefer Fetch 
         /// </remarks>
         /// <param name="batchSize">the size of the batch</param>
         /// <param name="expiresInMillis">how long from now the server should expire this request</param>
