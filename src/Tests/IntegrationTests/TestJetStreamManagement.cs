@@ -58,8 +58,8 @@ namespace IntegrationTests
 
                 Assert.NotNull(si.State);
                 Assert.Equal(-1, sc.MaxConsumers);
-                Assert.Equal(0u, sc.MaxMsgs);
-                Assert.Equal(0u, sc.MaxBytes);
+                Assert.Equal(-1, sc.MaxMsgs);
+                Assert.Equal(-1, sc.MaxBytes);
                 Assert.Equal(-1, sc.MaxMsgSize);
                 Assert.Equal(1, sc.Replicas);
 
@@ -91,8 +91,8 @@ namespace IntegrationTests
                 Assert.Equal(2, sc.Subjects.Count);
                 Assert.Equal(Subject(0), sc.Subjects[0]);
                 Assert.Equal(Subject(1), sc.Subjects[1]);
-                Assert.Equal(0u, sc.MaxBytes);
-                Assert.Equal(0u, sc.MaxMsgSize);
+                Assert.Equal(-1, sc.MaxBytes);
+                Assert.Equal(-1, sc.MaxMsgSize);
                 Assert.Equal(Duration.Zero, sc.MaxAge);
                 Assert.Equal(StorageType.Memory, sc.StorageType);
                 Assert.Equal(DiscardPolicy.Old, sc.DiscardPolicy);
