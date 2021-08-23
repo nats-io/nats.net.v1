@@ -126,11 +126,6 @@ namespace NATS.Client.JetStream
         public string Domain { get;  }
 
         /// <summary>
-        /// Gets the account hash name.
-        /// </summary>
-        public string AccountHash { get;  }
-
-        /// <summary>
         /// Gets the consumer name.
         /// </summary>
         public string Consumer { get;  }
@@ -165,10 +160,9 @@ namespace NATS.Client.JetStream
         /// </summary>
         public ulong NumPending { get;  }
 
-        /// <summary>
-        /// Gets the token.
-        /// </summary>
-        public string Token { get;  }
+        internal string AccountHash { get;  }
+
+        internal string Token { get;  }
 
         // Caller must ensure this is a JS message
         internal MetaData(string metaData)
@@ -194,7 +188,7 @@ namespace NATS.Client.JetStream
                 hasPending = true;
                 hasDomainHashToken = false;
             }
-            else if (parts.Length == 12)
+            else if (parts.Length >= 12)
             {
                 streamIndex = 4;
                 hasPending = true;
