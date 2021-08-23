@@ -99,36 +99,9 @@ namespace NATS.Client.JetStream
 
             var result = await Conn.RequestAsync(msg, timeout.Millis).ConfigureAwait(false);
             return ProcessPublishResponse(result, options);
+        }
 
-         // -----
-         // This is the attempt 1. Works sorta but won't build on CI/CD doesn't like the await
-         // warning CS1998: This async method lacks 'await' operators and will run synchronously. Consider using the 'await' operator to await non-blocking API calls, or 'await Task.Run(...)' to do CPU-bound work on a background thread
-         // -----
-         // async Task<PublishAck> ContinuationFunction(Task<Msg> antecedent) 
-         // => ProcessPublishResponse(antecedent.Result, options);
-         //
-         // return await Conn.RequestAsync(msg, timeout.Millis)
-         // .ContinueWith(ContinuationFunction, CancellationToken.None)
-         // .Unwrap();
-         // -----
-
-         // -----
-         // This is the attempt 2
-         // -----
-         // Duration timeout = options == null ? JetStreamOptions.RequestTimeout : options.StreamTimeout;
-         //
-         // Task<PublishAck> paTask = new Task<PublishAck>(() =>
-         // {
-         //     Task<Msg> msgTask = Conn.RequestAsync(msg, timeout.Millis);
-         //     msgTask.Wait();
-         //     return ProcessPublishResponse(msgTask.Result, options);
-         // });
-         //
-         // return await paTask.ConfigureAwait(false);
-         // -----
-      }
-
-      public PublishAck Publish(string subject, byte[] data) 
+        public PublishAck Publish(string subject, byte[] data) 
             => PublishSyncInternal(subject, data, null, null);
 
         public PublishAck Publish(string subject, byte[] data, PublishOptions options) 
