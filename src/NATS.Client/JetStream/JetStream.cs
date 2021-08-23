@@ -251,7 +251,7 @@ namespace NATS.Client.JetStream
                             args.Message.Ack();
                         } 
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         // todo send to error listener
                     }
