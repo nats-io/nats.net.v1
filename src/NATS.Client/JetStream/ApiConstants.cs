@@ -40,6 +40,7 @@ namespace NATS.Client.JetStream
         internal const string Delivered = "delivered";
         internal const string Description = "description";
         internal const string Discard = "discard";
+        internal const string Domain = "domain";
         internal const string Duplicate = "duplicate";
         internal const string DuplicateWindow = "duplicate_window";
         internal const string DurableName = "durable_name";

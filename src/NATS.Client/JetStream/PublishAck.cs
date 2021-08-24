@@ -17,6 +17,7 @@ namespace NATS.Client.JetStream
     {
         public string Stream { get; private set; }
         public ulong Seq { get; private set; }
+        public string Domain { get; private set; }
         public bool Duplicate { get; private set; }
 
         public PublishAck(Msg msg) : base(msg)
@@ -38,6 +39,7 @@ namespace NATS.Client.JetStream
                 // TODO is this the correct exception?
                 throw new NATSException("Invalid JetStream ack.");
             }
+            Domain = JsonNode[ApiConstants.Domain].Value;
 
             Seq = JsonNode[ApiConstants.Seq].AsUlong;
             if (Seq == 0)
@@ -51,7 +53,7 @@ namespace NATS.Client.JetStream
 
         public override string ToString()
         {
-            return $"Stream: {Stream}, Seq: {Seq}, Duplicate: {Duplicate}";
+            return $"Stream: {Stream}, Domain: {Domain}, Seq: {Seq}, Duplicate: {Duplicate}";
         }
     }
 }
