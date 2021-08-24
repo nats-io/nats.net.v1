@@ -31,6 +31,7 @@ namespace NATS.Client.JetStream
             if (opts != null)
             {
                 merged = MergeNum(merged, JetStreamConstants.ExpLastSeqHeader, opts.ExpectedLastSeq);
+                merged = MergeNum(merged, JetStreamConstants.ExpLastSubjectSeqHeader, opts.ExpectedLastSubjectSeq);
                 merged = MergeString(merged, JetStreamConstants.ExpLastIdHeader, opts.ExpectedLastMsgId);
                 merged = MergeString(merged, JetStreamConstants.ExpStreamHeader, opts.ExpectedStream);
                 merged = MergeString(merged, JetStreamConstants.MsgIdHeader, opts.MessageId);
