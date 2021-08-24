@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Text;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
@@ -33,30 +34,60 @@ namespace UnitTests.JetStream
         }
         
         [Fact]
-        public void TestTypes()
+        public void TestAs()
         {
-            Assert.Equal(int.MinValue, testJsonNode["imin"].AsInt);
-            Assert.Equal(-1, testJsonNode["iminusone"].AsInt);
-            Assert.Equal(0, testJsonNode["izero"].AsInt);
-            Assert.Equal(1, testJsonNode["ione"].AsInt);
-            Assert.Equal(int.MaxValue, testJsonNode["imax"].AsInt);
-            Assert.Equal(0, testJsonNode["notfound"].AsInt);
-        
-            Assert.Equal(long.MinValue, testJsonNode["lmin"].AsLong);
-            Assert.Equal(-1, testJsonNode["lminusone"].AsLong);
-            Assert.Equal(0, testJsonNode["lzero"].AsLong);
-            Assert.Equal(1, testJsonNode["lone"].AsLong);
-            Assert.Equal(long.MaxValue, testJsonNode["lmax"].AsLong);
-            Assert.Equal(0, testJsonNode["notfound"].AsLong);
-        
-            Assert.Equal(0ul, testJsonNode["uzero"].AsUlong);
-            Assert.Equal(1ul, testJsonNode["uone"].AsUlong);
-            Assert.Equal(ulong.MaxValue - 1, testJsonNode["unotmax"].AsUlong);
-            Assert.Equal(ulong.MaxValue, testJsonNode["umax"].AsUlong);
-            Assert.Equal(0ul, testJsonNode["notfound"].AsUlong);
+            AssertTypes(testJsonNode);
+        }
 
-            Assert.True(testJsonNode["btrue"].AsBool);
-            Assert.False(testJsonNode["bfalse"].AsBool);
+        [Fact]
+        public void TestCreateObject()
+        {
+            AssertTypes(
+                new JSONObject
+                {
+                    ["imin"] = Int32.MinValue,
+                    ["iminusone"] = -1,
+                    ["izero"] = 0,
+                    ["ione"] = 1,
+                    ["imax"] = 2147483647,
+                    ["lmin"] = -9223372036854775808L,
+                    ["lminusone"] = -1L,
+                    ["lzero"] = 0L,
+                    ["lone"] = 1L,
+                    ["lmax"] = 9223372036854775807L,
+                    ["uzero"] = (ulong)0,
+                    ["uone"] = (ulong)1,
+                    ["unotmax"] = 18446744073709551614u,
+                    ["umax"] = 18446744073709551615u,
+                    ["btrue"] = true,
+                    ["bfalse"] = false
+                });
+        }
+
+        private void AssertTypes(JSONNode jsonNode)
+        {
+            Assert.Equal(int.MinValue, jsonNode["imin"].AsInt);
+            Assert.Equal(-1, jsonNode["iminusone"].AsInt);
+            Assert.Equal(0, jsonNode["izero"].AsInt);
+            Assert.Equal(1, jsonNode["ione"].AsInt);
+            Assert.Equal(int.MaxValue, jsonNode["imax"].AsInt);
+            Assert.Equal(0, jsonNode["notfound"].AsInt);
+
+            Assert.Equal(long.MinValue, jsonNode["lmin"].AsLong);
+            Assert.Equal(-1, jsonNode["lminusone"].AsLong);
+            Assert.Equal(0, jsonNode["lzero"].AsLong);
+            Assert.Equal(1, jsonNode["lone"].AsLong);
+            Assert.Equal(long.MaxValue, jsonNode["lmax"].AsLong);
+            Assert.Equal(0, jsonNode["notfound"].AsLong);
+
+            Assert.Equal(0ul, jsonNode["uzero"].AsUlong);
+            Assert.Equal(1ul, jsonNode["uone"].AsUlong);
+            Assert.Equal(ulong.MaxValue - 1, jsonNode["unotmax"].AsUlong);
+            Assert.Equal(ulong.MaxValue, jsonNode["umax"].AsUlong);
+            Assert.Equal(0ul, jsonNode["notfound"].AsUlong);
+
+            Assert.True(jsonNode["btrue"].AsBool);
+            Assert.False(jsonNode["bfalse"].AsBool);
         }
 
         [Fact]

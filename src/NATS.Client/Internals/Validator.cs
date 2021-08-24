@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using NATS.Client.JetStream;
 
 namespace NATS.Client.Internals
@@ -39,26 +40,38 @@ namespace NATS.Client.Internals
                 "Durable is required and cannot contain a '.', '*' or '>' [null]");
         }
 
-        public static String Validate(String s, String label, bool required, Func<string, string, string> check) {
-            if (required) {
-                if (string.IsNullOrEmpty(s)) {
+        public static string Validate(string s, bool required, string label, Func<string> check)
+        {
+            string preCheck = EmptyAsNull(s);
+            if (preCheck == null)
+            {
+                if (required) {
                     throw new ArgumentException($"{label} cannot be null or empty [" + s + "]");
                 }
-            }
-            else if (EmptyAsNull(s) == null) {
                 return null;
             }
 
-            return check.Invoke(s, label);
+            return check.Invoke();
         }
 
         public static String ValidateJetStreamPrefix(String s) {
             return ValidatePrintableExceptWildGtDollar(s, "Prefix", false);
         }
 
-        public static string ValidatePrintable(string s, String label , bool required)
+        public static string ValidateMaxLength(String s, int maxLength, bool required, String label) {
+            return Validate(s, required, label, () =>
+            {
+                int len = Encoding.UTF8.GetByteCount(s);
+                if (len > maxLength) {
+                    throw new ArgumentException($"{label} cannot be longer than {maxLength} bytes but was {len} bytes");
+                }
+                return s;
+            });
+        }
+
+        public static string ValidatePrintable(string s, String label, bool required)
         {
-            return Validate(s, label, required, (ss, ll) => {
+            return Validate(s, required, label, () => {
                 if (NotPrintable(s)) {
                     throw new ArgumentException($"{label} must be in the printable ASCII range [" + s + "]");
                 }
@@ -68,7 +81,7 @@ namespace NATS.Client.Internals
 
         public static string ValidatePrintableExceptWildDotGt(string s, string label, bool required)
         {
-            return Validate(s, label, required, (ss, ll) => {
+            return Validate(s, required, label, () => {
                 if (NotPrintableOrHasWildGtDot(s)) {
                     throw new ArgumentException($"{label} must be in the printable ASCII range and cannot include `*`, `.` or `>` [" + s + "]");
                 }
@@ -78,7 +91,7 @@ namespace NATS.Client.Internals
 
         public static string ValidatePrintableExceptWildGt(string s, string label, bool required)
         {
-            return Validate(s, label, required, (ss, ll) => {
+            return Validate(s, required, label, () => {
                 if (NotPrintableOrHasWildGt(s)) {
                     throw new ArgumentException($"{label} must be in the printable ASCII range and cannot include `*`, `>` or `$` [" + s + "]");
                 }
@@ -88,7 +101,7 @@ namespace NATS.Client.Internals
 
         public static string ValidatePrintableExceptWildGtDollar(string s, string label, bool required)
         {
-            return Validate(s, label, required, (ss, ll) => {
+            return Validate(s, required, label, () => {
                 if (NotPrintableOrHasWildGtDollar(s)) {
                     throw new ArgumentException($"{label} must be in the printable ASCII range and cannot include `*`, `>` or `$` [" + s + "]");
                 }

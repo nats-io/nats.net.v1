@@ -20,7 +20,7 @@ namespace NATS.Client.JetStream
     public abstract class SourceBase : JsonSerializable
     {
         public string Name { get; }
-        public long StartSeq { get; }
+        public ulong StartSeq { get; }
         public DateTime StartTime { get; }
         public string FilterSubject { get; }
         public External External { get; }
@@ -28,7 +28,7 @@ namespace NATS.Client.JetStream
         internal SourceBase(JSONNode sourceBaseNode)
         {
             Name = sourceBaseNode[ApiConstants.Name].Value;
-            StartSeq = sourceBaseNode[ApiConstants.OptStartSeq].AsLong;
+            StartSeq = sourceBaseNode[ApiConstants.OptStartSeq].AsUlong;
             StartTime = JsonUtils.AsDate(sourceBaseNode[ApiConstants.OptStartTime]);
             FilterSubject = sourceBaseNode[ApiConstants.FilterSubject].Value;
             External = External.OptionalInstance(sourceBaseNode[ApiConstants.External]);

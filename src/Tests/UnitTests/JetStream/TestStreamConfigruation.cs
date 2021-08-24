@@ -250,7 +250,7 @@ namespace UnitTests.JetStream
 
             Assert.NotNull(sc.Mirror);
             Assert.Equal("eman", sc.Mirror.Name);
-            Assert.Equal(736, sc.Mirror.StartSeq);
+            Assert.Equal(736u, sc.Mirror.StartSeq);
             Assert.Equal(zdt, sc.Mirror.StartTime);
             Assert.Equal("mfsub", sc.Mirror.FilterSubject);
 
@@ -264,7 +264,7 @@ namespace UnitTests.JetStream
                 item => ValidateSource(item, "s1", 738, "s1sub", "s1api", "s1dlvrsub", zdt));
         }
 
-        private void ValidateSource(Source source, string name, int seq, string filter, string api, string deliver,
+        private void ValidateSource(Source source, string name, ulong seq, string filter, string api, string deliver,
             DateTime zdt)
         {
             Assert.Equal(name, source.Name);

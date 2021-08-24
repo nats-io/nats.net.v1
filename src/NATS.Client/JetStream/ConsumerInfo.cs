@@ -25,7 +25,7 @@ namespace NATS.Client.JetStream
         public DateTime Created { get; private set; }
         public SequencePair Delivered { get; private set; }
         public SequencePair AckFloor { get; private set; }
-        public long NumPending { get; private set; }
+        public ulong NumPending { get; private set; }
         public long NumWaiting { get; private set; }
         public long NumAckPending { get; private set; }
         public long NumRedelivered { get; private set; }
@@ -53,7 +53,7 @@ namespace NATS.Client.JetStream
             Created = JsonUtils.AsDate(ciNode[ApiConstants.Created]);
             Delivered = new SequencePair(ciNode[ApiConstants.Delivered]);
             AckFloor = new SequencePair(ciNode[ApiConstants.AckFloor]);
-            NumPending = ciNode[ApiConstants.NumPending].AsLong;
+            NumPending = ciNode[ApiConstants.NumPending].AsUlong;
             NumWaiting = ciNode[ApiConstants.NumWaiting].AsLong;
             NumAckPending = ciNode[ApiConstants.NumAckPending].AsLong;
             NumRedelivered = ciNode[ApiConstants.NumRedelivered].AsLong;

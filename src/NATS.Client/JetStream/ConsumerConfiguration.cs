@@ -26,6 +26,7 @@ namespace NATS.Client.JetStream
         public DeliverPolicy DeliverPolicy { get; }
         public AckPolicy AckPolicy { get; }
         public ReplayPolicy ReplayPolicy { get; }
+        public string Description { get; }
         public string Durable { get; }
         public string DeliverSubject { get; }
         public ulong StartSeq { get; }
@@ -47,6 +48,7 @@ namespace NATS.Client.JetStream
             DeliverPolicy = ApiEnums.GetValueOrDefault(ccNode[ApiConstants.DeliverPolicy].Value, DeliverPolicy.All);
             AckPolicy = ApiEnums.GetValueOrDefault(ccNode[ApiConstants.AckPolicy].Value, AckPolicy.Explicit);
             ReplayPolicy = ApiEnums.GetValueOrDefault(ccNode[ApiConstants.ReplayPolicy], ReplayPolicy.Instant);
+            Description = ccNode[ApiConstants.Description].Value;
             Durable = ccNode[ApiConstants.DurableName].Value;
             DeliverSubject = ccNode[ApiConstants.DeliverSubject].Value;
             StartSeq = ccNode[ApiConstants.OptStartSeq].AsUlong;
@@ -62,11 +64,12 @@ namespace NATS.Client.JetStream
             MaxPullWaiting = JsonUtils.AsLongOrMinus1(ccNode, ApiConstants.MaxWaiting);
         }
 
-        internal ConsumerConfiguration(string durable, DeliverPolicy deliverPolicy, ulong startSeq, DateTime startTime,
+        internal ConsumerConfiguration(string description, string durable, DeliverPolicy deliverPolicy, ulong startSeq, DateTime startTime,
             AckPolicy ackPolicy, Duration ackWait, long maxDeliver, string filterSubject, ReplayPolicy replayPolicy,
             string sampleFrequency, long rateLimit, string deliverSubject, long maxAckPending, 
             Duration idleHeartbeat, bool flowControl, long maxPullWaiting)
         {
+            Description = description;
             Durable = durable;
             DeliverPolicy = deliverPolicy;
             StartSeq = startSeq;
@@ -89,6 +92,7 @@ namespace NATS.Client.JetStream
         {
             return new JSONObject
             {
+                [ApiConstants.Description] = Description,
                 [ApiConstants.DurableName] = Durable,
                 [ApiConstants.DeliverPolicy] = DeliverPolicy.GetString(),
                 [ApiConstants.DeliverSubject] = DeliverSubject,
@@ -123,6 +127,7 @@ namespace NATS.Client.JetStream
             private DeliverPolicy _deliverPolicy = DeliverPolicy.All;
             private AckPolicy _ackPolicy = AckPolicy.Explicit;
             private ReplayPolicy _replayPolicy = ReplayPolicy.Instant;
+            private string _description;
             private string _durable;
             private string _deliverSubject;
             private ulong _startSeq;
@@ -148,6 +153,7 @@ namespace NATS.Client.JetStream
             public ConsumerConfigurationBuilder(ConsumerConfiguration cc)
             {
                 if (cc == null) return;
+                _description = cc.Description;
                 _durable = cc.Durable;
                 _deliverPolicy = cc.DeliverPolicy;
                 _startSeq = cc.StartSeq;
@@ -164,6 +170,17 @@ namespace NATS.Client.JetStream
                 _idleHeartbeat = cc.IdleHeartbeat;
                 _flowControl = cc.FlowControl;
                 _maxPullWaiting = cc.MaxPullWaiting;
+            }
+
+            /// <summary>
+            /// Sets the description.
+            /// </summary>
+            /// <param name="description">the description</param>
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder WithDescription(string description)
+            {
+                _description = description;
+                return this;
             }
 
             /// <summary>
@@ -370,6 +387,7 @@ namespace NATS.Client.JetStream
             public ConsumerConfiguration Build()
             {
                 return new ConsumerConfiguration(
+                    _description,
                     _durable,
                     _deliverPolicy,
                     _startSeq,

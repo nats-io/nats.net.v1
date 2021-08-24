@@ -19,14 +19,14 @@ namespace NATS.Client.JetStream
     public abstract class SourceInfoBase
     {
         public string Name { get; }
-        public long Lag { get; }
+        public ulong Lag { get; }
         public Duration Active { get; }
         public Error Error { get; }
 
         internal SourceInfoBase(JSONNode sourceInfoBaseNode)
         {
             Name = sourceInfoBaseNode[ApiConstants.Name].Value;
-            Lag = sourceInfoBaseNode[ApiConstants.Lag].AsLong;
+            Lag = sourceInfoBaseNode[ApiConstants.Lag].AsUlong;
             Active = JsonUtils.AsDuration(sourceInfoBaseNode, ApiConstants.Active, Duration.Zero);
             Error = Error.OptionalInstance(sourceInfoBaseNode[ApiConstants.Error]);
         }
