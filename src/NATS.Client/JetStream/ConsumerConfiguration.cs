@@ -179,7 +179,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithDescription(string description)
             {
-                _description = Validator.ValidateDescription(description, false);
+                _description = description;
                 return this;
             }
 

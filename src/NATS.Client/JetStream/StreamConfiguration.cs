@@ -191,7 +191,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public StreamConfigurationBuilder WithDescription(string description)
             {
-                _description = Validator.ValidateDescription(description, false);
+                _description = description;
                 return this;
             }
 
@@ -216,7 +216,7 @@ namespace NATS.Client.JetStream
             }
 
             /// <summary>
-            /// Sets the subjects in the StreamConfiguration.
+            /// Add the subjects in the StreamConfiguration.
             /// </summary>
             /// <param name="subjects">the stream's subjects</param>
             /// <returns>The StreamConfigurationBuilder</returns>
@@ -232,7 +232,7 @@ namespace NATS.Client.JetStream
             }
 
             /// <summary>
-            /// Sets the subjects in the StreamConfiguration.
+            /// Add the subjects in the StreamConfiguration.
             /// </summary>
             /// <param name="subjects">the stream's subjects</param>
             /// <returns>The StreamConfigurationBuilder</returns>

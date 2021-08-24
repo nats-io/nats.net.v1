@@ -61,17 +61,12 @@ namespace NATS.Client.Internals
         public static string ValidateMaxLength(String s, int maxLength, bool required, String label) {
             return Validate(s, required, label, () =>
             {
-                int len = Encoding.UTF8.GetBytes(s).Length;
+                int len = Encoding.UTF8.GetByteCount(s);
                 if (len > maxLength) {
                     throw new ArgumentException($"{label} cannot be longer than {maxLength} bytes but was {len} bytes");
                 }
                 return s;
             });
-        }
-
-        public static string ValidateDescription(String s, bool required)
-        {
-            return ValidateMaxLength(s, 4096, required, "Description");
         }
 
         public static string ValidatePrintable(string s, String label, bool required)
