@@ -12,7 +12,6 @@
 // limitations under the License.
 
 using System.Text;
-using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client.JetStream
@@ -35,7 +34,7 @@ namespace NATS.Client.JetStream
         {
             JsonNode = JSON.Parse(json);
             Type = JsonNode[ApiConstants.Type].Value;
-            if (Validator.NullOrEmpty(Type))
+            if (string.IsNullOrWhiteSpace(Type))
             {
                 Type = NoType;
             }

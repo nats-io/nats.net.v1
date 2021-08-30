@@ -298,11 +298,7 @@ namespace NATS.Client.Internals
 
         internal static string EmptyAsNull(string s)
         {
-            return NullOrEmpty(s) ? null : s;
-        }
-
-        internal static bool NullOrEmpty(String s) {
-            return s == null || s.Trim().Length == 0;
+            return string.IsNullOrWhiteSpace(s) ? null : s;
         }
 
         internal static bool ZeroOrLtMinus1(long l)

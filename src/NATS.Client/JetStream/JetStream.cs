@@ -214,7 +214,7 @@ namespace NATS.Client.JetStream
                     else if (queueName == null) {
                         throw new ArgumentException($"Existing consumer [{durable}] is configured as a queue / deliver group.");
                     }
-                    else if (!lookedUp.Equals(queueName)) {
+                    else if (lookedUp != queueName) {
                         throw new ArgumentException(
                             $"Existing consumer deliver group {lookedUp} does not match requested queue / deliver group {queueName}.");
                     }
