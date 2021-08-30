@@ -13,6 +13,7 @@
 
 using System.Linq;
 using System.Text;
+using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client.JetStream
@@ -61,7 +62,7 @@ namespace NATS.Client.JetStream
             ClientIp = siNode[ApiConstants.ClientIp].Value;
             Cluster = siNode[ApiConstants.Cluster].Value;
             ConnectURLs = siNode[ApiConstants.ConnectUrls].Children
-                .Where(n => !string.IsNullOrEmpty(n.Value))
+                .Where(n => !Validator.NullOrEmpty(n.Value))
                 .Select(n => n.Value)
                 .ToArray();
         }

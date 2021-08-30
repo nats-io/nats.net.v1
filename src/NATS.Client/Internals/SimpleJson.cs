@@ -1036,7 +1036,7 @@ namespace NATS.Client.Internals.SimpleJSON
 
         public override JSONNodeType Tag { get { return JSONNodeType.String; } }
         public override bool IsString { get { return true; } }
-        public override bool ShouldWrite { get { return !string.IsNullOrEmpty(m_Data); } }
+        public override bool ShouldWrite { get { return !Validator.NullOrEmpty(m_Data); } }
 
         public override Enumerator GetEnumerator() { return new Enumerator(); }
 

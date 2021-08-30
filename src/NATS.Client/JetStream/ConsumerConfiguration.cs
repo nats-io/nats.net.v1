@@ -29,6 +29,7 @@ namespace NATS.Client.JetStream
         public string Description { get; }
         public string Durable { get; }
         public string DeliverSubject { get; }
+        public string DeliverGroup { get; }
         public ulong StartSeq { get; }
         public DateTime StartTime { get; }
         public Duration AckWait { get; }
@@ -51,6 +52,7 @@ namespace NATS.Client.JetStream
             Description = ccNode[ApiConstants.Description].Value;
             Durable = ccNode[ApiConstants.DurableName].Value;
             DeliverSubject = ccNode[ApiConstants.DeliverSubject].Value;
+            DeliverGroup = ccNode[ApiConstants.DeliverGroup].Value;
             StartSeq = ccNode[ApiConstants.OptStartSeq].AsUlong;
             StartTime = JsonUtils.AsDate(ccNode[ApiConstants.OptStartTime]);
             AckWait = JsonUtils.AsDuration(ccNode, ApiConstants.AckWait, DefaultAckWait);
@@ -66,7 +68,7 @@ namespace NATS.Client.JetStream
 
         internal ConsumerConfiguration(string description, string durable, DeliverPolicy deliverPolicy, ulong startSeq, DateTime startTime,
             AckPolicy ackPolicy, Duration ackWait, long maxDeliver, string filterSubject, ReplayPolicy replayPolicy,
-            string sampleFrequency, long rateLimit, string deliverSubject, long maxAckPending, 
+            string sampleFrequency, long rateLimit, string deliverSubject, string deliverGroup, long maxAckPending, 
             Duration idleHeartbeat, bool flowControl, long maxPullWaiting)
         {
             Description = description;
@@ -82,6 +84,7 @@ namespace NATS.Client.JetStream
             SampleFrequency = sampleFrequency;
             RateLimit = rateLimit;
             DeliverSubject = deliverSubject;
+            DeliverGroup = deliverGroup;
             MaxAckPending = maxAckPending;
             IdleHeartbeat = idleHeartbeat;
             FlowControl = flowControl;
@@ -96,6 +99,7 @@ namespace NATS.Client.JetStream
                 [ApiConstants.DurableName] = Durable,
                 [ApiConstants.DeliverPolicy] = DeliverPolicy.GetString(),
                 [ApiConstants.DeliverSubject] = DeliverSubject,
+                [ApiConstants.DeliverGroup] = DeliverGroup,
                 [ApiConstants.OptStartSeq] = StartSeq,
                 [ApiConstants.OptStartTime] = JsonUtils.ToString(StartTime),
                 [ApiConstants.AckPolicy] = AckPolicy.GetString(),
@@ -130,6 +134,7 @@ namespace NATS.Client.JetStream
             private string _description;
             private string _durable;
             private string _deliverSubject;
+            private string _deliverGroup;
             private ulong _startSeq;
             private DateTime _startTime; 
             private Duration _ackWait = Duration.OfSeconds(30);
@@ -144,6 +149,7 @@ namespace NATS.Client.JetStream
 
             public string Durable => _durable;
             public string DeliverSubject => _deliverSubject;
+            public string DeliverGroup => _deliverGroup;
             public string FilterSubject => _filterSubject;
             public long MaxAckPending => _maxAckPending;
             public AckPolicy AcknowledgementPolicy => _ackPolicy;
@@ -166,6 +172,7 @@ namespace NATS.Client.JetStream
                 _sampleFrequency = cc.SampleFrequency;
                 _rateLimit = cc.RateLimit;
                 _deliverSubject = cc.DeliverSubject;
+                _deliverGroup = cc.DeliverGroup;
                 _maxAckPending = cc.MaxAckPending;
                 _idleHeartbeat = cc.IdleHeartbeat;
                 _flowControl = cc.FlowControl;
@@ -213,6 +220,17 @@ namespace NATS.Client.JetStream
             public ConsumerConfigurationBuilder WithDeliverSubject(string subject)
             {
                 _deliverSubject = subject;
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the group to deliver messages to.
+            /// </summary>
+            /// <param name="group">the delivery group.</param>
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder WithDeliverGroup(string group)
+            {
+                _deliverGroup = group;
                 return this;
             }
 
@@ -400,6 +418,7 @@ namespace NATS.Client.JetStream
                     _sampleFrequency,
                     _rateLimit,
                     _deliverSubject,
+                    _deliverGroup,
                     _maxAckPending,
                     _idleHeartbeat,
                     _flowControl,

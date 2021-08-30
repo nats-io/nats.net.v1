@@ -29,6 +29,8 @@ namespace NATS.Client.JetStream
         public long NumWaiting { get; private set; }
         public long NumAckPending { get; private set; }
         public long NumRedelivered { get; private set; }
+        public ClusterInfo ClusterInfo { get; private set; }
+        public bool PushBound { get; private set; }
 
         internal ConsumerInfo(Msg msg, bool throwOnError) : base(msg, throwOnError)
         {
@@ -57,6 +59,8 @@ namespace NATS.Client.JetStream
             NumWaiting = ciNode[ApiConstants.NumWaiting].AsLong;
             NumAckPending = ciNode[ApiConstants.NumAckPending].AsLong;
             NumRedelivered = ciNode[ApiConstants.NumRedelivered].AsLong;
+            ClusterInfo = ClusterInfo.OptionalInstance(ciNode[ApiConstants.Cluster]);
+            PushBound = ciNode[ApiConstants.PushBound].AsBool;
         }
     }
 }

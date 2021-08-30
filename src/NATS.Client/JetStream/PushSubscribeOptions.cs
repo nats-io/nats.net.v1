@@ -11,8 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using NATS.Client.Internals;
-
 namespace NATS.Client.JetStream
 {
     public sealed class PushSubscribeOptions : SubscribeOptions
@@ -27,9 +25,15 @@ namespace NATS.Client.JetStream
         /// </summary>
         public string DeliverSubject => ConsumerConfiguration.DeliverSubject;
 
-        // Validation is done by the builder Build()
-        private PushSubscribeOptions(string stream, bool direct, ConsumerConfiguration config) 
-            : base(stream, direct, config) {}
+        /// <summary>
+        /// Gets the deliver group
+        /// </summary>
+        public string DeliverGroup => ConsumerConfiguration.DeliverGroup;
+
+        // Validation is done by base class
+        private PushSubscribeOptions(string stream, string durable, bool bind, 
+            string deliverSubject, string deliverGroup, ConsumerConfiguration cc) 
+            : base(stream, durable, false, bind, deliverSubject, deliverGroup, cc) {}
 
         /// <summary>
         /// Create PushSubscribeOptions where you are binding to
@@ -37,7 +41,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="stream">the stream name to bind to</param>
         /// <returns>the PushSubscribeOptions</returns>
-        public static PushSubscribeOptions Bind(string stream) {
+        public static PushSubscribeOptions ForStream(string stream) {
             return new PushSubscribeOptionsBuilder().WithStream(stream).Build();
         }
 
@@ -48,8 +52,8 @@ namespace NATS.Client.JetStream
         /// <param name="stream">the stream name to bind to</param>
         /// <param name="durable">the durable name</param>
         /// <returns>the PushSubscribeOptions</returns>
-        public static PushSubscribeOptions DirectBind(string stream, string durable) {
-            return new PushSubscribeOptionsBuilder().WithStream(stream).WithDurable(durable).Direct().Build();
+        public static PushSubscribeOptions BindTo(string stream, string durable) {
+            return new PushSubscribeOptionsBuilder().WithStream(stream).WithDurable(durable).Bind().Build();
         }
 
         /// <summary>
@@ -64,11 +68,12 @@ namespace NATS.Client.JetStream
 
         public sealed class PushSubscribeOptionsBuilder
         {
-            private string _durable;
-            private string _deliverSubject;
             private string _stream;
-            private bool _direct;
+            private bool _bind;
+            private string _durable;
             private ConsumerConfiguration _config;
+            private string _deliverSubject;
+            private string _deliverGroup;
 
             /// <summary>
             /// Set the stream name
@@ -85,9 +90,9 @@ namespace NATS.Client.JetStream
             /// Set as a direct subscribe
             /// </summary>
             /// <returns>The builder</returns>
-            public PushSubscribeOptionsBuilder Direct()
+            public PushSubscribeOptionsBuilder Bind()
             {
-                _direct = true;
+                _bind = true;
                 return this;
             }
 
@@ -125,25 +130,23 @@ namespace NATS.Client.JetStream
             }
 
             /// <summary>
+            /// Set the deliver group 
+            /// </summary>
+            /// <param name="deliverGroup">the deliver group value</param>
+            /// <returns>The PushSubscribeOptionsBuilder</returns>
+            public PushSubscribeOptionsBuilder WithDeliverGroup(string deliverGroup)
+            {
+                _deliverGroup = deliverGroup;
+                return this;
+            }
+
+            /// <summary>
             /// Builds the PushSubscribeOptions
             /// </summary>
             /// <returns>The PushSubscribeOptions object.</returns>
             public PushSubscribeOptions Build()
             {
-                _stream = Validator.ValidateStreamName(_stream, false);
-                
-                _durable = Validator.ValidateDurable(_durable, false);
-                if (_durable == null && _config != null)
-                {
-                    _durable = Validator.ValidateDurable(_config.Durable, false);
-                }
-
-                _config = ConsumerConfiguration.Builder(_config)
-                    .WithDurable(_durable)
-                    .WithDeliverSubject(_deliverSubject)
-                    .Build();
-
-                return new PushSubscribeOptions(_stream, _direct, _config);
+                return new PushSubscribeOptions(_stream, _durable, _bind, _deliverSubject, _deliverGroup, _config);
             }
         }
     }

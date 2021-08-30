@@ -40,6 +40,28 @@ namespace NATS.Client.Internals
                 "Durable is required and cannot contain a '.', '*' or '>' [null]");
         }
 
+        internal static String ValidateMustMatchIfBothSupplied(String s1, String s2, String label1, String label2) {
+            // s1   | s2   || result
+            // ---- | ---- || --------------
+            // null | null || valid, null s2
+            // null | y    || valid, y s2
+            // x    | null || valid, x s1
+            // x    | x    || valid, x s1
+            // x    | y    || invalid
+            s1 = EmptyAsNull(s1);
+            s2 = EmptyAsNull(s2);
+            if (s1 == null) {
+                return s2; // s2 can be either null or y
+            }
+
+            // x / null or x / x
+            if (s2 == null || s1.Equals(s2)) {
+                return s1;
+            }
+
+            throw new ArgumentException($"{label1} [{s1}] must match the {label2} [{s2}] if both are provided.");
+        }
+
         public static string Validate(string s, bool required, string label, Func<string> check)
         {
             string preCheck = EmptyAsNull(s);
@@ -276,7 +298,11 @@ namespace NATS.Client.Internals
 
         internal static string EmptyAsNull(string s)
         {
-            return string.IsNullOrEmpty(s) ? null : s;
+            return NullOrEmpty(s) ? null : s;
+        }
+
+        internal static bool NullOrEmpty(String s) {
+            return s == null || s.Trim().Length == 0;
         }
 
         internal static bool ZeroOrLtMinus1(long l)

@@ -11,8 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using NATS.Client.Internals;
-
 namespace NATS.Client.JetStream
 {
     public sealed class PullSubscribeOptions : SubscribeOptions
@@ -22,19 +20,19 @@ namespace NATS.Client.JetStream
         /// </summary>
         public string Durable => ConsumerConfiguration.Durable;
 
-        // Validation is done by the builder Build()
-        private PullSubscribeOptions(string stream, bool direct, ConsumerConfiguration config) 
-            : base(stream, direct, config) {}
+        // Validation is done by base class
+        private PullSubscribeOptions(string stream, string durable, bool bind, ConsumerConfiguration cc) 
+            : base(stream, durable, true, bind, null, null, cc) {}
 
         /// <summary>
         /// Create PushSubscribeOptions where you are binding to
-        /// a specific stream, specific durable and are using direct mode
+        /// a specific stream, specific durable and are using bind mode
         /// </summary>
         /// <param name="stream">the stream name to bind to</param>
         /// <param name="durable">the durable name</param>
         /// <returns>the PushSubscribeOptions</returns>
-        public static PullSubscribeOptions DirectBind(string stream, string durable) {
-            return new PullSubscribeOptionsBuilder().WithStream(stream).WithDurable(durable).Direct().Build();
+        public static PullSubscribeOptions BindTo(string stream, string durable) {
+            return new PullSubscribeOptionsBuilder().WithStream(stream).WithDurable(durable).Bind(true).Build();
         }
 
         /// <summary>
@@ -48,21 +46,10 @@ namespace NATS.Client.JetStream
 
         public sealed class PullSubscribeOptionsBuilder
         {
-            private string _durable;
             private string _stream;
-            private bool _direct;
+            private bool _bind;
+            private string _durable;
             private ConsumerConfiguration _config;
-
-            /// <summary>
-            /// Set the durable
-            /// </summary>
-            /// <param name="durable">the durable value</param>
-            /// <returns>The PullSubscribeOptionsBuilder</returns>
-            public PullSubscribeOptionsBuilder WithDurable(string durable)
-            {
-                _durable = durable;
-                return this;
-            }
 
             /// <summary>
             /// Set the stream name
@@ -76,12 +63,23 @@ namespace NATS.Client.JetStream
             }
 
             /// <summary>
+            /// Set the durable
+            /// </summary>
+            /// <param name="durable">the durable value</param>
+            /// <returns>The PullSubscribeOptionsBuilder</returns>
+            public PullSubscribeOptionsBuilder WithDurable(string durable)
+            {
+                _durable = durable;
+                return this;
+            }
+
+            /// <summary>
             /// Set as a direct subscribe
             /// </summary>
             /// <returns>The builder</returns>
-            public PullSubscribeOptionsBuilder Direct()
+            public PullSubscribeOptionsBuilder Bind(bool isBind)
             {
-                _direct = true;
+                _bind = isBind;
                 return this;
             }
 
@@ -102,15 +100,7 @@ namespace NATS.Client.JetStream
             /// <returns>The PullSubscribeOptions object.</returns>
             public PullSubscribeOptions Build()
             {
-                _stream = Validator.ValidateStreamName(_stream, false);
-
-                _durable = Validator.ValidateDurableRequired(_durable, _config);
-
-                _config = ConsumerConfiguration.Builder(_config)
-                    .WithDurable(_durable)
-                    .Build();
-
-                return new PullSubscribeOptions(_stream, _direct, _config);
+                return new PullSubscribeOptions(_stream, _durable, _bind, _config);
             }
         }
     }

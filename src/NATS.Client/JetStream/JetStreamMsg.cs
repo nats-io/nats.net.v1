@@ -162,8 +162,6 @@ namespace NATS.Client.JetStream
 
         internal string AccountHash { get;  }
 
-        internal string Token { get;  }
-
         // Caller must ensure this is a JS message
         internal MetaData(string metaData)
         {
@@ -175,45 +173,51 @@ namespace NATS.Client.JetStream
             
             int streamIndex;
             bool hasPending;
-            bool hasDomainHashToken;
+            bool hasDomainAndHash;
             if (parts.Length == 8)
             {
                 streamIndex = 2;
                 hasPending = false;
-                hasDomainHashToken = false;
+                hasDomainAndHash = false;
             }
             else if (parts.Length == 9)
             {
                 streamIndex = 2;
                 hasPending = true;
-                hasDomainHashToken = false;
+                hasDomainAndHash = false;
             }
-            else if (parts.Length >= 12)
+            else if (parts.Length >= 11)
             {
                 streamIndex = 4;
                 hasPending = true;
-                hasDomainHashToken = true;
+                hasDomainAndHash = true;
             }
             else
             {
                 throw new NATSException($"Invalid MetaData: {metaData}");
             }
 
-            Prefix = parts[0];
-            // "ack" = parts[1]
-            Domain = hasDomainHashToken ? parts[2] : null;
-            AccountHash = hasDomainHashToken ? parts[3] : null;
-            Stream = parts[streamIndex];
-            Consumer = parts[streamIndex + 1];
-            NumDelivered = ulong.Parse(parts[streamIndex + 2]);
-            StreamSequence = ulong.Parse(parts[streamIndex + 3]);
-            ConsumerSequence = ulong.Parse(parts[streamIndex + 4]);
+            try
+            {
+                Prefix = parts[0];
+                // "ack" = parts[1]
+                Domain = hasDomainAndHash ? parts[2] : null;
+                AccountHash = hasDomainAndHash ? parts[3] : null;
+                Stream = parts[streamIndex];
+                Consumer = parts[streamIndex + 1];
+                NumDelivered = ulong.Parse(parts[streamIndex + 2]);
+                StreamSequence = ulong.Parse(parts[streamIndex + 3]);
+                ConsumerSequence = ulong.Parse(parts[streamIndex + 4]);
 
-            TimestampNanos = ulong.Parse(parts[streamIndex + 5]);
-            Timestamp = epochTime.AddTicks((long)TimestampNanos/100);
+                TimestampNanos = ulong.Parse(parts[streamIndex + 5]);
+                Timestamp = epochTime.AddTicks((long)TimestampNanos / 100);
 
-            NumPending = hasPending ? ulong.Parse(parts[streamIndex + 6]) : 0;
-            Token = hasDomainHashToken ? parts[streamIndex + 7] : null;
+                NumPending = hasPending ? ulong.Parse(parts[streamIndex + 6]) : 0;
+            }
+            catch (Exception)
+            {
+                throw new NATSException($"Invalid MetaData: {metaData}");
+            }
         }
 
         public override string ToString()

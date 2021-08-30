@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using NATS.Client;
 using NATS.Client.JetStream;
 using Xunit;
 
@@ -20,7 +21,12 @@ namespace UnitTests.JetStream
     {
         const string TestMetaV0 = "$JS.ACK.test-stream.test-consumer.1.2.3.1605139610113260000";
         const string TestMetaV1 = "$JS.ACK.test-stream.test-consumer.1.2.3.1605139610113260000.4";
-        const string TestMetaV2 = "$JS.ACK.v2Domain.v2Hash.test-stream.test-consumer.1.2.3.1605139610113260000.4.v2Token";
+        const string TestMetaV2 = "$JS.ACK.v2Domain.v2Hash.test-stream.test-consumer.1.2.3.1605139610113260000.4";
+        const string TestMetaVFuture = "$JS.ACK.v2Domain.v2Hash.test-stream.test-consumer.1.2.3.1605139610113260000.4.dont.care.how.many.more";
+        const string InvalidMetaNoAck = "$JS.nope.test-stream.test-consumer.1.2.3.1605139610113260000";
+        const string InvalidMetaLt8Tokens = "$JS.ACK.less-than.8-tokens.1.2.3";
+        const string InvalidMeta10Tokens = "$JS.ACK.v2Domain.v2Hash.test-stream.test-consumer.1.2.3.1605139610113260000";
+        const string InvalidMetaData = "$JS.ACK.v2Domain.v2Hash.test-stream.test-consumer.1.2.3.1605139610113260000.not-a-number";
 
         [Fact]
         public void MetaDataTests()
@@ -28,6 +34,12 @@ namespace UnitTests.JetStream
             ValidateMeta(false, false, new MetaData(TestMetaV0));
             ValidateMeta(true, false, new MetaData(TestMetaV1));
             ValidateMeta(true, true, new MetaData(TestMetaV2));
+            ValidateMeta(true, true, new MetaData(TestMetaVFuture));
+
+            Assert.Throws<NATSException>(() => ValidateMeta(true, true, new MetaData(InvalidMetaNoAck)));
+            Assert.Throws<NATSException>(() => ValidateMeta(true, true, new MetaData(InvalidMetaLt8Tokens)));
+            Assert.Throws<NATSException>(() => ValidateMeta(true, true, new MetaData(InvalidMeta10Tokens)));
+            Assert.Throws<NATSException>(() => ValidateMeta(true, true, new MetaData(InvalidMetaData)));
         }
 
         private static void ValidateMeta(bool hasPending, bool hasDomainHashToken, MetaData meta)
@@ -47,13 +59,10 @@ namespace UnitTests.JetStream
             if (hasDomainHashToken) {
                 Assert.Equal("v2Domain", meta.Domain);
                 Assert.Equal("v2Hash", meta.AccountHash);
-                Assert.Equal("v2Token", meta.Token);
-
             }
             else {
                 Assert.Null(meta.Domain);
                 Assert.Null(meta.AccountHash);
-                Assert.Null(meta.Token);
             }
         }
     }

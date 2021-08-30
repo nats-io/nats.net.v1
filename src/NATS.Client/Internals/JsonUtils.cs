@@ -50,7 +50,7 @@ namespace NATS.Client.Internals
         }
         
         internal static byte[] AsByteArrayFromBase64(JSONNode node) {
-            return string.IsNullOrEmpty(node.Value) ? null : Convert.FromBase64String(node.Value);
+            return Validator.NullOrEmpty(node.Value) ? null : Convert.FromBase64String(node.Value);
         }
         
         internal static DateTime AsDate(JSONNode node)

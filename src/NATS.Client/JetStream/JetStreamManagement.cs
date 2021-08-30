@@ -37,7 +37,7 @@ namespace NATS.Client.JetStream
         {
             Validator.ValidateNotNull(config, nameof(config));
             
-            if (string.IsNullOrEmpty(config.Name)) {
+            if (Validator.NullOrEmpty(config.Name)) {
                 throw new ArgumentException("Configuration must have a valid stream name");
             }
 
