@@ -101,16 +101,18 @@ namespace IntegrationTests
                 // subscribe using the handler, auto ack true
                 PushSubscribeOptions pso1 = PushSubscribeOptions.Builder()
                     .WithDurable(Durable(1)).Build();
-                js.PushSubscribeAsync(SUBJECT, Handler1, true, pso1);
+                IJetStreamPushAsyncSubscription asub = js.PushSubscribeAsync(SUBJECT, Handler1, true, pso1);
 
                 // wait for messages to arrive using the countdown latch.
                 latch1.Wait();
 
                 Assert.Equal(10, handlerReceived1);
+                
+                asub.Unsubscribe();
 
                 // check that all the messages were read by the durable
-                IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(SUBJECT, pso1);
-                AssertNoMoreMessages(sub);
+                IJetStreamPushSyncSubscription ssub = js.PushSubscribeSync(SUBJECT, pso1);
+                AssertNoMoreMessages(ssub);
 
                 // 2. auto ack false
                 CountdownEvent latch2 = new CountdownEvent(10);
@@ -127,7 +129,7 @@ namespace IntegrationTests
                 ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithAckWait(500).Build();
                 PushSubscribeOptions pso2 = PushSubscribeOptions.Builder()
                     .WithDurable(Durable(2)).WithConfiguration(cc).Build();
-                js.PushSubscribeAsync(SUBJECT, Handler2, false, pso2);
+                asub = js.PushSubscribeAsync(SUBJECT, Handler2, false, pso2);
 
                 // wait for messages to arrive using the countdown latch.
                 latch2.Wait();
@@ -135,9 +137,11 @@ namespace IntegrationTests
 
                 Thread.Sleep(2000); // just give it time for the server to realize the messages are not ack'ed
 
+                asub.Unsubscribe();
+                
                 // check that we get all the messages again
-                sub = js.PushSubscribeSync(SUBJECT, pso2);
-                Assert.Equal(10, ReadMessagesAck(sub).Count);
+                ssub = js.PushSubscribeSync(SUBJECT, pso2);
+                Assert.Equal(10, ReadMessagesAck(ssub).Count);
             });
         }
 
