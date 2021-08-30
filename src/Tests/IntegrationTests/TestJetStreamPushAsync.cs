@@ -302,7 +302,7 @@ namespace IntegrationTests
                         msg = sub.NextMessage(500);
                     }
                 }
-                catch (NATSTimeoutException e)
+                catch (NATSTimeoutException)
                 {
                     // timeout is acceptable, means no messages available.
                 }
