@@ -202,5 +202,39 @@ namespace UnitTests.JetStream
                 .Build());
             
         }
+
+        [Fact]
+        public void TestDeliverSubjectValidation()
+        {
+            Assert.Null(PushSubscribeOptions.Builder()
+                .WithDeliverSubject(null)
+                .WithConfiguration(ConsumerConfiguration.Builder().WithDeliverSubject(null).Build())
+                .Build()
+                .DeliverSubject);
+
+            Assert.Equal("y", PushSubscribeOptions.Builder()
+                .WithDeliverSubject(null)
+                .WithConfiguration(ConsumerConfiguration.Builder().WithDeliverSubject("y").Build())
+                .Build()
+                .DeliverSubject);
+
+            Assert.Equal("x", PushSubscribeOptions.Builder()
+                .WithDeliverSubject("x")
+                .WithConfiguration(ConsumerConfiguration.Builder().WithDeliverSubject(null).Build())
+                .Build()
+                .DeliverSubject);
+
+            Assert.Equal("x", PushSubscribeOptions.Builder()
+                .WithDeliverSubject("x")
+                .WithConfiguration(ConsumerConfiguration.Builder().WithDeliverSubject("x").Build())
+                .Build()
+                .DeliverSubject);
+
+            Assert.Throws<ArgumentException>(() => PushSubscribeOptions.Builder()
+                .WithDeliverSubject("x")
+                .WithConfiguration(ConsumerConfiguration.Builder().WithDeliverSubject("y").Build())
+                .Build());
+            
+        }
     }
 }

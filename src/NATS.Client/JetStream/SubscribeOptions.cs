@@ -35,6 +35,8 @@ namespace NATS.Client.JetStream
 
             deliverGroup = Validator.ValidateMustMatchIfBothSupplied(deliverGroup, cc?.DeliverGroup, "Builder Deliver Group", "Consumer Configuration Deliver Group");
 
+            deliverSubject = Validator.ValidateMustMatchIfBothSupplied(deliverSubject, cc?.DeliverSubject, "Builder Deliver Subject", "Consumer Configuration Deliver Subject");
+
             ConsumerConfiguration = ConsumerConfiguration.Builder(cc)
                 .WithDurable(durable)
                 .WithDeliverSubject(deliverSubject)
