@@ -22,7 +22,7 @@ namespace NATS.Client.JetStream
         private static ConcurrentDictionary<string, string> JsPrefixes = new ConcurrentDictionary<string, string>();
         
         internal static string AddPrefix(string prefix) {
-            if (string.IsNullOrEmpty(prefix) || prefix.Equals(JetStreamConstants.JsapiPrefix)) {
+            if (string.IsNullOrWhiteSpace(prefix) || prefix.Equals(JetStreamConstants.JsapiPrefix)) {
                 return JetStreamConstants.JsapiPrefix;
             }
 

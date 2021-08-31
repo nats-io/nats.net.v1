@@ -100,5 +100,107 @@ namespace UnitTests.JetStream
             ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithDurable(DURABLE).Build();
             PullSubscribeOptions.Builder().WithConfiguration(cc).Build();
         }
+
+        [Fact]
+        public void TestDurableValidation()
+        {
+            // push
+            Assert.Null(PushSubscribeOptions.Builder()
+                .WithDurable(null)
+                .WithConfiguration(ConsumerConfiguration.Builder().WithDurable(null).Build())
+                .Build()
+                .Durable);
+
+            Assert.Equal("y", PushSubscribeOptions.Builder()
+                .WithDurable(null)
+                .WithConfiguration(ConsumerConfiguration.Builder().WithDurable("y").Build())
+                .Build()
+                .Durable);
+
+            Assert.Equal("x", PushSubscribeOptions.Builder()
+                .WithDurable("x")
+                .WithConfiguration(ConsumerConfiguration.Builder().WithDurable(null).Build())
+                .Build()
+                .Durable);
+
+            Assert.Equal("x", PushSubscribeOptions.Builder()
+                .WithDurable("x")
+                .WithConfiguration(ConsumerConfiguration.Builder().WithDurable("x").Build())
+                .Build()
+                .Durable);
+
+            Assert.Throws<ArgumentException>(() => PushSubscribeOptions.Builder()
+                .WithDurable("x")
+                .WithConfiguration(ConsumerConfiguration.Builder().WithDurable("y").Build())
+                .Build());
+
+            Assert.Null(PushSubscribeOptions.Builder().Build().Durable);
+
+            // pull
+            Assert.Throws<ArgumentException>(() => PullSubscribeOptions.Builder()
+                .WithDurable(null)
+                .WithConfiguration(ConsumerConfiguration.Builder().WithDurable(null).Build())
+                .Build()
+                .Durable);
+
+            Assert.Equal("y", PullSubscribeOptions.Builder()
+                .WithDurable(null)
+                .WithConfiguration(ConsumerConfiguration.Builder().WithDurable("y").Build())
+                .Build()
+                .Durable);
+
+            Assert.Equal("x", PullSubscribeOptions.Builder()
+                .WithDurable("x")
+                .WithConfiguration(ConsumerConfiguration.Builder().WithDurable(null).Build())
+                .Build()
+                .Durable);
+
+            Assert.Equal("x", PullSubscribeOptions.Builder()
+                .WithDurable("x")
+                .WithConfiguration(ConsumerConfiguration.Builder().WithDurable("x").Build())
+                .Build()
+                .Durable);
+
+            Assert.Throws<ArgumentException>(() => PullSubscribeOptions.Builder()
+                .WithDurable("x")
+                .WithConfiguration(ConsumerConfiguration.Builder().WithDurable("y").Build())
+                .Build());
+
+            Assert.Throws<ArgumentException>(() => PullSubscribeOptions.Builder().Build());
+        }
+
+        [Fact]
+        public void TestDeliverGroupValidation()
+        {
+            Assert.Null(PushSubscribeOptions.Builder()
+                .WithDeliverGroup(null)
+                .WithConfiguration(ConsumerConfiguration.Builder().WithDeliverGroup(null).Build())
+                .Build()
+                .DeliverGroup);
+
+            Assert.Equal("y", PushSubscribeOptions.Builder()
+                .WithDeliverGroup(null)
+                .WithConfiguration(ConsumerConfiguration.Builder().WithDeliverGroup("y").Build())
+                .Build()
+                .DeliverGroup);
+
+            Assert.Equal("x", PushSubscribeOptions.Builder()
+                .WithDeliverGroup("x")
+                .WithConfiguration(ConsumerConfiguration.Builder().WithDeliverGroup(null).Build())
+                .Build()
+                .DeliverGroup);
+
+            Assert.Equal("x", PushSubscribeOptions.Builder()
+                .WithDeliverGroup("x")
+                .WithConfiguration(ConsumerConfiguration.Builder().WithDeliverGroup("x").Build())
+                .Build()
+                .DeliverGroup);
+
+            Assert.Throws<ArgumentException>(() => PushSubscribeOptions.Builder()
+                .WithDeliverGroup("x")
+                .WithConfiguration(ConsumerConfiguration.Builder().WithDeliverGroup("y").Build())
+                .Build());
+            
+        }
     }
 }

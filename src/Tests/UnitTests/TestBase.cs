@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using System.Threading;
 
 namespace UnitTests
 {
@@ -102,6 +103,28 @@ namespace UnitTests
 
         public static byte[] DataBytes(int seq) {
             return Encoding.ASCII.GetBytes(Data(seq));
+        }
+    }
+
+    public class InterlockedLong
+    {
+        private long count = 0;
+
+        public InterlockedLong() {}
+
+        public InterlockedLong(long count)
+        {
+            this.count = count;
+        }
+
+        public void Inc()
+        {
+            Interlocked.Increment(ref count);
+        }
+
+        public long Get()
+        {
+            return Interlocked.Read(ref count);
         }
     }
 }

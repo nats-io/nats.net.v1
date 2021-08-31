@@ -176,6 +176,18 @@ namespace UnitTests.Internals
         }
 
         [Fact]
+        public void TestValidateMustMatchIfBothSupplied()
+        {
+            Assert.Null(Validator.ValidateMustMatchIfBothSupplied(null, null, "", ""));
+            Assert.Equal("y", Validator.ValidateMustMatchIfBothSupplied(null, "y", "", ""));
+            Assert.Equal("y", Validator.ValidateMustMatchIfBothSupplied("", "y", "", ""));
+            Assert.Equal("x", Validator.ValidateMustMatchIfBothSupplied("x", null, "", ""));
+            Assert.Equal("x", Validator.ValidateMustMatchIfBothSupplied("x", " ", "", ""));
+            Assert.Equal("x", Validator.ValidateMustMatchIfBothSupplied("x", "x", "", ""));
+            Assert.Throws<ArgumentException>(() => Validator.ValidateMustMatchIfBothSupplied("x", "y", "", ""));
+        }
+
+        [Fact]
         public void TestNotNull()
         {
             object o1 = null;

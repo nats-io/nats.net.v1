@@ -146,21 +146,27 @@ namespace NATS.Client.JetStream
             SubscribeOptions so;
 
             if (isPullMode) {
-                so = pullOpts;
+                so = pullOpts; // options must have already been checked to be non null
                 stream = pullOpts.Stream;
                 ccBuilder = Builder(pullOpts.ConsumerConfiguration);
                 ccBuilder.WithDeliverSubject(null); // pull mode can't have a deliver subject
+                // queueName is already null
+                ccBuilder.WithDeliverGroup(null);   // pull mode can't have a deliver group
             }
             else {
-                so = pushOpts == null
-                    ? PushSubscribeOptions.Builder().Build()
-                    : pushOpts;
+                so = pushOpts ?? PushSubscribeOptions.Builder().Build();
                 stream = so.Stream; // might be null, that's ok (see direct)
                 ccBuilder = Builder(so.ConsumerConfiguration);
+                ccBuilder.WithMaxPullWaiting(0); // this does not apply to push, in fact will error b/c deliver subject will be set
+                // deliver subject does not have to be cleared
+                // figure out the queue name
+                queueName = Validator.ValidateMustMatchIfBothSupplied(ccBuilder.DeliverGroup, queueName,
+                    "Consumer Configuration DeliverGroup", "Queue Name");
+                ccBuilder.WithDeliverGroup(queueName); // and set it in case the deliver group was null
             }
 
             //
-            bool direct = so.Direct;
+            bool bindMode = so.Bind;
 
             string durable = ccBuilder.Durable;
             string inbox = ccBuilder.DeliverSubject;
@@ -176,27 +182,47 @@ namespace NATS.Client.JetStream
             
             // 2. Is this a durable or ephemeral
             if (durable != null) {
-                ConsumerInfo consumerInfo = 
+                ConsumerInfo lookedUpInfo = 
                     LookupConsumerInfo(stream, durable);
 
-                if (consumerInfo != null) { // the consumer for that durable already exists
+                if (lookedUpInfo != null) { // the consumer for that durable already exists
                     createConsumer = false;
-                    ConsumerConfiguration cc = consumerInfo.Configuration;
+                    ConsumerConfiguration lookedUpConfig = lookedUpInfo.Configuration;
 
                     // durable already exists, make sure the filter subject matches
-                    string existingFilterSubject = cc.FilterSubject;
-                    if (filterSubject != null && !filterSubject.Equals(existingFilterSubject)) {
+                    string lookedUp = Validator.EmptyAsNull(lookedUpConfig.FilterSubject);
+                    if (filterSubject != null && !filterSubject.Equals(lookedUp)) {
                         throw new ArgumentException(
                             $"Subject {subject} mismatches consumer configuration {filterSubject}.");
                     }
+                    filterSubject = lookedUp;
 
-                    filterSubject = existingFilterSubject;
-
-                    // use the deliver subject as the inbox. It may be null, that's ok
-                    inbox = cc.DeliverSubject;
+                    lookedUp = Validator.EmptyAsNull(lookedUpConfig.DeliverGroup);
+                    if (lookedUp == null) {
+                        // lookedUp was null, means existing consumer is not a queue consumer
+                        if (queueName == null) {
+                            // ok fine, no queue requested and the existing consumer is also not a queue consumer
+                            // we must check if the consumer is in use though
+                            if (lookedUpInfo.PushBound) {
+                                throw new ArgumentException($"Consumer [{durable}] is already bound to a subscription.");
+                            }
+                        }
+                        else { // else they requested a queue but this durable was not configured as queue
+                            throw new ArgumentException($"Existing consumer [{durable}] is not configured as a queue / deliver group.");
+                        }
+                    }
+                    else if (queueName == null) {
+                        throw new ArgumentException($"Existing consumer [{durable}] is configured as a queue / deliver group.");
+                    }
+                    else if (lookedUp != queueName) {
+                        throw new ArgumentException(
+                            $"Existing consumer deliver group {lookedUp} does not match requested queue / deliver group {queueName}.");
+                    }
+                    
+                    inbox = lookedUpConfig.DeliverSubject; // use the deliver subject as the inbox. It may be null, that's ok
                 }
-                else if (direct) {
-                    throw new ArgumentException("Consumer not found for durable. Required in direct mode.");
+                else if (bindMode) {
+                    throw new ArgumentException("Consumer not found for durable. Required in bind mode.");
                 }
             }
 
@@ -324,7 +350,7 @@ namespace NATS.Client.JetStream
         public IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler, bool autoAck)
         {
             Validator.ValidateSubject(subject, true);
-            queue = Validator.ValidateQueueName(queue, false);
+            queue = Validator.EmptyAsNull(Validator.ValidateQueueName(queue, false));
             Validator.ValidateNotNull(handler, nameof(handler));
             return (IJetStreamPushAsyncSubscription) CreateSubscription(subject, queue, handler, autoAck, null, null);
         }
@@ -339,7 +365,7 @@ namespace NATS.Client.JetStream
         public IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler, bool autoAck, PushSubscribeOptions options)
         {
             Validator.ValidateSubject(subject, true);
-            queue = Validator.ValidateQueueName(queue, false);
+            queue = Validator.EmptyAsNull(Validator.ValidateQueueName(queue, false));
             Validator.ValidateNotNull(handler, nameof(handler));
             return (IJetStreamPushAsyncSubscription) CreateSubscription(subject, queue, handler, autoAck, options, null);
         }
@@ -359,14 +385,14 @@ namespace NATS.Client.JetStream
         public IJetStreamPushSyncSubscription PushSubscribeSync(string subject, string queue)
         {
             Validator.ValidateSubject(subject, true);
-            queue = Validator.ValidateQueueName(queue, false);
+            queue = Validator.EmptyAsNull(Validator.ValidateQueueName(queue, false));
             return (IJetStreamPushSyncSubscription) CreateSubscription(subject, queue, null, false, null, null);
         }
 
         public IJetStreamPushSyncSubscription PushSubscribeSync(string subject, string queue, PushSubscribeOptions options)
         {
             Validator.ValidateSubject(subject, true);
-            queue = Validator.ValidateQueueName(queue, false);
+            queue = Validator.EmptyAsNull(Validator.ValidateQueueName(queue, false));
             return (IJetStreamPushSyncSubscription) CreateSubscription(subject, queue, null, false, options, null);
         }
     }

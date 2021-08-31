@@ -61,7 +61,7 @@ namespace NATS.Client.JetStream
             ClientIp = siNode[ApiConstants.ClientIp].Value;
             Cluster = siNode[ApiConstants.Cluster].Value;
             ConnectURLs = siNode[ApiConstants.ConnectUrls].Children
-                .Where(n => !string.IsNullOrEmpty(n.Value))
+                .Where(n => !string.IsNullOrWhiteSpace(n.Value))
                 .Select(n => n.Value)
                 .ToArray();
         }
