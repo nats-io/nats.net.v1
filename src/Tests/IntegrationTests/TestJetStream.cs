@@ -14,6 +14,7 @@
 using System;
 using System.Text;
 using NATS.Client;
+using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using Xunit;
 using static UnitTests.TestBase;
@@ -41,12 +42,29 @@ namespace IntegrationTests
         {
             Context.RunInServer(c =>
             {
-                // TODO
-                // Assert.Throws<NATSNoRespondersException>(() => c.CreateJetStreamContext().Subscribe(SUBJECT));
+                Assert.Throws<NATSNoRespondersException>(
+                    () => c.CreateJetStreamContext().PushSubscribeSync(SUBJECT));
 
-                Assert.Throws<NATSNoRespondersException>(() => 
-                    c.CreateJetStreamManagementContext().GetAccountStatistics());
+                Assert.Throws<NATSNoRespondersException>(
+                    () => c.CreateJetStreamManagementContext().GetAccountStatistics());
             });
+        }
+
+        [Fact]
+        public void TestPrefixManager()
+        {
+            Assert.Throws<ArgumentException>(() => JsPrefixManager.AddPrefix(HasDollar));
+            Assert.Throws<ArgumentException>(() => JsPrefixManager.AddPrefix(HasGt));
+            Assert.Throws<ArgumentException>(() => JsPrefixManager.AddPrefix(HasStar));
+
+            JsPrefixManager.AddPrefix("foo");
+            JsPrefixManager.AddPrefix("bar.");
+
+            Assert.True(JsPrefixManager.HasPrefix(JetStreamConstants.JsPrefix));
+            Assert.True(JsPrefixManager.HasPrefix(JetStreamConstants.JsapiPrefix));
+            Assert.True(JsPrefixManager.HasPrefix("foo.blah"));
+            Assert.True(JsPrefixManager.HasPrefix("bar.blah"));
+            Assert.False(JsPrefixManager.HasPrefix("not"));
         }
 
         [Fact]
@@ -174,6 +192,59 @@ namespace IntegrationTests
                 CreateTestStream(c);
 
                 IJetStream js = c.CreateJetStreamContext();
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                
+            // create a durable push subscriber - has deliver subject
+            ConsumerConfiguration ccDurPush = ConsumerConfiguration.Builder()
+                    .WithDurable(Durable(1))
+                    .WithDeliverSubject(Deliver(1))
+                    .Build();
+            jsm.AddOrUpdateConsumer(STREAM, ccDurPush);
+
+            // create a durable pull subscriber - notice no deliver subject
+            ConsumerConfiguration ccDurPull = ConsumerConfiguration.Builder()
+                    .WithDurable(Durable(2))
+                    .Build();
+            jsm.AddOrUpdateConsumer(STREAM, ccDurPull);
+
+            // try to pull subscribe against a push durable
+            ArgumentException ae = Assert.Throws<ArgumentException>(
+                    () => js.PullSubscribe(SUBJECT, PullSubscribeOptions.Builder().WithDurable(Durable(1)).Build())
+            );
+            Assert.Contains("[SUB-DS01]", ae.Message);
+
+            // try to pull bind against a push durable
+            ae = Assert.Throws<ArgumentException>(
+                    () => js.PullSubscribe(SUBJECT, PullSubscribeOptions.BindTo(STREAM, Durable(1)))
+            );
+            Assert.Contains("[SUB-DS01]", ae.Message);
+
+            // this one is okay
+            IJetStreamPullSubscription sub = js.PullSubscribe(SUBJECT, PullSubscribeOptions.Builder().WithDurable(Durable(2)).Build());
+            sub.Unsubscribe(); // so I can re-use the durable
+
+            // try to push subscribe against a pull durable
+            ae = Assert.Throws<ArgumentException>(
+                    () => js.PushSubscribeSync(SUBJECT, PushSubscribeOptions.Builder().WithDurable(Durable(2)).Build())
+            );
+            Assert.Contains("[SUB-DS02]", ae.Message);
+
+            // try to push bind against a pull durable
+            ae = Assert.Throws<ArgumentException>(
+                    () => js.PushSubscribeSync(SUBJECT, PushSubscribeOptions.BindTo(STREAM, Durable(2)))
+            );
+            Assert.Contains("[SUB-DS02]", ae.Message);
+
+            // try to push subscribe but mismatch the deliver subject
+            ConsumerConfiguration ccMis = ConsumerConfiguration.Builder().WithDeliverSubject("not-match").Build();
+            PushSubscribeOptions psoMis = PushSubscribeOptions.Builder().WithDurable(Durable(1))
+                .WithConfiguration(ccMis).Build();
+            ae = Assert.Throws<ArgumentException>(() => js.PushSubscribeSync(SUBJECT, psoMis));
+            Assert.Contains("[SUB-DS03]", ae.Message);
+
+            // this one is okay
+            js.PushSubscribeSync(SUBJECT, PushSubscribeOptions.Builder().WithDurable(Durable(1)).Build());
+                
             });
         }
 
