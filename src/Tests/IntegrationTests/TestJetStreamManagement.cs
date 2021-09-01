@@ -390,6 +390,38 @@ namespace IntegrationTests
                 
                 Assert.Throws<NATSJetStreamException>(() => jsm.AddOrUpdateConsumer(STREAM,
                     builder.WithFilterSubject(SubjectDot("not-match")).Build()));
+
+                // try to filter against durable with mismatch, pull
+                IJetStream js = c.CreateJetStreamContext();
+
+                jsm.AddOrUpdateConsumer(STREAM, ConsumerConfiguration.Builder()
+                    .WithDurable(Durable(42))
+                    .WithFilterSubject(SubjectDot("F"))
+                    .Build()
+                );
+
+                ConsumerConfiguration ccBadFilter = ConsumerConfiguration.Builder()
+                    .WithDurable(Durable(42)).WithFilterSubject("x").Build();
+
+                PullSubscribeOptions pullOptsBadFilter = PullSubscribeOptions.Builder()
+                    .WithConfiguration(ccBadFilter).Build();
+                
+                ArgumentException ae = Assert.Throws<ArgumentException>(() => js.PullSubscribe(SubjectDot("F"), pullOptsBadFilter));
+                Assert.Contains("[SUB-FS01]", ae.Message);
+
+                // try to filter against durable with mismatch, push
+                jsm.AddOrUpdateConsumer(STREAM, ConsumerConfiguration.Builder()
+                    .WithDurable(Durable(43))
+                    .WithDeliverSubject(Deliver(43))
+                    .WithFilterSubject(SubjectDot("F"))
+                    .Build()
+                );
+
+                ccBadFilter = ConsumerConfiguration.Builder().WithDurable(Durable(43)).WithFilterSubject("x").Build();
+
+                PushSubscribeOptions pushOptsBadFilter = PushSubscribeOptions.Builder().WithConfiguration(ccBadFilter).Build();
+                ae = Assert.Throws<ArgumentException>(() => js.PushSubscribeSync(SubjectDot("F"), pushOptsBadFilter));
+                Assert.Contains("[SUB-FS01]", ae.Message);
             });
         }
         

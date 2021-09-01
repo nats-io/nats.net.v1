@@ -53,7 +53,7 @@ namespace NATS.Client.JetStream
         /// <param name="durable">the durable name</param>
         /// <returns>the PushSubscribeOptions</returns>
         public static PushSubscribeOptions BindTo(string stream, string durable) {
-            return new PushSubscribeOptionsBuilder().WithStream(stream).WithDurable(durable).Bind().Build();
+            return new PushSubscribeOptionsBuilder().WithStream(stream).WithDurable(durable).Bind(true).Build();
         }
 
         /// <summary>
@@ -90,9 +90,9 @@ namespace NATS.Client.JetStream
             /// Set as a direct subscribe
             /// </summary>
             /// <returns>The builder</returns>
-            public PushSubscribeOptionsBuilder Bind()
+            public PushSubscribeOptionsBuilder Bind(bool b)
             {
-                _bind = true;
+                _bind = b;
                 return this;
             }
 

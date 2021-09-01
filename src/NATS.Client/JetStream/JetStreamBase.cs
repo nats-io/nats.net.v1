@@ -41,7 +41,7 @@ namespace NATS.Client.JetStream
 
         internal ConsumerInfo AddOrUpdateConsumerInternal(string streamName, ConsumerConfiguration config)
         {
-            string subj = config.Durable == null
+            string subj = string.IsNullOrWhiteSpace(config.Durable)
                 ? string.Format(JetStreamConstants.JsapiConsumerCreate, streamName)
                 : string.Format(JetStreamConstants.JsapiDurableCreate, streamName, config.Durable);
 
