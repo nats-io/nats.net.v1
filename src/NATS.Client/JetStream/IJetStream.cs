@@ -149,15 +149,6 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="subject">The subject on which to listen for messages.
         /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).</param>
-        /// <returns>a JetStreamPullSubscription</returns>
-        IJetStreamPullSubscription PullSubscribe(string subject);
-
-        /// <summary>
-        /// Creates a JetStream pull subscription.  Pull subscriptions fetch messages
-        /// from the server in batches.
-        /// </summary>
-        /// <param name="subject">The subject on which to listen for messages.
-        /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).</param>
         /// <param name="options">Pull Subcribe options for this subscription.</param>
         /// <returns>a JetStreamPullSubscription</returns>
         IJetStreamPullSubscription PullSubscribe(string subject, PullSubscribeOptions options);
