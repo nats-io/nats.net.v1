@@ -8,14 +8,24 @@
         public const int MaxPullSize = 256;
 
         /// <summary>
+        /// The standard JetStream Prefix prefix 
+        /// </summary>
+        public const string PrefixDollarJsDot = "$JS.";
+
+        /// <summary>
+        /// The standard JetStream Prefix suffix 
+        /// </summary>
+        public const string PrefixApiDot = "API.";
+
+        /// <summary>
         /// The standard JetStream Prefix
         /// </summary>
-        public const string JsPrefix = "$JS.";
+        public const string DefaultApiPrefix = "$JS.API.";
         
         /// <summary>
         /// The standard JetStream API Prefix
         /// </summary>
-        public const string JsapiPrefix = JsPrefix + "API.";
+        public const string JsAckSubjectPrefix = "$JS.ACK.";
 
         /// <summary>
         /// JSAPI_ACCOUNT_INFO is for obtaining general information about JetStream.

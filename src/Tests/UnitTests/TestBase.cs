@@ -13,8 +13,13 @@ namespace UnitTests
         public const string HasDot       = "has.dot";
         public const string HasStar      = "has*star";
         public const string HasGt        = "has>gt";
+        public const string HasDash      = "has-dash";
+        public const string HasUnder     = "has_under";
         public const string HasDollar    = "has$dollar";
         public const string HasLow       = "has\tlower\rthan\nspace";
+        public const string HasFwdSlash  = "has/fwd/slash";
+        public const string HasEquals    = "has=equals";
+        public const string HasTic       = "has`tic";
         public static readonly string Has127 = "has" + (char)127 + "127";
 
         public static string ReadDataFile(string name)

@@ -14,7 +14,6 @@
 using System;
 using System.Text;
 using NATS.Client;
-using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using Xunit;
 using static UnitTests.TestBase;
@@ -48,23 +47,6 @@ namespace IntegrationTests
                 Assert.Throws<NATSNoRespondersException>(
                     () => c.CreateJetStreamManagementContext().GetAccountStatistics());
             });
-        }
-
-        [Fact]
-        public void TestPrefixManager()
-        {
-            Assert.Throws<ArgumentException>(() => JsPrefixManager.AddPrefix(HasDollar));
-            Assert.Throws<ArgumentException>(() => JsPrefixManager.AddPrefix(HasGt));
-            Assert.Throws<ArgumentException>(() => JsPrefixManager.AddPrefix(HasStar));
-
-            JsPrefixManager.AddPrefix("foo");
-            JsPrefixManager.AddPrefix("bar.");
-
-            Assert.True(JsPrefixManager.HasPrefix(JetStreamConstants.JsPrefix));
-            Assert.True(JsPrefixManager.HasPrefix(JetStreamConstants.JsapiPrefix));
-            Assert.True(JsPrefixManager.HasPrefix("foo.blah"));
-            Assert.True(JsPrefixManager.HasPrefix("bar.blah"));
-            Assert.False(JsPrefixManager.HasPrefix("not"));
         }
 
         [Fact]

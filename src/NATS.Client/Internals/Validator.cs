@@ -31,13 +31,26 @@ namespace NATS.Client.Internals
             return ValidatePrintableExceptWildDotGt(s, "Durable", required);
         }
 
-        internal static string ValidateDurableRequired(string durable, ConsumerConfiguration cc)
+        public static string ValidateDurableRequired(string durable, ConsumerConfiguration cc)
         {
             if (durable != null) return ValidateDurable(durable, true);
             if (cc != null) return ValidateDurable(cc.Durable, true);
 
             throw new ArgumentException(
                 "Durable is required and cannot contain a '.', '*' or '>' [null]");
+        }
+
+        public static string ValidatePrefixOrDomain(String s, String label, bool required) {
+            return Validate(s, required, label, () => {
+                if (s.StartsWith("."))
+                {
+                    throw new ArgumentException($"{label} cannot start with `.` [{s}]");
+                }
+                if (NotPrintableOrHasWildGt(s)) {
+                    throw new ArgumentException($"{label} must be in the printable ASCII range and cannot include `*`, `>` [{s}]");
+                }
+                return s;
+            });
         }
 
         internal static String ValidateMustMatchIfBothSupplied(String s1, String s2, String label1, String label2) {
@@ -68,7 +81,7 @@ namespace NATS.Client.Internals
             if (preCheck == null)
             {
                 if (required) {
-                    throw new ArgumentException($"{label} cannot be null or empty [" + s + "]");
+                    throw new ArgumentException($"{label} cannot be null or empty [{s}]");
                 }
                 return null;
             }
@@ -95,7 +108,7 @@ namespace NATS.Client.Internals
         {
             return Validate(s, required, label, () => {
                 if (NotPrintable(s)) {
-                    throw new ArgumentException($"{label} must be in the printable ASCII range [" + s + "]");
+                    throw new ArgumentException($"{label} must be in the printable ASCII range [{s}]");
                 }
                 return s;
             });
@@ -105,7 +118,7 @@ namespace NATS.Client.Internals
         {
             return Validate(s, required, label, () => {
                 if (NotPrintableOrHasWildGtDot(s)) {
-                    throw new ArgumentException($"{label} must be in the printable ASCII range and cannot include `*`, `.` or `>` [" + s + "]");
+                    throw new ArgumentException($"{label} must be in the printable ASCII range and cannot include `*` or `.` [{s}]");
                 }
                 return s;
             });
@@ -115,7 +128,7 @@ namespace NATS.Client.Internals
         {
             return Validate(s, required, label, () => {
                 if (NotPrintableOrHasWildGt(s)) {
-                    throw new ArgumentException($"{label} must be in the printable ASCII range and cannot include `*`, `>` or `$` [" + s + "]");
+                    throw new ArgumentException($"{label} must be in the printable ASCII range and cannot include `*`, `>` or `$` [{s}]");
                 }
                 return s;
             });
@@ -125,7 +138,7 @@ namespace NATS.Client.Internals
         {
             return Validate(s, required, label, () => {
                 if (NotPrintableOrHasWildGtDollar(s)) {
-                    throw new ArgumentException($"{label} must be in the printable ASCII range and cannot include `*`, `>` or `$` [" + s + "]");
+                    throw new ArgumentException($"{label} must be in the printable ASCII range and cannot include `*`, `>` or `$` [{s}]");
                 }
                 return s;
             });

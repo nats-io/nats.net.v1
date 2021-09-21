@@ -277,8 +277,7 @@ namespace IntegrationTests
                 JsPublish(js, SUBJECT, "B", 10);
                 sub.PullExpiresIn(10, expires);
                 messages = ReadMessagesAck(sub);
-                Assert.Equal(15, messages.Count);
-                AssertStarts408(messages, 5, 10);
+                Assert.Equal(10, messages.Count);
                 Thread.Sleep(expires); // make sure the pull actually expires
 
                 JsPublish(js, SUBJECT, "C", 5);
@@ -291,8 +290,7 @@ namespace IntegrationTests
                 JsPublish(js, SUBJECT, "D", 10);
                 sub.Pull(10);
                 messages = ReadMessagesAck(sub);
-                Assert.Equal(15, messages.Count);
-                AssertStarts408(messages, 5, 10);
+                Assert.Equal(10, messages.Count);
 
                 JsPublish(js, SUBJECT, "E", 5);
                 sub.PullExpiresIn(10, expires); // using millis version here
@@ -304,8 +302,7 @@ namespace IntegrationTests
                 JsPublish(js, SUBJECT, "F", 10);
                 sub.PullNoWait(10);
                 messages = ReadMessagesAck(sub);
-                Assert.Equal(15, messages.Count);
-                AssertStarts408(messages, 5, 10);
+                Assert.Equal(10, messages.Count);
 
                 JsPublish(js, SUBJECT, "G", 5);
                 sub.PullExpiresIn(10, expires); // using millis version here
@@ -317,6 +314,13 @@ namespace IntegrationTests
                 messages = sub.Fetch(10, expires);
                 Assert.Equal(10, messages.Count);
                 AssertAllJetStream(messages);
+
+                JsPublish(js, SUBJECT, "I", 5);
+                sub.PullExpiresIn(10, expires);
+                messages = ReadMessagesAck(sub);
+                Assert.Equal(5, messages.Count);
+                AssertAllJetStream(messages);
+                Thread.Sleep(expires); // make sure the pull actually expires
             });
         }
 

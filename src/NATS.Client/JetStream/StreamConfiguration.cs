@@ -180,7 +180,7 @@ namespace NATS.Client.JetStream
             /// <param name="name">name of the stream.</param>
             /// <returns>The StreamConfigurationBuilder</returns>
             public StreamConfigurationBuilder WithName(string name) {
-                _name = name;
+                _name = Validator.ValidateStreamName(name, false);
                 return this;
             }
 
