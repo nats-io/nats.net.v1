@@ -121,22 +121,6 @@ namespace UnitTests.Internals
         }
 
         [Fact]
-        public void TestValidateMaxMessages()
-        {
-            Assert.Equal(1, Validator.ValidateMaxMessages(1));
-            Assert.Equal(-1, Validator.ValidateMaxMessages(-1));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxMessages(0));
-        }
-
-        [Fact]
-        public void TestValidateMaxBytes()
-        {
-            Assert.Equal(1, Validator.ValidateMaxBytes(1));
-            Assert.Equal(-1, Validator.ValidateMaxBytes(-1));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxBytes(0));
-        }
-
-        [Fact]
         public void TestValidateMaxMessageSize()
         {
             Assert.Equal(1, Validator.ValidateMaxMessageSize(1));
@@ -189,6 +173,18 @@ namespace UnitTests.Internals
             Assert.Throws<ArgumentException>(() => Validator.ValidateJetStreamPrefix(HasDollar));
             Assert.Throws<ArgumentException>(() => Validator.ValidateJetStreamPrefix(HasSpace));
             Assert.Throws<ArgumentException>(() => Validator.ValidateJetStreamPrefix(HasLow));
+        }
+
+        [Fact]
+        public void TestValidateMustMatchIfBothSupplied()
+        {
+            Assert.Null(Validator.ValidateMustMatchIfBothSupplied(null, null, "", ""));
+            Assert.Equal("y", Validator.ValidateMustMatchIfBothSupplied(null, "y", "", ""));
+            Assert.Equal("y", Validator.ValidateMustMatchIfBothSupplied("", "y", "", ""));
+            Assert.Equal("x", Validator.ValidateMustMatchIfBothSupplied("x", null, "", ""));
+            Assert.Equal("x", Validator.ValidateMustMatchIfBothSupplied("x", " ", "", ""));
+            Assert.Equal("x", Validator.ValidateMustMatchIfBothSupplied("x", "x", "", ""));
+            Assert.Throws<ArgumentException>(() => Validator.ValidateMustMatchIfBothSupplied("x", "y", "", ""));
         }
 
         [Fact]

@@ -17,12 +17,12 @@ using NATS.Client.Internals;
 
 namespace NATS.Client.JetStream
 {
-    internal static class JsPrefixManager
+    public static class JsPrefixManager
     {
-        private static ConcurrentDictionary<string, string> JsPrefixes = new ConcurrentDictionary<string, string>();
+        public static ConcurrentDictionary<string, string> JsPrefixes = new ConcurrentDictionary<string, string>();
         
-        internal static string AddPrefix(string prefix) {
-            if (string.IsNullOrEmpty(prefix) || prefix.Equals(JetStreamConstants.JsapiPrefix)) {
+        public static string AddPrefix(string prefix) {
+            if (string.IsNullOrWhiteSpace(prefix) || prefix.Equals(JetStreamConstants.JsapiPrefix)) {
                 return JetStreamConstants.JsapiPrefix;
             }
 
@@ -34,7 +34,7 @@ namespace NATS.Client.JetStream
             return JsPrefixes.GetOrAdd(prefix, prefix);
         }
 
-        internal static bool HasPrefix(string replyTo)
+        public static bool HasPrefix(string replyTo)
         {
             if (replyTo == null) return false;
             

@@ -46,7 +46,7 @@ namespace IntegrationTests
 
                 CountdownEvent latch = new CountdownEvent(10);
                 int received = 0;
-                
+
                 void TestHandler(object sender, MsgHandlerEventArgs args)
                 {
                     received++;
@@ -64,7 +64,7 @@ namespace IntegrationTests
 
                 // Wait for messages to arrive using the countdown latch.
                 latch.Wait();
-                
+
                 Assert.Equal(10, received);
             });
         }
@@ -86,32 +86,34 @@ namespace IntegrationTests
                 // 1. auto ack true
                 CountdownEvent latch1 = new CountdownEvent(10);
                 int handlerReceived1 = 0;
-                
+
                 // create our message handler, does not ack
                 void Handler1(object sender, MsgHandlerEventArgs args)
                 {
                     handlerReceived1++;
                     latch1.Signal();
-            }
+                }
 
                 // subscribe using the handler, auto ack true
                 PushSubscribeOptions pso1 = PushSubscribeOptions.Builder()
                     .WithDurable(Durable(1)).Build();
-                js.PushSubscribeAsync(SUBJECT, Handler1, true, pso1);
+                IJetStreamPushAsyncSubscription asub = js.PushSubscribeAsync(SUBJECT, Handler1, true, pso1);
 
                 // wait for messages to arrive using the countdown latch.
                 latch1.Wait();
-                
+
                 Assert.Equal(10, handlerReceived1);
-                
+
+                asub.Unsubscribe();
+
                 // check that all the messages were read by the durable
-                IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(SUBJECT, pso1);
-                AssertNoMoreMessages(sub);
-                
+                IJetStreamPushSyncSubscription ssub = js.PushSubscribeSync(SUBJECT, pso1);
+                AssertNoMoreMessages(ssub);
+
                 // 2. auto ack false
                 CountdownEvent latch2 = new CountdownEvent(10);
                 int handlerReceived2 = 0;
-                
+
                 // create our message handler, also does not ack
                 void Handler2(object sender, MsgHandlerEventArgs args)
                 {
@@ -123,17 +125,19 @@ namespace IntegrationTests
                 ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithAckWait(500).Build();
                 PushSubscribeOptions pso2 = PushSubscribeOptions.Builder()
                     .WithDurable(Durable(2)).WithConfiguration(cc).Build();
-                js.PushSubscribeAsync(SUBJECT, Handler2, false, pso2);
+                asub = js.PushSubscribeAsync(SUBJECT, Handler2, false, pso2);
 
                 // wait for messages to arrive using the countdown latch.
                 latch2.Wait();
                 Assert.Equal(10, handlerReceived2);
-                
+
                 Thread.Sleep(2000); // just give it time for the server to realize the messages are not ack'ed
-                
+
+                asub.Unsubscribe();
+
                 // check that we get all the messages again
-                sub = js.PushSubscribeSync(SUBJECT, pso2);
-                Assert.Equal(10, ReadMessagesAck(sub).Count);
+                ssub = js.PushSubscribeSync(SUBJECT, pso2);
+                Assert.Equal(10, ReadMessagesAck(ssub).Count);
             });
         }
     }

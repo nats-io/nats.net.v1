@@ -11,24 +11,39 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using NATS.Client.Internals;
+
 namespace NATS.Client.JetStream
 {
     /// <summary>
     /// The base class for all Subscribe Options containing a stream and
     /// consumer configuration.
     /// </summary>
-    public class SubscribeOptions
+    public abstract class SubscribeOptions
     {
         internal string Stream { get; }
-        internal bool Direct { get;  }
+        internal bool Bind { get;  }
         internal ConsumerConfiguration ConsumerConfiguration { get;}
 
-        internal SubscribeOptions(string stream, bool direct, ConsumerConfiguration configuration)
+        internal SubscribeOptions(string stream, string durable, bool pull, bool bind, 
+            string deliverSubject, string deliverGroup, ConsumerConfiguration cc)
         {
-            // THESE ARE ALREADY BE VALIDATED BY PRIVATE CONSTRUCTORS THAT CALL THIS base METHOD!
-            Stream = stream;
-            Direct = direct;
-            ConsumerConfiguration = configuration;
+            Stream = Validator.ValidateStreamName(stream, bind);
+            
+            durable = Validator.ValidateMustMatchIfBothSupplied(durable, cc?.Durable, "Builder Durable", "Consumer Configuration Durable");
+            durable = Validator.ValidateDurable(durable, pull || bind);
+
+            deliverGroup = Validator.ValidateMustMatchIfBothSupplied(deliverGroup, cc?.DeliverGroup, "Builder Deliver Group", "Consumer Configuration Deliver Group");
+
+            deliverSubject = Validator.ValidateMustMatchIfBothSupplied(deliverSubject, cc?.DeliverSubject, "Builder Deliver Subject", "Consumer Configuration Deliver Subject");
+
+            ConsumerConfiguration = ConsumerConfiguration.Builder(cc)
+                .WithDurable(durable)
+                .WithDeliverSubject(deliverSubject)
+                .WithDeliverGroup(deliverGroup)
+                .Build();
+
+            Bind = bind;
         }
     }
 }

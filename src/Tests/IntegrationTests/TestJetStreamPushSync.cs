@@ -11,11 +11,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using NATS.Client;
 using NATS.Client.JetStream;
+using UnitTests;
 using Xunit;
 using static UnitTests.TestBase;
 using static IntegrationTests.JetStreamTestBase;
@@ -222,6 +224,268 @@ namespace IntegrationTests
                 
                 AssertNoMoreMessages(sub);
             });
+        }
+
+        [Fact]
+        public void TestDeliveryPolicy()
+        {
+            Context.RunInJsServer(c =>
+            {
+                // create the stream.
+                CreateMemoryStream(c, STREAM, SUBJECT_STAR);
+
+                // Create our JetStream context to receive JetStream messages.
+                IJetStream js = c.CreateJetStreamContext();
+
+                string subjectA = SubjectDot("A");
+                string subjectB = SubjectDot("B");
+
+                js.Publish(subjectA, DataBytes(1));
+                js.Publish(subjectA, DataBytes(2));
+                Thread.Sleep(1500);
+                js.Publish(subjectA, DataBytes(3));
+                js.Publish(subjectB, DataBytes(91));
+                js.Publish(subjectB, DataBytes(92));
+
+                // DeliverPolicy.All
+                PushSubscribeOptions pso = PushSubscribeOptions.Builder()
+                        .WithConfiguration(ConsumerConfiguration.Builder().WithDeliverPolicy(DeliverPolicy.All).Build())
+                        .Build();
+                IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(subjectA, pso);
+                Msg m1 = sub.NextMessage(1000);
+                AssertMessage(m1, 1);
+                Msg m2 = sub.NextMessage(1000);
+                AssertMessage(m2, 2);
+                Msg m3 = sub.NextMessage(1000);
+                AssertMessage(m3, 3);
+
+                // DeliverPolicy.Last
+                pso = PushSubscribeOptions.Builder()
+                        .WithConfiguration(ConsumerConfiguration.Builder().WithDeliverPolicy(DeliverPolicy.Last).Build())
+                        .Build();
+                sub = js.PushSubscribeSync(subjectA, pso);
+                Msg m = sub.NextMessage(1000);
+                AssertMessage(m, 3);
+                AssertNoMoreMessages(sub);
+
+                // DeliverPolicy.New - No new messages between subscribe and next message
+                pso = PushSubscribeOptions.Builder()
+                        .WithConfiguration(ConsumerConfiguration.Builder().WithDeliverPolicy(DeliverPolicy.New).Build())
+                        .Build();
+                sub = js.PushSubscribeSync(subjectA, pso);
+                AssertNoMoreMessages(sub);
+
+                // DeliverPolicy.New - New message between subscribe and next message
+                sub = js.PushSubscribeSync(subjectA, pso);
+                js.Publish(subjectA, DataBytes(4));
+                m = sub.NextMessage(1000);
+                AssertMessage(m, 4);
+
+                // DeliverPolicy.ByStartSequence
+                pso = PushSubscribeOptions.Builder()
+                        .WithConfiguration(ConsumerConfiguration.Builder()
+                                .WithDeliverPolicy(DeliverPolicy.ByStartSequence)
+                                .WithStartSequence(3)
+                                .Build())
+                        .Build();
+                sub = js.PushSubscribeSync(subjectA, pso);
+                m = sub.NextMessage(1000);
+                AssertMessage(m, 3);
+                m = sub.NextMessage(1000);
+                AssertMessage(m, 4);
+
+                // DeliverPolicy.ByStartTime
+                pso = PushSubscribeOptions.Builder()
+                        .WithConfiguration(ConsumerConfiguration.Builder()
+                                .WithDeliverPolicy(DeliverPolicy.ByStartTime)
+                                .WithStartTime(m3.MetaData.Timestamp.AddSeconds(-1))
+                                .Build())
+                        .Build();
+                sub = js.PushSubscribeSync(subjectA, pso);
+                m = sub.NextMessage(1000);
+                AssertMessage(m, 3);
+                m = sub.NextMessage(1000);
+                AssertMessage(m, 4);
+
+                // DeliverPolicy.LastPerSubject
+                pso = PushSubscribeOptions.Builder()
+                        .WithConfiguration(ConsumerConfiguration.Builder()
+                                .WithDeliverPolicy(DeliverPolicy.LastPerSubject)
+                                .WithFilterSubject(subjectA)
+                                .Build())
+                        .Build();
+                sub = js.PushSubscribeSync(subjectA, pso);
+                m = sub.NextMessage(1000);
+                AssertMessage(m, 4);            
+            });
+        }
+        
+        private void AssertMessage(Msg m, int i) {
+            Assert.NotNull(m);
+            Assert.Equal(Data(i), Encoding.UTF8.GetString(m.Data));
+        }
+
+       [Fact]
+        public void TestQueueSubWorkflow()
+        {
+            Context.RunInJsServer(c =>
+            {
+                // create the stream.
+                CreateMemoryStream(c, STREAM, SUBJECT);
+
+                // Create our JetStream context to receive JetStream messages.
+                IJetStream js = c.CreateJetStreamContext();
+
+                // Setup the subscribers
+                // - the PushSubscribeOptions can be re-used since all the subscribers are the same
+                // - use a concurrent integer to track all the messages received
+                // - have a list of subscribers and threads so I can track them
+                PushSubscribeOptions pso = PushSubscribeOptions.Builder().WithDurable(DURABLE).Build();
+                InterlockedLong allReceived = new InterlockedLong();
+                IList<JsQueueSubscriber> subscribers = new List<JsQueueSubscriber>();
+                IList<Thread> subThreads = new List<Thread>();
+                for (int id = 1; id <= 3; id++) {
+                    // setup the subscription
+                    IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(SUBJECT, QUEUE, pso);
+                    // create and track the runnable
+                    JsQueueSubscriber qs = new JsQueueSubscriber(100, js, sub, allReceived);
+                    subscribers.Add(qs);
+                    // create, track and start the thread
+                    Thread t = new Thread(qs.Run);
+                    subThreads.Add(t);
+                    t.Start();
+                }
+                c.Flush(DefaultTimeout); // flush outgoing communication with/to the server
+
+                // create and start the publishing
+                Thread pubThread = new Thread(new JsPublisher(js, 100).Run);
+                pubThread.Start();
+
+                // wait for all threads to finish
+                pubThread.Join(5000);
+                foreach (Thread t in subThreads) {
+                    t.Join(5000);
+                }
+
+                ISet<String> uniqueDatas = new HashSet<String>();
+                // count
+                int count = 0;
+                foreach (JsQueueSubscriber qs in subscribers) {
+                    int r = qs.received;
+                    Assert.True(r > 0);
+                    count += r;
+                    foreach (string s in qs.datas) {
+                        Assert.True(uniqueDatas.Add(s));
+                    }
+                }
+
+                Assert.Equal(100, count);
+
+            });
+        }
+
+        [Fact]
+        public void TestQueueSubErrors()
+        {
+            Context.RunInJsServer(c =>
+            {
+                // create the stream.
+                CreateMemoryStream(c, STREAM, SUBJECT);
+
+                // Create our JetStream context to receive JetStream messages.
+                IJetStream js = c.CreateJetStreamContext();
+
+                // create a durable that is not a queue
+                PushSubscribeOptions pso1 = PushSubscribeOptions.Builder().WithDurable(Durable(1)).Build();
+                js.PushSubscribeSync(SUBJECT, pso1);
+
+                ArgumentException iae = Assert.Throws<ArgumentException>(() => js.PushSubscribeSync(SUBJECT, pso1));
+                Assert.Contains("[SUB-Q02]", iae.Message);
+
+                iae = Assert.Throws<ArgumentException>(() => js.PushSubscribeSync(SUBJECT, Queue(1), pso1));
+                Assert.Contains("[SUB-Q03]", iae.Message);
+
+                PushSubscribeOptions pso21 = PushSubscribeOptions.Builder().WithDurable(Durable(2)).Build();
+                js.PushSubscribeSync(SUBJECT, Queue(21), pso21);
+
+                PushSubscribeOptions pso22 = PushSubscribeOptions.Builder().WithDurable(Durable(2)).Build();
+                iae = Assert.Throws<ArgumentException>(() => js.PushSubscribeSync(SUBJECT, Queue(22), pso22));
+                Assert.Contains("[SUB-Q05]", iae.Message);
+
+                PushSubscribeOptions pso23 = PushSubscribeOptions.Builder().WithDurable(Durable(2)).Build();
+                iae = Assert.Throws<ArgumentException>(() => js.PushSubscribeSync(SUBJECT, pso23));
+                Assert.Contains("[SUB-Q04]", iae.Message);
+
+                PushSubscribeOptions pso3 = PushSubscribeOptions.Builder()
+                        .WithDurable(Durable(3))
+                        .WithDeliverGroup(Queue(31))
+                        .Build();
+                iae = Assert.Throws<ArgumentException>(() => js.PushSubscribeSync(SUBJECT, Queue(32), pso3));
+                Assert.Contains("[SUB-Q01]", iae.Message);
+            });
+        }
+    }
+    
+    class JsPublisher
+    {
+        IJetStream js;
+        int msgCount;
+
+        public JsPublisher(IJetStream js, int msgCount)
+        {
+            this.js = js;
+            this.msgCount = msgCount;
+        }
+
+        public void Run()
+        {
+            for (int x = 1; x <= msgCount; x++)
+            {
+                js.Publish(SUBJECT, Encoding.ASCII.GetBytes("Data # " + x));
+            }
+        }
+    }
+
+    class JsQueueSubscriber
+    {
+        int msgCount;
+        IJetStream js;
+        IJetStreamPushSyncSubscription sub;
+        InterlockedLong allReceived;
+        public int received;
+        public IList<string> datas;
+
+        public JsQueueSubscriber(int msgCount, IJetStream js, IJetStreamPushSyncSubscription sub, InterlockedLong allReceived)
+        {
+            this.msgCount = msgCount;
+            this.js = js;
+            this.sub = sub;
+            this.allReceived = allReceived;
+            received = 0;
+            datas = new List<string>();
+        }
+
+        public void Run()
+        {
+            while (allReceived.Get() < msgCount)
+            {
+                try
+                {
+                    Msg msg = sub.NextMessage(500);
+                    while (msg != null)
+                    {
+                        received++;
+                        allReceived.Inc();
+                        datas.Add(Encoding.UTF8.GetString(msg.Data));
+                        msg.Ack();
+                        msg = sub.NextMessage(500);
+                    }
+                }
+                catch (NATSTimeoutException)
+                {
+                    // timeout is acceptable, means no messages available.
+                }
+            }
         }
     }
 }

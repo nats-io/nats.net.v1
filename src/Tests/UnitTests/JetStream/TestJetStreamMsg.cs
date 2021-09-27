@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using NATS.Client;
 using NATS.Client.JetStream;
 using Xunit;
 
@@ -18,36 +19,51 @@ namespace UnitTests.JetStream
 {
     public class TestJetStreamMsg : TestBase
     {
+        const string TestMetaV0 = "$JS.ACK.test-stream.test-consumer.1.2.3.1605139610113260000";
+        const string TestMetaV1 = "$JS.ACK.test-stream.test-consumer.1.2.3.1605139610113260000.4";
+        const string TestMetaV2 = "$JS.ACK.v2Domain.v2Hash.test-stream.test-consumer.1.2.3.1605139610113260000.4";
+        const string TestMetaVFuture = "$JS.ACK.v2Domain.v2Hash.test-stream.test-consumer.1.2.3.1605139610113260000.4.dont.care.how.many.more";
+        const string InvalidMetaNoAck = "$JS.nope.test-stream.test-consumer.1.2.3.1605139610113260000";
+        const string InvalidMetaLt8Tokens = "$JS.ACK.less-than.8-tokens.1.2.3";
+        const string InvalidMeta10Tokens = "$JS.ACK.v2Domain.v2Hash.test-stream.test-consumer.1.2.3.1605139610113260000";
+        const string InvalidMetaData = "$JS.ACK.v2Domain.v2Hash.test-stream.test-consumer.1.2.3.1605139610113260000.not-a-number";
+
         [Fact]
         public void MetaDataTests()
         {
-            string reply = "$JS.ACK.test-stream.test-consumer.1.2.3.1605139610113260000";
-            MetaData jsmd = new MetaData(reply);
-            Assert.NotNull(jsmd);
-            Assert.Equal("test-stream", jsmd.Stream);
-            Assert.Equal("test-consumer", jsmd.Consumer);
-            Assert.True(1 == jsmd.NumDelivered);
-            Assert.True(2 == jsmd.StreamSequence);
-            Assert.True(3 == jsmd.ConsumerSequence);
-            Assert.True(2020 == jsmd.Timestamp.Year);
-            Assert.True(6 == jsmd.Timestamp.Minute);
-            Assert.True(113 == jsmd.Timestamp.Millisecond);
-            Assert.True(1605139610113260000 == jsmd.TimestampNanos);
-            Assert.True(0 == jsmd.NumPending);
+            ValidateMeta(false, false, new MetaData(TestMetaV0));
+            ValidateMeta(true, false, new MetaData(TestMetaV1));
+            ValidateMeta(true, true, new MetaData(TestMetaV2));
+            ValidateMeta(true, true, new MetaData(TestMetaVFuture));
 
-            reply = "$JS.ACK.test-stream.test-consumer.1.2.3.1605139610113260000.4";
-            jsmd = new MetaData(reply);
-            Assert.NotNull(jsmd);
-            Assert.Equal("test-stream", jsmd.Stream);
-            Assert.Equal("test-consumer", jsmd.Consumer);
-            Assert.True(1 == jsmd.NumDelivered);
-            Assert.True(2 == jsmd.StreamSequence);
-            Assert.True(3 == jsmd.ConsumerSequence);
-            Assert.True(2020 == jsmd.Timestamp.Year);
-            Assert.True(6 == jsmd.Timestamp.Minute);
-            Assert.True(113 == jsmd.Timestamp.Millisecond);
-            Assert.True(1605139610113260000 == jsmd.TimestampNanos);
-            Assert.True(4 == jsmd.NumPending);
+            Assert.Throws<NATSException>(() => ValidateMeta(true, true, new MetaData(InvalidMetaNoAck)));
+            Assert.Throws<NATSException>(() => ValidateMeta(true, true, new MetaData(InvalidMetaLt8Tokens)));
+            Assert.Throws<NATSException>(() => ValidateMeta(true, true, new MetaData(InvalidMeta10Tokens)));
+            Assert.Throws<NATSException>(() => ValidateMeta(true, true, new MetaData(InvalidMetaData)));
+        }
+
+        private static void ValidateMeta(bool hasPending, bool hasDomainHashToken, MetaData meta)
+        {
+            Assert.NotNull(meta);
+            Assert.Equal("test-stream", meta.Stream);
+            Assert.Equal("test-consumer", meta.Consumer);
+            Assert.Equal(1U, meta.NumDelivered);
+            Assert.Equal(2U, meta.StreamSequence);
+            Assert.Equal(3U, meta.ConsumerSequence);
+            Assert.Equal(2020, meta.Timestamp.Year);
+            Assert.Equal(6, meta.Timestamp.Minute);
+            Assert.Equal(113, meta.Timestamp.Millisecond);
+            Assert.Equal(1605139610113260000U, meta.TimestampNanos);
+            Assert.Equal(hasPending ? 4U : 0U, meta.NumPending);
+            
+            if (hasDomainHashToken) {
+                Assert.Equal("v2Domain", meta.Domain);
+                Assert.Equal("v2Hash", meta.AccountHash);
+            }
+            else {
+                Assert.Null(meta.Domain);
+                Assert.Null(meta.AccountHash);
+            }
         }
     }
 }

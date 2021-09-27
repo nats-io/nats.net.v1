@@ -34,7 +34,7 @@ namespace NATS.Client.JetStream
         {
             JsonNode = JSON.Parse(json);
             Type = JsonNode[ApiConstants.Type].Value;
-            if (string.IsNullOrEmpty(Type))
+            if (string.IsNullOrWhiteSpace(Type))
             {
                 Type = NoType;
             }

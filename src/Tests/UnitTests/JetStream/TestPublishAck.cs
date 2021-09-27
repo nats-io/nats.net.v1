@@ -22,9 +22,11 @@ namespace UnitTests.JetStream
     {
         [Fact]
         public void IsValidAck() {
-            String json = "{\"stream\":\"test\",\"seq\":42, \"duplicate\" : true }";
+            String json = "{\"stream\":\"test-stream\",\"seq\":42,\"domain\":\"test-domain\", \"duplicate\" : true }";
+
             PublishAck ack = new PublishAck(json);
-            Assert.Equal("test", ack.Stream);
+            Assert.Equal("test-stream", ack.Stream);
+            Assert.Equal("test-domain", ack.Domain);
             Assert.Equal(42ul, ack.Seq);
             Assert.True(ack.Duplicate);
         }

@@ -69,11 +69,11 @@ namespace IntegrationTests
                 Assert.Empty(sc.TemplateOwner);
 
                 StreamState ss = si.State;
-                Assert.Equal(0, ss.Messages);
-                Assert.Equal(0, ss.Bytes);
-                Assert.Equal(0, ss.FirstSeq);
-                Assert.Equal(0, ss.LastSeq);
-                Assert.Equal(0, ss.ConsumerCount);
+                Assert.Equal(0u, ss.Messages);
+                Assert.Equal(0u, ss.Bytes);
+                Assert.Equal(0u, ss.FirstSeq);
+                Assert.Equal(0u, ss.LastSeq);
+                Assert.Equal(0u, ss.ConsumerCount);
             });
         }
 
@@ -123,7 +123,7 @@ namespace IntegrationTests
                 Assert.Equal(Subject(0), sc.Subjects[0]);
                 Assert.Equal(Subject(1), sc.Subjects[1]);
                 Assert.Equal(Subject(2), sc.Subjects[2]);
-                Assert.Equal(43, sc.MaxBytes);
+                Assert.Equal(43u, sc.MaxBytes);
                 Assert.Equal(44, sc.MaxMsgSize);
                 Assert.Equal(Duration.OfDays(100), sc.MaxAge);
                 Assert.Equal(StorageType.Memory, sc.StorageType);
@@ -235,15 +235,15 @@ namespace IntegrationTests
                 CreateTestStream(c);
 
                 StreamInfo si = jsm.GetStreamInfo(STREAM);
-                Assert.Equal(0, si.State.Messages);                
+                Assert.Equal(0u, si.State.Messages);                
 
                 JsPublish(c, SUBJECT, 1);
                 si = jsm.GetStreamInfo(STREAM);
-                Assert.Equal(1, si.State.Messages);
+                Assert.Equal(1u, si.State.Messages);
 
                 PurgeResponse pr = jsm.PurgeStream(STREAM);
                 Assert.True(pr.Success);
-                Assert.Equal(1ul, pr.Purged);
+                Assert.Equal(1u, pr.Purged);
             });
         }
 
@@ -390,6 +390,38 @@ namespace IntegrationTests
                 
                 Assert.Throws<NATSJetStreamException>(() => jsm.AddOrUpdateConsumer(STREAM,
                     builder.WithFilterSubject(SubjectDot("not-match")).Build()));
+
+                // try to filter against durable with mismatch, pull
+                IJetStream js = c.CreateJetStreamContext();
+
+                jsm.AddOrUpdateConsumer(STREAM, ConsumerConfiguration.Builder()
+                    .WithDurable(Durable(42))
+                    .WithFilterSubject(SubjectDot("F"))
+                    .Build()
+                );
+
+                ConsumerConfiguration ccBadFilter = ConsumerConfiguration.Builder()
+                    .WithDurable(Durable(42)).WithFilterSubject("x").Build();
+
+                PullSubscribeOptions pullOptsBadFilter = PullSubscribeOptions.Builder()
+                    .WithConfiguration(ccBadFilter).Build();
+                
+                ArgumentException ae = Assert.Throws<ArgumentException>(() => js.PullSubscribe(SubjectDot("F"), pullOptsBadFilter));
+                Assert.Contains("[SUB-FS01]", ae.Message);
+
+                // try to filter against durable with mismatch, push
+                jsm.AddOrUpdateConsumer(STREAM, ConsumerConfiguration.Builder()
+                    .WithDurable(Durable(43))
+                    .WithDeliverSubject(Deliver(43))
+                    .WithFilterSubject(SubjectDot("F"))
+                    .Build()
+                );
+
+                ccBadFilter = ConsumerConfiguration.Builder().WithDurable(Durable(43)).WithFilterSubject("x").Build();
+
+                PushSubscribeOptions pushOptsBadFilter = PushSubscribeOptions.Builder().WithConfiguration(ccBadFilter).Build();
+                ae = Assert.Throws<ArgumentException>(() => js.PushSubscribeSync(SubjectDot("F"), pushOptsBadFilter));
+                Assert.Contains("[SUB-FS01]", ae.Message);
             });
         }
         

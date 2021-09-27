@@ -58,18 +58,24 @@ namespace NATS.Client.JetStream
         public ulong ExpectedLastSeq { get; }
         
         /// <summary>
+        /// The Expected Last Sequence.
+        /// </summary>
+        public ulong ExpectedLastSubjectSeq { get; }
+        
+        /// <summary>
         /// The Expected Message Id.
         /// </summary>
         public string MessageId { get; }
 
         private PublishOptions(string stream, Duration streamTimeout, string expectedStream,
-            string expectedLastMsgId, ulong expectedLastSeq, string messageId)
+            string expectedLastMsgId, ulong expectedLastSeq, ulong expectedLastSubjectSeq, string messageId)
         {
             Stream = stream;
             StreamTimeout = streamTimeout;
             ExpectedStream = expectedStream;
             ExpectedLastMsgId = expectedLastMsgId;
             ExpectedLastSeq = expectedLastSeq;
+            ExpectedLastSubjectSeq = expectedLastSubjectSeq;
             MessageId = messageId;
         }
         
@@ -94,6 +100,7 @@ namespace NATS.Client.JetStream
             private string _expectedStream;
             private string _expectedLastMsgId;
             private ulong _expectedLastSeq = DefaultLastSequence;
+            private ulong _expectedLastSubjectSeq = DefaultLastSequence;
             private string _messageId;
             
             /// <summary>
@@ -163,13 +170,24 @@ namespace NATS.Client.JetStream
             }        
 
             /// <summary>
-            /// Set the expected stream name.
+            /// Set the expected sequence.
             /// </summary>
-            /// <param name="lastSequence">The expected sequence.</param>
+            /// <param name="sequence">The expected sequence.</param>
             /// <returns>The PublishOptionsBuilder</returns>
-            public PublishOptionsBuilder WithExpectedLastSequence(ulong lastSequence)
+            public PublishOptionsBuilder WithExpectedLastSequence(ulong sequence)
             {
-                _expectedLastSeq = lastSequence;
+                _expectedLastSeq = sequence;
+                return this;
+            }
+
+            /// <summary>
+            /// Set the expected subject sequence.
+            /// </summary>
+            /// <param name="sequence">The expected subject sequence.</param>
+            /// <returns>The PublishOptionsBuilder</returns>
+            public PublishOptionsBuilder WithExpectedLastSubjectSequence(ulong sequence)
+            {
+                _expectedLastSubjectSeq = sequence;
                 return this;
             }
 
@@ -182,6 +200,7 @@ namespace NATS.Client.JetStream
             {
                 _expectedLastMsgId = null;
                 _expectedLastSeq = DefaultLastSequence;
+                _expectedLastSubjectSeq = DefaultLastSequence;
                 _messageId = null;
                 return this;
             }
@@ -192,7 +211,7 @@ namespace NATS.Client.JetStream
             /// <returns>The PublishOptions object.</returns>
             public PublishOptions Build() 
             {
-                return new PublishOptions(_stream, _streamTimeout, _expectedStream, _expectedLastMsgId, _expectedLastSeq, _messageId);
+                return new PublishOptions(_stream, _streamTimeout, _expectedStream, _expectedLastMsgId, _expectedLastSeq, _expectedLastSubjectSeq, _messageId);
             }
         }
     }

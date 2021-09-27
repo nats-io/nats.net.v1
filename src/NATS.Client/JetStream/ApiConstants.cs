@@ -35,11 +35,13 @@ namespace NATS.Client.JetStream
         internal const string Current = "current";
         internal const string Data = "data";
         internal const string Deliver = "deliver";
+        internal const string DeliverGroup = "deliver_group";
         internal const string DeliverPolicy = "deliver_policy";
         internal const string DeliverSubject = "deliver_subject";
         internal const string Delivered = "delivered";
         internal const string Description = "description";
         internal const string Discard = "discard";
+        internal const string Domain = "domain";
         internal const string Duplicate = "duplicate";
         internal const string DuplicateWindow = "duplicate_window";
         internal const string DurableName = "durable_name";
@@ -94,6 +96,7 @@ namespace NATS.Client.JetStream
         internal const string Port = "port";
         internal const string Proto = "proto";
         internal const string Purged = "purged";
+        internal const string PushBound = "push_bound";
         internal const string RateLimitBps = "rate_limit_bps";
         internal const string ReplayPolicy = "replay_policy";
         internal const string Replica = "replica";

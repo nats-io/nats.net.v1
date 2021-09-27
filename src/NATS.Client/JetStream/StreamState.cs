@@ -19,10 +19,10 @@ namespace NATS.Client.JetStream
 {
     public sealed class StreamState
     {
-        public long Messages { get; }
-        public long Bytes { get; }
-        public long FirstSeq { get; }
-        public long LastSeq { get; }
+        public ulong Messages { get; }
+        public ulong Bytes { get; }
+        public ulong FirstSeq { get; }
+        public ulong LastSeq { get; }
         public long ConsumerCount { get; }
         public DateTime FirstTime { get; }
         public DateTime LastTime { get; }
@@ -34,10 +34,10 @@ namespace NATS.Client.JetStream
 
         private StreamState(JSONNode streamState)
         {
-            Messages = streamState[ApiConstants.Messages].AsLong;
-            Bytes = streamState[ApiConstants.Bytes].AsLong;
-            FirstSeq = streamState[ApiConstants.FirstSeq].AsLong;
-            LastSeq = streamState[ApiConstants.LastSeq].AsLong;
+            Messages = streamState[ApiConstants.Messages].AsUlong;
+            Bytes = streamState[ApiConstants.Bytes].AsUlong;
+            FirstSeq = streamState[ApiConstants.FirstSeq].AsUlong;
+            LastSeq = streamState[ApiConstants.LastSeq].AsUlong;
             ConsumerCount = streamState[ApiConstants.ConsumerCount].AsLong;
             FirstTime = JsonUtils.AsDate(streamState[ApiConstants.FirstTs]);
             LastTime = JsonUtils.AsDate(streamState[ApiConstants.LastTs]);
