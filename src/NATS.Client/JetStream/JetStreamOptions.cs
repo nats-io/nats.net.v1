@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using NATS.Client.Internals;
+using static NATS.Client.Internals.JetStreamConstants;
 
 namespace NATS.Client.JetStream
 {
@@ -29,11 +30,6 @@ namespace NATS.Client.JetStream
             _requestTimeout = requestTimeout;
             _publishNoAck = publishNoAck;
         }
-
-        /// <summary>
-        /// The default JetStream prefix
-        /// </summary>
-        public static readonly string DefaultPrefix = JetStreamConstants.JsapiPrefix;
 
         /// <summary>
         /// Gets the prefix.
@@ -73,7 +69,8 @@ namespace NATS.Client.JetStream
 
         public sealed class JetStreamOptionsBuilder
         {
-            private string _prefix = DefaultPrefix;
+            private string _prefix;
+            private string _domain;
             private Duration _requestTimeout = DefaultTimeout;
             private bool _publishNoAck;
 
@@ -105,7 +102,22 @@ namespace NATS.Client.JetStream
             /// <returns>The JetStreamOptionsBuilder</returns>
             public JetStreamOptionsBuilder WithPrefix(string prefix) 
             {
-                _prefix = prefix;
+                _prefix = prefix; // validated during build
+                _domain = null; // build with one or the other
+                return this;
+            }
+            
+            /// <summary>
+            /// Sets the domain for JetStream subjects. A domain can be used in conjunction with
+            /// user permissions to restrict access to certain JetStream instances.  This must
+            /// match the domain used in the server.
+            /// </summary>
+            /// <param name="domain">The domain.</param>
+            /// <returns>The JetStreamOptionsBuilder</returns>
+            public JetStreamOptionsBuilder WithDomain(string domain) 
+            {
+                _domain = domain; // validated during build
+                _prefix = null; // build with one or the other
                 return this;
             }
 
@@ -147,9 +159,40 @@ namespace NATS.Client.JetStream
             /// <returns>The JetStreamOptions object.</returns>
             public JetStreamOptions Build()
             {
-                _prefix = JsPrefixManager.AddPrefix(_prefix);
+                if (_domain == null)
+                {
+                    _prefix = ValidatePrefix(_prefix);
+                }
+                else
+                {
+                    _prefix = ValidateDomain(_domain);
+                }
                 // _requestTimeout defaulted in WithRequestTimeout
                 return new JetStreamOptions(_prefix, _requestTimeout, _publishNoAck);
+            }
+
+            private string ValidatePrefix(string prefix) {
+                if (string.IsNullOrWhiteSpace(prefix)) {
+                    return DefaultApiPrefix;
+                }
+
+                prefix = Validator.ValidatePrefixOrDomain(prefix, "Prefix", true);
+                if (!prefix.EndsWith(".")) {
+                    prefix += ".";
+                }
+
+                return prefix;
+            }
+
+            private string ValidateDomain(string domain) {
+                if (string.IsNullOrWhiteSpace(domain)) {
+                    return DefaultApiPrefix;
+                }
+                domain = Validator.ValidatePrefixOrDomain(domain, "Domain", true);
+                if (!domain.EndsWith(".")) {
+                    domain += ".";
+                }
+                return PrefixDollarJsDot + domain + PrefixApiDot;
             }
         }
     }
