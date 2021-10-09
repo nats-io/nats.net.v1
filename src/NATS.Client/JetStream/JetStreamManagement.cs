@@ -48,7 +48,7 @@ namespace NATS.Client.JetStream
         
         public bool DeleteStream(string streamName)
         {
-            Validator.ValidateNotNull(streamName, nameof(streamName));
+            Validator.ValidateStreamName(streamName, true);
             string subj = string.Format(JetStreamConstants.JsapiStreamDelete, streamName);
             Msg m = RequestResponseRequired(subj, null, Timeout);
             return new SuccessApiResponse(m, true).Success;
@@ -56,7 +56,7 @@ namespace NATS.Client.JetStream
 
         public StreamInfo GetStreamInfo(string streamName)
         {
-            Validator.ValidateNotNull(streamName, nameof(streamName));
+            Validator.ValidateStreamName(streamName, true);
             string subj = string.Format(JetStreamConstants.JsapiStreamInfo, streamName);
             Msg m = RequestResponseRequired(subj, null, Timeout);
             return new StreamInfo(m, true);
@@ -64,9 +64,17 @@ namespace NATS.Client.JetStream
 
         public PurgeResponse PurgeStream(string streamName)
         {
-            Validator.ValidateNotNull(streamName, nameof(streamName));
+            Validator.ValidateStreamName(streamName, true);
             string subj = string.Format(JetStreamConstants.JsapiStreamPurge, streamName);
             Msg m = RequestResponseRequired(subj, null, Timeout);
+            return new PurgeResponse(m, true);
+        }
+
+        public PurgeResponse PurgeStream(string streamName, PurgeOptions options)
+        {
+            Validator.ValidateStreamName(streamName, true);
+            string subj = string.Format(JetStreamConstants.JsapiStreamPurge, streamName);
+            Msg m = RequestResponseRequired(subj, options.Serialize(), Timeout);
             return new PurgeResponse(m, true);
         }
 
@@ -80,7 +88,7 @@ namespace NATS.Client.JetStream
 
         public bool DeleteConsumer(string streamName, string consumer)
         {
-            Validator.ValidateNotNull(streamName, nameof(streamName));
+            Validator.ValidateStreamName(streamName, true);
             Validator.ValidateNotNull(consumer, nameof(consumer));
             string subj = string.Format(JetStreamConstants.JsapiConsumerDelete, streamName, consumer);
             Msg m = RequestResponseRequired(subj, null, Timeout);
@@ -89,7 +97,7 @@ namespace NATS.Client.JetStream
 
         public ConsumerInfo GetConsumerInfo(string streamName, string consumer)
         {
-            Validator.ValidateNotNull(streamName, nameof(streamName));
+            Validator.ValidateStreamName(streamName, true);
             Validator.ValidateNotNull(consumer, nameof(consumer));
             return GetConsumerInfoInternal(streamName, consumer);
         }
@@ -138,7 +146,7 @@ namespace NATS.Client.JetStream
 
         public MessageInfo GetMessage(string streamName, ulong sequence)
         {
-            Validator.ValidateNotNull(streamName, nameof(streamName));
+            Validator.ValidateStreamName(streamName, true);
             string subj = string.Format(JetStreamConstants.JsapiMsgGet, streamName);
             byte[] bytes = JsonUtils.SimpleMessageBody(ApiConstants.Seq, sequence);
             Msg m = RequestResponseRequired(subj, bytes, Timeout);
@@ -147,7 +155,7 @@ namespace NATS.Client.JetStream
 
         public bool DeleteMessage(string streamName, ulong sequence)
         {
-            Validator.ValidateNotNull(streamName, nameof(streamName));
+            Validator.ValidateStreamName(streamName, true);
             string subj = string.Format(JetStreamConstants.JsapiMsgDelete, streamName);
             byte[] bytes = JsonUtils.SimpleMessageBody(ApiConstants.Seq, sequence);
             Msg m = RequestResponseRequired(subj, bytes, Timeout);

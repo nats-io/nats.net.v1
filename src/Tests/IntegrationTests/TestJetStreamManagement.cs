@@ -227,23 +227,56 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public void TestPurgeStream()
+        public void TestPurgeStreamAndOptions()
         {
             Context.RunInJsServer(c =>
             {
-                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
-                CreateTestStream(c);
+                Assert.Throws<ArgumentException>(() => PurgeOptions.Builder().WithKeep(1).WithSequence(1).Build());
 
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                Assert.Throws<NATSJetStreamException>(() => jsm.PurgeStream(STREAM));
+                
+                CreateMemoryStream(c, STREAM, Subject(1), Subject(2));
+                
                 StreamInfo si = jsm.GetStreamInfo(STREAM);
                 Assert.Equal(0u, si.State.Messages);                
 
-                JsPublish(c, SUBJECT, 1);
+                JsPublish(c, Subject(1), 10);
                 si = jsm.GetStreamInfo(STREAM);
-                Assert.Equal(1u, si.State.Messages);
+                Assert.Equal(10u, si.State.Messages);
 
-                PurgeResponse pr = jsm.PurgeStream(STREAM);
+                PurgeOptions options = PurgeOptions.Builder().WithKeep(7).Build();
+                PurgeResponse pr = jsm.PurgeStream(STREAM, options);
                 Assert.True(pr.Success);
-                Assert.Equal(1u, pr.Purged);
+                Assert.Equal(3u, pr.Purged);
+
+                options = PurgeOptions.Builder().WithSequence(9).Build();
+                pr = jsm.PurgeStream(STREAM, options);
+                Assert.True(pr.Success);
+                Assert.Equal(5u, pr.Purged);
+                si = jsm.GetStreamInfo(STREAM);
+                Assert.Equal(2u, si.State.Messages);
+
+                pr = jsm.PurgeStream(STREAM);
+                Assert.True(pr.Success);
+                Assert.Equal(2u, pr.Purged);
+                si = jsm.GetStreamInfo(STREAM);
+                Assert.Equal(0u, si.State.Messages);
+
+                JsPublish(c, Subject(1), 10);
+                JsPublish(c, Subject(2), 10);
+                si = jsm.GetStreamInfo(STREAM);
+                Assert.Equal(20u, si.State.Messages);
+                jsm.PurgeStream(STREAM, PurgeOptions.WithSubject(Subject(1)));
+                si = jsm.GetStreamInfo(STREAM);
+                Assert.Equal(10u, si.State.Messages);
+
+                options = PurgeOptions.Builder().WithSubject(Subject(1)).WithSequence(1).Build();
+                Assert.Equal(Subject(1), options.Subject);
+                Assert.Equal(1u, options.Sequence);
+
+                options = PurgeOptions.Builder().WithSubject(Subject(1)).WithKeep(2).Build();
+                Assert.Equal(2u, options.Keep);
             });
         }
 

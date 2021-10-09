@@ -48,6 +48,7 @@ namespace NATS.Client.JetStream
         internal const string ErrCode = "err_code";
         internal const string Error = "error";
         internal const string External = "external";
+        internal const string Filter = "filter";
         internal const string FilterSubject = "filter_subject";
         internal const string FirstSeq = "first_seq";
         internal const string FirstTs = "first_ts";
@@ -58,6 +59,7 @@ namespace NATS.Client.JetStream
         internal const string Host = "host";
         internal const string IdleHeartbeat = "idle_heartbeat";
         internal const string Jetstream = "jetstream";
+        internal const string Keep = "keep";
         internal const string Lag = "lag";
         internal const string LameDuckMode = "ldm";
         internal const string LastSeq = "last_seq";
