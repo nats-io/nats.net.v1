@@ -118,6 +118,61 @@ namespace UnitTests.Internals
             Assert.Equal(1, Validator.ValidateMaxConsumers(1));
             Assert.Equal(-1, Validator.ValidateMaxConsumers(-1));
             Assert.Throws<ArgumentException>(() => Validator.ValidateMaxConsumers(0));
+            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxConsumers(-2));
+        }
+
+        [Fact]
+        public void TestValidateMaxMessages()
+        {
+            Assert.Equal(1, Validator.ValidateMaxMessages(1));
+            Assert.Equal(-1, Validator.ValidateMaxMessages(-1));
+            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxMessages(0));
+            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxMessages(-2));
+        }
+
+        [Fact]
+        public void TestValidateMaxBucketValues()
+        {
+            Assert.Equal(1, Validator.ValidateMaxBucketValues(1));
+            Assert.Equal(-1, Validator.ValidateMaxBucketValues(-1));
+            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxBucketValues(0));
+            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxBucketValues(-2));
+        }
+
+        [Fact]
+        public void TestValidateMaxMessagesPerSubject()
+        {
+            Assert.Equal(1, Validator.ValidateMaxMessagesPerSubject(1));
+            Assert.Equal(-1, Validator.ValidateMaxMessagesPerSubject(-1));
+            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxMessagesPerSubject(0));
+            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxMessagesPerSubject(-2));
+        }
+
+        [Fact]
+        public void TestValidateMaxHistoryPerKey()
+        {
+            Assert.Equal(1, Validator.ValidateMaxHistoryPerKey(1));
+            Assert.Equal(-1, Validator.ValidateMaxHistoryPerKey(-1));
+            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxHistoryPerKey(0));
+            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxHistoryPerKey(-2));
+        }
+
+        [Fact]
+        public void TestValidateMaxBytes()
+        {
+            Assert.Equal(1, Validator.ValidateMaxBytes(1));
+            Assert.Equal(-1, Validator.ValidateMaxBytes(-1));
+            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxBytes(0));
+            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxBytes(-2));
+        }
+
+        [Fact]
+        public void TestValidateMaxBucketBytes()
+        {
+            Assert.Equal(1, Validator.ValidateMaxBucketBytes(1));
+            Assert.Equal(-1, Validator.ValidateMaxBucketBytes(-1));
+            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxBucketBytes(0));
+            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxBucketBytes(-2));
         }
 
         [Fact]
@@ -126,6 +181,16 @@ namespace UnitTests.Internals
             Assert.Equal(1, Validator.ValidateMaxMessageSize(1));
             Assert.Equal(-1, Validator.ValidateMaxMessageSize(-1));
             Assert.Throws<ArgumentException>(() => Validator.ValidateMaxMessageSize(0));
+            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxMessageSize(-2));
+        }
+
+        [Fact]
+        public void TestValidateMaxValueBytes()
+        {
+            Assert.Equal(1, Validator.ValidateMaxValueBytes(1));
+            Assert.Equal(-1, Validator.ValidateMaxValueBytes(-1));
+            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxValueBytes(0));
+            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxValueBytes(-2));
         }
 
         [Fact]

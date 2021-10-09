@@ -74,6 +74,7 @@ namespace NATS.Client.JetStream
         internal const string MaxMemory = "max_memory";
         internal const string MaxMsgSize = "max_msg_size";
         internal const string MaxMsgs = "max_msgs";
+        internal const string MaxMsgsPerSubject = "max_msgs_per_subject";
         internal const string MaxPayload = "max_payload";
         internal const string MaxStorage = "max_storage";
         internal const string MaxStreams = "max_streams";

@@ -126,16 +126,16 @@
         /// JetStream expected last sequence header name.
         /// </summary>
         public const string ExpLastSeqHeader = "Nats-Expected-Last-Sequence";
-        
-        /// <summary>
-        /// JetStream expected last sequence header name.
-        /// </summary>
-        public const string ExpLastSubjectSeqHeader = "Nats-Expected-Last-Subject-Sequence";
 
         /// <summary>
         /// JetStream expected last message ID header Name.
         /// </summary>
         public const string ExpLastIdHeader = "Nats-Expected-Last-Msg-Id";
+        
+        /// <summary>
+        /// JetStream expected last sequence header name.
+        /// </summary>
+        public const string ExpLastSubjectSeqHeader = "Nats-Expected-Last-Subject-Sequence";
 
         public const int JsConsumerNotFoundErr = 10014;
     }

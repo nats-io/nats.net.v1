@@ -25,6 +25,7 @@ namespace NATS.Client.JetStream
         public RetentionPolicy RetentionPolicy { get; }
         public long MaxConsumers { get; }
         public long MaxMsgs { get; }
+        public long MaxMsgsPerSubject { get; }
         public long MaxBytes { get; }
         public Duration MaxAge { get; }
         public long MaxMsgSize { get; }
@@ -50,6 +51,7 @@ namespace NATS.Client.JetStream
             Subjects = JsonUtils.StringList(scNode, ApiConstants.Subjects);
             MaxConsumers = scNode[ApiConstants.MaxConsumers].AsLong;
             MaxMsgs = JsonUtils.AsLongOrMinus1(scNode, ApiConstants.MaxMsgs);
+            MaxMsgsPerSubject = JsonUtils.AsLongOrMinus1(scNode, ApiConstants.MaxMsgsPerSubject);
             MaxBytes = JsonUtils.AsLongOrMinus1(scNode, ApiConstants.MaxBytes);
             MaxAge = JsonUtils.AsDuration(scNode, ApiConstants.MaxAge, Duration.Zero);
             MaxMsgSize = JsonUtils.AsLongOrMinus1(scNode, ApiConstants.MaxMsgSize);
@@ -63,7 +65,7 @@ namespace NATS.Client.JetStream
         }
         
         private StreamConfiguration(string name, string description, List<string> subjects, RetentionPolicy retentionPolicy, 
-            long maxConsumers, long maxMsgs, long maxBytes, Duration maxAge, long maxMsgSize, 
+            long maxConsumers, long maxMsgs, long maxMsgsPerSubject, long maxBytes, Duration maxAge, long maxMsgSize, 
             StorageType storageType, int replicas, bool noAck, string templateOwner, 
             DiscardPolicy discardPolicy, Duration duplicateWindow, Placement placement, Mirror mirror, 
             List<Source> sources)
@@ -74,6 +76,7 @@ namespace NATS.Client.JetStream
             RetentionPolicy = retentionPolicy;
             MaxConsumers = maxConsumers;
             MaxMsgs = maxMsgs;
+            MaxMsgsPerSubject = maxMsgsPerSubject;
             MaxBytes = maxBytes;
             MaxAge = maxAge;
             MaxMsgSize = maxMsgSize;
@@ -105,6 +108,7 @@ namespace NATS.Client.JetStream
                 [ApiConstants.Subjects] = JsonUtils.ToArray(Subjects),
                 [ApiConstants.MaxConsumers] = MaxConsumers,
                 [ApiConstants.MaxMsgs] = MaxMsgs,
+                [ApiConstants.MaxMsgsPerSubject] = MaxMsgsPerSubject,
                 [ApiConstants.MaxBytes] = MaxBytes,
                 [ApiConstants.MaxAge] = MaxAge.Nanos,
                 [ApiConstants.MaxMsgSize] = MaxMsgSize,
@@ -136,6 +140,7 @@ namespace NATS.Client.JetStream
             private RetentionPolicy _retentionPolicy = RetentionPolicy.Limits;
             private long _maxConsumers = -1;
             private long _maxMsgs = -1;
+            private long _maxMsgsPerSubject = -1;
             private long _maxBytes = -1;
             private Duration _maxAge = Duration.Zero;
             private long _maxMsgSize = -1;
@@ -160,6 +165,7 @@ namespace NATS.Client.JetStream
                 _retentionPolicy = sc.RetentionPolicy;
                 _maxConsumers = sc.MaxConsumers;
                 _maxMsgs = sc.MaxMsgs;
+                _maxMsgsPerSubject = sc.MaxMsgsPerSubject;
                 _maxBytes = sc.MaxBytes;
                 _maxAge = sc.MaxAge;
                 _maxMsgSize = sc.MaxMsgSize;
@@ -269,7 +275,7 @@ namespace NATS.Client.JetStream
             }
 
             /// <summary>
-            /// Sets the maximum number of consumers in the StreamConfiguration.
+            /// Sets the maximum number of messages in the StreamConfiguration.
             /// </summary>
             /// <param name="maxMsgs">the maximum number of messages</param>
             /// <returns>The StreamConfigurationBuilder</returns>
@@ -278,6 +284,16 @@ namespace NATS.Client.JetStream
                 return this;
             }
 
+            /// <summary>
+            /// Sets the maximum number of message per subject in the StreamConfiguration.
+            /// </summary>
+            /// <param name="maxMsgsPerSubject">the maximum number of messages</param>
+            /// <returns>The StreamConfigurationBuilder</returns>
+            public StreamConfigurationBuilder WithMaxMessagesPerSubject(long maxMsgsPerSubject) {
+                _maxMsgsPerSubject = Validator.ValidateMaxMessagesPerSubject(maxMsgsPerSubject);
+                return this;
+            }
+                
             /// <summary>
             /// Sets the maximum number of bytes in the StreamConfiguration.
             /// </summary>
@@ -477,6 +493,7 @@ namespace NATS.Client.JetStream
                     _retentionPolicy,
                     _maxConsumers,
                     _maxMsgs,
+                    _maxMsgsPerSubject,
                     _maxBytes,
                     _maxAge,
                     _maxMsgSize,
