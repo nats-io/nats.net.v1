@@ -300,11 +300,6 @@ namespace NATS.Client
 
         #region JetStream
 
-        // this is intended for internal heartbeat processing
-        // when pre-processing heartbeats, the flowControlSubject is already extracted
-        // for later use, so set it here and get it later
-        internal string FlowControlSubject { get; set; }
-
         /// <summary>
         /// Gets the metadata associated with a JetStream message.
         /// </summary>

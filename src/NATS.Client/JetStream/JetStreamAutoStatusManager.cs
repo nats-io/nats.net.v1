@@ -152,12 +152,11 @@ namespace NATS.Client.JetStream
         private Msg BeforeQueueProcessor(Msg msg)
         {
             LastMsgReceived = DateTime.Now.Millisecond;
-            if (msg.HasStatus && msg.Status.IsHeartbeat()) {
-                String fcSubject = msg.Header?[JetStreamConstants.ConsumerStalledHdr];
-                if (fcSubject == null) {
+            if (msg.HasStatus 
+                && msg.Status.IsHeartbeat()
+                && msg.Header?[JetStreamConstants.ConsumerStalledHdr] == null) 
+            {
                     return null; // plain heartbeat, no need to queue
-                }
-                msg.FlowControlSubject = fcSubject;
             }
             return msg;
         }
@@ -176,8 +175,7 @@ namespace NATS.Client.JetStream
 
                 if (msg.Status.IsHeartbeat()) {
                     if (Fc) {
-                        // status flowControlSubject is set in the beforeQueueProcessor
-                        _processFlowControl(msg.FlowControlSubject);
+                        _processFlowControl(msg.Header?[JetStreamConstants.ConsumerStalledHdr]);
                     }
                     return true;
                 }
