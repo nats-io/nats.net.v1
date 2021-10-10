@@ -187,6 +187,8 @@ namespace NATS.Client
 
         SubChannelPool subChannelPool = null;
 
+        private Func<Msg, Msg> beforeQueueProcessor;
+        
         // One could use a task scheduler, but this is simpler and will
         // likely be easier to port to .NET core.
         private class CallbackScheduler : IDisposable
@@ -747,8 +749,15 @@ namespace NATS.Client
             callbackScheduler.Start();
 
             globalRequestInbox = NewInbox();
+
+            beforeQueueProcessor = msg => msg;
         }
 
+        internal void SetBeforeQueueProcessor(Func<Msg, Msg> beforeQueueProcessor)
+        {
+            this.beforeQueueProcessor = beforeQueueProcessor;
+        }
+        
         private void buildPublishProtocolBuffers(int size)
         {
             pubProtoBuf = new byte[size];
@@ -2179,8 +2188,16 @@ namespace NATS.Client
                         Msg msg = msgArgs.reply != null && msgArgs.reply.StartsWith(JetStreamConstants.JsAckSubjectPrefix)
                             ? new JetStreamMsg(this, msgArgs, s, msgBytes, length)
                             : new Msg(msgArgs, s, msgBytes, length);
-                        
-                        s.addMessage(msg, opts.subChanLen);
+
+                        // beforeQueueProcessor returns null if the message
+                        // does not need to be queued, for instance heartbeats
+                        // that are not flow control and are already seen by the
+                        // auto status manager
+                        msg = beforeQueueProcessor.Invoke(msg);
+                        if (msg != null)
+                        {
+                            s.addMessage(msg, opts.subChanLen);
+                        }
                     } // maxreached == false
 
                 } // lock s.mu

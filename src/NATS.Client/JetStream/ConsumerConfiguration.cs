@@ -452,6 +452,24 @@ namespace NATS.Client.JetStream
                     _headersOnly
                 );
             }
+
+            /// <summary>
+            /// Builds the PushSubscribeOptions with this configuration
+            /// </summary>
+            /// <returns>The PushSubscribeOptions</returns>
+            public PushSubscribeOptions BuildPushSubscribeOptions()
+            {
+                return PushSubscribeOptions.Builder().WithConfiguration(Build()).Build();
+            }
+
+            /// <summary>
+            /// Builds the PullSubscribeOptions with this configuration
+            /// </summary>
+            /// <returns>The PullSubscribeOptions</returns>
+            public PullSubscribeOptions BuildPullSubscribeOptions()
+            {
+                return PullSubscribeOptions.Builder().WithConfiguration(Build()).Build();
+            }
         }
     }
 }

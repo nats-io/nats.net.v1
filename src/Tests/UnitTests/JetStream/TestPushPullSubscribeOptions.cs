@@ -73,6 +73,9 @@ namespace UnitTests.JetStream
             // in configuration
             ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithDurable(DURABLE).Build();
             PushSubscribeOptions.Builder().WithConfiguration(cc).Build();
+            
+            // new helper
+            ConsumerConfiguration.Builder().WithDurable(DURABLE).BuildPushSubscribeOptions();
         }
 
         [Fact]
@@ -99,6 +102,9 @@ namespace UnitTests.JetStream
             // in configuration
             ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithDurable(DURABLE).Build();
             PullSubscribeOptions.Builder().WithConfiguration(cc).Build();
+            
+            // new helper
+            ConsumerConfiguration.Builder().WithDurable(DURABLE).BuildPullSubscribeOptions();
         }
 
         [Fact]

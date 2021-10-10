@@ -22,11 +22,17 @@ namespace NATS.Client.JetStream
     public abstract class SubscribeOptions
     {
         internal string Stream { get; }
+        internal bool Pull { get;  }
         internal bool Bind { get;  }
         internal ConsumerConfiguration ConsumerConfiguration { get;}
+        internal bool DetectGaps;
+        internal ulong ExpectedConsumerSeq;
+        internal long MessageAlarmTime;
 
         internal SubscribeOptions(string stream, string durable, bool pull, bool bind, 
-            string deliverSubject, string deliverGroup, ConsumerConfiguration cc)
+            string deliverSubject, string deliverGroup,
+            bool detectGaps, ulong expectedConsumerSeq, long messageAlarmTime,
+            ConsumerConfiguration cc)
         {
             Stream = Validator.ValidateStreamName(stream, bind);
             
@@ -43,7 +49,11 @@ namespace NATS.Client.JetStream
                 .WithDeliverGroup(deliverGroup)
                 .Build();
 
+            Pull = pull;
             Bind = bind;
+            DetectGaps = detectGaps;
+            ExpectedConsumerSeq = expectedConsumerSeq;
+            MessageAlarmTime = messageAlarmTime;
         }
     }
 }

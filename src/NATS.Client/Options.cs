@@ -13,10 +13,10 @@
 
 using System;
 using System.Linq;
-using System.Text;
-using System.Security.Cryptography.X509Certificates;
 using System.Net.Security;
 using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
 
 namespace NATS.Client
 {
@@ -114,6 +114,24 @@ namespace NATS.Client
         /// creating a connection.
         /// </summary>
         internal EventHandler<UserSignatureEventArgs> UserSignatureEventHandler = null;
+
+        /// <summary>
+        /// Represents the method that will handle an heartbeat alarm
+        /// encountered out of band.
+        /// </summary>
+        public EventHandler<HeartbeatAlarmEventArgs> HeartbeatAlarmEventHandler;
+
+        /// <summary>
+        /// Represents the method that will handle an message gap detected event
+        /// encountered out of band.
+        /// </summary>
+        public EventHandler<MessageGapDetectedEventArgs> MessageGapDetectedEventHandler;
+
+        /// <summary>
+        /// Represents the method that will handle a unknown or unhandled status event
+        /// encountered out of band.
+        /// </summary>
+        public EventHandler<UnhandledStatusEventArgs> UnhandledStatusEventHandler;
 
         /// <summary>
         /// Sets user credentials using the NATS 2.0 security scheme.
@@ -228,6 +246,9 @@ namespace NATS.Client
         {
             allowReconnect = o.allowReconnect;
             AsyncErrorEventHandler = o.AsyncErrorEventHandler;
+            HeartbeatAlarmEventHandler = o.HeartbeatAlarmEventHandler;
+            MessageGapDetectedEventHandler = o.MessageGapDetectedEventHandler;
+            UnhandledStatusEventHandler = o.UnhandledStatusEventHandler;
             ClosedEventHandler = o.ClosedEventHandler;
             ServerDiscoveredEventHandler = o.ServerDiscoveredEventHandler;
             DisconnectedEventHandler = o.DisconnectedEventHandler;
@@ -755,6 +776,9 @@ namespace NATS.Client
             sb.AppendFormat("AllowReconnect={0};", allowReconnect);
 
             appendEventHandler(sb, "AsyncErrorEventHandler", AsyncErrorEventHandler);
+            appendEventHandler(sb, "HeartbeatAlarmEventHandler", HeartbeatAlarmEventHandler);
+            appendEventHandler(sb, "MessageGapDetectedEventHandler", MessageGapDetectedEventHandler);
+            appendEventHandler(sb, "UnhandledStatusEventHandler", UnhandledStatusEventHandler);
             appendEventHandler(sb, "ClosedEventHandler", ClosedEventHandler);
             appendEventHandler(sb, "DisconnectedEventHandler", DisconnectedEventHandler);
             appendEventHandler(sb, "ReconnectedEventHandler", ReconnectedEventHandler);

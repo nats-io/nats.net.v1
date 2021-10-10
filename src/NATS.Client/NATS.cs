@@ -13,6 +13,8 @@
 
 using System;
 using System.Reflection;
+using System.Text;
+using NATS.Client.JetStream;
 
 /*! \mainpage %NATS .NET client.
  *
@@ -295,39 +297,136 @@ namespace NATS.Client
     /// </summary>
     public class ErrEventArgs : EventArgs
     {
-        private Connection c;
-        private Subscription s;
-        private String err;
-
-        internal ErrEventArgs(Connection c, Subscription s, String err)
-        {
-            this.c = c;
-            this.s = s;
-            this.err = err;
-        }
-
         /// <summary>
         /// Gets the <see cref="Connection"/> associated with the event.
         /// </summary>
-        public Connection Conn
-        {
-            get { return c; }
-        }
+        public Connection Conn { get; }
 
         /// <summary>
         /// Gets the <see cref="NATS.Client.Subscription"/> associated with the event.
         /// </summary>
-        public Subscription Subscription
-        {
-            get { return s; }
-        }
-
+        public Subscription Subscription  { get; }
+        
         /// <summary>
         /// Gets the error message associated with the event.
         /// </summary>
-        public string Error
+        public String Error { get; }
+
+        public ErrEventArgs(Connection conn, Subscription subscription, string error)
         {
-            get { return err; }
+            Conn = conn;
+            Subscription = subscription;
+            Error = error;
+        }
+    }
+
+    /// <summary>
+    /// Base class for Event Args that have a connection and a subscription
+    /// by an <see cref="IConnection"/>.
+    /// </summary>
+    public class ConnJsSubEventArgs : EventArgs
+    {
+        /// <summary>
+        /// Gets the <see cref="Connection"/> associated with the event.
+        /// </summary>
+        public Connection Conn { get; }
+        
+        /// <summary>
+        /// Gets the <see cref="NATS.Client.Subscription"/> associated with the event.
+        /// </summary>
+        public IJetStreamSubscription Sub { get; }
+
+        protected ConnJsSubEventArgs(Connection conn, IJetStreamSubscription sub)
+        {
+            Conn =  conn;
+            Sub = sub;
+        }
+    }
+
+    internal static class DefaultEventHandler
+    {
+        private static String FormatMessage(String label, params object[] pairs) {
+            StringBuilder sb = new StringBuilder(label).Append('.');
+            for (int x = 0; x < pairs.Length; x++) {
+                sb.Append(pairs[x]).Append(pairs[++x]);
+            }
+            return sb.ToString();
+        }
+
+        public static EventHandler<HeartbeatAlarmEventArgs> HandleHeartbeatAlarmEvent()
+        {
+            return (sender, e) =>
+                Console.WriteLine(FormatMessage("heartbeatAlarm", "Conn: ", e.Conn, "Sub: ", e.Sub,
+                    "lastStreamSequence: ", e.LastStreamSequence,
+                    "lastConsumerSequence: ", e.LastConsumerSequence,
+                    "expectedConsumerSequence: ", e.ExpectedConsumerSequence));
+        }
+
+        public static EventHandler<MessageGapDetectedEventArgs> HandleMessageGapDetectedEvent()
+        {
+            return (sender, e) =>
+                Console.WriteLine(FormatMessage("messageGapDetected", "Conn: ", e.Conn, "Sub: ", e.Sub,
+                    "lastStreamSequence: ", e.LastStreamSequence, 
+                    "lastConsumerSequence: ", e.LastConsumerSequence, 
+                    "expectedConsumerSequence: ", e.ExpectedConsumerSequence,
+                    "receivedConsumerSequence: ", e.ReceivedConsumerSequence));
+        }
+
+        public static EventHandler<UnhandledStatusEventArgs> HandleUnhandledStatusEvent()
+        {
+            return (sender, e) =>
+                Console.WriteLine(FormatMessage("unhandledStatus", "Conn: ", e.Conn, "Sub: ", e.Sub, "Status: ", e.Status));
+        }
+    }
+    
+    /// <summary>
+    /// Provides details for an heartbeat alarm encountered asynchronously
+    /// </summary>
+    public class HeartbeatAlarmEventArgs : ConnJsSubEventArgs
+    {
+        public ulong LastStreamSequence { get; }
+        public ulong LastConsumerSequence { get; }
+        public ulong ExpectedConsumerSequence { get; }
+
+        public HeartbeatAlarmEventArgs(Connection c, IJetStreamSubscription s, 
+            ulong lastStreamSequence, ulong lastConsumerSequence, ulong expectedConsumerSequence) : base(c, s)
+        {
+            LastStreamSequence = lastStreamSequence;
+            LastConsumerSequence = lastConsumerSequence;
+            ExpectedConsumerSequence = expectedConsumerSequence;
+        }
+    }
+
+    /// <summary>
+    /// Provides details when a message gap is encountered asynchronously
+    /// </summary>
+    public class MessageGapDetectedEventArgs : ConnJsSubEventArgs
+    {
+        public ulong LastStreamSequence { get; }
+        public ulong LastConsumerSequence { get; }
+        public ulong ExpectedConsumerSequence { get; }
+        public ulong ReceivedConsumerSequence { get; }
+
+        public MessageGapDetectedEventArgs(Connection c, IJetStreamSubscription s, 
+            ulong lastStreamSequence, ulong lastConsumerSequence, ulong expectedConsumerSequence, ulong receivedConsumerSequence) : base(c, s)
+        {
+            LastStreamSequence = lastStreamSequence;
+            LastConsumerSequence = lastConsumerSequence;
+            ExpectedConsumerSequence = expectedConsumerSequence;
+            ReceivedConsumerSequence = receivedConsumerSequence;
+        }
+    }
+
+    /// <summary>
+    /// Provides details for an status message when it is unknown or unhandled and encountered asynchronously
+    /// </summary>
+    public class UnhandledStatusEventArgs : ConnJsSubEventArgs
+    {
+        public MsgStatus Status { get; }
+
+        public UnhandledStatusEventArgs(Connection c, IJetStreamSubscription s, MsgStatus status) : base(c, s)
+        {
+            Status = status;
         }
     }
 

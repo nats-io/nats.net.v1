@@ -192,4 +192,38 @@ namespace NATS.Client
     {
         public NATSNoRespondersException() : base("No responders are available for the request.") { }
     }
+
+    /// <summary>
+    /// The exception that is thrown when a JetStream subscription detects a gap
+    /// </summary>
+    public class NATSJetStreamGapException : NATSException
+    {
+        private IJetStreamSubscription Sub { get; }
+        private ulong ExpectedConsumerSeq { get; }
+        private ulong ReceivedConsumerSeq { get; }
+
+        public NATSJetStreamGapException(IJetStreamSubscription sub, ulong expectedConsumerSeq, ulong receivedConsumerSeq)
+            : base($"Message Gap Detected. Expected Seq: {expectedConsumerSeq}, Received Seq: {receivedConsumerSeq}")
+        {
+            Sub = sub;
+            ExpectedConsumerSeq = expectedConsumerSeq;
+            ReceivedConsumerSeq = receivedConsumerSeq;
+        }
+    }
+
+    /// <summary>
+    /// The exception that is thrown when a JetStream subscription detects a gap
+    /// </summary>
+    public class NATSJetStreamStatusException : NATSException
+    {
+        private IJetStreamSubscription Sub { get; }
+        private MsgStatus Status { get; }
+
+        public NATSJetStreamStatusException(IJetStreamSubscription sub, MsgStatus status)
+            : base($"Unknown or unprocessed status message: {status.Message}")
+        {
+            Sub = sub;
+            Status = status;
+        }
+    }
 }

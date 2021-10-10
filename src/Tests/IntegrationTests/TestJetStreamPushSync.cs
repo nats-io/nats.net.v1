@@ -150,10 +150,8 @@ namespace IntegrationTests
                 // Create our JetStream context to receive JetStream messages.
                 IJetStream js = c.CreateJetStreamContext();
                 
-                ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithHeadersOnly(true).Build();
-
                 // Build our subscription options.
-                PushSubscribeOptions options = PushSubscribeOptions.Builder(cc).Build();
+                PushSubscribeOptions options = ConsumerConfiguration.Builder().WithHeadersOnly(true).BuildPushSubscribeOptions();
 
                 IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(SUBJECT, options);
                 c.Flush(DefaultTimeout); // flush outgoing communication with/to the server

@@ -296,15 +296,14 @@ namespace NATS.Client
         /// <summary>
         /// Returns true if there is a <see cref="MsgStatus"/> with fields set.
         /// </summary>
-        public bool HasStatus
-        {
-            get
-            {
-                return status != null;
-            }
-        }
+        public bool HasStatus => status != null;
 
         #region JetStream
+
+        // this is intended for internal heartbeat processing
+        // when pre-processing heartbeats, the flowControlSubject is already extracted
+        // for later use, so set it here and get it later
+        internal string FlowControlSubject { get; set; }
 
         /// <summary>
         /// Gets the metadata associated with a JetStream message.
