@@ -62,6 +62,7 @@ namespace NATS.Client.JetStream
         internal const string Keep = "keep";
         internal const string Lag = "lag";
         internal const string LameDuckMode = "ldm";
+        internal const string LastBySubject = "last_by_subj";
         internal const string LastSeq = "last_seq";
         internal const string LastTs = "last_ts";
         internal const string Leader = "leader";

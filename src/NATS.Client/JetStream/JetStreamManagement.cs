@@ -148,8 +148,7 @@ namespace NATS.Client.JetStream
         {
             Validator.ValidateStreamName(streamName, true);
             string subj = string.Format(JetStreamConstants.JsapiMsgGet, streamName);
-            byte[] bytes = JsonUtils.SimpleMessageBody(ApiConstants.Seq, sequence);
-            Msg m = RequestResponseRequired(subj, bytes, Timeout);
+            Msg m = RequestResponseRequired(subj, MessageGetRequest.SeqBytes(sequence), Timeout);
             return new MessageInfo(m, true);
         }
 
