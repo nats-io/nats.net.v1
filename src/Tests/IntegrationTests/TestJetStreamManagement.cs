@@ -362,9 +362,6 @@ namespace IntegrationTests
                 cc = ConsumerConfiguration.Builder(cc).WithIdleHeartbeat(Duration.OfMillis(111)).Build();
                 AssertInvalidConsumerUpdate(jsm, cc);
 
-                cc = ConsumerConfiguration.Builder(cc).WithFlowControl(true).Build();
-                AssertInvalidConsumerUpdate(jsm, cc);
-
                 cc = ConsumerConfiguration.Builder(cc).WithMaxDeliver(4).Build();
                 AssertInvalidConsumerUpdate(jsm, cc);
             });

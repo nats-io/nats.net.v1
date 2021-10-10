@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using NATS.Client;
+using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using UnitTests;
 using Xunit;
@@ -135,6 +136,34 @@ namespace IntegrationTests
                 messages = ReadMessagesAck(sub);
                 total += messages.Count;
                 ValidateRedAndTotal(0, messages.Count, 5, total);
+            });
+        }
+
+        [Fact]
+        public void TestHeadersOnly()
+        {
+            Context.RunInJsServer(c =>
+            {
+                // create the stream.
+                CreateMemoryStream(c, STREAM, SUBJECT);
+
+                // Create our JetStream context to receive JetStream messages.
+                IJetStream js = c.CreateJetStreamContext();
+                
+                ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithHeadersOnly(true).Build();
+
+                // Build our subscription options.
+                PushSubscribeOptions options = PushSubscribeOptions.Builder(cc).Build();
+
+                IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(SUBJECT, options);
+                c.Flush(DefaultTimeout); // flush outgoing communication with/to the server
+
+                JsPublish(js, SUBJECT, 5);
+
+                IList<Msg> messages = ReadMessagesAck(sub);
+                Assert.Equal(5, messages.Count);
+                Assert.Empty(messages[0].Data);
+                Assert.Equal("6", messages[0].Header[JetStreamConstants.MsgSizeHdr]);
             });
         }
 

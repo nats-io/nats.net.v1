@@ -41,6 +41,7 @@ namespace NATS.Client.JetStream
         public Duration IdleHeartbeat { get; }
         public bool FlowControl { get; }
         public long MaxPullWaiting { get; }
+        public bool HeadersOnly { get; }
 
         internal ConsumerConfiguration(string json) : this(JSON.Parse(json)) {}
 
@@ -64,12 +65,13 @@ namespace NATS.Client.JetStream
             IdleHeartbeat = JsonUtils.AsDuration(ccNode, ApiConstants.IdleHeartbeat, MinDefaultIdleHeartbeat);
             FlowControl = ccNode[ApiConstants.FlowControl].AsBool;
             MaxPullWaiting = JsonUtils.AsLongOrMinus1(ccNode, ApiConstants.MaxWaiting);
+            HeadersOnly = ccNode[ApiConstants.HeadersOnly].AsBool;
         }
 
         internal ConsumerConfiguration(string description, string durable, DeliverPolicy deliverPolicy, ulong startSeq, DateTime startTime,
             AckPolicy ackPolicy, Duration ackWait, long maxDeliver, string filterSubject, ReplayPolicy replayPolicy,
             string sampleFrequency, long rateLimit, string deliverSubject, string deliverGroup, long maxAckPending, 
-            Duration idleHeartbeat, bool flowControl, long maxPullWaiting)
+            Duration idleHeartbeat, bool flowControl, long maxPullWaiting, bool headersOnly)
         {
             Description = description;
             Durable = durable;
@@ -89,6 +91,7 @@ namespace NATS.Client.JetStream
             IdleHeartbeat = idleHeartbeat;
             FlowControl = flowControl;
             MaxPullWaiting = maxPullWaiting;
+            HeadersOnly = headersOnly;
         }
 
         internal override JSONNode ToJsonNode()
@@ -112,7 +115,8 @@ namespace NATS.Client.JetStream
                 [ApiConstants.MaxAckPending] = MaxAckPending,
                 [ApiConstants.IdleHeartbeat] = IdleHeartbeat.Nanos,
                 [ApiConstants.FlowControl] = FlowControl,
-                [ApiConstants.MaxWaiting] = MaxPullWaiting
+                [ApiConstants.MaxWaiting] = MaxPullWaiting,
+                [ApiConstants.HeadersOnly] = HeadersOnly
             };
         }
 
@@ -146,6 +150,7 @@ namespace NATS.Client.JetStream
             private Duration _idleHeartbeat = Duration.Zero;
             private bool _flowControl;
             private long _maxPullWaiting;
+            private bool _headersOnly;
 
             public string Durable => _durable;
             public string DeliverSubject => _deliverSubject;
@@ -177,6 +182,7 @@ namespace NATS.Client.JetStream
                 _idleHeartbeat = cc.IdleHeartbeat;
                 _flowControl = cc.FlowControl;
                 _maxPullWaiting = cc.MaxPullWaiting;
+                _headersOnly = cc.HeadersOnly;
             }
 
             /// <summary>
@@ -369,7 +375,7 @@ namespace NATS.Client.JetStream
             /// <summary>
             /// Sets the idle heart beat wait time.
             /// </summary>
-            /// <param name="idleHeartbeatMillis">the wait timeout as a Duration</param>
+            /// <param name="idleHeartbeatMillis">the wait timeout as milliseconds</param>
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithIdleHeartbeat(long idleHeartbeatMillis)
             {
@@ -378,13 +384,23 @@ namespace NATS.Client.JetStream
             }
 
             /// <summary>
-            /// Sets the flow control mode of the ConsumerConfiguration
+            /// Set the flow control on and set the idle heartbeat
             /// </summary>
-            /// <param name="flowControl">true to enable flow control.</param>
+            /// <param name="idleHeartbeat">the idle heart beat as a Duration</param>
             /// <returns>The ConsumerConfiguration</returns>
-            public ConsumerConfigurationBuilder WithFlowControl(bool flowControl) {
-                _flowControl = flowControl;
-                return this;
+            public ConsumerConfigurationBuilder WithFlowControl(Duration idleHeartbeat) {
+                _flowControl = true;
+                return WithIdleHeartbeat(idleHeartbeat);
+            }
+
+            /// <summary>
+            /// Set the flow control on and set the idle heartbeat
+            /// </summary>
+            /// <param name="idleHeartbeatMillis">the idle heart beat as milliseconds</param>
+            /// <returns>The ConsumerConfiguration</returns>
+            public ConsumerConfigurationBuilder WithFlowControl(long idleHeartbeatMillis) {
+                _flowControl = true;
+                return WithIdleHeartbeat(idleHeartbeatMillis);
             }
 
             /// <summary>
@@ -395,6 +411,16 @@ namespace NATS.Client.JetStream
             public ConsumerConfigurationBuilder WithMaxPullWaiting(long maxPullWaiting)
             {
                 _maxPullWaiting = maxPullWaiting;
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the headers only flag
+            /// </summary>
+            /// <param name="headersOnly">true to enable flow control.</param>
+            /// <returns>The ConsumerConfiguration</returns>
+            public ConsumerConfigurationBuilder WithHeadersOnly(bool headersOnly) {
+                _headersOnly = headersOnly;
                 return this;
             }
 
@@ -422,7 +448,8 @@ namespace NATS.Client.JetStream
                     _maxAckPending,
                     _idleHeartbeat,
                     _flowControl,
-                    _maxPullWaiting
+                    _maxPullWaiting,
+                    _headersOnly
                 );
             }
         }

@@ -66,6 +66,16 @@ namespace NATS.Client.JetStream
             return new PushSubscribeOptionsBuilder();
         }
 
+        /// <summary>
+        /// Gets the PushSubscribeOptions builder using the consumer configuration
+        /// </summary>
+        /// <returns>
+        /// The builder
+        /// </returns>
+        public static PushSubscribeOptionsBuilder Builder(ConsumerConfiguration cc) {
+            return new PushSubscribeOptionsBuilder().WithConfiguration(cc);
+        }
+
         public sealed class PushSubscribeOptionsBuilder
         {
             private string _stream;

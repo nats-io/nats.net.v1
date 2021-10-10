@@ -56,6 +56,7 @@ namespace NATS.Client.JetStream
         internal const string Go = "go";
         internal const string Hdrs = "hdrs";
         internal const string Headers = "headers";
+        internal const string HeadersOnly = "headers_only";
         internal const string Host = "host";
         internal const string IdleHeartbeat = "idle_heartbeat";
         internal const string Jetstream = "jetstream";
