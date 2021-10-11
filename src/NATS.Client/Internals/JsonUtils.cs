@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using NATS.Client.Internals.SimpleJSON;
+using NATS.Client.JetStream;
 
 namespace NATS.Client.Internals
 {
@@ -106,6 +107,18 @@ namespace NATS.Client.Internals
         public static byte[] Serialize(JSONNode node)
         {
             return Encoding.ASCII.GetBytes(node.ToString());
+        }
+
+        public static string ObjectString(string name, object o) {
+            switch (o)
+            {
+                case null:
+                    return name + "=null";
+                case JsonSerializable serializable:
+                    return name + serializable.ToJsonNode().ToString();
+                default:
+                    return o.ToString();
+            }
         }
     }
 }

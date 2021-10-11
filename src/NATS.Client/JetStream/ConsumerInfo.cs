@@ -12,8 +12,8 @@
 // limitations under the License.
 
 using System;
-using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
+using static NATS.Client.Internals.JsonUtils;
 
 namespace NATS.Client.JetStream
 {
@@ -52,7 +52,7 @@ namespace NATS.Client.JetStream
             Stream = ciNode[ApiConstants.StreamName].Value;
             Configuration = new ConsumerConfiguration(ciNode[ApiConstants.Config]);
             Name = ciNode[ApiConstants.Name].Value;
-            Created = JsonUtils.AsDate(ciNode[ApiConstants.Created]);
+            Created = AsDate(ciNode[ApiConstants.Created]);
             Delivered = new SequencePair(ciNode[ApiConstants.Delivered]);
             AckFloor = new SequencePair(ciNode[ApiConstants.AckFloor]);
             NumPending = ciNode[ApiConstants.NumPending].AsUlong;
@@ -61,6 +61,24 @@ namespace NATS.Client.JetStream
             NumRedelivered = ciNode[ApiConstants.NumRedelivered].AsLong;
             ClusterInfo = ClusterInfo.OptionalInstance(ciNode[ApiConstants.Cluster]);
             PushBound = ciNode[ApiConstants.PushBound].AsBool;
+        }
+
+        public override string ToString()
+        {
+            return "ConsumerInfo{" +
+                   "Stream='" + Stream + '\'' +
+                   ", Name='" + Name + '\'' +
+                   ", NumPending=" + NumPending +
+                   ", NumWaiting=" + NumWaiting +
+                   ", NumAckPending=" + NumAckPending +
+                   ", NumRedelivered=" + NumRedelivered +
+                   ", PushBound=" + PushBound +
+                   ", Created=" + Created +
+                   ", Delivered=" + Delivered +
+                   ", AckFloor=" + AckFloor +
+                   ", " + ObjectString("ConsumerConfiguration", Configuration) +
+                   ", " + ObjectString("ClusterInfo", ClusterInfo) +
+                   '}';
         }
     }
 }

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <Title>NATS JetStream Manage Consumers</Title>
+        <Description>NATS JetStream Manage Consumers Example</Description>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\NATS.Client\NATS.Client.csproj" />
+        <ProjectReference Include="..\JetStreamExampleUtils\JetStreamExampleUtils.csproj" />
+    </ItemGroup>
+
+</Project>

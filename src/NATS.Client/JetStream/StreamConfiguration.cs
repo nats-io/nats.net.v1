@@ -14,6 +14,7 @@
 using System.Collections.Generic;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
+using static NATS.Client.Internals.JsonUtils;
 
 namespace NATS.Client.JetStream
 {
@@ -48,17 +49,17 @@ namespace NATS.Client.JetStream
             DiscardPolicy = ApiEnums.GetValueOrDefault(scNode[ApiConstants.Discard].Value,DiscardPolicy.Old);
             Name = scNode[ApiConstants.Name].Value;
             Description = scNode[ApiConstants.Description].Value;
-            Subjects = JsonUtils.StringList(scNode, ApiConstants.Subjects);
+            Subjects = StringList(scNode, ApiConstants.Subjects);
             MaxConsumers = scNode[ApiConstants.MaxConsumers].AsLong;
-            MaxMsgs = JsonUtils.AsLongOrMinus1(scNode, ApiConstants.MaxMsgs);
-            MaxMsgsPerSubject = JsonUtils.AsLongOrMinus1(scNode, ApiConstants.MaxMsgsPerSubject);
-            MaxBytes = JsonUtils.AsLongOrMinus1(scNode, ApiConstants.MaxBytes);
-            MaxAge = JsonUtils.AsDuration(scNode, ApiConstants.MaxAge, Duration.Zero);
-            MaxMsgSize = JsonUtils.AsLongOrMinus1(scNode, ApiConstants.MaxMsgSize);
+            MaxMsgs = AsLongOrMinus1(scNode, ApiConstants.MaxMsgs);
+            MaxMsgsPerSubject = AsLongOrMinus1(scNode, ApiConstants.MaxMsgsPerSubject);
+            MaxBytes = AsLongOrMinus1(scNode, ApiConstants.MaxBytes);
+            MaxAge = AsDuration(scNode, ApiConstants.MaxAge, Duration.Zero);
+            MaxMsgSize = AsLongOrMinus1(scNode, ApiConstants.MaxMsgSize);
             Replicas = scNode[ApiConstants.NumReplicas].AsInt;
             NoAck = scNode[ApiConstants.NoAck].AsBool;
             TemplateOwner = scNode[ApiConstants.TemplateOwner].Value;
-            DuplicateWindow = JsonUtils.AsDuration(scNode, ApiConstants.DuplicateWindow, Duration.Zero);
+            DuplicateWindow = AsDuration(scNode, ApiConstants.DuplicateWindow, Duration.Zero);
             Placement = Placement.OptionalInstance(scNode[ApiConstants.Placement]);
             Mirror = Mirror.OptionalInstance(scNode[ApiConstants.Mirror]);
             Sources = Source.OptionalListOf(scNode[ApiConstants.Sources]);
@@ -94,9 +95,12 @@ namespace NATS.Client.JetStream
         internal override JSONNode ToJsonNode()
         {
             JSONArray sources = new JSONArray();
-            foreach (Source s in Sources)
+            if (Sources != null)
             {
-                sources.Add(null, s.ToJsonNode());
+                foreach (Source s in Sources)
+                {
+                    sources.Add(null, s.ToJsonNode());
+                }
             }
             return new JSONObject
             {
@@ -105,7 +109,7 @@ namespace NATS.Client.JetStream
                 [ApiConstants.Discard] = DiscardPolicy.GetString(),
                 [ApiConstants.Name] = Name,
                 [ApiConstants.Description] = Description,
-                [ApiConstants.Subjects] = JsonUtils.ToArray(Subjects),
+                [ApiConstants.Subjects] = ToArray(Subjects),
                 [ApiConstants.MaxConsumers] = MaxConsumers,
                 [ApiConstants.MaxMsgs] = MaxMsgs,
                 [ApiConstants.MaxMsgsPerSubject] = MaxMsgsPerSubject,

@@ -42,5 +42,18 @@ namespace NATS.Client.JetStream
             FirstTime = JsonUtils.AsDate(streamState[ApiConstants.FirstTs]);
             LastTime = JsonUtils.AsDate(streamState[ApiConstants.LastTs]);
         }
+
+        public override string ToString()
+        {
+            return "StreamState{" +
+                   "Messages=" + Messages +
+                   ", Bytes=" + Bytes +
+                   ", FirstSeq=" + FirstSeq +
+                   ", LastSeq=" + LastSeq +
+                   ", ConsumerCount=" + ConsumerCount +
+                   ", FirstTime=" + FirstTime +
+                   ", LastTime=" + LastTime +
+                   '}';
+        }
     }
 }

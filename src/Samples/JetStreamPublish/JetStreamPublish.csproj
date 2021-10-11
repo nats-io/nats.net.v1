@@ -9,6 +9,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\NATS.Client\NATS.Client.csproj" />
+      <ProjectReference Include="..\JetStreamExampleUtils\JetStreamExampleUtils.csproj" />
     </ItemGroup>
 
 </Project>
