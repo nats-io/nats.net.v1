@@ -140,7 +140,7 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public void TestHeadersOnly()
+        public void TestMessageWithHeadersOnly()
         {
             Context.RunInJsServer(c =>
             {
