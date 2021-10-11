@@ -32,7 +32,7 @@ namespace NATS.Client.JetStream
         private EventHandler<MessageGapDetectedEventArgs> MsgGapDetectedEventHandler;
         private EventHandler<UnhandledStatusEventArgs> UnhandledStatusEventHandler;
 
-        private TimerWrapper timerWrapper;
+        private AsmTimer asmTimer;
         
         internal JetStreamAutoStatusManager(Connection conn, SubscribeOptions so,
             ConsumerConfiguration cc, bool queueMode, bool syncMode)
@@ -42,7 +42,7 @@ namespace NATS.Client.JetStream
             QueueMode = queueMode;
             LastStreamSeq = 0;
             LastConsumerSeq = 0;
-            ExpectedConsumerSeq = so.ExpectedConsumerSeq;
+            ExpectedConsumerSeq = 1; // always starts at 1
             LastMsgReceived = -1;
 
             Pull = so.Pull;
@@ -87,17 +87,17 @@ namespace NATS.Client.JetStream
             this.sub = sub;
             if (Hb) {
                 conn.SetBeforeQueueProcessor(BeforeQueueProcessor);
-                timerWrapper = new TimerWrapper();
+                asmTimer = new AsmTimer();
             }
         }
 
-        void shutdown() {
-            if (timerWrapper != null) {
-                timerWrapper.Shutdown();
+        void Shutdown() {
+            if (asmTimer != null) {
+                asmTimer.Shutdown();
             }
         }
 
-        class TimerWrapper {
+        class AsmTimer {
 
             /* synchronized */ void Restart() {
                 cancel();
@@ -133,17 +133,13 @@ namespace NATS.Client.JetStream
         private void DetectGaps(Msg msg)
         {
             ulong receivedConsumerSeq = msg.MetaData.ConsumerSequence;
-            // expectedConsumerSeq <= 0 they didn't tell me where to start so assume whatever it is is correct
-            if (ExpectedConsumerSeq > 0) 
+            if (ExpectedConsumerSeq != receivedConsumerSeq) 
             {
-                if (ExpectedConsumerSeq != receivedConsumerSeq) 
-                {
-                    MsgGapDetectedEventHandler.Invoke(this, new MessageGapDetectedEventArgs(conn, sub,
-                        LastStreamSeq, LastConsumerSeq, ExpectedConsumerSeq, receivedConsumerSeq));
-                
-                    if (SyncMode) {
-                        throw new NATSJetStreamGapException(sub, ExpectedConsumerSeq, receivedConsumerSeq);
-                    }
+                MsgGapDetectedEventHandler.Invoke(this, new MessageGapDetectedEventArgs(conn, sub,
+                    LastStreamSeq, LastConsumerSeq, ExpectedConsumerSeq, receivedConsumerSeq));
+            
+                if (SyncMode) {
+                    throw new NATSJetStreamGapException(sub, ExpectedConsumerSeq, receivedConsumerSeq);
                 }
             }
             LastStreamSeq = msg.MetaData.StreamSequence;

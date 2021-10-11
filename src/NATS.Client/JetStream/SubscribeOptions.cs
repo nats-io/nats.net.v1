@@ -26,34 +26,130 @@ namespace NATS.Client.JetStream
         internal bool Bind { get;  }
         internal ConsumerConfiguration ConsumerConfiguration { get;}
         internal bool DetectGaps;
-        internal ulong ExpectedConsumerSeq;
         internal long MessageAlarmTime;
 
-        internal SubscribeOptions(string stream, string durable, bool pull, bool bind, 
-            string deliverSubject, string deliverGroup,
-            bool detectGaps, ulong expectedConsumerSeq, long messageAlarmTime,
-            ConsumerConfiguration cc)
+        protected SubscribeOptions(ISubscribeOptionsBuilder builder, bool pull, string deliverSubject, string deliverGroup)
         {
-            Stream = Validator.ValidateStreamName(stream, bind);
+            Stream = Validator.ValidateStreamName(builder.Stream, builder.Bind);
             
-            durable = Validator.ValidateMustMatchIfBothSupplied(durable, cc?.Durable, "Builder Durable", "Consumer Configuration Durable");
-            durable = Validator.ValidateDurable(durable, pull || bind);
+            string durable = Validator.ValidateMustMatchIfBothSupplied(builder.Durable, builder.Cc?.Durable, "Builder Durable", "Consumer Configuration Durable");
+            durable = Validator.ValidateDurable(durable, pull || builder.Bind);
 
-            deliverGroup = Validator.ValidateMustMatchIfBothSupplied(deliverGroup, cc?.DeliverGroup, "Builder Deliver Group", "Consumer Configuration Deliver Group");
+            deliverGroup = Validator.ValidateMustMatchIfBothSupplied(deliverGroup, builder.Cc?.DeliverGroup, "Builder Deliver Group", "Consumer Configuration Deliver Group");
 
-            deliverSubject = Validator.ValidateMustMatchIfBothSupplied(deliverSubject, cc?.DeliverSubject, "Builder Deliver Subject", "Consumer Configuration Deliver Subject");
+            deliverSubject = Validator.ValidateMustMatchIfBothSupplied(deliverSubject, builder.Cc?.DeliverSubject, "Builder Deliver Subject", "Consumer Configuration Deliver Subject");
 
-            ConsumerConfiguration = ConsumerConfiguration.Builder(cc)
+            ConsumerConfiguration = ConsumerConfiguration.Builder(builder.Cc)
                 .WithDurable(durable)
                 .WithDeliverSubject(deliverSubject)
                 .WithDeliverGroup(deliverGroup)
                 .Build();
 
             Pull = pull;
-            Bind = bind;
-            DetectGaps = detectGaps;
-            ExpectedConsumerSeq = expectedConsumerSeq;
-            MessageAlarmTime = messageAlarmTime;
+            Bind = builder.Bind;
+            DetectGaps = builder.DetectGaps;
+            MessageAlarmTime = builder.MessageAlarmTime;
+        }
+        
+        public interface ISubscribeOptionsBuilder
+        {
+            string Stream { get; }
+            bool Bind { get; }
+            string Durable { get; }
+            ConsumerConfiguration Cc { get; }
+            bool DetectGaps { get; }
+            long MessageAlarmTime { get; }
+        }
+            
+        public abstract class SubscribeOptionsBuilder<TB, TSo> : ISubscribeOptionsBuilder
+        {
+            string _stream;
+            bool _bind;
+            string _durable;
+            ConsumerConfiguration _config;
+            bool _detectGaps;
+            long _messageAlarmTime = -1;
+
+            public string Stream => _stream;
+            public bool Bind => _bind;
+            public string Durable => _durable;
+            public ConsumerConfiguration Cc => _config;
+            public bool DetectGaps => _detectGaps;
+            public long MessageAlarmTime => _messageAlarmTime;
+
+            protected abstract TB GetThis();
+
+            /// <summary>
+            /// Set the stream name
+            /// </summary>
+            /// <param name="stream">the stream name</param>
+            /// <returns>The builder</returns>
+            public TB WithStream(string stream)
+            {
+                _stream = stream;
+                return GetThis();
+            }
+
+            /// <summary>
+            /// Set the durable
+            /// </summary>
+            /// <param name="durable">the durable value</param>
+            /// <returns>The B</returns>
+            public TB WithDurable(string durable)
+            {
+                _durable = durable;
+                return GetThis();
+            }
+
+            /// <summary>
+            /// Set as a direct subscribe
+            /// </summary>
+            /// <returns>The builder</returns>
+            public TB WithBind(bool isBind)
+            {
+                _bind = isBind;
+                return GetThis();
+            }
+
+            /// <summary>
+            /// Set the ConsumerConfiguration
+            /// </summary>
+            /// <param name="configuration">the ConsumerConfiguration object</param>
+            /// <returns>The builder</returns>
+            public TB WithConfiguration(ConsumerConfiguration configuration)
+            {
+                _config = configuration;
+                return GetThis();
+            }
+
+            /// <summary>
+            /// Sets or clears the auto gap manage flag 
+            /// </summary>
+            /// <param name="detectGaps">the flag</param>
+            /// <returns>The builder</returns>
+            public TB WithDetectGaps(bool detectGaps)
+            {
+                _detectGaps = detectGaps;
+                return GetThis();
+            }
+
+            /// <summary>
+            /// Set the total amount of time to not receive any messages or heartbeats
+            /// before calling the ErrorListener heartbeatAlarm 
+            /// </summary>
+            /// <param name="messageAlarmTime"> the time</param>
+            /// <returns>The builder</returns>
+            public TB WithMessageAlarmTime(long messageAlarmTime)
+            {
+                _messageAlarmTime = messageAlarmTime;
+                return GetThis();
+            }
+
+            /// <summary>
+            /// Builds the SubscribeOptions
+            /// </summary>
+            /// <returns>The SubscribeOptions object.</returns>
+            public abstract TSo Build();
         }
     }
 }

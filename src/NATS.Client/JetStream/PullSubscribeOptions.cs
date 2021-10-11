@@ -21,11 +21,7 @@ namespace NATS.Client.JetStream
         public string Durable => ConsumerConfiguration.Durable;
 
         // Validation is done by base class
-        private PullSubscribeOptions(string stream, string durable, bool bind, 
-            bool detectGaps, ulong expectedConsumerSeq, long messageAlarmTime,
-            ConsumerConfiguration cc) 
-            : base(stream, durable, true, bind, null, null, 
-                detectGaps, expectedConsumerSeq, messageAlarmTime, cc) {}
+        private PullSubscribeOptions(ISubscribeOptionsBuilder builder) : base(builder, true, null, null) {}
 
         /// <summary>
         /// Create PushSubscribeOptions where you are binding to
@@ -35,104 +31,23 @@ namespace NATS.Client.JetStream
         /// <param name="durable">the durable name</param>
         /// <returns>the PushSubscribeOptions</returns>
         public static PullSubscribeOptions BindTo(string stream, string durable) {
-            return new PullSubscribeOptionsBuilder().WithStream(stream).WithDurable(durable).Bind(true).Build();
+            return new PullSubscribeOptionsSubscribeOptionsBuilder().WithStream(stream).WithDurable(durable).WithBind(true).Build();
         }
 
         /// <summary>
         /// Gets the PullSubscribeOptions builder.
         /// </summary>
         /// <returns>The PullSubscribeOptionsBuilder</returns>
-        public static PullSubscribeOptionsBuilder Builder()
+        public static PullSubscribeOptionsSubscribeOptionsBuilder Builder()
         {
-            return new PullSubscribeOptionsBuilder();
+            return new PullSubscribeOptionsSubscribeOptionsBuilder();
         }
 
-        public sealed class PullSubscribeOptionsBuilder
+        public sealed class PullSubscribeOptionsSubscribeOptionsBuilder 
+            : SubscribeOptionsBuilder<PullSubscribeOptionsSubscribeOptionsBuilder, PullSubscribeOptions>
         {
-            private string _stream;
-            private bool _bind;
-            private string _durable;
-            private ConsumerConfiguration _config;
-            private bool _detectGaps;
-            private ulong _expectedConsumerSeq;
-            private long _messageAlarmTime;
-
-            /// <summary>
-            /// Set the stream name
-            /// </summary>
-            /// <param name="stream">the stream name</param>
-            /// <returns>The builder</returns>
-            public PullSubscribeOptionsBuilder WithStream(string stream)
+            protected override PullSubscribeOptionsSubscribeOptionsBuilder GetThis()
             {
-                _stream = stream;
-                return this;
-            }
-
-            /// <summary>
-            /// Set the durable
-            /// </summary>
-            /// <param name="durable">the durable value</param>
-            /// <returns>The PullSubscribeOptionsBuilder</returns>
-            public PullSubscribeOptionsBuilder WithDurable(string durable)
-            {
-                _durable = durable;
-                return this;
-            }
-
-            /// <summary>
-            /// Set as a direct subscribe
-            /// </summary>
-            /// <returns>The builder</returns>
-            public PullSubscribeOptionsBuilder Bind(bool isBind)
-            {
-                _bind = isBind;
-                return this;
-            }
-
-            /// <summary>
-            /// Set the ConsumerConfiguration
-            /// </summary>
-            /// <param name="configuration">the ConsumerConfiguration object</param>
-            /// <returns>The builder</returns>
-            public PullSubscribeOptionsBuilder WithConfiguration(ConsumerConfiguration configuration)
-            {
-                _config = configuration;
-                return this;
-            }
-
-            /// <summary>
-            /// Sets or clears the auto gap manage flag 
-            /// </summary>
-            /// <param name="detectGaps">the flag</param>
-            /// <returns>The PullSubscribeOptionsBuilder</returns>
-            public PullSubscribeOptionsBuilder WithDetectGaps(bool detectGaps)
-            {
-                _detectGaps = detectGaps;
-                return this;
-            }
-
-            /// <summary>
-            /// Sets the expected consumer sequence to use the first
-            /// time on auto gap detect. Set to less than 1 to allow
-            /// any first sequence
-            /// </summary>
-            /// <param name="expectedConsumerSeq"> the time</param>
-            /// <returns>The PullSubscribeOptionsBuilder</returns>
-            public PullSubscribeOptionsBuilder WithExpectedConsumerSeq(ulong expectedConsumerSeq)
-            {
-                _expectedConsumerSeq = expectedConsumerSeq;
-                return this;
-            }
-
-            /// <summary>
-            /// Set the total amount of time to not receive any messages or heartbeats
-            /// before calling the ErrorListener heartbeatAlarm 
-            /// </summary>
-            /// <param name="messageAlarmTime"> the time</param>
-            /// <returns>The PullSubscribeOptionsBuilder</returns>
-            public PullSubscribeOptionsBuilder WithMessageAlarmTime(long messageAlarmTime)
-            {
-                _messageAlarmTime = messageAlarmTime;
                 return this;
             }
 
@@ -140,10 +55,9 @@ namespace NATS.Client.JetStream
             /// Builds the PullSubscribeOptions
             /// </summary>
             /// <returns>The PullSubscribeOptions object.</returns>
-            public PullSubscribeOptions Build()
+            public override PullSubscribeOptions Build()
             {
-                return new PullSubscribeOptions(_stream, _durable, _bind, 
-                    _detectGaps, _expectedConsumerSeq, _messageAlarmTime, _config);
+                return new PullSubscribeOptions(this);
             }
         }
     }

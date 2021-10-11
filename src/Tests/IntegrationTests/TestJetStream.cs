@@ -72,7 +72,7 @@ namespace IntegrationTests
                 pso = PushSubscribeOptions.Builder()
                     .WithStream(STREAM)
                     .WithDurable(DURABLE)
-                    .Bind(true)
+                    .WithBind(true)
                     .Build();
                 s = js.PushSubscribeSync(SUBJECT, pso);
                 m = s.NextMessage(1000);
@@ -89,16 +89,16 @@ namespace IntegrationTests
                 Assert.Equal(Data(3), Encoding.ASCII.GetString(m.Data));
 
                 Assert.Throws<ArgumentException>(
-                () => PushSubscribeOptions.Builder().WithStream(STREAM).Bind(true).Build());
+                () => PushSubscribeOptions.Builder().WithStream(STREAM).WithBind(true).Build());
 
                 Assert.Throws<ArgumentException>(
-                () => PushSubscribeOptions.Builder().WithDurable(DURABLE).Bind(true).Build());
+                () => PushSubscribeOptions.Builder().WithDurable(DURABLE).WithBind(true).Build());
 
                 Assert.Throws<ArgumentException>(
-                () => PushSubscribeOptions.Builder().WithStream(String.Empty).Bind(true).Build());
+                () => PushSubscribeOptions.Builder().WithStream(String.Empty).WithBind(true).Build());
 
                 Assert.Throws<ArgumentException>(
-                () => PushSubscribeOptions.Builder().WithStream(STREAM).WithDurable(String.Empty).Bind(true).Build());
+                () => PushSubscribeOptions.Builder().WithStream(STREAM).WithDurable(String.Empty).WithBind(true).Build());
             });
         }
 
@@ -127,7 +127,7 @@ namespace IntegrationTests
                 pso = PullSubscribeOptions.Builder()
                     .WithStream(STREAM)
                     .WithDurable(DURABLE)
-                    .Bind(true)
+                    .WithBind(true)
                     .Build();
                 s = js.PullSubscribe(SUBJECT, pso);
                 s.Pull(1);

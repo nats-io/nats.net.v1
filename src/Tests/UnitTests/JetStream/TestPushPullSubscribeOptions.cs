@@ -81,7 +81,7 @@ namespace UnitTests.JetStream
         [Fact]
         public void TestPullValidation() 
         {
-            PullSubscribeOptions.PullSubscribeOptionsBuilder builder1 = PullSubscribeOptions.Builder();
+            PullSubscribeOptions.PullSubscribeOptionsSubscribeOptionsBuilder builder1 = PullSubscribeOptions.Builder();
             Assert.Throws<ArgumentException>(() => builder1.WithStream(HasDot).Build());
             Assert.Throws<ArgumentException>(() => builder1.WithDurable(HasDot).Build());
 
@@ -89,7 +89,7 @@ namespace UnitTests.JetStream
             Assert.Throws<ArgumentException>(() => builder1.WithConfiguration(ccBadDur).Build());
 
             // durable required direct or in configuration
-            PullSubscribeOptions.PullSubscribeOptionsBuilder builder2 = PullSubscribeOptions.Builder();
+            PullSubscribeOptions.PullSubscribeOptionsSubscribeOptionsBuilder builder2 = PullSubscribeOptions.Builder();
 
             Assert.Throws<ArgumentException>(() => builder2.Build());
 
