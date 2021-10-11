@@ -134,14 +134,16 @@ namespace NATS.Client.JetStream
         {
             ulong receivedConsumerSeq = msg.MetaData.ConsumerSequence;
             // expectedConsumerSeq <= 0 they didn't tell me where to start so assume whatever it is is correct
-            if (ExpectedConsumerSeq > 0) {
-                if (ExpectedConsumerSeq != receivedConsumerSeq) {
+            if (ExpectedConsumerSeq > 0) 
+            {
+                if (ExpectedConsumerSeq != receivedConsumerSeq) 
+                {
+                    MsgGapDetectedEventHandler.Invoke(this, new MessageGapDetectedEventArgs(conn, sub,
+                        LastStreamSeq, LastConsumerSeq, ExpectedConsumerSeq, receivedConsumerSeq));
+                
                     if (SyncMode) {
                         throw new NATSJetStreamGapException(sub, ExpectedConsumerSeq, receivedConsumerSeq);
                     }
-                    MsgGapDetectedEventHandler.Invoke(this, new MessageGapDetectedEventArgs(conn, sub,
-                        LastStreamSeq, LastConsumerSeq,
-                        ExpectedConsumerSeq, receivedConsumerSeq));
                 }
             }
             LastStreamSeq = msg.MetaData.StreamSequence;
@@ -166,27 +168,30 @@ namespace NATS.Client.JetStream
             // only process fc and hb if those flags are set
             // otherwise they are simply known statuses
             if (msg.HasStatus) {
-                if (msg.Status.IsFlowControl()) {
+                if (msg.Status.IsFlowControl()) 
+                {
                     if (Fc) {
                         _processFlowControl(msg.Reply);
                     }
                     return true;
                 }
 
-                if (msg.Status.IsHeartbeat()) {
+                if (msg.Status.IsHeartbeat()) 
+                {
                     if (Fc) {
                         _processFlowControl(msg.Header?[JetStreamConstants.ConsumerStalledHdr]);
                     }
                     return true;
+                    
                 }
 
-                // this status is unknown to us, how we let the user know
-                // depends on whether they are sync or async
-                if (SyncMode) {
+                // this status is unknown to us, always use the error handler.
+                // If it's a sync call, also throw an exception
+                UnhandledStatusEventHandler.Invoke(this, new UnhandledStatusEventArgs(conn, sub, msg.Status));
+                if (SyncMode) 
+                {
                     throw new NATSJetStreamStatusException(sub, msg.Status);
                 }
-
-                UnhandledStatusEventHandler.Invoke(this, new UnhandledStatusEventArgs(conn, sub, msg.Status));
                 return true;
             }
             return false;
