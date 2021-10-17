@@ -14,10 +14,12 @@
 using System;
 using System.Text;
 using NATS.Client;
+using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using Xunit;
 using static UnitTests.TestBase;
 using static IntegrationTests.JetStreamTestBase;
+using static NATS.Client.JetStream.ConsumerConfiguration;
 
 namespace IntegrationTests
 {
@@ -177,14 +179,14 @@ namespace IntegrationTests
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
                 
             // create a durable push subscriber - has deliver subject
-            ConsumerConfiguration ccDurPush = ConsumerConfiguration.Builder()
+            ConsumerConfiguration ccDurPush = Builder()
                     .WithDurable(Durable(1))
                     .WithDeliverSubject(Deliver(1))
                     .Build();
             jsm.AddOrUpdateConsumer(STREAM, ccDurPush);
 
             // create a durable pull subscriber - notice no deliver subject
-            ConsumerConfiguration ccDurPull = ConsumerConfiguration.Builder()
+            ConsumerConfiguration ccDurPull = Builder()
                     .WithDurable(Durable(2))
                     .Build();
             jsm.AddOrUpdateConsumer(STREAM, ccDurPull);
@@ -218,7 +220,7 @@ namespace IntegrationTests
             Assert.Contains("[SUB-DS02]", ae.Message);
 
             // try to push subscribe but mismatch the deliver subject
-            ConsumerConfiguration ccMis = ConsumerConfiguration.Builder().WithDeliverSubject("not-match").Build();
+            ConsumerConfiguration ccMis = Builder().WithDeliverSubject("not-match").Build();
             PushSubscribeOptions psoMis = PushSubscribeOptions.Builder().WithDurable(Durable(1))
                 .WithConfiguration(ccMis).Build();
             ae = Assert.Throws<ArgumentException>(() => js.PushSubscribeSync(SUBJECT, psoMis));
@@ -248,6 +250,67 @@ namespace IntegrationTests
                 ci = pull.GetConsumerInformation();
                 Assert.Equal(STREAM, ci.Stream);
             });
+        }
+
+        [Fact]
+        public void TestConsumerCannotBeModified() {
+            Context.RunInJsServer(c =>
+            {
+                CreateTestStream(c);
+
+                IJetStream js = c.CreateJetStreamContext();
+
+                ConsumerConfigurationBuilder builder = DurBuilder();
+                c.CreateJetStreamManagementContext().AddOrUpdateConsumer(STREAM, builder.Build());
+
+                CcbmEx(js, DurBuilder().WithDeliverPolicy(DeliverPolicy.Last), "Deliver Policy");
+                CcbmEx(js, DurBuilder().WithDeliverPolicy(DeliverPolicy.New), "Deliver Policy");
+                CcbmEx(js, DurBuilder().WithAckPolicy(AckPolicy.None), "Ack Policy");
+                CcbmEx(js, DurBuilder().WithAckPolicy(AckPolicy.All), "Ack Policy");
+                CcbmEx(js, DurBuilder().WithReplayPolicy(ReplayPolicy.Original), "Replay Policy");
+
+                CcbmEx(js, DurBuilder().WithDescription("x"), "Description");
+                CcbmEx(js, DurBuilder().WithStartTime(DateTime.Now), "Start Time");
+                CcbmEx(js, DurBuilder().WithAckWait(Duration.OfMillis(1)), "Ack Wait");
+                CcbmEx(js, DurBuilder().WithSampleFrequency("x"), "Sample Frequency");
+                CcbmEx(js, DurBuilder().WithIdleHeartbeat(Duration.OfMillis(1)), "Idle Heartbeat");
+
+                CcbmEx(js, DurBuilder().WithStartSequence(5), "Start Sequence");
+                CcbmEx(js, DurBuilder().WithMaxDeliver(5), "Max Deliver");
+                CcbmEx(js, DurBuilder().WithRateLimit(5), "Rate Limit");
+                CcbmEx(js, DurBuilder().WithMaxAckPending(5), "Max Ack Pending");
+                CcbmEx(js, DurBuilder().WithMaxPullWaiting(5), "Max Pull Waiting");
+
+                // coverage for more than one problem
+                CcbmEx(js, DurBuilder().WithStartSequence(5).WithMaxDeliver(5), "Start Sequence", "Max Deliver");
+
+                CcbmOk(js, DurBuilder().WithStartSequence(0));
+                CcbmOk(js, DurBuilder().WithMaxDeliver(0));
+                CcbmOk(js, DurBuilder().WithMaxDeliver(-1));
+                CcbmOk(js, DurBuilder().WithRateLimit(0));
+                CcbmOk(js, DurBuilder().WithRateLimit(-1));
+                CcbmOk(js, DurBuilder().WithMaxAckPending(20000));
+                CcbmOk(js, DurBuilder().WithMaxPullWaiting(0));
+                CcbmOk(js, DurBuilder().WithMaxPullWaiting(512));
+            });
+        }
+
+        private void CcbmOk(IJetStream js, ConsumerConfigurationBuilder builder) {
+            js.PushSubscribeSync(SUBJECT, PushSubscribeOptions.Builder().WithConfiguration(builder.Build()).Build()).Unsubscribe();
+        }
+
+        private void CcbmEx(IJetStream js, ConsumerConfigurationBuilder builder, params string[] errs) {
+            ArgumentException ae = Assert.Throws<ArgumentException>(
+                () => js.PushSubscribeSync(SUBJECT, PushSubscribeOptions.Builder().WithConfiguration(builder.Build()).Build()));
+
+            Assert.Contains("[SUB-CC01]", ae.Message);
+            foreach (string err in errs) {
+                Assert.Contains(err, ae.Message);
+            }
+        }
+
+        private ConsumerConfigurationBuilder DurBuilder() {
+            return Builder().WithDurable(DURABLE).WithDeliverSubject(DELIVER);
         }
     }
 }

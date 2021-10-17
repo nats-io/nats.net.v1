@@ -13,15 +13,17 @@
 
 using System;
 using System.Text;
-using JetStreamExampleUtils;
 using NATS.Client;
 using NATS.Client.JetStream;
 
 namespace NATSExamples
 {
-    class JetStreamPublish
+    /// <summary>
+    /// This example will demonstrate JetStream publishing.
+    /// </summary>
+    internal static class JetStreamPublish
     {
-        const string Usage = 
+        private const string Usage = 
             "Usage: JetStreamPublish [-url url] [-creds file] [-stream stream] " +
             "[-subject subject] [-count count] [-payload payload] [-header key:value]" +
             "\n\nDefault Values:" +
@@ -36,34 +38,33 @@ namespace NATSExamples
 
         public static void Main(string[] args)
         {
-            ArgumentHelper helper = new ArgumentHelperBuilder("JetStream Publishing", args, Usage)
-                .Stream("example-stream")
-                .Subject("example-subject")
-                .Payload("Hello")
-                .Count(10)
+            ArgumentHelper helper = new ArgumentHelperBuilder("JetStream Publish", args, Usage)
+                .DefaultStream("example-stream")
+                .DefaultSubject("example-subject")
+                .DefaultPayload("Hello")
+                .DefaultCount(10)
                 .Build();
 
             try
             {
                 using (IConnection c = new ConnectionFactory().CreateConnection(helper.MakeOptions()))
                 {
-                    JsUtils.CreateStreamWhenDoesNotExist(c, helper.Stream, helper.Subject);
+                    // Use the utility to create a stream stored in memory.
+                    JsUtils.CreateStreamOrUpdateSubjects(c, helper.Stream, helper.Subject);
 
+                    // create a JetStream context
                     IJetStream js = c.CreateJetStreamContext();
-
-                    byte[] data = Encoding.UTF8.GetBytes(helper.Payload);
 
                     int stop = helper.Count < 2 ? 2 : helper.Count + 1;
                     for (int x = 1; x < stop; x++)
                     {
                         // make unique message data if you want more than 1 message
-                        if (helper.Count > 1)
-                        {
-                            data = Encoding.UTF8.GetBytes(helper.Payload + "-" + x);
-                        }
+                        byte[] data = helper.Count < 2
+                            ? Encoding.UTF8.GetBytes(helper.Payload)
+                            : Encoding.UTF8.GetBytes(helper.Payload + "-" + x);
 
                         // Publish a message and print the results of the publish acknowledgement.
-                        Msg msg = new Msg(helper.Subject, null, helper.Headers, data);
+                        Msg msg = new Msg(helper.Subject, null, helper.Header, data);
 
                         // We'll use the defaults for this simple example, but there are options
                         // to constrain publishing to certain streams, expect sequence numbers and

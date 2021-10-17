@@ -36,7 +36,7 @@ namespace IntegrationTests
                 // create the stream.
                 CreateMemoryStream(c, STREAM, SUBJECT);
 
-                // Create our JetStream context to receive JetStream messages.
+                // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
 
                 ConsumerConfiguration cc = ConsumerConfiguration.Builder()
@@ -104,7 +104,7 @@ namespace IntegrationTests
                 // create the stream.
                 CreateMemoryStream(c, STREAM, SUBJECT);
 
-                // Create our JetStream context to receive JetStream messages.
+                // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
 
                 // Build our subscription options. Durable is REQUIRED for pull based subscriptions
@@ -189,7 +189,7 @@ namespace IntegrationTests
                 // create the stream.
                 CreateMemoryStream(c, STREAM, SUBJECT);
 
-                // Create our JetStream context to receive JetStream messages.
+                // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
 
                 // Build our subscription options. Durable is REQUIRED for pull based subscriptions
@@ -253,7 +253,7 @@ namespace IntegrationTests
                 // create the stream.
                 CreateMemoryStream(c, STREAM, SUBJECT);
 
-                // Create our JetStream context to receive JetStream messages.
+                // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
 
                 // Build our subscription options. Durable is REQUIRED for pull based subscriptions
@@ -332,7 +332,7 @@ namespace IntegrationTests
                 // create the stream.
                 CreateMemoryStream(c, STREAM, SUBJECT);
 
-                // Create our JetStream context to receive JetStream messages.
+                // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
 
                 // Build our subscription options. Durable is REQUIRED for pull based subscriptions
@@ -369,7 +369,7 @@ namespace IntegrationTests
                 // create the stream.
                 CreateMemoryStream(c, STREAM, SUBJECT);
 
-                // Create our JetStream context to receive JetStream messages.
+                // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
 
                 // Build our subscription options. Durable is REQUIRED for pull based subscriptions
@@ -399,7 +399,7 @@ namespace IntegrationTests
                 // create the stream.
                 CreateMemoryStream(c, STREAM, SUBJECT);
 
-                // Create our JetStream context to receive JetStream messages.
+                // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
 
                 ConsumerConfiguration cc = ConsumerConfiguration.Builder()

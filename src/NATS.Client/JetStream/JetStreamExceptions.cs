@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-
 namespace NATS.Client.JetStream
 {
     /// <summary>
@@ -21,9 +19,6 @@ namespace NATS.Client.JetStream
     /// </summary>
     public class NATSJetStreamException : NATSException
     {
-        private int _errorCode = ErrorCodeUnspecified;
-        private int _apiErrorCode = ErrorCodeUnspecified;
-
         /// <summary>
         /// Unspecified error code.
         /// </summary>
@@ -33,13 +28,13 @@ namespace NATS.Client.JetStream
         /// Gets the error code returned by JetStream.  Returns ErrorCodeUnspecified
         /// if the error is local.
         /// </summary>
-        public int ErrorCode { get { return _errorCode; } }
+        public int ErrorCode { get; }
 
         /// <summary>
         /// Gets the error code returned by JetStream.  Returns ErrorCodeUnspecified
         /// if the error is local.
         /// </summary>
-        public int ApiErrorCode { get { return _apiErrorCode; } }
+        public int ApiErrorCode { get; }
 
         /// <summary>
         /// Returns the description of the error.
@@ -47,32 +42,23 @@ namespace NATS.Client.JetStream
         public string ErrorDescription => Message;
 
         /// <summary>
-        /// Supplied for unit testing.  Not normally used.
+        /// Construct a NATSJetStreamException from an ApiResponse that is an Error
         /// </summary>
         /// <param name="apiResponse"></param>
-        public NATSJetStreamException(ApiResponse apiResponse) : base(apiResponse.Error.Desc)
+        public NATSJetStreamException(ApiResponse apiResponse) : base(apiResponse.Error.ToString())
         {
-            _errorCode = apiResponse.ErrorCode;
-            _apiErrorCode = apiResponse.ApiErrorCode;
+            ErrorCode = apiResponse.ErrorCode;
+            ApiErrorCode = apiResponse.ApiErrorCode;
         }
 
         /// <summary>
-        /// Supplied for unit testing.  Not normally used.
-        /// </summary>
-        /// <param name="m"></param>
-        public NATSJetStreamException(Msg m) : this(new ApiResponse(m)) { }
-
-        /// <summary>
-        /// Supplied for unit testing.  Not normally used.
+        /// Construct a NATSJetStreamException from a string.
         /// </summary>
         /// <param name="s">The exception message.</param>
-        public NATSJetStreamException(string s) : base(s) { }
-
-        /// <summary>
-        /// Supplied for unit testing.  Not normally used.
-        /// </summary>
-        /// <param name="err">The exception message.</param>
-        /// <param name="innerEx">The inner exception.</param>
-        public NATSJetStreamException(string err, Exception innerEx) : base(err, innerEx) { }
+        public NATSJetStreamException(string s) : base(s)
+        {
+            ErrorCode = ErrorCodeUnspecified;
+            ApiErrorCode = ErrorCodeUnspecified;
+        }
     }
 }

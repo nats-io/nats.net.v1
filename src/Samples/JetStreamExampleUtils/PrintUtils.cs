@@ -13,36 +13,10 @@
 
 using System;
 using System.Collections.Generic;
-using NATS.Client;
 using NATS.Client.JetStream;
 
-namespace JetStreamExampleUtils
+namespace NATSExamples
 {
-    public static class JsUtils
-    {
-        public static void CreateStreamWhenDoesNotExist(IConnection c, string stream, params string[] subjects)
-        {
-            IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
-
-            try
-            {
-                jsm.GetStreamInfo(stream); // this throws if the stream does not exist
-                return;
-            }
-            catch (NATSJetStreamException)
-            {
-                /* stream does not exist */
-            }
-
-            StreamConfiguration sc = StreamConfiguration.Builder()
-                .WithName(stream)
-                .WithStorageType(StorageType.Memory)
-                .WithSubjects(subjects)
-                .Build();
-            jsm.AddStream(sc);
-        }
-    }
-
     public static class PrintUtils
     {
         public static void PrintStreamInfo(StreamInfo si) {
@@ -50,7 +24,19 @@ namespace JetStreamExampleUtils
         }
 
         public static void PrintStreamInfoList(IList<StreamInfo> list) {
-            PrintObject(list, "!StreamInfo", "StreamConfiguration", "StreamState");
+            bool first = true;
+            foreach (StreamInfo si in list)
+            {
+                if (first)
+                {
+                    first = false;
+                }
+                else
+                {
+                    Console.WriteLine();
+                }
+                PrintStreamInfo(si);
+            }
         }
 
         public static void PrintConsumerInfo(ConsumerInfo ci) {
@@ -78,9 +64,9 @@ namespace JetStreamExampleUtils
             string s = o.ToString();
             foreach (string sub in subObjectNames) {
                 bool noIndent = sub.StartsWith("!");
-                String sb = noIndent ? sub.Substring(1) : sub;
-                String rx1 = ", " + sb;
-                String repl1 = (noIndent ? ",\n": ",\n    ") + sb;
+                string sb = noIndent ? sub.Substring(1) : sub;
+                string rx1 = ", " + sb;
+                string repl1 = (noIndent ? ",\n": ",\n    ") + sb;
                 s = s.Replace(rx1, repl1);
             }
 

@@ -12,9 +12,11 @@
 // limitations under the License.
 
 using System;
+using System.Text;
 using System.Threading.Tasks;
 using NATS.Client.Internals;
 using static NATS.Client.Connection;
+using static NATS.Client.JetStream.ConsumerConfiguration;
 
 namespace NATS.Client.JetStream
 {
@@ -141,37 +143,46 @@ namespace NATS.Client.JetStream
 
             // setup the configuration, use a default.
             string stream;
-            ConsumerConfiguration.ConsumerConfigurationBuilder ccBuilder;
+            ConsumerConfiguration userCC; // close as we are going to get to what the user defaulted or supplied
+            ConsumerConfigurationBuilder ccBuilder;
             SubscribeOptions so;
 
             if (isPullMode) {
                 so = pullOpts; // options must have already been checked to be non null
                 stream = pullOpts.Stream;
-                ccBuilder = ConsumerConfiguration.Builder(pullOpts.ConsumerConfiguration);
+
+                ccBuilder = Builder(pullOpts.ConsumerConfiguration);
+                userCC = ccBuilder.Build();
+                
+                queueName = null; // should already be, just make sure
                 ccBuilder.WithDeliverSubject(null); // pull mode can't have a deliver subject
-                // queueName is already null
                 ccBuilder.WithDeliverGroup(null);   // pull mode can't have a deliver group
             }
             else {
                 so = pushOpts ?? PushSubscribeOptions.Builder().Build();
                 stream = so.Stream; // might be null, that's ok (see direct)
-                ccBuilder = ConsumerConfiguration.Builder(so.ConsumerConfiguration);
-                ccBuilder.WithMaxPullWaiting(0); // this does not apply to push, in fact will error b/c deliver subject will be set
-                // deliver subject does not have to be cleared
+                
+                ccBuilder = Builder(so.ConsumerConfiguration);
+
                 // figure out the queue name
                 queueName = Validator.ValidateMustMatchIfBothSupplied(ccBuilder.DeliverGroup, queueName,
                     "[SUB-Q01] Consumer Configuration DeliverGroup", "Queue Name");
-                ccBuilder.WithDeliverGroup(queueName); // and set it in case the deliver group was null
+                
+                // deliver subject does not have to be cleared, and set it in case the deliver group was null
+                ccBuilder.WithDeliverGroup(queueName); 
+
+                // did queue stuff before setting userCC because user can provide only queue
+                // and we make it deliverGroup normally below, so do the same here
+                userCC = ccBuilder.Build();
+
+                ccBuilder.WithMaxPullWaiting(0); // this does not apply to push, in fact will error b/c deliver subject will be set
             }
 
-            //
             bool bindMode = so.Bind;
 
-            string durable = ccBuilder.Durable;
+            ConsumerConfiguration consumerConfig = null;
+            string consumerName = ccBuilder.Durable;
             string inboxDeliver = ccBuilder.DeliverSubject;
-            string filterSubject = ccBuilder.FilterSubject;
-
-            bool createConsumer = true;
 
             // 1. Did they tell me what stream? No? look it up.
             // subscribe options will have already validated that stream is present for direct mode
@@ -180,18 +191,17 @@ namespace NATS.Client.JetStream
             }
             
             // 2. Is this a durable or ephemeral
-            if (!string.IsNullOrWhiteSpace(durable)) {
-                ConsumerInfo lookedUpInfo = 
-                    LookupConsumerInfo(stream, durable);
+            if (!string.IsNullOrWhiteSpace(consumerName)) {
+                ConsumerInfo lookedUpInfo = LookupConsumerInfo(stream, consumerName);
 
                 if (lookedUpInfo != null) { // the consumer for that durable already exists
-                    createConsumer = false;
-                    ConsumerConfiguration lookedUpConfig = lookedUpInfo.Configuration;
+                    consumerConfig = lookedUpInfo.Configuration;
 
-                    string lookedUp = lookedUpConfig.DeliverSubject;
+                    string lookedUp = consumerConfig.DeliverSubject;
                     if (isPullMode) {
                         if (!string.IsNullOrWhiteSpace(lookedUp)) {
-                            throw new ArgumentException($"[SUB-DS01] Consumer is already configured as a push consumer with deliver subject '{lookedUp}'.");
+                            throw new ArgumentException(
+                                $"[SUB-DS01] Consumer is already configured as a push consumer with deliver subject '{lookedUp}'.");
                         }
                     }
                     else if (string.IsNullOrWhiteSpace(lookedUp)) {
@@ -202,39 +212,48 @@ namespace NATS.Client.JetStream
                     }
 
                     // durable already exists, make sure the filter subject matches
-                    lookedUp = Validator.EmptyAsNull(lookedUpConfig.FilterSubject);
-                    if (!string.IsNullOrWhiteSpace(filterSubject) && !filterSubject.Equals(lookedUp)) {
+                    lookedUp = Validator.EmptyAsNull(consumerConfig.FilterSubject);
+                    String userFilterSubject = ccBuilder.FilterSubject;
+                    if (!string.IsNullOrWhiteSpace(lookedUp) && !userFilterSubject.Equals(lookedUp)) {
                         throw new ArgumentException(
-                            $"[SUB-FS01] Subject {subject} mismatches consumer configuration {filterSubject}.");
+                            $"[SUB-FS01] Subject {subject} mismatches consumer configuration {userFilterSubject}.");
                     }
-                    filterSubject = lookedUp;
 
-                    lookedUp = Validator.EmptyAsNull(lookedUpConfig.DeliverGroup);
+                    lookedUp = Validator.EmptyAsNull(consumerConfig.DeliverGroup);
                     if (string.IsNullOrWhiteSpace(lookedUp)) {
                         // lookedUp was null, means existing consumer is not a queue consumer
                         if (string.IsNullOrWhiteSpace(queueName)) {
                             // ok fine, no queue requested and the existing consumer is also not a queue consumer
                             // we must check if the consumer is in use though
                             if (lookedUpInfo.PushBound) {
-                                throw new ArgumentException($"[SUB-Q02] Consumer [{durable}] is already bound to a subscription.");
+                                throw new ArgumentException($"[SUB-PB01] Consumer [{consumerName}] is already bound to a subscription.");
                             }
                         }
                         else { // else they requested a queue but this durable was not configured as queue
-                            throw new ArgumentException($"[SUB-Q03] Existing consumer [{durable}] is not configured as a queue / deliver group.");
+                            throw new ArgumentException($"[SUB-Q01] Existing consumer [{consumerName}] is not configured as a queue / deliver group.");
                         }
                     }
                     else if (string.IsNullOrWhiteSpace(queueName)) {
-                        throw new ArgumentException($"[SUB-Q04] Existing consumer [{durable}] is configured as a queue / deliver group.");
+                        throw new ArgumentException($"[SUB-Q02] Existing consumer [{consumerName}] is configured as a queue / deliver group.");
                     }
                     else if (lookedUp != queueName) {
                         throw new ArgumentException(
-                            $"[SUB-Q05] Existing consumer deliver group {lookedUp} does not match requested queue / deliver group {queueName}.");
+                            $"[SUB-Q03] Existing consumer deliver group {lookedUp} does not match requested queue / deliver group {queueName}.");
                     }
                     
-                    inboxDeliver = lookedUpConfig.DeliverSubject; // use the deliver subject as the inbox. It may be null, that's ok
+                    // check to see if the user sent a different version than the server has
+                    // modifications are not allowed
+                    // previous checks for deliver subject and filter subject matching are now
+                    // in the changes function
+                    string changes = UserVersusServer(userCC, consumerConfig);
+                    if (changes != null) {
+                        throw new ArgumentException($"[SUB-CC01] Existing consumer cannot be modified. {changes}");
+                    }
+
+                    inboxDeliver = consumerConfig.DeliverSubject; // use the deliver subject as the inbox. It may be null, that's ok
                 }
                 else if (bindMode) {
-                    throw new ArgumentException("[SUB-B01] Consumer not found for durable. Required in bind mode.");
+                    throw new ArgumentException("[SUB-BND01] Consumer not found for durable. Required in bind mode.");
                 }
             }
 
@@ -243,7 +262,37 @@ namespace NATS.Client.JetStream
                 inboxDeliver = Conn.NewInbox();
             }
 
-            // 4. create the subscription
+            // 4. If consumer does not exist, create
+            if (consumerConfig == null) {
+                // Pull mode doesn't maintain a deliver subject. It's actually an error if we send it.
+                if (!isPullMode) {
+                    ccBuilder.WithDeliverSubject(inboxDeliver);
+                }
+
+                // being discussed if this is correct, but leave it for now.
+                String userFilterSubject = ccBuilder.FilterSubject;
+                ccBuilder.WithFilterSubject(string.IsNullOrWhiteSpace(userFilterSubject) ? subject : userFilterSubject);
+
+                // createOrUpdateConsumer can fail for security reasons, maybe other reasons?
+                ConsumerInfo ci = AddOrUpdateConsumerInternal(stream, ccBuilder.Build());
+                consumerName = ci.Name;
+                consumerConfig = ci.Configuration;
+            }
+
+            // 5. Queue Mode Check
+            bool queueMode = string.IsNullOrWhiteSpace(queueName);
+            if (queueMode && (consumerConfig.FlowControl || consumerConfig.IdleHeartbeat.Millis > 0)) {
+                throw new ArgumentException("[SUB-QM01] Cannot use queue when consumer has Flow Control or Heartbeat.");
+            }
+
+            // 6. create the subscription
+            string fnlStream = stream;
+            string fnlConsumerName = consumerName;
+            string fnlInboxDeliver = inboxDeliver;
+
+            JetStreamAutoStatusManager asm =
+                new JetStreamAutoStatusManager((Connection) Conn, so, consumerConfig, queueName != null, handler == null);
+            
             Subscription sub;
             if (isPullMode)
             {
@@ -275,33 +324,8 @@ namespace NATS.Client.JetStream
             else {
                 sub = ((Connection) Conn).subscribeAsync(inboxDeliver, queueName, handler, PushAsyncSubDelegate);
             }
-
-            // 5-Consumer didn't exist. It's either ephemeral or a durable that didn't already exist.
-            if (createConsumer) {
-                // Pull mode doesn't maintain a deliver subject. It's actually an error if we send it.
-                if (!isPullMode) {
-                    ccBuilder.WithDeliverSubject(inboxDeliver);
-                }
-
-                // being discussed if this is correct, but leave it for now.
-                ccBuilder.WithFilterSubject(string.IsNullOrWhiteSpace(filterSubject) ? subject : filterSubject);
-
-                // createOrUpdateConsumer can fail for security reasons, maybe other reasons?
-                ConsumerInfo ci;
-                try {
-                    ci = AddOrUpdateConsumerInternal(stream, ccBuilder.Build());
-                } 
-                catch (NATSJetStreamException)
-                {
-                    sub.Unsubscribe();
-                    throw;
-                }
-                ((IJetStreamSubscriptionInternal)sub).SetupJetStream(this, ci.Name, ci.Stream, inboxDeliver);
-            }
-            // 5-Consumer did exist.
-            else {
-                ((IJetStreamSubscriptionInternal)sub).SetupJetStream(this, durable, stream, inboxDeliver);
-            }
+            
+            ((IJetStreamSubscriptionInternal)sub).SetupJetStream(this, consumerName, stream, inboxDeliver);
 
             return sub;
         }
@@ -314,6 +338,65 @@ namespace NATS.Client.JetStream
 
         private CreateAsyncSubscriptionDelegate PushAsyncSubDelegate =
             (conn, subject, queue) => new JetStreamPushAsyncSubscription(conn, subject, queue);
+
+    private static string UserVersusServer(ConsumerConfiguration user, ConsumerConfiguration server) {
+
+        StringBuilder sb = new StringBuilder();
+        Comp(sb, user.FlowControl, server.FlowControl, "Flow Control");
+        Comp(sb, user.DeliverPolicy, server.DeliverPolicy, "Deliver Policy");
+        Comp(sb, user.AckPolicy, server.AckPolicy, "Ack Policy");
+        Comp(sb, user.ReplayPolicy, server.ReplayPolicy, "Replay Policy");
+
+        Comp(sb, user.StartSeq, server.StartSeq, CcNumeric.StartSeq);
+        Comp(sb, user.MaxDeliver, server.MaxDeliver, CcNumeric.MaxDeliver);
+        Comp(sb, user.RateLimit, server.RateLimit, CcNumeric.RateLimit);
+        Comp(sb, user.MaxAckPending, server.MaxAckPending, CcNumeric.MaxAckPending);
+        Comp(sb, user.MaxPullWaiting, server.MaxPullWaiting, CcNumeric.MaxPullWaiting);
+
+        Comp(sb, user.Description, server.Description, "Description");
+        Comp(sb, user.StartTime, server.StartTime, "Start Time");
+        Comp(sb, user.AckWait, server.AckWait, "Ack Wait");
+        Comp(sb, user.SampleFrequency, server.SampleFrequency, "Sample Frequency");
+        Comp(sb, user.IdleHeartbeat, server.IdleHeartbeat, "Idle Heartbeat");
+
+        return sb.Length == 0 ? null : sb.ToString();
+    }
+
+    private static void Comp(StringBuilder sb, string requested, string retrieved, String name)
+    {
+        string q = string.IsNullOrEmpty(requested) ? null : requested;
+        string t = string.IsNullOrEmpty(retrieved) ? null : retrieved;
+        if (!Equals(q, t)) {
+            AppendErr(sb, requested, retrieved, name);
+        }
+    }
+
+    private static void Comp(StringBuilder sb, object requested, object retrieved, String name)
+    {
+        if (!Equals(requested, retrieved)) {
+            AppendErr(sb, requested, retrieved, name);
+        }
+    }
+
+    private static void Comp(StringBuilder sb, long requested, long retrieved, CcNumeric field) 
+    {
+        if (field.Comparable(requested) != field.Comparable(retrieved)) {
+            AppendErr(sb, requested, retrieved, field.GetErr());
+        }
+    }
+
+    private static void Comp(StringBuilder sb, ulong requested, ulong retrieved, CcNumeric field) {
+        if (field.Comparable(requested) != field.Comparable(retrieved)) {
+            AppendErr(sb, requested, retrieved, field.GetErr());
+        }
+    }
+
+    private static void AppendErr(StringBuilder sb, Object requested, Object retrieved, String name) {
+        if (sb.Length > 0) {
+            sb.Append(", ");
+        }
+        sb.Append(name).Append(" [").Append(requested).Append(" vs. ").Append(retrieved).Append(']');
+    }
             
         internal ConsumerInfo LookupConsumerInfo(string lookupStream, string lookupConsumer) {
             try {
@@ -327,7 +410,7 @@ namespace NATS.Client.JetStream
             }
         }
 
-        internal string LookupStreamBySubject(string subject)
+        private string LookupStreamBySubject(string subject)
         {
             byte[] body = JsonUtils.SimpleMessageBody(ApiConstants.Subject, subject); 
             Msg resp = RequestResponseRequired(JetStreamConstants.JsapiStreamNames, body, Timeout);

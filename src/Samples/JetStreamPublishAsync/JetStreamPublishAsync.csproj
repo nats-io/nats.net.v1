@@ -5,10 +5,13 @@
         <Title>NATS JetStream Publish Async</Title>
         <Description>NATS JetStream Publish Async Example</Description>
         <IsPackable>false</IsPackable>
+        <RootNamespace>NATSExamples</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\..\NATS.Client\NATS.Client.csproj" />
+      <ProjectReference Include="..\JetStreamExampleUtils\JetStreamExampleUtils.csproj" />
     </ItemGroup>
 
 </Project>
+

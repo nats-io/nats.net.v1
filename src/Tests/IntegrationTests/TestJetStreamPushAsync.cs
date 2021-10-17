@@ -38,7 +38,7 @@ namespace IntegrationTests
                 // create the stream.
                 CreateMemoryStream(c, STREAM, SUBJECT);
 
-                // Create our JetStream context to receive JetStream messages.
+                // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
 
                 // publish some messages
@@ -77,7 +77,7 @@ namespace IntegrationTests
                 // create the stream.
                 CreateMemoryStream(c, STREAM, SUBJECT);
 
-                // Create our JetStream context to receive JetStream messages.
+                // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
 
                 // publish some messages

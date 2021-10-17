@@ -44,7 +44,7 @@ namespace NATS.Client
         /// <exception cref="NATSSlowConsumerException">The subscription has been marked as a slow consumer.</exception>
         public Msg NextMessage()
         {
-            return NextMessage(-1);
+            return NextMessageImpl(-1);
         }
 
         /// <summary>
@@ -64,10 +64,15 @@ namespace NATS.Client
         /// <see cref="Msg"/>.</exception>
         public Msg NextMessage(int timeout)
         {
-            Connection   localConn;
+            return NextMessageImpl(timeout);
+        }
+
+        protected Msg NextMessageImpl(int timeout)
+        {
+            Connection localConn;
             Channel<Msg> localChannel;
-            long         localMax;
-            Msg          msg;
+            long localMax;
+            Msg msg;
 
             lock (mu)
             {
@@ -83,6 +88,7 @@ namespace NATS.Client
                 {
                     throw new NATSBadSubscriptionException();
                 }
+
                 if (sc)
                 {
                     sc = false;
@@ -115,11 +121,13 @@ namespace NATS.Client
                 {
                     d = tallyDeliveredMessage(msg);
                 }
+
                 if (d == localMax)
                 {
                     // Remove subscription if we have reached max.
                     localConn.removeSubSafe(this);
                 }
+
                 if (localMax > 0 && d > localMax)
                 {
                     throw new NATSMaxMessagesException();

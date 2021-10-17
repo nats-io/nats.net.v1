@@ -14,26 +14,30 @@
 using System;
 using NATS.Client;
 
-namespace JetStreamExampleUtils
+namespace NATSExamples
 {
     public class ArgumentHelper
     {
         private string _title;
+        internal bool _countUnlimitedFlag;
         
-        public string Url { get; set; }
+        public string Url { get; set; } = Defaults.Url;
         public string Creds { get; set; }
         public string Stream { get; set; }
         public string Subject { get; set; }
-        public string Durable { get; set; }
+        public string Queue { get; set; }
         public string Payload { get; set; }
-        public int Count { get; set; }
-        public MsgHeader Headers { get; set; }
+        public string Consumer { get; set; }
+        public string Durable { get; set; }
+        public string DeliverSubject { get; set; }
+        public int Count { get; set; } = int.MinValue;
+        public int SubsCount { get; set; } = int.MinValue;
+        public int PullSize { get; set; } = int.MinValue;
+        public MsgHeader Header { get; set; }
 
         public ArgumentHelper(string title)
         {
             _title = title;
-            Url = Defaults.Url;
-            Count = int.MinValue;
         }
   
         public void Parse(string[] args, string usage)
@@ -61,18 +65,42 @@ namespace JetStreamExampleUtils
                         Subject = args[i + 1];
                         break;
 
+                    case "-count": 
+                        Count = Convert.ToInt32(args[i + 1]);
+                        break;
+
+                    case "-subscount": 
+                        SubsCount = Convert.ToInt32(args[i + 1]);
+                        break;
+
+                    case "-pull": 
+                        PullSize = Convert.ToInt32(args[i + 1]);
+                        break;
+
+                    case "-queue": 
+                        Queue = args[i + 1];
+                        break;
+
                     case "-payload": 
                         Payload = args[i + 1];
                         break;
 
-                    case "-count": 
-                        Count = Convert.ToInt32(args[i + 1]);
+                    case "-con": 
+                        Consumer = args[i + 1];
+                        break;
+
+                    case "-dur": 
+                        Durable = args[i + 1];
+                        break;
+
+                    case "-deliver": 
+                        DeliverSubject = args[i + 1];
                         break;
 
                     case "-header": 
                         string[] split = args[i + 1].Split(':');
                         if (split.Length != 2) { UsageThenExit(usage); }
-                        Headers.Add(split[0], split[1]);
+                        Header.Add(split[0], split[1]);
                         break;
                 }
             }
@@ -99,13 +127,22 @@ namespace JetStreamExampleUtils
         
         public void DisplayBanner()
         {
-            Console.WriteLine($"{_title} Example");
+            Console.WriteLine($"\n{_title} Example");
             _banner("Url", Url);
             _banner("Stream", Stream);
             _banner("Subject", Subject);
-            _banner("Count", Count);
+            _banner("Queue", Queue);
             _banner("Payload", Payload);
-            _banner("Headers", Headers?.Count > 0 ? "Yes" : null);
+            _banner("Consumer", Consumer);
+            _banner("Durable", Durable);
+            _banner("Deliver", DeliverSubject);
+            _banner("Creds", Creds == null ? null : "**********");
+            _banner("PullSize", PullSize);
+            _banner("Count", Count, _countUnlimitedFlag);
+            _banner("SubsCount", SubsCount);
+            _banner("Headers", Header?.Count > 0 ? Header.Count : int.MinValue);
+
+            Console.WriteLine();
         }
 
         private void _banner(string label, string value)
@@ -118,7 +155,15 @@ namespace JetStreamExampleUtils
 
         private void _banner(string label, int value)
         {
-            if (value > int.MinValue)
+            _banner(label, value, false);
+        }
+
+        private void _banner(string label, int value, bool unlimited)
+        {
+            if (unlimited && (value == int.MaxValue || value < 1)) {
+                Console.WriteLine($"  {label}: Unlimited");
+            }
+            else if (value > int.MinValue)
             {
                 Console.WriteLine($"  {label}: {value}");
             }
@@ -151,52 +196,60 @@ namespace JetStreamExampleUtils
             return argumentHelper;
         }
 
-        public ArgumentHelperBuilder Url(string s)
-        {
-            argumentHelper.Url = s;
-            return this;
-        }
-
-        public ArgumentHelperBuilder Creds(string s)
-        {
-            argumentHelper.Creds = s;
-            return this;
-        }
-
-        public ArgumentHelperBuilder Stream(string s)
+        public ArgumentHelperBuilder DefaultStream(string s)
         {
             argumentHelper.Stream = s;
             return this;
         }
 
-        public ArgumentHelperBuilder Subject(string s)
+        public ArgumentHelperBuilder DefaultSubject(string s)
         {
             argumentHelper.Subject = s;
             return this;
         }
 
-        public ArgumentHelperBuilder Durable(string s)
+        public ArgumentHelperBuilder DefaultDurable(string s)
         {
             argumentHelper.Durable = s;
             return this;
         }
 
-        public ArgumentHelperBuilder Payload(string s)
+        public ArgumentHelperBuilder DefaultQueue(string s)
+        {
+            argumentHelper.Queue = s;
+            return this;
+        }
+
+        public ArgumentHelperBuilder DefaultDeliverSubject(string s)
+        {
+            argumentHelper.DeliverSubject = s;
+            return this;
+        }
+
+        public ArgumentHelperBuilder DefaultPayload(string s)
         {
             argumentHelper.Payload = s;
             return this;
         }
-
-        public ArgumentHelperBuilder Header(MsgHeader h)
-        {
-            argumentHelper.Headers = h;
-            return this;
-        }
-
-        public ArgumentHelperBuilder Count(int i)
+        
+        public ArgumentHelperBuilder DefaultCount(int i)
         {
             argumentHelper.Count = i;
             return this;
         }
+        
+        public ArgumentHelperBuilder DefaultSubsCount(int i)
+        {
+            argumentHelper.SubsCount = i;
+            return this;
+        }
+        
+        public ArgumentHelperBuilder DefaultCount(int i, bool unlimitedFlag)
+        {
+            argumentHelper.Count = i;
+            argumentHelper._countUnlimitedFlag = unlimitedFlag;
+            return this;
+        }
+        
     }
 }

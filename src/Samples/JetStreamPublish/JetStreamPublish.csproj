@@ -5,6 +5,7 @@
         <Title>NATS JetStream Publish</Title>
         <Description>NATS JetStream Publish Example</Description>
         <IsPackable>false</IsPackable>
+        <RootNamespace>NATSExamples</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

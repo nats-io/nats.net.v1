@@ -13,29 +13,31 @@
 
 using System;
 using System.Collections.Generic;
-using JetStreamExampleUtils;
 using NATS.Client;
 using NATS.Client.JetStream;
-using static JetStreamExampleUtils.PrintUtils;
+using static NATSExamples.PrintUtils;
 
 namespace NATSExamples
 {
-    class JetStreamManageConsumers
+    /// <summary>
+    /// This example will demonstrate JetStream management (admin) api consumer management.
+    /// </summary>
+    internal static class JetStreamManageConsumers
     {
-        const string Usage = 
+        private const string Usage = 
             "Usage: JetStreamManageConsumers [-url url] [-creds file] [-stream stream] " +
-            "[-subject subject] [-dur durable-prefix]" +
+            "[-subject subject] [-durable durable-prefix]" +
             "\n\nDefault Values:" +
             "\n   [-stream]   mcon-stream" +
             "\n   [-subject]  mcon-subject" +
-            "\n   [-dur]      mcon-durable-";
+            "\n   [-durable]  mcon-durable-";
 
         public static void Main(string[] args)
         {
             ArgumentHelper helper = new ArgumentHelperBuilder("JetStream Manage Consumers", args, Usage)
-                .Stream("mcon-stream")
-                .Subject("mcon-subject")
-                .Durable("mcon-durable-")
+                .DefaultStream("mcon-stream")
+                .DefaultSubject("mcon-subject")
+                .DefaultDurable("mcon-durable-")
                 .Build();
 
             try
@@ -47,18 +49,12 @@ namespace NATSExamples
                 {
                     // Create a JetStreamManagement context.
                     IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
-
-                    // Create (add) a stream with a subject
-                    Console.WriteLine("\n----------\n1. Configure And Add Stream 1");
-                    StreamConfiguration streamConfig = StreamConfiguration.Builder()
-                            .WithName(helper.Stream)
-                            .WithSubjects(helper.Stream)
-                            .WithStorageType(StorageType.Memory)
-                            .Build();
-                    PrintStreamInfo(jsm.AddStream(streamConfig));
+                    
+                    // Use the utility to create a stream stored in memory.
+                    JsUtils.CreateStreamExitWhenExists(jsm, helper.Stream, helper.Subject);
 
                     // 1. Add Consumers
-                    Console.WriteLine("\n----------\n2. Configure And Add Consumers");
+                    Console.WriteLine("----------\n1. Configure And Add Consumers");
                     ConsumerConfiguration cc = ConsumerConfiguration.Builder()
                             .WithDurable(durable1) // durable name is required when creating consumers
                             .Build();
@@ -71,26 +67,39 @@ namespace NATSExamples
                     ci = jsm.AddOrUpdateConsumer(helper.Stream, cc);
                     PrintObject(ci);
 
-                    // 2. Get information on consumers
-                    // 2.1 get a list of all consumers
-                    // 2.2 get a list of ConsumerInfo's for all consumers
-                    Console.WriteLine("\n----------\n2.1 getConsumerNames");
-                    IList<string> consumerNames = jsm.GetConsumerNames(helper.Stream);
-                    Console.WriteLine("Consumer Names: " + String.Join(",", consumerNames)); 
-
-                    Console.WriteLine("\n----------\n2.2 getConsumers");
+                    // 2. get a list of ConsumerInfo's for all consumers
+                    Console.WriteLine("\n----------\n2. getConsumers");
                     IList<ConsumerInfo> consumers = jsm.GetConsumers(helper.Stream);
                     PrintConsumerInfoList(consumers);
 
-                    // 3 Delete consumers
+                    // 3. get a list of all consumers
+                    Console.WriteLine("\n----------\n3. getConsumerNames");
+                    IList<string> consumerNames = jsm.GetConsumerNames(helper.Stream);
+                    Console.WriteLine("Consumer Names: " + String.Join(",", consumerNames)); 
+
+                    // 4. Delete a consumer, then list them again
                     // Subsequent calls to deleteStream will throw a
-                    // JetStreamApiException "consumer not found (404)"
-                    Console.WriteLine("\n----------\n3. Delete consumers");
+                    // NATSJetStreamException [10014]
+                    Console.WriteLine("\n----------\n4. Delete a consumer");
                     jsm.DeleteConsumer(helper.Stream, durable1);
                     consumerNames = jsm.GetConsumerNames(helper.Stream);
                     Console.WriteLine("Consumer Names: " + String.Join(",", consumerNames)); 
 
+                    // 5. Try to delete the consumer again and get the exception
+                    Console.WriteLine("\n----------\n5. Delete consumer again");
+                    try
+                    {
+                        jsm.DeleteConsumer(helper.Stream, durable1);
+                    }
+                    catch (NATSJetStreamException e)
+                    {
+                        Console.WriteLine($"Exception was: '{e.ErrorDescription}'");
+                    }
+
                     Console.WriteLine("\n----------");
+
+                    // delete the stream since we are done with it.
+                    jsm.DeleteStream(helper.Stream);
                 }
             }
             catch (Exception ex)

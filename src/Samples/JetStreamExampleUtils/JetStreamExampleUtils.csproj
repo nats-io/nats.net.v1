@@ -1,15 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-<PropertyGroup>
-    <TargetFrameworks Condition="$(OS) == 'Windows_NT'">netstandard1.6;net46</TargetFrameworks>
-    <TargetFramework Condition="$(OS) != 'Windows_NT'">netstandard1.6</TargetFramework>
-    <Title>NATS JetStream Example Utils</Title>
-    <PackageId>NATS.JetStreamExampleUtils</PackageId>
-    <Description>NATS JetStream Example Utils Library</Description>
-    <DebugType>pdbonly</DebugType>
-    <DebugSymbols>true</DebugSymbols>
-</PropertyGroup>
-
+    <PropertyGroup>
+        <TargetFrameworks Condition="$(OS) == 'Windows_NT'">netstandard1.6;net46</TargetFrameworks>
+        <TargetFramework Condition="$(OS) != 'Windows_NT'">netstandard1.6</TargetFramework>
+        <Title>NATS JetStream Example Utils</Title>
+        <PackageId>NATS.JetStreamExampleUtils</PackageId>
+        <Description>NATS JetStream Example Utils Library</Description>
+        <DebugType>pdbonly</DebugType>
+        <DebugSymbols>true</DebugSymbols>
+        <RootNamespace>NATSExamples</RootNamespace>
+    </PropertyGroup>
 
     <ItemGroup Condition="$(TargetFramework) == 'netstandard1.6'">
         <PackageReference Include="System.Net.Security" Version="4.3.2" />

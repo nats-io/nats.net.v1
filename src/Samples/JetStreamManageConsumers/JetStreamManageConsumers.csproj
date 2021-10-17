@@ -5,6 +5,7 @@
         <Title>NATS JetStream Manage Consumers</Title>
         <Description>NATS JetStream Manage Consumers Example</Description>
         <IsPackable>false</IsPackable>
+        <RootNamespace>NATSExamples</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

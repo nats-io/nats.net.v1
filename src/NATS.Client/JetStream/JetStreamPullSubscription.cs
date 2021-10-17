@@ -50,6 +50,19 @@ namespace NATS.Client.JetStream
             return true;
         }
 
+        // TODO THIS IS JUST A TEMPORARY IMPLEMENTATIONS
+        // THAT THROWS AWAY STATUS MESSAGES
+        // THIS IS NOT RELEASE CODE AND WILL BE REPLACED BY THE AUTO STATUS MANAGER
+        public new Msg NextMessage(int timeout)
+        {
+            Msg m = base.NextMessage(timeout);
+            while (!m.IsJetStream)
+            {
+                m = NextMessageImpl(timeout);
+            }
+            return m;
+        }
+
         public void Pull(int batchSize)
         {
             PullInternal(batchSize, false, null);

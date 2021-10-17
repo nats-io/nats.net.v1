@@ -46,7 +46,7 @@ namespace NATS.Client.JetStream
 
         /// <summary>
         /// Create PushSubscribeOptions where you are binding to
-        /// a specific stream, specific durable and are using direct mode
+        /// a specific stream, specific durable and are using bind to mode
         /// </summary>
         /// <param name="stream">the stream name to bind to</param>
         /// <param name="durable">the durable name</param>

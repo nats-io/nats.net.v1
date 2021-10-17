@@ -56,9 +56,7 @@ namespace NATS.Client
         {
             if (string.IsNullOrWhiteSpace(subject))
             {
-                throw new ArgumentException(
-                    "Subject cannot be null, empty, or whitespace.",
-                    "subject");
+                throw new ArgumentException("Subject cannot be null, empty, or whitespace.", nameof(subject));
             }
 
             this.Subject = subject;

@@ -41,7 +41,7 @@ namespace IntegrationTests
                 // create the stream.
                 CreateMemoryStream(c, STREAM, SUBJECT);
 
-                // Create our JetStream context to receive JetStream messages.
+                // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
 
                 // publish some messages
@@ -94,7 +94,7 @@ namespace IntegrationTests
                 // create the stream.
                 CreateMemoryStream(c, STREAM, SUBJECT);
 
-                // Create our JetStream context to receive JetStream messages.
+                // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
 
                 // publish some messages
@@ -147,7 +147,7 @@ namespace IntegrationTests
                 // create the stream.
                 CreateMemoryStream(c, STREAM, SUBJECT);
 
-                // Create our JetStream context to receive JetStream messages.
+                // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
                 
                 // Build our subscription options.
@@ -173,7 +173,7 @@ namespace IntegrationTests
                 // create the stream.
                 CreateMemoryStream(c, STREAM, SUBJECT);
 
-                // Create our JetStream context to receive JetStream messages.
+                // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
                 
                 ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithAckWait(1500).Build();
@@ -261,7 +261,7 @@ namespace IntegrationTests
                 // create the stream.
                 CreateMemoryStream(c, STREAM, SUBJECT_STAR);
 
-                // Create our JetStream context to receive JetStream messages.
+                // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
 
                 string subjectA = SubjectDot("A");
@@ -360,7 +360,7 @@ namespace IntegrationTests
                 // create the stream.
                 CreateMemoryStream(c, STREAM, SUBJECT);
 
-                // Create our JetStream context to receive JetStream messages.
+                // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
 
                 // Setup the subscribers
@@ -419,7 +419,7 @@ namespace IntegrationTests
                 // create the stream.
                 CreateMemoryStream(c, STREAM, SUBJECT);
 
-                // Create our JetStream context to receive JetStream messages.
+                // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
 
                 // create a durable that is not a queue
