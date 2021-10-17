@@ -226,8 +226,7 @@ namespace IntegrationTests
                 JsPublish(js, SUBJECT, "C", 5);
                 sub.PullNoWait(10);
                 messages = ReadMessagesAck(sub);
-                Assert.Equal(6, messages.Count);
-                AssertLastIsStatus(messages, 404);
+                Assert.Equal(5, messages.Count);
 
                 // publish 12 messages
                 // no wait, batch size 10, there are more than batch messages we will read 10
@@ -237,11 +236,10 @@ namespace IntegrationTests
                 Assert.Equal(10, messages.Count);
 
                 // 2 messages left
-                // no wait, less than batch ssize will WILL trip nowait
+                // no wait, less than batch size will WILL trip nowait
                 sub.PullNoWait(10);
                 messages = ReadMessagesAck(sub);
-                Assert.Equal(3, messages.Count);
-                AssertLastIsStatus(messages, 404);
+                Assert.Equal(2, messages.Count);
             });
         }
 

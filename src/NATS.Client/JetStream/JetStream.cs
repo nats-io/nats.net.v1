@@ -41,17 +41,17 @@ namespace NATS.Client.JetStream
             return merged;
         }
 
-        private MsgHeader MergeNum(MsgHeader h, String key, ulong value)
+        private MsgHeader MergeNum(MsgHeader h, string key, ulong value)
         {
             return value > 0 ? _MergeString(h, key, value.ToString()) : h;
         }
 
-        private MsgHeader MergeString(MsgHeader h, String key, String value) 
+        private MsgHeader MergeString(MsgHeader h, string key, string value) 
         {
             return string.IsNullOrWhiteSpace(value) ? h : _MergeString(h, key, value);
         }
 
-        private MsgHeader _MergeString(MsgHeader h, String key, String value) 
+        private MsgHeader _MergeString(MsgHeader h, string key, string value) 
         {
             if (h == null) {
                 h = new MsgHeader();
@@ -66,8 +66,8 @@ namespace NATS.Client.JetStream
             }
 
             PublishAck ack = new PublishAck(resp);
-            String ackStream = ack.Stream;
-            String pubStream = options?.Stream;
+            string ackStream = ack.Stream;
+            string pubStream = options?.Stream;
             // stream specified in options but different than ack should not happen but...
             if (!string.IsNullOrWhiteSpace(pubStream) && pubStream != ackStream) {
                 throw new NATSJetStreamException("Expected ack from stream " + pubStream + ", received from: " + ackStream);
@@ -213,8 +213,8 @@ namespace NATS.Client.JetStream
 
                     // durable already exists, make sure the filter subject matches
                     lookedUp = Validator.EmptyAsNull(consumerConfig.FilterSubject);
-                    String userFilterSubject = ccBuilder.FilterSubject;
-                    if (!string.IsNullOrWhiteSpace(lookedUp) && !userFilterSubject.Equals(lookedUp)) {
+                    string userFilterSubject = ccBuilder.FilterSubject;
+                    if (!string.IsNullOrWhiteSpace(userFilterSubject) && !userFilterSubject.Equals(lookedUp)) {
                         throw new ArgumentException(
                             $"[SUB-FS01] Subject {subject} mismatches consumer configuration {userFilterSubject}.");
                     }
@@ -270,7 +270,7 @@ namespace NATS.Client.JetStream
                 }
 
                 // being discussed if this is correct, but leave it for now.
-                String userFilterSubject = ccBuilder.FilterSubject;
+                string userFilterSubject = ccBuilder.FilterSubject;
                 ccBuilder.WithFilterSubject(string.IsNullOrWhiteSpace(userFilterSubject) ? subject : userFilterSubject);
 
                 // createOrUpdateConsumer can fail for security reasons, maybe other reasons?
@@ -362,7 +362,7 @@ namespace NATS.Client.JetStream
         return sb.Length == 0 ? null : sb.ToString();
     }
 
-    private static void Comp(StringBuilder sb, string requested, string retrieved, String name)
+    private static void Comp(StringBuilder sb, string requested, string retrieved, string name)
     {
         string q = string.IsNullOrEmpty(requested) ? null : requested;
         string t = string.IsNullOrEmpty(retrieved) ? null : retrieved;
@@ -371,7 +371,7 @@ namespace NATS.Client.JetStream
         }
     }
 
-    private static void Comp(StringBuilder sb, object requested, object retrieved, String name)
+    private static void Comp(StringBuilder sb, object requested, object retrieved, string name)
     {
         if (!Equals(requested, retrieved)) {
             AppendErr(sb, requested, retrieved, name);
@@ -391,7 +391,7 @@ namespace NATS.Client.JetStream
         }
     }
 
-    private static void AppendErr(StringBuilder sb, Object requested, Object retrieved, String name) {
+    private static void AppendErr(StringBuilder sb, Object requested, Object retrieved, string name) {
         if (sb.Length > 0) {
             sb.Append(", ");
         }

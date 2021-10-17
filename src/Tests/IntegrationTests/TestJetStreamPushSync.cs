@@ -65,6 +65,8 @@ namespace IntegrationTests
                 IList<Msg> messages0 = ReadMessagesAck(sub);
                 total += messages0.Count;
                 ValidateRedAndTotal(0, messages0.Count, 5, total);
+                
+                sub.Unsubscribe();
 
                 // Subscription 2
                 sub = js.PushSubscribeSync(SUBJECT, options);
@@ -427,21 +429,21 @@ namespace IntegrationTests
                 js.PushSubscribeSync(SUBJECT, pso1);
 
                 ArgumentException iae = Assert.Throws<ArgumentException>(() => js.PushSubscribeSync(SUBJECT, pso1));
-                Assert.Contains("[SUB-Q02]", iae.Message);
+                Assert.Contains("[SUB-PB01]", iae.Message);
 
                 iae = Assert.Throws<ArgumentException>(() => js.PushSubscribeSync(SUBJECT, Queue(1), pso1));
-                Assert.Contains("[SUB-Q03]", iae.Message);
+                Assert.Contains("[SUB-Q01]", iae.Message);
 
                 PushSubscribeOptions pso21 = PushSubscribeOptions.Builder().WithDurable(Durable(2)).Build();
                 js.PushSubscribeSync(SUBJECT, Queue(21), pso21);
 
                 PushSubscribeOptions pso22 = PushSubscribeOptions.Builder().WithDurable(Durable(2)).Build();
                 iae = Assert.Throws<ArgumentException>(() => js.PushSubscribeSync(SUBJECT, Queue(22), pso22));
-                Assert.Contains("[SUB-Q05]", iae.Message);
+                Assert.Contains("[SUB-Q03]", iae.Message);
 
                 PushSubscribeOptions pso23 = PushSubscribeOptions.Builder().WithDurable(Durable(2)).Build();
                 iae = Assert.Throws<ArgumentException>(() => js.PushSubscribeSync(SUBJECT, pso23));
-                Assert.Contains("[SUB-Q04]", iae.Message);
+                Assert.Contains("[SUB-Q02]", iae.Message);
 
                 PushSubscribeOptions pso3 = PushSubscribeOptions.Builder()
                         .WithDurable(Durable(3))
@@ -449,6 +451,25 @@ namespace IntegrationTests
                         .Build();
                 iae = Assert.Throws<ArgumentException>(() => js.PushSubscribeSync(SUBJECT, Queue(32), pso3));
                 Assert.Contains("[SUB-Q01]", iae.Message);
+
+                // TODO TURN THESE ON AFTER SUB CHANGES DONE
+                // ConsumerConfiguration ccFc = ConsumerConfiguration.Builder().WithFlowControl(1000).Build();
+                // PushSubscribeOptions pso4 = PushSubscribeOptions.Builder()
+                //     .WithDurable(Durable(4))
+                //     .WithDeliverGroup(Queue(4))
+                //     .WithConfiguration(ccFc)
+                //     .Build();
+                // iae = Assert.Throws<ArgumentException>(() => js.PushSubscribeSync(SUBJECT, Queue(4), pso4));
+                // Assert.Contains("[SUB-QM01]", iae.Message);
+                //
+                // ConsumerConfiguration ccHb = ConsumerConfiguration.Builder().WithIdleHeartbeat(1000).Build();
+                // PushSubscribeOptions pso5 = PushSubscribeOptions.Builder()
+                //     .WithDurable(Durable(5))
+                //     .WithDeliverGroup(Queue(5))
+                //     .WithConfiguration(ccHb)
+                //     .Build();
+                // iae = Assert.Throws<ArgumentException>(() => js.PushSubscribeSync(SUBJECT, Queue(5), pso5));
+                // Assert.Contains("[SUB-QM01]", iae.Message);
             });
         }
     }

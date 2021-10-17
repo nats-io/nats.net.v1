@@ -160,11 +160,11 @@ namespace IntegrationTests
                 
                 PushSubscribeOptions pushso = PushSubscribeOptions.BindTo(STREAM, DURABLE);
                 ArgumentException ae = Assert.Throws<ArgumentException>(() => js.PushSubscribeSync(SUBJECT, pushso));
-                Assert.Contains("[SUB-B01]", ae.Message);
+                Assert.Contains("[SUB-BND01]", ae.Message);
                 
                 PullSubscribeOptions pullso = PullSubscribeOptions.BindTo(STREAM, DURABLE);
                 ae = Assert.Throws<ArgumentException>(() => js.PullSubscribe(SUBJECT, pullso));
-                Assert.Contains("[SUB-B01]", ae.Message);
+                Assert.Contains("[SUB-BND01]", ae.Message);
             });
         }
 
