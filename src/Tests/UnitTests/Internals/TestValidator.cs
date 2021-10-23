@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System;
+using NATS.Client;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using Xunit;
@@ -243,13 +244,14 @@ namespace UnitTests.Internals
         [Fact]
         public void TestValidateMustMatchIfBothSupplied()
         {
-            Assert.Null(Validator.ValidateMustMatchIfBothSupplied(null, null, "", ""));
-            Assert.Equal("y", Validator.ValidateMustMatchIfBothSupplied(null, "y", "", ""));
-            Assert.Equal("y", Validator.ValidateMustMatchIfBothSupplied("", "y", "", ""));
-            Assert.Equal("x", Validator.ValidateMustMatchIfBothSupplied("x", null, "", ""));
-            Assert.Equal("x", Validator.ValidateMustMatchIfBothSupplied("x", " ", "", ""));
-            Assert.Equal("x", Validator.ValidateMustMatchIfBothSupplied("x", "x", "", ""));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateMustMatchIfBothSupplied("x", "y", "", ""));
+            ClientExDetail detail = new ClientExDetail("TEST", 999999, "desc");
+            Assert.Null(Validator.ValidateMustMatchIfBothSupplied(null, null, detail));
+            Assert.Equal("y", Validator.ValidateMustMatchIfBothSupplied(null, "y", detail));
+            Assert.Equal("y", Validator.ValidateMustMatchIfBothSupplied("", "y", detail));
+            Assert.Equal("x", Validator.ValidateMustMatchIfBothSupplied("x", null, detail));
+            Assert.Equal("x", Validator.ValidateMustMatchIfBothSupplied("x", " ", detail));
+            Assert.Equal("x", Validator.ValidateMustMatchIfBothSupplied("x", "x", detail));
+            Assert.Throws<NATSJetStreamClientException>(() => Validator.ValidateMustMatchIfBothSupplied("x", "y", detail));
         }
 
         [Fact]

@@ -38,7 +38,7 @@ namespace IntegrationTests
         {
             Context.RunInJsServer(c =>
             {
-                CreateTestStream(c);
+                CreateDefaultTestStream(c);
 
                 IJetStream js = c.CreateJetStreamContext();
 
@@ -53,7 +53,7 @@ namespace IntegrationTests
         public void TestPublishVarieties() {
             Context.RunInJsServer(c =>
             {
-                CreateTestStream(c);
+                CreateDefaultTestStream(c);
                 IJetStream js = c.CreateJetStreamContext();
 
                 PublishAck pa = js.Publish(SUBJECT, DataBytes(1));
@@ -114,7 +114,7 @@ namespace IntegrationTests
         {
             Context.RunInJsServer(c =>
             {
-                CreateTestStream(c);
+                CreateDefaultTestStream(c);
                 IJetStream js = c.CreateJetStreamContext();
 
                 IList<Task<PublishAck>> tasks = new List<Task<PublishAck>>();
@@ -257,7 +257,7 @@ namespace IntegrationTests
         {
             Context.RunInJsServer(c =>
             {
-                CreateTestStream(c);
+                CreateDefaultTestStream(c);
                 IJetStream js = c.CreateJetStreamContext();
 
                 // stream supplied and matches

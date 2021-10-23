@@ -50,6 +50,14 @@ namespace NATS.Client.JetStream
             return val <= (ulong)min || val == (ulong)srvrDflt ? (ulong)srvrDflt : val;
         }
 
+        public bool NotEquals(long val1, long val2) {
+            return Comparable(val1) != Comparable(val2);
+        }
+
+        public bool NotEquals(ulong val1, ulong val2) {
+            return Comparable(val1) != Comparable(val2);
+        }
+
         internal string GetErr() {
             return err;
         }
@@ -58,7 +66,7 @@ namespace NATS.Client.JetStream
         internal static readonly CcNumeric MaxDeliver = new CcNumeric("Max Deliver", 1, -1, -1);
         internal static readonly CcNumeric RateLimit = new CcNumeric("Rate Limit", 1, -1, -1);
         internal static readonly CcNumeric MaxAckPending = new CcNumeric("Max Ack Pending", 0, 0, 20000L);
-        internal static readonly CcNumeric MaxPullWaiting = new CcNumeric("Max Pull Waiting", 1, 0, 512);
+        internal static readonly CcNumeric MaxPullWaiting = new CcNumeric("Max Pull Waiting", 0, 0, 512);
     }
 
     public sealed class ConsumerConfiguration : JsonSerializable

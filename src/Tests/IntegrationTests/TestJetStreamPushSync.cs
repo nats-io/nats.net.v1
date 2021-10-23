@@ -39,7 +39,7 @@ namespace IntegrationTests
             Context.RunInJsServer(c =>
             {
                 // create the stream.
-                CreateMemoryStream(c, STREAM, SUBJECT);
+                CreateDefaultTestStream(c);
 
                 // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
@@ -94,7 +94,7 @@ namespace IntegrationTests
             Context.RunInJsServer(c =>
             {
                 // create the stream.
-                CreateMemoryStream(c, STREAM, SUBJECT);
+                CreateDefaultTestStream(c);
 
                 // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
@@ -147,7 +147,7 @@ namespace IntegrationTests
             Context.RunInJsServer(c =>
             {
                 // create the stream.
-                CreateMemoryStream(c, STREAM, SUBJECT);
+                CreateDefaultTestStream(c);
 
                 // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
@@ -173,7 +173,7 @@ namespace IntegrationTests
             Context.RunInJsServer(c =>
             {
                 // create the stream.
-                CreateMemoryStream(c, STREAM, SUBJECT);
+                CreateDefaultTestStream(c);
 
                 // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
@@ -360,7 +360,7 @@ namespace IntegrationTests
             Context.RunInJsServer(c =>
             {
                 // create the stream.
-                CreateMemoryStream(c, STREAM, SUBJECT);
+                CreateDefaultTestStream(c);
 
                 // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
@@ -412,66 +412,6 @@ namespace IntegrationTests
 
             });
         }
-
-        [Fact]
-        public void TestQueueSubErrors()
-        {
-            Context.RunInJsServer(c =>
-            {
-                // create the stream.
-                CreateMemoryStream(c, STREAM, SUBJECT);
-
-                // Create our JetStream context.
-                IJetStream js = c.CreateJetStreamContext();
-
-                // create a durable that is not a queue
-                PushSubscribeOptions pso1 = PushSubscribeOptions.Builder().WithDurable(Durable(1)).Build();
-                js.PushSubscribeSync(SUBJECT, pso1);
-
-                ArgumentException iae = Assert.Throws<ArgumentException>(() => js.PushSubscribeSync(SUBJECT, pso1));
-                Assert.Contains("[SUB-PB01]", iae.Message);
-
-                iae = Assert.Throws<ArgumentException>(() => js.PushSubscribeSync(SUBJECT, Queue(1), pso1));
-                Assert.Contains("[SUB-Q01]", iae.Message);
-
-                PushSubscribeOptions pso21 = PushSubscribeOptions.Builder().WithDurable(Durable(2)).Build();
-                js.PushSubscribeSync(SUBJECT, Queue(21), pso21);
-
-                PushSubscribeOptions pso22 = PushSubscribeOptions.Builder().WithDurable(Durable(2)).Build();
-                iae = Assert.Throws<ArgumentException>(() => js.PushSubscribeSync(SUBJECT, Queue(22), pso22));
-                Assert.Contains("[SUB-Q03]", iae.Message);
-
-                PushSubscribeOptions pso23 = PushSubscribeOptions.Builder().WithDurable(Durable(2)).Build();
-                iae = Assert.Throws<ArgumentException>(() => js.PushSubscribeSync(SUBJECT, pso23));
-                Assert.Contains("[SUB-Q02]", iae.Message);
-
-                PushSubscribeOptions pso3 = PushSubscribeOptions.Builder()
-                        .WithDurable(Durable(3))
-                        .WithDeliverGroup(Queue(31))
-                        .Build();
-                iae = Assert.Throws<ArgumentException>(() => js.PushSubscribeSync(SUBJECT, Queue(32), pso3));
-                Assert.Contains("[SUB-Q01]", iae.Message);
-
-                // TODO TURN THESE ON AFTER SUB CHANGES DONE
-                // ConsumerConfiguration ccFc = ConsumerConfiguration.Builder().WithFlowControl(1000).Build();
-                // PushSubscribeOptions pso4 = PushSubscribeOptions.Builder()
-                //     .WithDurable(Durable(4))
-                //     .WithDeliverGroup(Queue(4))
-                //     .WithConfiguration(ccFc)
-                //     .Build();
-                // iae = Assert.Throws<ArgumentException>(() => js.PushSubscribeSync(SUBJECT, Queue(4), pso4));
-                // Assert.Contains("[SUB-QM01]", iae.Message);
-                //
-                // ConsumerConfiguration ccHb = ConsumerConfiguration.Builder().WithIdleHeartbeat(1000).Build();
-                // PushSubscribeOptions pso5 = PushSubscribeOptions.Builder()
-                //     .WithDurable(Durable(5))
-                //     .WithDeliverGroup(Queue(5))
-                //     .WithConfiguration(ccHb)
-                //     .Build();
-                // iae = Assert.Throws<ArgumentException>(() => js.PushSubscribeSync(SUBJECT, Queue(5), pso5));
-                // Assert.Contains("[SUB-QM01]", iae.Message);
-            });
-        }
     }
     
     class JsPublisher
@@ -515,7 +455,7 @@ namespace IntegrationTests
 
         public void Run()
         {
-            while (allReceived.Get() < msgCount)
+            while (allReceived.Read() < msgCount)
             {
                 try
                 {
@@ -523,7 +463,7 @@ namespace IntegrationTests
                     while (msg != null)
                     {
                         received++;
-                        allReceived.Inc();
+                        allReceived.Increment();
                         datas.Add(Encoding.UTF8.GetString(msg.Data));
                         msg.Ack();
                         msg = sub.NextMessage(500);

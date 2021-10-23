@@ -19,7 +19,7 @@ using NATS.Client.JetStream;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace UnitTests.JetStream
+namespace UnitTests.Internals
 {
     public class TestJson : TestBase
     {

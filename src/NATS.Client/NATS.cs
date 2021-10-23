@@ -343,6 +343,24 @@ namespace NATS.Client
         }
     }
 
+    internal static class NoOpEventHandler
+    {
+        public static EventHandler<HeartbeatAlarmEventArgs> HandleHeartbeatAlarmEvent()
+        {
+            return (sender, e) => {};
+        }
+
+        public static EventHandler<MessageGapDetectedEventArgs> HandleMessageGapDetectedEvent()
+        {
+            return (sender, e) => { };
+        }
+
+        public static EventHandler<UnhandledStatusEventArgs> HandleUnhandledStatusEvent()
+        {
+            return (sender, e) => { };
+        }
+    }
+
     internal static class DefaultEventHandler
     {
         private static String FormatMessage(String label, params object[] pairs) {

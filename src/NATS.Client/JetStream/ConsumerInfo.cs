@@ -21,7 +21,7 @@ namespace NATS.Client.JetStream
     {
         public string Stream { get; private set; }
         public string Name { get; private set; }
-        public ConsumerConfiguration Configuration { get; private set; }
+        public ConsumerConfiguration ConsumerConfiguration { get; private set; }
         public DateTime Created { get; private set; }
         public SequencePair Delivered { get; private set; }
         public SequencePair AckFloor { get; private set; }
@@ -50,7 +50,7 @@ namespace NATS.Client.JetStream
         private void Init(JSONNode ciNode)
         {
             Stream = ciNode[ApiConstants.StreamName].Value;
-            Configuration = new ConsumerConfiguration(ciNode[ApiConstants.Config]);
+            ConsumerConfiguration = new ConsumerConfiguration(ciNode[ApiConstants.Config]);
             Name = ciNode[ApiConstants.Name].Value;
             Created = AsDate(ciNode[ApiConstants.Created]);
             Delivered = new SequencePair(ciNode[ApiConstants.Delivered]);
@@ -76,7 +76,7 @@ namespace NATS.Client.JetStream
                    ", Created=" + Created +
                    ", Delivered=" + Delivered +
                    ", AckFloor=" + AckFloor +
-                   ", " + ObjectString("ConsumerConfiguration", Configuration) +
+                   ", " + ObjectString("ConsumerConfiguration", ConsumerConfiguration) +
                    ", " + ObjectString("ClusterInfo", ClusterInfo) +
                    '}';
         }

@@ -16,6 +16,12 @@ namespace NATS.Client.Internals
             return possible.IsNumber ? possible.AsInt : -1;
         }
 
+        internal static long AsLongOrZero(JSONNode node, String field)
+        {
+            JSONNode possible = node[field];
+            return possible.IsNumber ? possible.AsLong : 0;
+        }
+
         internal static long AsLongOrMinus1(JSONNode node, String field)
         {
             JSONNode possible = node[field];

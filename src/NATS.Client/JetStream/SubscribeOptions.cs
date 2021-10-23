@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using NATS.Client.Internals;
+using static NATS.Client.ClientExDetail;
 
 namespace NATS.Client.JetStream
 {
@@ -32,12 +33,12 @@ namespace NATS.Client.JetStream
         {
             Stream = Validator.ValidateStreamName(builder.Stream, builder.Bind);
             
-            string durable = Validator.ValidateMustMatchIfBothSupplied(builder.Durable, builder.Cc?.Durable, "Builder Durable", "Consumer Configuration Durable");
+            string durable = Validator.ValidateMustMatchIfBothSupplied(builder.Durable, builder.Cc?.Durable, JsSoDurableMismatch);
             durable = Validator.ValidateDurable(durable, pull || builder.Bind);
 
-            deliverGroup = Validator.ValidateMustMatchIfBothSupplied(deliverGroup, builder.Cc?.DeliverGroup, "Builder Deliver Group", "Consumer Configuration Deliver Group");
+            deliverGroup = Validator.ValidateMustMatchIfBothSupplied(deliverGroup, builder.Cc?.DeliverGroup, JsSoDeliverGroupMismatch);
 
-            deliverSubject = Validator.ValidateMustMatchIfBothSupplied(deliverSubject, builder.Cc?.DeliverSubject, "Builder Deliver Subject", "Consumer Configuration Deliver Subject");
+            deliverSubject = Validator.ValidateMustMatchIfBothSupplied(deliverSubject, builder.Cc?.DeliverSubject, JsSoDeliverSubjectGroupMismatch);
 
             ConsumerConfiguration = ConsumerConfiguration.Builder(builder.Cc)
                 .WithDurable(durable)

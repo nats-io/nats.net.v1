@@ -34,7 +34,7 @@ namespace IntegrationTests
             Context.RunInJsServer(c =>
             {
                 // create the stream.
-                CreateMemoryStream(c, STREAM, SUBJECT);
+                CreateDefaultTestStream(c);
 
                 // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
@@ -102,7 +102,7 @@ namespace IntegrationTests
             Context.RunInJsServer(c =>
             {
                 // create the stream.
-                CreateMemoryStream(c, STREAM, SUBJECT);
+                CreateDefaultTestStream(c);
 
                 // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
@@ -187,7 +187,7 @@ namespace IntegrationTests
             Context.RunInJsServer(c =>
             {
                 // create the stream.
-                CreateMemoryStream(c, STREAM, SUBJECT);
+                CreateDefaultTestStream(c);
 
                 // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
@@ -249,7 +249,7 @@ namespace IntegrationTests
             Context.RunInJsServer(c =>
             {
                 // create the stream.
-                CreateMemoryStream(c, STREAM, SUBJECT);
+                CreateDefaultTestStream(c);
 
                 // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
@@ -328,7 +328,7 @@ namespace IntegrationTests
             Context.RunInJsServer(c =>
             {
                 // create the stream.
-                CreateMemoryStream(c, STREAM, SUBJECT);
+                CreateDefaultTestStream(c);
 
                 // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
@@ -365,7 +365,7 @@ namespace IntegrationTests
             Context.RunInJsServer(c =>
             {
                 // create the stream.
-                CreateMemoryStream(c, STREAM, SUBJECT);
+                CreateDefaultTestStream(c);
 
                 // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
@@ -395,7 +395,7 @@ namespace IntegrationTests
             Context.RunInJsServer(c =>
             {
                 // create the stream.
-                CreateMemoryStream(c, STREAM, SUBJECT);
+                CreateDefaultTestStream(c);
 
                 // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();

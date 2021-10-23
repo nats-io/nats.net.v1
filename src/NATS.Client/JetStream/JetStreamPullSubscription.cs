@@ -17,38 +17,25 @@ using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client.JetStream
 {
-    public class JetStreamPullSubscription : SyncSubscription, IJetStreamPullSubscription, IJetStreamSubscriptionInternal
+    public class JetStreamPullSubscription : SyncSubscription, IJetStreamPullSubscription
     {
-        protected JetStream _js;
-        protected string _consumer;
-        protected string _stream;
-        protected string _deliver;
+        public JetStream Context { get; }
+        public string Stream { get; }
+        public string Consumer { get; }
+        public string DeliverSubject { get; }
 
-        internal JetStreamPullSubscription(Connection conn, string subject, string queue)
-            : base(conn, subject, queue) {}
-
-        void IJetStreamSubscriptionInternal.SetupJetStream(JetStream js, string consumer, string stream, string deliver) {
-            _js = js;
-            _consumer = consumer;
-            _stream = stream;
-            _deliver = deliver;
-        }
-
-        public string Consumer => _consumer;
-        public string Stream => _stream;
-        public string DeliverSubject => _deliver;
-        
-        public JetStream GetContext() => _js;
-
-        public ConsumerInfo GetConsumerInformation()
+        internal JetStreamPullSubscription(Connection conn, string subject,
+            JetStream js, string stream, string consumer, string deliver)
+            : base(conn, subject, null)
         {
-            return _js.LookupConsumerInfo(_stream, _consumer);
+            Context = js;
+            Stream = stream;
+            Consumer = consumer;
+            DeliverSubject = deliver;
         }
 
-        public bool IsPullMode()
-        {
-            return true;
-        }
+        public ConsumerInfo GetConsumerInformation() => Context.LookupConsumerInfo(Stream, Consumer);
+        public bool IsPullMode() => true;
 
         // TODO THIS IS JUST A TEMPORARY IMPLEMENTATIONS
         // THAT THROWS AWAY STATUS MESSAGES
@@ -86,7 +73,7 @@ namespace NATS.Client.JetStream
         private void PullInternal(int batchSize, bool noWait, Duration expiresIn) {
             int batch = Validator.ValidatePullBatchSize(batchSize);
             string subj = string.Format(JetStreamConstants.JsapiConsumerMsgNext, Stream, Consumer);
-            string publishSubject = GetContext().PrependPrefix(subj);
+            string publishSubject = Context.PrependPrefix(subj);
             Connection.Publish(publishSubject, Subject, GetPullJson(batch, noWait, expiresIn));
             Connection.FlushBuffer();
         }

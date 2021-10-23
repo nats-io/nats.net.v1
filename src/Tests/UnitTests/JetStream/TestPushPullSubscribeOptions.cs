@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System;
+using NATS.Client;
 using NATS.Client.JetStream;
 using Xunit;
 
@@ -51,8 +52,6 @@ namespace UnitTests.JetStream
                 .WithStream(STREAM)
                 .WithDurable(DURABLE)
                 .Build();
-            Console.WriteLine(so.Stream);
-            Console.WriteLine(so.Durable);
             Assert.Equal(STREAM, so.Stream);
             Assert.Equal(DURABLE, so.Durable);
         }
@@ -135,7 +134,7 @@ namespace UnitTests.JetStream
                 .Build()
                 .Durable);
 
-            Assert.Throws<ArgumentException>(() => PushSubscribeOptions.Builder()
+            Assert.Throws<NATSJetStreamClientException>(() => PushSubscribeOptions.Builder()
                 .WithDurable("x")
                 .WithConfiguration(ConsumerConfiguration.Builder().WithDurable("y").Build())
                 .Build());
@@ -167,7 +166,7 @@ namespace UnitTests.JetStream
                 .Build()
                 .Durable);
 
-            Assert.Throws<ArgumentException>(() => PullSubscribeOptions.Builder()
+            Assert.Throws<NATSJetStreamClientException>(() => PullSubscribeOptions.Builder()
                 .WithDurable("x")
                 .WithConfiguration(ConsumerConfiguration.Builder().WithDurable("y").Build())
                 .Build());
@@ -202,7 +201,7 @@ namespace UnitTests.JetStream
                 .Build()
                 .DeliverGroup);
 
-            Assert.Throws<ArgumentException>(() => PushSubscribeOptions.Builder()
+            Assert.Throws<NATSJetStreamClientException>(() => PushSubscribeOptions.Builder()
                 .WithDeliverGroup("x")
                 .WithConfiguration(ConsumerConfiguration.Builder().WithDeliverGroup("y").Build())
                 .Build());
@@ -236,7 +235,7 @@ namespace UnitTests.JetStream
                 .Build()
                 .DeliverSubject);
 
-            Assert.Throws<ArgumentException>(() => PushSubscribeOptions.Builder()
+            Assert.Throws<NATSJetStreamClientException>(() => PushSubscribeOptions.Builder()
                 .WithDeliverSubject("x")
                 .WithConfiguration(ConsumerConfiguration.Builder().WithDeliverSubject("y").Build())
                 .Build());
