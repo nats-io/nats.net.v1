@@ -91,7 +91,7 @@ namespace IntegrationTests
             return ConnectionFactory.CreateEncodedConnection(opts);
         }
 
-        public void RunInServer(Action<IConnection> test, TestServerInfo testServerInfo)
+        public void RunInServer(TestServerInfo testServerInfo, Action<IConnection> test)
         {
             using (var s = NATSServer.CreateFastAndVerify(testServerInfo.Port))
             {
@@ -102,7 +102,7 @@ namespace IntegrationTests
             }
         }
 
-        public void RunInJsServer(Action<IConnection> test, TestServerInfo testServerInfo)
+        public void RunInJsServer(TestServerInfo testServerInfo, Action<IConnection> test)
         {
             using (var s = NATSServer.CreateJetStreamFastAndVerify(testServerInfo.Port))
             {
@@ -295,8 +295,8 @@ namespace IntegrationTests
             Server1 = new TestServerInfo(TestSeedPorts.AutoPort.Increment());
         }
         
-        public void RunInJsServer(Action<IConnection> test) => base.RunInJsServer(test, Server1);
-        public void RunInServer(Action<IConnection> test) => base.RunInServer(test, Server1);
+        public void RunInJsServer(Action<IConnection> test) => base.RunInJsServer(Server1, test);
+        public void RunInServer(Action<IConnection> test) => base.RunInServer(Server1, test);
     }
 
     public sealed class SkipPlatformsWithoutSignals : FactAttribute
