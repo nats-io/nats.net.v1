@@ -17,39 +17,14 @@ using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client.JetStream
 {
-    public class JetStreamPullSubscription : SyncSubscription, IJetStreamPullSubscription
+    public class JetStreamPullSubscription : JetStreamAbstractSyncSubscription, IJetStreamPullSubscription
     {
-        public JetStream Context { get; }
-        public string Stream { get; }
-        public string Consumer { get; }
-        public string DeliverSubject { get; }
-
         internal JetStreamPullSubscription(Connection conn, string subject,
-            JetStream js, string stream, string consumer, string deliver)
-            : base(conn, subject, null)
-        {
-            Context = js;
-            Stream = stream;
-            Consumer = consumer;
-            DeliverSubject = deliver;
-        }
+            IAutoStatusManager asm, JetStream js, string stream, string consumer, string deliver)
+            : base(conn, subject, null, asm, js, stream, consumer, deliver) {}
 
-        public ConsumerInfo GetConsumerInformation() => Context.LookupConsumerInfo(Stream, Consumer);
         public bool IsPullMode() => true;
-
-        // TODO THIS IS JUST A TEMPORARY IMPLEMENTATIONS
-        // THAT THROWS AWAY STATUS MESSAGES
-        // THIS IS NOT RELEASE CODE AND WILL BE REPLACED BY THE AUTO STATUS MANAGER
-        public new Msg NextMessage(int timeout)
-        {
-            Msg m = base.NextMessage(timeout);
-            while (!m.IsJetStream)
-            {
-                m = NextMessageImpl(timeout);
-            }
-            return m;
-        }
-
+        
         public void Pull(int batchSize)
         {
             PullInternal(batchSize, false, null);

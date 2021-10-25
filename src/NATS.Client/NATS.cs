@@ -359,6 +359,11 @@ namespace NATS.Client
         {
             return (sender, e) => { };
         }
+
+        public static EventHandler<FlowControlProcessedEventArgs> FlowControlProcessedEvent()
+        {
+            return (sender, e) => { };
+        }
     }
 
     internal static class DefaultEventHandler
@@ -374,7 +379,7 @@ namespace NATS.Client
         public static EventHandler<HeartbeatAlarmEventArgs> HandleHeartbeatAlarmEvent()
         {
             return (sender, e) =>
-                Console.WriteLine(FormatMessage("heartbeatAlarm", "Conn: ", e.Conn, "Sub: ", e.Sub,
+                Console.WriteLine(FormatMessage("HeartbeatAlarm", "Conn: ", e.Conn, "Sub: ", e.Sub,
                     "lastStreamSequence: ", e.LastStreamSequence,
                     "lastConsumerSequence: ", e.LastConsumerSequence,
                     "expectedConsumerSequence: ", e.ExpectedConsumerSequence));
@@ -383,7 +388,7 @@ namespace NATS.Client
         public static EventHandler<MessageGapDetectedEventArgs> HandleMessageGapDetectedEvent()
         {
             return (sender, e) =>
-                Console.WriteLine(FormatMessage("messageGapDetected", "Conn: ", e.Conn, "Sub: ", e.Sub,
+                Console.WriteLine(FormatMessage("MessageGapDetected", "Conn: ", e.Conn, "Sub: ", e.Sub,
                     "lastStreamSequence: ", e.LastStreamSequence, 
                     "lastConsumerSequence: ", e.LastConsumerSequence, 
                     "expectedConsumerSequence: ", e.ExpectedConsumerSequence,
@@ -393,12 +398,18 @@ namespace NATS.Client
         public static EventHandler<UnhandledStatusEventArgs> HandleUnhandledStatusEvent()
         {
             return (sender, e) =>
-                Console.WriteLine(FormatMessage("unhandledStatus", "Conn: ", e.Conn, "Sub: ", e.Sub, "Status: ", e.Status));
+                Console.WriteLine(FormatMessage("UnhandledStatus", "Conn: ", e.Conn, "Sub: ", e.Sub, "Status: ", e.Status));
+        }
+
+        public static EventHandler<FlowControlProcessedEventArgs> HandleFlowControlProcessedEvent()
+        {
+            return (sender, e) =>
+                Console.WriteLine(FormatMessage("FlowControlProcessed", "Conn: ", e.Conn, "Sub: ", e.Sub, "FcSubject: ", e.FcSubject, "Source: ", e.Source));
         }
     }
     
     /// <summary>
-    /// Provides details for an heartbeat alarm encountered asynchronously
+    /// Provides details for an heartbeat alarm encountered
     /// </summary>
     public class HeartbeatAlarmEventArgs : ConnJsSubEventArgs
     {
@@ -416,7 +427,7 @@ namespace NATS.Client
     }
 
     /// <summary>
-    /// Provides details when a message gap is encountered asynchronously
+    /// Provides details when a message gap is encountered
     /// </summary>
     public class MessageGapDetectedEventArgs : ConnJsSubEventArgs
     {
@@ -436,7 +447,7 @@ namespace NATS.Client
     }
 
     /// <summary>
-    /// Provides details for an status message when it is unknown or unhandled and encountered asynchronously
+    /// Provides details for an status message when it is unknown or unhandled
     /// </summary>
     public class UnhandledStatusEventArgs : ConnJsSubEventArgs
     {
@@ -445,6 +456,23 @@ namespace NATS.Client
         public UnhandledStatusEventArgs(Connection c, IJetStreamSubscription s, MsgStatus status) : base(c, s)
         {
             Status = status;
+        }
+    }
+
+    public enum FlowControlSource { FlowControl, Heartbeat }
+    
+    /// <summary>
+    /// Provides details for an status message when when a flow control is processed.
+    /// </summary>
+    public class FlowControlProcessedEventArgs : ConnJsSubEventArgs
+    {
+        public string FcSubject { get; }
+        public FlowControlSource Source { get; }
+
+        public FlowControlProcessedEventArgs(Connection c, IJetStreamSubscription s, string fcSubject, FlowControlSource source) : base(c, s)
+        {
+            FcSubject = fcSubject;
+            Source = source;
         }
     }
 

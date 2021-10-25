@@ -287,7 +287,7 @@ namespace NATS.Client.JetStream
             {
                 SyncSubscription CreateSubDelegate(Connection lConn, string lSubject, string lQueueNa)
                 {
-                    return new JetStreamPullSubscription(lConn, lSubject, this, stream, consumerName, inboxDeliver);
+                    return new JetStreamPullSubscription(lConn, lSubject, asm, this, stream, consumerName, inboxDeliver);
                 }
 
                 sub = ((Connection)Conn).subscribeSync(inboxDeliver, queueName, CreateSubDelegate);
@@ -295,7 +295,7 @@ namespace NATS.Client.JetStream
             else if (userHandler == null) {
                 SyncSubscription CreateSubDelegate(Connection lConn, string lSubject, string lQueue)
                 {
-                    return new JetStreamPushSyncSubscription(lConn, lSubject, lQueue, this, stream, consumerName, inboxDeliver);
+                    return new JetStreamPushSyncSubscription(lConn, lSubject, lQueue, asm, this, stream, consumerName, inboxDeliver);
                 }
                 
                 sub = ((Connection)Conn).subscribeSync(inboxDeliver, queueName, CreateSubDelegate); 
@@ -316,7 +316,7 @@ namespace NATS.Client.JetStream
 
                 AsyncSubscription CreateAsyncSubDelegate(Connection lConn, string lSubject, string lQueue)
                 {
-                    return new JetStreamPushAsyncSubscription(lConn, lSubject, lQueue, this, stream, consumerName, inboxDeliver);
+                    return new JetStreamPushAsyncSubscription(lConn, lSubject, lQueue, asm, this, stream, consumerName, inboxDeliver);
                 }
                 
                 sub = ((Connection)Conn).subscribeAsync(inboxDeliver, queueName, JsSubHandler, CreateAsyncSubDelegate);

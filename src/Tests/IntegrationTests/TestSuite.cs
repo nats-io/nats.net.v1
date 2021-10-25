@@ -69,17 +69,18 @@ namespace IntegrationTests
             return opts;
         }
 
-        public Options GetTestOptions(int? port = null)
+        public Options GetTestOptions(int? port = null, Action<Options> optionsModifier = null)
         {
             var opts = GetTestOptionsWithDefaultTimeout(port);
             opts.Timeout = 10000;
+            optionsModifier?.Invoke(opts);
 
             return opts;
         }
 
-        public IConnection OpenConnection(int? port = null)
+        public IConnection OpenConnection(int? port = null, Action<Options> optionsModifier = null)
         {
-            var opts = GetTestOptions(port);
+            var opts = GetTestOptions(port, optionsModifier);
 
             return ConnectionFactory.CreateConnection(opts);
         }
@@ -107,6 +108,17 @@ namespace IntegrationTests
             using (var s = NATSServer.CreateJetStreamFastAndVerify(testServerInfo.Port))
             {
                 using (var c = OpenConnection(testServerInfo.Port))
+                {
+                    test(c);
+                }
+            }
+        }
+
+        public void RunInJsServer(TestServerInfo testServerInfo, Action<Options> optionsModifier, Action<IConnection> test)
+        {
+            using (var s = NATSServer.CreateJetStreamFastAndVerify(testServerInfo.Port, optionsModifier))
+            {
+                using (var c = OpenConnection(testServerInfo.Port, optionsModifier))
                 {
                     test(c);
                 }
@@ -284,8 +296,9 @@ namespace IntegrationTests
     public class JetStreamPublishSuiteContext : OneServerSuiteContext {}
     public class JetStreamPushAsyncSuiteContext : OneServerSuiteContext {}
     public class JetStreamPushSyncSuiteContext : OneServerSuiteContext {}
+    public class JetStreamPushSyncQueueSuiteContext : OneServerSuiteContext {}
     public class JetStreamPullSuiteContext : OneServerSuiteContext {}
-
+    
     public class OneServerSuiteContext : SuiteContext
     {
         public readonly TestServerInfo Server1;

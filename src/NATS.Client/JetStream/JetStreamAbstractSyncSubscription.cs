@@ -11,17 +11,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Diagnostics;
+
 namespace NATS.Client.JetStream
 {
-    public class JetStreamPushAsyncSubscription : AsyncSubscription, IJetStreamPushAsyncSubscription
+    public class JetStreamAbstractSyncSubscription : SyncSubscription
     {
-        private IAutoStatusManager _asm;
+        internal IAutoStatusManager _asm;
         public JetStream Context { get; }
         public string Stream { get; }
         public string Consumer { get; }
         public string DeliverSubject { get; }
 
-        internal JetStreamPushAsyncSubscription(Connection conn, string subject, string queue,
+        internal JetStreamAbstractSyncSubscription(Connection conn, string subject, string queue,
             IAutoStatusManager asm, JetStream js, string stream, string consumer, string deliver)
             : base(conn, subject, queue)
         {
@@ -33,6 +35,34 @@ namespace NATS.Client.JetStream
         }
 
         public ConsumerInfo GetConsumerInformation() => Context.LookupConsumerInfo(Stream, Consumer);
-        public bool IsPullMode() => false;
+
+        public new Msg NextMessage()
+        {
+            // this calls is intended to block indefinitely 
+            Msg msg = NextMessageImpl(-1);
+            while (msg != null && _asm.Manage(msg)) {
+                msg = NextMessageImpl(-1);
+            }
+            return msg;
+        }
+
+        public new Msg NextMessage(int timeout)
+        {
+            if (timeout < 0)
+            {
+                return NextMessage();
+            }
+
+            Stopwatch sw = Stopwatch.StartNew();
+            long leftover = timeout;
+            while (leftover > 0) {
+                Msg msg = NextMessageImpl(timeout);
+                if (!_asm.Manage(msg)) { // not managed means JS Message
+                    return msg;
+                }
+                leftover = timeout - (int)sw.ElapsedMilliseconds;
+            }
+            throw new NATSTimeoutException();
+        }
     }
 }

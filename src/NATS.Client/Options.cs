@@ -117,21 +117,23 @@ namespace NATS.Client
 
         /// <summary>
         /// Represents the method that will handle an heartbeat alarm
-        /// encountered out of band.
         /// </summary>
         public EventHandler<HeartbeatAlarmEventArgs> HeartbeatAlarmEventHandler;
 
         /// <summary>
         /// Represents the method that will handle an message gap detected event
-        /// encountered out of band.
         /// </summary>
         public EventHandler<MessageGapDetectedEventArgs> MessageGapDetectedEventHandler;
 
         /// <summary>
         /// Represents the method that will handle a unknown or unhandled status event
-        /// encountered out of band.
         /// </summary>
         public EventHandler<UnhandledStatusEventArgs> UnhandledStatusEventHandler;
+
+        /// <summary>
+        /// Represents the method that will handle a flow control processed event
+        /// </summary>
+        public EventHandler<FlowControlProcessedEventArgs> FlowControlProcessedEventHandler;
 
         /// <summary>
         /// Sets user credentials using the NATS 2.0 security scheme.
@@ -249,6 +251,7 @@ namespace NATS.Client
             HeartbeatAlarmEventHandler = o.HeartbeatAlarmEventHandler;
             MessageGapDetectedEventHandler = o.MessageGapDetectedEventHandler;
             UnhandledStatusEventHandler = o.UnhandledStatusEventHandler;
+            FlowControlProcessedEventHandler = o.FlowControlProcessedEventHandler;
             ClosedEventHandler = o.ClosedEventHandler;
             ServerDiscoveredEventHandler = o.ServerDiscoveredEventHandler;
             DisconnectedEventHandler = o.DisconnectedEventHandler;
@@ -779,6 +782,7 @@ namespace NATS.Client
             appendEventHandler(sb, "HeartbeatAlarmEventHandler", HeartbeatAlarmEventHandler);
             appendEventHandler(sb, "MessageGapDetectedEventHandler", MessageGapDetectedEventHandler);
             appendEventHandler(sb, "UnhandledStatusEventHandler", UnhandledStatusEventHandler);
+            appendEventHandler(sb, "FlowControlProcessedEventHandler", FlowControlProcessedEventHandler);
             appendEventHandler(sb, "ClosedEventHandler", ClosedEventHandler);
             appendEventHandler(sb, "DisconnectedEventHandler", DisconnectedEventHandler);
             appendEventHandler(sb, "ReconnectedEventHandler", ReconnectedEventHandler);

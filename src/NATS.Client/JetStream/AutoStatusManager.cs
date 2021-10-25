@@ -73,6 +73,7 @@ namespace NATS.Client.JetStream
         private EventHandler<HeartbeatAlarmEventArgs> HeartbeatAlarmEventHandler;
         private EventHandler<MessageGapDetectedEventArgs> MsgGapDetectedEventHandler;
         private EventHandler<UnhandledStatusEventArgs> UnhandledStatusEventHandler;
+        private EventHandler<FlowControlProcessedEventArgs> FlowControlProcessedEventHandler;
 
         private AsmTimer asmTimer;
         
@@ -118,6 +119,7 @@ namespace NATS.Client.JetStream
             HeartbeatAlarmEventHandler = conn.Opts.HeartbeatAlarmEventHandler ?? NoOpEventHandler.HandleHeartbeatAlarmEvent();
             MsgGapDetectedEventHandler = conn.Opts.MessageGapDetectedEventHandler ?? NoOpEventHandler.HandleMessageGapDetectedEvent();
             UnhandledStatusEventHandler = conn.Opts.UnhandledStatusEventHandler ?? NoOpEventHandler.HandleUnhandledStatusEvent();
+            FlowControlProcessedEventHandler = conn.Opts.FlowControlProcessedEventHandler ?? NoOpEventHandler.FlowControlProcessedEvent();
         }
 
         // chicken or egg situation here. The handler needs the sub in case of error
@@ -208,7 +210,7 @@ namespace NATS.Client.JetStream
                 if (msg.Status.IsFlowControl()) 
                 {
                     if (Fc) {
-                        _processFlowControl(msg.Reply);
+                        _processFlowControl(msg.Reply, FlowControlSource.FlowControl);
                     }
                     return true;
                 }
@@ -216,7 +218,7 @@ namespace NATS.Client.JetStream
                 if (msg.Status.IsHeartbeat()) 
                 {
                     if (Fc) {
-                        _processFlowControl(msg.Header?[JetStreamConstants.ConsumerStalledHdr]);
+                        _processFlowControl(msg.Header?[JetStreamConstants.ConsumerStalledHdr], FlowControlSource.Heartbeat);
                     }
                     return true;
                     
@@ -234,12 +236,13 @@ namespace NATS.Client.JetStream
             return false;
         }
 
-        private void _processFlowControl(String fcSubject) {
+        private void _processFlowControl(String fcSubject, FlowControlSource source) {
             // we may get multiple fc/hb messages with the same reply
             // only need to post to that subject once
             if (fcSubject != null && !fcSubject.Equals(LastFcSubject)) {
                 conn.Publish(fcSubject, null);
                 LastFcSubject = fcSubject; // set after publish in case the pub fails
+                FlowControlProcessedEventHandler.Invoke(this, new FlowControlProcessedEventArgs(conn, _sub, fcSubject, source));
             }
         }
    }

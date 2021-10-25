@@ -20,6 +20,7 @@ using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using UnitTests;
 using Xunit;
+using Xunit.Abstractions;
 using static UnitTests.TestBase;
 using static IntegrationTests.JetStreamTestBase;
 
@@ -27,8 +28,11 @@ namespace IntegrationTests
 {
     public class TestJetStreamPushSync : TestSuite<JetStreamPushSyncSuiteContext>
     {
-        public TestJetStreamPushSync(JetStreamPushSyncSuiteContext context) : base(context)
+        private readonly ITestOutputHelper output;
+
+        public TestJetStreamPushSync(ITestOutputHelper output, JetStreamPushSyncSuiteContext context) : base(context)
         {
+            this.output = output;
         }
 
         [Theory]
@@ -354,126 +358,61 @@ namespace IntegrationTests
             Assert.Equal(Data(i), Encoding.UTF8.GetString(m.Data));
         }
 
-       [Fact]
-        public void TestQueueSubWorkflow()
+        [Fact]
+        public void TestPushSyncFlowControl()
         {
-            Context.RunInJsServer(c =>
+            InterlockedInt fcps = new InterlockedInt();
+            
+            Action<Options> optionsModifier = opts =>
+            {
+                opts.FlowControlProcessedEventHandler = (sender, args) =>
+                {
+                    fcps.Increment();
+                };
+            };
+            
+            Context.RunInJsServer(new TestServerInfo(TestSeedPorts.AutoPort.Increment()), optionsModifier, c =>
             {
                 // create the stream.
                 CreateDefaultTestStream(c);
 
                 // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
+                
+                byte[] data = new byte[8192];
 
-                // Setup the subscribers
-                // - the PushSubscribeOptions can be re-used since all the subscribers are the same
-                // - use a concurrent integer to track all the messages received
-                // - have a list of subscribers and threads so I can track them
-                PushSubscribeOptions pso = PushSubscribeOptions.Builder().WithDurable(DURABLE).Build();
-                InterlockedLong allReceived = new InterlockedLong();
-                IList<JsQueueSubscriber> subscribers = new List<JsQueueSubscriber>();
-                IList<Thread> subThreads = new List<Thread>();
-                for (int id = 1; id <= 3; id++) {
-                    // setup the subscription
-                    IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(SUBJECT, QUEUE, pso);
-                    // create and track the runnable
-                    JsQueueSubscriber qs = new JsQueueSubscriber(100, js, sub, allReceived);
-                    subscribers.Add(qs);
-                    // create, track and start the thread
-                    Thread t = new Thread(qs.Run);
-                    subThreads.Add(t);
-                    t.Start();
+                int MSG_COUNT = 1000;
+                
+                for (int x = 100_000; x < MSG_COUNT + 100_000; x++) {
+                    byte[] fill = Encoding.ASCII.GetBytes(""+ x);
+                    Array.Copy(fill, 0, data, 0, 6);
+                    js.Publish(new Msg(SUBJECT, data));
                 }
-                c.Flush(DefaultTimeout); // flush outgoing communication with/to the server
+                
+                InterlockedInt count = new InterlockedInt();
+                HashSet<string> set = new HashSet<string>();
+                
+                ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithFlowControl(1000).Build();
+                PushSubscribeOptions pso = PushSubscribeOptions.Builder().WithConfiguration(cc).Build();
 
-                // create and start the publishing
-                Thread pubThread = new Thread(new JsPublisher(js, 100).Run);
-                pubThread.Start();
-
-                // wait for all threads to finish
-                pubThread.Join(5000);
-                foreach (Thread t in subThreads) {
-                    t.Join(5000);
-                }
-
-                ISet<String> uniqueDatas = new HashSet<String>();
-                // count
-                int count = 0;
-                foreach (JsQueueSubscriber qs in subscribers) {
-                    int r = qs.received;
-                    Assert.True(r > 0);
-                    count += r;
-                    foreach (string s in qs.datas) {
-                        Assert.True(uniqueDatas.Add(s));
+                IJetStreamPushSyncSubscription ssub = js.PushSubscribeSync(SUBJECT, pso);
+                for (int x = 0; x < MSG_COUNT; x++) {
+                    Msg msg = ssub.NextMessage(1000);
+                    byte[] fill = new byte[6];
+                    // output.WriteLine("" + x + " " + msg.Subject + " " + msg.Reply);
+                    Array.Copy(msg.Data, 0, fill, 0, 6);
+                    string id = Encoding.ASCII.GetString(fill);
+                    if (set.Add(id)) {
+                        count.Increment();
                     }
+                    msg.Ack();
                 }
 
-                Assert.Equal(100, count);
+                output.WriteLine("RED " + count.Read() + " " + fcps.Read());
+                Assert.Equal(MSG_COUNT, count.Read());
+                Assert.True(fcps.Read() > 0);
 
             });
-        }
-    }
-    
-    class JsPublisher
-    {
-        IJetStream js;
-        int msgCount;
-
-        public JsPublisher(IJetStream js, int msgCount)
-        {
-            this.js = js;
-            this.msgCount = msgCount;
-        }
-
-        public void Run()
-        {
-            for (int x = 1; x <= msgCount; x++)
-            {
-                js.Publish(SUBJECT, Encoding.ASCII.GetBytes("Data # " + x));
-            }
-        }
-    }
-
-    class JsQueueSubscriber
-    {
-        int msgCount;
-        IJetStream js;
-        IJetStreamPushSyncSubscription sub;
-        InterlockedLong allReceived;
-        public int received;
-        public IList<string> datas;
-
-        public JsQueueSubscriber(int msgCount, IJetStream js, IJetStreamPushSyncSubscription sub, InterlockedLong allReceived)
-        {
-            this.msgCount = msgCount;
-            this.js = js;
-            this.sub = sub;
-            this.allReceived = allReceived;
-            received = 0;
-            datas = new List<string>();
-        }
-
-        public void Run()
-        {
-            while (allReceived.Read() < msgCount)
-            {
-                try
-                {
-                    Msg msg = sub.NextMessage(500);
-                    while (msg != null)
-                    {
-                        received++;
-                        allReceived.Increment();
-                        datas.Add(Encoding.UTF8.GetString(msg.Data));
-                        msg.Ack();
-                        msg = sub.NextMessage(500);
-                    }
-                }
-                catch (NATSTimeoutException)
-                {
-                    // timeout is acceptable, means no messages available.
-                }
-            }
         }
     }
 }

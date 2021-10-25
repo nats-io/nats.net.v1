@@ -244,7 +244,7 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public void TestAfterIncompleteExpiresPulls()
+        public void TestPullExpires()
         {
             Context.RunInJsServer(c =>
             {
@@ -386,6 +386,30 @@ namespace IntegrationTests
 
                 sub.Pull(1);
                 AssertNoMoreMessages(sub);
+            });
+        }
+
+        [Fact]
+        public void TestAckReplySyncCoverage()
+        {
+            Context.RunInJsServer(c =>
+            {
+                // create the stream.
+                CreateDefaultTestStream(c);
+
+                // Create our JetStream context.
+                IJetStream js = c.CreateJetStreamContext();
+
+                IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(SUBJECT);
+                c.Flush(DefaultTimeout); // flush outgoing communication with/to the server
+
+                JsPublish(js, SUBJECT, "COVERAGE", 1);
+
+                Msg message = sub.NextMessage(1000);
+                Assert.NotNull(message);
+                message.Reply = "$JS.ACK.stream.LS0k4eeN.1.1.1.1627472530542070600.0";
+
+                Assert.Throws<NATSNoRespondersException>(() => message.AckSync(1000));
             });
         }
 

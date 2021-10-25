@@ -122,6 +122,11 @@ namespace UnitTests
             this.count = start;
         }
 
+        public void Set(long l)
+        {
+            Interlocked.Exchange(ref count, l);
+        }
+
         public long Increment()
         {
             return Interlocked.Increment(ref count);
@@ -135,7 +140,7 @@ namespace UnitTests
 
     public class InterlockedInt
     {
-        private InterlockedLong il;
+        private readonly InterlockedLong il;
 
         public InterlockedInt()
         {
@@ -145,6 +150,11 @@ namespace UnitTests
         public InterlockedInt(long start)
         {
             il = new InterlockedLong(start);
+        }
+
+        public void Set(int i)
+        {
+            il.Set(i);
         }
 
         public int Increment()
