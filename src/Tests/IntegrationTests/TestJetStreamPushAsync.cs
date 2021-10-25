@@ -140,5 +140,50 @@ namespace IntegrationTests
                 Assert.Equal(10, ReadMessagesAck(ssub).Count);
             });
         }
+
+        [Fact]
+        public void TestDontAutoAckIfUserAcks() {
+            string mockAckReply = "mock-ack-reply.";
+            
+            Context.RunInJsServer(c =>
+            {
+                CreateMemoryStream(c, STREAM, SUBJECT, mockAckReply + "*");
+                
+                // Create our JetStream context.
+                IJetStream js = c.CreateJetStreamContext();
+
+                // publish some messages
+                JsPublish(js, SUBJECT, 2);
+
+                // 1. auto ack true
+                CountdownEvent latch = new CountdownEvent(2);
+                bool flag = true;
+
+                // create our message handler, does not ack
+                void Handler1(object sender, MsgHandlerEventArgs args)
+                {
+                    if (flag)
+                    {
+                        args.Message.Reply = mockAckReply + "user";
+                        args.Message.Ack();
+                        flag = false;
+                    }
+                    args.Message.Reply = mockAckReply + "system";
+                    latch.Signal();
+                }
+
+                // subscribe using the handler, auto ack true
+                IJetStreamPushAsyncSubscription asub = js.PushSubscribeAsync(SUBJECT, Handler1, true);
+
+                // wait for messages to arrive using the countdown latch.
+                latch.Wait();
+
+                IJetStreamPushSyncSubscription ssub = js.PushSubscribeSync(mockAckReply + "*");
+                Msg m = ssub.NextMessage(1000);
+                Assert.Equal(mockAckReply + "user", m.Subject);
+                m = ssub.NextMessage(1000);
+                Assert.Equal(mockAckReply + "system", m.Subject);
+            });
+        }
     }
 }
