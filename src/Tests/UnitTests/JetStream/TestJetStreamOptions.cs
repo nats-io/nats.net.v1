@@ -16,6 +16,7 @@ using NATS.Client;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using Xunit;
+using static NATS.Client.Internals.JetStreamConstants;
 
 namespace UnitTests.JetStream
 {
@@ -25,11 +26,11 @@ namespace UnitTests.JetStream
         public void TestPushAffirmative()
         {
             JetStreamOptions jso = JetStreamOptions.Builder().Build();
-            Assert.Equal(JetStreamConstants.JsapiPrefix, jso.Prefix);
+            Assert.Equal(DefaultApiPrefix, jso.Prefix);
             Assert.Equal(Duration.OfMillis(Defaults.Timeout), jso.RequestTimeout);
 
             jso = JetStreamOptions.Builder(jso).Build();
-            Assert.Equal(JetStreamConstants.JsapiPrefix, jso.Prefix);
+            Assert.Equal(DefaultApiPrefix, jso.Prefix);
             Assert.Equal(Duration.OfMillis(Defaults.Timeout), jso.RequestTimeout);
 
             jso = JetStreamOptions.Builder()
@@ -59,13 +60,93 @@ namespace UnitTests.JetStream
             Assert.Equal(Duration.OfSeconds(42), jso.RequestTimeout);
             Assert.True(jso.IsPublishNoAck);
         }
-    
+
         [Fact]
-        public void TestInvalidPrefix() 
+        public void TestPrefixValidation()
         {
-            Assert.Throws<ArgumentException>(() => JetStreamOptions.Builder().WithPrefix(HasStar).Build());
-            Assert.Throws<ArgumentException>(() => JetStreamOptions.Builder().WithPrefix(HasGt).Build());
-            Assert.Throws<ArgumentException>(() => JetStreamOptions.Builder().WithPrefix(HasDollar).Build());
+            AssertDefaultPrefix(null);
+            AssertDefaultPrefix("");
+            AssertDefaultPrefix(" ");
+
+            AssertValidPrefix(Plain);
+            AssertValidPrefix(HasPrintable);
+            AssertValidPrefix(HasDot);
+            AssertValidPrefix(HasDash);
+            AssertValidPrefix(HasUnder);
+            AssertValidPrefix(HasDollar);
+            AssertValidPrefix(HasFwdSlash);
+            AssertValidPrefix(HasEquals);
+            AssertValidPrefix(HasTic);
+
+            AssertInvalidPrefix(HasSpace);
+            AssertInvalidPrefix(HasStar);
+            AssertInvalidPrefix(HasGt);
+            AssertInvalidPrefix(HasLow);
+            AssertInvalidPrefix(Has127);
+
+            AssertInvalidPrefix(".");
+            AssertInvalidPrefix("." + Plain);
+        }
+
+        private void AssertValidPrefix(String prefix) {
+            JetStreamOptions jso = JetStreamOptions.Builder().WithPrefix(prefix).Build();
+            String prefixWithDot = prefix.EndsWith(".") ? prefix : prefix + ".";
+            Assert.Equal(prefixWithDot, jso.Prefix);
+        }
+
+        private void AssertDefaultPrefix(String prefix) {
+            JetStreamOptions jso = JetStreamOptions.Builder().WithPrefix(prefix).Build();
+            Assert.Equal(DefaultApiPrefix, jso.Prefix);
+        }
+
+        private void AssertInvalidPrefix(String prefix) {
+            Assert.Throws<ArgumentException>(() => JetStreamOptions.Builder().WithPrefix(prefix).Build());
+        }
+
+        [Fact]
+        public void TestDomainValidation()
+        {
+            AssertDefaultDomain(null);
+            AssertDefaultDomain("");
+            AssertDefaultDomain(" ");
+
+            AssertValidDomain(Plain);
+            AssertValidDomain(HasPrintable);
+            AssertValidDomain(HasDot);
+            AssertValidDomain(HasDash);
+            AssertValidDomain(HasUnder);
+            AssertValidDomain(HasDollar);
+            AssertValidDomain(HasFwdSlash);
+            AssertValidDomain(HasEquals);
+            AssertValidDomain(HasTic);
+
+            AssertInvalidDomain(HasSpace);
+            AssertInvalidDomain(HasStar);
+            AssertInvalidDomain(HasGt);
+            AssertInvalidDomain(HasLow);
+            AssertInvalidDomain(Has127);
+
+            AssertInvalidDomain(".");
+            AssertInvalidDomain("." + Plain);
+        }
+
+        private void AssertValidDomain(String domain) {
+            JetStreamOptions jso = JetStreamOptions.Builder().WithDomain(domain).Build();
+            if (domain.StartsWith(".")) {
+                domain = domain.Substring(1);
+            }
+            String prefixWithDot = domain.EndsWith(".") ? domain : domain + ".";
+            String expected = PrefixDollarJsDot + prefixWithDot + PrefixApiDot;
+            Assert.Equal(expected, jso.Prefix);
+        }
+
+        private void AssertDefaultDomain(String domain) {
+            JetStreamOptions jso = JetStreamOptions.Builder().WithDomain(domain).Build();
+            Assert.Equal(DefaultApiPrefix, jso.Prefix);
+        }
+
+        private void AssertInvalidDomain(String domain) {
+            Assert.Throws<ArgumentException>(() => JetStreamOptions.Builder().WithDomain(domain).Build());
         }
     }
 }

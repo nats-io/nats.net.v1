@@ -2176,7 +2176,7 @@ namespace NATS.Client
                     maxReached = s.tallyMessage(length);
                     if (maxReached == false)
                     {
-                        Msg msg = JsPrefixManager.HasPrefix(msgArgs.reply)
+                        Msg msg = msgArgs.reply != null && msgArgs.reply.StartsWith(JetStreamConstants.JsAckSubjectPrefix)
                             ? new JetStreamMsg(this, msgArgs, s, msgBytes, length)
                             : new Msg(msgArgs, s, msgBytes, length);
                         
