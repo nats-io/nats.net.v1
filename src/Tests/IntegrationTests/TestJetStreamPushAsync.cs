@@ -11,9 +11,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using NATS.Client;
 using NATS.Client.JetStream;
+using UnitTests;
 using Xunit;
 using Xunit.Abstractions;
 using static UnitTests.TestBase;
@@ -160,7 +164,7 @@ namespace IntegrationTests
                 bool flag = true;
 
                 // create our message handler, does not ack
-                void Handler1(object sender, MsgHandlerEventArgs args)
+                void Handler(object sender, MsgHandlerEventArgs args)
                 {
                     if (flag)
                     {
@@ -173,7 +177,7 @@ namespace IntegrationTests
                 }
 
                 // subscribe using the handler, auto ack true
-                IJetStreamPushAsyncSubscription asub = js.PushSubscribeAsync(SUBJECT, Handler1, true);
+                js.PushSubscribeAsync(SUBJECT, Handler, true);
 
                 // wait for messages to arrive using the countdown latch.
                 latch.Wait();
@@ -183,6 +187,68 @@ namespace IntegrationTests
                 Assert.Equal(mockAckReply + "user", m.Subject);
                 m = ssub.NextMessage(1000);
                 Assert.Equal(mockAckReply + "system", m.Subject);
+            });
+        }
+
+        [Fact]
+        public void TestPushAsyncFlowControl()
+        {
+            InterlockedInt fcps = new InterlockedInt();
+            
+            Action<Options> optionsModifier = opts =>
+            {
+                opts.FlowControlProcessedEventHandler = (sender, args) =>
+                {
+                    fcps.Increment();
+                };
+            };
+            
+            Context.RunInJsServer(new TestServerInfo(TestSeedPorts.AutoPort.Increment()), optionsModifier, c =>
+            {
+                // create the stream.
+                CreateDefaultTestStream(c);
+
+                // Create our JetStream context.
+                IJetStream js = c.CreateJetStreamContext();
+                
+                byte[] data = new byte[8192];
+
+                int msgCount = 1000;
+                
+                for (int x = 100_000; x < msgCount + 100_000; x++) {
+                    byte[] fill = Encoding.ASCII.GetBytes(""+ x);
+                    Array.Copy(fill, 0, data, 0, 6);
+                    js.Publish(new Msg(SUBJECT, data));
+                }
+                
+                InterlockedInt count = new InterlockedInt();
+                HashSet<string> set = new HashSet<string>();
+                
+                CountdownEvent latch = new CountdownEvent(msgCount);
+
+                // create our message handler, does not ack
+                void Handler(object sender, MsgHandlerEventArgs args)
+                {
+                    byte[] fill = new byte[6];
+                    Array.Copy(args.Message.Data, 0, fill, 0, 6);
+                    string id = Encoding.ASCII.GetString(fill);
+                    if (set.Add(id)) {
+                        count.Increment();
+                    }
+                    args.Message.Ack();
+                    latch.Signal();
+                }
+
+                // subscribe using the handler
+                ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithFlowControl(1000).Build();
+                PushSubscribeOptions pso = PushSubscribeOptions.Builder().WithConfiguration(cc).Build();
+                js.PushSubscribeAsync(SUBJECT, Handler, false, pso);
+
+                // wait for messages to arrive using the countdown latch.
+                latch.Wait();
+
+                Assert.Equal(msgCount, count.Read());
+                Assert.True(fcps.Read() > 0);
             });
         }
     }

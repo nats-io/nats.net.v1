@@ -399,7 +399,6 @@ namespace IntegrationTests
                 for (int x = 0; x < MSG_COUNT; x++) {
                     Msg msg = ssub.NextMessage(1000);
                     byte[] fill = new byte[6];
-                    // output.WriteLine("" + x + " " + msg.Subject + " " + msg.Reply);
                     Array.Copy(msg.Data, 0, fill, 0, 6);
                     string id = Encoding.ASCII.GetString(fill);
                     if (set.Add(id)) {
@@ -408,10 +407,8 @@ namespace IntegrationTests
                     msg.Ack();
                 }
 
-                output.WriteLine("RED " + count.Read() + " " + fcps.Read());
                 Assert.Equal(MSG_COUNT, count.Read());
                 Assert.True(fcps.Read() > 0);
-
             });
         }
     }
