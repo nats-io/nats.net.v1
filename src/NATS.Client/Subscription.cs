@@ -148,7 +148,12 @@ namespace NATS.Client
         private void handleSlowConsumer(Msg msg)
         {
             dropped++;
-            conn.processSlowConsumer(this);
+            if (!sc)
+            {
+                sc = true;
+                conn.processSlowConsumer(this);
+            }
+
             pMsgs--;
             pBytes -= msg.Data.Length;
         }
@@ -195,6 +200,14 @@ namespace NATS.Client
                 // slow consumer
                 handleSlowConsumer(msg);
                 return false;
+            }
+
+            if (sc 
+                && (pMsgsLimit <= 0 || pMsgs < Math.Max(1, pMsgsLimit / 10)) 
+                && (pBytesLimit<=0 || pBytes < Math.Max(1, pBytesLimit/10)))
+            {
+                //Recovered from slow consumer
+                sc = false;
             }
 
             if (mch != null)

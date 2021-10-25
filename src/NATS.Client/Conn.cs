@@ -2195,7 +2195,9 @@ namespace NATS.Client
         // async error handler if registered.
         internal void processSlowConsumer(Subscription s)
         {
-            lastEx = new NATSSlowConsumerException();
+            //don't do that. it renders the connection unusable and the client won't recover.
+            //lastEx = new NATSSlowConsumerException();
+
             if (!s.sc)
             {
                 EventHandler<ErrEventArgs> aseh = opts.AsyncErrorEventHandler;
