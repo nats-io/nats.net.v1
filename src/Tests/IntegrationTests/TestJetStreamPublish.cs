@@ -80,7 +80,7 @@ namespace IntegrationTests
                 AssertNextMessage(s, null); // 8
 
                 // bad subject
-                Assert.Throws<TimeoutException>(() => js.Publish(Subject(999), null));
+                Assert.Throws<NATSNoRespondersException>(() => js.Publish(Subject(999), null));
             });
         }
 
