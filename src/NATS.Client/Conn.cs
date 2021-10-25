@@ -2198,8 +2198,6 @@ namespace NATS.Client
             //don't do that. it renders the connection unusable and the client won't recover.
             //lastEx = new NATSSlowConsumerException();
 
-            if (!s.sc)
-            {
                 EventHandler<ErrEventArgs> aseh = opts.AsyncErrorEventHandler;
                 if (aseh != null)
                 {
@@ -2207,8 +2205,6 @@ namespace NATS.Client
                         () => { aseh(this, new ErrEventArgs(this, s, "Slow Consumer")); }
                     );
                 }
-            }
-            s.sc = true;
         }
 
         private void kickFlusher()
