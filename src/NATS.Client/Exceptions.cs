@@ -193,25 +193,7 @@ namespace NATS.Client
     }
 
     /// <summary>
-    /// The exception that is thrown when a JetStream subscription detects a gap
-    /// </summary>
-    public class NATSJetStreamGapException : NATSException
-    {
-        private Subscription Sub { get; }
-        private ulong ExpectedConsumerSeq { get; }
-        private ulong ReceivedConsumerSeq { get; }
-
-        public NATSJetStreamGapException(Subscription sub, ulong expectedConsumerSeq, ulong receivedConsumerSeq)
-            : base($"Message Gap Detected. Expected Seq: {expectedConsumerSeq}, Received Seq: {receivedConsumerSeq}")
-        {
-            Sub = sub;
-            ExpectedConsumerSeq = expectedConsumerSeq;
-            ReceivedConsumerSeq = receivedConsumerSeq;
-        }
-    }
-
-    /// <summary>
-    /// The exception that is thrown when a JetStream subscription detects a gap
+    /// The exception that is thrown when a JetStream subscription detects a unknown status
     /// </summary>
     public class NATSJetStreamStatusException : NATSException
     {

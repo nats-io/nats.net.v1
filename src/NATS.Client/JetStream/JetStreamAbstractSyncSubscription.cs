@@ -35,6 +35,18 @@ namespace NATS.Client.JetStream
         }
 
         public ConsumerInfo GetConsumerInformation() => Context.LookupConsumerInfo(Stream, Consumer);
+                
+        public override void Unsubscribe()
+        {
+            _asm.Shutdown();
+            base.Unsubscribe();
+        }
+
+        internal override void close()
+        {
+            _asm.Shutdown();
+            base.close();
+        }
 
         public new Msg NextMessage()
         {

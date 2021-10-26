@@ -45,7 +45,7 @@ namespace NATS.Client.JetStream
                 Connection.Publish(_reply, ackType.Bytes);
             }
 
-            lastAck = ackType;
+            _lastAck = ackType;
         }
 
         /// <summary>

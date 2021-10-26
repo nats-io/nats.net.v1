@@ -13,6 +13,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using NATS.Client.Internals;
 
 namespace NATS.Client.JetStream
@@ -57,17 +58,15 @@ namespace NATS.Client.JetStream
 
         internal bool SyncMode { get; }
         internal bool QueueMode { get; }
-        internal bool Gap { get; }
         internal bool Hb { get; }
         internal bool Fc { get; }
 
-        internal long IdleHeartbeatSetting { get; }
-        internal long AlarmPeriodSetting { get; }
+        internal int IdleHeartbeatSetting { get; }
+        internal int AlarmPeriodSetting { get; }
 
         internal string LastFcSubject { get; private set; }
         internal ulong LastStreamSeq { get; private set; }
         internal ulong LastConsumerSeq { get; private set; }
-        internal ulong ExpectedConsumerSeq { get; private set; }
         internal long LastMsgReceived { get; private set; }
 
         private AsmTimer asmTimer;
@@ -80,11 +79,9 @@ namespace NATS.Client.JetStream
             QueueMode = queueMode;
             LastStreamSeq = 0;
             LastConsumerSeq = 0;
-            ExpectedConsumerSeq = 1; // always starts at 1
             LastMsgReceived = -1;
 
             if (queueMode) {
-                Gap = false;
                 Hb = false;
                 Fc = false;
                 IdleHeartbeatSetting = 0;
@@ -92,14 +89,13 @@ namespace NATS.Client.JetStream
             }
             else
             {
-                Gap = so.DetectGaps;
                 IdleHeartbeatSetting = cc.IdleHeartbeat.Millis;
                 if (IdleHeartbeatSetting == 0) {
                     AlarmPeriodSetting = 0;
                     Hb = false;
                 }
                 else {
-                    long mat = so.MessageAlarmTime;
+                    int mat = so.MessageAlarmTime;
                     if (mat < IdleHeartbeatSetting) {
                         AlarmPeriodSetting = IdleHeartbeatSetting * Threshold;
                     }
@@ -119,7 +115,7 @@ namespace NATS.Client.JetStream
             _sub = sub;
             if (Hb) {
                 conn.SetBeforeQueueProcessor(BeforeQueueProcessor);
-                asmTimer = new AsmTimer();
+                asmTimer = new AsmTimer(this);
             }
         }
 
@@ -129,70 +125,36 @@ namespace NATS.Client.JetStream
             }
         }
 
-        // TODO
-        class AsmTimer {
+        class AsmTimer
+        {
+            private readonly object mu = new object();
+            private Timer timer;
 
-            /* synchronized */ void Restart() {
-                cancel();
-                // if (sub.isActive()) {
-                    // timer = new Timer();
-                    // timer.schedule(new TimerWrapperTimerTask(), alarmPeriodSetting);
-                // }
+            public AsmTimer(PushAutoStatusManager asm)
+            {
+                timer = new Timer(s => {
+                        long sinceLast = DateTimeOffset.Now.ToUnixTimeMilliseconds() - asm.LastMsgReceived;
+                        if (sinceLast > asm.AlarmPeriodSetting) {
+                            asm.conn.Opts.HeartbeatAlarmEventHandler.Invoke(this, 
+                                new HeartbeatAlarmEventArgs(asm.conn, asm._sub, asm.LastStreamSeq, asm.LastConsumerSeq));
+                        }
+                    }, 
+                    null, asm.AlarmPeriodSetting, asm.AlarmPeriodSetting);
             }
 
-            /* synchronized */ public void Shutdown() {
-                cancel();
-            }
-
-            private void cancel() {
-                // if (timer != null) {
-                    // timer.cancel();
-                    // timer.purge();
-                    // timer = null;
-                // }
+            public void Shutdown() {
+                if (timer != null)
+                {
+                    lock (mu)
+                    {
+                        timer.Dispose();
+                        timer = null;
+                    }
+                }
             }
         }
 
         public bool Manage(Msg msg) {
-            if (CheckStatusForPushMode(msg)) {
-                return true;
-            }
-            if (Gap) {
-                DetectGaps(msg);
-            }
-            return false;
-        }
-
-        private void DetectGaps(Msg msg)
-        {
-            ulong receivedConsumerSeq = msg.MetaData.ConsumerSequence;
-            if (ExpectedConsumerSeq != receivedConsumerSeq) 
-            {
-                conn.Opts.MessageGapDetectedEventHandler.Invoke(this, new MessageGapDetectedEventArgs(conn, _sub,
-                    LastStreamSeq, LastConsumerSeq, ExpectedConsumerSeq, receivedConsumerSeq));
-            
-                if (SyncMode) {
-                    throw new NATSJetStreamGapException(_sub, ExpectedConsumerSeq, receivedConsumerSeq);
-                }
-            }
-            LastStreamSeq = msg.MetaData.StreamSequence;
-            LastConsumerSeq = receivedConsumerSeq;
-            ExpectedConsumerSeq = receivedConsumerSeq + 1;
-        }
-
-        private Msg BeforeQueueProcessor(Msg msg)
-        {
-            LastMsgReceived = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-            if (msg.HasStatus 
-                && msg.Status.IsHeartbeat()
-                && msg.Header?[JetStreamConstants.ConsumerStalledHdr] == null) 
-            {
-                    return null; // plain heartbeat, no need to queue
-            }
-            return msg;
-        }
-
-        private bool CheckStatusForPushMode(Msg msg) {
             // this checks fc, hb and unknown
             // only process fc and hb if those flags are set
             // otherwise they are simply known statuses
@@ -223,7 +185,23 @@ namespace NATS.Client.JetStream
                 }
                 return true;
             }
+            
+            // JS Message
+            LastStreamSeq = msg.MetaData.StreamSequence;
+            LastConsumerSeq = msg.MetaData.ConsumerSequence;;
             return false;
+        }
+
+        private Msg BeforeQueueProcessor(Msg msg)
+        {
+            LastMsgReceived = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            if (msg.HasStatus 
+                && msg.Status.IsHeartbeat()
+                && msg.Header?[JetStreamConstants.ConsumerStalledHdr] == null) 
+            {
+                    return null; // plain heartbeat, no need to queue
+            }
+            return msg;
         }
 
         private void _processFlowControl(String fcSubject, FlowControlSource source) {

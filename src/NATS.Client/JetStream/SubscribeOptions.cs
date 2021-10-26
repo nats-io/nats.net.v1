@@ -26,8 +26,7 @@ namespace NATS.Client.JetStream
         internal bool Pull { get;  }
         internal bool Bind { get;  }
         internal ConsumerConfiguration ConsumerConfiguration { get;}
-        internal bool DetectGaps;
-        internal long MessageAlarmTime;
+        internal int MessageAlarmTime;
 
         protected SubscribeOptions(ISubscribeOptionsBuilder builder, bool pull, string deliverSubject, string deliverGroup)
         {
@@ -48,7 +47,6 @@ namespace NATS.Client.JetStream
 
             Pull = pull;
             Bind = builder.Bind;
-            DetectGaps = builder.DetectGaps;
             MessageAlarmTime = builder.MessageAlarmTime;
         }
         
@@ -58,8 +56,7 @@ namespace NATS.Client.JetStream
             bool Bind { get; }
             string Durable { get; }
             ConsumerConfiguration Cc { get; }
-            bool DetectGaps { get; }
-            long MessageAlarmTime { get; }
+            int MessageAlarmTime { get; }
         }
             
         public abstract class SubscribeOptionsBuilder<TB, TSo> : ISubscribeOptionsBuilder
@@ -68,15 +65,13 @@ namespace NATS.Client.JetStream
             bool _bind;
             string _durable;
             ConsumerConfiguration _config;
-            bool _detectGaps;
-            long _messageAlarmTime = -1;
+            int _messageAlarmTime = -1;
 
             public string Stream => _stream;
             public bool Bind => _bind;
             public string Durable => _durable;
             public ConsumerConfiguration Cc => _config;
-            public bool DetectGaps => _detectGaps;
-            public long MessageAlarmTime => _messageAlarmTime;
+            public int MessageAlarmTime => _messageAlarmTime;
 
             protected abstract TB GetThis();
 
@@ -124,23 +119,12 @@ namespace NATS.Client.JetStream
             }
 
             /// <summary>
-            /// Sets or clears the auto gap manage flag 
-            /// </summary>
-            /// <param name="detectGaps">the flag</param>
-            /// <returns>The builder</returns>
-            public TB WithDetectGaps(bool detectGaps)
-            {
-                _detectGaps = detectGaps;
-                return GetThis();
-            }
-
-            /// <summary>
             /// Set the total amount of time to not receive any messages or heartbeats
             /// before calling the ErrorListener heartbeatAlarm 
             /// </summary>
             /// <param name="messageAlarmTime"> the time</param>
             /// <returns>The builder</returns>
-            public TB WithMessageAlarmTime(long messageAlarmTime)
+            public TB WithMessageAlarmTime(int messageAlarmTime)
             {
                 _messageAlarmTime = messageAlarmTime;
                 return GetThis();

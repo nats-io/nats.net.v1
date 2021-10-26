@@ -282,34 +282,12 @@ namespace NATS.Client
     {
         public ulong LastStreamSequence { get; }
         public ulong LastConsumerSequence { get; }
-        public ulong ExpectedConsumerSequence { get; }
 
         public HeartbeatAlarmEventArgs(Connection c, Subscription s, 
-            ulong lastStreamSequence, ulong lastConsumerSequence, ulong expectedConsumerSequence) : base(c, s)
+            ulong lastStreamSequence, ulong lastConsumerSequence) : base(c, s)
         {
             LastStreamSequence = lastStreamSequence;
             LastConsumerSequence = lastConsumerSequence;
-            ExpectedConsumerSequence = expectedConsumerSequence;
-        }
-    }
-
-    /// <summary>
-    /// Provides details when a message gap is encountered
-    /// </summary>
-    public class MessageGapDetectedEventArgs : ConnJsSubEventArgs
-    {
-        public ulong LastStreamSequence { get; }
-        public ulong LastConsumerSequence { get; }
-        public ulong ExpectedConsumerSequence { get; }
-        public ulong ReceivedConsumerSequence { get; }
-
-        public MessageGapDetectedEventArgs(Connection c, Subscription s, 
-            ulong lastStreamSequence, ulong lastConsumerSequence, ulong expectedConsumerSequence, ulong receivedConsumerSequence) : base(c, s)
-        {
-            LastStreamSequence = lastStreamSequence;
-            LastConsumerSequence = lastConsumerSequence;
-            ExpectedConsumerSequence = expectedConsumerSequence;
-            ReceivedConsumerSequence = receivedConsumerSequence;
         }
     }
 
@@ -438,16 +416,7 @@ namespace NATS.Client
             (sender, e) =>
                 WriteEvent("HeartbeatAlarm", e,
                     "lastStreamSequence: ", e.LastStreamSequence,
-                    "lastConsumerSequence: ", e.LastConsumerSequence,
-                    "expectedConsumerSequence: ", e.ExpectedConsumerSequence);
-
-        public static EventHandler<MessageGapDetectedEventArgs> DefaultMessageGapDetectedEventHandler() =>
-            (sender, e) =>
-                WriteEvent("MessageGapDetected", e,
-                    "lastStreamSequence: ", e.LastStreamSequence, 
-                    "lastConsumerSequence: ", e.LastConsumerSequence, 
-                    "expectedConsumerSequence: ", e.ExpectedConsumerSequence,
-                    "receivedConsumerSequence: ", e.ReceivedConsumerSequence);
+                    "lastConsumerSequence: ", e.LastConsumerSequence);
 
         public static EventHandler<UnhandledStatusEventArgs> DefaultUnhandledStatusEventHandler() => 
             (sender, e) => WriteEvent("UnhandledStatus", e, "Status: ", e.Status);
@@ -458,7 +427,7 @@ namespace NATS.Client
         private static void WriteEvent(String label, ConnJsSubEventArgs e, params object[] pairs) {
             var sb = BeginFormatMessage(label, e.Conn, e.Sub, null);
             for (int x = 0; x < pairs.Length; x++) {
-                sb.Append(pairs[x]).Append(pairs[++x]);
+                sb.Append(", ").Append(pairs[x]).Append(pairs[++x]);
             }
             Console.Error.WriteLine(sb.ToString());
         }
@@ -473,17 +442,17 @@ namespace NATS.Client
 
         private static StringBuilder BeginFormatMessage(string label, Connection conn, Subscription sub, string error)
         {
-            StringBuilder sb = new StringBuilder(label).Append('.');
+            StringBuilder sb = new StringBuilder(label);
             if (conn != null)
             {
-                sb.Append("Connection: ").Append(conn.ClientID);
+                sb.Append(", Connection: ").Append(conn.ClientID);
             }
             if (sub != null) {
-                sb.Append("Subscription: ").Append(sub.Sid);
+                sb.Append(", Subscription: ").Append(sub.Sid);
             }
             if (error != null)
             {
-                sb.Append("Error: ").Append(error);
+                sb.Append(", Error: ").Append(error);
             }
             return sb;
         }

@@ -52,7 +52,6 @@ namespace NATS.Client
         private EventHandler<ConnEventArgs> _lameDuckModeEventHandler;
         private EventHandler<ReconnectDelayEventArgs> _reconnectDelayHandler;
         private EventHandler<HeartbeatAlarmEventArgs> _heartbeatAlarmEventHandler;
-        private EventHandler<MessageGapDetectedEventArgs> _messageGapDetectedEventHandler;
         private EventHandler<UnhandledStatusEventArgs> _unhandledStatusEventHandler;
         private EventHandler<FlowControlProcessedEventArgs> _flowControlProcessedEventHandler;
  
@@ -146,15 +145,6 @@ namespace NATS.Client
         {
             get => _heartbeatAlarmEventHandler ?? DefaultEventHandler.DefaultHeartbeatAlarmEventHandler();
             set => _heartbeatAlarmEventHandler = value;
-        }
-
-        /// <summary>
-        /// Represents the method that will handle an message gap detected event
-        /// </summary>
-        public EventHandler<MessageGapDetectedEventArgs> MessageGapDetectedEventHandler
-        {
-            get => _messageGapDetectedEventHandler ?? DefaultEventHandler.DefaultMessageGapDetectedEventHandler();
-            set => _messageGapDetectedEventHandler = value;
         }
 
         /// <summary>
@@ -305,7 +295,6 @@ namespace NATS.Client
             allowReconnect = o.allowReconnect;
             AsyncErrorEventHandler = o.AsyncErrorEventHandler;
             HeartbeatAlarmEventHandler = o.HeartbeatAlarmEventHandler;
-            MessageGapDetectedEventHandler = o.MessageGapDetectedEventHandler;
             UnhandledStatusEventHandler = o.UnhandledStatusEventHandler;
             FlowControlProcessedEventHandler = o.FlowControlProcessedEventHandler;
             ClosedEventHandler = o.ClosedEventHandler;
@@ -836,7 +825,6 @@ namespace NATS.Client
 
             appendEventHandler(sb, "AsyncErrorEventHandler", AsyncErrorEventHandler);
             appendEventHandler(sb, "HeartbeatAlarmEventHandler", HeartbeatAlarmEventHandler);
-            appendEventHandler(sb, "MessageGapDetectedEventHandler", MessageGapDetectedEventHandler);
             appendEventHandler(sb, "UnhandledStatusEventHandler", UnhandledStatusEventHandler);
             appendEventHandler(sb, "FlowControlProcessedEventHandler", FlowControlProcessedEventHandler);
             appendEventHandler(sb, "ClosedEventHandler", ClosedEventHandler);

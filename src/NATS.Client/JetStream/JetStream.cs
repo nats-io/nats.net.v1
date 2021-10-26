@@ -300,18 +300,28 @@ namespace NATS.Client.JetStream
                 
                 sub = ((Connection)Conn).subscribeSync(inboxDeliver, queueName, CreateSubDelegate); 
             }
-            else 
+            else
             {
-                void JsSubHandler(object sender, MsgHandlerEventArgs args)
+                EventHandler<MsgHandlerEventArgs> handler;
+                if (autoAck && serverCc.AckPolicy != AckPolicy.None)
                 {
-                    if (asm.Manage(args.Message)) { return; } // manager handled the message
-                    
-                    userHandler.Invoke(sender, args);
-                    
-                    if (autoAck && args.Message.LastAck() == null) // auto and not already ack'd
+                    handler = (sender, args) => 
                     {
-                        args.Message.Ack();
-                    }
+                        if (asm.Manage(args.Message)) { return; } // manager handled the message
+                        userHandler.Invoke(sender, args);
+                        if (args.Message.LastAck == null || args.Message.LastAck == AckType.AckProgress)
+                        {
+                            args.Message.Ack();
+                        }
+                    };
+                }
+                else
+                {
+                    handler = (sender, args) => 
+                    {
+                        if (asm.Manage(args.Message)) { return; } // manager handled the message
+                        userHandler.Invoke(sender, args);
+                    };
                 }
 
                 AsyncSubscription CreateAsyncSubDelegate(Connection lConn, string lSubject, string lQueue)
@@ -319,7 +329,7 @@ namespace NATS.Client.JetStream
                     return new JetStreamPushAsyncSubscription(lConn, lSubject, lQueue, asm, this, stream, consumerName, inboxDeliver);
                 }
                 
-                sub = ((Connection)Conn).subscribeAsync(inboxDeliver, queueName, JsSubHandler, CreateAsyncSubDelegate);
+                sub = ((Connection)Conn).subscribeAsync(inboxDeliver, queueName, handler, CreateAsyncSubDelegate);
             }
 
             asm.SetSub(sub);

@@ -31,7 +31,7 @@ namespace NATS.Client
         internal Subscription sub;
         internal MsgHeader header;
         internal MsgStatus status;
-        protected AckType lastAck;
+        protected AckType _lastAck;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Msg"/> class without any
@@ -305,10 +305,10 @@ namespace NATS.Client
         public virtual JetStream.MetaData MetaData => null;
 
         /// <summary>
-        /// the last ack that was done with this message
+        /// the last ack that was done with this message, or null if there has not been an ack
         /// </summary>
         /// <returns>the last ack or null</returns>
-        public virtual AckType LastAck() => lastAck;
+        public AckType LastAck => _lastAck;
 
         /// <summary>
         /// Acknowledges a JetStream messages received from a Consumer,
