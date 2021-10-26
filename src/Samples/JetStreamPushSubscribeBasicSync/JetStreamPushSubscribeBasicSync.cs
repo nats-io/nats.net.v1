@@ -13,7 +13,6 @@
 
 using System;
 using System.Text;
-using System.Threading;
 using NATS.Client;
 using NATS.Client.JetStream;
 
@@ -68,7 +67,6 @@ namespace NATSExamples
                     PushSubscribeOptions so = PushSubscribeOptions.Builder()
                             .WithStream(helper.Stream)
                             .WithDurable(helper.Durable) // it's okay if this is null, the builder handles it
-                            .WithConfiguration(ConsumerConfiguration.Builder().WithIdleHeartbeat(500).Build())
                             .Build();
 
                     // Subscribe synchronously, then just wait for messages.
@@ -108,8 +106,6 @@ namespace NATSExamples
                     }
 
                     Console.WriteLine("\n" + red + " message(s) were received.\n");
-                    
-                    Thread.Sleep(1000000);
 
                     sub.Unsubscribe();
                     c.Flush(5000);

@@ -42,7 +42,7 @@ using System.Text;
 // Notes on the NATS .NET client.
 // 
 // While public and protected methods 
-// and properties adhere to the .NET coding guidlines, 
+// and properties adhere to the .NET coding guidelines, 
 // internal/private members and methods mirror the go client for
 // maintenance purposes.  Public method and properties are
 // documented with standard .NET doc.
@@ -59,7 +59,7 @@ using System.Text;
 //
 //     Coding guidelines are based on:
 //     http://blogs.msdn.com/b/brada/archive/2005/01/26/361363.aspx
-//     although method location mirrors the go client to faciliate
+//     although method location mirrors the go client to facilitate
 //     maintenance.
 //     
 namespace NATS.Client
@@ -172,6 +172,74 @@ namespace NATS.Client
 
         // Default server pool size
         internal const int srvPoolSize = 4;
+        
+        public static EventHandler<ConnEventArgs> DefaultClosedEventHandler() => 
+            (sender, e) => WriteEvent("ClosedEvent", e);
+        
+        public static EventHandler<ConnEventArgs> DefaultServerDiscoveredEventHandler() => 
+            (sender, e) => WriteEvent("ServerDiscoveredEvent", e);
+        
+        public static EventHandler<ConnEventArgs> DefaultDisconnectedEventHandler() => 
+            (sender, e) => WriteEvent("DisconnectedEvent", e);
+
+        public static EventHandler<ConnEventArgs> DefaultReconnectedEventHandler() => 
+            (sender, e) => WriteEvent("ReconnectedEvent", e);
+
+        public static EventHandler<ConnEventArgs> DefaultLameDuckModeEventHandler() => 
+            (sender, e) => WriteEvent("LameDuckModeEvent", e);
+
+        public static EventHandler<ErrEventArgs> DefaultAsyncErrorEventHandler() => 
+            (sender, e) => WriteError("AsyncErrorEvent", e);
+
+        public static EventHandler<ReconnectDelayEventArgs> DefaultReconnectDelayHandler() => (sender, e) =>
+        {
+            Console.Error.WriteLine($"ReconnectDelay Attempts: {e.Attempts}");
+        };
+
+        public static EventHandler<HeartbeatAlarmEventArgs> DefaultHeartbeatAlarmEventHandler() =>
+            (sender, e) =>
+                WriteEvent("HeartbeatAlarm", e,
+                    "lastStreamSequence: ", e.LastStreamSequence,
+                    "lastConsumerSequence: ", e.LastConsumerSequence);
+
+        public static EventHandler<UnhandledStatusEventArgs> DefaultUnhandledStatusEventHandler() => 
+            (sender, e) => WriteEvent("UnhandledStatus", e, "Status: ", e.Status);
+
+        public static EventHandler<FlowControlProcessedEventArgs> DefaultFlowControlProcessedEventHandler() =>
+            (sender, e) => WriteEvent("FlowControlProcessed", e, "FcSubject: ", e.FcSubject, "Source: ", e.Source);
+
+        private static void WriteEvent(String label, ConnJsSubEventArgs e, params object[] pairs) {
+            var sb = BeginFormatMessage(label, e.Conn, e.Sub, null);
+            for (int x = 0; x < pairs.Length; x++) {
+                sb.Append(", ").Append(pairs[x]).Append(pairs[++x]);
+            }
+            Console.Error.WriteLine(sb.ToString());
+        }
+
+        private static void WriteEvent(String label, ConnEventArgs e) {
+            Console.Error.WriteLine(BeginFormatMessage(label, e.Conn, null, e.Error.Message).ToString());
+        }
+
+        private static void WriteError(String label, ErrEventArgs e) {
+            Console.Error.WriteLine(BeginFormatMessage(label, e.Conn, e.Subscription, e.Error).ToString());
+        }
+
+        private static StringBuilder BeginFormatMessage(string label, Connection conn, Subscription sub, string error)
+        {
+            StringBuilder sb = new StringBuilder(label);
+            if (conn != null)
+            {
+                sb.Append(", Connection: ").Append(conn.ClientID);
+            }
+            if (sub != null) {
+                sb.Append(", Subscription: ").Append(sub.Sid);
+            }
+            if (error != null)
+            {
+                sb.Append(", Error: ").Append(error);
+            }
+            return sb;
+        }
     }
 
     public enum FlowControlSource { FlowControl, Heartbeat }
@@ -384,77 +452,6 @@ namespace NATS.Client
                 }
                 return signedNonce;
             }
-        }
-    }
-
-    internal static class DefaultEventHandler
-    {
-        public static EventHandler<ConnEventArgs> DefaultClosedEventHandler() => 
-            (sender, e) => WriteEvent("ClosedEvent", e);
-        
-        public static EventHandler<ConnEventArgs> DefaultServerDiscoveredEventHandler() => 
-            (sender, e) => WriteEvent("ServerDiscoveredEvent", e);
-        
-        public static EventHandler<ConnEventArgs> DefaultDisconnectedEventHandler() => 
-            (sender, e) => WriteEvent("DisconnectedEvent", e);
-
-        public static EventHandler<ConnEventArgs> DefaultReconnectedEventHandler() => 
-            (sender, e) => WriteEvent("ReconnectedEvent", e);
-
-        public static EventHandler<ConnEventArgs> DefaultLameDuckModeEventHandler() => 
-            (sender, e) => WriteEvent("LameDuckModeEvent", e);
-
-        public static EventHandler<ErrEventArgs> DefaultAsyncErrorEventHandler() => 
-            (sender, e) => WriteError("AsyncErrorEvent", e);
-
-        public static EventHandler<ReconnectDelayEventArgs> DefaultReconnectDelayHandler() => (sender, e) =>
-        {
-            Console.Error.WriteLine($"ReconnectDelay Attempts: {e.Attempts}");
-        };
-
-        public static EventHandler<HeartbeatAlarmEventArgs> DefaultHeartbeatAlarmEventHandler() =>
-            (sender, e) =>
-                WriteEvent("HeartbeatAlarm", e,
-                    "lastStreamSequence: ", e.LastStreamSequence,
-                    "lastConsumerSequence: ", e.LastConsumerSequence);
-
-        public static EventHandler<UnhandledStatusEventArgs> DefaultUnhandledStatusEventHandler() => 
-            (sender, e) => WriteEvent("UnhandledStatus", e, "Status: ", e.Status);
-
-        public static EventHandler<FlowControlProcessedEventArgs> DefaultFlowControlProcessedEventHandler() =>
-            (sender, e) => WriteEvent("FlowControlProcessed", e, "FcSubject: ", e.FcSubject, "Source: ", e.Source);
-
-        private static void WriteEvent(String label, ConnJsSubEventArgs e, params object[] pairs) {
-            var sb = BeginFormatMessage(label, e.Conn, e.Sub, null);
-            for (int x = 0; x < pairs.Length; x++) {
-                sb.Append(", ").Append(pairs[x]).Append(pairs[++x]);
-            }
-            Console.Error.WriteLine(sb.ToString());
-        }
-
-        private static void WriteEvent(String label, ConnEventArgs e) {
-            Console.Error.WriteLine(BeginFormatMessage(label, e.Conn, null, e.Error.Message).ToString());
-        }
-
-        private static void WriteError(String label, ErrEventArgs e) {
-            Console.Error.WriteLine(BeginFormatMessage(label, e.Conn, e.Subscription, e.Error).ToString());
-        }
-
-        private static StringBuilder BeginFormatMessage(string label, Connection conn, Subscription sub, string error)
-        {
-            StringBuilder sb = new StringBuilder(label);
-            if (conn != null)
-            {
-                sb.Append(", Connection: ").Append(conn.ClientID);
-            }
-            if (sub != null) {
-                sb.Append(", Subscription: ").Append(sub.Sid);
-            }
-            if (error != null)
-            {
-                sb.Append(", Error: ").Append(error);
-            }
-            return sb;
         }
     }
 

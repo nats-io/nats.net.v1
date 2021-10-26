@@ -27,6 +27,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
+using static NATS.Client.Defaults;
+using Timeout = System.Threading.Timeout;
 
 namespace NATS.Client
 {
@@ -105,15 +107,12 @@ namespace NATS.Client
 
         private readonly Nuid _nuid = new Nuid();
 
-        Options opts = new Options();
+        private readonly Options opts; // assigned in constructor
 
         /// <summary>
         /// Gets the configuration options for this instance.
         /// </summary>
-        public Options Opts
-        {
-            get { return opts; }
-        }
+        public Options Opts => opts;
 
         private readonly List<Thread> wg = new List<Thread>(2);
 
@@ -396,8 +395,8 @@ namespace NATS.Client
 
                     client.NoDelay = false;
 
-                    client.ReceiveBufferSize = Defaults.defaultBufSize*2;
-                    client.SendBufferSize    = Defaults.defaultBufSize;
+                    client.ReceiveBufferSize = defaultBufSize*2;
+                    client.SendBufferSize    = defaultBufSize;
                     
                     stream = client.GetStream();
 
@@ -723,10 +722,18 @@ namespace NATS.Client
         internal Connection(Options options)
         {
             opts = new Options(options);
-            if (opts.ReconnectDelayHandler == null)
-            {
-                opts.ReconnectDelayHandler = DefaultReconnectDelayHandler;
-            }
+
+            // set default handlers
+            if (opts.ClosedEventHandler == null) { opts.ClosedEventHandler = DefaultClosedEventHandler(); }
+            if (opts.ServerDiscoveredEventHandler == null) { opts.ServerDiscoveredEventHandler = DefaultServerDiscoveredEventHandler(); }
+            if (opts.DisconnectedEventHandler == null) { opts.DisconnectedEventHandler = DefaultDisconnectedEventHandler(); }
+            if (opts.ReconnectedEventHandler == null) { opts.ReconnectedEventHandler = DefaultReconnectedEventHandler(); }
+            if (opts.AsyncErrorEventHandler == null) { opts.AsyncErrorEventHandler = DefaultAsyncErrorEventHandler(); }
+            if (opts.LameDuckModeEventHandler == null) { opts.LameDuckModeEventHandler = DefaultLameDuckModeEventHandler(); }
+            if (opts.ReconnectDelayHandler == null) { opts.ReconnectDelayHandler = DefaultReconnectDelayHandler; }
+            if (opts.HeartbeatAlarmEventHandler == null) { opts.HeartbeatAlarmEventHandler = DefaultHeartbeatAlarmEventHandler(); }
+            if (opts.UnhandledStatusEventHandler == null) { opts.UnhandledStatusEventHandler = DefaultUnhandledStatusEventHandler(); }
+            if (opts.FlowControlProcessedEventHandler == null) { opts.FlowControlProcessedEventHandler = DefaultFlowControlProcessedEventHandler(); }
 
             PING_P_BYTES = Encoding.UTF8.GetBytes(IC.pingProto);
             PING_P_BYTES_LEN = PING_P_BYTES.Length;
@@ -842,7 +849,7 @@ namespace NATS.Client
                     catch (Exception) { }
                 }
 
-                bw = conn.getWriteBufferedStream(Defaults.defaultBufSize);
+                bw = conn.getWriteBufferedStream(defaultBufSize);
                 br = conn.getReadBufferedStream();
             }
             catch (Exception e)
@@ -859,7 +866,7 @@ namespace NATS.Client
         {
             conn.makeTLS(this.opts);
 
-            bw = conn.getWriteBufferedStream(Defaults.defaultBufSize);
+            bw = conn.getWriteBufferedStream(defaultBufSize);
             br = conn.getReadBufferedStream();
         }
 
@@ -1166,9 +1173,8 @@ namespace NATS.Client
                         if (!ex.IsAuthorizationViolationError() && !ex.IsAuthenticationExpiredError())
                             throw;
 
-                        var aseh = opts.AsyncErrorEventHandler;
-                        if (aseh != null)
-                            callbackScheduler.Add(() => aseh(s, new ErrEventArgs(this, null, ex.Message)));
+                        // handler is defaulted in constructor
+                        callbackScheduler.Add(() => opts.AsyncErrorEventHandler(s, new ErrEventArgs(this, null, ex.Message)));
 
                         if (natsAuthEx == null || !natsAuthEx.Message.Equals(ex.Message, StringComparison.OrdinalIgnoreCase))
                         {
@@ -1418,11 +1424,11 @@ namespace NATS.Client
             {
                 // TODO:  Make this reader (or future equivalent) unbounded.
                 // we need the underlying stream, so leave it open.
-                sr = new StreamReader(br, Encoding.UTF8, false, Defaults.MaxControlLineSize, true);
+                sr = new StreamReader(br, Encoding.UTF8, false, MaxControlLineSize, true);
                 result = sr.ReadLine();
 
                 // If opts.verbose is set, handle +OK.
-                if (opts.Verbose == true && IC.okProtoNoCRLF.Equals(result))
+                if (opts.Verbose && IC.okProtoNoCRLF.Equals(result))
                 {
                     result = sr.ReadLine();
                 }
@@ -1468,7 +1474,7 @@ namespace NATS.Client
             // the string directly using the buffered reader.
             //
             // Keep the underlying stream open.
-            using (StreamReader sr = new StreamReader(br, Encoding.ASCII, false, Defaults.MaxControlLineSize, true))
+            using (StreamReader sr = new StreamReader(br, Encoding.ASCII, false, MaxControlLineSize, true))
             {
                 return new Control(sr.ReadLine());
             }
@@ -1601,6 +1607,7 @@ namespace NATS.Client
                 var errorForHandler = lastEx;
                 lastEx = null;
 
+                // handler is defaulted in constructor
                 scheduleConnEvent(Opts.DisconnectedEventHandler, errorForHandler);
 
                 Srv cur;
@@ -1694,6 +1701,7 @@ namespace NATS.Client
                     srvPool.CurrentServer = cur;
                     status = ConnState.CONNECTED;
 
+                    // handler is defaulted in constructor
                     scheduleConnEvent(Opts.ReconnectedEventHandler);
 
                     // Release lock here, we will return below
@@ -1770,7 +1778,7 @@ namespace NATS.Client
         private void readLoop()
         {
             // Stack based buffer.
-            byte[] buffer = new byte[Defaults.defaultReadLength];
+            byte[] buffer = new byte[defaultReadLength];
             var parser = new Parser(this);
             int len;
 
@@ -1778,7 +1786,7 @@ namespace NATS.Client
             {
                 try
                 {
-                    len = br.Read(buffer, 0, Defaults.defaultReadLength);
+                    len = br.Read(buffer, 0, defaultReadLength);
 
                     // A length of zero can mean that the socket was closed
                     // locally by the application (Close) or the server
@@ -1854,7 +1862,7 @@ namespace NATS.Client
 
         // Roll our own fast conversion - we know it's the right
         // encoding. 
-        char[] convertToStrBuf = new char[Defaults.MaxControlLineSize];
+        char[] convertToStrBuf = new char[MaxControlLineSize];
 
         // Since we know we don't need to decode the protocol string,
         // just copy the chars into bytes.  This increased
@@ -2233,13 +2241,10 @@ namespace NATS.Client
             lastEx = new NATSSlowConsumerException();
             if (!s.sc)
             {
-                EventHandler<ErrEventArgs> aseh = opts.AsyncErrorEventHandler;
-                if (aseh != null)
-                {
-                    callbackScheduler.Add(
-                        () => { aseh(this, new ErrEventArgs(this, s, "Slow Consumer")); }
-                    );
-                }
+                // handler is defaulted in constructor
+                callbackScheduler.Add(
+                    () => { opts.AsyncErrorEventHandler(this, new ErrEventArgs(this, s, "Slow Consumer")); }
+                );
             }
             s.sc = true;
         }
@@ -2389,11 +2394,13 @@ namespace NATS.Client
                 var serverAdded = srvPool.Add(discoveredUrls, true);
                 if (notify && serverAdded)
                 {
+                    // handler is defaulted in constructor
                     scheduleConnEvent(opts.ServerDiscoveredEventHandler);
                 }
             }
 
-            if (notify && info.LameDuckMode && opts.LameDuckModeEventHandler != null)
+            // handler is defaulted in constructor
+            if (notify && info.LameDuckMode)
             {
                 scheduleConnEvent(opts.LameDuckModeEventHandler);
             }
@@ -4194,6 +4201,7 @@ namespace NATS.Client
                 // disconnect;
                 if (invokeDelegates && conn.isSetup())
                 {
+                    // handler is defaulted in constructor
                     scheduleConnEvent(Opts.DisconnectedEventHandler, error);
                 }
 
@@ -4244,6 +4252,7 @@ namespace NATS.Client
 
                 if (invokeDelegates)
                 {
+                    // handler is defaulted in constructor
                     scheduleConnEvent(opts.ClosedEventHandler, error);
                 }
 
@@ -4341,13 +4350,10 @@ namespace NATS.Client
         // async error handler if registered.
         internal void pushDrainException(Subscription s, Exception ex)
         {
-            EventHandler<ErrEventArgs> aseh = opts.AsyncErrorEventHandler;
-            if (aseh != null)
-            {
-                callbackScheduler.Add(
-                    () => { aseh(s, new ErrEventArgs(this, s, ex.Message)); }
-                );
-            }
+            // handler is defaulted in constructor
+            callbackScheduler.Add(
+                () => { opts.AsyncErrorEventHandler(s, new ErrEventArgs(this, s, ex.Message)); }
+            );
         }
 
         private void drain(int timeout)
@@ -4427,7 +4433,7 @@ namespace NATS.Client
         /// <seealso cref="Close()"/>
         public void Drain()
         {
-            Drain(Defaults.DefaultDrainTimeout);
+            Drain(DefaultDrainTimeout);
         }
 
         /// <summary>
@@ -4466,7 +4472,7 @@ namespace NATS.Client
         /// <returns>A task that represents the asynchronous drain operation.</returns>
         public Task DrainAsync()
         {
-            return DrainAsync(Defaults.DefaultDrainTimeout);
+            return DrainAsync(DefaultDrainTimeout);
         }
 
         /// <summary>

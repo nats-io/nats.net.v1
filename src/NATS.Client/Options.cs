@@ -44,66 +44,35 @@ namespace NATS.Client
 
         internal X509Certificate2Collection certificates = null;
 
-        private EventHandler<ConnEventArgs> _closedEventHandler;
-        private EventHandler<ConnEventArgs> _serverDiscoveredEventHandler;
-        private EventHandler<ConnEventArgs> _disconnectedEventHandler;
-        private EventHandler<ConnEventArgs> _reconnectedEventHandler;
-        private EventHandler<ErrEventArgs> _asyncErrorEventHandler;
-        private EventHandler<ConnEventArgs> _lameDuckModeEventHandler;
-        private EventHandler<ReconnectDelayEventArgs> _reconnectDelayHandler;
-        private EventHandler<HeartbeatAlarmEventArgs> _heartbeatAlarmEventHandler;
-        private EventHandler<UnhandledStatusEventArgs> _unhandledStatusEventHandler;
-        private EventHandler<FlowControlProcessedEventArgs> _flowControlProcessedEventHandler;
- 
         /// <summary>
         /// Represents the method that will handle an event raised 
         /// when a connection is closed.
         /// </summary>
-        public EventHandler<ConnEventArgs> ClosedEventHandler
-        {
-            get => _closedEventHandler ?? DefaultEventHandler.DefaultClosedEventHandler();
-            set => _closedEventHandler = value;
-        }
+        public EventHandler<ConnEventArgs> ClosedEventHandler;
 
         /// <summary>
         /// Represents the method that will handle an event raised
         /// whenever a new server has joined the cluster.
         /// </summary>
-        public EventHandler<ConnEventArgs> ServerDiscoveredEventHandler
-        {
-            get => _serverDiscoveredEventHandler ?? DefaultEventHandler.DefaultServerDiscoveredEventHandler();
-            set => _serverDiscoveredEventHandler = value;
-        }
+        public EventHandler<ConnEventArgs> ServerDiscoveredEventHandler;
 
         /// <summary>
         /// Represents the method that will handle an event raised 
         /// when a connection has been disconnected from a server.
         /// </summary>
-        public EventHandler<ConnEventArgs> DisconnectedEventHandler
-        {
-            get => _disconnectedEventHandler ?? DefaultEventHandler.DefaultDisconnectedEventHandler();
-            set => _disconnectedEventHandler = value;
-        }
+        public EventHandler<ConnEventArgs> DisconnectedEventHandler;
 
         /// <summary>
         /// Represents the method that will handle an event raised 
         /// when a connection has reconnected to a server.
         /// </summary>
-        public EventHandler<ConnEventArgs> ReconnectedEventHandler
-        {
-            get => _reconnectedEventHandler ?? DefaultEventHandler.DefaultReconnectedEventHandler();
-            set => _reconnectedEventHandler = value;
-        }
+        public EventHandler<ConnEventArgs> ReconnectedEventHandler;
 
         /// <summary>
         /// Represents the method that will handle an event raised 
         /// when an error occurs out of band.
         /// </summary>
-        public EventHandler<ErrEventArgs> AsyncErrorEventHandler
-        {
-            get => _asyncErrorEventHandler ?? DefaultEventHandler.DefaultAsyncErrorEventHandler();
-            set => _asyncErrorEventHandler = value;
-        }
+        public EventHandler<ErrEventArgs> AsyncErrorEventHandler;
 
         /// <summary>
         /// Represents the method that will handle an event raised
@@ -114,11 +83,7 @@ namespace NATS.Client
         /// before shuting down. This is often used in deployments when upgrading
         /// NATS Servers.
         /// </remarks>
-        public EventHandler<ConnEventArgs> LameDuckModeEventHandler
-        {
-            get => _lameDuckModeEventHandler ?? DefaultEventHandler.DefaultLameDuckModeEventHandler();
-            set => _lameDuckModeEventHandler = value;
-        }
+        public EventHandler<ConnEventArgs> LameDuckModeEventHandler;
 
         /// <summary>
         /// Represents the optional method that is used to get from the
@@ -132,39 +97,23 @@ namespace NATS.Client
         /// zero and <see cref="Options.ReconnectJitter"/> or
         /// <see cref="Options.ReconnectJitterTLS"/>
         /// </remarks>
-        public EventHandler<ReconnectDelayEventArgs> ReconnectDelayHandler
-        {
-            get => _reconnectDelayHandler ?? DefaultEventHandler.DefaultReconnectDelayHandler();
-            set => _reconnectDelayHandler = value;
-        }
-        
+        public EventHandler<ReconnectDelayEventArgs> ReconnectDelayHandler;
+
         /// <summary>
         /// Represents the method that will handle an heartbeat alarm
         /// </summary>
-        public EventHandler<HeartbeatAlarmEventArgs> HeartbeatAlarmEventHandler
-        {
-            get => _heartbeatAlarmEventHandler ?? DefaultEventHandler.DefaultHeartbeatAlarmEventHandler();
-            set => _heartbeatAlarmEventHandler = value;
-        }
+        public EventHandler<HeartbeatAlarmEventArgs> HeartbeatAlarmEventHandler;
 
         /// <summary>
         /// Represents the method that will handle a unknown or unhandled status event
         /// </summary>
-        public EventHandler<UnhandledStatusEventArgs> UnhandledStatusEventHandler
-        {
-            get => _unhandledStatusEventHandler ?? DefaultEventHandler.DefaultUnhandledStatusEventHandler();
-            set => _unhandledStatusEventHandler = value;
-        }
+        public EventHandler<UnhandledStatusEventArgs> UnhandledStatusEventHandler;
 
         /// <summary>
         /// Represents the method that will handle a flow control processed event
         /// </summary>
-        public EventHandler<FlowControlProcessedEventArgs> FlowControlProcessedEventHandler
-        {
-            get => _flowControlProcessedEventHandler ?? DefaultEventHandler.DefaultFlowControlProcessedEventHandler();
-            set => _flowControlProcessedEventHandler = value;
-        }
-
+        public EventHandler<FlowControlProcessedEventArgs> FlowControlProcessedEventHandler;
+        
         /// <summary>
         /// Represents the optional method that is used to fetch and
         /// return the account signed JWT for this user.  Exceptions thrown
