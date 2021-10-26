@@ -30,6 +30,11 @@ namespace NATS.Client
     public interface ISubscription : IDisposable
     {
         /// <summary>
+        /// the id associated with the subscription, used by the connection when processing an incoming
+        /// </summary>
+        long Sid { get; }
+        
+        /// <summary>
         /// Gets the subject for this subscription.
         /// </summary>
         /// <remarks><para>Subject names, including reply subject (INBOX) names, are case-sensitive

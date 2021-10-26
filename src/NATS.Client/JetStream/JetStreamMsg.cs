@@ -36,7 +36,7 @@ namespace NATS.Client.JetStream
         private void AckReply(AckType ackType, int timeout)
         {
             // very important, must use _reply variable, not public Reply property
-            if (timeout > 0)
+            if (timeout >= 0)
             {
                 Connection.Request(_reply, ackType.Bytes, timeout);
             }
@@ -52,7 +52,7 @@ namespace NATS.Client.JetStream
         /// Acknowledges a JetStream messages received from a Consumer,
         /// indicating the message will not be resent.
         /// </summary>
-        public override void Ack() => AckReply(AckAck, 0);
+        public override void Ack() => AckReply(AckAck, -1);
 
         /// <summary>
         /// Acknowledges a JetStream messages received from a Consumer,
@@ -68,21 +68,21 @@ namespace NATS.Client.JetStream
         /// that the message is not completely processed and should be sent
         /// again later.
         /// </summary>
-        public override void Nak() => AckReply(AckNak, 0);
+        public override void Nak() => AckReply(AckNak, -1);
 
         /// <summary>
         /// Prevents this message from ever being delivered regardless of
         /// maxDeliverCount.
         /// </summary>
-        public override void Term() => AckReply(AckTerm, 0);
+        public override void Term() => AckReply(AckTerm, -1);
 
         /// <summary>
         /// Indicates that this message is being worked on and reset redelivery timer in the server.
         /// </summary>
-        public override void InProgress() => AckReply(AckProgress, 0);
+        public override void InProgress() => AckReply(AckProgress, -1);
 
         /// <summary>
-        /// Checks if a message is from Jetstream or is a standard message.
+        /// Checks if a message is from JetStream or is a standard message.
         /// </summary>
         /// <returns></returns>
         public override bool IsJetStream => true;

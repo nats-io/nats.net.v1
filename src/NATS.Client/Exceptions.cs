@@ -12,7 +12,6 @@
 // limitations under the License.
 
 using System;
-using NATS.Client.JetStream;
 
 namespace NATS.Client
 {
@@ -198,11 +197,11 @@ namespace NATS.Client
     /// </summary>
     public class NATSJetStreamGapException : NATSException
     {
-        private IJetStreamSubscription Sub { get; }
+        private Subscription Sub { get; }
         private ulong ExpectedConsumerSeq { get; }
         private ulong ReceivedConsumerSeq { get; }
 
-        public NATSJetStreamGapException(IJetStreamSubscription sub, ulong expectedConsumerSeq, ulong receivedConsumerSeq)
+        public NATSJetStreamGapException(Subscription sub, ulong expectedConsumerSeq, ulong receivedConsumerSeq)
             : base($"Message Gap Detected. Expected Seq: {expectedConsumerSeq}, Received Seq: {receivedConsumerSeq}")
         {
             Sub = sub;
@@ -216,10 +215,10 @@ namespace NATS.Client
     /// </summary>
     public class NATSJetStreamStatusException : NATSException
     {
-        private IJetStreamSubscription Sub { get; }
+        private Subscription Sub { get; }
         private MsgStatus Status { get; }
 
-        public NATSJetStreamStatusException(IJetStreamSubscription sub, MsgStatus status)
+        public NATSJetStreamStatusException(Subscription sub, MsgStatus status)
             : base($"Unknown or unprocessed status message: {status.Message}")
         {
             Sub = sub;
@@ -243,32 +242,32 @@ namespace NATS.Client
         public string Id => _detail.Id;
     }
 
-    public class ClientExDetail
+    public sealed class ClientExDetail
     {
-        public static ClientExDetail JsSubPullCantHaveDeliverGroup = new ClientExDetail(Sub, 90001, "Pull subscriptions can't have a deliver group.");
-        public static ClientExDetail JsSubPullCantHaveDeliverSubject = new ClientExDetail(Sub, 90002, "Pull subscriptions can't have a deliver subject.");
-        public static ClientExDetail JsSubPushCantHaveMaxPullWaiting = new ClientExDetail(Sub, 90003, "Push subscriptions cannot supply max pull waiting.");
-        public static ClientExDetail JsSubQueueDeliverGroupMismatch = new ClientExDetail(Sub, 90004, "Queue / deliver group mismatch.");
-        public static ClientExDetail JsSubFcHbNotValidPull = new ClientExDetail(Sub, 90005, "Flow Control and/or heartbeat is not valid with a pull subscription.");
-        public static ClientExDetail JsSubFcHbHbNotValidQueue = new ClientExDetail(Sub, 90006, "Flow Control and/or heartbeat is not valid in queue mode.");
-        public static ClientExDetail JsSubNoMatchingStreamForSubject = new ClientExDetail(Sub, 90007, "No matching streams for subject.");
-        public static ClientExDetail JsSubConsumerAlreadyConfiguredAsPush = new ClientExDetail(Sub, 90008, "Consumer is already configured as a push consumer.");
-        public static ClientExDetail JsSubConsumerAlreadyConfiguredAsPull = new ClientExDetail(Sub, 90009, "Consumer is already configured as a pull consumer.");
-        public static ClientExDetail JsSubExistingDeliverSubjectMismatch = new ClientExDetail(Sub, 90010, "Existing consumer deliver subject does not match requested deliver subject.");
-        public static ClientExDetail JsSubSubjectDoesNotMatchFilter = new ClientExDetail(Sub, 90011, "Subject does not match consumer configuration filter.");
-        public static ClientExDetail JsSubConsumerAlreadyBound = new ClientExDetail(Sub, 90012, "Consumer is already bound to a subscription.");
-        public static ClientExDetail JsSubExistingConsumerNotQueue = new ClientExDetail(Sub, 90013, "Existing consumer is not configured as a queue / deliver group.");
-        public static ClientExDetail JsSubExistingConsumerIsQueue = new ClientExDetail(Sub, 90014, "Existing consumer  is configured as a queue / deliver group.");
-        public static ClientExDetail JsSubExistingQueueDoesNotMatchRequestedQueue = new ClientExDetail(Sub, 90015, "Existing consumer deliver group does not match requested queue / deliver group.");
-        public static ClientExDetail JsSubExistingConsumerCannotBeModified = new ClientExDetail(Sub, 90016, "Existing consumer cannot be modified.");
-        public static ClientExDetail JsSubConsumerNotFoundRequiredInBind = new ClientExDetail(Sub, 90017, "Consumer not found, required in bind mode.");
+        public static readonly ClientExDetail JsSubPullCantHaveDeliverGroup = new ClientExDetail(Sub, 90001, "Pull subscriptions can't have a deliver group.");
+        public static readonly ClientExDetail JsSubPullCantHaveDeliverSubject = new ClientExDetail(Sub, 90002, "Pull subscriptions can't have a deliver subject.");
+        public static readonly ClientExDetail JsSubPushCantHaveMaxPullWaiting = new ClientExDetail(Sub, 90003, "Push subscriptions cannot supply max pull waiting.");
+        public static readonly ClientExDetail JsSubQueueDeliverGroupMismatch = new ClientExDetail(Sub, 90004, "Queue / deliver group mismatch.");
+        public static readonly ClientExDetail JsSubFcHbNotValidPull = new ClientExDetail(Sub, 90005, "Flow Control and/or heartbeat is not valid with a pull subscription.");
+        public static readonly ClientExDetail JsSubFcHbHbNotValidQueue = new ClientExDetail(Sub, 90006, "Flow Control and/or heartbeat is not valid in queue mode.");
+        public static readonly ClientExDetail JsSubNoMatchingStreamForSubject = new ClientExDetail(Sub, 90007, "No matching streams for subject.");
+        public static readonly ClientExDetail JsSubConsumerAlreadyConfiguredAsPush = new ClientExDetail(Sub, 90008, "Consumer is already configured as a push consumer.");
+        public static readonly ClientExDetail JsSubConsumerAlreadyConfiguredAsPull = new ClientExDetail(Sub, 90009, "Consumer is already configured as a pull consumer.");
+        public static readonly ClientExDetail JsSubExistingDeliverSubjectMismatch = new ClientExDetail(Sub, 90010, "Existing consumer deliver subject does not match requested deliver subject.");
+        public static readonly ClientExDetail JsSubSubjectDoesNotMatchFilter = new ClientExDetail(Sub, 90011, "Subject does not match consumer configuration filter.");
+        public static readonly ClientExDetail JsSubConsumerAlreadyBound = new ClientExDetail(Sub, 90012, "Consumer is already bound to a subscription.");
+        public static readonly ClientExDetail JsSubExistingConsumerNotQueue = new ClientExDetail(Sub, 90013, "Existing consumer is not configured as a queue / deliver group.");
+        public static readonly ClientExDetail JsSubExistingConsumerIsQueue = new ClientExDetail(Sub, 90014, "Existing consumer  is configured as a queue / deliver group.");
+        public static readonly ClientExDetail JsSubExistingQueueDoesNotMatchRequestedQueue = new ClientExDetail(Sub, 90015, "Existing consumer deliver group does not match requested queue / deliver group.");
+        public static readonly ClientExDetail JsSubExistingConsumerCannotBeModified = new ClientExDetail(Sub, 90016, "Existing consumer cannot be modified.");
+        public static readonly ClientExDetail JsSubConsumerNotFoundRequiredInBind = new ClientExDetail(Sub, 90017, "Consumer not found, required in bind mode.");
 
-        public static ClientExDetail JsSoDurableMismatch = new ClientExDetail(So, 90101, "Builder durable must match the consumer configuration durable if both are provided.");
-        public static ClientExDetail JsSoDeliverGroupMismatch = new ClientExDetail(So, 90102, "Builder deliver group must match the consumer configuration deliver group if both are provided.");
-        public static ClientExDetail JsSoDeliverSubjectGroupMismatch = new ClientExDetail(So, 90103, "Builder deliver subject must match the consumer configuration deliver subject if both are provided.");
+        public static readonly ClientExDetail JsSoDurableMismatch = new ClientExDetail(So, 90101, "Builder durable must match the consumer configuration durable if both are provided.");
+        public static readonly ClientExDetail JsSoDeliverGroupMismatch = new ClientExDetail(So, 90102, "Builder deliver group must match the consumer configuration deliver group if both are provided.");
+        public static readonly ClientExDetail JsSoDeliverSubjectGroupMismatch = new ClientExDetail(So, 90103, "Builder deliver subject must match the consumer configuration deliver subject if both are provided.");
 
-        internal const string Sub = "SUB";
-        internal const string So = "SO";
+        private const string Sub = "SUB";
+        private const string So = "SO";
 
         public string Id { get; }
         public string Message { get; }

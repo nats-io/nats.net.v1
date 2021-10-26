@@ -1026,6 +1026,24 @@ namespace NATS.Client
         }
 
         /// <summary>
+        /// Gets the ID of client as known by the NATS server, otherwise <c>null</c>.
+        /// </summary>
+        /// <remarks>
+        /// May not be supported in all versions of the server. If the client is connected to
+        /// an older server or is in the process of connecting, 0 will be returned.
+        /// </remarks>
+        public int ClientID
+        {
+            get
+            {
+                lock (mu)
+                {
+                    return info.ClientId;
+                }
+            }
+        }
+
+        /// <summary>
         /// Gets the server ID of the NATS server to which this instance
         /// is connected, otherwise <c>null</c>.
         /// </summary>

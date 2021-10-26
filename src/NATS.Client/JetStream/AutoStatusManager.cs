@@ -19,7 +19,7 @@ namespace NATS.Client.JetStream
 {
     internal interface IAutoStatusManager
     {
-        void SetSub(IJetStreamSubscription sub);
+        void SetSub(Subscription sub);
         void Shutdown();
         bool Manage(Msg msg);
     }
@@ -27,9 +27,9 @@ namespace NATS.Client.JetStream
     internal class PullAutoStatusManager : IAutoStatusManager
     {
         private static readonly IList<int> PullKnownStatusCodes = new List<int>(new []{404, 408});
-        private IJetStreamSubscription _sub;
+        private Subscription _sub;
         
-        public void SetSub(IJetStreamSubscription sub)
+        public void SetSub(Subscription sub)
         {
             _sub = sub;
         }
@@ -53,7 +53,7 @@ namespace NATS.Client.JetStream
         private const int Threshold = 3;
 
         private readonly Connection conn;
-        private IJetStreamSubscription _sub;
+        private Subscription _sub;
 
         internal bool SyncMode { get; }
         internal bool QueueMode { get; }
@@ -69,11 +69,6 @@ namespace NATS.Client.JetStream
         internal ulong LastConsumerSeq { get; private set; }
         internal ulong ExpectedConsumerSeq { get; private set; }
         internal long LastMsgReceived { get; private set; }
-        
-        private EventHandler<HeartbeatAlarmEventArgs> HeartbeatAlarmEventHandler;
-        private EventHandler<MessageGapDetectedEventArgs> MsgGapDetectedEventHandler;
-        private EventHandler<UnhandledStatusEventArgs> UnhandledStatusEventHandler;
-        private EventHandler<FlowControlProcessedEventArgs> FlowControlProcessedEventHandler;
 
         private AsmTimer asmTimer;
         
@@ -115,16 +110,11 @@ namespace NATS.Client.JetStream
                 }
                 Fc = Hb && cc.FlowControl; // can't have fc w/o heartbeat
             }
-
-            HeartbeatAlarmEventHandler = conn.Opts.HeartbeatAlarmEventHandler ?? NoOpEventHandler.HandleHeartbeatAlarmEvent();
-            MsgGapDetectedEventHandler = conn.Opts.MessageGapDetectedEventHandler ?? NoOpEventHandler.HandleMessageGapDetectedEvent();
-            UnhandledStatusEventHandler = conn.Opts.UnhandledStatusEventHandler ?? NoOpEventHandler.HandleUnhandledStatusEvent();
-            FlowControlProcessedEventHandler = conn.Opts.FlowControlProcessedEventHandler ?? NoOpEventHandler.FlowControlProcessedEvent();
         }
 
         // chicken or egg situation here. The handler needs the sub in case of error
         // but the sub needs the handler in order to be created
-        public void SetSub(IJetStreamSubscription sub)
+        public void SetSub(Subscription sub)
         {
             _sub = sub;
             if (Hb) {
@@ -178,7 +168,7 @@ namespace NATS.Client.JetStream
             ulong receivedConsumerSeq = msg.MetaData.ConsumerSequence;
             if (ExpectedConsumerSeq != receivedConsumerSeq) 
             {
-                MsgGapDetectedEventHandler.Invoke(this, new MessageGapDetectedEventArgs(conn, _sub,
+                conn.Opts.MessageGapDetectedEventHandler.Invoke(this, new MessageGapDetectedEventArgs(conn, _sub,
                     LastStreamSeq, LastConsumerSeq, ExpectedConsumerSeq, receivedConsumerSeq));
             
                 if (SyncMode) {
@@ -226,7 +216,7 @@ namespace NATS.Client.JetStream
 
                 // this status is unknown to us, always use the error handler.
                 // If it's a sync call, also throw an exception
-                UnhandledStatusEventHandler.Invoke(this, new UnhandledStatusEventArgs(conn, _sub, msg.Status));
+                conn.Opts.UnhandledStatusEventHandler.Invoke(this, new UnhandledStatusEventArgs(conn, _sub, msg.Status));
                 if (SyncMode) 
                 {
                     throw new NATSJetStreamStatusException(_sub, msg.Status);
@@ -242,7 +232,7 @@ namespace NATS.Client.JetStream
             if (fcSubject != null && !fcSubject.Equals(LastFcSubject)) {
                 conn.Publish(fcSubject, null);
                 LastFcSubject = fcSubject; // set after publish in case the pub fails
-                FlowControlProcessedEventHandler.Invoke(this, new FlowControlProcessedEventArgs(conn, _sub, fcSubject, source));
+                conn.Opts.FlowControlProcessedEventHandler.Invoke(this, new FlowControlProcessedEventArgs(conn, _sub, fcSubject, source));
             }
         }
    }

@@ -43,36 +43,68 @@ namespace NATS.Client
         int reconnectJitterTLS = Defaults.ReconnectJitterTLS;
 
         internal X509Certificate2Collection certificates = null;
+
+        private EventHandler<ConnEventArgs> _closedEventHandler;
+        private EventHandler<ConnEventArgs> _serverDiscoveredEventHandler;
+        private EventHandler<ConnEventArgs> _disconnectedEventHandler;
+        private EventHandler<ConnEventArgs> _reconnectedEventHandler;
+        private EventHandler<ErrEventArgs> _asyncErrorEventHandler;
+        private EventHandler<ConnEventArgs> _lameDuckModeEventHandler;
+        private EventHandler<ReconnectDelayEventArgs> _reconnectDelayHandler;
+        private EventHandler<HeartbeatAlarmEventArgs> _heartbeatAlarmEventHandler;
+        private EventHandler<MessageGapDetectedEventArgs> _messageGapDetectedEventHandler;
+        private EventHandler<UnhandledStatusEventArgs> _unhandledStatusEventHandler;
+        private EventHandler<FlowControlProcessedEventArgs> _flowControlProcessedEventHandler;
  
         /// <summary>
         /// Represents the method that will handle an event raised 
         /// when a connection is closed.
         /// </summary>
-        public EventHandler<ConnEventArgs> ClosedEventHandler = null;
+        public EventHandler<ConnEventArgs> ClosedEventHandler
+        {
+            get => _closedEventHandler ?? DefaultEventHandler.DefaultClosedEventHandler();
+            set => _closedEventHandler = value;
+        }
 
         /// <summary>
         /// Represents the method that will handle an event raised
         /// whenever a new server has joined the cluster.
         /// </summary>
-        public EventHandler<ConnEventArgs> ServerDiscoveredEventHandler = null;
+        public EventHandler<ConnEventArgs> ServerDiscoveredEventHandler
+        {
+            get => _serverDiscoveredEventHandler ?? DefaultEventHandler.DefaultServerDiscoveredEventHandler();
+            set => _serverDiscoveredEventHandler = value;
+        }
 
         /// <summary>
         /// Represents the method that will handle an event raised 
         /// when a connection has been disconnected from a server.
         /// </summary>
-        public EventHandler<ConnEventArgs> DisconnectedEventHandler = null;
+        public EventHandler<ConnEventArgs> DisconnectedEventHandler
+        {
+            get => _disconnectedEventHandler ?? DefaultEventHandler.DefaultDisconnectedEventHandler();
+            set => _disconnectedEventHandler = value;
+        }
 
         /// <summary>
         /// Represents the method that will handle an event raised 
         /// when a connection has reconnected to a server.
         /// </summary>
-        public EventHandler<ConnEventArgs> ReconnectedEventHandler = null;
+        public EventHandler<ConnEventArgs> ReconnectedEventHandler
+        {
+            get => _reconnectedEventHandler ?? DefaultEventHandler.DefaultReconnectedEventHandler();
+            set => _reconnectedEventHandler = value;
+        }
 
         /// <summary>
         /// Represents the method that will handle an event raised 
         /// when an error occurs out of band.
         /// </summary>
-        public EventHandler<ErrEventArgs> AsyncErrorEventHandler = null;
+        public EventHandler<ErrEventArgs> AsyncErrorEventHandler
+        {
+            get => _asyncErrorEventHandler ?? DefaultEventHandler.DefaultAsyncErrorEventHandler();
+            set => _asyncErrorEventHandler = value;
+        }
 
         /// <summary>
         /// Represents the method that will handle an event raised
@@ -83,7 +115,11 @@ namespace NATS.Client
         /// before shuting down. This is often used in deployments when upgrading
         /// NATS Servers.
         /// </remarks>
-        public EventHandler<ConnEventArgs> LameDuckModeEventHandler = null;
+        public EventHandler<ConnEventArgs> LameDuckModeEventHandler
+        {
+            get => _lameDuckModeEventHandler ?? DefaultEventHandler.DefaultLameDuckModeEventHandler();
+            set => _lameDuckModeEventHandler = value;
+        }
 
         /// <summary>
         /// Represents the optional method that is used to get from the
@@ -97,7 +133,47 @@ namespace NATS.Client
         /// zero and <see cref="Options.ReconnectJitter"/> or
         /// <see cref="Options.ReconnectJitterTLS"/>
         /// </remarks>
-        public EventHandler<ReconnectDelayEventArgs> ReconnectDelayHandler = null;
+        public EventHandler<ReconnectDelayEventArgs> ReconnectDelayHandler
+        {
+            get => _reconnectDelayHandler ?? DefaultEventHandler.DefaultReconnectDelayHandler();
+            set => _reconnectDelayHandler = value;
+        }
+        
+        /// <summary>
+        /// Represents the method that will handle an heartbeat alarm
+        /// </summary>
+        public EventHandler<HeartbeatAlarmEventArgs> HeartbeatAlarmEventHandler
+        {
+            get => _heartbeatAlarmEventHandler ?? DefaultEventHandler.DefaultHeartbeatAlarmEventHandler();
+            set => _heartbeatAlarmEventHandler = value;
+        }
+
+        /// <summary>
+        /// Represents the method that will handle an message gap detected event
+        /// </summary>
+        public EventHandler<MessageGapDetectedEventArgs> MessageGapDetectedEventHandler
+        {
+            get => _messageGapDetectedEventHandler ?? DefaultEventHandler.DefaultMessageGapDetectedEventHandler();
+            set => _messageGapDetectedEventHandler = value;
+        }
+
+        /// <summary>
+        /// Represents the method that will handle a unknown or unhandled status event
+        /// </summary>
+        public EventHandler<UnhandledStatusEventArgs> UnhandledStatusEventHandler
+        {
+            get => _unhandledStatusEventHandler ?? DefaultEventHandler.DefaultUnhandledStatusEventHandler();
+            set => _unhandledStatusEventHandler = value;
+        }
+
+        /// <summary>
+        /// Represents the method that will handle a flow control processed event
+        /// </summary>
+        public EventHandler<FlowControlProcessedEventArgs> FlowControlProcessedEventHandler
+        {
+            get => _flowControlProcessedEventHandler ?? DefaultEventHandler.DefaultFlowControlProcessedEventHandler();
+            set => _flowControlProcessedEventHandler = value;
+        }
 
         /// <summary>
         /// Represents the optional method that is used to fetch and
@@ -114,26 +190,6 @@ namespace NATS.Client
         /// creating a connection.
         /// </summary>
         internal EventHandler<UserSignatureEventArgs> UserSignatureEventHandler = null;
-
-        /// <summary>
-        /// Represents the method that will handle an heartbeat alarm
-        /// </summary>
-        public EventHandler<HeartbeatAlarmEventArgs> HeartbeatAlarmEventHandler;
-
-        /// <summary>
-        /// Represents the method that will handle an message gap detected event
-        /// </summary>
-        public EventHandler<MessageGapDetectedEventArgs> MessageGapDetectedEventHandler;
-
-        /// <summary>
-        /// Represents the method that will handle a unknown or unhandled status event
-        /// </summary>
-        public EventHandler<UnhandledStatusEventArgs> UnhandledStatusEventHandler;
-
-        /// <summary>
-        /// Represents the method that will handle a flow control processed event
-        /// </summary>
-        public EventHandler<FlowControlProcessedEventArgs> FlowControlProcessedEventHandler;
 
         /// <summary>
         /// Sets user credentials using the NATS 2.0 security scheme.

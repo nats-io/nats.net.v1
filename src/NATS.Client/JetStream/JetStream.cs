@@ -322,7 +322,7 @@ namespace NATS.Client.JetStream
                 sub = ((Connection)Conn).subscribeAsync(inboxDeliver, queueName, JsSubHandler, CreateAsyncSubDelegate);
             }
 
-            asm.SetSub((IJetStreamSubscription)sub);
+            asm.SetSub(sub);
             return sub;
         }
 

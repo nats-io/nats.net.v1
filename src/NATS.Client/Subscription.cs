@@ -84,12 +84,14 @@ namespace NATS.Client
         }
 
         /// <summary>
+        /// the id associated with the subscription, used by the connection when processing an incoming
+        /// </summary>
+        public long Sid => sid; 
+
+        /// <summary>
         /// Gets the subject for this subscription.
         /// </summary>
-        public string Subject
-        {
-            get { return subject; }
-        }
+        public string Subject => subject;
 
         // Optional queue group name. If present, all subscriptions with the
         // same name will form a distributed queue, and each message will
@@ -103,22 +105,13 @@ namespace NATS.Client
         /// If present, all subscriptions with the same name will form a distributed queue, and each message will only
         /// be processed by one member of the group.
         /// </remarks>
-        public string Queue
-        {
-            get { return queue; }
-        }
+        public string Queue => queue;
 
         /// <summary>
         /// Gets the <see cref="Connection"/> associated with this instance.
         /// </summary>
-        public Connection Connection
-        {
-            get
-            {
-                return conn;
-            }
-        }
- 
+        public Connection Connection => conn;
+
         //caller must lock
         internal bool tallyMessage(long bytes)
         {
