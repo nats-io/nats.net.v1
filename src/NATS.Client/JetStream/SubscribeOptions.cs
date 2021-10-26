@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using NATS.Client.Internals;
+using static NATS.Client.ClientExDetail;
 
 namespace NATS.Client.JetStream
 {
@@ -22,28 +23,118 @@ namespace NATS.Client.JetStream
     public abstract class SubscribeOptions
     {
         internal string Stream { get; }
+        internal bool Pull { get;  }
         internal bool Bind { get;  }
         internal ConsumerConfiguration ConsumerConfiguration { get;}
+        internal int MessageAlarmTime;
 
-        internal SubscribeOptions(string stream, string durable, bool pull, bool bind, 
-            string deliverSubject, string deliverGroup, ConsumerConfiguration cc)
+        protected SubscribeOptions(ISubscribeOptionsBuilder builder, bool pull, string deliverSubject, string deliverGroup)
         {
-            Stream = Validator.ValidateStreamName(stream, bind);
+            Stream = Validator.ValidateStreamName(builder.Stream, builder.Bind);
             
-            durable = Validator.ValidateMustMatchIfBothSupplied(durable, cc?.Durable, "Builder Durable", "Consumer Configuration Durable");
-            durable = Validator.ValidateDurable(durable, pull || bind);
+            string durable = Validator.ValidateMustMatchIfBothSupplied(builder.Durable, builder.Cc?.Durable, JsSoDurableMismatch);
+            durable = Validator.ValidateDurable(durable, pull || builder.Bind);
 
-            deliverGroup = Validator.ValidateMustMatchIfBothSupplied(deliverGroup, cc?.DeliverGroup, "Builder Deliver Group", "Consumer Configuration Deliver Group");
+            deliverGroup = Validator.ValidateMustMatchIfBothSupplied(deliverGroup, builder.Cc?.DeliverGroup, JsSoDeliverGroupMismatch);
 
-            deliverSubject = Validator.ValidateMustMatchIfBothSupplied(deliverSubject, cc?.DeliverSubject, "Builder Deliver Subject", "Consumer Configuration Deliver Subject");
+            deliverSubject = Validator.ValidateMustMatchIfBothSupplied(deliverSubject, builder.Cc?.DeliverSubject, JsSoDeliverSubjectGroupMismatch);
 
-            ConsumerConfiguration = ConsumerConfiguration.Builder(cc)
+            ConsumerConfiguration = ConsumerConfiguration.Builder(builder.Cc)
                 .WithDurable(durable)
                 .WithDeliverSubject(deliverSubject)
                 .WithDeliverGroup(deliverGroup)
                 .Build();
 
-            Bind = bind;
+            Pull = pull;
+            Bind = builder.Bind;
+            MessageAlarmTime = builder.MessageAlarmTime;
+        }
+        
+        public interface ISubscribeOptionsBuilder
+        {
+            string Stream { get; }
+            bool Bind { get; }
+            string Durable { get; }
+            ConsumerConfiguration Cc { get; }
+            int MessageAlarmTime { get; }
+        }
+            
+        public abstract class SubscribeOptionsBuilder<TB, TSo> : ISubscribeOptionsBuilder
+        {
+            string _stream;
+            bool _bind;
+            string _durable;
+            ConsumerConfiguration _config;
+            int _messageAlarmTime = -1;
+
+            public string Stream => _stream;
+            public bool Bind => _bind;
+            public string Durable => _durable;
+            public ConsumerConfiguration Cc => _config;
+            public int MessageAlarmTime => _messageAlarmTime;
+
+            protected abstract TB GetThis();
+
+            /// <summary>
+            /// Set the stream name
+            /// </summary>
+            /// <param name="stream">the stream name</param>
+            /// <returns>The builder</returns>
+            public TB WithStream(string stream)
+            {
+                _stream = stream;
+                return GetThis();
+            }
+
+            /// <summary>
+            /// Set the durable
+            /// </summary>
+            /// <param name="durable">the durable value</param>
+            /// <returns>The B</returns>
+            public TB WithDurable(string durable)
+            {
+                _durable = durable;
+                return GetThis();
+            }
+
+            /// <summary>
+            /// Set as a direct subscribe
+            /// </summary>
+            /// <returns>The builder</returns>
+            public TB WithBind(bool isBind)
+            {
+                _bind = isBind;
+                return GetThis();
+            }
+
+            /// <summary>
+            /// Set the ConsumerConfiguration
+            /// </summary>
+            /// <param name="configuration">the ConsumerConfiguration object</param>
+            /// <returns>The builder</returns>
+            public TB WithConfiguration(ConsumerConfiguration configuration)
+            {
+                _config = configuration;
+                return GetThis();
+            }
+
+            /// <summary>
+            /// Set the total amount of time to not receive any messages or heartbeats
+            /// before calling the ErrorListener heartbeatAlarm 
+            /// </summary>
+            /// <param name="messageAlarmTime"> the time</param>
+            /// <returns>The builder</returns>
+            public TB WithMessageAlarmTime(int messageAlarmTime)
+            {
+                _messageAlarmTime = messageAlarmTime;
+                return GetThis();
+            }
+
+            /// <summary>
+            /// Builds the SubscribeOptions
+            /// </summary>
+            /// <returns>The SubscribeOptions object.</returns>
+            public abstract TSo Build();
         }
     }
 }

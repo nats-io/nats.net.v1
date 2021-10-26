@@ -64,6 +64,14 @@ namespace NATS.Client.JetStream
         PurgeResponse PurgeStream(string streamName);
 
         /// <summary>
+        /// Purges all messages in a stream.
+        /// </summary>
+        /// <param name="streamName">The name of the stream.</param>
+        /// <param name="options">The purge options.</param>
+        /// <returns>The result of the purge.</returns>
+        PurgeResponse PurgeStream(string streamName, PurgeOptions options);
+
+        /// <summary>
         /// Adds or updates a consumer.
         /// </summary>
         /// <param name="streamName">The name of the stream the consumer is attached to.</param>

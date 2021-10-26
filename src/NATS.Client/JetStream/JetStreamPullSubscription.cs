@@ -17,39 +17,14 @@ using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client.JetStream
 {
-    public class JetStreamPullSubscription : SyncSubscription, IJetStreamPullSubscription, IJetStreamSubscriptionInternal
+    public class JetStreamPullSubscription : JetStreamAbstractSyncSubscription, IJetStreamPullSubscription
     {
-        protected JetStream _js;
-        protected string _consumer;
-        protected string _stream;
-        protected string _deliver;
+        internal JetStreamPullSubscription(Connection conn, string subject,
+            IAutoStatusManager asm, JetStream js, string stream, string consumer, string deliver)
+            : base(conn, subject, null, asm, js, stream, consumer, deliver) {}
 
-        internal JetStreamPullSubscription(Connection conn, string subject, string queue)
-            : base(conn, subject, queue) {}
-
-        void IJetStreamSubscriptionInternal.SetupJetStream(JetStream js, string consumer, string stream, string deliver) {
-            _js = js;
-            _consumer = consumer;
-            _stream = stream;
-            _deliver = deliver;
-        }
-
-        public string Consumer => _consumer;
-        public string Stream => _stream;
-        public string DeliverSubject => _deliver;
+        public bool IsPullMode() => true;
         
-        public JetStream GetContext() => _js;
-
-        public ConsumerInfo GetConsumerInformation()
-        {
-            return _js.LookupConsumerInfo(_stream, _consumer);
-        }
-
-        public bool IsPullMode()
-        {
-            return true;
-        }
-
         public void Pull(int batchSize)
         {
             PullInternal(batchSize, false, null);
@@ -73,7 +48,7 @@ namespace NATS.Client.JetStream
         private void PullInternal(int batchSize, bool noWait, Duration expiresIn) {
             int batch = Validator.ValidatePullBatchSize(batchSize);
             string subj = string.Format(JetStreamConstants.JsapiConsumerMsgNext, Stream, Consumer);
-            string publishSubject = GetContext().PrependPrefix(subj);
+            string publishSubject = Context.PrependPrefix(subj);
             Connection.Publish(publishSubject, Subject, GetPullJson(batch, noWait, expiresIn));
             Connection.FlushBuffer();
         }

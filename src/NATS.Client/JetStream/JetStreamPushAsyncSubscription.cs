@@ -13,37 +13,38 @@
 
 namespace NATS.Client.JetStream
 {
-    public class JetStreamPushAsyncSubscription : AsyncSubscription, IJetStreamPushAsyncSubscription, IJetStreamSubscriptionInternal
+    public class JetStreamPushAsyncSubscription : AsyncSubscription, IJetStreamPushAsyncSubscription
     {
-        protected JetStream _js;
-        protected string _consumer;
-        protected string _stream;
-        protected string _deliver;
+        private IAutoStatusManager _asm;
+        public JetStream Context { get; }
+        public string Stream { get; }
+        public string Consumer { get; }
+        public string DeliverSubject { get; }
 
-        internal JetStreamPushAsyncSubscription(Connection conn, string subject, string queue)
-            : base(conn, subject, queue) {}
-
-        void IJetStreamSubscriptionInternal.SetupJetStream(JetStream js, string consumer, string stream, string deliver) {
-            _js = js;
-            _consumer = consumer;
-            _stream = stream;
-            _deliver = deliver;
+        internal JetStreamPushAsyncSubscription(Connection conn, string subject, string queue,
+            IAutoStatusManager asm, JetStream js, string stream, string consumer, string deliver)
+            : base(conn, subject, queue)
+        {
+            _asm = asm;
+            Context = js;
+            Stream = stream;
+            Consumer = consumer;
+            DeliverSubject = deliver;
         }
 
-        public string Consumer => _consumer;
-        public string Stream => _stream;
-        public string DeliverSubject => _deliver;
-
-        public JetStream GetContext() => _js;
-
-        public ConsumerInfo GetConsumerInformation()
+        public ConsumerInfo GetConsumerInformation() => Context.LookupConsumerInfo(Stream, Consumer);
+        public bool IsPullMode() => false;
+        
+        public override void Unsubscribe()
         {
-            return _js.LookupConsumerInfo(_stream, _consumer);
+            _asm.Shutdown();
+            base.Unsubscribe();
         }
 
-        public bool IsPullMode()
+        internal override void close()
         {
-            return false;
+            _asm.Shutdown();
+            base.close();
         }
     }
 }

@@ -113,23 +113,58 @@ namespace UnitTests
 
     public class InterlockedLong
     {
-        private long count = 0;
+        private long count;
 
         public InterlockedLong() {}
 
-        public InterlockedLong(long count)
+        public InterlockedLong(long start)
         {
-            this.count = count;
+            this.count = start;
         }
 
-        public void Inc()
+        public void Set(long l)
         {
-            Interlocked.Increment(ref count);
+            Interlocked.Exchange(ref count, l);
         }
 
-        public long Get()
+        public long Increment()
+        {
+            return Interlocked.Increment(ref count);
+        }
+
+        public long Read()
         {
             return Interlocked.Read(ref count);
+        }
+    }
+
+    public class InterlockedInt
+    {
+        private readonly InterlockedLong il;
+
+        public InterlockedInt()
+        {
+            il = new InterlockedLong();
+        }
+
+        public InterlockedInt(long start)
+        {
+            il = new InterlockedLong(start);
+        }
+
+        public void Set(int i)
+        {
+            il.Set(i);
+        }
+
+        public int Increment()
+        {
+            return (int)il.Increment();
+        }
+
+        public int Read()
+        {
+            return (int)il.Read();
         }
     }
 }

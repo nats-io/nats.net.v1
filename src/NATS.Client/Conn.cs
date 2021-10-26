@@ -27,6 +27,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
+using static NATS.Client.Defaults;
+using Timeout = System.Threading.Timeout;
 
 namespace NATS.Client
 {
@@ -105,15 +107,12 @@ namespace NATS.Client
 
         private readonly Nuid _nuid = new Nuid();
 
-        Options opts = new Options();
+        private readonly Options opts; // assigned in constructor
 
         /// <summary>
         /// Gets the configuration options for this instance.
         /// </summary>
-        public Options Opts
-        {
-            get { return opts; }
-        }
+        public Options Opts => opts;
 
         private readonly List<Thread> wg = new List<Thread>(2);
 
@@ -394,8 +393,8 @@ namespace NATS.Client
 
                     client.NoDelay = false;
 
-                    client.ReceiveBufferSize = Defaults.defaultBufSize*2;
-                    client.SendBufferSize    = Defaults.defaultBufSize;
+                    client.ReceiveBufferSize = defaultBufSize*2;
+                    client.SendBufferSize    = defaultBufSize;
                     
                     stream = client.GetStream();
 
@@ -721,10 +720,6 @@ namespace NATS.Client
         internal Connection(Options options)
         {
             opts = new Options(options);
-            if (opts.ReconnectDelayHandler == null)
-            {
-                opts.ReconnectDelayHandler = DefaultReconnectDelayHandler;
-            }
 
             PING_P_BYTES = Encoding.UTF8.GetBytes(IC.pingProto);
             PING_P_BYTES_LEN = PING_P_BYTES.Length;
@@ -747,8 +742,12 @@ namespace NATS.Client
             callbackScheduler.Start();
 
             globalRequestInbox = NewInbox();
+
+            BeforeQueueProcessor = msg => msg;
         }
 
+        internal Func<Msg, Msg> BeforeQueueProcessor;
+        
         private void buildPublishProtocolBuffers(int size)
         {
             pubProtoBuf = new byte[size];
@@ -833,7 +832,7 @@ namespace NATS.Client
                     catch (Exception) { }
                 }
 
-                bw = conn.getWriteBufferedStream(Defaults.defaultBufSize);
+                bw = conn.getWriteBufferedStream(defaultBufSize);
                 br = conn.getReadBufferedStream();
             }
             catch (Exception e)
@@ -850,7 +849,7 @@ namespace NATS.Client
         {
             conn.makeTLS(this.opts);
 
-            bw = conn.getWriteBufferedStream(Defaults.defaultBufSize);
+            bw = conn.getWriteBufferedStream(defaultBufSize);
             br = conn.getReadBufferedStream();
         }
 
@@ -1017,6 +1016,24 @@ namespace NATS.Client
         }
 
         /// <summary>
+        /// Gets the ID of client as known by the NATS server, otherwise <c>null</c>.
+        /// </summary>
+        /// <remarks>
+        /// May not be supported in all versions of the server. If the client is connected to
+        /// an older server or is in the process of connecting, 0 will be returned.
+        /// </remarks>
+        public int ClientID
+        {
+            get
+            {
+                lock (mu)
+                {
+                    return info.ClientId;
+                }
+            }
+        }
+
+        /// <summary>
         /// Gets the server ID of the NATS server to which this instance
         /// is connected, otherwise <c>null</c>.
         /// </summary>
@@ -1139,9 +1156,7 @@ namespace NATS.Client
                         if (!ex.IsAuthorizationViolationError() && !ex.IsAuthenticationExpiredError())
                             throw;
 
-                        var aseh = opts.AsyncErrorEventHandler;
-                        if (aseh != null)
-                            callbackScheduler.Add(() => aseh(s, new ErrEventArgs(this, null, ex.Message)));
+                        callbackScheduler.Add(() => opts.AsyncErrorEventHandlerOrDefault(s, new ErrEventArgs(this, null, ex.Message)));
 
                         if (natsAuthEx == null || !natsAuthEx.Message.Equals(ex.Message, StringComparison.OrdinalIgnoreCase))
                         {
@@ -1391,11 +1406,11 @@ namespace NATS.Client
             {
                 // TODO:  Make this reader (or future equivalent) unbounded.
                 // we need the underlying stream, so leave it open.
-                sr = new StreamReader(br, Encoding.UTF8, false, Defaults.MaxControlLineSize, true);
+                sr = new StreamReader(br, Encoding.UTF8, false, MaxControlLineSize, true);
                 result = sr.ReadLine();
 
                 // If opts.verbose is set, handle +OK.
-                if (opts.Verbose == true && IC.okProtoNoCRLF.Equals(result))
+                if (opts.Verbose && IC.okProtoNoCRLF.Equals(result))
                 {
                     result = sr.ReadLine();
                 }
@@ -1441,7 +1456,7 @@ namespace NATS.Client
             // the string directly using the buffered reader.
             //
             // Keep the underlying stream open.
-            using (StreamReader sr = new StreamReader(br, Encoding.ASCII, false, Defaults.MaxControlLineSize, true))
+            using (StreamReader sr = new StreamReader(br, Encoding.ASCII, false, MaxControlLineSize, true))
             {
                 return new Control(sr.ReadLine());
             }
@@ -1574,7 +1589,7 @@ namespace NATS.Client
                 var errorForHandler = lastEx;
                 lastEx = null;
 
-                scheduleConnEvent(Opts.DisconnectedEventHandler, errorForHandler);
+                scheduleConnEvent(Opts.DisconnectedEventHandlerOrDefault, errorForHandler);
 
                 Srv cur;
                 int wlf = 0;
@@ -1667,7 +1682,7 @@ namespace NATS.Client
                     srvPool.CurrentServer = cur;
                     status = ConnState.CONNECTED;
 
-                    scheduleConnEvent(Opts.ReconnectedEventHandler);
+                    scheduleConnEvent(Opts.ReconnectedEventHandlerOrDefault);
 
                     // Release lock here, we will return below
                     if (lockWasTaken)
@@ -1743,7 +1758,7 @@ namespace NATS.Client
         private void readLoop()
         {
             // Stack based buffer.
-            byte[] buffer = new byte[Defaults.defaultReadLength];
+            byte[] buffer = new byte[defaultReadLength];
             var parser = new Parser(this);
             int len;
 
@@ -1751,7 +1766,7 @@ namespace NATS.Client
             {
                 try
                 {
-                    len = br.Read(buffer, 0, Defaults.defaultReadLength);
+                    len = br.Read(buffer, 0, defaultReadLength);
 
                     // A length of zero can mean that the socket was closed
                     // locally by the application (Close) or the server
@@ -1827,7 +1842,7 @@ namespace NATS.Client
 
         // Roll our own fast conversion - we know it's the right
         // encoding. 
-        char[] convertToStrBuf = new char[Defaults.MaxControlLineSize];
+        char[] convertToStrBuf = new char[MaxControlLineSize];
 
         // Since we know we don't need to decode the protocol string,
         // just copy the chars into bytes.  This increased
@@ -2179,8 +2194,16 @@ namespace NATS.Client
                         Msg msg = msgArgs.reply != null && msgArgs.reply.StartsWith(JetStreamConstants.JsAckSubjectPrefix)
                             ? new JetStreamMsg(this, msgArgs, s, msgBytes, length)
                             : new Msg(msgArgs, s, msgBytes, length);
-                        
-                        s.addMessage(msg, opts.subChanLen);
+
+                        // BeforeQueueProcessor returns null if the message
+                        // does not need to be queued, for instance heartbeats
+                        // that are not flow control and are already seen by the
+                        // auto status manager
+                        msg = BeforeQueueProcessor.Invoke(msg);
+                        if (msg != null)
+                        {
+                            s.addMessage(msg, opts.subChanLen);
+                        }
                     } // maxreached == false
 
                 } // lock s.mu
@@ -2198,13 +2221,9 @@ namespace NATS.Client
             lastEx = new NATSSlowConsumerException();
             if (!s.sc)
             {
-                EventHandler<ErrEventArgs> aseh = opts.AsyncErrorEventHandler;
-                if (aseh != null)
-                {
-                    callbackScheduler.Add(
-                        () => { aseh(this, new ErrEventArgs(this, s, "Slow Consumer")); }
-                    );
-                }
+                callbackScheduler.Add(
+                    () => { opts.AsyncErrorEventHandlerOrDefault(this, new ErrEventArgs(this, s, "Slow Consumer")); }
+                );
             }
             s.sc = true;
         }
@@ -2354,13 +2373,13 @@ namespace NATS.Client
                 var serverAdded = srvPool.Add(discoveredUrls, true);
                 if (notify && serverAdded)
                 {
-                    scheduleConnEvent(opts.ServerDiscoveredEventHandler);
+                    scheduleConnEvent(opts.ServerDiscoveredEventHandlerOrDefault);
                 }
             }
 
-            if (notify && info.LameDuckMode && opts.LameDuckModeEventHandler != null)
+            if (notify && info.LameDuckMode)
             {
-                scheduleConnEvent(opts.LameDuckModeEventHandler);
+                scheduleConnEvent(opts.LameDuckModeEventHandlerOrDefault);
             }
         }
 
@@ -4159,7 +4178,7 @@ namespace NATS.Client
                 // disconnect;
                 if (invokeDelegates && conn.isSetup())
                 {
-                    scheduleConnEvent(Opts.DisconnectedEventHandler, error);
+                    scheduleConnEvent(Opts.DisconnectedEventHandlerOrDefault, error);
                 }
 
                 // Go ahead and make sure we have flushed the outbound buffer.
@@ -4209,7 +4228,7 @@ namespace NATS.Client
 
                 if (invokeDelegates)
                 {
-                    scheduleConnEvent(opts.ClosedEventHandler, error);
+                    scheduleConnEvent(opts.ClosedEventHandlerOrDefault, error);
                 }
 
                 status = closeState;
@@ -4306,13 +4325,9 @@ namespace NATS.Client
         // async error handler if registered.
         internal void pushDrainException(Subscription s, Exception ex)
         {
-            EventHandler<ErrEventArgs> aseh = opts.AsyncErrorEventHandler;
-            if (aseh != null)
-            {
-                callbackScheduler.Add(
-                    () => { aseh(s, new ErrEventArgs(this, s, ex.Message)); }
-                );
-            }
+            callbackScheduler.Add(
+                () => { opts.AsyncErrorEventHandlerOrDefault(s, new ErrEventArgs(this, s, ex.Message)); }
+            );
         }
 
         private void drain(int timeout)
@@ -4392,7 +4407,7 @@ namespace NATS.Client
         /// <seealso cref="Close()"/>
         public void Drain()
         {
-            Drain(Defaults.DefaultDrainTimeout);
+            Drain(DefaultDrainTimeout);
         }
 
         /// <summary>
@@ -4431,7 +4446,7 @@ namespace NATS.Client
         /// <returns>A task that represents the asynchronous drain operation.</returns>
         public Task DrainAsync()
         {
-            return DrainAsync(Defaults.DefaultDrainTimeout);
+            return DrainAsync(DefaultDrainTimeout);
         }
 
         /// <summary>
@@ -4679,7 +4694,7 @@ namespace NATS.Client
 
         public IJetStreamManagement CreateJetStreamManagementContext(JetStreamOptions options = null)
         {
-            return new JetStream.JetStreamManagement(this, options);
+            return new JetStreamManagement(this, options);
         }
 
         #endregion

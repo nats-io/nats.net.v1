@@ -31,6 +31,7 @@ namespace NATS.Client
         internal Subscription sub;
         internal MsgHeader header;
         internal MsgStatus status;
+        protected AckType _lastAck;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Msg"/> class without any
@@ -56,9 +57,7 @@ namespace NATS.Client
         {
             if (string.IsNullOrWhiteSpace(subject))
             {
-                throw new ArgumentException(
-                    "Subject cannot be null, empty, or whitespace.",
-                    "subject");
+                throw new ArgumentException("Subject cannot be null, empty, or whitespace.", nameof(subject));
             }
 
             this.Subject = subject;
@@ -296,13 +295,7 @@ namespace NATS.Client
         /// <summary>
         /// Returns true if there is a <see cref="MsgStatus"/> with fields set.
         /// </summary>
-        public bool HasStatus
-        {
-            get
-            {
-                return status != null;
-            }
-        }
+        public bool HasStatus => status != null;
 
         #region JetStream
 
@@ -310,6 +303,12 @@ namespace NATS.Client
         /// Gets the metadata associated with a JetStream message.
         /// </summary>
         public virtual JetStream.MetaData MetaData => null;
+
+        /// <summary>
+        /// the last ack that was done with this message, or null if there has not been an ack
+        /// </summary>
+        /// <returns>the last ack or null</returns>
+        public AckType LastAck => _lastAck;
 
         /// <summary>
         /// Acknowledges a JetStream messages received from a Consumer,

@@ -13,8 +13,8 @@
 
 using System;
 using System.Collections.Generic;
-using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
+using static NATS.Client.Internals.JsonUtils;
 
 namespace NATS.Client.JetStream
 {
@@ -44,12 +44,24 @@ namespace NATS.Client.JetStream
 
         private void Init(JSONNode siNode)
         {
-            Created = JsonUtils.AsDate(siNode[ApiConstants.Created]);
+            Created = AsDate(siNode[ApiConstants.Created]);
             Config = new StreamConfiguration(siNode[ApiConstants.Config]);
             State = StreamState.OptionalInstance(siNode[ApiConstants.State]);
             ClusterInfo = ClusterInfo.OptionalInstance(siNode[ApiConstants.Cluster]);
             MirrorInfo = MirrorInfo.OptionalInstance(siNode[ApiConstants.Mirror]);
             SourceInfos = SourceInfo.OptionalListOf(siNode[ApiConstants.Sources]);
+        }
+
+        public override string ToString()
+        {
+            return "StreamInfo{" +
+                   "Created=" + Created +
+                   ", " + ObjectString("StreamConfiguration", Config) +
+                   ", " + ObjectString("StreamState", State) +
+                   ", " + ObjectString("ClusterInfo", ClusterInfo) +
+                   ", " + ObjectString("Mirror", MirrorInfo) +
+                   ", SourceInfos=" + SourceInfos +
+                   '}';
         }
     }
 }
