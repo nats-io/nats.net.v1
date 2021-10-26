@@ -17,6 +17,7 @@ using System.Net.Security;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using static NATS.Client.Defaults;
 
 namespace NATS.Client
 {
@@ -49,30 +50,35 @@ namespace NATS.Client
         /// when a connection is closed.
         /// </summary>
         public EventHandler<ConnEventArgs> ClosedEventHandler;
+        public EventHandler<ConnEventArgs> ClosedEventHandlerOrDefault => ClosedEventHandler ?? DefaultClosedEventHandler();
 
         /// <summary>
         /// Represents the method that will handle an event raised
         /// whenever a new server has joined the cluster.
         /// </summary>
         public EventHandler<ConnEventArgs> ServerDiscoveredEventHandler;
+        public EventHandler<ConnEventArgs> ServerDiscoveredEventHandlerOrDefault => ServerDiscoveredEventHandler ?? DefaultServerDiscoveredEventHandler();
 
         /// <summary>
         /// Represents the method that will handle an event raised 
         /// when a connection has been disconnected from a server.
         /// </summary>
         public EventHandler<ConnEventArgs> DisconnectedEventHandler;
+        public EventHandler<ConnEventArgs> DisconnectedEventHandlerOrDefault => DisconnectedEventHandler ?? DefaultDisconnectedEventHandler();
 
         /// <summary>
         /// Represents the method that will handle an event raised 
         /// when a connection has reconnected to a server.
         /// </summary>
         public EventHandler<ConnEventArgs> ReconnectedEventHandler;
+        public EventHandler<ConnEventArgs> ReconnectedEventHandlerOrDefault => ReconnectedEventHandler ?? DefaultReconnectedEventHandler();
 
         /// <summary>
         /// Represents the method that will handle an event raised 
         /// when an error occurs out of band.
         /// </summary>
         public EventHandler<ErrEventArgs> AsyncErrorEventHandler;
+        public EventHandler<ErrEventArgs> AsyncErrorEventHandlerOrDefault => AsyncErrorEventHandler ?? DefaultAsyncErrorEventHandler();
 
         /// <summary>
         /// Represents the method that will handle an event raised
@@ -84,6 +90,7 @@ namespace NATS.Client
         /// NATS Servers.
         /// </remarks>
         public EventHandler<ConnEventArgs> LameDuckModeEventHandler;
+        public EventHandler<ConnEventArgs> LameDuckModeEventHandlerOrDefault => LameDuckModeEventHandler ?? DefaultLameDuckModeEventHandler();
 
         /// <summary>
         /// Represents the optional method that is used to get from the
@@ -98,21 +105,25 @@ namespace NATS.Client
         /// <see cref="Options.ReconnectJitterTLS"/>
         /// </remarks>
         public EventHandler<ReconnectDelayEventArgs> ReconnectDelayHandler;
+        public EventHandler<ReconnectDelayEventArgs> ReconnectDelayHandlerOrDefault => ReconnectDelayHandler ?? DefaultReconnectDelayHandler();
 
         /// <summary>
         /// Represents the method that will handle an heartbeat alarm
         /// </summary>
         public EventHandler<HeartbeatAlarmEventArgs> HeartbeatAlarmEventHandler;
+        public EventHandler<HeartbeatAlarmEventArgs> HeartbeatAlarmEventHandlerOrDefault => HeartbeatAlarmEventHandler ?? DefaultHeartbeatAlarmEventHandler();
 
         /// <summary>
         /// Represents the method that will handle a unknown or unhandled status event
         /// </summary>
         public EventHandler<UnhandledStatusEventArgs> UnhandledStatusEventHandler;
+        public EventHandler<UnhandledStatusEventArgs> UnhandledStatusEventHandlerOrDefault => UnhandledStatusEventHandler ?? DefaultUnhandledStatusEventHandler();
 
         /// <summary>
         /// Represents the method that will handle a flow control processed event
         /// </summary>
         public EventHandler<FlowControlProcessedEventArgs> FlowControlProcessedEventHandler;
+        public EventHandler<FlowControlProcessedEventArgs> FlowControlProcessedEventHandlerOrDefault => FlowControlProcessedEventHandler ?? DefaultFlowControlProcessedEventHandler();
         
         /// <summary>
         /// Represents the optional method that is used to fetch and
@@ -218,7 +229,7 @@ namespace NATS.Client
             UserSignatureEventHandler = SignatureEventHandler ?? throw new ArgumentNullException("SignatureEventHandler");
         }
 
-        internal int maxPingsOut = Defaults.MaxPingOut;
+        internal int maxPingsOut = MaxPingOut;
 
         internal int subChanLen = 65536;
         internal int subscriberDeliveryTaskCount = 0;

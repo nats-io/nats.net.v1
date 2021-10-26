@@ -114,7 +114,7 @@ namespace NATS.Client.JetStream
         {
             _sub = sub;
             if (Hb) {
-                conn.SetBeforeQueueProcessor(BeforeQueueProcessor);
+                conn.BeforeQueueProcessor = BeforeQueueProcessor;
                 asmTimer = new AsmTimer(this);
             }
         }
@@ -135,7 +135,7 @@ namespace NATS.Client.JetStream
                 timer = new Timer(s => {
                         long sinceLast = DateTimeOffset.Now.ToUnixTimeMilliseconds() - asm.LastMsgReceived;
                         if (sinceLast > asm.AlarmPeriodSetting) {
-                            asm.conn.Opts.HeartbeatAlarmEventHandler.Invoke(this, 
+                            asm.conn.Opts.HeartbeatAlarmEventHandlerOrDefault.Invoke(this, 
                                 new HeartbeatAlarmEventArgs(asm.conn, asm._sub, asm.LastStreamSeq, asm.LastConsumerSeq));
                         }
                     }, 
@@ -178,7 +178,7 @@ namespace NATS.Client.JetStream
 
                 // this status is unknown to us, always use the error handler.
                 // If it's a sync call, also throw an exception
-                conn.Opts.UnhandledStatusEventHandler.Invoke(this, new UnhandledStatusEventArgs(conn, _sub, msg.Status));
+                conn.Opts.UnhandledStatusEventHandlerOrDefault.Invoke(this, new UnhandledStatusEventArgs(conn, _sub, msg.Status));
                 if (SyncMode) 
                 {
                     throw new NATSJetStreamStatusException(_sub, msg.Status);
@@ -210,7 +210,7 @@ namespace NATS.Client.JetStream
             if (fcSubject != null && !fcSubject.Equals(LastFcSubject)) {
                 conn.Publish(fcSubject, null);
                 LastFcSubject = fcSubject; // set after publish in case the pub fails
-                conn.Opts.FlowControlProcessedEventHandler.Invoke(this, new FlowControlProcessedEventArgs(conn, _sub, fcSubject, source));
+                conn.Opts.FlowControlProcessedEventHandlerOrDefault.Invoke(this, new FlowControlProcessedEventArgs(conn, _sub, fcSubject, source));
             }
         }
    }

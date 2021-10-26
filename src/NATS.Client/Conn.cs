@@ -186,8 +186,6 @@ namespace NATS.Client
 
         SubChannelPool subChannelPool = null;
 
-        private Func<Msg, Msg> beforeQueueProcessor;
-        
         // One could use a task scheduler, but this is simpler and will
         // likely be easier to port to .NET core.
         private class CallbackScheduler : IDisposable
@@ -723,18 +721,6 @@ namespace NATS.Client
         {
             opts = new Options(options);
 
-            // set default handlers
-            if (opts.ClosedEventHandler == null) { opts.ClosedEventHandler = DefaultClosedEventHandler(); }
-            if (opts.ServerDiscoveredEventHandler == null) { opts.ServerDiscoveredEventHandler = DefaultServerDiscoveredEventHandler(); }
-            if (opts.DisconnectedEventHandler == null) { opts.DisconnectedEventHandler = DefaultDisconnectedEventHandler(); }
-            if (opts.ReconnectedEventHandler == null) { opts.ReconnectedEventHandler = DefaultReconnectedEventHandler(); }
-            if (opts.AsyncErrorEventHandler == null) { opts.AsyncErrorEventHandler = DefaultAsyncErrorEventHandler(); }
-            if (opts.LameDuckModeEventHandler == null) { opts.LameDuckModeEventHandler = DefaultLameDuckModeEventHandler(); }
-            if (opts.ReconnectDelayHandler == null) { opts.ReconnectDelayHandler = DefaultReconnectDelayHandler; }
-            if (opts.HeartbeatAlarmEventHandler == null) { opts.HeartbeatAlarmEventHandler = DefaultHeartbeatAlarmEventHandler(); }
-            if (opts.UnhandledStatusEventHandler == null) { opts.UnhandledStatusEventHandler = DefaultUnhandledStatusEventHandler(); }
-            if (opts.FlowControlProcessedEventHandler == null) { opts.FlowControlProcessedEventHandler = DefaultFlowControlProcessedEventHandler(); }
-
             PING_P_BYTES = Encoding.UTF8.GetBytes(IC.pingProto);
             PING_P_BYTES_LEN = PING_P_BYTES.Length;
 
@@ -757,13 +743,10 @@ namespace NATS.Client
 
             globalRequestInbox = NewInbox();
 
-            beforeQueueProcessor = msg => msg;
+            BeforeQueueProcessor = msg => msg;
         }
 
-        internal void SetBeforeQueueProcessor(Func<Msg, Msg> beforeQueueProcessor)
-        {
-            this.beforeQueueProcessor = beforeQueueProcessor;
-        }
+        internal Func<Msg, Msg> BeforeQueueProcessor;
         
         private void buildPublishProtocolBuffers(int size)
         {
@@ -1173,8 +1156,7 @@ namespace NATS.Client
                         if (!ex.IsAuthorizationViolationError() && !ex.IsAuthenticationExpiredError())
                             throw;
 
-                        // handler is defaulted in constructor
-                        callbackScheduler.Add(() => opts.AsyncErrorEventHandler(s, new ErrEventArgs(this, null, ex.Message)));
+                        callbackScheduler.Add(() => opts.AsyncErrorEventHandlerOrDefault(s, new ErrEventArgs(this, null, ex.Message)));
 
                         if (natsAuthEx == null || !natsAuthEx.Message.Equals(ex.Message, StringComparison.OrdinalIgnoreCase))
                         {
@@ -1607,8 +1589,7 @@ namespace NATS.Client
                 var errorForHandler = lastEx;
                 lastEx = null;
 
-                // handler is defaulted in constructor
-                scheduleConnEvent(Opts.DisconnectedEventHandler, errorForHandler);
+                scheduleConnEvent(Opts.DisconnectedEventHandlerOrDefault, errorForHandler);
 
                 Srv cur;
                 int wlf = 0;
@@ -1701,8 +1682,7 @@ namespace NATS.Client
                     srvPool.CurrentServer = cur;
                     status = ConnState.CONNECTED;
 
-                    // handler is defaulted in constructor
-                    scheduleConnEvent(Opts.ReconnectedEventHandler);
+                    scheduleConnEvent(Opts.ReconnectedEventHandlerOrDefault);
 
                     // Release lock here, we will return below
                     if (lockWasTaken)
@@ -2215,11 +2195,11 @@ namespace NATS.Client
                             ? new JetStreamMsg(this, msgArgs, s, msgBytes, length)
                             : new Msg(msgArgs, s, msgBytes, length);
 
-                        // beforeQueueProcessor returns null if the message
+                        // BeforeQueueProcessor returns null if the message
                         // does not need to be queued, for instance heartbeats
                         // that are not flow control and are already seen by the
                         // auto status manager
-                        msg = beforeQueueProcessor.Invoke(msg);
+                        msg = BeforeQueueProcessor.Invoke(msg);
                         if (msg != null)
                         {
                             s.addMessage(msg, opts.subChanLen);
@@ -2241,9 +2221,8 @@ namespace NATS.Client
             lastEx = new NATSSlowConsumerException();
             if (!s.sc)
             {
-                // handler is defaulted in constructor
                 callbackScheduler.Add(
-                    () => { opts.AsyncErrorEventHandler(this, new ErrEventArgs(this, s, "Slow Consumer")); }
+                    () => { opts.AsyncErrorEventHandlerOrDefault(this, new ErrEventArgs(this, s, "Slow Consumer")); }
                 );
             }
             s.sc = true;
@@ -2394,15 +2373,13 @@ namespace NATS.Client
                 var serverAdded = srvPool.Add(discoveredUrls, true);
                 if (notify && serverAdded)
                 {
-                    // handler is defaulted in constructor
-                    scheduleConnEvent(opts.ServerDiscoveredEventHandler);
+                    scheduleConnEvent(opts.ServerDiscoveredEventHandlerOrDefault);
                 }
             }
 
-            // handler is defaulted in constructor
             if (notify && info.LameDuckMode)
             {
-                scheduleConnEvent(opts.LameDuckModeEventHandler);
+                scheduleConnEvent(opts.LameDuckModeEventHandlerOrDefault);
             }
         }
 
@@ -4201,8 +4178,7 @@ namespace NATS.Client
                 // disconnect;
                 if (invokeDelegates && conn.isSetup())
                 {
-                    // handler is defaulted in constructor
-                    scheduleConnEvent(Opts.DisconnectedEventHandler, error);
+                    scheduleConnEvent(Opts.DisconnectedEventHandlerOrDefault, error);
                 }
 
                 // Go ahead and make sure we have flushed the outbound buffer.
@@ -4252,8 +4228,7 @@ namespace NATS.Client
 
                 if (invokeDelegates)
                 {
-                    // handler is defaulted in constructor
-                    scheduleConnEvent(opts.ClosedEventHandler, error);
+                    scheduleConnEvent(opts.ClosedEventHandlerOrDefault, error);
                 }
 
                 status = closeState;
@@ -4350,9 +4325,8 @@ namespace NATS.Client
         // async error handler if registered.
         internal void pushDrainException(Subscription s, Exception ex)
         {
-            // handler is defaulted in constructor
             callbackScheduler.Add(
-                () => { opts.AsyncErrorEventHandler(s, new ErrEventArgs(this, s, ex.Message)); }
+                () => { opts.AsyncErrorEventHandlerOrDefault(s, new ErrEventArgs(this, s, ex.Message)); }
             );
         }
 
