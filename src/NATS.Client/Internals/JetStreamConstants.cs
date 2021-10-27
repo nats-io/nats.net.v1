@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace NATS.Client.Internals
+﻿namespace NATS.Client.Internals
 {
     public static class JetStreamConstants
     {
@@ -144,21 +142,6 @@ namespace NATS.Client.Internals
         public const string ConsumerStalledHeader = "Nats-Consumer-Stalled";
         public const string RollupHeader = "Nats-Rollup";
         public const string MsgSizeHeader = "Nats-Msg-Size";
-
-        [Obsolete("This property is obsolete. Use LastConsumerHeader instead.", false)]
-        public const string LastConsumerHdr = "Nats-Last-Consumer";
-
-        [Obsolete("This property is obsolete. Use LastStreamHeader instead.", false)]
-        public const string LastStreamHdr = "Nats-Last-Stream";
-        
-        [Obsolete("This property is obsolete. Use ConsumerStalledHeader instead.", false)]
-        public const string ConsumerStalledHdr = "Nats-Consumer-Stalled";
-        
-        [Obsolete("This property is obsolete. Use RollupHeader instead.", false)]
-        public const string RollupHdr = "Nats-Rollup";
-        
-        [Obsolete("This property is obsolete. Use MsgSizeHeader instead.", false)]
-        public const string MsgSizeHdr = "Nats-Msg-Size";
 
         public const int JsConsumerNotFoundErr = 10014;
     }
