@@ -137,11 +137,11 @@
         /// </summary>
         public const string ExpLastSubjectSeqHeader = "Nats-Expected-Last-Subject-Sequence";
         
-        public const string LastConsumerHdr = "Nats-Last-Consumer";
-        public const string LastStreamHdr = "Nats-Last-Stream";
-        public const string ConsumerStalledHdr = "Nats-Consumer-Stalled";
-        public const string RollupHdr = "Nats-Rollup";
-        public const string MsgSizeHdr = "Nats-Msg-Size";
+        public const string LastConsumerHeader = "Nats-Last-Consumer";
+        public const string LastStreamHeader = "Nats-Last-Stream";
+        public const string ConsumerStalledHeader = "Nats-Consumer-Stalled";
+        public const string RollupHeader = "Nats-Rollup";
+        public const string MsgSizeHeader = "Nats-Msg-Size";
 
         public const int JsConsumerNotFoundErr = 10014;
     }

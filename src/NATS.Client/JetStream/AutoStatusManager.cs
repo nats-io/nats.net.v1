@@ -170,7 +170,7 @@ namespace NATS.Client.JetStream
                 if (msg.Status.IsHeartbeat()) 
                 {
                     if (Fc) {
-                        _processFlowControl(msg.Header?[JetStreamConstants.ConsumerStalledHdr], FlowControlSource.Heartbeat);
+                        _processFlowControl(msg.Header?[JetStreamConstants.ConsumerStalledHeader], FlowControlSource.Heartbeat);
                     }
                     return true;
                     
@@ -197,7 +197,7 @@ namespace NATS.Client.JetStream
             LastMsgReceived = DateTimeOffset.Now.ToUnixTimeMilliseconds();
             if (msg.HasStatus 
                 && msg.Status.IsHeartbeat()
-                && msg.Header?[JetStreamConstants.ConsumerStalledHdr] == null) 
+                && msg.Header?[JetStreamConstants.ConsumerStalledHeader] == null) 
             {
                     return null; // plain heartbeat, no need to queue
             }

@@ -167,7 +167,7 @@ namespace IntegrationTests
                 IList<Msg> messages = ReadMessagesAck(sub);
                 Assert.Equal(5, messages.Count);
                 Assert.Empty(messages[0].Data);
-                Assert.Equal("6", messages[0].Header[JetStreamConstants.MsgSizeHdr]);
+                Assert.Equal("6", messages[0].Header[JetStreamConstants.MsgSizeHeader]);
             });
         }
 
