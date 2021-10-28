@@ -68,7 +68,7 @@ namespace NATSExamples
                     sub.Pull(10);
 
                     // 1. JsUtils.Publish some that is less than the batch size.
-                    // -  Do this first as data will typically be JsUtils.Published first.
+                    // -  Do this first as data will typically be published first.
                     Console.WriteLine("----------\n1. JsUtils.Publish some amount of messages, but not entire batch size.");
                     JsUtils.Publish(js, helper.Subject, "A", 4);
                     IList<Msg> messages = JsUtils.ReadMessagesAck(sub);
