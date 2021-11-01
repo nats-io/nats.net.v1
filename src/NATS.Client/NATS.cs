@@ -198,6 +198,33 @@ namespace NATS.Client
     }
 
     /// <summary>
+    /// Provides the details when a client side slow consumer <see cref="Client.Subscription"/> was detected
+    /// and messages are dropped. 
+    /// </summary>
+    public class SlowConsumerEventArgs : EventArgs
+    {
+        internal SlowConsumerEventArgs(Connection c, Subscription s, Msg m)
+        {
+            Connection = c;
+            Subscription = s;
+            FirstDroppedMessage = m;
+        }
+        /// <summary>
+        /// Gets the <see cref="Client.Connection"/> associated with the event.
+        /// </summary>
+        public Connection Connection { get; }
+        /// <summary>
+        /// The <see cref="Client.Subscription"/> that is a slow consumer 
+        /// </summary>
+        public Subscription Subscription { get; }
+        /// <summary>
+        /// The first <see cref="Msg"/> that has been dropped
+        /// because the <see cref="Subscription"/>s buffers went full. 
+        /// </summary>
+        public Msg FirstDroppedMessage { get; }
+    }
+
+    /// <summary>
     /// Provides details for the ReconnectDelayEvent.
     /// </summary>
     /// <remarks>

@@ -151,7 +151,7 @@ namespace NATS.Client
             if (!sc)
             {
                 sc = true;
-                conn.processSlowConsumer(this);
+                conn.processSlowConsumer(this, msg);
             }
 
             pMsgs--;
@@ -202,14 +202,6 @@ namespace NATS.Client
                 return false;
             }
 
-            if (sc 
-                && (pMsgsLimit <= 0 || pMsgs < Math.Max(1, pMsgsLimit / 10)) 
-                && (pBytesLimit<=0 || pBytes < Math.Max(1, pBytesLimit/10)))
-            {
-                //Recovered from slow consumer
-                sc = false;
-            }
-
             if (mch != null)
             {
                 if (mch.Count >= maxCount)
@@ -219,9 +211,20 @@ namespace NATS.Client
                 }
                 else
                 {
-                    sc = false;
                     mch.add(msg);
                 }
+            }
+
+            //Recover from slow consumer.
+            //Wait for some more free capacity in the buffers before clearing the sc flag to avoid firing to many slow consumer events. 
+            const float maxBufferUsageToClearSlowConsumer = 0.8f;
+            if (sc 
+                && (pMsgsLimit <= 0 || pMsgs < Math.Max(1, pMsgsLimit * maxBufferUsageToClearSlowConsumer)) 
+                && (pBytesLimit <= 0 || pBytes < Math.Max(1, pBytesLimit * maxBufferUsageToClearSlowConsumer))
+                && (mch == null || mch.Count < Math.Max(1, maxCount * maxBufferUsageToClearSlowConsumer))  
+            )
+            {
+                sc = false;
             }
             return true;
         }

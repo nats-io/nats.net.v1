@@ -76,6 +76,12 @@ namespace NATS.Client
 
         /// <summary>
         /// Represents the method that will handle an event raised
+        /// when a slow consumer was detected
+        /// </summary>
+        public EventHandler<SlowConsumerEventArgs> SlowConsumerEventHandler = null;
+
+        /// <summary>
+        /// Represents the method that will handle an event raised
         /// when the server notifies the connection that it entered lame duck mode.
         /// </summary>
         /// <remarks>
@@ -228,6 +234,7 @@ namespace NATS.Client
         {
             allowReconnect = o.allowReconnect;
             AsyncErrorEventHandler = o.AsyncErrorEventHandler;
+            SlowConsumerEventHandler = o.SlowConsumerEventHandler;
             ClosedEventHandler = o.ClosedEventHandler;
             ServerDiscoveredEventHandler = o.ServerDiscoveredEventHandler;
             DisconnectedEventHandler = o.DisconnectedEventHandler;
@@ -755,6 +762,7 @@ namespace NATS.Client
             sb.AppendFormat("AllowReconnect={0};", allowReconnect);
 
             appendEventHandler(sb, "AsyncErrorEventHandler", AsyncErrorEventHandler);
+            appendEventHandler(sb, nameof(SlowConsumerEventHandler), SlowConsumerEventHandler);
             appendEventHandler(sb, "ClosedEventHandler", ClosedEventHandler);
             appendEventHandler(sb, "DisconnectedEventHandler", DisconnectedEventHandler);
             appendEventHandler(sb, "ReconnectedEventHandler", ReconnectedEventHandler);
