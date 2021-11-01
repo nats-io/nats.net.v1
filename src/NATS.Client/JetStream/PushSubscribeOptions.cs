@@ -31,9 +31,8 @@ namespace NATS.Client.JetStream
         public string DeliverGroup => ConsumerConfiguration.DeliverGroup;
 
         // Validation is done by base class
-        private PushSubscribeOptions(string stream, string durable, bool bind, 
-            string deliverSubject, string deliverGroup, ConsumerConfiguration cc) 
-            : base(stream, durable, false, bind, deliverSubject, deliverGroup, cc) {}
+        private PushSubscribeOptions(ISubscribeOptionsBuilder builder, string deliverSubject, string deliverGroup) 
+            : base(builder, false, deliverSubject, deliverGroup) {}
 
         /// <summary>
         /// Create PushSubscribeOptions where you are binding to
@@ -47,13 +46,14 @@ namespace NATS.Client.JetStream
 
         /// <summary>
         /// Create PushSubscribeOptions where you are binding to
-        /// a specific stream, specific durable and are using direct mode
+        /// a specific stream, specific durable and are using bind to mode
         /// </summary>
         /// <param name="stream">the stream name to bind to</param>
         /// <param name="durable">the durable name</param>
         /// <returns>the PushSubscribeOptions</returns>
-        public static PushSubscribeOptions BindTo(string stream, string durable) {
-            return new PushSubscribeOptionsBuilder().WithStream(stream).WithDurable(durable).Bind(true).Build();
+        public static PushSubscribeOptions BindTo(string stream, string durable)
+        {
+            return new PushSubscribeOptionsBuilder().WithStream(stream).WithDurable(durable).WithBind(true).Build();
         }
 
         /// <summary>
@@ -67,54 +67,13 @@ namespace NATS.Client.JetStream
         }
 
         public sealed class PushSubscribeOptionsBuilder
+            : SubscribeOptionsBuilder<PushSubscribeOptionsBuilder, PushSubscribeOptions>
         {
-            private string _stream;
-            private bool _bind;
-            private string _durable;
-            private ConsumerConfiguration _config;
             private string _deliverSubject;
             private string _deliverGroup;
 
-            /// <summary>
-            /// Set the stream name
-            /// </summary>
-            /// <param name="stream">the stream name</param>
-            /// <returns>The builder</returns>
-            public PushSubscribeOptionsBuilder WithStream(string stream)
+            protected override PushSubscribeOptionsBuilder GetThis()
             {
-                _stream = stream;
-                return this;
-            }
-
-            /// <summary>
-            /// Set as a direct subscribe
-            /// </summary>
-            /// <returns>The builder</returns>
-            public PushSubscribeOptionsBuilder Bind(bool b)
-            {
-                _bind = b;
-                return this;
-            }
-
-            /// <summary>
-            /// Set the ConsumerConfiguration
-            /// </summary>
-            /// <param name="configuration">the ConsumerConfiguration object</param>
-            /// <returns>The builder</returns>
-            public PushSubscribeOptionsBuilder WithConfiguration(ConsumerConfiguration configuration)
-            {
-                _config = configuration;
-                return this;
-            }
-
-            /// <summary>
-            /// Set the durable
-            /// </summary>
-            /// <param name="durable">the durable value</param>
-            /// <returns>The PushSubscribeOptionsBuilder</returns>
-            public PushSubscribeOptionsBuilder WithDurable(string durable)
-            {
-                _durable = durable;
                 return this;
             }
 
@@ -144,9 +103,9 @@ namespace NATS.Client.JetStream
             /// Builds the PushSubscribeOptions
             /// </summary>
             /// <returns>The PushSubscribeOptions object.</returns>
-            public PushSubscribeOptions Build()
+            public override PushSubscribeOptions Build()
             {
-                return new PushSubscribeOptions(_stream, _durable, _bind, _deliverSubject, _deliverGroup, _config);
+                return new PushSubscribeOptions(this, _deliverSubject, _deliverGroup);
             }
         }
     }

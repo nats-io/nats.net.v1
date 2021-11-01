@@ -33,5 +33,14 @@ namespace NATS.Client.JetStream
             Leader = clusterNode[ApiConstants.Leader].Value;
             Replicas = Replica.OptionalListOf(clusterNode[ApiConstants.Replicas]);
         }
+        
+        public override string ToString()
+        {
+            return "ClusterInfo{" +
+                   "Name='" + Name + '\'' +
+                   ", Leader='" + Leader + '\'' +
+                   ", Replicas=" + Replicas +
+                   '}';
+        }
     }
 }

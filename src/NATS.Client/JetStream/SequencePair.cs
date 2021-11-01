@@ -25,5 +25,13 @@ namespace NATS.Client.JetStream
             ConsumerSeq = spNode[ApiConstants.ConsumerSeq].AsUlong;
             StreamSeq = spNode[ApiConstants.StreamSeq].AsUlong;
         }
+
+        public override string ToString()
+        {
+            return "{" +
+                   "ConsumerSeq=" + ConsumerSeq +
+                   ", StreamSeq=" + StreamSeq +
+                   '}';
+        }
     }
 }

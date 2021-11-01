@@ -15,26 +15,32 @@ using System.Collections.Generic;
 
 namespace NATS.Client.JetStream
 {
-    internal interface IJetStreamSubscriptionInternal
-    {
-        void SetupJetStream(JetStream js, string consumer, string stream, string deliver);
-    }
-
     public interface IJetStreamSubscription : ISubscription
     {
         /// <summary>
-        /// Get the JetStream Context
+        /// The JetStream Context
         /// </summary>
-        JetStream GetContext();
+        JetStream Context { get; }
+
+        /// <summary>
+        /// The Stream Name
+        /// </summary>
+        string Stream { get; }
+
+        /// <summary>
+        /// The Consumer Name
+        /// </summary>
+        string Consumer { get; }
+
+        /// <summary>
+        /// The Deliver Subject
+        /// </summary>
+        string DeliverSubject { get; }
 
         /// <summary>
         /// Gets the ConsumerInformation for this Subscription.
         /// </summary>
         ConsumerInfo GetConsumerInformation();
-
-        string Consumer { get; }
-        string Stream { get; }
-        string DeliverSubject { get; }
 
         bool IsPullMode();
     }

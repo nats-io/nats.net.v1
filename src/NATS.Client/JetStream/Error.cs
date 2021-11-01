@@ -41,21 +41,18 @@ namespace NATS.Client.JetStream
 
         public override string ToString()
         {
-            if (Code == NOT_SET) 
-            {
-                if (ApiErrorCode == NOT_SET) 
-                {
+            if (ApiErrorCode == NOT_SET) {
+                if (Code == NOT_SET) {
                     return Desc;
                 }
-                return $"{Desc} [{ApiErrorCode}]";
-            }
-
-            if (ApiErrorCode == NOT_SET) 
-            {
                 return $"{Desc} ({Code})";
             }
 
-            return $"{Desc} ({Code}) [{ApiErrorCode}]";
+            if (Code == NOT_SET) {
+                return Desc;
+            }
+
+            return $"{Desc} [{ApiErrorCode}]";
         }
     }
 }

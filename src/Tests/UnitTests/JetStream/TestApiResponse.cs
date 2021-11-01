@@ -44,7 +44,7 @@ namespace UnitTests.JetStream
             Assert.Equal("the description (500)", jsApiResp.Error.ToString());
             NATSJetStreamException jsApiEx = new NATSJetStreamException(jsApiResp);
             Assert.Equal(500, jsApiEx.ErrorCode);
-            Assert.Equal("the description", jsApiEx.ErrorDescription);
+            Assert.Equal("the description (500)", jsApiEx.ErrorDescription);
 
             jsApiResp = new TestingApiResponse(jsons[1]);
             Assert.True(jsApiResp.HasError);
@@ -54,7 +54,7 @@ namespace UnitTests.JetStream
             Assert.Equal("the description (0)", jsApiResp.Error.ToString());
             jsApiEx = new NATSJetStreamException(jsApiResp);
             Assert.Equal(0, jsApiEx.ErrorCode);
-            Assert.Equal("the description", jsApiEx.ErrorDescription);
+            Assert.Equal("the description (0)", jsApiEx.ErrorDescription);
 
             jsApiResp = new TestingApiResponse(jsons[2]);
             Assert.True(jsApiResp.HasError);

@@ -13,37 +13,12 @@
 
 namespace NATS.Client.JetStream
 {
-    public class JetStreamPushSyncSubscription : SyncSubscription, IJetStreamPushSyncSubscription, IJetStreamSubscriptionInternal
+    public class JetStreamPushSyncSubscription : JetStreamAbstractSyncSubscription, IJetStreamPushSyncSubscription
     {
-        protected JetStream _js;
-        protected string _consumer;
-        protected string _stream;
-        protected string _deliver;
+        internal JetStreamPushSyncSubscription(Connection conn, string subject, string queue,
+            IAutoStatusManager asm, JetStream js, string stream, string consumer, string deliver)
+            : base(conn, subject, null, asm, js, stream, consumer, deliver) {}
 
-        internal JetStreamPushSyncSubscription(Connection conn, string subject, string queue) 
-            : base(conn, subject, queue) {}
-
-        void IJetStreamSubscriptionInternal.SetupJetStream(JetStream js, string consumer, string stream, string deliver) {
-            _js = js;
-            _consumer = consumer;
-            _stream = stream;
-            _deliver = deliver;
-        }
-
-        public string Consumer => _consumer;
-        public string Stream => _stream;
-        public string DeliverSubject => _deliver;
-
-        public JetStream GetContext() => _js;
-
-        public ConsumerInfo GetConsumerInformation()
-        {
-            return _js.LookupConsumerInfo(_stream, _consumer);
-        }
-
-        public bool IsPullMode()
-        {
-            return false;
-        }
+        public bool IsPullMode() => false;
     }
 }

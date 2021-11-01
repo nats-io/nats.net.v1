@@ -12,17 +12,12 @@
 // limitations under the License.
 
 using System;
-using System.Text;
+using static NATS.Client.AckType;
 
 namespace NATS.Client.JetStream
 {
     public sealed class JetStreamMsg : Msg
     {
-        private static readonly byte[] AckAck = Encoding.ASCII.GetBytes("+ACK");
-        private static readonly byte[] AckNak = Encoding.ASCII.GetBytes("-NAK");
-        private static readonly byte[] AckProgress = Encoding.ASCII.GetBytes("+WPI");
-        private static readonly byte[] AckTerm = Encoding.ASCII.GetBytes("+TERM");
-
         /// <summary>
         /// Gets the metadata associated with a JetStream message.
         /// </summary>
@@ -38,29 +33,26 @@ namespace NATS.Client.JetStream
             MetaData = new MetaData(_reply);
         }
 
-        private void AckReply(byte[] ackType, int timeout)
+        private void AckReply(AckType ackType, int timeout)
         {
             // very important, must use _reply variable, not public Reply property
-            if (timeout > 0)
+            if (timeout >= 0)
             {
-                Connection.Request(_reply, ackType, timeout);
+                Connection.Request(_reply, ackType.Bytes, timeout);
             }
             else
             {     
-                Connection.Publish(_reply, ackType);
+                Connection.Publish(_reply, ackType.Bytes);
             }
-        }
 
-        private void AckReply(byte[] ackType) => AckReply(ackType, 0);
+            _lastAck = ackType;
+        }
 
         /// <summary>
         /// Acknowledges a JetStream messages received from a Consumer,
         /// indicating the message will not be resent.
         /// </summary>
-        public override void Ack()
-        {
-            AckReply(AckAck);
-        }
+        public override void Ack() => AckReply(AckAck, -1);
 
         /// <summary>
         /// Acknowledges a JetStream messages received from a Consumer,
@@ -71,27 +63,26 @@ namespace NATS.Client.JetStream
         /// confirmation</param>
         public override void AckSync(int timeout) => AckReply(AckAck, timeout);
         
-
         /// <summary>
         /// Acknowledges a JetStream message has been received but indicates
         /// that the message is not completely processed and should be sent
         /// again later.
         /// </summary>
-        public override void Nak() => AckReply(AckNak);
+        public override void Nak() => AckReply(AckNak, -1);
 
         /// <summary>
         /// Prevents this message from ever being delivered regardless of
         /// maxDeliverCount.
         /// </summary>
-        public override void Term() => AckReply(AckTerm);
+        public override void Term() => AckReply(AckTerm, -1);
 
         /// <summary>
         /// Indicates that this message is being worked on and reset redelivery timer in the server.
         /// </summary>
-        public override void InProgress() => AckReply(AckProgress);
+        public override void InProgress() => AckReply(AckProgress, -1);
 
         /// <summary>
-        /// Checks if a message is from Jetstream or is a standard message.
+        /// Checks if a message is from JetStream or is a standard message.
         /// </summary>
         /// <returns></returns>
         public override bool IsJetStream => true;

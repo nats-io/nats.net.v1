@@ -13,10 +13,11 @@
 
 using System;
 using System.Linq;
-using System.Text;
-using System.Security.Cryptography.X509Certificates;
 using System.Net.Security;
 using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using static NATS.Client.Defaults;
 
 namespace NATS.Client
 {
@@ -43,36 +44,41 @@ namespace NATS.Client
         int reconnectJitterTLS = Defaults.ReconnectJitterTLS;
 
         internal X509Certificate2Collection certificates = null;
- 
+
         /// <summary>
         /// Represents the method that will handle an event raised 
         /// when a connection is closed.
         /// </summary>
-        public EventHandler<ConnEventArgs> ClosedEventHandler = null;
+        public EventHandler<ConnEventArgs> ClosedEventHandler;
+        public EventHandler<ConnEventArgs> ClosedEventHandlerOrDefault => ClosedEventHandler ?? DefaultClosedEventHandler();
 
         /// <summary>
         /// Represents the method that will handle an event raised
         /// whenever a new server has joined the cluster.
         /// </summary>
-        public EventHandler<ConnEventArgs> ServerDiscoveredEventHandler = null;
+        public EventHandler<ConnEventArgs> ServerDiscoveredEventHandler;
+        public EventHandler<ConnEventArgs> ServerDiscoveredEventHandlerOrDefault => ServerDiscoveredEventHandler ?? DefaultServerDiscoveredEventHandler();
 
         /// <summary>
         /// Represents the method that will handle an event raised 
         /// when a connection has been disconnected from a server.
         /// </summary>
-        public EventHandler<ConnEventArgs> DisconnectedEventHandler = null;
+        public EventHandler<ConnEventArgs> DisconnectedEventHandler;
+        public EventHandler<ConnEventArgs> DisconnectedEventHandlerOrDefault => DisconnectedEventHandler ?? DefaultDisconnectedEventHandler();
 
         /// <summary>
         /// Represents the method that will handle an event raised 
         /// when a connection has reconnected to a server.
         /// </summary>
-        public EventHandler<ConnEventArgs> ReconnectedEventHandler = null;
+        public EventHandler<ConnEventArgs> ReconnectedEventHandler;
+        public EventHandler<ConnEventArgs> ReconnectedEventHandlerOrDefault => ReconnectedEventHandler ?? DefaultReconnectedEventHandler();
 
         /// <summary>
         /// Represents the method that will handle an event raised 
         /// when an error occurs out of band.
         /// </summary>
-        public EventHandler<ErrEventArgs> AsyncErrorEventHandler = null;
+        public EventHandler<ErrEventArgs> AsyncErrorEventHandler;
+        public EventHandler<ErrEventArgs> AsyncErrorEventHandlerOrDefault => AsyncErrorEventHandler ?? DefaultAsyncErrorEventHandler();
 
         /// <summary>
         /// Represents the method that will handle an event raised
@@ -83,7 +89,8 @@ namespace NATS.Client
         /// before shuting down. This is often used in deployments when upgrading
         /// NATS Servers.
         /// </remarks>
-        public EventHandler<ConnEventArgs> LameDuckModeEventHandler = null;
+        public EventHandler<ConnEventArgs> LameDuckModeEventHandler;
+        public EventHandler<ConnEventArgs> LameDuckModeEventHandlerOrDefault => LameDuckModeEventHandler ?? DefaultLameDuckModeEventHandler();
 
         /// <summary>
         /// Represents the optional method that is used to get from the
@@ -97,8 +104,27 @@ namespace NATS.Client
         /// zero and <see cref="Options.ReconnectJitter"/> or
         /// <see cref="Options.ReconnectJitterTLS"/>
         /// </remarks>
-        public EventHandler<ReconnectDelayEventArgs> ReconnectDelayHandler = null;
+        public EventHandler<ReconnectDelayEventArgs> ReconnectDelayHandler;
+        public EventHandler<ReconnectDelayEventArgs> ReconnectDelayHandlerOrDefault => ReconnectDelayHandler ?? DefaultReconnectDelayHandler();
 
+        /// <summary>
+        /// Represents the method that will handle an heartbeat alarm
+        /// </summary>
+        public EventHandler<HeartbeatAlarmEventArgs> HeartbeatAlarmEventHandler;
+        public EventHandler<HeartbeatAlarmEventArgs> HeartbeatAlarmEventHandlerOrDefault => HeartbeatAlarmEventHandler ?? DefaultHeartbeatAlarmEventHandler();
+
+        /// <summary>
+        /// Represents the method that will handle a unknown or unhandled status event
+        /// </summary>
+        public EventHandler<UnhandledStatusEventArgs> UnhandledStatusEventHandler;
+        public EventHandler<UnhandledStatusEventArgs> UnhandledStatusEventHandlerOrDefault => UnhandledStatusEventHandler ?? DefaultUnhandledStatusEventHandler();
+
+        /// <summary>
+        /// Represents the method that will handle a flow control processed event
+        /// </summary>
+        public EventHandler<FlowControlProcessedEventArgs> FlowControlProcessedEventHandler;
+        public EventHandler<FlowControlProcessedEventArgs> FlowControlProcessedEventHandlerOrDefault => FlowControlProcessedEventHandler ?? DefaultFlowControlProcessedEventHandler();
+        
         /// <summary>
         /// Represents the optional method that is used to fetch and
         /// return the account signed JWT for this user.  Exceptions thrown
@@ -203,7 +229,7 @@ namespace NATS.Client
             UserSignatureEventHandler = SignatureEventHandler ?? throw new ArgumentNullException("SignatureEventHandler");
         }
 
-        internal int maxPingsOut = Defaults.MaxPingOut;
+        internal int maxPingsOut = MaxPingOut;
 
         internal int subChanLen = 65536;
         internal int subscriberDeliveryTaskCount = 0;
@@ -228,6 +254,9 @@ namespace NATS.Client
         {
             allowReconnect = o.allowReconnect;
             AsyncErrorEventHandler = o.AsyncErrorEventHandler;
+            HeartbeatAlarmEventHandler = o.HeartbeatAlarmEventHandler;
+            UnhandledStatusEventHandler = o.UnhandledStatusEventHandler;
+            FlowControlProcessedEventHandler = o.FlowControlProcessedEventHandler;
             ClosedEventHandler = o.ClosedEventHandler;
             ServerDiscoveredEventHandler = o.ServerDiscoveredEventHandler;
             DisconnectedEventHandler = o.DisconnectedEventHandler;
@@ -755,6 +784,9 @@ namespace NATS.Client
             sb.AppendFormat("AllowReconnect={0};", allowReconnect);
 
             appendEventHandler(sb, "AsyncErrorEventHandler", AsyncErrorEventHandler);
+            appendEventHandler(sb, "HeartbeatAlarmEventHandler", HeartbeatAlarmEventHandler);
+            appendEventHandler(sb, "UnhandledStatusEventHandler", UnhandledStatusEventHandler);
+            appendEventHandler(sb, "FlowControlProcessedEventHandler", FlowControlProcessedEventHandler);
             appendEventHandler(sb, "ClosedEventHandler", ClosedEventHandler);
             appendEventHandler(sb, "DisconnectedEventHandler", DisconnectedEventHandler);
             appendEventHandler(sb, "ReconnectedEventHandler", ReconnectedEventHandler);
