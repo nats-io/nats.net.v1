@@ -22,27 +22,27 @@ namespace NATS.Client.JetStream
     {
         private static readonly String OffsetJsonStart = "{\"offset\":";
 
-        protected readonly int total; // so always has the first "at least one more"
-        protected readonly int limit;
-        protected readonly int lastOffset;
+        protected readonly int Total; // so always has the first "at least one more"
+        protected readonly int Limit;
+        protected readonly int LastOffset;
 
         internal ListRequestEngine() : base()
         {
-            total = Int32.MaxValue;
-            limit = 0;
-            lastOffset = 0;
+            Total = Int32.MaxValue;
+            Limit = 0;
+            LastOffset = 0;
         }
 
         internal ListRequestEngine(Msg msg) : base(msg, true)
         {
-            total = JsonNode.GetValueOrDefault(ApiConstants.Total, Int32.MaxValue);
-            limit = JsonNode.GetValueOrDefault(ApiConstants.Limit, 0);
-            lastOffset = JsonNode.GetValueOrDefault(ApiConstants.Offset, 0);
+            Total = JsonNode.GetValueOrDefault(ApiConstants.Total, Int32.MaxValue);
+            Limit = JsonNode.GetValueOrDefault(ApiConstants.Limit, 0);
+            LastOffset = JsonNode.GetValueOrDefault(ApiConstants.Offset, 0);
         }
 
         internal bool HasMore()
         {
-            return total > (lastOffset + limit);
+            return Total > (LastOffset + Limit);
         }
 
         internal byte[] InternalNextJson()
@@ -52,7 +52,7 @@ namespace NATS.Client.JetStream
 
         internal byte[] NoFilterJson()
         {
-            return Encoding.ASCII.GetBytes(OffsetJsonStart + (lastOffset + limit) + "}");
+            return Encoding.ASCII.GetBytes(OffsetJsonStart + (LastOffset + Limit) + "}");
         }
 
         internal byte[] InternalNextJson(String fieldName, String filter)
@@ -64,14 +64,14 @@ namespace NATS.Client.JetStream
                     return NoFilterJson();
                 }
 
-                return Encoding.ASCII.GetBytes(OffsetJsonStart + (lastOffset + limit) + ",\"" + fieldName + "\":\"" +
+                return Encoding.ASCII.GetBytes(OffsetJsonStart + (LastOffset + Limit) + ",\"" + fieldName + "\":\"" +
                                                filter + "\"}");
             }
 
             return null;
         }
 
-        internal JSONArray GetItems(String objectName)
+        internal JSONArray GetNodes(String objectName)
         {
             return JsonNode[objectName].AsArray;
         }
@@ -82,26 +82,33 @@ namespace NATS.Client.JetStream
         private readonly string objectName;
         private readonly string filterFieldName;
 
-        protected ListRequestEngine engine;
+        protected ListRequestEngine Engine;
 
         internal void Process(Msg msg)
         {
-            engine = new ListRequestEngine(msg);
-            ProcessItems(engine.GetItems(objectName));
+            Engine = new ListRequestEngine(msg);
+            JSONArray nodes = Engine.GetNodes(objectName);
+            if (nodes != null)
+            {
+                for (int x = 0; x < nodes.Count; x++)
+                {
+                    ProcessItem(nodes[x]);
+                }
+            }
         }
 
-        protected abstract void ProcessItems(JSONArray items);
+        protected abstract void ProcessItem(JSONNode node);
 
         protected AbstractListReader(string objectName, string filterFieldName = null)
         {
             this.objectName = objectName;
             this.filterFieldName = filterFieldName;
-            engine = new ListRequestEngine();
+            Engine = new ListRequestEngine();
         }
 
         internal byte[] NextJson()
         {
-            return engine.InternalNextJson();
+            return Engine.InternalNextJson();
         }
 
         internal byte[] NextJson(string filter)
@@ -111,12 +118,12 @@ namespace NATS.Client.JetStream
                 throw new ArgumentException("Filter not supported.");
             }
 
-            return engine.InternalNextJson(filterFieldName, filter);
+            return Engine.InternalNextJson(filterFieldName, filter);
         }
 
         internal bool HasMore()
         {
-            return engine.HasMore();
+            return Engine.HasMore();
         }
     }
 
@@ -126,12 +133,9 @@ namespace NATS.Client.JetStream
 
         protected StringListReader(String objectName, String filterFieldName = null) : base(objectName, filterFieldName) {}
 
-        protected override void ProcessItems(JSONArray items)
+        protected override void ProcessItem(JSONNode node)
         {
-            for (int x = 0; x < items.Count; x++)
-            {
-                _strings.Add(items[x].Value);
-            }
+            _strings.Add(node.Value);
         }
 
         public List<string> Strings => _strings;
@@ -153,12 +157,9 @@ namespace NATS.Client.JetStream
 
         internal ConsumerListReader() : base(ApiConstants.Consumers) {}
 
-        protected override void ProcessItems(JSONArray items)
+        protected override void ProcessItem(JSONNode node)
         {
-            for (int x = 0; x < items.Count; x++)
-            {
-                _consumerInfos.Add(new ConsumerInfo(items[x]));
-            }
+            _consumerInfos.Add(new ConsumerInfo(node));
         }
 
         public List<ConsumerInfo> Consumers => _consumerInfos;
@@ -170,12 +171,9 @@ namespace NATS.Client.JetStream
 
         internal StreamListReader() : base(ApiConstants.Streams) {}
 
-        protected override void ProcessItems(JSONArray items)
+        protected override void ProcessItem(JSONNode node)
         {
-            for (int x = 0; x < items.Count; x++)
-            {
-                _streamInfos.Add(new StreamInfo(items[x]));
-            }
+            _streamInfos.Add(new StreamInfo(node));
         }
 
         public List<StreamInfo> Streams => _streamInfos;

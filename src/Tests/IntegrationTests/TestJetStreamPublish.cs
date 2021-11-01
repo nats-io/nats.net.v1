@@ -34,26 +34,10 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public void TestJetStreamSimplePublish()
-        {
-            Context.RunInJsServer(c =>
-            {
-                CreateTestStream(c);
-
-                IJetStream js = c.CreateJetStreamContext();
-
-                PublishAck pa = js.Publish(SUBJECT, DataBytes());
-                Assert.True(pa.HasError == false);
-                Assert.True(pa.Seq == 1);
-                Assert.Equal(STREAM, pa.Stream);
-            });
-        }
-
-        [Fact]
         public void TestPublishVarieties() {
             Context.RunInJsServer(c =>
             {
-                CreateTestStream(c);
+                CreateDefaultTestStream(c);
                 IJetStream js = c.CreateJetStreamContext();
 
                 PublishAck pa = js.Publish(SUBJECT, DataBytes(1));
@@ -94,6 +78,9 @@ namespace IntegrationTests
                 AssertNextMessage(s, null); // 6
                 AssertNextMessage(s, null); // 7
                 AssertNextMessage(s, null); // 8
+
+                // bad subject
+                Assert.Throws<NATSNoRespondersException>(() => js.Publish(Subject(999), null));
             });
         }
 
@@ -109,12 +96,12 @@ namespace IntegrationTests
             }
         }
 
-        [Fact(Skip = "WorkInProgress")]
+        [Fact]
         public void TestPublishAsyncVarieties()
         {
             Context.RunInJsServer(c =>
             {
-                CreateTestStream(c);
+                CreateDefaultTestStream(c);
                 IJetStream js = c.CreateJetStreamContext();
 
                 IList<Task<PublishAck>> tasks = new List<Task<PublishAck>>();
@@ -154,11 +141,11 @@ namespace IntegrationTests
         {
             try
             {
-                var r = task.Result;
+                var ignored = task.Result;
             }
             catch (Exception e)
             {
-                Assert.NotNull(e.InnerException?.InnerException as NATSNoRespondersException);
+                Assert.NotNull(e.InnerException as NATSNoRespondersException);
             }
         }
         
@@ -257,7 +244,7 @@ namespace IntegrationTests
         {
             Context.RunInJsServer(c =>
             {
-                CreateTestStream(c);
+                CreateDefaultTestStream(c);
                 IJetStream js = c.CreateJetStreamContext();
 
                 // stream supplied and matches
@@ -283,42 +270,43 @@ namespace IntegrationTests
             Assert.False(pa.Duplicate);
         }
 
-        // TODO [Fact] public
-        private void TestPublishNoAck()
+        [Fact]
+        public void TestPublishAckJson()
         {
-            Context.RunInJsServer(c =>
-            {
-                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
-                
-                StreamConfiguration sc = StreamConfiguration.Builder()
-                    .WithName(STREAM)
-                    .WithStorageType(StorageType.Memory)
-                    .WithSubjects(SUBJECT)
-                    .WithNoAck(true)
-                    .Build();
+            string json = "{\"stream\":\"sname\", \"seq\":42, \"duplicate\":false}";
+            PublishAck pa = new PublishAck(json);
+            Assert.Equal("sname", pa.Stream);
+            Assert.Equal(42U, pa.Seq);
+            Assert.False(pa.Duplicate);
+        }
 
-                jsm.AddStream(sc);
-                
-                IJetStream js = c.CreateJetStreamContext();
+        [Fact] 
+        public void TestPublishNoAck()
+        {
+            TestServerInfo testServerInfo = new TestServerInfo(4222);
+            Context.RunInJsServer(testServerInfo, c => 
+            {
+                CreateDefaultTestStream(c);
+
+                JetStreamOptions jso = JetStreamOptions.Builder().WithPublishNoAck(true).Build();
+                IJetStream js = c.CreateJetStreamContext(jso);
                 
                 string data1 = "noackdata1";
-                // string data2 = "noackdata2";
+                string data2 = "noackdata2";
 
                 PublishAck pa = js.Publish(SUBJECT, Encoding.ASCII.GetBytes(data1));
                 Assert.Null(pa);
 
-                // TODO
-                // CompletableFuture<PublishAck> f = js.publishAsync(SUBJECT, data2.getBytes());
-                // assertNull(f);
+                Task<PublishAck> task = js.PublishAsync(SUBJECT, Encoding.ASCII.GetBytes(data2));
+                Assert.Null(task.Result);
 
                 IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(SUBJECT);
                 Msg m = sub.NextMessage(DefaultTimeout);
                 Assert.NotNull(m);
                 Assert.Equal(data1, Encoding.ASCII.GetString(m.Data));
-                // m = sub.nextMessage(Duration.ofSeconds(2));
-                // assertNotNull(m);
-                // assertEquals(data2, new String(m.getData()));
-                
+                m = sub.NextMessage(DefaultTimeout);
+                Assert.NotNull(m);
+                Assert.Equal(data2, Encoding.ASCII.GetString(m.Data));
             });
         }
     }

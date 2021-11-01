@@ -16,9 +16,11 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using NATS.Client;
+using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using UnitTests;
 using Xunit;
+using Xunit.Abstractions;
 using static UnitTests.TestBase;
 using static IntegrationTests.JetStreamTestBase;
 
@@ -26,8 +28,11 @@ namespace IntegrationTests
 {
     public class TestJetStreamPushSync : TestSuite<JetStreamPushSyncSuiteContext>
     {
-        public TestJetStreamPushSync(JetStreamPushSyncSuiteContext context) : base(context)
+        private readonly ITestOutputHelper output;
+
+        public TestJetStreamPushSync(ITestOutputHelper output, JetStreamPushSyncSuiteContext context) : base(context)
         {
+            this.output = output;
         }
 
         [Theory]
@@ -38,9 +43,9 @@ namespace IntegrationTests
             Context.RunInJsServer(c =>
             {
                 // create the stream.
-                CreateMemoryStream(c, STREAM, SUBJECT);
+                CreateDefaultTestStream(c);
 
-                // Create our JetStream context to receive JetStream messages.
+                // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
 
                 // publish some messages
@@ -64,6 +69,8 @@ namespace IntegrationTests
                 IList<Msg> messages0 = ReadMessagesAck(sub);
                 total += messages0.Count;
                 ValidateRedAndTotal(0, messages0.Count, 5, total);
+                
+                sub.Unsubscribe();
 
                 // Subscription 2
                 sub = js.PushSubscribeSync(SUBJECT, options);
@@ -91,9 +98,9 @@ namespace IntegrationTests
             Context.RunInJsServer(c =>
             {
                 // create the stream.
-                CreateMemoryStream(c, STREAM, SUBJECT);
+                CreateDefaultTestStream(c);
 
-                // Create our JetStream context to receive JetStream messages.
+                // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
 
                 // publish some messages
@@ -139,14 +146,40 @@ namespace IntegrationTests
         }
 
         [Fact]
+        public void TestMessageWithHeadersOnly()
+        {
+            Context.RunInJsServer(c =>
+            {
+                // create the stream.
+                CreateDefaultTestStream(c);
+
+                // Create our JetStream context.
+                IJetStream js = c.CreateJetStreamContext();
+                
+                // Build our subscription options.
+                PushSubscribeOptions options = ConsumerConfiguration.Builder().WithHeadersOnly(true).BuildPushSubscribeOptions();
+
+                IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(SUBJECT, options);
+                c.Flush(DefaultTimeout); // flush outgoing communication with/to the server
+
+                JsPublish(js, SUBJECT, 5);
+
+                IList<Msg> messages = ReadMessagesAck(sub);
+                Assert.Equal(5, messages.Count);
+                Assert.Empty(messages[0].Data);
+                Assert.Equal("6", messages[0].Header[JetStreamConstants.MsgSizeHdr]);
+            });
+        }
+
+        [Fact]
         public void TestAcks()
         {
             Context.RunInJsServer(c =>
             {
                 // create the stream.
-                CreateMemoryStream(c, STREAM, SUBJECT);
+                CreateDefaultTestStream(c);
 
-                // Create our JetStream context to receive JetStream messages.
+                // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
                 
                 ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithAckWait(1500).Build();
@@ -234,7 +267,7 @@ namespace IntegrationTests
                 // create the stream.
                 CreateMemoryStream(c, STREAM, SUBJECT_STAR);
 
-                // Create our JetStream context to receive JetStream messages.
+                // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
 
                 string subjectA = SubjectDot("A");
@@ -325,167 +358,58 @@ namespace IntegrationTests
             Assert.Equal(Data(i), Encoding.UTF8.GetString(m.Data));
         }
 
-       [Fact]
-        public void TestQueueSubWorkflow()
-        {
-            Context.RunInJsServer(c =>
-            {
-                // create the stream.
-                CreateMemoryStream(c, STREAM, SUBJECT);
-
-                // Create our JetStream context to receive JetStream messages.
-                IJetStream js = c.CreateJetStreamContext();
-
-                // Setup the subscribers
-                // - the PushSubscribeOptions can be re-used since all the subscribers are the same
-                // - use a concurrent integer to track all the messages received
-                // - have a list of subscribers and threads so I can track them
-                PushSubscribeOptions pso = PushSubscribeOptions.Builder().WithDurable(DURABLE).Build();
-                InterlockedLong allReceived = new InterlockedLong();
-                IList<JsQueueSubscriber> subscribers = new List<JsQueueSubscriber>();
-                IList<Thread> subThreads = new List<Thread>();
-                for (int id = 1; id <= 3; id++) {
-                    // setup the subscription
-                    IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(SUBJECT, QUEUE, pso);
-                    // create and track the runnable
-                    JsQueueSubscriber qs = new JsQueueSubscriber(100, js, sub, allReceived);
-                    subscribers.Add(qs);
-                    // create, track and start the thread
-                    Thread t = new Thread(qs.Run);
-                    subThreads.Add(t);
-                    t.Start();
-                }
-                c.Flush(DefaultTimeout); // flush outgoing communication with/to the server
-
-                // create and start the publishing
-                Thread pubThread = new Thread(new JsPublisher(js, 100).Run);
-                pubThread.Start();
-
-                // wait for all threads to finish
-                pubThread.Join(5000);
-                foreach (Thread t in subThreads) {
-                    t.Join(5000);
-                }
-
-                ISet<String> uniqueDatas = new HashSet<String>();
-                // count
-                int count = 0;
-                foreach (JsQueueSubscriber qs in subscribers) {
-                    int r = qs.received;
-                    Assert.True(r > 0);
-                    count += r;
-                    foreach (string s in qs.datas) {
-                        Assert.True(uniqueDatas.Add(s));
-                    }
-                }
-
-                Assert.Equal(100, count);
-
-            });
-        }
-
         [Fact]
-        public void TestQueueSubErrors()
+        public void TestPushSyncFlowControl()
         {
-            Context.RunInJsServer(c =>
+            InterlockedInt fcps = new InterlockedInt();
+            
+            Action<Options> optionsModifier = opts =>
+            {
+                opts.FlowControlProcessedEventHandler = (sender, args) =>
+                {
+                    fcps.Increment();
+                };
+            };
+            
+            Context.RunInJsServer(new TestServerInfo(TestSeedPorts.AutoPort.Increment()), optionsModifier, c =>
             {
                 // create the stream.
-                CreateMemoryStream(c, STREAM, SUBJECT);
+                CreateDefaultTestStream(c);
 
-                // Create our JetStream context to receive JetStream messages.
+                // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
+                
+                byte[] data = new byte[8192];
 
-                // create a durable that is not a queue
-                PushSubscribeOptions pso1 = PushSubscribeOptions.Builder().WithDurable(Durable(1)).Build();
-                js.PushSubscribeSync(SUBJECT, pso1);
+                int MSG_COUNT = 1000;
+                
+                for (int x = 100_000; x < MSG_COUNT + 100_000; x++) {
+                    byte[] fill = Encoding.ASCII.GetBytes(""+ x);
+                    Array.Copy(fill, 0, data, 0, 6);
+                    js.Publish(new Msg(SUBJECT, data));
+                }
+                
+                InterlockedInt count = new InterlockedInt();
+                HashSet<string> set = new HashSet<string>();
+                
+                ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithFlowControl(1000).Build();
+                PushSubscribeOptions pso = PushSubscribeOptions.Builder().WithConfiguration(cc).Build();
 
-                ArgumentException iae = Assert.Throws<ArgumentException>(() => js.PushSubscribeSync(SUBJECT, pso1));
-                Assert.Contains("[SUB-Q02]", iae.Message);
-
-                iae = Assert.Throws<ArgumentException>(() => js.PushSubscribeSync(SUBJECT, Queue(1), pso1));
-                Assert.Contains("[SUB-Q03]", iae.Message);
-
-                PushSubscribeOptions pso21 = PushSubscribeOptions.Builder().WithDurable(Durable(2)).Build();
-                js.PushSubscribeSync(SUBJECT, Queue(21), pso21);
-
-                PushSubscribeOptions pso22 = PushSubscribeOptions.Builder().WithDurable(Durable(2)).Build();
-                iae = Assert.Throws<ArgumentException>(() => js.PushSubscribeSync(SUBJECT, Queue(22), pso22));
-                Assert.Contains("[SUB-Q05]", iae.Message);
-
-                PushSubscribeOptions pso23 = PushSubscribeOptions.Builder().WithDurable(Durable(2)).Build();
-                iae = Assert.Throws<ArgumentException>(() => js.PushSubscribeSync(SUBJECT, pso23));
-                Assert.Contains("[SUB-Q04]", iae.Message);
-
-                PushSubscribeOptions pso3 = PushSubscribeOptions.Builder()
-                        .WithDurable(Durable(3))
-                        .WithDeliverGroup(Queue(31))
-                        .Build();
-                iae = Assert.Throws<ArgumentException>(() => js.PushSubscribeSync(SUBJECT, Queue(32), pso3));
-                Assert.Contains("[SUB-Q01]", iae.Message);
-            });
-        }
-    }
-    
-    class JsPublisher
-    {
-        IJetStream js;
-        int msgCount;
-
-        public JsPublisher(IJetStream js, int msgCount)
-        {
-            this.js = js;
-            this.msgCount = msgCount;
-        }
-
-        public void Run()
-        {
-            for (int x = 1; x <= msgCount; x++)
-            {
-                js.Publish(SUBJECT, Encoding.ASCII.GetBytes("Data # " + x));
-            }
-        }
-    }
-
-    class JsQueueSubscriber
-    {
-        int msgCount;
-        IJetStream js;
-        IJetStreamPushSyncSubscription sub;
-        InterlockedLong allReceived;
-        public int received;
-        public IList<string> datas;
-
-        public JsQueueSubscriber(int msgCount, IJetStream js, IJetStreamPushSyncSubscription sub, InterlockedLong allReceived)
-        {
-            this.msgCount = msgCount;
-            this.js = js;
-            this.sub = sub;
-            this.allReceived = allReceived;
-            received = 0;
-            datas = new List<string>();
-        }
-
-        public void Run()
-        {
-            while (allReceived.Get() < msgCount)
-            {
-                try
-                {
-                    Msg msg = sub.NextMessage(500);
-                    while (msg != null)
-                    {
-                        received++;
-                        allReceived.Inc();
-                        datas.Add(Encoding.UTF8.GetString(msg.Data));
-                        msg.Ack();
-                        msg = sub.NextMessage(500);
+                IJetStreamPushSyncSubscription ssub = js.PushSubscribeSync(SUBJECT, pso);
+                for (int x = 0; x < MSG_COUNT; x++) {
+                    Msg msg = ssub.NextMessage(1000);
+                    byte[] fill = new byte[6];
+                    Array.Copy(msg.Data, 0, fill, 0, 6);
+                    string id = Encoding.ASCII.GetString(fill);
+                    if (set.Add(id)) {
+                        count.Increment();
                     }
+                    msg.Ack();
                 }
-                catch (NATSTimeoutException)
-                {
-                    // timeout is acceptable, means no messages available.
-                }
-            }
+
+                Assert.Equal(MSG_COUNT, count.Read());
+                Assert.True(fcps.Read() > 0);
+            });
         }
     }
 }

@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System;
+using NATS.Client;
 using NATS.Client.JetStream;
 using Xunit;
 
@@ -51,8 +52,6 @@ namespace UnitTests.JetStream
                 .WithStream(STREAM)
                 .WithDurable(DURABLE)
                 .Build();
-            Console.WriteLine(so.Stream);
-            Console.WriteLine(so.Durable);
             Assert.Equal(STREAM, so.Stream);
             Assert.Equal(DURABLE, so.Durable);
         }
@@ -73,12 +72,15 @@ namespace UnitTests.JetStream
             // in configuration
             ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithDurable(DURABLE).Build();
             PushSubscribeOptions.Builder().WithConfiguration(cc).Build();
+            
+            // new helper
+            ConsumerConfiguration.Builder().WithDurable(DURABLE).BuildPushSubscribeOptions();
         }
 
         [Fact]
         public void TestPullValidation() 
         {
-            PullSubscribeOptions.PullSubscribeOptionsBuilder builder1 = PullSubscribeOptions.Builder();
+            PullSubscribeOptions.PullSubscribeOptionsSubscribeOptionsBuilder builder1 = PullSubscribeOptions.Builder();
             Assert.Throws<ArgumentException>(() => builder1.WithStream(HasDot).Build());
             Assert.Throws<ArgumentException>(() => builder1.WithDurable(HasDot).Build());
 
@@ -86,7 +88,7 @@ namespace UnitTests.JetStream
             Assert.Throws<ArgumentException>(() => builder1.WithConfiguration(ccBadDur).Build());
 
             // durable required direct or in configuration
-            PullSubscribeOptions.PullSubscribeOptionsBuilder builder2 = PullSubscribeOptions.Builder();
+            PullSubscribeOptions.PullSubscribeOptionsSubscribeOptionsBuilder builder2 = PullSubscribeOptions.Builder();
 
             Assert.Throws<ArgumentException>(() => builder2.Build());
 
@@ -99,6 +101,9 @@ namespace UnitTests.JetStream
             // in configuration
             ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithDurable(DURABLE).Build();
             PullSubscribeOptions.Builder().WithConfiguration(cc).Build();
+            
+            // new helper
+            ConsumerConfiguration.Builder().WithDurable(DURABLE).BuildPullSubscribeOptions();
         }
 
         [Fact]
@@ -129,7 +134,7 @@ namespace UnitTests.JetStream
                 .Build()
                 .Durable);
 
-            Assert.Throws<ArgumentException>(() => PushSubscribeOptions.Builder()
+            Assert.Throws<NATSJetStreamClientException>(() => PushSubscribeOptions.Builder()
                 .WithDurable("x")
                 .WithConfiguration(ConsumerConfiguration.Builder().WithDurable("y").Build())
                 .Build());
@@ -161,7 +166,7 @@ namespace UnitTests.JetStream
                 .Build()
                 .Durable);
 
-            Assert.Throws<ArgumentException>(() => PullSubscribeOptions.Builder()
+            Assert.Throws<NATSJetStreamClientException>(() => PullSubscribeOptions.Builder()
                 .WithDurable("x")
                 .WithConfiguration(ConsumerConfiguration.Builder().WithDurable("y").Build())
                 .Build());
@@ -196,7 +201,7 @@ namespace UnitTests.JetStream
                 .Build()
                 .DeliverGroup);
 
-            Assert.Throws<ArgumentException>(() => PushSubscribeOptions.Builder()
+            Assert.Throws<NATSJetStreamClientException>(() => PushSubscribeOptions.Builder()
                 .WithDeliverGroup("x")
                 .WithConfiguration(ConsumerConfiguration.Builder().WithDeliverGroup("y").Build())
                 .Build());
@@ -230,7 +235,7 @@ namespace UnitTests.JetStream
                 .Build()
                 .DeliverSubject);
 
-            Assert.Throws<ArgumentException>(() => PushSubscribeOptions.Builder()
+            Assert.Throws<NATSJetStreamClientException>(() => PushSubscribeOptions.Builder()
                 .WithDeliverSubject("x")
                 .WithConfiguration(ConsumerConfiguration.Builder().WithDeliverSubject("y").Build())
                 .Build());

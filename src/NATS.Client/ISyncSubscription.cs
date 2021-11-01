@@ -11,8 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-
 namespace NATS.Client
 {
     /// <summary>
@@ -31,6 +29,7 @@ namespace NATS.Client
         /// <summary>
         /// Returns the next <see cref="Msg"/> available to a synchronous
         /// subscriber, or block up to a given timeout until the next one is available.
+        /// timeout less than zero means block until a message is available
         /// </summary>
         /// <param name="timeout">The amount of time, in milliseconds, to wait for
         /// the next message.</param>

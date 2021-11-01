@@ -53,7 +53,19 @@ namespace NATS.Client.Internals
             });
         }
 
-        internal static String ValidateMustMatchIfBothSupplied(String s1, String s2, String label1, String label2) {
+        public static void ValidateNotSupplied(String s, ClientExDetail detail) {
+            if (!string.IsNullOrWhiteSpace(s)) {
+                throw detail.Instance();
+            }
+        }
+
+        public static void ValidateNotSupplied(long l, long dflt, ClientExDetail detail) {
+            if (l > dflt) {
+                throw detail.Instance();
+            }
+        }
+
+        internal static String ValidateMustMatchIfBothSupplied(String s1, String s2, ClientExDetail detail) {
             // s1   | s2   || result
             // ---- | ---- || --------------
             // null | null || valid, null s2
@@ -72,7 +84,7 @@ namespace NATS.Client.Internals
                 return s1;
             }
 
-            throw new ArgumentException($"{label1} [{s1}] must match the {label2} [{s2}] if both are provided.");
+            throw detail.Instance();
         }
 
         public static string Validate(string s, bool required, string label, Func<string> check)
@@ -165,14 +177,39 @@ namespace NATS.Client.Internals
             return ValidateGtZeroOrMinus1(max, "Max Messages");
         }
 
+        internal static long ValidateMaxBucketValues(long max)
+        {
+            return ValidateGtZeroOrMinus1(max, "Max Bucket Values"); // max bucket values is a kv alias to max messages
+        }
+
+        internal static long ValidateMaxMessagesPerSubject(long max)
+        {
+            return ValidateGtZeroOrMinus1(max, "Max Messages Per Subject");
+        }
+
+        internal static long ValidateMaxHistoryPerKey(long max)
+        {
+            return ValidateGtZeroOrMinus1(max, "Max History Per Key");
+        }
+        
         internal static long ValidateMaxBytes(long max)
         {
             return ValidateGtZeroOrMinus1(max, "Max Bytes");
         }
+        
+        internal static long ValidateMaxBucketBytes(long max)
+        {
+            return ValidateGtZeroOrMinus1(max, "Max BucketBytes"); // max bucket bytes is a kv alias to max bytes
+        }
 
         internal static long ValidateMaxMessageSize(long max)
         {
-            return ValidateGtZeroOrMinus1(max, "Max message size");
+            return ValidateGtZeroOrMinus1(max, "Max Message Size");
+        }
+
+        internal static long ValidateMaxValueBytes(long max)
+        {
+            return ValidateGtZeroOrMinus1(max, "Max Value Bytes"); // max value bytes is a kv alias to max message size
         }
 
         internal static int ValidateNumberOfReplicas(int replicas)
@@ -224,7 +261,7 @@ namespace NATS.Client.Internals
         {
             if (o == null)
             {
-                throw new ArgumentNullException($"{fieldName} cannot be null");
+                throw new ArgumentNullException(fieldName);
             }
 
             return o;
@@ -234,7 +271,7 @@ namespace NATS.Client.Internals
         {
             if (s == null)
             {
-                throw new ArgumentNullException($"{fieldName} cannot be null");
+                throw new ArgumentNullException(fieldName);
             }
 
             return s;

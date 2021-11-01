@@ -12,10 +12,10 @@ namespace IntegrationTests
         public const string JsReplyTo = "$JS.ACK.test-stream.test-consumer.1.2.3.1605139610113260000";
         public static readonly int DefaultTimeout = 500; // millis
 
-        public static void CreateTestStream(IConnection c)
+        public static void CreateDefaultTestStream(IConnection c)
             => CreateMemoryStream(c, STREAM, SUBJECT);
 
-        public static void CreateTestStream(IJetStreamManagement jsm)
+        public static void CreateDefaultTestStream(IJetStreamManagement jsm)
             => CreateMemoryStream(jsm, STREAM, SUBJECT);
 
         public static void CreateMemoryStream(IConnection c, string streamName, params string[] subjects)
@@ -71,7 +71,7 @@ namespace IntegrationTests
             JsPublish(c.CreateJetStreamContext(), subject, startId, count);
         }
 
-        public static PublishAck JsPublish(JetStream js) {
+        public static PublishAck JsPublish(IJetStream js) {
             return js.Publish(new Msg(SUBJECT, DataBytes()));
         }
 

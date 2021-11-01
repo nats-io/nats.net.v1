@@ -48,6 +48,7 @@ namespace NATS.Client.JetStream
         internal const string ErrCode = "err_code";
         internal const string Error = "error";
         internal const string External = "external";
+        internal const string Filter = "filter";
         internal const string FilterSubject = "filter_subject";
         internal const string FirstSeq = "first_seq";
         internal const string FirstTs = "first_ts";
@@ -55,11 +56,14 @@ namespace NATS.Client.JetStream
         internal const string Go = "go";
         internal const string Hdrs = "hdrs";
         internal const string Headers = "headers";
+        internal const string HeadersOnly = "headers_only";
         internal const string Host = "host";
         internal const string IdleHeartbeat = "idle_heartbeat";
         internal const string Jetstream = "jetstream";
+        internal const string Keep = "keep";
         internal const string Lag = "lag";
         internal const string LameDuckMode = "ldm";
+        internal const string LastBySubject = "last_by_subj";
         internal const string LastSeq = "last_seq";
         internal const string LastTs = "last_ts";
         internal const string Leader = "leader";
@@ -72,6 +76,7 @@ namespace NATS.Client.JetStream
         internal const string MaxMemory = "max_memory";
         internal const string MaxMsgSize = "max_msg_size";
         internal const string MaxMsgs = "max_msgs";
+        internal const string MaxMsgsPerSubject = "max_msgs_per_subject";
         internal const string MaxPayload = "max_payload";
         internal const string MaxStorage = "max_storage";
         internal const string MaxStreams = "max_streams";

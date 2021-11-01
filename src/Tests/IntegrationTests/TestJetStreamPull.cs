@@ -34,9 +34,9 @@ namespace IntegrationTests
             Context.RunInJsServer(c =>
             {
                 // create the stream.
-                CreateMemoryStream(c, STREAM, SUBJECT);
+                CreateDefaultTestStream(c);
 
-                // Create our JetStream context to receive JetStream messages.
+                // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
 
                 ConsumerConfiguration cc = ConsumerConfiguration.Builder()
@@ -102,9 +102,9 @@ namespace IntegrationTests
             Context.RunInJsServer(c =>
             {
                 // create the stream.
-                CreateMemoryStream(c, STREAM, SUBJECT);
+                CreateDefaultTestStream(c);
 
-                // Create our JetStream context to receive JetStream messages.
+                // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
 
                 // Build our subscription options. Durable is REQUIRED for pull based subscriptions
@@ -187,9 +187,9 @@ namespace IntegrationTests
             Context.RunInJsServer(c =>
             {
                 // create the stream.
-                CreateMemoryStream(c, STREAM, SUBJECT);
+                CreateDefaultTestStream(c);
 
-                // Create our JetStream context to receive JetStream messages.
+                // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
 
                 // Build our subscription options. Durable is REQUIRED for pull based subscriptions
@@ -226,8 +226,7 @@ namespace IntegrationTests
                 JsPublish(js, SUBJECT, "C", 5);
                 sub.PullNoWait(10);
                 messages = ReadMessagesAck(sub);
-                Assert.Equal(6, messages.Count);
-                AssertLastIsStatus(messages, 404);
+                Assert.Equal(5, messages.Count);
 
                 // publish 12 messages
                 // no wait, batch size 10, there are more than batch messages we will read 10
@@ -237,23 +236,22 @@ namespace IntegrationTests
                 Assert.Equal(10, messages.Count);
 
                 // 2 messages left
-                // no wait, less than batch ssize will WILL trip nowait
+                // no wait, less than batch size will WILL trip nowait
                 sub.PullNoWait(10);
                 messages = ReadMessagesAck(sub);
-                Assert.Equal(3, messages.Count);
-                AssertLastIsStatus(messages, 404);
+                Assert.Equal(2, messages.Count);
             });
         }
 
         [Fact]
-        public void TestAfterIncompleteExpiresPulls()
+        public void TestPullExpires()
         {
             Context.RunInJsServer(c =>
             {
                 // create the stream.
-                CreateMemoryStream(c, STREAM, SUBJECT);
+                CreateDefaultTestStream(c);
 
-                // Create our JetStream context to receive JetStream messages.
+                // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
 
                 // Build our subscription options. Durable is REQUIRED for pull based subscriptions
@@ -330,9 +328,9 @@ namespace IntegrationTests
             Context.RunInJsServer(c =>
             {
                 // create the stream.
-                CreateMemoryStream(c, STREAM, SUBJECT);
+                CreateDefaultTestStream(c);
 
-                // Create our JetStream context to receive JetStream messages.
+                // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
 
                 // Build our subscription options. Durable is REQUIRED for pull based subscriptions
@@ -367,9 +365,9 @@ namespace IntegrationTests
             Context.RunInJsServer(c =>
             {
                 // create the stream.
-                CreateMemoryStream(c, STREAM, SUBJECT);
+                CreateDefaultTestStream(c);
 
-                // Create our JetStream context to receive JetStream messages.
+                // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
 
                 // Build our subscription options. Durable is REQUIRED for pull based subscriptions
@@ -392,14 +390,38 @@ namespace IntegrationTests
         }
 
         [Fact]
+        public void TestAckReplySyncCoverage()
+        {
+            Context.RunInJsServer(c =>
+            {
+                // create the stream.
+                CreateDefaultTestStream(c);
+
+                // Create our JetStream context.
+                IJetStream js = c.CreateJetStreamContext();
+
+                IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(SUBJECT);
+                c.Flush(DefaultTimeout); // flush outgoing communication with/to the server
+
+                JsPublish(js, SUBJECT, "COVERAGE", 1);
+
+                Msg message = sub.NextMessage(1000);
+                Assert.NotNull(message);
+                message.Reply = "$JS.ACK.stream.LS0k4eeN.1.1.1.1627472530542070600.0";
+
+                Assert.Throws<NATSNoRespondersException>(() => message.AckSync(1000));
+            });
+        }
+
+        [Fact]
         public void TestAckWaitTimeout()
         {
             Context.RunInJsServer(c =>
             {
                 // create the stream.
-                CreateMemoryStream(c, STREAM, SUBJECT);
+                CreateDefaultTestStream(c);
 
-                // Create our JetStream context to receive JetStream messages.
+                // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
 
                 ConsumerConfiguration cc = ConsumerConfiguration.Builder()

@@ -50,6 +50,7 @@ namespace UnitTests.JetStream
                     .WithRetentionPolicy(testSc.RetentionPolicy)
                     .WithMaxConsumers(testSc.MaxConsumers)
                     .WithMaxMessages(testSc.MaxMsgs)
+                    .WithMaxMessagesPerSubject(testSc.MaxMsgsPerSubject)
                     .WithMaxBytes(testSc.MaxBytes)
                     .WithMaxAge(testSc.MaxAge)
                     .WithMaxMsgSize(testSc.MaxMsgSize)
@@ -232,6 +233,7 @@ namespace UnitTests.JetStream
             Assert.Equal(RetentionPolicy.Interest, sc.RetentionPolicy);
             Assert.Equal(730, sc.MaxConsumers);
             Assert.Equal(731, sc.MaxMsgs);
+            Assert.Equal(7311, sc.MaxMsgsPerSubject);
             Assert.Equal(732, sc.MaxBytes);
             Assert.Equal(Duration.OfNanos(42000000000L), sc.MaxAge);
             Assert.Equal(734, sc.MaxMsgSize);

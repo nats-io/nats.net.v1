@@ -34,19 +34,19 @@ namespace UnitTests.JetStream
                 .WithFilterSubject("fs")
                 .WithMaxDeliver(5555)
                 .WithMaxAckPending(6666)
-                .WithIdleHeartbeat(Duration.OfSeconds(66))
                 .WithRateLimit(4242)
                 .WithReplayPolicy(ReplayPolicy.Original)
                 .WithSampleFrequency("10s")
                 .WithStartSequence(2001)
                 .WithStartTime(dt)
                 .WithDeliverSubject("deliver")
-                .WithFlowControl(true)
+                .WithFlowControl(Duration.OfMillis(66))
+                .WithHeadersOnly(true)
                 .Build();
 
             Assert.Equal(AckPolicy.Explicit, c.AckPolicy);
             Assert.Equal(Duration.OfSeconds(99), c.AckWait);
-            Assert.Equal(Duration.OfSeconds(66), c.IdleHeartbeat);
+            Assert.Equal(Duration.OfMillis(66), c.IdleHeartbeat);
             Assert.Equal(DeliverPolicy.ByStartSequence, c.DeliverPolicy);
             Assert.Equal("deliver", c.DeliverSubject);
             Assert.Equal("durable", c.Durable);
@@ -58,6 +58,7 @@ namespace UnitTests.JetStream
             Assert.Equal(2001ul, c.StartSeq);
             Assert.Equal(dt, c.StartTime);
             Assert.True(c.FlowControl);
+            Assert.True(c.HeadersOnly);
 
             ConsumerCreateRequest ccr = new ConsumerCreateRequest("stream", c);
             Assert.Equal("stream", ccr.StreamName);
@@ -67,7 +68,7 @@ namespace UnitTests.JetStream
             c = new ConsumerConfiguration(node[ApiConstants.Config]);
             Assert.Equal(AckPolicy.Explicit, c.AckPolicy);
             Assert.Equal(Duration.OfSeconds(99), c.AckWait);
-            Assert.Equal(Duration.OfSeconds(66), c.IdleHeartbeat);
+            Assert.Equal(Duration.OfMillis(66), c.IdleHeartbeat);
             Assert.Equal(DeliverPolicy.ByStartSequence, c.DeliverPolicy);
             Assert.Equal("deliver", c.DeliverSubject);
             Assert.Equal("durable", c.Durable);
@@ -78,6 +79,34 @@ namespace UnitTests.JetStream
             Assert.Equal(2001ul, c.StartSeq);
             Assert.Equal(dt, c.StartTime);
             Assert.True(c.FlowControl);
+
+            // flow control idle heartbeat combo
+            c = ConsumerConfiguration.Builder()
+                .WithFlowControl(Duration.OfMillis(501)).Build();
+            Assert.True(c.FlowControl);
+            Assert.Equal(501, c.IdleHeartbeat.Millis);
+
+            c = ConsumerConfiguration.Builder()
+                .WithFlowControl(502).Build();
+            Assert.True(c.FlowControl);
+            Assert.Equal(502, c.IdleHeartbeat.Millis);
+
+            // millis instead of duration coverage
+            // supply null as deliverPolicy, ackPolicy , replayPolicy,
+            c = ConsumerConfiguration.Builder()
+                .WithDeliverPolicy(null)
+                .WithAckPolicy(null)
+                .WithReplayPolicy(null)
+                .WithAckWait(9000) // millis
+                .WithIdleHeartbeat(6000) // millis
+                .Build();
+
+            Assert.Equal(AckPolicy.Explicit, c.AckPolicy);
+            Assert.Equal(DeliverPolicy.All, c.DeliverPolicy);
+            Assert.Equal(ReplayPolicy.Instant, c.ReplayPolicy);
+            Assert.Equal(Duration.OfSeconds(9), c.AckWait);
+            Assert.Equal(Duration.OfSeconds(6), c.IdleHeartbeat);
+            
         }
 
         [Fact]
@@ -101,6 +130,7 @@ namespace UnitTests.JetStream
             Assert.Equal("sample_freq-value", c.SampleFrequency);
             Assert.True(c.FlowControl);
             Assert.Equal(128, c.MaxPullWaiting);
+            Assert.True(c.HeadersOnly);
         }
     }
 }

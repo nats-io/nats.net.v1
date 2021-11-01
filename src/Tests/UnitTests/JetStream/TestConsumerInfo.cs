@@ -36,7 +36,7 @@ namespace UnitTests.JetStream
             Assert.Equal(42, ci.NumAckPending);
             Assert.Equal(42, ci.NumRedelivered);
 
-            ConsumerConfiguration c = ci.Configuration;
+            ConsumerConfiguration c = ci.ConsumerConfiguration;
             Assert.Equal("foo-consumer", c.Durable);
             Assert.Equal("bar", c.DeliverSubject);
             Assert.Equal(DeliverPolicy.All, c.DeliverPolicy);
