@@ -81,6 +81,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JetStreamPullSubFetchUseCas
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JetStreamPullSubNoWaitUseCases", "Samples\JetStreamPullSubNoWaitUseCases\JetStreamPullSubNoWaitUseCases.csproj", "{FEF800F2-A84C-4822-97C2-91127D40B194}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JetStreamSampleStarter", "Samples\JetStreamSampleStarter\JetStreamSampleStarter.csproj", "{C5642390-BDE8-4AAF-AEAC-1D573F7F2F10}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -215,6 +217,10 @@ Global
 		{FEF800F2-A84C-4822-97C2-91127D40B194}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FEF800F2-A84C-4822-97C2-91127D40B194}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FEF800F2-A84C-4822-97C2-91127D40B194}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C5642390-BDE8-4AAF-AEAC-1D573F7F2F10}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C5642390-BDE8-4AAF-AEAC-1D573F7F2F10}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C5642390-BDE8-4AAF-AEAC-1D573F7F2F10}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C5642390-BDE8-4AAF-AEAC-1D573F7F2F10}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -251,6 +257,7 @@ Global
 		{4B9FE3F8-A8ED-471B-93E9-7DD1AA2B6C0E} = {776C2E80-958B-4C0D-BCC4-67D39DB4570B}
 		{C9C5251D-00E7-4F78-B9A4-A8F87864B28C} = {776C2E80-958B-4C0D-BCC4-67D39DB4570B}
 		{FEF800F2-A84C-4822-97C2-91127D40B194} = {776C2E80-958B-4C0D-BCC4-67D39DB4570B}
+		{C5642390-BDE8-4AAF-AEAC-1D573F7F2F10} = {776C2E80-958B-4C0D-BCC4-67D39DB4570B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0972F03C-E4DF-483A-B767-9216F4434F11}
