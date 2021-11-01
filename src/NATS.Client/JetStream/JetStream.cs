@@ -194,65 +194,65 @@ namespace NATS.Client.JetStream
             String consumerName = userCC.Durable;
             String inboxDeliver = userCC.DeliverSubject;
             
-        // 3. Does this consumer already exist?
-        if (consumerName != null) {
-            ConsumerInfo serverInfo = LookupConsumerInfo(stream, consumerName);
+            // 3. Does this consumer already exist?
+            if (consumerName != null) {
+                ConsumerInfo serverInfo = LookupConsumerInfo(stream, consumerName);
 
-            if (serverInfo != null) { // the consumer for that durable already exists
-                serverCc = serverInfo.ConsumerConfiguration;
+                if (serverInfo != null) { // the consumer for that durable already exists
+                    serverCc = serverInfo.ConsumerConfiguration;
 
-                if (isPullMode) {
-                    if (!string.IsNullOrWhiteSpace(serverCc.DeliverSubject)) {
-                        throw JsSubConsumerAlreadyConfiguredAsPush.Instance();
-                    }
-                }
-                else if (string.IsNullOrWhiteSpace(serverCc.DeliverSubject)) {
-                    throw JsSubConsumerAlreadyConfiguredAsPull.Instance();
-                }
-                else if (inboxDeliver != null && !inboxDeliver.Equals(serverCc.DeliverSubject)) {
-                    throw JsSubExistingDeliverSubjectMismatch.Instance();
-                }
-
-                // durable already exists, make sure the filter subject matches
-                String userFilterSubject = userCC.FilterSubject;
-                if (userFilterSubject != null && !userFilterSubject.Equals(serverCc.FilterSubject)) {
-                    throw JsSubSubjectDoesNotMatchFilter.Instance();
-                }
-
-                if (string.IsNullOrWhiteSpace(serverCc.DeliverGroup)) {
-                    // lookedUp was null/empty, means existing consumer is not a queue consumer
-                    if (qgroup == null) {
-                        // ok fine, no queue requested and the existing consumer is also not a queue consumer
-                        // we must check if the consumer is in use though
-                        if (serverInfo.PushBound) {
-                            throw JsSubConsumerAlreadyBound.Instance();
+                    if (isPullMode) {
+                        if (!string.IsNullOrWhiteSpace(serverCc.DeliverSubject)) {
+                            throw JsSubConsumerAlreadyConfiguredAsPush.Instance();
                         }
                     }
-                    else { // else they requested a queue but this durable was not configured as queue
-                        throw JsSubExistingConsumerNotQueue.Instance();
+                    else if (string.IsNullOrWhiteSpace(serverCc.DeliverSubject)) {
+                        throw JsSubConsumerAlreadyConfiguredAsPull.Instance();
                     }
-                }
-                else if (qgroup == null) {
-                    throw JsSubExistingConsumerIsQueue.Instance();
-                }
-                else if (!serverCc.DeliverGroup.Equals(qgroup)) {
-                    throw JsSubExistingQueueDoesNotMatchRequestedQueue.Instance();
-                }
+                    else if (inboxDeliver != null && !inboxDeliver.Equals(serverCc.DeliverSubject)) {
+                        throw JsSubExistingDeliverSubjectMismatch.Instance();
+                    }
 
-                // check to see if the user sent a different version than the server has
-                // modifications are not allowed
-                // previous checks for deliver subject and filter subject matching are now
-                // in the changes function
-                if (UserIsModifiedVsServer(userCC, serverCc)) {
-                    throw JsSubExistingConsumerCannotBeModified.Instance();
-                }
+                    // durable already exists, make sure the filter subject matches
+                    String userFilterSubject = userCC.FilterSubject;
+                    if (userFilterSubject != null && !userFilterSubject.Equals(serverCc.FilterSubject)) {
+                        throw JsSubSubjectDoesNotMatchFilter.Instance();
+                    }
 
-                inboxDeliver = serverCc.DeliverSubject; // use the deliver subject as the inbox. It may be null, that's ok, we'll fix that later
+                    if (string.IsNullOrWhiteSpace(serverCc.DeliverGroup)) {
+                        // lookedUp was null/empty, means existing consumer is not a queue consumer
+                        if (qgroup == null) {
+                            // ok fine, no queue requested and the existing consumer is also not a queue consumer
+                            // we must check if the consumer is in use though
+                            if (serverInfo.PushBound) {
+                                throw JsSubConsumerAlreadyBound.Instance();
+                            }
+                        }
+                        else { // else they requested a queue but this durable was not configured as queue
+                            throw JsSubExistingConsumerNotQueue.Instance();
+                        }
+                    }
+                    else if (qgroup == null) {
+                        throw JsSubExistingConsumerIsQueue.Instance();
+                    }
+                    else if (!serverCc.DeliverGroup.Equals(qgroup)) {
+                        throw JsSubExistingQueueDoesNotMatchRequestedQueue.Instance();
+                    }
+
+                    // check to see if the user sent a different version than the server has
+                    // modifications are not allowed
+                    // previous checks for deliver subject and filter subject matching are now
+                    // in the changes function
+                    if (UserIsModifiedVsServer(userCC, serverCc)) {
+                        throw JsSubExistingConsumerCannotBeModified.Instance();
+                    }
+
+                    inboxDeliver = serverCc.DeliverSubject; // use the deliver subject as the inbox. It may be null, that's ok, we'll fix that later
+                }
+                else if (so.Bind) {
+                    throw JsSubConsumerNotFoundRequiredInBind.Instance();
+                }
             }
-            else if (so.Bind) {
-                throw JsSubConsumerNotFoundRequiredInBind.Instance();
-            }
-        }
 
             // 4. If no deliver subject (inbox) provided or found, make an inbox.
             if (string.IsNullOrWhiteSpace(inboxDeliver)) {
@@ -268,7 +268,7 @@ namespace NATS.Client.JetStream
                     ccBuilder.WithDeliverSubject(inboxDeliver);
                 }
 
-                string userFilterSubject = ccBuilder.FilterSubject;
+                string userFilterSubject = userCC.FilterSubject;
                 ccBuilder.WithFilterSubject(string.IsNullOrWhiteSpace(userFilterSubject) ? subject : userFilterSubject);
 
                 // createOrUpdateConsumer can fail for security reasons, maybe other reasons?
@@ -352,10 +352,17 @@ namespace NATS.Client.JetStream
                    || !Equals(user.StartTime, server.StartTime)
                    || !Equals(user.AckWait, server.AckWait)
                    || !Equals(user.IdleHeartbeat, server.IdleHeartbeat)
-                   || !Equals(EmptyAsNull(user.Description), EmptyAsNull(server.Description))
-                   || !Equals(EmptyAsNull(user.SampleFrequency), EmptyAsNull(server.SampleFrequency));
+                   || !EqualsConsideringSupplied(user.Description, server.Description)
+                   || !EqualsConsideringSupplied(user.SampleFrequency, server.SampleFrequency);
         }
-            
+
+        private static bool EqualsConsideringSupplied(string user, string server)
+        {
+            string u = EmptyAsNull(user);
+            string s = EmptyAsNull(server);
+            return u == null || s != null && u.Equals(s);
+        }
+        
         // protected internal so can be tested
         protected internal ConsumerInfo LookupConsumerInfo(string lookupStream, string lookupConsumer) {
             try {

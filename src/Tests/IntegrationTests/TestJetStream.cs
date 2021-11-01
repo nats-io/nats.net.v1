@@ -537,12 +537,13 @@ namespace IntegrationTests
         public void TestConsumerCannotBeModified() {
             Context.RunInJsServer(c =>
             {
-                CreateDefaultTestStream(c);
-
                 IJetStream js = c.CreateJetStreamContext();
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+
+                CreateDefaultTestStream(jsm);
 
                 ConsumerConfiguration.ConsumerConfigurationBuilder builder = DurBuilder();
-                c.CreateJetStreamManagementContext().AddOrUpdateConsumer(STREAM, builder.Build());
+                jsm.AddOrUpdateConsumer(STREAM, builder.Build());
 
                 CcbmEx(js, DurBuilder().WithDeliverPolicy(DeliverPolicy.Last));
                 CcbmEx(js, DurBuilder().WithDeliverPolicy(DeliverPolicy.New));
@@ -550,9 +551,9 @@ namespace IntegrationTests
                 CcbmEx(js, DurBuilder().WithAckPolicy(AckPolicy.All));
                 CcbmEx(js, DurBuilder().WithReplayPolicy(ReplayPolicy.Original));
 
-                CcbmEx(js, DurBuilder().WithDescription("x"));
                 CcbmEx(js, DurBuilder().WithStartTime(DateTime.Now));
                 CcbmEx(js, DurBuilder().WithAckWait(Duration.OfMillis(1)));
+                CcbmEx(js, DurBuilder().WithDescription("x"));
                 CcbmEx(js, DurBuilder().WithSampleFrequency("x"));
                 CcbmEx(js, DurBuilder().WithIdleHeartbeat(Duration.OfMillis(1)));
 
@@ -573,6 +574,29 @@ namespace IntegrationTests
                 c.CreateJetStreamManagementContext().AddOrUpdateConsumer(STREAM, builder2.Build());
                 CcbmExPull(js, builder2.WithMaxPullWaiting(999));
                 CcbmOkPull(js, builder2.WithMaxPullWaiting(512)); // 512 is the default
+
+                jsm.DeleteConsumer(STREAM, DURABLE);
+                
+                jsm.AddOrUpdateConsumer(STREAM, DurBuilder().WithDescription("desc").WithSampleFrequency("42").Build());
+                CcbmOk(js, DurBuilder());
+                CcbmEx(js, DurBuilder().WithDescription("x"));
+                CcbmEx(js, DurBuilder().WithSampleFrequency("73"));
+                
+                jsm.DeleteConsumer(STREAM, DURABLE);
+
+                builder = DurBuilder()
+                    .WithStartSequence(5)
+                    .WithMaxDeliver(6)
+                    .WithRateLimit(7)
+                    .WithMaxAckPending(8)
+                    .WithDeliverPolicy(DeliverPolicy.ByStartSequence);
+                
+                jsm.AddOrUpdateConsumer(STREAM, builder.Build());
+
+                CcbmEx(js, builder.WithStartSequence(55));
+                CcbmEx(js, builder.WithMaxDeliver(66));
+                CcbmEx(js, builder.WithRateLimit(77));
+                CcbmEx(js, builder.WithMaxAckPending(88));
             });
         }
 

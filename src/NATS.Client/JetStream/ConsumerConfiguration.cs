@@ -14,164 +14,127 @@
 using System;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
+using static NATS.Client.Internals.JsonUtils;
 
 namespace NATS.Client.JetStream
 {
-    internal class CcNumeric
-    {
-        private string err;
-        private long min;
-        private long normal;
-        private long srvrDflt;
-
-        public CcNumeric(string err, long min, long normal, long srvrDflt)
-        {
-            this.err = err;
-            this.min = min;
-            this.normal = normal;
-            this.srvrDflt = srvrDflt;
-        }
-
-        internal long Normalize(long val)
-        {
-            return val < min ? -1 : val;
-        }
-
-        internal ulong Normalize(ulong val)
-        {
-            return val <= (ulong)min ? (ulong)normal : val;
-        }
-
-        internal long Comparable(long val) {
-            return val <= min || val == srvrDflt ? srvrDflt : val;
-        }
-
-        internal ulong Comparable(ulong val) {
-            return val <= (ulong)min || val == (ulong)srvrDflt ? (ulong)srvrDflt : val;
-        }
-
-        public bool NotEquals(long val1, long val2) {
-            return Comparable(val1) != Comparable(val2);
-        }
-
-        public bool NotEquals(ulong val1, ulong val2) {
-            return Comparable(val1) != Comparable(val2);
-        }
-
-        internal string GetErr() {
-            return err;
-        }
-
-        internal static readonly CcNumeric StartSeq = new CcNumeric("Start Sequence", 1, 0, 0);
-        internal static readonly CcNumeric MaxDeliver = new CcNumeric("Max Deliver", 1, -1, -1);
-        internal static readonly CcNumeric RateLimit = new CcNumeric("Rate Limit", 1, -1, -1);
-        internal static readonly CcNumeric MaxAckPending = new CcNumeric("Max Ack Pending", 0, 0, 20000L);
-        internal static readonly CcNumeric MaxPullWaiting = new CcNumeric("Max Pull Waiting", 0, 0, 512);
-    }
-
     public sealed class ConsumerConfiguration : JsonSerializable
     {
-        private static readonly Duration MinAckWait = Duration.One;
-        private static readonly Duration MinDefaultIdleHeartbeat = Duration.Zero;
-        private static readonly Duration DefaultAckWait = Duration.OfSeconds(30);
+        public static readonly Duration MinAckWait = Duration.One;
+        public static readonly Duration MinDefaultIdleHeartbeat = Duration.Zero;
+        public static readonly Duration DefaultAckWait = Duration.OfSeconds(30);
 
-        public DeliverPolicy DeliverPolicy { get; }
-        public AckPolicy AckPolicy { get; }
-        public ReplayPolicy ReplayPolicy { get; }
+        internal DeliverPolicy? _DeliverPolicy;
+        internal AckPolicy? _AckPolicy;
+        internal ReplayPolicy? _ReplayPolicy;
+        internal DateTime? _StartTime;
+        internal ulong? _StartSeq;
+        internal long? _MaxDeliver;
+        internal long? _RateLimit;
+        internal long? _MaxAckPending;
+        internal long? _MaxPullWaiting;
+
+        public DeliverPolicy DeliverPolicy => _DeliverPolicy ?? DeliverPolicy.All;
+        public AckPolicy AckPolicy => _AckPolicy ?? AckPolicy.Explicit;
+        public ReplayPolicy ReplayPolicy => _ReplayPolicy ?? ReplayPolicy.Instant;
         public string Description { get; }
         public string Durable { get; }
         public string DeliverSubject { get; }
         public string DeliverGroup { get; }
-        public DateTime StartTime { get; }
-        public Duration AckWait { get; }
         public string FilterSubject { get; }
         public string SampleFrequency { get; }
+        public DateTime StartTime => _StartTime ?? DateTime.MinValue;
+        public Duration AckWait { get; }
         public Duration IdleHeartbeat { get; }
         public bool FlowControl { get; }
         public bool HeadersOnly { get; }
+        public ulong StartSeq => _StartSeq ?? CcNumeric.StartSeq.InitialUlong();
+        public long MaxDeliver => _MaxDeliver ?? CcNumeric.MaxDeliver.Initial();
+        public long RateLimit => _RateLimit ?? CcNumeric.RateLimit.Initial();
+        public long MaxAckPending => _MaxAckPending ?? CcNumeric.MaxAckPending.Initial();
+        public long MaxPullWaiting => _MaxPullWaiting ?? CcNumeric.MaxPullWaiting.Initial();
 
-        public ulong StartSeq { get; }
-        public long MaxDeliver { get; }
-        public long RateLimit { get; }
-        public long MaxAckPending { get; }
-        public long MaxPullWaiting { get; }
-
-        internal ConsumerConfiguration(string json) : this(JSON.Parse(json)) {}
+        internal ConsumerConfiguration(string json) : this(JSON.Parse(json))
+        {
+        }
 
         internal ConsumerConfiguration(JSONNode ccNode)
         {
-            DeliverPolicy = ApiEnums.GetValueOrDefault(ccNode[ApiConstants.DeliverPolicy].Value, DeliverPolicy.All);
-            AckPolicy = ApiEnums.GetValueOrDefault(ccNode[ApiConstants.AckPolicy].Value, AckPolicy.Explicit);
-            ReplayPolicy = ApiEnums.GetValueOrDefault(ccNode[ApiConstants.ReplayPolicy], ReplayPolicy.Instant);
+            _DeliverPolicy = ApiEnums.GetDeliverPolicy(ccNode[ApiConstants.DeliverPolicy].Value);
+            _AckPolicy = ApiEnums.GetAckPolicy(ccNode[ApiConstants.AckPolicy].Value);
+            _ReplayPolicy = ApiEnums.GetReplayPolicy(ccNode[ApiConstants.ReplayPolicy]);
+
             Description = ccNode[ApiConstants.Description].Value;
             Durable = ccNode[ApiConstants.DurableName].Value;
             DeliverSubject = ccNode[ApiConstants.DeliverSubject].Value;
             DeliverGroup = ccNode[ApiConstants.DeliverGroup].Value;
-            StartTime = JsonUtils.AsDate(ccNode[ApiConstants.OptStartTime]);
-            AckWait = JsonUtils.AsDuration(ccNode, ApiConstants.AckWait, DefaultAckWait);
             FilterSubject = ccNode[ApiConstants.FilterSubject].Value;
             SampleFrequency = ccNode[ApiConstants.SampleFreq].Value;
-            IdleHeartbeat = JsonUtils.AsDuration(ccNode, ApiConstants.IdleHeartbeat, MinDefaultIdleHeartbeat);
+            
+            _StartTime = AsDate(ccNode[ApiConstants.OptStartTime]);
+            AckWait = AsDuration(ccNode, ApiConstants.AckWait, DefaultAckWait);
+            IdleHeartbeat = AsDuration(ccNode, ApiConstants.IdleHeartbeat, MinDefaultIdleHeartbeat);
             FlowControl = ccNode[ApiConstants.FlowControl].AsBool;
             HeadersOnly = ccNode[ApiConstants.HeadersOnly].AsBool;
 
-            StartSeq = CcNumeric.StartSeq.Normalize(ccNode[ApiConstants.OptStartSeq].AsUlong);
-            MaxDeliver = CcNumeric.MaxDeliver.Normalize(JsonUtils.AsLongOrMinus1(ccNode, ApiConstants.MaxDeliver));
-            RateLimit = CcNumeric.RateLimit.Normalize(ccNode[ApiConstants.RateLimitBps].AsLong);
-            MaxAckPending = CcNumeric.MaxAckPending.Normalize(ccNode[ApiConstants.MaxAckPending].AsLong);
-            MaxPullWaiting = CcNumeric.MaxPullWaiting.Normalize(JsonUtils.AsLongOrMinus1(ccNode, ApiConstants.MaxWaiting));
+            _StartSeq = CcNumeric.StartSeq.InitialUlong(ccNode[ApiConstants.OptStartSeq].AsUlong);
+            _MaxDeliver = CcNumeric.MaxDeliver.Initial(ccNode[ApiConstants.MaxDeliver].AsLong);
+            _RateLimit = CcNumeric.RateLimit.Initial(ccNode[ApiConstants.RateLimitBps].AsLong);
+            _MaxAckPending = CcNumeric.MaxAckPending.Initial(ccNode[ApiConstants.MaxAckPending].AsLong);
+            _MaxPullWaiting = CcNumeric.MaxPullWaiting.Initial(ccNode[ApiConstants.MaxWaiting].AsLong);
         }
 
-        private ConsumerConfiguration(string description, string durable, DeliverPolicy deliverPolicy, ulong startSeq, DateTime startTime,
-            AckPolicy ackPolicy, Duration ackWait, long maxDeliver, string filterSubject, ReplayPolicy replayPolicy,
-            string sampleFrequency, long rateLimit, string deliverSubject, string deliverGroup, long maxAckPending, 
-            Duration idleHeartbeat, bool flowControl, long maxPullWaiting, bool headersOnly)
+        private ConsumerConfiguration(ConsumerConfigurationBuilder builder)
         {
-            Description = description;
-            Durable = durable;
-            DeliverPolicy = deliverPolicy;
-            StartSeq = startSeq;
-            StartTime = startTime;
-            AckPolicy = ackPolicy;
-            AckWait = ackWait;
-            MaxDeliver = maxDeliver;
-            FilterSubject = filterSubject;
-            ReplayPolicy = replayPolicy;
-            SampleFrequency = sampleFrequency;
-            RateLimit = rateLimit;
-            DeliverSubject = deliverSubject;
-            DeliverGroup = deliverGroup;
-            MaxAckPending = maxAckPending;
-            IdleHeartbeat = idleHeartbeat;
-            FlowControl = flowControl;
-            MaxPullWaiting = maxPullWaiting;
-            HeadersOnly = headersOnly;
+            _DeliverPolicy = builder._deliverPolicy;
+            _AckPolicy = builder._ackPolicy;
+            _ReplayPolicy = builder._replayPolicy;
+
+            Description = builder._description;
+            Durable = builder._durable;
+            DeliverSubject = builder._deliverSubject;
+            DeliverGroup = builder._deliverGroup;
+            FilterSubject = builder._filterSubject;
+            SampleFrequency = builder._sampleFrequency;
+
+            _StartTime = builder._startTime;
+            AckWait = builder._ackWait;
+            IdleHeartbeat = builder._idleHeartbeat;
+            FlowControl = builder._flowControl;
+            HeadersOnly = builder._headersOnly;
+
+            _StartSeq = builder._startSeq;
+            _MaxDeliver = builder._maxDeliver;
+            _RateLimit = builder._rateLimit;
+            _MaxAckPending = builder._maxAckPending;
+            _MaxPullWaiting = builder._maxPullWaiting;
         }
 
         internal override JSONNode ToJsonNode()
         {
-            return new JSONObject
-            {
-                [ApiConstants.Description] = Description,
-                [ApiConstants.DurableName] = Durable,
-                [ApiConstants.DeliverPolicy] = DeliverPolicy.GetString(),
-                [ApiConstants.DeliverSubject] = DeliverSubject,
-                [ApiConstants.DeliverGroup] = DeliverGroup,
-                [ApiConstants.OptStartSeq] = StartSeq,
-                [ApiConstants.OptStartTime] = JsonUtils.ToString(StartTime),
-                [ApiConstants.AckPolicy] = AckPolicy.GetString(),
-                [ApiConstants.AckWait] = AckWait.Nanos,
-                [ApiConstants.MaxDeliver] = MaxDeliver,
-                [ApiConstants.FilterSubject] = FilterSubject,
-                [ApiConstants.ReplayPolicy] = ReplayPolicy.GetString(),
-                [ApiConstants.SampleFreq] = SampleFrequency,
-                [ApiConstants.RateLimitBps] = RateLimit,
-                [ApiConstants.MaxAckPending] = MaxAckPending,
-                [ApiConstants.IdleHeartbeat] = IdleHeartbeat.Nanos,
-                [ApiConstants.FlowControl] = FlowControl,
-                [ApiConstants.MaxWaiting] = MaxPullWaiting,
-                [ApiConstants.HeadersOnly] = HeadersOnly
-            };
+            JSONObject o = new JSONObject();
+
+            AddField(o, ApiConstants.Description, Description);
+            AddField(o, ApiConstants.DurableName, Durable);
+            AddField(o, ApiConstants.DeliverPolicy, DeliverPolicy.GetString());
+            AddField(o, ApiConstants.DeliverSubject, DeliverSubject);
+            AddField(o, ApiConstants.DeliverGroup, DeliverGroup);
+            AddField(o, ApiConstants.OptStartSeq, StartSeq);
+            AddField(o, ApiConstants.OptStartTime, JsonUtils.ToString(StartTime));
+            AddField(o, ApiConstants.AckPolicy, AckPolicy.GetString());
+            AddField(o, ApiConstants.AckWait, AckWait.Nanos);
+            AddField(o, ApiConstants.MaxDeliver, MaxDeliver);
+            AddField(o, ApiConstants.FilterSubject, FilterSubject);
+            AddField(o, ApiConstants.ReplayPolicy, ReplayPolicy.GetString());
+            AddField(o, ApiConstants.SampleFreq, SampleFrequency);
+            AddField(o, ApiConstants.RateLimitBps, RateLimit);
+            AddField(o, ApiConstants.MaxAckPending, MaxAckPending);
+            AddField(o, ApiConstants.IdleHeartbeat, IdleHeartbeat.Nanos);
+            AddField(o, ApiConstants.FlowControl, FlowControl);
+            AddField(o, ApiConstants.MaxWaiting, MaxPullWaiting);
+            AddField(o, ApiConstants.HeadersOnly, HeadersOnly);
+
+            return o;
         }
 
         public static ConsumerConfigurationBuilder Builder()
@@ -186,32 +149,26 @@ namespace NATS.Client.JetStream
 
         public sealed class ConsumerConfigurationBuilder
         {
-            private DeliverPolicy _deliverPolicy = DeliverPolicy.All;
-            private AckPolicy _ackPolicy = AckPolicy.Explicit;
-            private ReplayPolicy _replayPolicy = ReplayPolicy.Instant;
-            private string _description;
-            private string _durable;
-            private string _deliverSubject;
-            private string _deliverGroup;
-            private ulong _startSeq;
-            private DateTime _startTime; 
-            private Duration _ackWait = Duration.OfSeconds(30);
-            private long _maxDeliver;
-            private string _filterSubject;
-            private string _sampleFrequency;
-            private long _rateLimit;
-            private long _maxAckPending;
-            private Duration _idleHeartbeat = Duration.Zero;
-            private bool _flowControl;
-            private long _maxPullWaiting;
-            private bool _headersOnly;
+            internal DeliverPolicy _deliverPolicy = DeliverPolicy.All;
+            internal AckPolicy _ackPolicy = AckPolicy.Explicit;
+            internal ReplayPolicy _replayPolicy = ReplayPolicy.Instant;
+            internal string _description;
+            internal string _durable;
+            internal string _deliverSubject;
+            internal string _deliverGroup;
+            internal DateTime _startTime; 
+            internal Duration _ackWait = Duration.OfSeconds(30);
+            internal string _filterSubject;
+            internal string _sampleFrequency;
+            internal Duration _idleHeartbeat = Duration.Zero;
+            internal bool _flowControl;
+            internal bool _headersOnly;
 
-            public string Durable => _durable;
-            public string DeliverSubject => _deliverSubject;
-            public string DeliverGroup => _deliverGroup;
-            public string FilterSubject => _filterSubject;
-            public long MaxAckPending => _maxAckPending;
-            public AckPolicy AcknowledgementPolicy => _ackPolicy;
+            internal ulong? _startSeq = null;
+            internal long? _maxDeliver = null;
+            internal long? _rateLimit = null;
+            internal long? _maxAckPending = null;
+            internal long? _maxPullWaiting = null;
 
             public ConsumerConfigurationBuilder() {}
 
@@ -299,7 +256,7 @@ namespace NATS.Client.JetStream
             /// </summary>
             /// <param name="sequence">the start sequence</param>
             /// <returns>The ConsumerConfigurationBuilder</returns>
-            public ConsumerConfigurationBuilder WithStartSequence(ulong sequence)
+            public ConsumerConfigurationBuilder WithStartSequence(ulong? sequence)
             {
                 _startSeq = sequence;
                 return this;
@@ -354,7 +311,7 @@ namespace NATS.Client.JetStream
             /// </summary>
             /// <param name="maxDeliver">the maximum delivery amount</param>
             /// <returns>The ConsumerConfigurationBuilder</returns>
-            public ConsumerConfigurationBuilder WithMaxDeliver(long maxDeliver)
+            public ConsumerConfigurationBuilder WithMaxDeliver(long? maxDeliver)
             {
                 _maxDeliver = maxDeliver;
                 return this;
@@ -398,7 +355,7 @@ namespace NATS.Client.JetStream
             /// </summary>
             /// <param name="msgsPerSecond">messages per second to deliver</param>
             /// <returns>The ConsumerConfigurationBuilder</returns>
-            public ConsumerConfigurationBuilder WithRateLimit(int msgsPerSecond)
+            public ConsumerConfigurationBuilder WithRateLimit(int? msgsPerSecond)
             {
                 _rateLimit = msgsPerSecond;
                 return this;
@@ -409,7 +366,7 @@ namespace NATS.Client.JetStream
             /// </summary>
             /// <param name="maxAckPending">maximum pending acknowledgements.</param>
             /// <returns>The ConsumerConfigurationBuilder</returns>
-            public ConsumerConfigurationBuilder WithMaxAckPending(long maxAckPending)
+            public ConsumerConfigurationBuilder WithMaxAckPending(long? maxAckPending)
             {
                 _maxAckPending = maxAckPending;
                 return this;
@@ -462,7 +419,7 @@ namespace NATS.Client.JetStream
             /// </summary>
             /// <param name="maxPullWaiting">the maximum delivery amount</param>
             /// <returns>The ConsumerConfigurationBuilder</returns>
-            public ConsumerConfigurationBuilder WithMaxPullWaiting(long maxPullWaiting)
+            public ConsumerConfigurationBuilder WithMaxPullWaiting(long? maxPullWaiting)
             {
                 _maxPullWaiting = maxPullWaiting;
                 return this;
@@ -484,27 +441,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfiguration</returns>
             public ConsumerConfiguration Build()
             {
-                return new ConsumerConfiguration(
-                    _description,
-                    _durable,
-                    _deliverPolicy,
-                    _startSeq,
-                    _startTime,
-                    _ackPolicy,
-                    _ackWait,
-                    _maxDeliver,
-                    _filterSubject,
-                    _replayPolicy,
-                    _sampleFrequency,
-                    _rateLimit,
-                    _deliverSubject,
-                    _deliverGroup,
-                    _maxAckPending,
-                    _idleHeartbeat,
-                    _flowControl,
-                    _maxPullWaiting,
-                    _headersOnly
-                );
+                return new ConsumerConfiguration(this);
             }
 
             /// <summary>
@@ -525,5 +462,43 @@ namespace NATS.Client.JetStream
                 return PullSubscribeOptions.Builder().WithConfiguration(Build()).Build();
             }
         }
+    }
+    
+    internal class CcNumeric
+    {
+        private string err;
+        private long min;
+        private long initial;
+        private long server;
+
+        public CcNumeric(string err, long min, long initial, long server)
+        {
+            this.err = err;
+            this.min = min;
+            this.initial = initial;
+            this.server = server;
+        }
+
+        internal long Initial()                => initial;
+        internal long Initial(long val)        => val < min ? initial : val;
+        internal long Comparable(long val)     => val < min || val == server ? initial : val;
+
+        internal ulong InitialUlong()          => (ulong)initial;
+        internal ulong InitialUlong(ulong val) => val < (ulong)min ? (ulong)initial : val;
+        internal ulong Comparable(ulong val)   => val < (ulong)min || val == (ulong)server ? (ulong)initial : val;
+
+        public bool NotEquals(long val1, long val2) {
+            return Comparable(val1) != Comparable(val2);
+        }
+
+        public bool NotEquals(ulong val1, ulong val2) {
+            return Comparable(val1) != Comparable(val2);
+        }
+
+        internal static readonly CcNumeric StartSeq = new CcNumeric("Start Sequence", 1, 0, 0);
+        internal static readonly CcNumeric MaxDeliver = new CcNumeric("Max Deliver", 1, -1, -1);
+        internal static readonly CcNumeric RateLimit = new CcNumeric("Rate Limit", 1, -1, -1);
+        internal static readonly CcNumeric MaxAckPending = new CcNumeric("Max Ack Pending", 0, 0, 20000L);
+        internal static readonly CcNumeric MaxPullWaiting = new CcNumeric("Max Pull Waiting", 0, 0, 512);
     }
 }

@@ -75,9 +75,11 @@ namespace NATS.Client.Internals
         internal static string ToString(DateTime dt)
         {
             // Assume MinValue is Unset
-            if (dt.Equals(DateTime.MinValue))
-                return null;
-
+            return dt.Equals(DateTime.MinValue) ? null : UnsafeToString(dt);
+        }
+        
+        internal static string UnsafeToString(DateTime dt)
+        {
             return dt.ToUniversalTime().ToString("O");
         }
 
@@ -124,6 +126,50 @@ namespace NATS.Client.Internals
                     return name + serializable.ToJsonNode().ToString();
                 default:
                     return o.ToString();
+            }
+        }
+
+        public static void AddField(JSONObject o, string field, string value)
+        {
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                o[field] = value;
+            }
+        }
+
+        public static void AddField(JSONObject o, string field, DateTime? value)
+        {
+            DateTime dt = value.GetValueOrDefault(DateTime.MinValue);
+            if (!dt.Equals(DateTime.MinValue))
+            {
+                o[field] = UnsafeToString(dt);
+            }
+        }
+
+        public static void AddField(JSONObject o, string field, long? value)
+        {
+            long l = value.GetValueOrDefault(-1);
+            if (l >= 0)
+            {
+                o[field] = l;
+            }
+        }
+
+        public static void AddField(JSONObject o, string field, ulong? value)
+        {
+            ulong u = value.GetValueOrDefault(0);
+            if (u > 0)
+            {
+                o[field] = u;
+            }
+        }
+ 
+        public static void AddField(JSONObject o, string field, bool? value)
+        {
+            bool b = value.GetValueOrDefault(false);
+            if (b)
+            {
+                o[field] = b;
             }
         }
     }

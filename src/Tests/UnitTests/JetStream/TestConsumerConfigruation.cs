@@ -106,7 +106,8 @@ namespace UnitTests.JetStream
             Assert.Equal(ReplayPolicy.Instant, c.ReplayPolicy);
             Assert.Equal(Duration.OfSeconds(9), c.AckWait);
             Assert.Equal(Duration.OfSeconds(6), c.IdleHeartbeat);
-            
+
+            AssertDefaultCc(ConsumerConfiguration.Builder().Build());
         }
 
         [Fact]
@@ -114,6 +115,7 @@ namespace UnitTests.JetStream
         {
             string json = ReadDataFile("ConsumerConfiguration.json");
             ConsumerConfiguration c = new ConsumerConfiguration(json);
+            Assert.Equal("foo-desc", c.Description);
             Assert.Equal(DeliverPolicy.All, c.DeliverPolicy);
             Assert.Equal(AckPolicy.All, c.AckPolicy);
             Assert.Equal(Duration.OfSeconds(30), c.AckWait);
@@ -124,6 +126,7 @@ namespace UnitTests.JetStream
             Assert.Equal(2020, c.StartTime.Year);
             Assert.Equal(21, c.StartTime.Second);
             Assert.Equal("foo-durable", c.Durable);
+            Assert.Equal("grp", c.DeliverGroup);
             Assert.Equal("bar", c.DeliverSubject);
             Assert.Equal("foo-filter", c.FilterSubject);
             Assert.Equal(42, c.MaxAckPending);
@@ -131,6 +134,36 @@ namespace UnitTests.JetStream
             Assert.True(c.FlowControl);
             Assert.Equal(128, c.MaxPullWaiting);
             Assert.True(c.HeadersOnly);
+            Assert.Equal(99U, c.StartSeq);
+
+            AssertDefaultCc(new ConsumerConfiguration("{}"));
+        }
+
+        private static void AssertDefaultCc(ConsumerConfiguration c)
+        {
+            Assert.Equal(DeliverPolicy.All, c.DeliverPolicy);
+            Assert.Equal(AckPolicy.Explicit, c.AckPolicy);
+            Assert.Equal(ReplayPolicy.Instant, c.ReplayPolicy);
+            Assert.True(string.IsNullOrWhiteSpace(c.Durable));
+            Assert.True(string.IsNullOrWhiteSpace(c.DeliverGroup));
+            Assert.True(string.IsNullOrWhiteSpace(c.DeliverSubject));
+            Assert.True(string.IsNullOrWhiteSpace(c.FilterSubject));
+            Assert.True(string.IsNullOrWhiteSpace(c.Description));
+            Assert.True(string.IsNullOrWhiteSpace(c.SampleFrequency));
+
+            Assert.Equal(ConsumerConfiguration.DefaultAckWait, c.AckWait);
+            Assert.Equal(ConsumerConfiguration.MinDefaultIdleHeartbeat, c.IdleHeartbeat);
+
+            Assert.Equal(DateTime.MinValue, c.StartTime);
+
+            Assert.False(c.FlowControl);
+            Assert.False(c.HeadersOnly);
+
+            Assert.Equal(CcNumeric.StartSeq.InitialUlong(), c.StartSeq);
+            Assert.Equal(CcNumeric.MaxDeliver.Initial(), c.MaxDeliver);
+            Assert.Equal(CcNumeric.RateLimit.Initial(), c.RateLimit);
+            Assert.Equal(CcNumeric.MaxAckPending.Initial(), c.MaxAckPending);
+            Assert.Equal(CcNumeric.MaxPullWaiting.Initial(), c.MaxPullWaiting);
         }
     }
 }
