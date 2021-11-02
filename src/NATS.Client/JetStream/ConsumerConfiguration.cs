@@ -21,52 +21,6 @@ namespace NATS.Client.JetStream
 {
     public sealed class ConsumerConfiguration : JsonSerializable
     {
-        internal bool WouldBeChangeTo(ConsumerConfiguration original)
-        {
-            return (_deliverPolicy.HasValue && _deliverPolicy.Value != original.DeliverPolicy)
-                   || (_ackPolicy.HasValue && _ackPolicy.Value != original.AckPolicy)
-                   || (_replayPolicy.HasValue && _replayPolicy.Value != original.ReplayPolicy)
-
-                   || _flowControl.HasValue && _flowControl.Value != original.FlowControl
-                   || _headersOnly.HasValue && _headersOnly.Value != original.HeadersOnly
-
-                   || CcNumeric.StartSeq.Changed(_startSeq, original.StartSeq)
-                   || CcNumeric.MaxDeliver.Changed(_maxDeliver, original.MaxDeliver)
-                   || CcNumeric.RateLimit.Changed(_rateLimit, original.RateLimit)
-                   || CcNumeric.MaxAckPending.Changed(_maxAckPending, original.MaxAckPending)
-                   || CcNumeric.MaxPullWaiting.Changed(_maxPullWaiting, original.MaxPullWaiting)
-
-                   || WouldBeChange(AckWait, original.AckWait)
-                   || WouldBeChange(IdleHeartbeat, original.IdleHeartbeat)
-                   
-                   || WouldBeChange(StartTime, original.StartTime)
-                   
-                   || WouldBeChange(Description, original.Description)
-                   || WouldBeChange(SampleFrequency, original.SampleFrequency)
-                   || WouldBeChange(DeliverSubject, original.DeliverSubject)
-                   || WouldBeChange(DeliverGroup, original.DeliverGroup)
-                   ;
-
-            // do not need to check Durable because the original is retrieved by the durable name
-            // do not need to check FilterSubject because it's already validated against the original
-        }
-
-        private static bool WouldBeChange(string request, string original)
-        {
-            string r = EmptyAsNull(request);
-            return r != null && !r.Equals(EmptyAsNull(original));
-        }
-
-        private static bool WouldBeChange(DateTime request, DateTime original)
-        {
-            return request != DateTime.MinValue && !request.Equals(original);
-        }
-
-        private static bool WouldBeChange(Duration request, Duration original)
-        {
-            return request != null && !request.Equals(original);
-        }
-
         public static readonly Duration MinAckWait = Duration.One;
         public static readonly Duration MinDefaultIdleHeartbeat = Duration.OfMillis(100);
 
@@ -180,6 +134,52 @@ namespace NATS.Client.JetStream
             AddField(o, ApiConstants.HeadersOnly, HeadersOnly);
 
             return o;
+        }
+        
+        internal bool WouldBeChangeTo(ConsumerConfiguration original)
+        {
+            return (_deliverPolicy.HasValue && _deliverPolicy.Value != original.DeliverPolicy)
+                   || (_ackPolicy.HasValue && _ackPolicy.Value != original.AckPolicy)
+                   || (_replayPolicy.HasValue && _replayPolicy.Value != original.ReplayPolicy)
+
+                   || _flowControl.HasValue && _flowControl.Value != original.FlowControl
+                   || _headersOnly.HasValue && _headersOnly.Value != original.HeadersOnly
+
+                   || CcNumeric.StartSeq.Changed(_startSeq, original.StartSeq)
+                   || CcNumeric.MaxDeliver.Changed(_maxDeliver, original.MaxDeliver)
+                   || CcNumeric.RateLimit.Changed(_rateLimit, original.RateLimit)
+                   || CcNumeric.MaxAckPending.Changed(_maxAckPending, original.MaxAckPending)
+                   || CcNumeric.MaxPullWaiting.Changed(_maxPullWaiting, original.MaxPullWaiting)
+
+                   || WouldBeChange(AckWait, original.AckWait)
+                   || WouldBeChange(IdleHeartbeat, original.IdleHeartbeat)
+                   
+                   || WouldBeChange(StartTime, original.StartTime)
+                   
+                   || WouldBeChange(Description, original.Description)
+                   || WouldBeChange(SampleFrequency, original.SampleFrequency)
+                   || WouldBeChange(DeliverSubject, original.DeliverSubject)
+                   || WouldBeChange(DeliverGroup, original.DeliverGroup)
+                   ;
+
+            // do not need to check Durable because the original is retrieved by the durable name
+            // do not need to check FilterSubject because it's already validated against the original
+        }
+
+        private static bool WouldBeChange(string request, string original)
+        {
+            string r = EmptyAsNull(request);
+            return r != null && !r.Equals(EmptyAsNull(original));
+        }
+
+        private static bool WouldBeChange(DateTime request, DateTime original)
+        {
+            return request != DateTime.MinValue && !request.Equals(original);
+        }
+
+        private static bool WouldBeChange(Duration request, Duration original)
+        {
+            return request != null && !request.Equals(original);
         }
 
         public static ConsumerConfigurationBuilder Builder()
