@@ -145,11 +145,11 @@ namespace NATS.Client.JetStream
                    || _flowControl.HasValue && _flowControl.Value != original.FlowControl
                    || _headersOnly.HasValue && _headersOnly.Value != original.HeadersOnly
 
-                   || CcNumeric.StartSeq.Changed(_startSeq, original.StartSeq)
-                   || CcNumeric.MaxDeliver.Changed(_maxDeliver, original.MaxDeliver)
-                   || CcNumeric.RateLimit.Changed(_rateLimit, original.RateLimit)
-                   || CcNumeric.MaxAckPending.Changed(_maxAckPending, original.MaxAckPending)
-                   || CcNumeric.MaxPullWaiting.Changed(_maxPullWaiting, original.MaxPullWaiting)
+                   || CcNumeric.StartSeq.WouldBeChange(_startSeq, original.StartSeq)
+                   || CcNumeric.MaxDeliver.WouldBeChange(_maxDeliver, original.MaxDeliver)
+                   || CcNumeric.RateLimit.WouldBeChange(_rateLimit, original.RateLimit)
+                   || CcNumeric.MaxAckPending.WouldBeChange(_maxAckPending, original.MaxAckPending)
+                   || CcNumeric.MaxPullWaiting.WouldBeChange(_maxPullWaiting, original.MaxPullWaiting)
 
                    || WouldBeChange(AckWait, original.AckWait)
                    || WouldBeChange(IdleHeartbeat, original.IdleHeartbeat)
@@ -536,13 +536,13 @@ namespace NATS.Client.JetStream
         internal ulong InitialUlong(ulong val) => val < (ulong)min ? (ulong)initial : val;
         internal ulong Comparable(ulong val)   => val < (ulong)min || val == (ulong)server ? (ulong)initial : val;
 
-        public bool Changed(long? user, long srvr)
+        public bool WouldBeChange(long? user, long srvr)
         {
             long u = user.GetValueOrDefault(long.MinValue);
             return u != long.MinValue && Comparable(u) != Comparable(srvr);
         }
 
-        public bool Changed(ulong? user, ulong srvr) {
+        public bool WouldBeChange(ulong? user, ulong srvr) {
             ulong u = user.GetValueOrDefault(ulong.MaxValue);
             return u != ulong.MaxValue && Comparable(u) != Comparable(srvr);
         }
