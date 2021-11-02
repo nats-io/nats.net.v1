@@ -144,19 +144,17 @@ namespace NATS.Client.Internals
 
         public static void AddField(JSONObject o, string field, DateTime? value)
         {
-            DateTime dt = value.GetValueOrDefault(DateTime.MinValue);
-            if (!dt.Equals(DateTime.MinValue))
+            if (value != null)
             {
-                o[field] = UnsafeToString(dt);
+                o[field] = UnsafeToString(value.Value);
             }
         }
 
         public static void AddField(JSONObject o, string field, long? value)
         {
-            long l = value.GetValueOrDefault(-1);
-            if (l >= 0)
+            if (value != null && value >= 0)
             {
-                o[field] = l;
+                o[field] = value;
             }
         }
 
@@ -170,19 +168,17 @@ namespace NATS.Client.Internals
 
         public static void AddField(JSONObject o, string field, ulong? value)
         {
-            ulong u = value.GetValueOrDefault(0);
-            if (u > 0)
+            if (value != null)
             {
-                o[field] = u;
+                o[field] = value;
             }
         }
  
         public static void AddField(JSONObject o, string field, bool? value)
         {
-            bool b = value.GetValueOrDefault(false);
-            if (b)
+            if (value != null && value == true)
             {
-                o[field] = b;
+                o[field] = true;
             }
         }
     }
