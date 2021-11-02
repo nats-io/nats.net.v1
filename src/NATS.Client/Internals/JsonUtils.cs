@@ -102,12 +102,12 @@ namespace NATS.Client.Internals
             return arr;
         }
  
-        public static byte[] SimpleMessageBody(string name, long value)
+        internal static byte[] SimpleMessageBody(string name, long value)
         {
             return Encoding.ASCII.GetBytes("{\"" + name + "\":" + value + "}");
         }
 
-        public static byte[] SimpleMessageBody(string name, ulong value)
+        internal static byte[] SimpleMessageBody(string name, ulong value)
         {
             return Encoding.ASCII.GetBytes("{\"" + name + "\":" + value + "}");
         }
@@ -134,7 +134,7 @@ namespace NATS.Client.Internals
             }
         }
 
-        public static void AddField(JSONObject o, string field, string value)
+        internal static void AddField(JSONObject o, string field, string value)
         {
             if (!string.IsNullOrWhiteSpace(value))
             {
@@ -142,7 +142,7 @@ namespace NATS.Client.Internals
             }
         }
 
-        public static void AddField(JSONObject o, string field, DateTime? value)
+        internal static void AddField(JSONObject o, string field, DateTime? value)
         {
             if (value != null)
             {
@@ -150,7 +150,7 @@ namespace NATS.Client.Internals
             }
         }
 
-        public static void AddField(JSONObject o, string field, long? value)
+        internal static void AddField(JSONObject o, string field, long? value)
         {
             if (value != null && value >= 0)
             {
@@ -158,7 +158,7 @@ namespace NATS.Client.Internals
             }
         }
 
-        public static void AddField(JSONObject o, string field, Duration value)
+        internal static void AddField(JSONObject o, string field, Duration value)
         {
             if (value != null)
             {
@@ -166,7 +166,7 @@ namespace NATS.Client.Internals
             }
         }
 
-        public static void AddField(JSONObject o, string field, ulong? value)
+        internal static void AddField(JSONObject o, string field, ulong? value)
         {
             if (value != null)
             {
@@ -174,7 +174,7 @@ namespace NATS.Client.Internals
             }
         }
  
-        public static void AddField(JSONObject o, string field, bool? value)
+        internal static void AddField(JSONObject o, string field, bool? value)
         {
             if (value != null && value == true)
             {
