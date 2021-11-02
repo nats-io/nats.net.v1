@@ -254,7 +254,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithDescription(string description)
             {
-                _description = description;
+                _description = EmptyAsNull(description);
                 return this;
             }
 
@@ -265,7 +265,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithDurable(string durable)
             {
-                _durable = durable;
+                _durable = EmptyAsNull(durable);
                 return this;
             }
 
@@ -276,7 +276,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithDeliverPolicy(DeliverPolicy? policy)
             {
-                _deliverPolicy = policy ?? DeliverPolicy.All;
+                _deliverPolicy = policy;
                 return this;
             }
 
@@ -287,7 +287,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithDeliverSubject(string deliverSubject)
             {
-                _deliverSubject = deliverSubject;
+                _deliverSubject = EmptyAsNull(deliverSubject);
                 return this;
             }
 
@@ -298,7 +298,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithDeliverGroup(string group)
             {
-                _deliverGroup = group;
+                _deliverGroup = EmptyAsNull(group);
                 return this;
             }
 
@@ -331,7 +331,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithAckPolicy(AckPolicy? policy)
             {
-                _ackPolicy = policy ?? AckPolicy.Explicit;
+                _ackPolicy = policy;
                 return this;
             }
 
@@ -375,7 +375,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithFilterSubject(string filterSubject)
             {
-                _filterSubject = filterSubject;
+                _filterSubject = EmptyAsNull(filterSubject);
                 return this;
             }
 
@@ -386,7 +386,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithReplayPolicy(ReplayPolicy? policy)
             {
-                _replayPolicy = policy ?? ReplayPolicy.Instant;
+                _replayPolicy = policy;
                 return this;
             }
 
@@ -397,7 +397,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithSampleFrequency(string frequency)
             {
-                _sampleFrequency = frequency;
+                _sampleFrequency = EmptyAsNull(frequency);
                 return this;
             }
 
@@ -406,7 +406,7 @@ namespace NATS.Client.JetStream
             /// </summary>
             /// <param name="msgsPerSecond">messages per second to deliver</param>
             /// <returns>The ConsumerConfigurationBuilder</returns>
-            public ConsumerConfigurationBuilder WithRateLimit(int? msgsPerSecond)
+            public ConsumerConfigurationBuilder WithRateLimit(long? msgsPerSecond)
             {
                 _rateLimit = msgsPerSecond;
                 return this;
