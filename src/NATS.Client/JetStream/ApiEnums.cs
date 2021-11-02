@@ -93,7 +93,7 @@ namespace NATS.Client.JetStream
             return null;
         }
 
-        public static AckPolicy GetValueOrDefault(string value, AckPolicy aDefault)
+        public static AckPolicy? GetAckPolicy(string value)
         {
             if (value != null)
             {
@@ -105,10 +105,10 @@ namespace NATS.Client.JetStream
                 }
             }
 
-            return aDefault;
+            return null;
         }
 
-        public static DeliverPolicy GetValueOrDefault(string value, DeliverPolicy aDefault)
+        public static DeliverPolicy? GetDeliverPolicy(string value)
         {
             if (value != null)
             {
@@ -122,7 +122,21 @@ namespace NATS.Client.JetStream
                 }
             }
 
-            return aDefault;
+            return null;
+        }
+
+        public static ReplayPolicy? GetReplayPolicy(string value)
+        {
+            if (value != null)
+            {
+                switch (value)
+                {
+                    case "instant": return ReplayPolicy.Instant;
+                    case "original": return ReplayPolicy.Original;
+                }
+            }
+
+            return null;
         }
 
         public static DiscardPolicy GetValueOrDefault(string value, DiscardPolicy aDefault)
@@ -133,20 +147,6 @@ namespace NATS.Client.JetStream
                 {
                     case "new": return DiscardPolicy.New;
                     case "old": return DiscardPolicy.Old;
-                }
-            }
-
-            return aDefault;
-        }
-
-        public static ReplayPolicy GetValueOrDefault(string value, ReplayPolicy aDefault)
-        {
-            if (value != null)
-            {
-                switch (value)
-                {
-                    case "instant": return ReplayPolicy.Instant;
-                    case "original": return ReplayPolicy.Original;
                 }
             }
 

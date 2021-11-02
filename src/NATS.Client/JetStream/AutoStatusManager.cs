@@ -89,8 +89,8 @@ namespace NATS.Client.JetStream
             }
             else
             {
-                IdleHeartbeatSetting = cc.IdleHeartbeat.Millis;
-                if (IdleHeartbeatSetting == 0) {
+                IdleHeartbeatSetting = cc.IdleHeartbeat?.Millis ?? 0;
+                if (IdleHeartbeatSetting <= 0) {
                     AlarmPeriodSetting = 0;
                     Hb = false;
                 }

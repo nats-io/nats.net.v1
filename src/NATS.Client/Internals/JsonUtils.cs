@@ -36,6 +36,11 @@ namespace NATS.Client.Internals
 
         internal static Duration AsDuration(JSONNode node, String field, Duration dflt)
         {
+            if (dflt == null)
+            {
+                long l = node.GetValueOrDefault(field, long.MinValue).AsLong;
+                return l == long.MinValue ? null : Duration.OfNanos(l);
+            }
             return Duration.OfNanos(node.GetValueOrDefault(field, dflt.Nanos).AsLong);
         }
 
@@ -75,9 +80,11 @@ namespace NATS.Client.Internals
         internal static string ToString(DateTime dt)
         {
             // Assume MinValue is Unset
-            if (dt.Equals(DateTime.MinValue))
-                return null;
-
+            return dt.Equals(DateTime.MinValue) ? null : UnsafeToString(dt);
+        }
+        
+        internal static string UnsafeToString(DateTime dt)
+        {
             return dt.ToUniversalTime().ToString("O");
         }
 
@@ -95,12 +102,12 @@ namespace NATS.Client.Internals
             return arr;
         }
  
-        public static byte[] SimpleMessageBody(string name, long value)
+        internal static byte[] SimpleMessageBody(string name, long value)
         {
             return Encoding.ASCII.GetBytes("{\"" + name + "\":" + value + "}");
         }
 
-        public static byte[] SimpleMessageBody(string name, ulong value)
+        internal static byte[] SimpleMessageBody(string name, ulong value)
         {
             return Encoding.ASCII.GetBytes("{\"" + name + "\":" + value + "}");
         }
@@ -124,6 +131,54 @@ namespace NATS.Client.Internals
                     return name + serializable.ToJsonNode().ToString();
                 default:
                     return o.ToString();
+            }
+        }
+
+        internal static void AddField(JSONObject o, string field, string value)
+        {
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                o[field] = value;
+            }
+        }
+
+        internal static void AddField(JSONObject o, string field, DateTime? value)
+        {
+            if (value != null)
+            {
+                o[field] = UnsafeToString(value.Value);
+            }
+        }
+
+        internal static void AddField(JSONObject o, string field, long? value)
+        {
+            if (value != null && value >= 0)
+            {
+                o[field] = value;
+            }
+        }
+
+        internal static void AddField(JSONObject o, string field, Duration value)
+        {
+            if (value != null)
+            {
+                o[field] = value.Nanos;
+            }
+        }
+
+        internal static void AddField(JSONObject o, string field, ulong? value)
+        {
+            if (value != null)
+            {
+                o[field] = value;
+            }
+        }
+ 
+        internal static void AddField(JSONObject o, string field, bool? value)
+        {
+            if (value != null && value == true)
+            {
+                o[field] = true;
             }
         }
     }
