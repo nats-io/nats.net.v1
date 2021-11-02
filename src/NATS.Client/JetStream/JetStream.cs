@@ -173,7 +173,7 @@ namespace NATS.Client.JetStream
             }
             
             // 2A. Flow Control / heartbeat not always valid
-            if (userCC.FlowControl || userCC.IdleHeartbeat.Millis > 0) {
+            if (userCC.FlowControl || userCC.IdleHeartbeat != null && userCC.IdleHeartbeat.Millis > 0) {
                 if (isPullMode) {
                     throw JsSubFcHbNotValidPull.Instance();
                 }
@@ -215,7 +215,7 @@ namespace NATS.Client.JetStream
 
                     // durable already exists, make sure the filter subject matches
                     String userFilterSubject = userCC.FilterSubject;
-                    if (userFilterSubject != null && !userFilterSubject.Equals(serverCc.FilterSubject)) {
+                    if (!string.IsNullOrWhiteSpace(userFilterSubject) && !userFilterSubject.Equals(serverCc.FilterSubject)) {
                         throw JsSubSubjectDoesNotMatchFilter.Instance();
                     }
 
@@ -243,7 +243,7 @@ namespace NATS.Client.JetStream
                     // modifications are not allowed
                     // previous checks for deliver subject and filter subject matching are now
                     // in the changes function
-                    if (UserIsModifiedVsServer(userCC, serverCc)) {
+                    if (userCC.WouldBeChangeTo(serverCc)) {
                         throw JsSubExistingConsumerCannotBeModified.Instance();
                     }
 
@@ -334,33 +334,6 @@ namespace NATS.Client.JetStream
 
             asm.SetSub(sub);
             return sub;
-        }
-
-        private static bool UserIsModifiedVsServer(ConsumerConfiguration user, ConsumerConfiguration server)
-        {
-            return user.FlowControl != server.FlowControl
-                   || user.DeliverPolicy != server.DeliverPolicy
-                   || user.AckPolicy != server.AckPolicy
-                   || user.ReplayPolicy != server.ReplayPolicy
-
-                   || CcNumeric.StartSeq.NotEquals(user.StartSeq, server.StartSeq)
-                   || CcNumeric.MaxDeliver.NotEquals(user.MaxDeliver, server.MaxDeliver)
-                   || CcNumeric.RateLimit.NotEquals(user.RateLimit, server.RateLimit)
-                   || CcNumeric.MaxAckPending.NotEquals(user.MaxAckPending, server.MaxAckPending)
-                   || CcNumeric.MaxPullWaiting.NotEquals(user.MaxPullWaiting, server.MaxPullWaiting)
-
-                   || !Equals(user.StartTime, server.StartTime)
-                   || !Equals(user.AckWait, server.AckWait)
-                   || !Equals(user.IdleHeartbeat, server.IdleHeartbeat)
-                   || !EqualsConsideringSupplied(user.Description, server.Description)
-                   || !EqualsConsideringSupplied(user.SampleFrequency, server.SampleFrequency);
-        }
-
-        private static bool EqualsConsideringSupplied(string user, string server)
-        {
-            string u = EmptyAsNull(user);
-            string s = EmptyAsNull(server);
-            return u == null || s != null && u.Equals(s);
         }
         
         // protected internal so can be tested

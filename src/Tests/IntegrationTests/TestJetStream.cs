@@ -534,6 +534,97 @@ namespace IntegrationTests
         }
 
         [Fact]
+        public void TestConsumerIsNotModified()
+        {
+            Context.RunInJsServer(c =>
+            {
+                CreateDefaultTestStream(c);
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+
+                // test with config in issue 105
+                ConsumerConfiguration cc = ConsumerConfiguration.Builder()
+                    .WithDescription("desc")
+                    .WithAckPolicy(AckPolicy.Explicit)
+                    .WithDeliverPolicy(DeliverPolicy.All)
+                    .WithDeliverSubject(Deliver(1))
+                    .WithDeliverGroup(Queue(1))
+                    .WithDurable(Durable(1))
+                    .WithMaxAckPending(65000)
+                    .WithMaxDeliver(5)
+                    .WithReplayPolicy(ReplayPolicy.Instant)
+                    .Build();
+                jsm.AddOrUpdateConsumer(STREAM, cc);
+
+                IJetStream js = c.CreateJetStreamContext();
+                
+                PushSubscribeOptions pushOpts = PushSubscribeOptions.BindTo(STREAM, Durable(1));
+                js.PushSubscribeSync(SUBJECT, Queue(1), pushOpts); // should not throw an error
+
+                // testing numerics
+                cc = ConsumerConfiguration.Builder()
+                    .WithDeliverPolicy(DeliverPolicy.ByStartSequence)
+                    .WithDeliverSubject(Deliver(21))
+                    .WithDurable(Durable(21))
+                    .WithStartSequence(42)
+                    .WithMaxDeliver(43)
+                    .WithRateLimit(44)
+                    .WithMaxAckPending(45)
+                    .Build();
+                jsm.AddOrUpdateConsumer(STREAM, cc);
+
+                pushOpts = PushSubscribeOptions.BindTo(STREAM, Durable(21));
+                js.PushSubscribeSync(SUBJECT, pushOpts); // should not throw an error
+
+                cc = ConsumerConfiguration.Builder()
+                    .WithDurable(Durable(22))
+                    .WithMaxPullWaiting(46)
+                    .Build();
+                jsm.AddOrUpdateConsumer(STREAM, cc);
+
+                PullSubscribeOptions pullOpts = PullSubscribeOptions.BindTo(STREAM, Durable(22));
+                js.PullSubscribe(SUBJECT, pullOpts); // should not throw an error
+
+                // testing DateTime
+                cc = ConsumerConfiguration.Builder()
+                    .WithDeliverPolicy(DeliverPolicy.ByStartTime)
+                    .WithDeliverSubject(Deliver(3))
+                    .WithDurable(Durable(3))
+                    .WithStartTime(DateTime.Now.AddHours(1))
+                    .Build();
+                jsm.AddOrUpdateConsumer(STREAM, cc);
+
+                pushOpts = PushSubscribeOptions.BindTo(STREAM, Durable(3));
+                js.PushSubscribeSync(SUBJECT, pushOpts); // should not throw an error
+                
+                // testing boolean and duration
+                cc = ConsumerConfiguration.Builder()
+                    .WithDeliverSubject(Deliver(4))
+                    .WithDurable(Durable(4))
+                    .WithFlowControl(1000)
+                    .WithHeadersOnly(true)
+                    .WithAckWait(2000)
+                    .Build();
+                jsm.AddOrUpdateConsumer(STREAM, cc);
+
+                pushOpts = PushSubscribeOptions.BindTo(STREAM, Durable(4));
+                js.PushSubscribeSync(SUBJECT, pushOpts); // should not throw an error
+                
+                // testing enums
+                cc = ConsumerConfiguration.Builder()
+                    .WithDeliverSubject(Deliver(5))
+                    .WithDurable(Durable(5))
+                    .WithDeliverPolicy(DeliverPolicy.Last)
+                    .WithAckPolicy(AckPolicy.None)
+                    .WithReplayPolicy(ReplayPolicy.Original)
+                    .Build();
+                jsm.AddOrUpdateConsumer(STREAM, cc);
+
+                pushOpts = PushSubscribeOptions.BindTo(STREAM, Durable(5));
+                js.PushSubscribeSync(SUBJECT, pushOpts); // should not throw an error
+            });
+        }
+
+        [Fact]
         public void TestConsumerCannotBeModified() {
             Context.RunInJsServer(c =>
             {
@@ -555,7 +646,7 @@ namespace IntegrationTests
                 CcbmEx(js, DurBuilder().WithAckWait(Duration.OfMillis(1)));
                 CcbmEx(js, DurBuilder().WithDescription("x"));
                 CcbmEx(js, DurBuilder().WithSampleFrequency("x"));
-                CcbmEx(js, DurBuilder().WithIdleHeartbeat(Duration.OfMillis(1)));
+                CcbmEx(js, DurBuilder().WithIdleHeartbeat(Duration.OfMillis(1000)));
 
                 CcbmEx(js, DurBuilder().WithStartSequence(5));
                 CcbmEx(js, DurBuilder().WithMaxDeliver(5));

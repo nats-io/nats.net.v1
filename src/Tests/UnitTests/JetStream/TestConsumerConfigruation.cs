@@ -40,13 +40,13 @@ namespace UnitTests.JetStream
                 .WithStartSequence(2001)
                 .WithStartTime(dt)
                 .WithDeliverSubject("deliver")
-                .WithFlowControl(Duration.OfMillis(66))
+                .WithFlowControl(Duration.OfMillis(166))
                 .WithHeadersOnly(true)
                 .Build();
 
             Assert.Equal(AckPolicy.Explicit, c.AckPolicy);
             Assert.Equal(Duration.OfSeconds(99), c.AckWait);
-            Assert.Equal(Duration.OfMillis(66), c.IdleHeartbeat);
+            Assert.Equal(Duration.OfMillis(166), c.IdleHeartbeat);
             Assert.Equal(DeliverPolicy.ByStartSequence, c.DeliverPolicy);
             Assert.Equal("deliver", c.DeliverSubject);
             Assert.Equal("durable", c.Durable);
@@ -68,7 +68,7 @@ namespace UnitTests.JetStream
             c = new ConsumerConfiguration(node[ApiConstants.Config]);
             Assert.Equal(AckPolicy.Explicit, c.AckPolicy);
             Assert.Equal(Duration.OfSeconds(99), c.AckWait);
-            Assert.Equal(Duration.OfMillis(66), c.IdleHeartbeat);
+            Assert.Equal(Duration.OfMillis(166), c.IdleHeartbeat);
             Assert.Equal(DeliverPolicy.ByStartSequence, c.DeliverPolicy);
             Assert.Equal("deliver", c.DeliverSubject);
             Assert.Equal("durable", c.Durable);
@@ -151,8 +151,8 @@ namespace UnitTests.JetStream
             Assert.True(string.IsNullOrWhiteSpace(c.Description));
             Assert.True(string.IsNullOrWhiteSpace(c.SampleFrequency));
 
-            Assert.Equal(ConsumerConfiguration.DefaultAckWait, c.AckWait);
-            Assert.Equal(ConsumerConfiguration.MinDefaultIdleHeartbeat, c.IdleHeartbeat);
+            Assert.Null(c.AckWait);
+            Assert.Null(c.IdleHeartbeat);
 
             Assert.Equal(DateTime.MinValue, c.StartTime);
 

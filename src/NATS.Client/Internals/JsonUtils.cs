@@ -36,6 +36,11 @@ namespace NATS.Client.Internals
 
         internal static Duration AsDuration(JSONNode node, String field, Duration dflt)
         {
+            if (dflt == null)
+            {
+                long l = node.GetValueOrDefault(field, long.MinValue).AsLong;
+                return l == long.MinValue ? null : Duration.OfNanos(l);
+            }
             return Duration.OfNanos(node.GetValueOrDefault(field, dflt.Nanos).AsLong);
         }
 
@@ -152,6 +157,14 @@ namespace NATS.Client.Internals
             if (l >= 0)
             {
                 o[field] = l;
+            }
+        }
+
+        public static void AddField(JSONObject o, string field, Duration value)
+        {
+            if (value != null)
+            {
+                o[field] = value.Nanos;
             }
         }
 
