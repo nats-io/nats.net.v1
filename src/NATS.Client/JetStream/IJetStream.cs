@@ -71,7 +71,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="message">A <see cref="Msg"/> that contains the request data to publish
         /// to the connected NATS server.  Any reply subject will be ignored.</param>
-        /// <returns>A publish Acknowedgement</returns>
+        /// <returns>A publish acknowledgement</returns>
         PublishAck Publish(Msg message);
 
         /// <summary>
@@ -80,7 +80,7 @@ namespace NATS.Client.JetStream
         /// <param name="message">A <see cref="Msg"/> that contains the request data to publish
         /// to the connected NATS server.  Any reply subject will be ignored.</param>
         /// <param name="publishOptions">Options for publishing.</param>
-        /// <returns>A publish acknowedgement.</returns>
+        /// <returns>A publish acknowledgement.</returns>
         PublishAck Publish(Msg message, PublishOptions publishOptions);
 
         /// <summary>
@@ -131,7 +131,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="message">A <see cref="Msg"/> that contains the request data to publish
         /// to the connected NATS server.  Any reply subject will be ignored.</param>
-        /// <returns>A publish Acknowedgement</returns>
+        /// <returns>A publish acknowledgement</returns>
         Task<PublishAck> PublishAsync(Msg message);
 
         /// <summary>
@@ -140,7 +140,7 @@ namespace NATS.Client.JetStream
         /// <param name="message">A <see cref="Msg"/> that contains the request data to publish
         /// to the connected NATS server.  Any reply subject will be ignored.</param>
         /// <param name="publishOptions">Options for publishing.</param>
-        /// <returns>A publish acknowedgement.</returns>
+        /// <returns>A publish acknowledgement.</returns>
         Task<PublishAck> PublishAsync(Msg message, PublishOptions publishOptions);
 
         /// <summary>
