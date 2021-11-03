@@ -191,8 +191,22 @@ namespace NATS.Client
         public static EventHandler<ErrEventArgs> DefaultAsyncErrorEventHandler() => 
             (sender, e) => WriteError("AsyncErrorEvent", e);
 
-        public static EventHandler<SlowConsumerEventArgs> DefaultSlowConsumerEventHandler() =>
-            (sender, e) => WriteEvent("SlowConsumer", e, "FirstDroppedStreamSequence", e.FirstDroppedMessage?.MetaData?.StreamSequence, "FirstDroppedConsumerSequence", e.FirstDroppedMessage?.MetaData?.ConsumerSequence);
+        public static EventHandler<SlowConsumerEventArgs> DefaultSlowConsumerEventHandler(Options opts) =>
+            (sender, e) =>
+            {
+               if (opts.SlowConsumerEventHandler == null)
+               {
+                   //If the user does not care about slow consumers (has not registered an event handler) propagate the situation as error to gain backward compatibility.
+                   e.Conn.lastEx = new NATSSlowConsumerException();
+                   opts.AsyncErrorEventHandlerOrDefault(sender, new ErrEventArgs(e.Conn, e.Sub, "Slow Consumer"));
+               }
+               var pairs = Array.Empty<object>();
+               if (e.FirstDroppedMessage.IsJetStream)
+               {                                                                                                                                                             
+                   pairs = new object[] { "FirstDroppedStreamSequence", e.FirstDroppedMessage.MetaData?.StreamSequence, "FirstDroppedConsumerSequence", e.FirstDroppedMessage.MetaData?.ConsumerSequence };
+               }
+               WriteEvent("SlowConsumer", e, pairs);
+            };
 
         public static EventHandler<ReconnectDelayEventArgs> DefaultReconnectDelayHandler() => (sender, e) =>
         {

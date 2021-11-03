@@ -2218,19 +2218,7 @@ namespace NATS.Client
         // async error handler if registered.
         internal void processSlowConsumer(Subscription s, Msg m)
         {
-            //don't do that. it renders the connection unusable and the client won't recover.
-            //lastEx = new NATSSlowConsumerException();
-            var slowConsumerEventHandler = opts.SlowConsumerEventHandler;
-            if (slowConsumerEventHandler != null)
-            {
-                callbackScheduler.Add(()=> slowConsumerEventHandler(this, new SlowConsumerEventArgs(this, s, m)));
-            }
-            else //If the user does not care about slow consumers (has not registered an event handler) propagate the situation as error.
-            {
-                callbackScheduler.Add(
-                    () => { opts.AsyncErrorEventHandlerOrDefault(this, new ErrEventArgs(this, s, "Slow Consumer")); }
-                );
-            }
+            callbackScheduler.Add(()=> opts.SlowConsumerEventHandlerOrDefault(this, new SlowConsumerEventArgs(this, s, m)));
         }
 
         private void kickFlusher()

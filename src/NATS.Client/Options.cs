@@ -86,7 +86,7 @@ namespace NATS.Client
         /// </summary>
         public EventHandler<SlowConsumerEventArgs> SlowConsumerEventHandler;
 
-        public EventHandler<SlowConsumerEventArgs> SlowConsumerEventHandlerOrDefault => SlowConsumerEventHandler ?? DefaultSlowConsumerEventHandler();
+        public EventHandler<SlowConsumerEventArgs> SlowConsumerEventHandlerOrDefault => SlowConsumerEventHandler ?? DefaultSlowConsumerEventHandler(this);
 
         /// <summary>
         /// Represents the method that will handle an event raised
