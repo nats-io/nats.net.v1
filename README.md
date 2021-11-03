@@ -716,8 +716,6 @@ The NATS .NET client can throw the following exceptions:
 
 ## JetStream
 
-__JetStream IS CURRENTLY IN BETA / PRE-RELEASE AND IS SUBJECT TO CHANGE__
-
 Publishing and subscribing to JetStream enabled servers is straightforward.  A
 JetStream enabled application will connect to a server, establish a JetStream
 context, and then publish or subscribe.  This can be mixed and matched with standard
