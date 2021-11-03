@@ -71,7 +71,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="message">A <see cref="Msg"/> that contains the request data to publish
         /// to the connected NATS server.  Any reply subject will be ignored.</param>
-        /// <returns>A publish Acknowedgement</returns>
+        /// <returns>A publish acknowledgement</returns>
         PublishAck Publish(Msg message);
 
         /// <summary>
@@ -80,7 +80,7 @@ namespace NATS.Client.JetStream
         /// <param name="message">A <see cref="Msg"/> that contains the request data to publish
         /// to the connected NATS server.  Any reply subject will be ignored.</param>
         /// <param name="publishOptions">Options for publishing.</param>
-        /// <returns>A publish acknowedgement.</returns>
+        /// <returns>A publish acknowledgement.</returns>
         PublishAck Publish(Msg message, PublishOptions publishOptions);
 
         /// <summary>
@@ -131,7 +131,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="message">A <see cref="Msg"/> that contains the request data to publish
         /// to the connected NATS server.  Any reply subject will be ignored.</param>
-        /// <returns>A publish Acknowedgement</returns>
+        /// <returns>A publish acknowledgement</returns>
         Task<PublishAck> PublishAsync(Msg message);
 
         /// <summary>
@@ -140,7 +140,7 @@ namespace NATS.Client.JetStream
         /// <param name="message">A <see cref="Msg"/> that contains the request data to publish
         /// to the connected NATS server.  Any reply subject will be ignored.</param>
         /// <param name="publishOptions">Options for publishing.</param>
-        /// <returns>A publish acknowedgement.</returns>
+        /// <returns>A publish acknowledgement.</returns>
         Task<PublishAck> PublishAsync(Msg message, PublishOptions publishOptions);
 
         /// <summary>
@@ -149,7 +149,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="subject">The subject on which to listen for messages.
         /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).</param>
-        /// <param name="options">Pull Subcribe options for this subscription.</param>
+        /// <param name="options">Pull Subscribe options for this subscription.</param>
         /// <returns>a JetStreamPullSubscription</returns>
         IJetStreamPullSubscription PullSubscribe(string subject, PullSubscribeOptions options);
 
@@ -189,7 +189,7 @@ namespace NATS.Client.JetStream
         /// <param name="handler">The <see cref="EventHandler{MsgHandlerEventArgs}"/> invoked when messages are received 
         /// on the returned <see cref="IJetStreamPushAsyncSubscription"/>.</param>
         /// <param name="autoAck">Whether or not to auto ack the message</param>
-        /// <param name="options">Pull Subcribe options for this subscription.</param>
+        /// <param name="options">Pull Subscribe options for this subscription.</param>
         /// <returns>An <see cref="IJetStreamPushAsyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
         /// <seealso cref="ISubscription.Subject"/>
