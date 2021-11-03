@@ -256,6 +256,21 @@ namespace NATS.Client.Internals
 
             return Duration.OfMillis(millis);
         }
+
+        internal static Duration ValidateDurationNotRequiredNotLessThanMin(Duration provided, Duration minimum)
+        {
+            if (provided != null && provided.Nanos < minimum.Nanos)
+            {
+                throw new ArgumentException("Duration must be greater than or equal to " + minimum + " nanos.");
+            }
+
+            return provided;
+        }
+
+        internal static Duration ValidateDurationNotRequiredNotLessThanMin(long millis, Duration minimum)
+        {
+            return ValidateDurationNotRequiredNotLessThanMin(Duration.OfMillis(millis), minimum);
+        }
         
         internal static object ValidateNotNull(object o, string fieldName)
         {
@@ -355,7 +370,7 @@ namespace NATS.Client.Internals
         {
             return l == 0 || l < -1;
         }
-
+        
         internal static Duration EnsureNotNullAndNotLessThanMin(Duration provided, Duration minimum, Duration dflt)
         {
             return provided == null || provided.Nanos < minimum.Nanos ? dflt : provided;
