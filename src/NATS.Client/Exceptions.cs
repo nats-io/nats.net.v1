@@ -235,7 +235,6 @@ namespace NATS.Client
         public static readonly ClientExDetail JsSubNoMatchingStreamForSubject = new ClientExDetail(Sub, 90007, "No matching streams for subject.");
         public static readonly ClientExDetail JsSubConsumerAlreadyConfiguredAsPush = new ClientExDetail(Sub, 90008, "Consumer is already configured as a push consumer.");
         public static readonly ClientExDetail JsSubConsumerAlreadyConfiguredAsPull = new ClientExDetail(Sub, 90009, "Consumer is already configured as a pull consumer.");
-        public static readonly ClientExDetail JsSubExistingDeliverSubjectMismatch = new ClientExDetail(Sub, 90010, "Existing consumer deliver subject does not match requested deliver subject.");
         public static readonly ClientExDetail JsSubSubjectDoesNotMatchFilter = new ClientExDetail(Sub, 90011, "Subject does not match consumer configuration filter.");
         public static readonly ClientExDetail JsSubConsumerAlreadyBound = new ClientExDetail(Sub, 90012, "Consumer is already bound to a subscription.");
         public static readonly ClientExDetail JsSubExistingConsumerNotQueue = new ClientExDetail(Sub, 90013, "Existing consumer is not configured as a queue / deliver group.");

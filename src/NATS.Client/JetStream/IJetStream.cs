@@ -150,7 +150,7 @@ namespace NATS.Client.JetStream
         /// <param name="subject">The subject on which to listen for messages.
         /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).</param>
         /// <param name="options">Pull Subscribe options for this subscription.</param>
-        /// <returns>a JetStreamPullSubscription</returns>
+        /// <returns>An IJetStreamPullSubscription</returns>
         IJetStreamPullSubscription PullSubscribe(string subject, PullSubscribeOptions options);
 
         /// <summary>
@@ -168,7 +168,7 @@ namespace NATS.Client.JetStream
         /// <param name="handler">The <see cref="EventHandler{MsgHandlerEventArgs}"/> invoked when messages are received 
         /// on the returned <see cref="IAsyncSubscription"/>.</param>
         /// <param name="autoAck">Whether or not to auto ack the message</param>
-        /// <returns>An <see cref="IAsyncSubscription"/> to use to read any messages received
+        /// <returns>An <see cref="IJetStreamPushAsyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
         /// <seealso cref="ISubscription.Subject"/>
         /// <returns>A JetStream push subscription</returns>
@@ -215,7 +215,7 @@ namespace NATS.Client.JetStream
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
         /// <seealso cref="ISubscription.Subject"/>
         /// <seealso cref="ISubscription.Queue"/>
-        /// <returns>A JetStream push subscription</returns>
+        /// <returns>An IJetStreamPushAsyncSubscription</returns>
         IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler, bool autoAck);
 
         /// <summary>
@@ -238,8 +238,8 @@ namespace NATS.Client.JetStream
         /// <seealso cref="ISubscription.Subject"/>
         /// <seealso cref="ISubscription.Queue"/>
         /// <param name="autoAck">Whether or not to auto ack the message</param>
-        /// <param name="options">JetStream pull subscription options.</param>
-        /// <returns>A JetStream push subscription</returns>
+        /// <param name="options">JetStream push subscription options.</param>
+        /// <returns>An IJetStreamPushAsyncSubscription</returns>
         IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler, bool autoAck, PushSubscribeOptions options);
 
         /// <summary>
@@ -293,5 +293,37 @@ namespace NATS.Client.JetStream
         /// <seealso cref="ISubscription.Subject"/>
         /// <seealso cref="ISubscription.Queue"/>
         IJetStreamPushSyncSubscription PushSubscribeSync(string subject, string queue, PushSubscribeOptions options);
+
+        /// <summary>
+        /// Creates a JetStream pull subscription to an existing consumer.  Pull subscriptions fetch messages
+        /// from the server in batches.
+        /// </summary>
+        /// <param name="stream">The stream that has the durable consumer already created</param>
+        /// <param name="durable">The existing durable consumer name</param>
+        /// <returns>an IJetStreamPullSubscription</returns>
+        IJetStreamPullSubscription PullBindSubscribe(string stream, string durable);
+
+        /// <summary>
+        /// Creates a JetStream asynchronous push subscription to an existing consumer.
+        /// </summary>
+        /// <param name="stream">The stream that has the durable consumer already created</param>
+        /// <param name="durable">The existing durable consumer name</param>
+        /// <returns>an IJetStreamPushAsyncSubscription</returns>
+        IJetStreamPushAsyncSubscription PushBindSubscribeAsync(string stream, string durable, EventHandler<MsgHandlerEventArgs> handler, bool autoAck);
+
+        /// <summary>
+        /// Creates a JetStream synchronous push subscription to an existing consumer.
+        /// </summary>
+        /// <param name="stream">The stream that has the durable consumer already created</param>
+        /// <param name="durable">The existing durable consumer name</param>
+        /// <param name="handler">The <see cref="EventHandler{MsgHandlerEventArgs}"/> invoked when messages are received 
+        /// on the returned <see cref="IAsyncSubscription"/>.</param>
+        /// <returns>An <see cref="IAsyncSubscription"/> to use to read any messages received
+        /// from the NATS Server on the given <paramref name="subject"/>.</returns>
+        /// <seealso cref="ISubscription.Subject"/>
+        /// <seealso cref="ISubscription.Queue"/>
+        /// <param name="autoAck">Whether or not to auto ack the message</param>
+        /// <returns>an IJetStreamPushSyncSubscription</returns>
+        IJetStreamPushSyncSubscription PushBindSubscribeSync(string stream, string durable);
     }
 }

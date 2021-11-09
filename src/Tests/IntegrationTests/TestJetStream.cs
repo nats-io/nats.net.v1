@@ -18,6 +18,7 @@ using NATS.Client;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using Xunit;
+using Xunit.Abstractions;
 using static UnitTests.TestBase;
 using static IntegrationTests.JetStreamTestBase;
 using static NATS.Client.ClientExDetail;
@@ -26,7 +27,12 @@ namespace IntegrationTests
 {
     public class TestJetStream : TestSuite<JetStreamSuiteContext>
     {
-        public TestJetStream(JetStreamSuiteContext context) : base(context) {}
+        private readonly ITestOutputHelper output;
+
+        public TestJetStream(ITestOutputHelper output, JetStreamSuiteContext context) : base(context) 
+        {
+            this.output = output;
+        }
 
         [Fact]
         public void TestJetStreamContextCreate()
@@ -454,6 +460,99 @@ namespace IntegrationTests
             });
         }
 
+        private static readonly Random Rndm = new Random();
+        
+        [Fact]
+        public void TestFilterMismatchErrors()
+        {
+            Context.RunInJsServer(c =>
+            {
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                IJetStream js = c.CreateJetStreamContext();
+
+                // single subject
+                CreateMemoryStream(jsm, STREAM, SUBJECT);
+
+                // will work as SubscribeSubject equals Filter Subject
+                SubscribeOk(js, jsm, SUBJECT, SUBJECT);
+                SubscribeOk(js, jsm, ">", ">");
+                SubscribeOk(js, jsm, "*", "*");
+
+                // will work as SubscribeSubject != empty Filter Subject,
+                // b/c Stream has exactly 1 subject and is a match.
+                SubscribeOk(js, jsm, "", SUBJECT);
+
+                // will work as SubscribeSubject != Filter Subject of '>'
+                // b/c Stream has exactly 1 subject and is a match.
+                SubscribeOk(js, jsm, ">", SUBJECT);
+
+                // will not work
+                SubscribeEx(js, jsm, "*", SUBJECT);
+
+                // multiple subjects no wildcards
+                jsm.DeleteStream(STREAM);
+                CreateMemoryStream(jsm, STREAM, SUBJECT, Subject(2));
+
+                // will work as SubscribeSubject equals Filter Subject
+                SubscribeOk(js, jsm, SUBJECT, SUBJECT);
+                SubscribeOk(js, jsm, ">", ">");
+                SubscribeOk(js, jsm, "*", "*");
+
+                // will not work because stream has more than 1 subject
+                SubscribeEx(js, jsm, "", SUBJECT);
+                SubscribeEx(js, jsm, ">", SUBJECT);
+                SubscribeEx(js, jsm, "*", SUBJECT);
+
+                // multiple subjects via '>'
+                jsm.DeleteStream(STREAM);
+                CreateMemoryStream(jsm, STREAM, SUBJECT_GT);
+
+                // will work, exact matches
+                SubscribeOk(js, jsm, SubjectDot("1"), SubjectDot("1"));
+                SubscribeOk(js, jsm, ">", ">");
+
+                // will not work because mismatch / stream has more than 1 subject
+                SubscribeEx(js, jsm, "", SubjectDot("1"));
+                SubscribeEx(js, jsm, ">", SubjectDot("1"));
+                SubscribeEx(js, jsm, SUBJECT_GT, SubjectDot("1"));
+
+                // multiple subjects via '*'
+                jsm.DeleteStream(STREAM);
+                CreateMemoryStream(jsm, STREAM, SUBJECT_STAR);
+
+                // will work, exact matches
+                SubscribeOk(js, jsm, SubjectDot("1"), SubjectDot("1"));
+                SubscribeOk(js, jsm, ">", ">");
+
+                // will not work because mismatch / stream has more than 1 subject
+                SubscribeEx(js, jsm, "", SubjectDot("1"));
+                SubscribeEx(js, jsm, ">", SubjectDot("1"));
+                SubscribeEx(js, jsm, SUBJECT_STAR, SubjectDot("1"));
+            });
+        }
+
+        private void SubscribeOk(IJetStream js, IJetStreamManagement jsm, string fs, string ss) 
+        {
+            int i = Rndm.Next(); // just want a unique number
+            SetupConsumer(jsm, i, fs);
+            js.PushSubscribeSync(ss, ConsumerConfiguration.Builder().WithDurable(Durable(i)).BuildPushSubscribeOptions()).Unsubscribe();
+        }
+
+        private void SubscribeEx(IJetStream js, IJetStreamManagement jsm, string fs, string ss) 
+        {
+            int i = Rndm.Next(); // just want a unique number
+            SetupConsumer(jsm, i, fs);
+            NATSJetStreamClientException e = Assert.Throws<NATSJetStreamClientException>(
+                () => js.PushSubscribeSync(ss, ConsumerConfiguration.Builder().WithDurable(Durable(i)).BuildPushSubscribeOptions()));
+            Assert.Contains(JsSubSubjectDoesNotMatchFilter.Id, e.Message);
+        }
+
+        private void SetupConsumer(IJetStreamManagement jsm, int i, String fs)
+        {
+            jsm.AddOrUpdateConsumer(STREAM,
+                ConsumerConfiguration.Builder().WithDeliverSubject(Deliver(i)).WithDurable(Durable(i)).WithFilterSubject(fs).Build());
+        }
+
         [Fact]
         public void TestBindDurableDeliverSubject()
         {
@@ -500,13 +599,6 @@ namespace IntegrationTests
                 e = Assert.Throws<NATSJetStreamClientException>(
                         () => js.PushSubscribeSync(SUBJECT, PushSubscribeOptions.BindTo(STREAM, Durable(2))));
                 Assert.Contains(JsSubConsumerAlreadyConfiguredAsPull.Id, e.Message);
-
-                // try to push subscribe but mismatch the deliver subject
-                ConsumerConfiguration ccMis = ConsumerConfiguration.Builder().WithDeliverSubject("not-match").Build();
-                PushSubscribeOptions psoMis = PushSubscribeOptions.Builder().WithDurable(Durable(1))
-                    .WithConfiguration(ccMis).Build();
-                e = Assert.Throws<NATSJetStreamClientException>(() => js.PushSubscribeSync(SUBJECT, psoMis));
-                Assert.Contains(JsSubExistingDeliverSubjectMismatch.Id, e.Message);
 
                 // this one is okay
                 js.PushSubscribeSync(SUBJECT, PushSubscribeOptions.Builder().WithDurable(Durable(1)).Build());

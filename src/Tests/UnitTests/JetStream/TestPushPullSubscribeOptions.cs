@@ -43,6 +43,7 @@ namespace UnitTests.JetStream
             Assert.Null(so.Stream);
             Assert.Null(so.Durable);
             Assert.Null(so.DeliverSubject);
+            Assert.False(so.Pull);
         }
     
         [Fact]
@@ -54,6 +55,7 @@ namespace UnitTests.JetStream
                 .Build();
             Assert.Equal(STREAM, so.Stream);
             Assert.Equal(DURABLE, so.Durable);
+            Assert.True(so.Pull);
         }
 
         [Fact]

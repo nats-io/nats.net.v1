@@ -452,5 +452,61 @@ namespace IntegrationTests
                 AssertNoMoreMessages(sub);
             });
         }
+        
+        [Fact]
+        public void TestDurable()
+        {
+            Context.RunInJsServer(c =>
+            {
+                // create the stream.
+                CreateDefaultTestStream(c);
+
+                // Create our JetStream context.
+                IJetStream js = c.CreateJetStreamContext();
+
+                // Build our subscription options normally
+                PullSubscribeOptions options1 = PullSubscribeOptions.Builder().WithDurable(DURABLE).Build();
+                _testDurable(js, () => js.PullSubscribe(SUBJECT, options1));
+
+                // no subject so stream and durable are required
+                PullSubscribeOptions options2 = PullSubscribeOptions.Builder()
+                    .WithStream(STREAM)
+                    .WithDurable(DURABLE)
+                    .Build();
+                _testDurable(js, () => js.PullSubscribe(null, options2));
+
+                // bind long form
+                PullSubscribeOptions options3 = PullSubscribeOptions.Builder()
+                    .WithStream(STREAM)
+                    .WithDurable(DURABLE)
+                    .WithBind(true)
+                    .Build();
+                _testDurable(js, () => js.PullSubscribe(null, options3));
+
+                // bind short form
+                PullSubscribeOptions options4 = PullSubscribeOptions.BindTo(STREAM, DURABLE);
+                _testDurable(js, () => js.PullSubscribe(null, options4));
+
+                // bind shortest form
+                _testDurable(js, () => js.PullBindSubscribe(STREAM, DURABLE));
+            });
+        }
+
+        private void _testDurable(IJetStream js, PullSubSupplier supplier)
+        {
+            JsPublish(js, SUBJECT, 2);
+
+            IJetStreamPullSubscription sub = supplier.Invoke();
+
+            // start the pull
+            sub.PullNoWait(4);
+
+            IList<Msg> messages = ReadMessagesAck(sub);
+            ValidateRedAndTotal(2, messages.Count, 2, 2);
+
+            sub.Unsubscribe();
+        }
+
+        delegate IJetStreamPullSubscription PullSubSupplier();
     }
 }

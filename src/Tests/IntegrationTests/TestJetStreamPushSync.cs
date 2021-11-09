@@ -103,46 +103,106 @@ namespace IntegrationTests
                 // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
 
-                // publish some messages
-                JsPublish(js, SUBJECT, 1, 5);
-
-                // use ackWait so I don't have to wait forever before re-subscribing
-                ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithAckWait(3000).Build();
-
-                // Build our subscription options.
-                PushSubscribeOptions options = PushSubscribeOptions.Builder()
+                // Build our subscription options normally
+                PushSubscribeOptions options1 = PushSubscribeOptions.Builder()
                     .WithDurable(DURABLE)
-                    .WithConfiguration(cc)
                     .WithDeliverSubject(deliverSubject)
                     .Build();
 
-                // Subscribe.
-                IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(SUBJECT, options);
-                AssertSubscription(sub, STREAM, DURABLE, deliverSubject, false);
-                c.Flush(DefaultTimeout); // flush outgoing communication with/to the server
+                _testPushDurableSubSync(deliverSubject, c, js, () => js.PushSubscribeSync(SUBJECT, options1));
+                _testPushDurableSubAsync(js, h => js.PushSubscribeAsync(SUBJECT, h, false, options1));
 
-                // read what is available
-                IList<Msg> messages = ReadMessagesAck(sub);
-                int total = messages.Count;
-                ValidateRedAndTotal(5, messages.Count, 5, total);
+                // no subject so stream and durable are required
+                PushSubscribeOptions options2 = PushSubscribeOptions.Builder()
+                    .WithStream(STREAM)
+                    .WithDurable(DURABLE)
+                    .WithDeliverSubject(deliverSubject)
+                    .Build();
+                _testPushDurableSubSync(deliverSubject, c, js, () => js.PushSubscribeSync(null, options2));
+                _testPushDurableSubAsync(js, h => js.PushSubscribeAsync(null, h, false, options2));
 
-                // read again, nothing should be there
-                messages = ReadMessagesAck(sub);
-                total += messages.Count;
-                ValidateRedAndTotal(0, messages.Count, 5, total);
+                // bind long form
+                PushSubscribeOptions options3 = PushSubscribeOptions.Builder()
+                    .WithStream(STREAM)
+                    .WithDurable(DURABLE)
+                    .WithBind(true)
+                    .WithDeliverSubject(deliverSubject)
+                    .Build();
+                _testPushDurableSubSync(deliverSubject, c, js, () => js.PushSubscribeSync(null, options3));
+                _testPushDurableSubAsync(js, h => js.PushSubscribeAsync(null, h, false, options3));
 
-                sub.Unsubscribe();
-                c.Flush(DefaultTimeout); // flush outgoing communication with/to the server
+                // bind short form
+                PushSubscribeOptions options4 = PushSubscribeOptions.BindTo(STREAM, DURABLE);
+                _testPushDurableSubSync(deliverSubject, c, js, () => js.PushSubscribeSync(null, options4));
+                _testPushDurableSubAsync(js, h => js.PushSubscribeAsync(null, h, false, options4));
 
-                // re-subscribe
-                sub = js.PushSubscribeSync(SUBJECT, options);
-                c.Flush(DefaultTimeout); // flush outgoing communication with/to the server
-
-                // read again, nothing should be there
-                messages = ReadMessagesAck(sub);
-                total += messages.Count;
-                ValidateRedAndTotal(0, messages.Count, 5, total);
+                // bind shortest form
+                _testPushDurableSubSync(deliverSubject, c, js, () => js.PushBindSubscribeSync(STREAM, DURABLE));
+                _testPushDurableSubAsync(js, h => js.PushBindSubscribeAsync(STREAM, DURABLE, h, false));
             });
+        }
+        
+        delegate IJetStreamPushSyncSubscription PushSyncSubSupplier();
+        delegate IJetStreamPushAsyncSubscription PushAsyncSubSupplier(EventHandler<MsgHandlerEventArgs> handler);
+
+        private void _testPushDurableSubSync(string deliverSubject, IConnection nc, IJetStream js, PushSyncSubSupplier supplier)
+        {
+            // publish some messages
+            JsPublish(js, SUBJECT, 1, 5);
+
+            IJetStreamPushSyncSubscription sub = supplier.Invoke();
+            AssertSubscription(sub, STREAM, DURABLE, deliverSubject, false);
+
+            // read what is available
+            IList<Msg> messages = ReadMessagesAck(sub);
+            int total = messages.Count;
+            ValidateRedAndTotal(5, messages.Count, 5, total);
+
+            // read again, nothing should be there
+            messages = ReadMessagesAck(sub);
+            total += messages.Count;
+            ValidateRedAndTotal(0, messages.Count, 5, total);
+
+            sub.Unsubscribe();
+            nc.Flush(1000); // flush outgoing communication with/to the server
+
+            // re-subscribe
+            sub = supplier.Invoke();
+            nc.Flush(1000); // flush outgoing communication with/to the server
+
+            // read again, nothing should be there
+            messages = ReadMessagesAck(sub);
+            total += messages.Count;
+            ValidateRedAndTotal(0, messages.Count, 5, total);
+
+            sub.Unsubscribe();
+            nc.Flush(1000); // flush outgoing communication with/to the server
+        }
+
+        private void _testPushDurableSubAsync(IJetStream js, PushAsyncSubSupplier supplier)
+        {
+            // publish some messages
+            JsPublish(js, SUBJECT, 5);
+
+            CountdownEvent latch = new CountdownEvent(5);
+            int received = 0;
+
+            void TestHandler(object sender, MsgHandlerEventArgs args)
+            {
+                received++;
+                args.Message.Ack();
+                latch.Signal();
+            }
+
+            // Subscribe using the handler
+            IJetStreamPushAsyncSubscription sub = supplier.Invoke(TestHandler);
+
+            // Wait for messages to arrive using the countdown latch.
+            latch.Wait(10000);
+
+            sub.Unsubscribe();
+
+            Assert.Equal(5, received);
         }
 
         [Fact]
