@@ -468,24 +468,17 @@ namespace IntegrationTests
                 PullSubscribeOptions options1 = PullSubscribeOptions.Builder().WithDurable(DURABLE).Build();
                 _testDurable(js, () => js.PullSubscribe(SUBJECT, options1));
 
-                // no subject so stream and durable are required
-                PullSubscribeOptions options2 = PullSubscribeOptions.Builder()
-                    .WithStream(STREAM)
-                    .WithDurable(DURABLE)
-                    .Build();
-                _testDurable(js, () => js.PullSubscribe(null, options2));
-
                 // bind long form
-                PullSubscribeOptions options3 = PullSubscribeOptions.Builder()
+                PullSubscribeOptions options2 = PullSubscribeOptions.Builder()
                     .WithStream(STREAM)
                     .WithDurable(DURABLE)
                     .WithBind(true)
                     .Build();
-                _testDurable(js, () => js.PullSubscribe(null, options3));
+                _testDurable(js, () => js.PullSubscribe(null, options2));
 
                 // bind short form
-                PullSubscribeOptions options4 = PullSubscribeOptions.BindTo(STREAM, DURABLE);
-                _testDurable(js, () => js.PullSubscribe(null, options4));
+                PullSubscribeOptions options3 = PullSubscribeOptions.BindTo(STREAM, DURABLE);
+                _testDurable(js, () => js.PullSubscribe(null, options3));
             });
         }
 

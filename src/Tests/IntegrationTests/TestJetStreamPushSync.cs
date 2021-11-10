@@ -112,29 +112,20 @@ namespace IntegrationTests
                 _testPushDurableSubSync(deliverSubject, c, js, () => js.PushSubscribeSync(SUBJECT, options1));
                 _testPushDurableSubAsync(js, h => js.PushSubscribeAsync(SUBJECT, h, false, options1));
 
-                // no subject so stream and durable are required
-                PushSubscribeOptions options2 = PushSubscribeOptions.Builder()
-                    .WithStream(STREAM)
-                    .WithDurable(DURABLE)
-                    .WithDeliverSubject(deliverSubject)
-                    .Build();
-                _testPushDurableSubSync(deliverSubject, c, js, () => js.PushSubscribeSync(null, options2));
-                _testPushDurableSubAsync(js, h => js.PushSubscribeAsync(null, h, false, options2));
-
                 // bind long form
-                PushSubscribeOptions options3 = PushSubscribeOptions.Builder()
+                PushSubscribeOptions options2 = PushSubscribeOptions.Builder()
                     .WithStream(STREAM)
                     .WithDurable(DURABLE)
                     .WithBind(true)
                     .WithDeliverSubject(deliverSubject)
                     .Build();
-                _testPushDurableSubSync(deliverSubject, c, js, () => js.PushSubscribeSync(null, options3));
-                _testPushDurableSubAsync(js, h => js.PushSubscribeAsync(null, h, false, options3));
+                _testPushDurableSubSync(deliverSubject, c, js, () => js.PushSubscribeSync(null, options2));
+                _testPushDurableSubAsync(js, h => js.PushSubscribeAsync(null, h, false, options2));
 
                 // bind short form
-                PushSubscribeOptions options4 = PushSubscribeOptions.BindTo(STREAM, DURABLE);
-                _testPushDurableSubSync(deliverSubject, c, js, () => js.PushSubscribeSync(null, options4));
-                _testPushDurableSubAsync(js, h => js.PushSubscribeAsync(null, h, false, options4));
+                PushSubscribeOptions options3 = PushSubscribeOptions.BindTo(STREAM, DURABLE);
+                _testPushDurableSubSync(deliverSubject, c, js, () => js.PushSubscribeSync(null, options3));
+                _testPushDurableSubAsync(js, h => js.PushSubscribeAsync(null, h, false, options3));
             });
         }
         
