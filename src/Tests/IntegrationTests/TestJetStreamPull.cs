@@ -486,9 +486,6 @@ namespace IntegrationTests
                 // bind short form
                 PullSubscribeOptions options4 = PullSubscribeOptions.BindTo(STREAM, DURABLE);
                 _testDurable(js, () => js.PullSubscribe(null, options4));
-
-                // bind shortest form
-                _testDurable(js, () => js.PullBindSubscribe(STREAM, DURABLE));
             });
         }
 

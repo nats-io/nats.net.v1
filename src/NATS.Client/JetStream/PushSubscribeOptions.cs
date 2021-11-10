@@ -15,21 +15,6 @@ namespace NATS.Client.JetStream
 {
     public sealed class PushSubscribeOptions : SubscribeOptions
     {
-        /// <summary>
-        /// Gets the durable name
-        /// </summary>
-        public string Durable => ConsumerConfiguration.Durable;
-
-        /// <summary>
-        /// Gets the deliver subject
-        /// </summary>
-        public string DeliverSubject => ConsumerConfiguration.DeliverSubject;
-
-        /// <summary>
-        /// Gets the deliver group
-        /// </summary>
-        public string DeliverGroup => ConsumerConfiguration.DeliverGroup;
-
         // Validation is done by base class
         private PushSubscribeOptions(ISubscribeOptionsBuilder builder, string deliverSubject, string deliverGroup) 
             : base(builder, false, deliverSubject, deliverGroup) {}

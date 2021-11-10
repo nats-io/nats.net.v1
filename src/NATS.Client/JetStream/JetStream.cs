@@ -448,25 +448,6 @@ namespace NATS.Client.JetStream
             return (IJetStreamPushSyncSubscription) CreateSubscription(subject, queue, null, false, options, null);
         }
 
-        public IJetStreamPullSubscription PullBindSubscribe(string stream, string durable)
-        {
-            return (IJetStreamPullSubscription) CreateSubscription(null, null, null, false, null, PullSubscribeOptions.BindTo(stream, durable));
-        }
-
-        public IJetStreamPushAsyncSubscription PushBindSubscribeAsync(string stream, string durable, EventHandler<MsgHandlerEventArgs> handler, bool autoAck)
-        {
-            return (IJetStreamPushAsyncSubscription) CreateSubscription(null, null, handler, autoAck, PushSubscribeOptions.BindTo(stream, durable), null);
-        }
-
-        public IJetStreamPushSyncSubscription PushBindSubscribeSync(string stream, string durable)
-        {
-            return (IJetStreamPushSyncSubscription) CreateSubscription(null, null, null, false, PushSubscribeOptions.BindTo(stream, durable), null);
-        }
-
-        private bool IsSubjectRequired(SubscribeOptions options) {
-            if (options == null) { return true; }
-            if (options.Bind) { return false; }
-            return string.IsNullOrWhiteSpace(options.Stream) || string.IsNullOrWhiteSpace(options.Durable);
-        }
+        private bool IsSubjectRequired(SubscribeOptions options) => options == null || !options.Bind;
     }
 }

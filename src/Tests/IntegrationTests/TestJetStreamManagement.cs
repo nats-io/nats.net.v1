@@ -429,7 +429,7 @@ namespace IntegrationTests
             try {
                 jsm.DeleteConsumer(STREAM, Durable(1));
             }
-            catch (Exception e) { /* ignore */ }
+            catch (Exception) { /* ignore */ }
 
             ConsumerConfiguration cc = ConsumerConfiguration.Builder()
                 .WithDurable(Durable(1))

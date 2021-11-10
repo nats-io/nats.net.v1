@@ -22,12 +22,26 @@ namespace NATS.Client.JetStream
     /// </summary>
     public abstract class SubscribeOptions
     {
-        internal string Stream { get; }
-        internal bool Pull { get; }
-        internal bool Bind { get; }
-        internal ConsumerConfiguration ConsumerConfiguration { get; }
-        internal string Durable => ConsumerConfiguration.Durable;
+        public string Stream { get; }
+        public bool Pull { get; }
+        public bool Bind { get; }
+        public ConsumerConfiguration ConsumerConfiguration { get; }
         internal int MessageAlarmTime { get; }
+
+        /// <summary>
+        /// Gets the durable name
+        /// </summary>
+        public string Durable => ConsumerConfiguration.Durable;
+
+        /// <summary>
+        /// Gets the deliver subject
+        /// </summary>
+        public string DeliverSubject => ConsumerConfiguration.DeliverSubject;
+
+        /// <summary>
+        /// Gets the deliver group
+        /// </summary>
+        public string DeliverGroup => ConsumerConfiguration.DeliverGroup;
 
         protected SubscribeOptions(ISubscribeOptionsBuilder builder, bool pull, string deliverSubject, string deliverGroup)
         {

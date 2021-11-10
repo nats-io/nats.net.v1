@@ -135,10 +135,6 @@ namespace IntegrationTests
                 PushSubscribeOptions options4 = PushSubscribeOptions.BindTo(STREAM, DURABLE);
                 _testPushDurableSubSync(deliverSubject, c, js, () => js.PushSubscribeSync(null, options4));
                 _testPushDurableSubAsync(js, h => js.PushSubscribeAsync(null, h, false, options4));
-
-                // bind shortest form
-                _testPushDurableSubSync(deliverSubject, c, js, () => js.PushBindSubscribeSync(STREAM, DURABLE));
-                _testPushDurableSubAsync(js, h => js.PushBindSubscribeAsync(STREAM, DURABLE, h, false));
             });
         }
         
