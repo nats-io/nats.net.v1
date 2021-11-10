@@ -18,7 +18,6 @@ using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using Xunit;
 using static IntegrationTests.JetStreamTestBase;
-using static NATS.Client.ClientExDetail;
 using static UnitTests.TestBase;
 
 namespace IntegrationTests
@@ -503,29 +502,6 @@ namespace IntegrationTests
                     .WithFilterSubject(SubjectDot("F"))
                     .Build()
                 );
-
-                ConsumerConfiguration ccBadFilter = ConsumerConfiguration.Builder()
-                    .WithDurable(Durable(42)).WithFilterSubject("x").Build();
-
-                PullSubscribeOptions pullOptsBadFilter = PullSubscribeOptions.Builder()
-                    .WithConfiguration(ccBadFilter).Build();
-
-                NATSJetStreamClientException e = Assert.Throws<NATSJetStreamClientException>(() => js.PullSubscribe(SubjectDot("F"), pullOptsBadFilter));
-                Assert.Contains(JsSubSubjectDoesNotMatchFilter.Id, e.Message);
-
-                // try to filter against durable with mismatch, push
-                jsm.AddOrUpdateConsumer(STREAM, ConsumerConfiguration.Builder()
-                    .WithDurable(Durable(43))
-                    .WithDeliverSubject(Deliver(43))
-                    .WithFilterSubject(SubjectDot("F"))
-                    .Build()
-                );
-
-                ccBadFilter = ConsumerConfiguration.Builder().WithDurable(Durable(43)).WithFilterSubject("x").Build();
-
-                PushSubscribeOptions pushOptsBadFilter = PushSubscribeOptions.Builder().WithConfiguration(ccBadFilter).Build();
-                e = Assert.Throws<NATSJetStreamClientException>(() => js.PushSubscribeSync(SubjectDot("F"), pushOptsBadFilter));
-                Assert.Contains(JsSubSubjectDoesNotMatchFilter.Id, e.Message);
             });
         }
         
