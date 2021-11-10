@@ -257,64 +257,6 @@ namespace IntegrationTests
             });
         }
 
-        [Fact]
-        public void TestFilterSubjectDurable() {
-            Context.RunInJsServer(c =>
-            {
-                // Create our JetStream context.
-                IJetStream js = c.CreateJetStreamContext();
-
-                string subjectWild = SUBJECT + ".*";
-                string subjectA = SUBJECT + ".A";
-                string subjectB = SUBJECT + ".B";
-
-                // create the stream.
-                CreateMemoryStream(c, STREAM, subjectWild);
-
-                JsPublish(js, subjectA, 1);
-                JsPublish(js, subjectB, 1);
-                JsPublish(js, subjectA, 1);
-                JsPublish(js, subjectB, 1);
-
-                ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithFilterSubject(subjectA).WithAckPolicy(AckPolicy.None).Build();
-                PushSubscribeOptions pso = PushSubscribeOptions.Builder().WithDurable(DURABLE).WithConfiguration(cc).Build();
-                IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(subjectWild, pso);
-                c.Flush(1000);
-
-                Msg m = sub.NextMessage(1000);
-                Assert.Equal(subjectA, m.Subject);
-                Assert.Equal(1U, m.MetaData.StreamSequence);
-                m = sub.NextMessage(1000);
-                Assert.Equal(subjectA, m.Subject);
-                Assert.Equal(3U, m.MetaData.StreamSequence);
-                Assert.Throws<NATSTimeoutException>(() => sub.NextMessage(1000));
-                sub.Unsubscribe();
-
-                JsPublish(js, subjectA, 1);
-                JsPublish(js, subjectB, 1);
-                JsPublish(js, subjectA, 1);
-                JsPublish(js, subjectB, 1);
-            
-                sub = js.PushSubscribeSync(subjectWild, pso);
-                c.Flush(1000);
-
-                m = sub.NextMessage(1000);
-                Assert.Equal(subjectA, m.Subject);
-                Assert.Equal(5U, m.MetaData.StreamSequence);
-                m = sub.NextMessage(1000);
-                Assert.Equal(7U, m.MetaData.StreamSequence);
-                sub.Unsubscribe();
-
-                ConsumerConfiguration cc1 = ConsumerConfiguration.Builder().WithFilterSubject(subjectWild).Build();
-                PushSubscribeOptions pso1 = PushSubscribeOptions.Builder().WithDurable(DURABLE).WithConfiguration(cc1).Build();
-                Assert.Throws<NATSJetStreamClientException>(() => js.PushSubscribeSync(subjectWild, pso1));
-
-                ConsumerConfiguration cc2 = ConsumerConfiguration.Builder().WithFilterSubject(subjectB).Build();
-                PushSubscribeOptions pso2 = PushSubscribeOptions.Builder().WithDurable(DURABLE).WithConfiguration(cc2).Build();
-                Assert.Throws<NATSJetStreamClientException>(() => js.PushSubscribeSync(subjectWild, pso2));
-            });
-        }
-
         class JetStreamTestImpl : JetStream
         {
             public JetStreamTestImpl(IConnection connection) : base(connection, null) {}
