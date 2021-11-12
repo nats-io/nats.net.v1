@@ -57,11 +57,15 @@ namespace NATS.Client
         // than the received subject inside a Msg if this is a wildcard.
         private string      subject = null;
 
+        internal Func<Msg, Msg> BeforeChannelAddCheck;
+
         internal Subscription(Connection conn, string subject, string queue)
         {
             this.conn = conn;
             this.subject = subject;
             this.queue = queue;
+
+            BeforeChannelAddCheck = msg => msg;
         }
 
         internal virtual void close()
@@ -181,28 +185,38 @@ namespace NATS.Client
 		        pBytesMax = pBytes;
             }
 	
-            // Check for a Slow Consumer
-	        if ((pMsgsLimit > 0 && pMsgs > pMsgsLimit)
-                || (pBytesLimit > 0 && pBytes > pBytesLimit))
+            // BeforeChannelAddCheck returns null if the message
+            // does not need to be queued, for instance heartbeats
+            // that are not flow control and are already seen by the
+            // auto status manager
+            msg = BeforeChannelAddCheck.Invoke(msg);
+            
+            if (msg != null)
             {
-                // slow consumer
-                handleSlowConsumer(msg);
-                return false;
-            }
-
-            if (mch != null)
-            {
-                if (mch.Count >= maxCount)
+                // Check for a Slow Consumer
+                if ((pMsgsLimit > 0 && pMsgs > pMsgsLimit)
+                    || (pBytesLimit > 0 && pBytes > pBytesLimit))
                 {
+                    // slow consumer
                     handleSlowConsumer(msg);
                     return false;
                 }
-                else
+
+                if (mch != null)
                 {
-                    sc = false;
-                    mch.add(msg);
+                    if (mch.Count >= maxCount)
+                    {
+                        handleSlowConsumer(msg);
+                        return false;
+                    }
+                    else
+                    {
+                        sc = false;
+                        mch.add(msg);
+                    }
                 }
             }
+
             return true;
         }
 
