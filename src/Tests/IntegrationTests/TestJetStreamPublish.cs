@@ -283,8 +283,7 @@ namespace IntegrationTests
         [Fact] 
         public void TestPublishNoAck()
         {
-            TestServerInfo testServerInfo = new TestServerInfo(4222);
-            Context.RunInJsServer(testServerInfo, c => 
+            Context.RunInJsServer(c => 
             {
                 CreateDefaultTestStream(c);
 

@@ -742,11 +742,7 @@ namespace NATS.Client
             callbackScheduler.Start();
 
             globalRequestInbox = NewInbox();
-
-            BeforeQueueProcessor = msg => msg;
         }
-
-        internal Func<Msg, Msg> BeforeQueueProcessor;
         
         private void buildPublishProtocolBuffers(int size)
         {
@@ -2195,15 +2191,7 @@ namespace NATS.Client
                             ? new JetStreamMsg(this, msgArgs, s, msgBytes, length)
                             : new Msg(msgArgs, s, msgBytes, length);
 
-                        // BeforeQueueProcessor returns null if the message
-                        // does not need to be queued, for instance heartbeats
-                        // that are not flow control and are already seen by the
-                        // auto status manager
-                        msg = BeforeQueueProcessor.Invoke(msg);
-                        if (msg != null)
-                        {
-                            s.addMessage(msg, opts.subChanLen);
-                        }
+                        s.addMessage(msg, opts.subChanLen);
                     } // maxreached == false
 
                 } // lock s.mu

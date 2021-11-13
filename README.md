@@ -934,6 +934,29 @@ messages, one for each message the previous batch was short. You can just ignore
 See `JetStreamPullSubExpire` (TODO) and `JetStreamPullSubExpireUseCases` (TODO)
 in the JetStream samples for detailed and runnable samples.
 
+### Subscription Creation
+
+Subscription creation has many checks to make sure that a valid, operable subscription can be made.
+
+| Name | Group | Code | Description |
+| --- | --- | --- | --- |
+| JsSubPullCantHaveDeliverGroup | SUB | 90001 | Pull subscriptions can't have a deliver group. |
+| JsSubPullCantHaveDeliverSubject | SUB | 90002 | Pull subscriptions can't have a deliver subject. |
+| JsSubPushCantHaveMaxPullWaiting | SUB | 90003 | Push subscriptions cannot supply max pull waiting. |
+| JsSubQueueDeliverGroupMismatch | SUB | 90004 | Queue / deliver group mismatch. |
+| JsSubFcHbNotValidPull | SUB | 90005 | Flow Control and/or heartbeat is not valid with a pull subscription. |
+| JsSubFcHbHbNotValidQueue | SUB | 90006 | Flow Control and/or heartbeat is not valid in queue mode. |
+| JsSubNoMatchingStreamForSubject | SUB | 90007 | No matching streams for subject. |
+| JsSubConsumerAlreadyConfiguredAsPush | SUB | 90008 | Consumer is already configured as a push consumer. |
+| JsSubConsumerAlreadyConfiguredAsPull | SUB | 90009 | Consumer is already configured as a pull consumer. |
+| JsSubSubjectDoesNotMatchFilter | SUB | 90011 | Subject does not match consumer configuration filter. |
+| JsSubConsumerAlreadyBound | SUB | 90012 | Consumer is already bound to a subscription. |
+| JsSubExistingConsumerNotQueue | SUB | 90013 | Existing consumer is not configured as a queue / deliver group. |
+| JsSubExistingConsumerIsQueue | SUB | 90014 | Existing consumer  is configured as a queue / deliver group. |
+| JsSubExistingQueueDoesNotMatchRequestedQueue | SUB | 90015 | Existing consumer deliver group does not match requested queue / deliver group. |
+| JsSubExistingConsumerCannotBeModified | SUB | 90016 | Existing consumer cannot be modified. |
+| JsSubConsumerNotFoundRequiredInBind | SUB | 90017 | Consumer not found, required in bind mode. |
+
 ### Message Acknowledgements
 
 There are multiple types of acknowledgements in JetStream:

@@ -18,7 +18,6 @@ using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using Xunit;
 using static IntegrationTests.JetStreamTestBase;
-using static NATS.Client.ClientExDetail;
 using static UnitTests.TestBase;
 
 namespace IntegrationTests
@@ -373,6 +372,36 @@ namespace IntegrationTests
         }
 
         [Fact]
+        public void TestValidConsumerUpdates()
+        {
+            Context.RunInJsServer(c =>
+            {
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                CreateMemoryStream(jsm, STREAM, SUBJECT_GT);
+
+                ConsumerConfiguration cc = PrepForUpdateTest(jsm);
+                cc = ConsumerConfiguration.Builder(cc).WithDeliverSubject(Deliver(2)).Build();
+                AssertValidAddOrUpdate(jsm, cc);
+
+                cc = PrepForUpdateTest(jsm);
+                cc = ConsumerConfiguration.Builder(cc).WithAckWait(Duration.OfSeconds(5)).Build();
+                AssertValidAddOrUpdate(jsm, cc);
+
+                cc = PrepForUpdateTest(jsm);
+                cc = ConsumerConfiguration.Builder(cc).WithRateLimit(100).Build();
+                AssertValidAddOrUpdate(jsm, cc);
+
+                cc = PrepForUpdateTest(jsm);
+                cc = ConsumerConfiguration.Builder(cc).WithMaxAckPending(100).Build();
+                AssertValidAddOrUpdate(jsm, cc);
+
+                cc = PrepForUpdateTest(jsm);
+                cc = ConsumerConfiguration.Builder(cc).WithMaxDeliver(4).Build();
+                AssertValidAddOrUpdate(jsm, cc);
+            });
+        }
+
+        [Fact]
         public void TestInvalidConsumerUpdates()
         {
             Context.RunInJsServer(c =>
@@ -380,47 +409,42 @@ namespace IntegrationTests
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
                 CreateMemoryStream(jsm, STREAM, SUBJECT_GT);
 
-                ConsumerConfiguration cc = ConsumerConfiguration.Builder()
-                    .WithDurable(Durable(1))
-                    .WithAckPolicy(AckPolicy.Explicit)
-                    .WithDeliverSubject(Deliver(1))
-                    .WithMaxDeliver(3)
-                    .WithFilterSubject(SUBJECT_GT)
-                    .Build();
-
-                AssertValidAddOrUpdate(jsm, cc);
-
-                cc = ConsumerConfiguration.Builder(cc).WithDeliverSubject(Deliver(2)).Build();
-                AssertValidAddOrUpdate(jsm, cc);
-
+                ConsumerConfiguration cc = PrepForUpdateTest(jsm);
                 cc = ConsumerConfiguration.Builder(cc).WithDeliverPolicy(DeliverPolicy.New).Build();
                 AssertInvalidConsumerUpdate(jsm, cc);
 
-                cc = ConsumerConfiguration.Builder(cc).WithAckWait(Duration.OfSeconds(5)).Build();
-                AssertInvalidConsumerUpdate(jsm, cc);
-
+                cc = PrepForUpdateTest(jsm);
                 cc = ConsumerConfiguration.Builder(cc).WithFilterSubject(SUBJECT_STAR).Build();
                 AssertInvalidConsumerUpdate(jsm, cc);
 
-                cc = ConsumerConfiguration.Builder(cc).WithRateLimit(100).Build();
-                AssertInvalidConsumerUpdate(jsm, cc);
-
-                cc = ConsumerConfiguration.Builder(cc).WithMaxAckPending(100).Build();
-                AssertInvalidConsumerUpdate(jsm, cc);
-
+                cc = PrepForUpdateTest(jsm);
                 cc = ConsumerConfiguration.Builder(cc).WithIdleHeartbeat(Duration.OfMillis(111)).Build();
                 AssertInvalidConsumerUpdate(jsm, cc);
-
-                cc = ConsumerConfiguration.Builder(cc).WithMaxDeliver(4).Build();
-                AssertInvalidConsumerUpdate(jsm, cc);
             });
+        }
+        
+        private ConsumerConfiguration PrepForUpdateTest(IJetStreamManagement jsm)
+        {
+            try {
+                jsm.DeleteConsumer(STREAM, Durable(1));
+            }
+            catch (Exception) { /* ignore */ }
+
+            ConsumerConfiguration cc = ConsumerConfiguration.Builder()
+                .WithDurable(Durable(1))
+                .WithAckPolicy(AckPolicy.Explicit)
+                .WithDeliverSubject(Deliver(1))
+                .WithMaxDeliver(3)
+                .WithFilterSubject(SUBJECT_GT)
+                .Build();
+            AssertValidAddOrUpdate(jsm, cc);
+            return cc;
         }
 
         private void AssertInvalidConsumerUpdate(IJetStreamManagement jsm, ConsumerConfiguration cc) {
             NATSJetStreamException e = Assert.Throws<NATSJetStreamException>(() => jsm.AddOrUpdateConsumer(STREAM, cc));
-            // 10013 consumer name already in use
-            // 10105 consumer already exists and is still active
-            Assert.True(e.ApiErrorCode == 10013 || e.ApiErrorCode == 10105);
+            Assert.Equal(10012, e.ApiErrorCode);
+            Assert.Equal(500, e.ErrorCode);
         }
 
         private void AssertValidAddOrUpdate(IJetStreamManagement jsm, ConsumerConfiguration cc) {
@@ -478,29 +502,6 @@ namespace IntegrationTests
                     .WithFilterSubject(SubjectDot("F"))
                     .Build()
                 );
-
-                ConsumerConfiguration ccBadFilter = ConsumerConfiguration.Builder()
-                    .WithDurable(Durable(42)).WithFilterSubject("x").Build();
-
-                PullSubscribeOptions pullOptsBadFilter = PullSubscribeOptions.Builder()
-                    .WithConfiguration(ccBadFilter).Build();
-
-                NATSJetStreamClientException e = Assert.Throws<NATSJetStreamClientException>(() => js.PullSubscribe(SubjectDot("F"), pullOptsBadFilter));
-                Assert.Contains(JsSubSubjectDoesNotMatchFilter.Id, e.Message);
-
-                // try to filter against durable with mismatch, push
-                jsm.AddOrUpdateConsumer(STREAM, ConsumerConfiguration.Builder()
-                    .WithDurable(Durable(43))
-                    .WithDeliverSubject(Deliver(43))
-                    .WithFilterSubject(SubjectDot("F"))
-                    .Build()
-                );
-
-                ccBadFilter = ConsumerConfiguration.Builder().WithDurable(Durable(43)).WithFilterSubject("x").Build();
-
-                PushSubscribeOptions pushOptsBadFilter = PushSubscribeOptions.Builder().WithConfiguration(ccBadFilter).Build();
-                e = Assert.Throws<NATSJetStreamClientException>(() => js.PushSubscribeSync(SubjectDot("F"), pushOptsBadFilter));
-                Assert.Contains(JsSubSubjectDoesNotMatchFilter.Id, e.Message);
             });
         }
         

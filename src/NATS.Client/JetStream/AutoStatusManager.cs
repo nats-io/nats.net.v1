@@ -114,7 +114,7 @@ namespace NATS.Client.JetStream
         {
             _sub = sub;
             if (Hb) {
-                conn.BeforeQueueProcessor = BeforeQueueProcessor;
+                _sub.BeforeChannelAddCheck = BeforeChannelAddCheck;
                 asmTimer = new AsmTimer(this);
             }
         }
@@ -192,7 +192,7 @@ namespace NATS.Client.JetStream
             return false;
         }
 
-        private Msg BeforeQueueProcessor(Msg msg)
+        private Msg BeforeChannelAddCheck(Msg msg)
         {
             LastMsgReceived = DateTimeOffset.Now.ToUnixTimeMilliseconds();
             if (msg.HasStatus 

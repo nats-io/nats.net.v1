@@ -54,12 +54,7 @@ namespace IntegrationTests
                 void TestHandler(object sender, MsgHandlerEventArgs args)
                 {
                     received++;
-
-                    if (args.Message.IsJetStream)
-                    {
-                        args.Message.Ack();
-                    }
-
+                    args.Message.Ack();
                     latch.Signal();
                 }
 
