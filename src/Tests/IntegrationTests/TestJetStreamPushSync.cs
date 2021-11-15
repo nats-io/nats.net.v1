@@ -218,7 +218,7 @@ namespace IntegrationTests
                 Assert.Empty(m.Data);
                 Assert.True(m.HasHeaders);
                 Assert.Equal("bar", m.Header["foo"]);
-                Assert.Equal("6", m.Header[JetStreamConstants.MsgSizeHdr]);
+                Assert.Equal("6", m.Header[JetStreamConstants.MsgSizeHeader]);
 
                 sub.Unsubscribe();
 
@@ -229,7 +229,7 @@ namespace IntegrationTests
                 Assert.Equal(6, m.Data.Length);
                 Assert.True(m.HasHeaders);
                 Assert.Equal("bar", m.Header["foo"]);
-                Assert.Null(m.Header[JetStreamConstants.MsgSizeHdr]);
+                Assert.Null(m.Header[JetStreamConstants.MsgSizeHeader]);
             });
         }
 
