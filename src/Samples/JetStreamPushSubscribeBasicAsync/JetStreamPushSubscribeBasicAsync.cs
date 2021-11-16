@@ -12,6 +12,8 @@
 // limitations under the License.
 
 using System;
+using System.Text;
+using System.Threading;
 using NATS.Client;
 using NATS.Client.JetStream;
 
@@ -38,11 +40,10 @@ namespace NATSExamples
         public static void Main(string[] args)
         {
             ArgumentHelper helper = new ArgumentHelperBuilder("Push Subscribe Basic Async", args, Usage)
-                .DefaultStream("blah-stream")
-                .DefaultSubject("blah-subject")
+                .DefaultStream("example-stream")
+                .DefaultSubject("example-subject")
                 .Build();
 
-            // TODO See Java Project NatsJsPushSubBasicAsync for example
             try
             {
                 using (IConnection c = new ConnectionFactory().CreateConnection(helper.MakeOptions()))
@@ -50,13 +51,23 @@ namespace NATSExamples
                     JsUtils.CreateStreamWhenDoesNotExist(c, helper.Stream, helper.Subject);
 
                     IJetStream js = c.CreateJetStreamContext();
+
+                    new Thread(() =>
+                    {
+                        js.PushSubscribeAsync(helper.Subject, (sender, a) =>
+                        {
+                            a.Message.Ack();
+                            Console.WriteLine(Encoding.UTF8.GetString(a.Message.Data));
+                        }, false);
+                    }).Start();
+                    
+                    Thread.Sleep(3000);
                 }
             }
             catch (Exception ex)
             {
                 helper.ReportException(ex);
             }
-            
         }
     }
 }

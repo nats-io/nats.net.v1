@@ -65,7 +65,18 @@ namespace NATS.Client
             this.Header = header;
             this.Data = data;
         }
-
+        
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Msg"/> class with a subject, header, and data.
+        /// </summary>
+        /// <param name="subject">Subject of the message.</param>
+        /// <param name="header">Message headers or <c>null</c>.</param>
+        /// <param name="data">A byte array containing the message payload.</param>
+        public Msg(string subject, MsgHeader header, byte[] data)
+            : this(subject, null, header, data)
+        {
+        }
+        
         /// <summary>
         /// Initializes a new instance of the <see cref="Msg"/> class with a subject, reply, and data.
         /// </summary>
@@ -83,7 +94,7 @@ namespace NATS.Client
         /// <param name="subject">Subject of the message.</param>
         /// <param name="data">A byte array containing the message payload.</param>
         public Msg(string subject, byte[] data)
-            : this(subject, null, data)
+            : this(subject, null, null, data)
         {
         }
 
@@ -92,7 +103,7 @@ namespace NATS.Client
         /// </summary>
         /// <param name="subject">Subject of the message.</param>
         public Msg(string subject)
-            : this(subject, null, null)
+            : this(subject, null, null, null)
         {
         }
 

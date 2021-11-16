@@ -45,7 +45,7 @@ All examples provide statistics for benchmarking.
 ### Visual Studio
 The recommendation is to load `src\NATS.sln` into Visual Studio 2019 (Visual Studio 2017 works as well). .NET Core SDK style projects are used to multitarget different frameworks, so when working with the source code (debugging, running tets etc) you might need to mind the "context" of the current framework.
 
- XML documentation is generated (in `Release`), so code completion, context help, etc, will be available in the editor.
+XML documentation is generated (in `Release`), so code completion, context help, etc, will be available in the editor.
 
 ### Command line
 Since .NET Core SDK style projects are used, you can use the .NET SDK to build, run tests, pack etc.
@@ -302,7 +302,7 @@ scheme.  XML was chosen as the example here as it is natively supported by .NET 
 ```
 
 One can also use `Data Contract` to serialize objects.  Below are simple example
- overrides that work with .NET core:
+overrides that work with .NET core:
 
 ```c#
 [DataContract]
@@ -467,7 +467,7 @@ Setup a subscriber to auto-unsubscribe after ten messsages.
         s.AutoUnsubscribe(10);
 ```
 
-Note that an anonymous function was used.  This is for brevity here - in practice, delegate functions can be used as well.  
+Note that an anonymous function was used.  This is for brevity here - in practice, delegate functions can be used as well.
 
 Other events can be assigned delegate methods through the options object.
 ```c#
@@ -784,8 +784,6 @@ See `JetStreamPublishWithOptionsUseCases` in the JetStream samples for a detaile
 
 **Asynchronous:**
 
-TODO This is not available yet.
-
 ```c#
 
       IList<Task<PublishAck>> tasks = new new List<Task<PublishAck>>();
@@ -836,7 +834,7 @@ Push subscriptions can be synchronous or asynchronous. The server *pushes* messa
             js.PushSubscribeAsync("subject", MyHandler, false, pso);
 ```
 
-See the `JetStreamPushSubcribeAsync` (TODO) in the JetStream samples for a detailed and runnable sample.
+See the `JetStreamPushSubcribeBasicAsync` in the JetStream samples for a detailed and runnable sample.
 
 ### Push Sync Subscribing
 
@@ -881,7 +879,7 @@ The client can provide a timeout to wait for the first message in a batch.
 The fetch call returns when the batch is ready.
 The timeout may be exceeded if the server sent messages very near the end of the timeout period.
 
-See `JetStreamPullSubscribeFetch` (TODO) and `JetStreamPullSubscribeFetchUseCases` (TODO)
+See `JetStreamPullSubFetch` and `JetStreamPullSubFetchUseCases`
 in the JetStream samples for a detailed and runnable sample.
 
 **Batch Size:**
@@ -897,7 +895,7 @@ messages it has up to the batch size. If it has no messages it will wait until i
 The client may time out before that time. If there are less than the batch size available,
 you can ask for more later. Once the entire batch size has been filled, you must make another pull request.
 
-See `JetStreamPullSubBatchSize` (TODO) and `JetStreamPullSubBatchSizeUseCases` (TODO)
+See `JetStreamPullSubBatchSize` and `JetStreamPullSubBatchSizeUseCases`
 in the JetStream samples for detailed and runnable samples.
 
 **No Wait and Batch Size:**
@@ -914,7 +912,7 @@ will return immediately. If there are less than the batch size available, you wi
 available and a 404 status message indicating the server did not have enough messages.
 You must make a pull request every time. **This is an advanced api**
 
-See the `JetStreamPullSubNoWaitUseCases` (TODO) in the JetStream samples for a detailed and runnable sample.
+See the `JetStreamPullSubNoWaitUseCases` in the JetStream samples for a detailed and runnable sample.
 
 **Expires In and Batch Size:**
 
@@ -931,7 +929,7 @@ You must make a pull request every time. In subsequent pulls, you will receive m
 messages, one for each message the previous batch was short. You can just ignore these.
 **This is an advanced api**
 
-See `JetStreamPullSubExpire` (TODO) and `JetStreamPullSubExpireUseCases` (TODO)
+See `JetStreamPullSubExpiresIn` and `JetStreamPullSubExpiresInUseCases`
 in the JetStream samples for detailed and runnable samples.
 
 ### Subscription Creation
@@ -1034,14 +1032,18 @@ To that end, with any contributions, certainly feel free to code in a more .NET 
 
 ## TODO
 
+* [ ] Key Value
+* [ ] Ordered Consumer
+* [ ] Object Store
+* [x] JetStream
 * [ ] Another performance pass - look at stream directly over socket, contention, fastpath optimizations, rw locks.
 * [ ] Rx API (unified over NATS Streaming?)
-* [ ] Expand Unit Tests to test internals (namely Parsing)
-* [X] Travis CI (Used AppVeyor instead)
 * [ ] Allow configuration for performance tuning (buffer sizes), defaults based on plaform.
-* [X] [.NET Core](https://github.com/dotnet/core) compatibility, TLS required.
 * [ ] Azure Service Bus Connector
 * [ ] Visual Studio [Starter Kit](https://msdn.microsoft.com/en-us/library/ccd9ychb.aspx)
+* [x] Expand Unit Tests to test internals (namely Parsing)
+* [X] Travis CI (Used AppVeyor instead)
+* [X] [.NET Core](https://github.com/dotnet/core) compatibility, TLS required.
 * [X] Convert unit tests to xunit
 * [X] Comprehensive benchmarking
 * [X] TLS
@@ -1049,7 +1051,5 @@ To that end, with any contributions, certainly feel free to code in a more .NET 
 * [X] Update delegates from traditional model to custom
 * [X] NuGet package
 * [X] Strong name the assembly
-* [ ] JetStream
 
 Any suggestions and/or contributions are welcome!
-

@@ -203,18 +203,33 @@ namespace IntegrationTests
                 // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
                 
+                MsgHeader h = new MsgHeader();
+                h["foo"] = "bar";
+                js.Publish(new Msg(SUBJECT, h, DataBytes(1)));
+
                 // Build our subscription options.
-                PushSubscribeOptions options = ConsumerConfiguration.Builder().WithHeadersOnly(true).BuildPushSubscribeOptions();
+                PushSubscribeOptions options = ConsumerConfiguration.Builder()
+                    .WithHeadersOnly(true).BuildPushSubscribeOptions();
 
                 IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(SUBJECT, options);
                 c.Flush(DefaultTimeout); // flush outgoing communication with/to the server
 
-                JsPublish(js, SUBJECT, 5);
+                Msg m = sub.NextMessage(1000);
+                Assert.Empty(m.Data);
+                Assert.True(m.HasHeaders);
+                Assert.Equal("bar", m.Header["foo"]);
+                Assert.Equal("6", m.Header[JetStreamConstants.MsgSizeHeader]);
 
-                IList<Msg> messages = ReadMessagesAck(sub);
-                Assert.Equal(5, messages.Count);
-                Assert.Empty(messages[0].Data);
-                Assert.Equal("6", messages[0].Header[JetStreamConstants.MsgSizeHdr]);
+                sub.Unsubscribe();
+
+                // without headers only
+                sub = js.PushSubscribeSync(SUBJECT);
+                c.Flush(DefaultTimeout); // flush outgoing communication with/to the server
+                m = sub.NextMessage(1000);
+                Assert.Equal(6, m.Data.Length);
+                Assert.True(m.HasHeaders);
+                Assert.Equal("bar", m.Header["foo"]);
+                Assert.Null(m.Header[JetStreamConstants.MsgSizeHeader]);
             });
         }
 
