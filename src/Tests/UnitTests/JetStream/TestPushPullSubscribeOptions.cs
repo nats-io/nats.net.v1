@@ -237,11 +237,94 @@ namespace UnitTests.JetStream
                 .Build()
                 .DeliverSubject);
 
-            Assert.Throws<NATSJetStreamClientException>(() => PushSubscribeOptions.Builder()
+            NATSJetStreamClientException e = Assert.Throws<NATSJetStreamClientException>(() => PushSubscribeOptions.Builder()
                 .WithDeliverSubject("x")
                 .WithConfiguration(ConsumerConfiguration.Builder().WithDeliverSubject("y").Build())
                 .Build());
             
+            Assert.Contains(ClientExDetail.JsSoDeliverSubjectMismatch.Id, e.Message);
+        }
+        
+        [Fact]
+        public void TestCreationErrors() {
+            ConsumerConfiguration cc1 = ConsumerConfiguration.Builder().WithDurable(Durable((1))).Build();
+            NATSJetStreamClientException e = Assert.Throws<NATSJetStreamClientException>(
+                () => PushSubscribeOptions.Builder().WithConfiguration(cc1).WithDurable(Durable(2)).Build());
+            Assert.Contains(ClientExDetail.JsSoDurableMismatch.Id, e.Message);
+
+            ConsumerConfiguration cc2 = ConsumerConfiguration.Builder().WithDeliverGroup(Deliver((1))).Build();
+            e = Assert.Throws<NATSJetStreamClientException>(
+                () => PushSubscribeOptions.Builder().WithConfiguration(cc2).WithDeliverGroup(Deliver(2)).Build());
+            Assert.Contains(ClientExDetail.JsSoDeliverGroupMismatch.Id, e.Message);
+        }
+
+        [Fact]
+        public void TestBindCreationErrors() {
+            Assert.Throws<ArgumentException>(() => PushSubscribeOptions.BindTo(null, DURABLE));
+            Assert.Throws<ArgumentException>(() => PushSubscribeOptions.BindTo(String.Empty, DURABLE));
+            Assert.Throws<ArgumentException>(() => PushSubscribeOptions.BindTo(STREAM, null));
+            Assert.Throws<ArgumentException>(() => PushSubscribeOptions.BindTo(STREAM, String.Empty));
+            Assert.Throws<ArgumentException>(() => PushSubscribeOptions.Builder().WithStream(STREAM).WithBind(true).Build());
+            Assert.Throws<ArgumentException>(() => PushSubscribeOptions.Builder().WithStream(String.Empty).WithDurable(DURABLE).WithBind(true).Build());
+            Assert.Throws<ArgumentException>(() => PushSubscribeOptions.Builder().WithDurable(DURABLE).WithBind(true).Build());
+            Assert.Throws<ArgumentException>(() => PushSubscribeOptions.Builder().WithStream(STREAM).WithDurable(String.Empty).WithBind(true).Build());
+
+            Assert.Throws<ArgumentException>(() => PullSubscribeOptions.BindTo(null, DURABLE));
+            Assert.Throws<ArgumentException>(() => PullSubscribeOptions.BindTo(String.Empty, DURABLE));
+            Assert.Throws<ArgumentException>(() => PullSubscribeOptions.BindTo(STREAM, null));
+            Assert.Throws<ArgumentException>(() => PullSubscribeOptions.BindTo(STREAM, String.Empty));
+            Assert.Throws<ArgumentException>(() => PullSubscribeOptions.Builder().WithStream(STREAM).WithBind(true).Build());
+            Assert.Throws<ArgumentException>(() => PullSubscribeOptions.Builder().WithStream(String.Empty).WithDurable(DURABLE).WithBind(true).Build());
+            Assert.Throws<ArgumentException>(() => PullSubscribeOptions.Builder().WithDurable(DURABLE).WithBind(true).Build());
+            Assert.Throws<ArgumentException>(() => PullSubscribeOptions.Builder().WithStream(STREAM).WithDurable(String.Empty).WithBind(true).Build());
+        }
+        
+        [Fact]
+        public void TestOrderedCreation() {
+            ConsumerConfiguration ccEmpty = ConsumerConfiguration.Builder().Build();
+            PushSubscribeOptions.Builder().WithConfiguration(ccEmpty).WithOrdered(true).Build();
+
+            NATSJetStreamClientException e = Assert.Throws<NATSJetStreamClientException>(
+                () => PushSubscribeOptions.Builder().WithStream(STREAM).WithBind(true).WithOrdered(true).Build());
+            Assert.Contains(ClientExDetail.JsSoOrderedNotAllowedWithBind.Id, e.Message);
+
+            e = Assert.Throws<NATSJetStreamClientException>(
+                () => PushSubscribeOptions.Builder().WithDeliverGroup(DELIVER).WithOrdered(true).Build());
+            Assert.Contains(ClientExDetail.JsSoOrderedNotAllowedWithDeliverGroup.Id, e.Message);
+
+            e = Assert.Throws<NATSJetStreamClientException>(
+                () => PushSubscribeOptions.Builder().WithDurable(DURABLE).WithOrdered(true).Build());
+            Assert.Contains(ClientExDetail.JsSoOrderedNotAllowedWithDurable.Id, e.Message);
+
+            e = Assert.Throws<NATSJetStreamClientException>(
+                () => PushSubscribeOptions.Builder().WithDeliverSubject(DELIVER).WithOrdered(true).Build());
+            Assert.Contains(ClientExDetail.JsSoOrderedNotAllowedWithDeliverSubject.Id, e.Message);
+
+            ConsumerConfiguration ccAckNotNone1 = ConsumerConfiguration.Builder().WithAckPolicy(AckPolicy.All).Build();
+            e = Assert.Throws<NATSJetStreamClientException>(
+                () => PushSubscribeOptions.Builder().WithConfiguration(ccAckNotNone1).WithOrdered(true).Build());
+            Assert.Contains(ClientExDetail.JsSoOrderedRequiresAckPolicyNone.Id, e.Message);
+
+            ConsumerConfiguration ccAckNotNone2 = ConsumerConfiguration.Builder().WithAckPolicy(AckPolicy.Explicit).Build();
+            e = Assert.Throws<NATSJetStreamClientException>(
+                () => PushSubscribeOptions.Builder().WithConfiguration(ccAckNotNone2).WithOrdered(true).Build());
+            Assert.Contains(ClientExDetail.JsSoOrderedRequiresAckPolicyNone.Id, e.Message);
+
+            ConsumerConfiguration ccAckNoneOk = ConsumerConfiguration.Builder().WithAckPolicy(AckPolicy.None).Build();
+            PushSubscribeOptions.Builder().WithConfiguration(ccAckNoneOk).WithOrdered(true).Build();
+
+            ConsumerConfiguration ccMax = ConsumerConfiguration.Builder().WithMaxDeliver(2).Build();
+            e = Assert.Throws<NATSJetStreamClientException>(
+                () => PushSubscribeOptions.Builder().WithConfiguration(ccMax).WithOrdered(true).Build());
+            Assert.Contains(ClientExDetail.JsSoOrderedRequiresMaxDeliver.Id, e.Message);
+
+            ConsumerConfiguration ccHb = ConsumerConfiguration.Builder().WithIdleHeartbeat(100).Build();
+            PushSubscribeOptions pso = PushSubscribeOptions.Builder().WithConfiguration(ccHb).WithOrdered(true).Build();
+            Assert.Equal(SubscribeOptions.DefaultOrderedHeartbeat, pso.ConsumerConfiguration.IdleHeartbeat.Millis);
+
+            ccHb = ConsumerConfiguration.Builder().WithIdleHeartbeat(SubscribeOptions.DefaultOrderedHeartbeat + 1).Build();
+            pso = PushSubscribeOptions.Builder().WithConfiguration(ccHb).WithOrdered(true).Build();
+            Assert.Equal(SubscribeOptions.DefaultOrderedHeartbeat + 1, pso.ConsumerConfiguration.IdleHeartbeat.Millis);
         }
     }
 }

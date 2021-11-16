@@ -83,9 +83,127 @@ namespace UnitTests.JetStream
             Assert.Equal(Duration.OfSeconds(9), c.AckWait);
             Assert.Equal(Duration.OfSeconds(6), c.IdleHeartbeat);
 
-            AssertDefaultCc(ConsumerConfiguration.Builder().Build());
+            ConsumerConfiguration original = ConsumerConfiguration.Builder().Build();
+            ValidateDefault(original);
+
+            ConsumerConfiguration ccTest = ConsumerConfiguration.Builder(null).Build();
+            ValidateDefault(ccTest);
+
+            ccTest = new ConsumerConfiguration.ConsumerConfigurationBuilder(null).Build();
+            ValidateDefault(ccTest);
+
+            ccTest = ConsumerConfiguration.Builder(original).Build();
+            ValidateDefault(ccTest);        }
+        
+        private void ValidateDefault(ConsumerConfiguration cc) {
+            AssertDefaultCc(cc);
+            Assert.False(cc.DeliverPolicyWasSet);
+            Assert.False(cc.AckPolicyWasSet);
+            Assert.False(cc.ReplayPolicyWasSet);
+            Assert.False(cc.StartSeqWasSet);
+            Assert.False(cc.MaxDeliverWasSet);
+            Assert.False(cc.RateLimitWasSet);
+            Assert.False(cc.MaxAckPendingWasSet);
+            Assert.False(cc.MaxPullWaitingWasSet);
+            Assert.False(cc.FlowControlWasSet);
+            Assert.False(cc.HeadersOnlyWasSet);
         }
 
+        [Fact]
+        public void TestChanges()
+        {
+            ConsumerConfiguration original = ConsumerConfiguration.Builder().Build();
+            Assert.False(original.WouldBeChangeTo(original));
+
+            Assert.False(ConsumerConfiguration.Builder(original).WithDeliverPolicy(DeliverPolicy.All).Build()
+                .WouldBeChangeTo(original));
+            Assert.True(ConsumerConfiguration.Builder(original).WithDeliverPolicy(DeliverPolicy.New).Build()
+                .WouldBeChangeTo(original));
+
+            Assert.False(ConsumerConfiguration.Builder(original).WithAckPolicy(AckPolicy.Explicit).Build()
+                .WouldBeChangeTo(original));
+            Assert.True(ConsumerConfiguration.Builder(original).WithAckPolicy(AckPolicy.None).Build()
+                .WouldBeChangeTo(original));
+
+            Assert.False(ConsumerConfiguration.Builder(original).WithReplayPolicy(ReplayPolicy.Instant).Build()
+                .WouldBeChangeTo(original));
+            Assert.True(ConsumerConfiguration.Builder(original).WithReplayPolicy(ReplayPolicy.Original).Build()
+                .WouldBeChangeTo(original));
+
+            ConsumerConfiguration ccTest = ConsumerConfiguration.Builder(original).WithFlowControl(1000).Build();
+            Assert.False(ccTest.WouldBeChangeTo(ccTest));
+            Assert.True(ccTest.WouldBeChangeTo(original));
+
+            ccTest = ConsumerConfiguration.Builder(original).WithIdleHeartbeat(1000).Build();
+            Assert.False(ccTest.WouldBeChangeTo(ccTest));
+            Assert.True(ccTest.WouldBeChangeTo(original));
+
+            ccTest = ConsumerConfiguration.Builder(original).WithStartTime(DateTime.Now).Build();
+            Assert.False(ccTest.WouldBeChangeTo(ccTest));
+            Assert.True(ccTest.WouldBeChangeTo(original));
+
+            Assert.False(ConsumerConfiguration.Builder(original).WithHeadersOnly(false).Build()
+                .WouldBeChangeTo(original));
+            Assert.True(ConsumerConfiguration.Builder(original).WithHeadersOnly(true).Build()
+                .WouldBeChangeTo(original));
+
+            Assert.False(ConsumerConfiguration.Builder(original).WithStartSequence(CcNumeric.StartSeq.InitialUlong()).Build()
+                .WouldBeChangeTo(original));
+            Assert.True(ConsumerConfiguration.Builder(original).WithStartSequence(99).Build()
+                .WouldBeChangeTo(original));
+
+            Assert.False(ConsumerConfiguration.Builder(original).WithMaxDeliver(CcNumeric.MaxDeliver.Initial()).Build()
+                .WouldBeChangeTo(original));
+            Assert.True(ConsumerConfiguration.Builder(original).WithMaxDeliver(99).Build()
+                .WouldBeChangeTo(original));
+
+            Assert.False(ConsumerConfiguration.Builder(original).WithRateLimit(CcNumeric.RateLimit.Initial()).Build()
+                .WouldBeChangeTo(original));
+            Assert.True(ConsumerConfiguration.Builder(original).WithRateLimit(99).Build()
+                .WouldBeChangeTo(original));
+
+            Assert.False(ConsumerConfiguration.Builder(original).WithMaxAckPending(CcNumeric.MaxAckPending.Initial()).Build()
+                .WouldBeChangeTo(original));
+            Assert.True(ConsumerConfiguration.Builder(original).WithMaxAckPending(99).Build()
+                .WouldBeChangeTo(original));
+
+            Assert.False(ConsumerConfiguration.Builder(original).WithMaxPullWaiting(CcNumeric.MaxPullWaiting.Initial()).Build()
+                .WouldBeChangeTo(original));
+            Assert.True(ConsumerConfiguration.Builder(original).WithMaxPullWaiting(99).Build()
+                .WouldBeChangeTo(original));
+
+
+            Assert.False(ConsumerConfiguration.Builder(original).WithFilterSubject(string.Empty).Build()
+                .WouldBeChangeTo(original));
+            ccTest = ConsumerConfiguration.Builder(original).WithFilterSubject(Plain).Build();
+            Assert.False(ccTest.WouldBeChangeTo(ccTest));
+            Assert.True(ccTest.WouldBeChangeTo(original));
+
+            Assert.False(ConsumerConfiguration.Builder(original).WithDescription(string.Empty).Build()
+                .WouldBeChangeTo(original));
+            ccTest = ConsumerConfiguration.Builder(original).WithDescription(Plain).Build();
+            Assert.False(ccTest.WouldBeChangeTo(ccTest));
+            Assert.True(ccTest.WouldBeChangeTo(original));
+
+            Assert.False(ConsumerConfiguration.Builder(original).WithSampleFrequency(string.Empty).Build()
+                .WouldBeChangeTo(original));
+            ccTest = ConsumerConfiguration.Builder(original).WithSampleFrequency(Plain).Build();
+            Assert.False(ccTest.WouldBeChangeTo(ccTest));
+            Assert.True(ccTest.WouldBeChangeTo(original));
+
+            Assert.False(ConsumerConfiguration.Builder(original).WithDeliverSubject(string.Empty).Build()
+                .WouldBeChangeTo(original));
+            ccTest = ConsumerConfiguration.Builder(original).WithDeliverSubject(Plain).Build();
+            Assert.False(ccTest.WouldBeChangeTo(ccTest));
+            Assert.True(ccTest.WouldBeChangeTo(original));
+
+            Assert.False(ConsumerConfiguration.Builder(original).WithDeliverGroup(string.Empty).Build()
+                .WouldBeChangeTo(original));
+            ccTest = ConsumerConfiguration.Builder(original).WithDeliverGroup(Plain).Build();
+            Assert.False(ccTest.WouldBeChangeTo(ccTest));
+            Assert.True(ccTest.WouldBeChangeTo(original));        
+        }
+        
         private static void AssertAsBuilt(ConsumerConfiguration c, DateTime dt)
         {
             Assert.Equal(AckPolicy.Explicit, c.AckPolicy);
@@ -105,7 +223,16 @@ namespace UnitTests.JetStream
             Assert.Equal(73, c.MaxPullWaiting);
             Assert.True(c.FlowControl);
             Assert.True(c.HeadersOnly);
-        }
+            Assert.True(c.DeliverPolicyWasSet);
+            Assert.True(c.AckPolicyWasSet);
+            Assert.True(c.ReplayPolicyWasSet);
+            Assert.True(c.StartSeqWasSet);
+            Assert.True(c.MaxDeliverWasSet);
+            Assert.True(c.RateLimitWasSet);
+            Assert.True(c.MaxAckPendingWasSet);
+            Assert.True(c.MaxPullWaitingWasSet);
+            Assert.True(c.FlowControlWasSet);
+            Assert.True(c.HeadersOnlyWasSet);        }
 
         [Fact]
         public void ParsingWorks()

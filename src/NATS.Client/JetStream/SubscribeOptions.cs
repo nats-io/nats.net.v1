@@ -22,9 +22,12 @@ namespace NATS.Client.JetStream
     /// </summary>
     public abstract class SubscribeOptions
     {
+        public const long DefaultOrderedHeartbeat = 5000;
+
         public string Stream { get; }
         public bool Pull { get; }
         public bool Bind { get; }
+        public bool Ordered { get; }
         public ConsumerConfiguration ConsumerConfiguration { get; }
         internal int MessageAlarmTime { get; }
 
@@ -43,8 +46,18 @@ namespace NATS.Client.JetStream
         /// </summary>
         public string DeliverGroup => ConsumerConfiguration.DeliverGroup;
 
-        protected SubscribeOptions(ISubscribeOptionsBuilder builder, bool pull, string deliverSubject, string deliverGroup)
+        protected SubscribeOptions(ISubscribeOptionsBuilder builder, bool pull, bool ordered, string deliverSubject, string deliverGroup)
         {
+            Pull = pull;
+            Bind = builder.Bind;
+            Ordered = ordered;
+            MessageAlarmTime = builder.MessageAlarmTime;
+
+            if (Ordered && Bind)
+            {
+                throw JsSoOrderedNotAllowedWithBind.Instance();
+            }
+            
             Stream = Validator.ValidateStreamName(builder.Stream, builder.Bind);
             
             string durable = Validator.ValidateMustMatchIfBothSupplied(builder.Durable, builder.Cc?.Durable, JsSoDurableMismatch);
@@ -52,17 +65,40 @@ namespace NATS.Client.JetStream
 
             deliverGroup = Validator.ValidateMustMatchIfBothSupplied(deliverGroup, builder.Cc?.DeliverGroup, JsSoDeliverGroupMismatch);
 
-            deliverSubject = Validator.ValidateMustMatchIfBothSupplied(deliverSubject, builder.Cc?.DeliverSubject, JsSoDeliverSubjectGroupMismatch);
+            deliverSubject = Validator.ValidateMustMatchIfBothSupplied(deliverSubject, builder.Cc?.DeliverSubject, JsSoDeliverSubjectMismatch);
 
-            ConsumerConfiguration = ConsumerConfiguration.Builder(builder.Cc)
-                .WithDurable(durable)
-                .WithDeliverSubject(deliverSubject)
-                .WithDeliverGroup(deliverGroup)
-                .Build();
+            if (Ordered) {
+                Validator.ValidateNotSupplied(deliverGroup, JsSoOrderedNotAllowedWithDeliverGroup);
+                Validator.ValidateNotSupplied(durable, JsSoOrderedNotAllowedWithDurable);
+                Validator.ValidateNotSupplied(deliverSubject, JsSoOrderedNotAllowedWithDeliverSubject);
+                long hb = DefaultOrderedHeartbeat;
+                if (builder.Cc != null) {
+                    if (builder.Cc.AckPolicyWasSet && builder.Cc.AckPolicy != AckPolicy.None) {
+                        throw JsSoOrderedRequiresAckPolicyNone.Instance();
+                    }
+                    if (builder.Cc.MaxDeliver > 1) {
+                        throw JsSoOrderedRequiresMaxDeliver.Instance();
+                    }
 
-            Pull = pull;
-            Bind = builder.Bind;
-            MessageAlarmTime = builder.MessageAlarmTime;
+                    long ccHb = builder.Cc.IdleHeartbeat == null ? long.MinValue : builder.Cc.IdleHeartbeat.Millis;
+                    if (ccHb > hb) {
+                        hb = ccHb;
+                    }
+                }
+                ConsumerConfiguration = ConsumerConfiguration.Builder(builder.Cc)
+                    .WithAckPolicy(AckPolicy.None)
+                    .WithMaxDeliver(1)
+                    .WithFlowControl(hb)
+                    .WithAckWait(Duration.OfHours(22))
+                    .Build();
+            }
+            else {
+                ConsumerConfiguration = ConsumerConfiguration.Builder(builder.Cc)
+                    .WithDurable(durable)
+                    .WithDeliverSubject(deliverSubject)
+                    .WithDeliverGroup(deliverGroup)
+                    .Build();
+            }
         }
         
         public interface ISubscribeOptionsBuilder

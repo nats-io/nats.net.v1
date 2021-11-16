@@ -17,14 +17,14 @@ namespace NATS.Client.JetStream
 {
     public class JetStreamAbstractSyncSubscription : SyncSubscription
     {
-        internal IAutoStatusManager _asm;
+        internal IStatusManager _asm;
         public JetStream Context { get; }
         public string Stream { get; }
         public string Consumer { get; }
         public string DeliverSubject { get; }
 
         internal JetStreamAbstractSyncSubscription(Connection conn, string subject, string queue,
-            IAutoStatusManager asm, JetStream js, string stream, string consumer, string deliver)
+            IStatusManager asm, JetStream js, string stream, string consumer, string deliver)
             : base(conn, subject, queue)
         {
             _asm = asm;

@@ -18,14 +18,18 @@ using NATS.Client.Internals;
 
 namespace NATS.Client.JetStream
 {
-    internal interface IAutoStatusManager
+    internal interface IMessageManager
+    {
+        bool Manage(Msg msg);
+    }
+    
+    internal interface IStatusManager : IMessageManager
     {
         void SetSub(Subscription sub);
         void Shutdown();
-        bool Manage(Msg msg);
     }
 
-    internal class PullAutoStatusManager : IAutoStatusManager
+    internal class PullStatusManager : IStatusManager
     {
         private static readonly IList<int> PullKnownStatusCodes = new List<int>(new []{404, 408});
         private Subscription _sub;
@@ -49,7 +53,7 @@ namespace NATS.Client.JetStream
         }
     }
 
-    internal class PushAutoStatusManager : IAutoStatusManager
+    internal class PushStatusManager : IStatusManager
     {
         private const int Threshold = 3;
 
@@ -71,7 +75,7 @@ namespace NATS.Client.JetStream
 
         private AsmTimer asmTimer;
         
-        internal PushAutoStatusManager(Connection conn, SubscribeOptions so,
+        internal PushStatusManager(Connection conn, SubscribeOptions so,
             ConsumerConfiguration cc, bool queueMode, bool syncMode)
         {
             this.conn = conn;
@@ -130,7 +134,7 @@ namespace NATS.Client.JetStream
             private readonly object mu = new object();
             private Timer timer;
 
-            public AsmTimer(PushAutoStatusManager asm)
+            public AsmTimer(PushStatusManager asm)
             {
                 timer = new Timer(s => {
                         long sinceLast = DateTimeOffset.Now.ToUnixTimeMilliseconds() - asm.LastMsgReceived;

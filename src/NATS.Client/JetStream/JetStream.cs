@@ -281,9 +281,9 @@ namespace NATS.Client.JetStream
             }
 
             // 6. create the subscription
-            IAutoStatusManager asm = isPullMode
-                ? (IAutoStatusManager)new PullAutoStatusManager()
-                : new PushAutoStatusManager((Connection) Conn, so, serverCC, qgroup != null, userHandler == null);
+            IStatusManager asm = isPullMode
+                ? (IStatusManager)new PullStatusManager()
+                : new PushStatusManager((Connection) Conn, so, serverCC, qgroup != null, userHandler == null);
             
             Subscription sub;
             if (isPullMode)

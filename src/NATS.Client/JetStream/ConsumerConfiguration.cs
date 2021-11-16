@@ -55,6 +55,17 @@ namespace NATS.Client.JetStream
         public bool FlowControl => _flowControl ?? false;
         public bool HeadersOnly => _headersOnly ?? false;
 
+        internal bool DeliverPolicyWasSet => _deliverPolicy != null;
+        internal bool AckPolicyWasSet => _ackPolicy != null;
+        internal bool ReplayPolicyWasSet => _replayPolicy != null;
+        internal bool StartSeqWasSet => _startSeq != null;
+        internal bool MaxDeliverWasSet => _maxDeliver != null;
+        internal bool RateLimitWasSet => _rateLimit != null;
+        internal bool MaxAckPendingWasSet => _maxAckPending != null;
+        internal bool MaxPullWaitingWasSet => _maxPullWaiting != null;
+        internal bool FlowControlWasSet => _flowControl != null;
+        internal bool HeadersOnlyWasSet => _headersOnly != null;
+
         internal ConsumerConfiguration(string json) : this(JSON.Parse(json)) {}
 
         internal ConsumerConfiguration(JSONNode ccNode)
@@ -527,11 +538,11 @@ namespace NATS.Client.JetStream
             this.server = server;
         }
 
-        internal long Initial()                => initial;
+        public long Initial()                  => initial;
         internal long Initial(long val)        => val < min ? initial : val;
         internal long Comparable(long val)     => val < min || val == server ? initial : val;
 
-        internal ulong InitialUlong()          => (ulong)initial;
+        public ulong InitialUlong()            => (ulong)initial;
         internal ulong InitialUlong(ulong val) => val < (ulong)min ? (ulong)initial : val;
         internal ulong Comparable(ulong val)   => val < (ulong)min || val == (ulong)server ? (ulong)initial : val;
 
