@@ -57,7 +57,7 @@ namespace NATS.Client
         // than the received subject inside a Msg if this is a wildcard.
         private string      subject = null;
 
-        public Func<Msg, Msg> BeforeChannelAddCheck;
+        internal Func<Msg, Msg> BeforeChannelAddCheck;
 
         internal Subscription(Connection conn, string subject, string queue)
         {
