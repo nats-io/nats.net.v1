@@ -62,7 +62,8 @@ namespace IntegrationTests
                 js.PushSubscribeAsync(SUBJECT, TestHandler, false);
 
                 // Wait for messages to arrive using the countdown latch.
-                latch.Wait();
+                // make sure we don't wait forever
+                latch.Wait(10000);
 
                 Assert.Equal(10, received);
             });
@@ -98,8 +99,9 @@ namespace IntegrationTests
                     .WithDurable(Durable(1)).Build();
                 IJetStreamPushAsyncSubscription asub = js.PushSubscribeAsync(SUBJECT, Handler1, true, pso1);
 
-                // wait for messages to arrive using the countdown latch.
-                latch1.Wait();
+                // Wait for messages to arrive using the countdown latch.
+                // make sure we don't wait forever
+                latch1.Wait(10000);
 
                 Assert.Equal(10, handlerReceived1);
 
@@ -126,8 +128,9 @@ namespace IntegrationTests
                     .WithDurable(Durable(2)).WithConfiguration(cc).Build();
                 asub = js.PushSubscribeAsync(SUBJECT, Handler2, false, pso2);
 
-                // wait for messages to arrive using the countdown latch.
-                latch2.Wait();
+                // Wait for messages to arrive using the countdown latch.
+                // make sure we don't wait forever
+                latch2.Wait(10000);
                 Assert.Equal(10, handlerReceived2);
 
                 Thread.Sleep(2000); // just give it time for the server to realize the messages are not ack'ed
@@ -141,50 +144,104 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public void TestDontAutoAckIfUserAcks() {
-            string mockAckReply = "mock-ack-reply.";
+        public void TestDontAutoAckSituations() {
             
             Context.RunInJsServer(c =>
             {
-                CreateMemoryStream(c, STREAM, SUBJECT, mockAckReply + "*");
+                CreateMemoryStream(c, STREAM, SUBJECT, MockAckReply + "*");
                 
                 // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
 
                 // publish some messages
-                JsPublish(js, SUBJECT, 2);
+                JsPublish(js, SUBJECT, 3);
 
                 // 1. auto ack true
-                CountdownEvent latch = new CountdownEvent(2);
-                bool flag = true;
-
-                // create our message handler, does not ack
-                void Handler(object sender, MsgHandlerEventArgs args)
-                {
-                    if (flag)
-                    {
-                        args.Message.Reply = mockAckReply + "user";
-                        args.Message.Ack();
-                        flag = false;
-                    }
-                    args.Message.Reply = mockAckReply + "system";
-                    latch.Signal();
-                }
 
                 // subscribe using the handler, auto ack true
-                js.PushSubscribeAsync(SUBJECT, Handler, true);
+                AckSituationsHandler ash = new AckSituationsHandler(3, 0);
+                IJetStreamPushAsyncSubscription async = js.PushSubscribeAsync(SUBJECT, ash.Handler(), true);
 
                 // wait for messages to arrive using the countdown latch.
-                latch.Wait();
+                // make sure we don't wait forever
+                ash.latch.Wait(10000);
+                Assert.Equal(0, ash.latch.CurrentCount);
+                async.Unsubscribe();
+                    
+                IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(MockAckReply + "*");
+                Msg m = sub.NextMessage(1000);
+                Assert.Equal(MockAckReply + "user", m.Subject);
+                m = sub.NextMessage(1000);
+                Assert.Equal(MockAckReply + "progress", m.Subject);
+                m = sub.NextMessage(1000);
+                Assert.Equal(MockAckReply + "system", m.Subject);
 
-                IJetStreamPushSyncSubscription ssub = js.PushSubscribeSync(mockAckReply + "*");
-                Msg m = ssub.NextMessage(1000);
-                Assert.Equal(mockAckReply + "user", m.Subject);
-                m = ssub.NextMessage(1000);
-                Assert.Equal(mockAckReply + "system", m.Subject);
+                // coverage explicit no ack flag
+                ash = new AckSituationsHandler(2, 99);
+                PushSubscribeOptions pso = ConsumerConfiguration.Builder()
+                    .WithAckWait(100_000)
+                    .BuildPushSubscribeOptions();
+                async = js.PushSubscribeAsync(SUBJECT, ash.Handler(), false, pso);
+                ash.latch.Wait(10000);
+                Assert.Equal(0, ash.latch.CurrentCount);
+                async.Unsubscribe();
+                
+                // no messages should have been published to our mock reply
+                Assert.Throws<NATSTimeoutException>(() => sub.NextMessage(1000));
+
+                // coverage explicit AckPolicyNone
+                ash = new AckSituationsHandler(2, 99);
+                pso = ConsumerConfiguration.Builder()
+                    .WithAckPolicy(AckPolicy.None)
+                    .BuildPushSubscribeOptions();
+                async = js.PushSubscribeAsync(SUBJECT, ash.Handler(), true, pso);
+                ash.latch.Wait(10000);
+                Assert.Equal(0, ash.latch.CurrentCount);
+                async.Unsubscribe();
+                
+                // no messages should have been published to our mock reply
+                Assert.Throws<NATSTimeoutException>(() => sub.NextMessage(1000));
             });
         }
 
+        const string MockAckReply = "mock-ack-reply.";
+
+        class AckSituationsHandler
+        {
+            public CountdownEvent latch;
+            public InterlockedInt flag;
+
+            public AckSituationsHandler(int latchCount, int flagCount)
+            {
+                latch = new CountdownEvent(latchCount);
+                flag = new InterlockedInt(flagCount);
+            }
+
+            // create our message handler, does not ack
+            public EventHandler<MsgHandlerEventArgs> Handler()
+            {
+                return (sender, args) =>
+                {
+                    if (flag.Increment() == 1)
+                    {
+                        args.Message.Reply = MockAckReply + "user";
+                        args.Message.Ack();
+                    }
+                    else if (flag.Read() == 2)
+                    {
+                        args.Message.InProgress();
+                        args.Message.Reply = MockAckReply + "progress";
+                    }
+                    else
+                    {
+                        args.Message.Reply = MockAckReply + "system";
+                    }
+
+                    latch.Signal();
+                };
+            }
+        }
+        
         [Fact]
         public void TestPushAsyncFlowControl()
         {
@@ -239,8 +296,9 @@ namespace IntegrationTests
                 PushSubscribeOptions pso = PushSubscribeOptions.Builder().WithConfiguration(cc).Build();
                 js.PushSubscribeAsync(SUBJECT, Handler, false, pso);
 
-                // wait for messages to arrive using the countdown latch.
-                latch.Wait();
+                // Wait for messages to arrive using the countdown latch.
+                // make sure we don't wait forever
+                latch.Wait(10000);
 
                 Assert.Equal(msgCount, count.Read());
                 Assert.True(fcps.Read() > 0);

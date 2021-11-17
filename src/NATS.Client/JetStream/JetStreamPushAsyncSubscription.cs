@@ -15,17 +15,17 @@ namespace NATS.Client.JetStream
 {
     public class JetStreamPushAsyncSubscription : AsyncSubscription, IJetStreamPushAsyncSubscription
     {
-        private IStatusManager _asm;
+        private IStatusManager _statusManager;
         public JetStream Context { get; }
         public string Stream { get; }
         public string Consumer { get; }
         public string DeliverSubject { get; }
 
         internal JetStreamPushAsyncSubscription(Connection conn, string subject, string queue,
-            IStatusManager asm, JetStream js, string stream, string consumer, string deliver)
+            IStatusManager statusManager, JetStream js, string stream, string consumer, string deliver)
             : base(conn, subject, queue)
         {
-            _asm = asm;
+            _statusManager = statusManager;
             Context = js;
             Stream = stream;
             Consumer = consumer;
@@ -37,13 +37,13 @@ namespace NATS.Client.JetStream
         
         public override void Unsubscribe()
         {
-            _asm.Shutdown();
+            _statusManager.Shutdown();
             base.Unsubscribe();
         }
 
         internal override void close()
         {
-            _asm.Shutdown();
+            _statusManager.Shutdown();
             base.close();
         }
     }

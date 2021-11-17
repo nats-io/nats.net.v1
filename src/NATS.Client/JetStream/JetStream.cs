@@ -134,9 +134,9 @@ namespace NATS.Client.JetStream
         // ----------------------------------------------------------------------------------------------------
         private static readonly PushSubscribeOptions DefaultPushOpts = PushSubscribeOptions.Builder().Build();
 
-        Subscription CreateSubscription(string subject, string queueName,
+        IJetStreamSubscription CreateSubscription(string subject, string queueName,
             EventHandler<MsgHandlerEventArgs> userHandler, bool autoAck,
-            PushSubscribeOptions pushSubscribeOptions, 
+            PushSubscribeOptions pushSubscribeOptions,
             PullSubscribeOptions pullSubscribeOptions)
         {
             // 1. Prepare for all the validation
@@ -147,7 +147,8 @@ namespace NATS.Client.JetStream
             string qgroup;
             ConsumerConfiguration userCC;
 
-            if (isPullMode) {
+            if (isPullMode)
+            {
                 so = pullSubscribeOptions; // options must have already been checked to be non null
                 stream = pullSubscribeOptions.Stream;
 
@@ -157,7 +158,8 @@ namespace NATS.Client.JetStream
                 ValidateNotSupplied(userCC.DeliverGroup, JsSubPullCantHaveDeliverGroup);
                 ValidateNotSupplied(userCC.DeliverSubject, JsSubPullCantHaveDeliverSubject);
             }
-            else {
+            else
+            {
                 so = pushSubscribeOptions ?? DefaultPushOpts;
                 stream = so.Stream; // might be null, that's ok (see directBind)
 
@@ -166,23 +168,34 @@ namespace NATS.Client.JetStream
                 ValidateNotSupplied(userCC.MaxPullWaiting, 0, JsSubPushCantHaveMaxPullWaiting);
 
                 // figure out the queue name
-                qgroup = ValidateMustMatchIfBothSupplied(userCC.DeliverGroup, queueName, JsSubQueueDeliverGroupMismatch);
+                qgroup = ValidateMustMatchIfBothSupplied(userCC.DeliverGroup, queueName,
+                    JsSubQueueDeliverGroupMismatch);
+                if (so.Ordered && qgroup != null)
+                {
+                    throw JsSubOrderedNotAllowOnQueues.Instance();
+                }
             }
-            
+
             // 2A. Flow Control / heartbeat not always valid
-            if (userCC.FlowControl || userCC.IdleHeartbeat != null && userCC.IdleHeartbeat.Millis > 0) {
-                if (isPullMode) {
+            if (userCC.FlowControl || userCC.IdleHeartbeat != null && userCC.IdleHeartbeat.Millis > 0)
+            {
+                if (isPullMode)
+                {
                     throw JsSubFcHbNotValidPull.Instance();
                 }
-                if (qgroup != null) {
+
+                if (qgroup != null)
+                {
                     throw JsSubFcHbHbNotValidQueue.Instance();
                 }
             }
 
             // 2B. Did they tell me what stream? No? look it up.
-            if (string.IsNullOrWhiteSpace(stream)) {
+            if (string.IsNullOrWhiteSpace(stream))
+            {
                 stream = LookupStreamBySubject(subject);
-                if (stream == null) {
+                if (stream == null)
+                {
                     throw JsSubNoMatchingStreamForSubject.Instance();
                 }
             }
@@ -190,46 +203,60 @@ namespace NATS.Client.JetStream
             ConsumerConfiguration serverCC = null;
             String consumerName = userCC.Durable;
             String inboxDeliver = userCC.DeliverSubject;
-            
+
             // 3. Does this consumer already exist?
-            if (consumerName != null) {
+            if (consumerName != null)
+            {
                 ConsumerInfo serverInfo = LookupConsumerInfo(stream, consumerName);
 
-                if (serverInfo != null) { // the consumer for that durable already exists
+                if (serverInfo != null)
+                {
+                    // the consumer for that durable already exists
                     serverCC = serverInfo.ConsumerConfiguration;
 
                     // check to see if the user sent a different version than the server has
                     // modifications are not allowed
-                    if (userCC.WouldBeChangeTo(serverCC)) {
+                    if (userCC.WouldBeChangeTo(serverCC))
+                    {
                         throw JsSubExistingConsumerCannotBeModified.Instance();
                     }
 
-                    if (isPullMode) {
-                        if (!string.IsNullOrWhiteSpace(serverCC.DeliverSubject)) {
+                    if (isPullMode)
+                    {
+                        if (!string.IsNullOrWhiteSpace(serverCC.DeliverSubject))
+                        {
                             throw JsSubConsumerAlreadyConfiguredAsPush.Instance();
                         }
                     }
-                    else if (string.IsNullOrWhiteSpace(serverCC.DeliverSubject)) {
+                    else if (string.IsNullOrWhiteSpace(serverCC.DeliverSubject))
+                    {
                         throw JsSubConsumerAlreadyConfiguredAsPull.Instance();
                     }
 
-                    if (string.IsNullOrWhiteSpace(serverCC.DeliverGroup)) {
+                    if (string.IsNullOrWhiteSpace(serverCC.DeliverGroup))
+                    {
                         // lookedUp was null/empty, means existing consumer is not a queue consumer
-                        if (qgroup == null) {
+                        if (qgroup == null)
+                        {
                             // ok fine, no queue requested and the existing consumer is also not a queue consumer
                             // we must check if the consumer is in use though
-                            if (serverInfo.PushBound) {
+                            if (serverInfo.PushBound)
+                            {
                                 throw JsSubConsumerAlreadyBound.Instance();
                             }
                         }
-                        else { // else they requested a queue but this durable was not configured as queue
+                        else
+                        {
+                            // else they requested a queue but this durable was not configured as queue
                             throw JsSubExistingConsumerNotQueue.Instance();
                         }
                     }
-                    else if (qgroup == null) {
+                    else if (qgroup == null)
+                    {
                         throw JsSubExistingConsumerIsQueue.Instance();
                     }
-                    else if (!serverCC.DeliverGroup.Equals(qgroup)) {
+                    else if (!serverCC.DeliverGroup.Equals(qgroup))
+                    {
                         throw JsSubExistingQueueDoesNotMatchRequestedQueue.Instance();
                     }
 
@@ -243,13 +270,34 @@ namespace NATS.Client.JetStream
                         throw JsSubSubjectDoesNotMatchFilter.Instance();
                     }
 
-                    inboxDeliver = serverCC.DeliverSubject; // use the deliver subject as the inbox. It may be null, that's ok, we'll fix that later
+                    inboxDeliver =
+                        serverCC
+                            .DeliverSubject; // use the deliver subject as the inbox. It may be null, that's ok, we'll fix that later
                 }
-                else if (so.Bind) {
+                else if (so.Bind)
+                {
                     throw JsSubConsumerNotFoundRequiredInBind.Instance();
                 }
             }
 
+            return FinishCreateSubscription(subject, userHandler, autoAck, isPullMode, so, stream, qgroup, 
+                userCC, serverCC, consumerName, inboxDeliver, null);
+        }
+        
+        // this was separated expressly so ordered consumer can skip the beginning
+        internal IJetStreamSubscription FinishCreateSubscription(string subject,
+            EventHandler<MsgHandlerEventArgs> userHandler,
+            bool autoAck,
+            bool isPullMode,
+            SubscribeOptions so,
+            string stream,
+            string qgroup,
+            ConsumerConfiguration userCC,
+            ConsumerConfiguration serverCC,
+            string consumerName,
+            string inboxDeliver,
+            AbstractJetStreamOrderedPushSubscription orderedSub)
+        {
             // 4. If no deliver subject (inbox) provided or found, make an inbox.
             if (string.IsNullOrWhiteSpace(inboxDeliver)) {
                 inboxDeliver = Conn.NewInbox();
@@ -281,61 +329,89 @@ namespace NATS.Client.JetStream
             }
 
             // 6. create the subscription
-            IStatusManager asm = isPullMode
+            IStatusManager statusManager = isPullMode
                 ? (IStatusManager)new PullStatusManager()
                 : new PushStatusManager((Connection) Conn, so, serverCC, qgroup != null, userHandler == null);
-            
-            Subscription sub;
+
+            IJetStreamSubscription sub;
+
             if (isPullMode)
             {
                 SyncSubscription CreateSubDelegate(Connection lConn, string lSubject, string lQueueNa)
                 {
-                    return new JetStreamPullSubscription(lConn, lSubject, asm, this, stream, consumerName, inboxDeliver);
+                    return new JetStreamPullSubscription(lConn, lSubject, statusManager, this, stream, consumerName, inboxDeliver);
                 }
 
-                sub = ((Connection)Conn).subscribeSync(inboxDeliver, queueName, CreateSubDelegate);
+                sub = (JetStreamPullSubscription)((Connection)Conn).subscribeSync(inboxDeliver, qgroup, CreateSubDelegate);
             }
-            else if (userHandler == null) {
+            else if (userHandler == null) 
+            {
+                if (orderedSub == null && so.Ordered)
+                {
+                    orderedSub = new JetStreamOrderedPushSyncSubscription(this, subject, so, stream, serverCC);
+                }
+
                 SyncSubscription CreateSubDelegate(Connection lConn, string lSubject, string lQueue)
                 {
-                    return new JetStreamPushSyncSubscription(lConn, lSubject, lQueue, asm, this, stream, consumerName, inboxDeliver);
+                    return new JetStreamPushSyncSubscription(lConn, lSubject, lQueue, statusManager, this, stream, consumerName, inboxDeliver);
                 }
-                
-                sub = ((Connection)Conn).subscribeSync(inboxDeliver, queueName, CreateSubDelegate); 
+            
+                sub = (JetStreamPushSyncSubscription)((Connection)Conn).subscribeSync(inboxDeliver, qgroup, CreateSubDelegate); 
             }
             else
             {
-                EventHandler<MsgHandlerEventArgs> handler;
+                IMessageManager orderedManager;
+                    
+                if (orderedSub == null && so.Ordered)
+                {
+                    orderedSub = new JetStreamOrderedPushAsyncSubscription(this, subject, userHandler, autoAck, so, stream, serverCC);
+                    orderedManager = (JetStreamOrderedPushAsyncSubscription)orderedSub;
+                }
+                else
+                {
+                    orderedManager = NoOpMessageManager.Instance;
+                }
+
+                Action<Msg> autoAckAction;
                 if (autoAck && serverCC.AckPolicy != AckPolicy.None)
                 {
-                    handler = (sender, args) => 
+                    autoAckAction = m =>
                     {
-                        if (asm.Manage(args.Message)) { return; } // manager handled the message
-                        userHandler.Invoke(sender, args);
-                        if (args.Message.LastAck == null || args.Message.LastAck == AckType.AckProgress)
+                        if (m.LastAck == null || m.LastAck == AckType.AckProgress)
                         {
-                            args.Message.Ack();
+                            m.Ack();
                         }
+
                     };
                 }
                 else
                 {
-                    handler = (sender, args) => 
-                    {
-                        if (asm.Manage(args.Message)) { return; } // manager handled the message
-                        userHandler.Invoke(sender, args);
-                    };
+                    autoAckAction = m => {};
                 }
+
+                EventHandler<MsgHandlerEventArgs> handler = (sender, args) => 
+                {
+                    if (statusManager.Manage(args.Message)) { return; } // manager handled the message
+                    if (orderedManager.Manage(args.Message)) { return; } // manager handled the message
+                    userHandler.Invoke(sender, args);
+                    autoAckAction.Invoke(args.Message);
+                };
 
                 AsyncSubscription CreateAsyncSubDelegate(Connection lConn, string lSubject, string lQueue)
                 {
-                    return new JetStreamPushAsyncSubscription(lConn, lSubject, lQueue, asm, this, stream, consumerName, inboxDeliver);
+                    return new JetStreamPushAsyncSubscription(lConn, lSubject, lQueue, statusManager, this, stream, consumerName, inboxDeliver);
                 }
-                
-                sub = ((Connection)Conn).subscribeAsync(inboxDeliver, queueName, handler, CreateAsyncSubDelegate);
+            
+                sub = (JetStreamPushAsyncSubscription)((Connection)Conn).subscribeAsync(inboxDeliver, qgroup, handler, CreateAsyncSubDelegate);
             }
 
-            asm.SetSub(sub);
+            statusManager.SetSub(sub);
+
+            if (orderedSub != null) {
+                orderedSub.SetCurrent(sub);
+                return orderedSub;
+            }
+
             return sub;
         }
         
@@ -367,7 +443,7 @@ namespace NATS.Client.JetStream
             return si.Config.Subjects.Count == 1 ? si.Config.Subjects[0] : null;
         }
 
-        private Boolean IsFilterMatch(String subscribeSubject, String filterSubject, String stream) {
+        private bool IsFilterMatch(String subscribeSubject, String filterSubject, String stream) {
 
             // subscribeSubject guaranteed to not be empty or null
             // filterSubject may be null or empty or have value

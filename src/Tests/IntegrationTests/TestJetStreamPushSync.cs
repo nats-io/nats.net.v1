@@ -13,6 +13,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Threading;
 using NATS.Client;
@@ -23,17 +24,33 @@ using Xunit;
 using Xunit.Abstractions;
 using static UnitTests.TestBase;
 using static IntegrationTests.JetStreamTestBase;
+using static NATS.Client.ClientExDetail;
 
 namespace IntegrationTests
 {
     public class TestJetStreamPushSync : TestSuite<JetStreamPushSyncSuiteContext>
     {
-        private readonly ITestOutputHelper output;
+        public static ITestOutputHelper Output;
 
         public TestJetStreamPushSync(ITestOutputHelper output, JetStreamPushSyncSuiteContext context) : base(context)
         {
-            this.output = output;
+            Output = output;
         }
+
+        public class ConsoleWriter : StringWriter
+        {
+            private ITestOutputHelper output;
+            public ConsoleWriter(ITestOutputHelper output)
+            {
+                this.output = output;
+            }
+
+            public override void WriteLine(string m)
+            {
+                output.WriteLine(m);
+            }
+        }
+
 
         [Theory]
         [InlineData(null)]
@@ -471,7 +488,155 @@ namespace IntegrationTests
 
                 Assert.Equal(MSG_COUNT, count.Read());
                 Assert.True(fcps.Read() > 0);
+
+                // coverage for subscribe options heartbeat directly
+                cc = ConsumerConfiguration.Builder().WithIdleHeartbeat(0).Build();
+                pso = PushSubscribeOptions.Builder().WithConfiguration(cc).Build();
+                js.PushSubscribeSync(SUBJECT, pso);
             });
+        }
+
+        // THIS [Fact] IS COMMENTED OUT BECAUSE IT CANNOT BE EXECUTED UNLESS AN INTERNAL OBJECT,
+        // Subscription.BeforeChannelAddCheck IS MADE PUBLIC
+        // THE check IS THE ONLY PLACE I'M ABLE TO INTERCEPT THE MESSAGE SO IT CAN BE DROPPED
+        // SIMULATING A MESSAGE BEING DROPPED. SO IT IS RUN MANUALLY WHEN DESIRED AND IS CURRENTLY PASSING
+        // [Fact]
+        [Fact(Skip="Cannot Test Without Temporary change of an internal to public")]
+        public void TestOrdered() {
+            Console.SetOut(new ConsoleWriter(Output));
+
+            Context.RunInJsServer(c =>
+            {
+                // Create our JetStream context.
+                IJetStream js = c.CreateJetStreamContext();
+
+                CreateMemoryStream(c, STREAM, Subject(1), Subject(2));
+                
+                PushSubscribeOptions pso = PushSubscribeOptions.Builder().WithOrdered(true).Build();
+                NATSJetStreamClientException e = Assert.Throws<NATSJetStreamClientException>(() => js.PushSubscribeSync(SUBJECT, QUEUE, pso));
+                Assert.Contains(JsSubOrderedNotAllowOnQueues.Id, e.Message);
+
+                IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(Subject(1), pso);
+                c.Flush(DefaultTimeout); // flush outgoing communication with/to the server
+
+                // set the interceptor for this subscription
+                JetStreamOrderedPushSyncSubscription orderedSub = (JetStreamOrderedPushSyncSubscription)sub;
+                TestBeforeChannelAddCheck check = new TestBeforeChannelAddCheck();
+                ((Subscription)orderedSub.Current).BeforeChannelAddCheck = check.Before();
+
+                // publish after interceptor is set before messages come in
+                JsPublish(js, Subject(1), 3);
+
+                // message 1
+                Msg m = sub.NextMessage(1000); // use duration version here for coverage
+                Assert.Equal(1U, m.MetaData.StreamSequence);
+                Assert.Equal(1U, m.MetaData.ConsumerSequence);
+
+                // drop 2
+                Assert.Throws<NATSTimeoutException>(() => sub.NextMessage(1000));
+
+                // message 2
+                m = sub.NextMessage(500);
+                Assert.Equal(2U, m.MetaData.StreamSequence);
+                Assert.Equal(1U, m.MetaData.ConsumerSequence);
+
+                // message 3
+                m = sub.NextMessage(500);
+                Assert.Equal(3U, m.MetaData.StreamSequence);
+                Assert.Equal(2U, m.MetaData.ConsumerSequence);
+
+                // set the interceptor for this subscription
+                check = new TestBeforeChannelAddCheck();
+                ((Subscription)orderedSub.Current).BeforeChannelAddCheck = check.Before();
+                
+                // publish after interceptor is set before messages come in
+                JsPublish(js, Subject(1), 3);
+                
+                // message 4
+                m = sub.NextMessage(1000); // use duration version here for coverage
+                Assert.Equal(4U, m.MetaData.StreamSequence);
+                Assert.Equal(3U, m.MetaData.ConsumerSequence);
+
+                // drop 5
+                Assert.Throws<NATSTimeoutException>(() => sub.NextMessage(1000));
+
+                // message 5
+                m = sub.NextMessage(500);
+                Assert.Equal(5U, m.MetaData.StreamSequence);
+                Assert.Equal(1U, m.MetaData.ConsumerSequence);
+
+                // message 6
+                m = sub.NextMessage(500);
+                Assert.Equal(6U, m.MetaData.StreamSequence);
+                Assert.Equal(2U, m.MetaData.ConsumerSequence);
+
+                sub.Unsubscribe();
+                
+                // ----------------------------------------------------------------------------------------------------
+                // THIS IS ACTUALLY TESTING ASYNC SO I DON'T HAVE TO SETUP THE INTERCEPTOR IN OTHER CODE
+                // ----------------------------------------------------------------------------------------------------
+
+                CountdownEvent latch = new CountdownEvent(3);
+                InterlockedInt received = new InterlockedInt();
+                InterlockedLong[] ssFlags = new InterlockedLong[3];
+                InterlockedLong[] csFlags = new InterlockedLong[3];
+
+                EventHandler<MsgHandlerEventArgs> handler = (sender, args) =>
+                {
+                    int i = received.Increment() - 1;
+                    ssFlags[i] = new InterlockedLong((long)args.Message.MetaData.StreamSequence);
+                    csFlags[i] = new InterlockedLong((long)args.Message.MetaData.ConsumerSequence);
+                    latch.Signal();
+                };
+
+                IJetStreamPushAsyncSubscription asyncSub = js.PushSubscribeAsync(Subject(2), handler, false, pso);
+                
+                JetStreamOrderedPushAsyncSubscription orderedAsyncSub = (JetStreamOrderedPushAsyncSubscription)asyncSub;
+                check = new TestBeforeChannelAddCheck();
+                ((Subscription)orderedAsyncSub.Current).BeforeChannelAddCheck = check.Before();
+                                
+                // publish after interceptor is set before messages come in
+                JsPublish(js, Subject(2), 3);
+
+                // wait for messages to arrive using the countdown latch.
+                // make sure we don't wait forever
+                latch.Wait(10000);
+
+                Assert.Equal(7, ssFlags[0].Read());
+                Assert.Equal(1, csFlags[0].Read());
+
+                Assert.Equal(8, ssFlags[1].Read());
+                Assert.Equal(1, csFlags[1].Read());
+
+                Assert.Equal(9, ssFlags[2].Read());
+                Assert.Equal(2, csFlags[2].Read());
+
+            });
+        }
+
+        class TestBeforeChannelAddCheck
+        {
+            private readonly InterlockedInt drop = new InterlockedInt();
+
+            // create our message handler, does not ack
+            public Func<Msg, Msg> Before() =>
+                m =>
+                {
+                    if (m.HasStatus)
+                    {
+                        return null;
+                    }
+
+                    if (m.IsJetStream)
+                    {
+                        if (drop.Increment() == 2)
+                        {
+                            return null;
+                        }
+                    }
+
+                    return m;
+                };
         }
     }
 }

@@ -298,6 +298,13 @@ namespace NATS.Client
 
         CallbackScheduler callbackScheduler = new CallbackScheduler();
 
+        internal void ScheduleErrEvent(Subscription s, string error)
+        {
+            callbackScheduler.Add(
+                () => { opts.AsyncErrorEventHandlerOrDefault(this, new ErrEventArgs(this, s, error)); }
+            );
+        }
+
         internal class Control
         {
             // for efficiency, assign these once in the contructor;

@@ -22,19 +22,26 @@ namespace NATS.Client.JetStream
     {
         bool Manage(Msg msg);
     }
+
+    internal class NoOpMessageManager : IMessageManager
+    {
+        internal static NoOpMessageManager Instance = new NoOpMessageManager();
+        
+        public bool Manage(Msg msg) => false;
+    }
     
     internal interface IStatusManager : IMessageManager
     {
-        void SetSub(Subscription sub);
+        void SetSub(IJetStreamSubscription sub);
         void Shutdown();
     }
 
     internal class PullStatusManager : IStatusManager
     {
         private static readonly IList<int> PullKnownStatusCodes = new List<int>(new []{404, 408});
-        private Subscription _sub;
+        private IJetStreamSubscription _sub;
         
-        public void SetSub(Subscription sub)
+        public void SetSub(IJetStreamSubscription sub)
         {
             _sub = sub;
         }
@@ -47,7 +54,7 @@ namespace NATS.Client.JetStream
             
             if ( !PullKnownStatusCodes.Contains(msg.Status.Code) ) {
                 // pull is always sync
-                throw new NATSJetStreamStatusException(_sub, msg.Status);
+                throw new NATSJetStreamStatusException((Subscription)_sub, msg.Status);
             }
             return true;
         }
@@ -58,7 +65,7 @@ namespace NATS.Client.JetStream
         private const int Threshold = 3;
 
         private readonly Connection conn;
-        private Subscription _sub;
+        private IJetStreamSubscription _sub;
 
         internal bool SyncMode { get; }
         internal bool QueueMode { get; }
@@ -114,11 +121,11 @@ namespace NATS.Client.JetStream
 
         // chicken or egg situation here. The handler needs the sub in case of error
         // but the sub needs the handler in order to be created
-        public void SetSub(Subscription sub)
+        public void SetSub(IJetStreamSubscription sub)
         {
             _sub = sub;
             if (Hb) {
-                _sub.BeforeChannelAddCheck = BeforeChannelAddCheck;
+                ((Subscription)_sub).BeforeChannelAddCheck = BeforeChannelAddCheck;
                 asmTimer = new AsmTimer(this);
             }
         }
@@ -134,16 +141,16 @@ namespace NATS.Client.JetStream
             private readonly object mu = new object();
             private Timer timer;
 
-            public AsmTimer(PushStatusManager asm)
+            public AsmTimer(PushStatusManager statusManager)
             {
                 timer = new Timer(s => {
-                        long sinceLast = DateTimeOffset.Now.ToUnixTimeMilliseconds() - asm.LastMsgReceived;
-                        if (sinceLast > asm.AlarmPeriodSetting) {
-                            asm.conn.Opts.HeartbeatAlarmEventHandlerOrDefault.Invoke(this, 
-                                new HeartbeatAlarmEventArgs(asm.conn, asm._sub, asm.LastStreamSeq, asm.LastConsumerSeq));
+                        long sinceLast = DateTimeOffset.Now.ToUnixTimeMilliseconds() - statusManager.LastMsgReceived;
+                        if (sinceLast > statusManager.AlarmPeriodSetting) {
+                            statusManager.conn.Opts.HeartbeatAlarmEventHandlerOrDefault.Invoke(this, 
+                                new HeartbeatAlarmEventArgs(statusManager.conn, (Subscription)statusManager._sub, statusManager.LastStreamSeq, statusManager.LastConsumerSeq));
                         }
                     }, 
-                    null, asm.AlarmPeriodSetting, asm.AlarmPeriodSetting);
+                    null, statusManager.AlarmPeriodSetting, statusManager.AlarmPeriodSetting);
             }
 
             public void Shutdown() {
@@ -182,10 +189,10 @@ namespace NATS.Client.JetStream
 
                 // this status is unknown to us, always use the error handler.
                 // If it's a sync call, also throw an exception
-                conn.Opts.UnhandledStatusEventHandlerOrDefault.Invoke(this, new UnhandledStatusEventArgs(conn, _sub, msg.Status));
+                conn.Opts.UnhandledStatusEventHandlerOrDefault.Invoke(this, new UnhandledStatusEventArgs(conn, (Subscription)_sub, msg.Status));
                 if (SyncMode) 
                 {
-                    throw new NATSJetStreamStatusException(_sub, msg.Status);
+                    throw new NATSJetStreamStatusException((Subscription)_sub, msg.Status);
                 }
                 return true;
             }
@@ -214,7 +221,7 @@ namespace NATS.Client.JetStream
             if (fcSubject != null && !fcSubject.Equals(LastFcSubject)) {
                 conn.Publish(fcSubject, null);
                 LastFcSubject = fcSubject; // set after publish in case the pub fails
-                conn.Opts.FlowControlProcessedEventHandlerOrDefault.Invoke(this, new FlowControlProcessedEventArgs(conn, _sub, fcSubject, source));
+                conn.Opts.FlowControlProcessedEventHandlerOrDefault.Invoke(this, new FlowControlProcessedEventArgs(conn, (Subscription)_sub, fcSubject, source));
             }
         }
    }
