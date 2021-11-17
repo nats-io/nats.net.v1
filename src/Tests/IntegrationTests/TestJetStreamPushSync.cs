@@ -490,7 +490,7 @@ namespace IntegrationTests
                 Assert.True(fcps.Read() > 0);
 
                 // coverage for subscribe options heartbeat directly
-                cc = ConsumerConfiguration.Builder().WithIdleHeartbeat(0).Build();
+                cc = ConsumerConfiguration.Builder().WithIdleHeartbeat(100).Build();
                 pso = PushSubscribeOptions.Builder().WithConfiguration(cc).Build();
                 js.PushSubscribeSync(SUBJECT, pso);
             });
