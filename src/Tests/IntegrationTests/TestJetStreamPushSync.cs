@@ -496,12 +496,7 @@ namespace IntegrationTests
             });
         }
 
-        // THIS [Fact] IS COMMENTED OUT BECAUSE IT CANNOT BE EXECUTED UNLESS AN INTERNAL OBJECT,
-        // Subscription.BeforeChannelAddCheck IS MADE PUBLIC
-        // THE check IS THE ONLY PLACE I'M ABLE TO INTERCEPT THE MESSAGE SO IT CAN BE DROPPED
-        // SIMULATING A MESSAGE BEING DROPPED. SO IT IS RUN MANUALLY WHEN DESIRED AND IS CURRENTLY PASSING
-        // [Fact]
-        [Fact(Skip="Cannot Test Without Temporary change of an internal to public")]
+        [Fact]
         public void TestOrdered() {
             Console.SetOut(new ConsoleWriter(Output));
 
@@ -522,7 +517,7 @@ namespace IntegrationTests
                 // set the interceptor for this subscription
                 JetStreamOrderedPushSyncSubscription orderedSub = (JetStreamOrderedPushSyncSubscription)sub;
                 TestBeforeChannelAddCheck check = new TestBeforeChannelAddCheck();
-                ((Subscription)orderedSub.Current).BeforeChannelAddCheck = check.Before();
+                orderedSub._____setTestingInterceptor(check.Before());
 
                 // publish after interceptor is set before messages come in
                 JsPublish(js, Subject(1), 3);
@@ -547,7 +542,7 @@ namespace IntegrationTests
 
                 // set the interceptor for this subscription
                 check = new TestBeforeChannelAddCheck();
-                ((Subscription)orderedSub.Current).BeforeChannelAddCheck = check.Before();
+                orderedSub._____setTestingInterceptor(check.Before());
                 
                 // publish after interceptor is set before messages come in
                 JsPublish(js, Subject(1), 3);
@@ -593,7 +588,7 @@ namespace IntegrationTests
                 
                 JetStreamOrderedPushAsyncSubscription orderedAsyncSub = (JetStreamOrderedPushAsyncSubscription)asyncSub;
                 check = new TestBeforeChannelAddCheck();
-                ((Subscription)orderedAsyncSub.Current).BeforeChannelAddCheck = check.Before();
+                orderedAsyncSub._____setTestingInterceptor(check.Before());
                                 
                 // publish after interceptor is set before messages come in
                 JsPublish(js, Subject(2), 3);

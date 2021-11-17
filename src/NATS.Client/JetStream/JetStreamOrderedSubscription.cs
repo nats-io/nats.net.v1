@@ -42,7 +42,14 @@ namespace NATS.Client.JetStream
         }
 
         public IJetStreamSubscription Current => current;
-        
+
+        // DO NOT USE. This method is strictly for unit testing as a way to simulate 
+        // messages coming in out of order. DO NOT USE.
+        public void _____setTestingInterceptor(Func<Msg, Msg> beforeChannelAddCheck)
+        {
+            Guarded(() => ((Subscription)current).BeforeChannelAddCheck = beforeChannelAddCheck);
+        }
+            
         // IDisposable
         public void Dispose()
         {
@@ -260,6 +267,8 @@ namespace NATS.Client.JetStream
         public JetStreamOrderedPushAsyncSubscription(JetStream js, string subject, EventHandler<MsgHandlerEventArgs> userHandler, bool isAutoAck, SubscribeOptions so, string stream, ConsumerConfiguration serverCc) 
             : base(js, subject, userHandler, isAutoAck, so, stream, serverCc)
         {
+            // need this otherwise we get a compiler warning on azure build
+            MessageHandler += (s, a) => { };
         }
 
         public override void SetCurrent(IJetStreamSubscription sub)
