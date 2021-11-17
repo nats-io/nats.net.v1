@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace NATS.Client.JetStream
@@ -33,6 +34,7 @@ namespace NATS.Client.JetStream
         }
 
         public abstract void SetCurrent(IJetStreamSubscription sub);
+        protected abstract void ClearCurrent();
         
         protected void SetCurrentInternal(IJetStreamSubscription sub)
         {
@@ -186,7 +188,6 @@ namespace NATS.Client.JetStream
 
         protected Msg CheckForOutOfOrder(Msg msg)
         {
-
             if (msg != null)
             {
                 ulong receivedConsumerSeq = msg.MetaData.ConsumerSequence;
@@ -195,7 +196,10 @@ namespace NATS.Client.JetStream
                         current.Unsubscribe();
                     } catch (Exception re) {
                         ((Connection)js.Conn).ScheduleErrEvent((Subscription)current, re.Message);
-                    } finally {
+                    } 
+                    finally
+                    {
+                        ClearCurrent();
                         current = null;
                     }
 
@@ -211,8 +215,9 @@ namespace NATS.Client.JetStream
                         js.FinishCreateSubscription(
                             subject, userHandler, isAutoAck, false, so, stream, null, userCC, null, null, null, this);
                     } 
-                    catch (Exception e) 
+                    catch (Exception e)
                     {
+                        ClearCurrent();
                         current = null;
                         
                         ((Connection)js.Conn).ScheduleErrEvent((Subscription)current, e.Message);
@@ -248,6 +253,11 @@ namespace NATS.Client.JetStream
             SetCurrentInternal(sub);
         }
 
+        protected override void ClearCurrent()
+        {
+            syncCurrent = null;
+        }
+
         // ISyncSubscription
         public Msg NextMessage()
         {
@@ -263,21 +273,53 @@ namespace NATS.Client.JetStream
     public class JetStreamOrderedPushAsyncSubscription : AbstractJetStreamOrderedPushSubscription, IJetStreamPushAsyncSubscription, IMessageManager
     {
         private IJetStreamPushAsyncSubscription asyncCurrent;
-        
+
+        private IList<EventHandler<MsgHandlerEventArgs>> events;
+            
         public JetStreamOrderedPushAsyncSubscription(JetStream js, string subject, EventHandler<MsgHandlerEventArgs> userHandler, bool isAutoAck, SubscribeOptions so, string stream, ConsumerConfiguration serverCc) 
             : base(js, subject, userHandler, isAutoAck, so, stream, serverCc)
         {
-            // need this otherwise we get a compiler warning on azure build
-            MessageHandler += (s, a) => { };
+            events = new List<EventHandler<MsgHandlerEventArgs>>();
         }
 
         public override void SetCurrent(IJetStreamSubscription sub)
         {
             asyncCurrent = (IJetStreamPushAsyncSubscription)sub;
+            foreach(var item in events)
+            {
+                asyncCurrent.MessageHandler += item;
+            }
             SetCurrentInternal(sub);
         }
 
-        public event EventHandler<MsgHandlerEventArgs> MessageHandler;
+        protected override void ClearCurrent()
+        {
+            foreach(var item in events)
+            {
+                asyncCurrent.MessageHandler -= item;
+            }
+            asyncCurrent = null;
+        }
+
+        public event EventHandler<MsgHandlerEventArgs> MessageHandler
+        {
+            add
+            {
+                events.Add(value);
+                if (asyncCurrent != null)
+                {
+                    asyncCurrent.MessageHandler += value;
+                }
+            }
+            remove
+            {
+                events.Remove(value);
+                if (asyncCurrent != null)
+                {
+                    asyncCurrent.MessageHandler -= value;
+                }
+            }
+        }
 
         public void Start()
         {
