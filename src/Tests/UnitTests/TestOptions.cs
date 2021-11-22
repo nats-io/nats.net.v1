@@ -12,9 +12,9 @@
 // limitations under the License.
 
 using System;
-using System.Reflection.Emit;
 using NATS.Client;
 using Xunit;
+using static NATS.Client.Defaults;
 
 namespace UnitTests
 {
@@ -118,6 +118,41 @@ namespace UnitTests
                 "null",
             };
             GetDefaultOptions().Servers = okServers;
+        }
+
+        [Fact]
+        public void TestDefaultHandler()
+        {
+            // making sure there is no null pointer
+            ConnEventArgs cea = new ConnEventArgs(null, null);
+            DefaultClosedEventHandler().Invoke(null, cea);
+            DefaultServerDiscoveredEventHandler().Invoke(null, cea);
+            DefaultDisconnectedEventHandler().Invoke(null, cea);
+            DefaultReconnectedEventHandler().Invoke(null, cea);
+            DefaultLameDuckModeEventHandler().Invoke(null, cea);
+            DefaultLameDuckModeEventHandler().Invoke(null, cea);
+            DefaultClosedEventHandler().Invoke(null, null);
+            DefaultServerDiscoveredEventHandler().Invoke(null, null);
+            DefaultDisconnectedEventHandler().Invoke(null, null);
+            DefaultReconnectedEventHandler().Invoke(null, null);
+            DefaultLameDuckModeEventHandler().Invoke(null, null);
+            DefaultLameDuckModeEventHandler().Invoke(null, null);
+
+            ErrEventArgs eea = new ErrEventArgs(null, null, null);
+            DefaultAsyncErrorEventHandler().Invoke(null, eea);
+            DefaultAsyncErrorEventHandler().Invoke(null, null);
+
+            HeartbeatAlarmEventArgs haea = new HeartbeatAlarmEventArgs(null, null, 0U, 0U);
+            DefaultHeartbeatAlarmEventHandler().Invoke(null, haea);
+            DefaultHeartbeatAlarmEventHandler().Invoke(null, null);
+
+            UnhandledStatusEventArgs usea = new UnhandledStatusEventArgs(null, null, null);
+            DefaultUnhandledStatusEventHandler().Invoke(null, usea);
+            DefaultUnhandledStatusEventHandler().Invoke(null, null);
+
+            FlowControlProcessedEventArgs fcpea = new FlowControlProcessedEventArgs(null, null, null, FlowControlSource.Heartbeat);
+            DefaultFlowControlProcessedEventHandler().Invoke(null, fcpea);
+            DefaultFlowControlProcessedEventHandler().Invoke(null, null);
         }
     }
 }
