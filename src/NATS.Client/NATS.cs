@@ -217,7 +217,7 @@ namespace NATS.Client
         }
 
         private static void WriteEvent(String label, ConnEventArgs e) {
-            Console.Error.WriteLine(BeginFormatMessage(label, e.Conn, null, e.Error.Message).ToString());
+            Console.Error.WriteLine(BeginFormatMessage(label, e.Conn, null, e.Error?.Message).ToString());
         }
 
         private static void WriteError(String label, ErrEventArgs e) {
