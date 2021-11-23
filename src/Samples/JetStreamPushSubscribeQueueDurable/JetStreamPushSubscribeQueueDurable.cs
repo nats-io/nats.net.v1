@@ -35,7 +35,7 @@ namespace NATSExamples
         
         public static void Main(string[] args)
         {
-            ArgumentHelper helper = new ArgumentHelperBuilder("NATS JetStream Push Subscribe Bind Durable", args, Usage)
+            ArgumentHelper helper = new ArgumentHelperBuilder("NATS JetStream Push Subscribe Queue Durable", args, Usage)
                 .DefaultStream("qdur-stream")
                 .DefaultSubject("qdur-subject")
                 .DefaultQueue("qdur-queue")
