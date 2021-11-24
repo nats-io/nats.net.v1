@@ -326,11 +326,10 @@ namespace IntegrationTests
         {
             Context.RunInJsServer(c =>
             {
-                // create the stream.
-                CreateMemoryStream(c, STREAM, SUBJECT_STAR);
-
-                // Create our JetStream context.
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
                 IJetStream js = c.CreateJetStreamContext();
+                
+                CreateMemoryStream(jsm, STREAM, SUBJECT_STAR);
 
                 string subjectA = SubjectDot("A");
                 string subjectB = SubjectDot("B");
@@ -412,6 +411,22 @@ namespace IntegrationTests
                 sub = js.PushSubscribeSync(subjectA, pso);
                 m = sub.NextMessage(1000);
                 AssertMessage(m, 4);            
+
+                // DeliverPolicy.ByStartSequence with a deleted record
+                PublishAck pa4 = js.Publish(subjectA, DataBytes(4));
+                PublishAck pa5 = js.Publish(subjectA, DataBytes(5));
+                js.Publish(subjectA, DataBytes(6));
+                jsm.DeleteMessage(STREAM, pa4.Seq);
+                jsm.DeleteMessage(STREAM, pa5.Seq);
+
+                pso = ConsumerConfiguration.Builder()
+                    .WithDeliverPolicy(DeliverPolicy.ByStartSequence)
+                    .WithStartSequence(pa4.Seq)
+                    .BuildPushSubscribeOptions();
+                    
+                sub = js.PushSubscribeSync(subjectA, pso);
+                m = sub.NextMessage(1000);
+                AssertMessage(m, 6);
             });
         }
         
