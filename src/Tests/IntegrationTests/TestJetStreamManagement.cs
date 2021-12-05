@@ -598,7 +598,7 @@ namespace IntegrationTests
                 MessageInfo mi = jsm.GetMessage(STREAM, 1);
                 Assert.Equal(SUBJECT, mi.Subject);
                 Assert.Equal(Data(1), System.Text.Encoding.ASCII.GetString(mi.Data));
-                Assert.Equal(1, mi.Seq);
+                Assert.Equal(1U, mi.Sequence);
                 Assert.True(mi.Time >= beforeCreated);
                 Assert.NotNull(mi.Headers);
                 Assert.Equal("bar", mi.Headers["foo"]);
@@ -606,7 +606,7 @@ namespace IntegrationTests
                 mi = jsm.GetMessage(STREAM, 2);
                 Assert.Equal(SUBJECT, mi.Subject);
                 Assert.Null(mi.Data);
-                Assert.Equal(2, mi.Seq);
+                Assert.Equal(2U, mi.Sequence);
                 Assert.True(mi.Time >= beforeCreated);
                 Assert.Null(mi.Headers);
 

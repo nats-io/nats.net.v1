@@ -12,8 +12,10 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NATS.Client;
+using NATS.Client.JetStream;
 using UnitTests;
 using Xunit;
 
@@ -109,7 +111,14 @@ namespace IntegrationTests
             {
                 using (var c = OpenConnection(testServerInfo.Port))
                 {
-                    test(c);
+                    try
+                    {
+                        test(c);
+                    }
+                    finally
+                    {
+                        cleanupJs(c);
+                    }
                 }
             }
         }
@@ -120,8 +129,25 @@ namespace IntegrationTests
             {
                 using (var c = OpenConnection(testServerInfo.Port, optionsModifier))
                 {
-                    test(c);
+                    try
+                    {
+                        test(c);
+                    }
+                    finally
+                    {
+                        cleanupJs(c);
+                    }
                 }
+            }
+        }
+
+        private void cleanupJs(IConnection c)
+        {
+            IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+            IList<string> streams = jsm.GetStreamNames();
+            foreach (string s in streams)
+            {
+                jsm.DeleteStream(s);
             }
         }
     }
@@ -298,6 +324,7 @@ namespace IntegrationTests
     public class JetStreamPushSyncSuiteContext : OneServerSuiteContext {}
     public class JetStreamPushSyncQueueSuiteContext : OneServerSuiteContext {}
     public class JetStreamPullSuiteContext : OneServerSuiteContext {}
+    public class KeyValueSuiteContext : OneServerSuiteContext {}
     
     public class OneServerSuiteContext : SuiteContext
     {

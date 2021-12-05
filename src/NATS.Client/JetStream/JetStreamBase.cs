@@ -25,9 +25,9 @@ namespace NATS.Client.JetStream
         protected JetStreamBase(IConnection connection, JetStreamOptions options)
         {
             Conn = connection;
-            JetStreamOptions = options ?? JetStreamOptions.Builder().Build();
+            JetStreamOptions = options ?? JetStreamOptions.DefaultJsOptions;
             Prefix = JetStreamOptions.Prefix;
-            Timeout = (int) JetStreamOptions.RequestTimeout.Millis;
+            Timeout = JetStreamOptions.RequestTimeout.Millis;
         }
         
         // ----------------------------------------------------------------------------------------------------

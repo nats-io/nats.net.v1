@@ -56,6 +56,8 @@ namespace UnitTests
         public const string DURABLE = "durable";
         public const string DELIVER = "deliver";
         public const string MESSAGE_ID = "mid";
+        public const string BUCKET = "bucket";
+        public const string KEY = "key";
         public const string DATA = "data";
 
         public static string Stream(int seq) {
@@ -92,6 +94,14 @@ namespace UnitTests
 
         public static string Deliver(int seq) {
             return DELIVER + "-" + seq;
+        }
+
+        public static string Bucket(int seq) {
+            return BUCKET + "-" + seq;
+        }
+
+        public static string Key(int seq) {
+            return KEY + "-" + seq;
         }
 
         public static string MessageId(int seq) {

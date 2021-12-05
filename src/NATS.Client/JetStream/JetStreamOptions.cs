@@ -18,7 +18,8 @@ namespace NATS.Client.JetStream
 {
     public sealed class JetStreamOptions
     {
-        private static readonly Duration DefaultTimeout = Duration.OfMillis(Defaults.Timeout);
+        public static readonly Duration DefaultTimeout = Duration.OfMillis(Defaults.Timeout);
+        public static readonly JetStreamOptions DefaultJsOptions = Builder().Build();
 
         private readonly string _prefix;
         private readonly Duration _requestTimeout;
