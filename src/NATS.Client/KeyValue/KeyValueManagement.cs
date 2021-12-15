@@ -17,13 +17,13 @@ using NATS.Client.JetStream;
 
 namespace NATS.Client.KeyValue
 {
-    public class KeyValueManagement : IKeyValueManagement
+    internal class KeyValueManagement : IKeyValueManagement
     {
         private readonly IJetStreamManagement jsm;
 
-        internal KeyValueManagement(IConnection connection)
+        internal KeyValueManagement(IConnection connection, JetStreamOptions options)
         {
-            jsm = connection.CreateJetStreamManagementContext();
+            jsm = connection.CreateJetStreamManagementContext(options);
         }
         
         public KeyValueStatus Create(KeyValueConfiguration config)
@@ -31,7 +31,7 @@ namespace NATS.Client.KeyValue
             return new KeyValueStatus(jsm.AddStream(config.BackingConfig));
         }
 
-        public IList<string> GetBucketsNames()
+        public IList<string> GetBucketNames()
         {
             IList<string> buckets = new List<string>();
             IList<string> names = jsm.GetStreamNames();
@@ -46,13 +46,13 @@ namespace NATS.Client.KeyValue
         public KeyValueStatus GetBucketInfo(string bucketName)
         {
             Validator.ValidateKvBucketNameRequired(bucketName);
-            return new KeyValueStatus(jsm.GetStreamInfo(KeyValueUtil.StreamName(bucketName)));
+            return new KeyValueStatus(jsm.GetStreamInfo(KeyValueUtil.ToStreamName(bucketName)));
         }
 
         public bool Delete(string bucketName)
         {
             Validator.ValidateKvBucketNameRequired(bucketName);
-            return jsm.DeleteStream(KeyValueUtil.StreamName(bucketName));
+            return jsm.DeleteStream(KeyValueUtil.ToStreamName(bucketName));
         }
     }
 }

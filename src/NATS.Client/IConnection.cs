@@ -782,12 +782,14 @@ namespace NATS.Client
         /// Gets a context for a Key Value bucket 
         /// </summary>
         /// <param name="bucketName">The name of the bucket</param>
+        /// <param name="options">Optional JetStream options.</param>
         /// <returns></returns>
         IKeyValue CreateKeyValueContext(string bucketName, JetStreamOptions options = null);
 
         /// <summary>
         /// Gets a context for administrating Key Value buckets
         /// </summary>
+        /// <param name="options">Optional JetStream options.</param>
         /// <returns></returns>
         IKeyValueManagement CreateKeyValueManagementContext(JetStreamOptions options = null);
     }

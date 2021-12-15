@@ -13,7 +13,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -34,20 +33,6 @@ namespace IntegrationTests
         public TestKeyValue(ITestOutputHelper output, KeyValueSuiteContext context) : base(context)
         {
             this.output = output;
-        }
-
-        public class ConsoleWriter : StringWriter
-        {
-            private ITestOutputHelper output;
-            public ConsoleWriter(ITestOutputHelper output)
-            {
-                this.output = output;
-            }
-
-            public override void WriteLine(string m)
-            {
-                output.WriteLine(m);
-            }
         }
 
         [Fact]
@@ -81,7 +66,7 @@ namespace IntegrationTests
                 kvc = status.Config;
                 Assert.Equal(BUCKET, status.BucketName);
                 Assert.Equal(BUCKET, kvc.BucketName);
-                Assert.Equal(KeyValueUtil.StreamName(BUCKET), kvc.BackingConfig.Name);
+                Assert.Equal(KeyValueUtil.ToStreamName(BUCKET), kvc.BackingConfig.Name);
                 Assert.Equal(-1, kvc.MaxValues);
                 Assert.Equal(3, status.MaxHistoryPerKey);
                 Assert.Equal(3, kvc.MaxHistoryPerKey);
@@ -316,7 +301,7 @@ namespace IntegrationTests
                 Assert.Throws<NATSJetStreamException>(() => kvm.Delete(BUCKET));
                 Assert.Throws<NATSJetStreamException>(() => kvm.GetBucketInfo(BUCKET));
 
-                Assert.Equal(0, kvm.GetBucketsNames().Count);
+                Assert.Equal(0, kvm.GetBucketNames().Count);
             });
         }
         
@@ -414,7 +399,7 @@ namespace IntegrationTests
                 kv.Purge(Key(4));
 
                 IJetStream js = c.CreateJetStreamContext();
-                IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(KeyValueUtil.StreamSubject(BUCKET));
+                IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(KeyValueUtil.ToStreamSubject(BUCKET));
 
                 Msg m = sub.NextMessage(1000);
                 Assert.Equal("a", Encoding.UTF8.GetString(m.Data));
@@ -434,7 +419,7 @@ namespace IntegrationTests
                 sub.Unsubscribe();
 
                 kv.PurgeDeletes();
-                sub = js.PushSubscribeSync(KeyValueUtil.StreamSubject(BUCKET));
+                sub = js.PushSubscribeSync(KeyValueUtil.ToStreamSubject(BUCKET));
 
                 m = sub.NextMessage(1000);
                 Assert.Equal("b", Encoding.UTF8.GetString(m.Data));
@@ -443,6 +428,56 @@ namespace IntegrationTests
                 Assert.Equal("c", Encoding.UTF8.GetString(m.Data));
 
                 sub.Unsubscribe();
+            });
+        }
+
+        [Fact]
+        public void TestCreateAndUpdate() {
+            Context.RunInJsServer(c =>
+            {
+                // get the kv management context
+                IKeyValueManagement kvm = c.CreateKeyValueManagementContext();
+
+                kvm.Create(KeyValueConfiguration.Builder()
+                    .WithName(BUCKET)
+                    .WithStorageType(StorageType.Memory)
+                    .WithMaxHistoryPerKey(64)
+                    .Build());
+
+                IKeyValue kv = c.CreateKeyValueContext(BUCKET);
+
+                // 1. allowed to create something that does not exist
+                ulong rev1 = kv.Create(KEY, Encoding.UTF8.GetBytes("a"));
+
+                // 2. allowed to update with proper revision
+                kv.Update(KEY, Encoding.UTF8.GetBytes("ab"), rev1);
+
+                // 3. not allowed to update with wrong revision
+                Assert.Throws<NATSJetStreamException>(() => kv.Update(KEY, Encoding.UTF8.GetBytes("zzz"), rev1));
+
+                // 4. not allowed to create a key that exists
+                Assert.Throws<NATSJetStreamException>(() => kv.Create(KEY, Encoding.UTF8.GetBytes("zzz")));
+
+                // 5. not allowed to update a key that does not exist
+                Assert.Throws<NATSJetStreamException>(() => kv.Update(KEY, Encoding.UTF8.GetBytes("zzz"), 1));
+
+                // 6. allowed to create a key that is deleted
+                kv.Delete(KEY);
+                kv.Create(KEY, Encoding.UTF8.GetBytes("abc"));
+
+                // 7. allowed to update a key that is deleted, as long as you have it's revision
+                kv.Delete(KEY);
+                IList<KeyValueEntry> hist = kv.History(KEY);
+                kv.Update(KEY, Encoding.UTF8.GetBytes("abcd"), hist[hist.Count-1].Revision);
+
+                // 8. allowed to create a key that is purged
+                kv.Purge(KEY);
+                kv.Create(KEY, Encoding.UTF8.GetBytes("abcde"));
+
+                // 9. allowed to update a key that is deleted, as long as you have it's revision
+                kv.Purge(KEY);
+                hist = kv.History(KEY);
+                kv.Update(KEY, Encoding.UTF8.GetBytes("abcdef"), hist[hist.Count-1].Revision);
             });
         }
 
@@ -468,14 +503,14 @@ namespace IntegrationTests
                 CreateMemoryStream(c, Stream(1));
                 CreateMemoryStream(c, Stream(2));
 
-                IList<string> buckets = kvm.GetBucketsNames();
+                IList<string> buckets = kvm.GetBucketNames();
                 Assert.Equal(2, buckets.Count);
                 Assert.Contains(Bucket(1), buckets);
                 Assert.Contains(Bucket(2), buckets);
             });
         }
 
-        private void AssertKeys(IList<String> apiKeys, params String[] manualKeys) {
+        private void AssertKeys(IList<string> apiKeys, params string[] manualKeys) {
             Assert.Equal(manualKeys.Length, apiKeys.Count);
             foreach (string k in manualKeys)
             {
@@ -525,11 +560,34 @@ namespace IntegrationTests
         [Fact]
         public void TestWatch()
         {
-            Console.SetOut(new ConsoleWriter(output));
-
             string keyNull = "key.nl";
             string key1 = "key.1";
             string key2 = "key.2";
+            
+            Object[] key1AllExpecteds = new Object[] {
+                "a", "aa", KeyValueOperation.Delete, "aaa", KeyValueOperation.Delete, KeyValueOperation.Purge
+            };
+
+            Object[] noExpecteds = new Object[0];
+            Object[] purgeOnlyExpecteds = { KeyValueOperation.Purge };
+
+            Object[] key2AllExpecteds = {
+                "z", "zz", KeyValueOperation.Delete, "zzz"
+            };
+
+            Object[] key2AfterExpecteds = { "zzz" };
+
+            Object[] allExpecteds = new object[] {
+                "a", "aa", "z", "zz",
+                KeyValueOperation.Delete, KeyValueOperation.Delete,
+                "aaa", "zzz",
+                KeyValueOperation.Delete, KeyValueOperation.Purge,
+                null
+            };
+
+            Object[] allPutsExpecteds = {
+                "a", "aa", "z", "zz", "aaa", "zzz", null
+            };
             
             Context.RunInJsServer(c =>
             {
@@ -539,41 +597,42 @@ namespace IntegrationTests
                 // create the bucket
                 kvm.Create(KeyValueConfiguration.Builder()
                     .WithName(BUCKET)
+                    .WithMaxHistoryPerKey(10)
                     .WithStorageType(StorageType.Memory)
                     .Build());
 
                 IKeyValue kv = c.CreateKeyValueContext(BUCKET);
-                
-                TestKeyValueWatcher key1FullWatcher = new TestKeyValueWatcher();
-                TestKeyValueWatcher key1MetaWatcher = new TestKeyValueWatcher();
-                TestKeyValueWatcher key2FullWatcher = new TestKeyValueWatcher();
-                TestKeyValueWatcher key2MetaWatcher = new TestKeyValueWatcher();
-                TestKeyValueWatcher allPutWatcher = new TestKeyValueWatcher();
-                TestKeyValueWatcher allDelWatcher = new TestKeyValueWatcher();
-                TestKeyValueWatcher allPurgeWatcher = new TestKeyValueWatcher();
-                TestKeyValueWatcher allDelPurgeWatcher = new TestKeyValueWatcher();
-                TestKeyValueWatcher allFullWatcher = new TestKeyValueWatcher();
-                TestKeyValueWatcher allMetaWatcher = new TestKeyValueWatcher();
-                TestKeyValueWatcher starFullWatcher = new TestKeyValueWatcher();
-                TestKeyValueWatcher starMetaWatcher = new TestKeyValueWatcher();
-                TestKeyValueWatcher gtFullWatcher = new TestKeyValueWatcher();
-                TestKeyValueWatcher gtMetaWatcher = new TestKeyValueWatcher();
+
+                TestKeyValueWatcher key1FullWatcher = new TestKeyValueWatcher(true);
+                TestKeyValueWatcher key1MetaWatcher = new TestKeyValueWatcher(true, KeyValueWatchOption.MetaOnly);
+                TestKeyValueWatcher key1StartNewWatcher = new TestKeyValueWatcher(true, KeyValueWatchOption.MetaOnly);
+                TestKeyValueWatcher key1StartAllWatcher = new TestKeyValueWatcher(true, KeyValueWatchOption.MetaOnly);
+                TestKeyValueWatcher key2FullWatcher = new TestKeyValueWatcher(true);
+                TestKeyValueWatcher key2MetaWatcher = new TestKeyValueWatcher(true, KeyValueWatchOption.MetaOnly);
+                TestKeyValueWatcher allAllFullWatcher = new TestKeyValueWatcher(true);
+                TestKeyValueWatcher allAllMetaWatcher = new TestKeyValueWatcher(true, KeyValueWatchOption.MetaOnly);
+                TestKeyValueWatcher allIgDelFullWatcher = new TestKeyValueWatcher(true, KeyValueWatchOption.IgnoreDelete);
+                TestKeyValueWatcher allIgDelMetaWatcher = new TestKeyValueWatcher(true, KeyValueWatchOption.MetaOnly, KeyValueWatchOption.IgnoreDelete);
+                TestKeyValueWatcher starFullWatcher = new TestKeyValueWatcher(true);
+                TestKeyValueWatcher starMetaWatcher = new TestKeyValueWatcher(true, KeyValueWatchOption.MetaOnly);
+                TestKeyValueWatcher gtFullWatcher = new TestKeyValueWatcher(true);
+                TestKeyValueWatcher gtMetaWatcher = new TestKeyValueWatcher(true, KeyValueWatchOption.MetaOnly);
 
                 IList<KeyValueWatchSubscription> subs = new List<KeyValueWatchSubscription>();
-                subs.Add(kv.Watch(key1, key1FullWatcher.Watcher, false));
-                subs.Add(kv.Watch(key1, key1MetaWatcher.Watcher, true));
-                subs.Add(kv.Watch(key2, key2FullWatcher.Watcher, false));
-                subs.Add(kv.Watch(key2, key2MetaWatcher.Watcher, true));
-                subs.Add(kv.WatchAll(allPutWatcher.Watcher, false, KeyValueOperation.Put));
-                subs.Add(kv.WatchAll(allDelWatcher.Watcher, true, KeyValueOperation.Delete));
-                subs.Add(kv.WatchAll(allPurgeWatcher.Watcher, true, KeyValueOperation.Purge));
-                subs.Add(kv.WatchAll(allDelPurgeWatcher.Watcher, true, KeyValueOperation.Delete, KeyValueOperation.Purge));
-                subs.Add(kv.WatchAll(allFullWatcher.Watcher, false));
-                subs.Add(kv.WatchAll(allMetaWatcher.Watcher, true));
-                subs.Add(kv.Watch("key.*", starFullWatcher.Watcher, false));
-                subs.Add(kv.Watch("key.*", starMetaWatcher.Watcher, true));
-                subs.Add(kv.Watch("key.>", gtFullWatcher.Watcher, false));
-                subs.Add(kv.Watch("key.>", gtMetaWatcher.Watcher, true));
+                subs.Add(kv.Watch(key1, key1FullWatcher, key1FullWatcher.WatchOptions));
+                subs.Add(kv.Watch(key1, key1MetaWatcher, key1MetaWatcher.WatchOptions));
+                subs.Add(kv.Watch(key1, key1StartNewWatcher, key1StartNewWatcher.WatchOptions));
+                subs.Add(kv.Watch(key1, key1StartAllWatcher, key1StartAllWatcher.WatchOptions));
+                subs.Add(kv.Watch(key2, key2FullWatcher, key2FullWatcher.WatchOptions));
+                subs.Add(kv.Watch(key2, key2MetaWatcher, key2MetaWatcher.WatchOptions));
+                subs.Add(kv.WatchAll(allAllFullWatcher, allAllFullWatcher.WatchOptions));
+                subs.Add(kv.WatchAll(allAllMetaWatcher, allAllMetaWatcher.WatchOptions));
+                subs.Add(kv.WatchAll(allIgDelFullWatcher, allIgDelFullWatcher.WatchOptions));
+                subs.Add(kv.WatchAll(allIgDelMetaWatcher, allIgDelMetaWatcher.WatchOptions));
+                subs.Add(kv.Watch("key.*", starFullWatcher, starFullWatcher.WatchOptions));
+                subs.Add(kv.Watch("key.*", starMetaWatcher, starMetaWatcher.WatchOptions));
+                subs.Add(kv.Watch("key.>", gtFullWatcher, gtFullWatcher.WatchOptions));
+                subs.Add(kv.Watch("key.>", gtMetaWatcher, gtMetaWatcher.WatchOptions));
 
                 kv.Put(key1, "a");
                 kv.Put(key1, "aa");
@@ -584,48 +643,28 @@ namespace IntegrationTests
                 kv.Put(key1, "aaa");
                 kv.Put(key2, "zzz");
                 kv.Delete(key1);
-                kv.Delete(key2);
                 kv.Purge(key1);
-                kv.Purge(key2);
                 kv.Put(keyNull, (byte[])null);
                 
-                Thread.Sleep(2000);
+                Thread.Sleep(100); // give time for all the data to be setup
 
-                object[] key1Expecteds = new object[] {
-                    "a", "aa", KeyValueOperation.Delete, "aaa", KeyValueOperation.Delete, KeyValueOperation.Purge
-                };
+                TestKeyValueWatcher key1AfterWatcher = new TestKeyValueWatcher(false, KeyValueWatchOption.MetaOnly);
+                TestKeyValueWatcher key1AfterIgDelWatcher = new TestKeyValueWatcher(false, KeyValueWatchOption.MetaOnly, KeyValueWatchOption.IgnoreDelete);
+                TestKeyValueWatcher key1AfterStartNewWatcher = new TestKeyValueWatcher(false, KeyValueWatchOption.MetaOnly, KeyValueWatchOption.UpdatesOnly);
+                TestKeyValueWatcher key1AfterStartFirstWatcher = new TestKeyValueWatcher(false, KeyValueWatchOption.MetaOnly, KeyValueWatchOption.IncludeHistory);
+                TestKeyValueWatcher key2AfterWatcher = new TestKeyValueWatcher(false, KeyValueWatchOption.MetaOnly);
+                TestKeyValueWatcher key2AfterStartNewWatcher = new TestKeyValueWatcher(false, KeyValueWatchOption.MetaOnly, KeyValueWatchOption.UpdatesOnly);
+                TestKeyValueWatcher key2AfterStartFirstWatcher = new TestKeyValueWatcher(false, KeyValueWatchOption.MetaOnly, KeyValueWatchOption.IncludeHistory);
 
-                object[] key2Expecteds = new object[] {
-                    "z", "zz", KeyValueOperation.Delete, "zzz", KeyValueOperation.Delete, KeyValueOperation.Purge
-                };
+                subs.Add(kv.Watch(key1, key1AfterWatcher, key1AfterWatcher.WatchOptions));
+                subs.Add(kv.Watch(key1, key1AfterIgDelWatcher, key1AfterIgDelWatcher.WatchOptions));
+                subs.Add(kv.Watch(key1, key1AfterStartNewWatcher, key1AfterStartNewWatcher.WatchOptions));
+                subs.Add(kv.Watch(key1, key1AfterStartFirstWatcher, key1AfterStartFirstWatcher.WatchOptions));
+                subs.Add(kv.Watch(key2, key2AfterWatcher, key2AfterWatcher.WatchOptions));
+                subs.Add(kv.Watch(key2, key2AfterStartNewWatcher, key2AfterStartNewWatcher.WatchOptions));
+                subs.Add(kv.Watch(key2, key2AfterStartFirstWatcher, key2AfterStartFirstWatcher.WatchOptions));
 
-                object[] allExpecteds = new object[] {
-                    "a", "aa", "z", "zz",
-                    KeyValueOperation.Delete, KeyValueOperation.Delete,
-                    "aaa", "zzz",
-                    KeyValueOperation.Delete, KeyValueOperation.Delete,
-                    KeyValueOperation.Purge, KeyValueOperation.Purge,
-                    null
-                };
-
-                object[] allPuts = new object[] {
-                    "a", "aa", "z", "zz", "aaa", "zzz", null
-                };
-
-                object[] allDels = new object[] {
-                    KeyValueOperation.Delete, KeyValueOperation.Delete,
-                    KeyValueOperation.Delete, KeyValueOperation.Delete
-                };
-
-                object[] allPurges = new object[] {
-                    KeyValueOperation.Purge, KeyValueOperation.Purge
-                };
-
-                object[] allDelsPurges = new object[] {
-                    KeyValueOperation.Delete, KeyValueOperation.Delete,
-                    KeyValueOperation.Delete, KeyValueOperation.Delete,
-                    KeyValueOperation.Purge, KeyValueOperation.Purge
-                };
+                Thread.Sleep(2000); // give time for the watches to get messages
 
                 // unsubscribe so the watchers don't get any more messages
                 foreach (KeyValueWatchSubscription sub in subs)
@@ -637,28 +676,48 @@ namespace IntegrationTests
                 kv.Put(key1, "aaaa");
                 kv.Put(key2, "zzzz");
 
-                ValidateWatcher(key1Expecteds, key1FullWatcher, false);
-                ValidateWatcher(key1Expecteds, key1MetaWatcher, true);
-                ValidateWatcher(key2Expecteds, key2FullWatcher, false);
-                ValidateWatcher(key2Expecteds, key2MetaWatcher, true);
-                ValidateWatcher(allPuts, allPutWatcher, false);
-                ValidateWatcher(allDels, allDelWatcher, true);
-                ValidateWatcher(allPurges, allPurgeWatcher, true);
-                ValidateWatcher(allDelsPurges, allDelPurgeWatcher, true);
-                ValidateWatcher(allExpecteds, allFullWatcher, false);
-                ValidateWatcher(allExpecteds, allMetaWatcher, true);
-                ValidateWatcher(allExpecteds, starFullWatcher, false);
-                ValidateWatcher(allExpecteds, starMetaWatcher, true);
-                ValidateWatcher(allExpecteds, gtFullWatcher, false);
-                ValidateWatcher(allExpecteds, gtMetaWatcher, true);
+                ValidateWatcher(key1AllExpecteds, key1FullWatcher);
+                ValidateWatcher(key1AllExpecteds, key1MetaWatcher);
+                ValidateWatcher(key1AllExpecteds, key1StartNewWatcher);
+                ValidateWatcher(key1AllExpecteds, key1StartAllWatcher);
+
+                ValidateWatcher(key2AllExpecteds, key2FullWatcher);
+                ValidateWatcher(key2AllExpecteds, key2MetaWatcher);
+
+                ValidateWatcher(allExpecteds, allAllFullWatcher);
+                ValidateWatcher(allExpecteds, allAllMetaWatcher);
+                ValidateWatcher(allPutsExpecteds, allIgDelFullWatcher);
+                ValidateWatcher(allPutsExpecteds, allIgDelMetaWatcher);
+
+                ValidateWatcher(allExpecteds, starFullWatcher);
+                ValidateWatcher(allExpecteds, starMetaWatcher);
+                ValidateWatcher(allExpecteds, gtFullWatcher);
+                ValidateWatcher(allExpecteds, gtMetaWatcher);
+
+                ValidateWatcher(purgeOnlyExpecteds, key1AfterWatcher);
+                ValidateWatcher(noExpecteds, key1AfterIgDelWatcher);
+                ValidateWatcher(noExpecteds, key1AfterStartNewWatcher);
+                ValidateWatcher(purgeOnlyExpecteds, key1AfterStartFirstWatcher);
+
+                ValidateWatcher(key2AfterExpecteds, key2AfterWatcher);
+                ValidateWatcher(noExpecteds, key2AfterStartNewWatcher);
+                ValidateWatcher(key2AllExpecteds, key2AfterStartFirstWatcher);
             });
         }
 
-        private void ValidateWatcher(object[] expecteds, TestKeyValueWatcher watcher, bool metaOnly) {
+        private void ValidateWatcher(object[] expectedKves, TestKeyValueWatcher watcher) {
+            Assert.Equal(expectedKves.Length, watcher.Entries.Count);
+            Assert.Equal(1, watcher.EndOfDataReceived);
+            
+            if (expectedKves.Length > 0) {
+                Assert.Equal(watcher.BeforeWatcher, watcher.EndBeforeEntries);
+            }
+
             int aix = 0;
             DateTime lastCreated = DateTime.MinValue;
             ulong lastRevision = 0;
-            foreach (KeyValueEntry kve in watcher.entries) {
+            
+            foreach (KeyValueEntry kve in watcher.Entries) {
 
                 Assert.True(kve.Created.CompareTo(lastCreated) >= 0);
                 lastCreated = kve.Created;
@@ -666,16 +725,15 @@ namespace IntegrationTests
                 Assert.True(lastRevision < kve.Revision);
                 lastRevision = kve.Revision;
 
-                Object expected = expecteds[aix++];
+                Object expected = expectedKves[aix++];
                 if (expected == null) {
                     Assert.Equal(KeyValueOperation.Put, kve.Operation);
                     Assert.True(kve.Value == null || kve.Value.Length == 0);
                     Assert.Equal(0, kve.DataLength);
                 }
-                else if (expected is string) {
+                else if (expected is string s) {
                     Assert.Equal(KeyValueOperation.Put, kve.Operation);
-                    String s = (String) expected;
-                    if (metaOnly) {
+                    if (watcher.MetaOnly) {
                         Assert.True(kve.Value == null || kve.Value.Length == 0);
                         Assert.Equal(s.Length, kve.DataLength);
                     }
@@ -694,13 +752,39 @@ namespace IntegrationTests
         }
     }
 
-    class TestKeyValueWatcher
+    class TestKeyValueWatcher : IKeyValueWatcher 
     {
-        public IList<KeyValueEntry> entries = new List<KeyValueEntry>();
+        public IList<KeyValueEntry> Entries = new List<KeyValueEntry>();
+        public KeyValueWatchOption[] WatchOptions;
+        public bool BeforeWatcher;
+        public bool MetaOnly;
+        public int EndOfDataReceived;
+        public bool EndBeforeEntries;
 
-        public Action<KeyValueEntry> Watcher => kve =>
+        public TestKeyValueWatcher(bool beforeWatcher, params KeyValueWatchOption[] watchOptions)
         {
-            entries.Add(kve);
-        };
+            BeforeWatcher = beforeWatcher;
+            WatchOptions = watchOptions;
+            foreach (KeyValueWatchOption wo in watchOptions)
+            {
+                if (wo == KeyValueWatchOption.MetaOnly)
+                {
+                    MetaOnly = true;
+                    break;
+                }
+            }
+        }
+
+        public void Watch(KeyValueEntry kve)
+        {
+            Entries.Add(kve);
+        }
+
+        public void EndOfData()
+        {
+            if (++EndOfDataReceived == 1 && Entries.Count == 0) {
+                EndBeforeEntries = true;
+            }
+        }
     }
 }

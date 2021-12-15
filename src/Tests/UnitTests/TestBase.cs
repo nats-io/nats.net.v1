@@ -2,11 +2,47 @@
 using System.IO;
 using System.Text;
 using System.Threading;
+using Xunit.Abstractions;
 
 namespace UnitTests
 {
     public class TestBase
     {
+        // ----------------------------------------------------------------------------------------------------
+        // console debug help 
+        // ----------------------------------------------------------------------------------------------------
+        /*
+            private readonly ITestOutputHelper output;
+
+            public TestKeyValue(ITestOutputHelper output, BlahSuiteContext context) : base(context)
+            {
+	            this.output = output;
+            }
+
+            [Fact]
+            public void TestRedirectConsole() {
+	            Console.SetOut(new ConsoleWriter(output));
+	            ...
+            }
+        */
+       
+        public class ConsoleWriter : StringWriter
+        {
+            private ITestOutputHelper output;
+            public ConsoleWriter(ITestOutputHelper output)
+            {
+                this.output = output;
+            }
+
+            public override void WriteLine(string m)
+            {
+                output.WriteLine(m);
+            }
+        }
+
+        // ----------------------------------------------------------------------------------------------------
+        // unit test 
+        // ----------------------------------------------------------------------------------------------------
         public const string Plain        = "plain";
         public const string HasSpace     = "has space";
         public const string HasPrintable = "has-print!able";
@@ -76,7 +112,7 @@ namespace UnitTests
             return SUBJECT + "-" + seq;
         }
 
-        public static String SubjectDot(String field) {
+        public static string SubjectDot(string field) {
             return SUBJECT + "." + field;
         }
 
@@ -121,6 +157,9 @@ namespace UnitTests
         }
     }
 
+    // ----------------------------------------------------------------------------------------------------
+    // Atomic equivalents. See also NATS.Client.Internals.InterlockedBoolean available from int   
+    // ----------------------------------------------------------------------------------------------------
     public class InterlockedLong
     {
         private long count;
@@ -129,7 +168,7 @@ namespace UnitTests
 
         public InterlockedLong(long start)
         {
-            this.count = start;
+            count = start;
         }
 
         public void Set(long l)

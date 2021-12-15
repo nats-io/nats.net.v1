@@ -21,31 +21,39 @@ namespace NATS.Client.JetStream
         public static readonly Duration DefaultTimeout = Duration.OfMillis(Defaults.Timeout);
         public static readonly JetStreamOptions DefaultJsOptions = Builder().Build();
 
-        private readonly string _prefix;
-        private readonly Duration _requestTimeout;
-        private readonly bool _publishNoAck;
-
-        private JetStreamOptions(string prefix, Duration requestTimeout, bool publishNoAck)
+        private JetStreamOptions(string inPrefix, Duration requestTimeout, bool publishNoAck)
         {
-            _prefix = prefix;
-            _requestTimeout = requestTimeout;
-            _publishNoAck = publishNoAck;
+            if (inPrefix == null) {
+                IsDefaultPrefix = true;
+                Prefix = DefaultApiPrefix;
+            }
+            else {
+                IsDefaultPrefix = false;
+                Prefix = inPrefix;
+            }
+            RequestTimeout = requestTimeout;
+            IsPublishNoAck = publishNoAck;
         }
 
         /// <summary>
         /// Gets the prefix.
         /// </summary>
-        public string Prefix { get => _prefix; }
+        public string Prefix { get; }
 
         /// <summary>
         /// Gets the request timeout
         /// </summary>
-        public Duration RequestTimeout { get => _requestTimeout; }
+        public Duration RequestTimeout { get; }
         
         /// <summary>
         /// Gets is publish should be done in no ack (core) style
         /// </summary>
-        public bool IsPublishNoAck { get => _publishNoAck; }
+        public bool IsPublishNoAck { get; }
+        
+        /// <summary>
+        /// True if the prefix for this options is the default prefix.
+        /// </summary>
+        public bool IsDefaultPrefix { get; }
         
         /// <summary>
         /// Gets the JetStreamOptions builder.
@@ -88,7 +96,14 @@ namespace NATS.Client.JetStream
             {
                 if (jso != null)
                 {
-                    _prefix = jso.Prefix;
+                    if (jso.IsDefaultPrefix)
+                    {
+                        _prefix = null;
+                    }
+                    else
+                    {
+                        _prefix = jso.Prefix;
+                    }
                     _requestTimeout = jso.RequestTimeout;
                     _publishNoAck = jso.IsPublishNoAck;
                 }
@@ -103,8 +118,10 @@ namespace NATS.Client.JetStream
             /// <returns>The JetStreamOptionsBuilder</returns>
             public JetStreamOptionsBuilder WithPrefix(string prefix) 
             {
-                _prefix = prefix; // validated during build
-                _domain = null; // build with one or the other
+                _prefix = Validator.EmptyAsNull(prefix); // validated during build
+                if (_prefix != null) {
+                    _domain = null; // build with one or the other
+                }
                 return this;
             }
             
@@ -117,8 +134,10 @@ namespace NATS.Client.JetStream
             /// <returns>The JetStreamOptionsBuilder</returns>
             public JetStreamOptionsBuilder WithDomain(string domain) 
             {
-                _domain = domain; // validated during build
-                _prefix = null; // build with one or the other
+                _domain = Validator.EmptyAsNull(domain); // validated during build
+                if (_domain != null) {
+                    _prefix = null; // build with one or the other
+                }
                 return this;
             }
 
@@ -160,40 +179,30 @@ namespace NATS.Client.JetStream
             /// <returns>The JetStreamOptions object.</returns>
             public JetStreamOptions Build()
             {
-                if (_domain == null)
+                string calculated = null;
+                if (_domain != null)
                 {
-                    _prefix = ValidatePrefix(_prefix);
+                    calculated = ValidateDomain(_domain);
                 }
-                else
+                else if (_prefix != null)
                 {
-                    _prefix = ValidateDomain(_domain);
+                    calculated = ValidatePrefix(_prefix);
                 }
                 // _requestTimeout defaulted in WithRequestTimeout
-                return new JetStreamOptions(_prefix, _requestTimeout, _publishNoAck);
+                return new JetStreamOptions(calculated, _requestTimeout, _publishNoAck);
             }
 
             private string ValidatePrefix(string prefix) {
-                if (string.IsNullOrWhiteSpace(prefix)) {
-                    return DefaultApiPrefix;
-                }
-
-                prefix = Validator.ValidatePrefixOrDomain(prefix, "Prefix", true);
-                if (!prefix.EndsWith(".")) {
-                    prefix += ".";
-                }
-
-                return prefix;
+                string valid = Validator.ValidatePrefixOrDomain(prefix, "Prefix", true);
+                return valid.EndsWith(".") ? valid : valid + ".";
             }
 
             private string ValidateDomain(string domain) {
-                if (string.IsNullOrWhiteSpace(domain)) {
-                    return DefaultApiPrefix;
+                string valid = Validator.ValidatePrefixOrDomain(domain, "Domain", true);
+                if (valid.EndsWith(".")) {
+                    return PrefixDollarJsDot + valid + PrefixApiDot;
                 }
-                domain = Validator.ValidatePrefixOrDomain(domain, "Domain", true);
-                if (!domain.EndsWith(".")) {
-                    domain += ".";
-                }
-                return PrefixDollarJsDot + domain + PrefixApiDot;
+                return PrefixDollarJsDot + valid + "." + PrefixApiDot;
             }
         }
     }

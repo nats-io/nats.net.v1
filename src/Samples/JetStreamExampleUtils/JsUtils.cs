@@ -165,7 +165,7 @@ namespace NATSExamples
         // ----------------------------------------------------------------------------------------------------
         // PUBLISH
         // ----------------------------------------------------------------------------------------------------
-        public static void Publish(IConnection c, String subject, int count) {
+        public static void Publish(IConnection c, string subject, int count) {
             Publish(c.CreateJetStreamContext(), subject, "data", count, false);
         }
 

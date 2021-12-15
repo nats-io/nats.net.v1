@@ -11,7 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using static NATS.Client.JetStream.StreamConfiguration;
@@ -69,12 +68,12 @@ namespace NATS.Client.KeyValue
                 }
             }
 
-            public KeyValueConfigurationBuilder WithName(String name) {
+            public KeyValueConfigurationBuilder WithName(string name) {
                 _name = name;
                 return this;
             }
 
-            public KeyValueConfigurationBuilder WithDescription(String description) {
+            public KeyValueConfigurationBuilder WithDescription(string description) {
                 scBuilder.WithDescription(description);
                 return this;
             }
@@ -116,8 +115,8 @@ namespace NATS.Client.KeyValue
 
             public KeyValueConfiguration Build() {
                 _name = Validator.ValidateKvBucketNameRequired(_name);
-                scBuilder.WithName(KeyValueUtil.StreamName(_name))
-                    .WithSubjects(KeyValueUtil.StreamSubject(_name))
+                scBuilder.WithName(KeyValueUtil.ToStreamName(_name))
+                    .WithSubjects(KeyValueUtil.ToStreamSubject(_name))
                     .WithAllowRollup(true)
                     .WithDenyDelete(true);
                 return new KeyValueConfiguration(scBuilder.Build());

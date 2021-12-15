@@ -27,6 +27,8 @@ namespace NATS.Client.KeyValue
 
         public string BucketName => Config.BucketName;
 
+        public string Description => Config.Description;
+
         public ulong EntryCount => BackingStreamInfo.State.Messages;
 
         public long MaxHistoryPerKey => Config.MaxHistoryPerKey;

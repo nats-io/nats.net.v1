@@ -53,15 +53,15 @@ namespace NATS.Client.Internals
             });
         }
 
-        public static string ValidateKvBucketNameRequired(String s) {
+        public static string ValidateKvBucketNameRequired(string s) {
             return ValidateKvBucketName(s, "Bucket name", true);
         }
 
-        public static string ValidateKvKeyWildcardAllowedRequired(String s) {
+        public static string ValidateKvKeyWildcardAllowedRequired(string s) {
             return ValidateWildcardKvKey(s, "Key", true);
         }
 
-        public static string ValidateNonWildcardKvKeyRequired(String s) {
+        public static string ValidateNonWildcardKvKeyRequired(string s) {
             return ValidateNonWildcardKvKey(s, "Key", true);
         }
 

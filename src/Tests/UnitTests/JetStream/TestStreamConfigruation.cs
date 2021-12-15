@@ -135,7 +135,7 @@ namespace UnitTests.JetStream
             AssertSubjects(builder.Build(), 1);
 
             // Subjects(...) replaces
-            builder.WithSubjects((String)null);
+            builder.WithSubjects((string)null);
             AssertSubjects(builder.Build());
 
             // Subjects(...) replaces

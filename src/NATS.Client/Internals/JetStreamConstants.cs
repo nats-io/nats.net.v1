@@ -165,5 +165,6 @@ namespace NATS.Client.Internals
 
         public const int JsConsumerNotFoundErr = 10014;
         public const int JsNoMessageFoundErr = 10037;
+        public const int JsWrongLastSequence = 10071;
     }
 }

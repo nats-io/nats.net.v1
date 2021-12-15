@@ -11,37 +11,173 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Collections.Generic;
 
 namespace NATS.Client.KeyValue
 {
+    public enum KeyValueWatchOption
+    {
+        /// <summary>
+        /// Do not include deletes or purges in results.
+        /// Default is to include deletes.
+        /// </summary>
+        IgnoreDelete,
+        
+        /// <summary>
+        /// Only get meta data, skip value when retrieving data from the server.
+        /// </summary>
+        MetaOnly,
+        
+        /// <summary>
+        /// Watch starting at the first entry for all keys.
+        /// Default is to start at the last per key.
+        /// </summary>
+        IncludeHistory,
+        
+        /// <summary>
+        /// Watch starting when there are new entries for keys.
+        /// Default is to start at the last per key.
+        /// </summary>
+        UpdatesOnly
+    }
+
+    public interface IKeyValueWatcher
+    {
+        /// <summary>
+        /// Called when a key has been updated
+        /// </summary>
+        /// <param name="kve">The entry for the updated key</param>
+        void Watch(KeyValueEntry kve);
+
+        /// <summary>
+        /// Called once if there is no data when the watch is created
+        /// or if there is data, the first time the watch exhausts all existing data.
+        /// </summary>
+        void EndOfData();
+    }
+    
     public interface IKeyValue
     {
+        /// <summary>
+        /// The name of the bucket
+        /// THIS IS A BETA FEATURE AND SUBJECT TO CHANGE
+        /// </summary>
         string BucketName { get; }
 
+        /// <summary>
+        /// Get the entry for a key
+        /// THIS IS A BETA FEATURE AND SUBJECT TO CHANGE
+        /// </summary>
+        /// <param name="key">the key</param>
+        /// <returns></returns>
         KeyValueEntry Get(string key);
 
+        /// <summary>
+        /// Put a byte[] as the value for a key
+        /// THIS IS A BETA FEATURE AND SUBJECT TO CHANGE
+        /// </summary>
+        /// <param name="key">the key</param>
+        /// <param name="value">the bytes of the value</param>
+        /// <returns>the revision number for the key</returns>
         ulong Put(string key, byte[] value);
 
+        /// <summary>
+        /// Put a string as the value for a key
+        /// THIS IS A BETA FEATURE AND SUBJECT TO CHANGE
+        /// </summary>
+        /// <param name="key">the key</param>
+        /// <param name="value">the UTF-8 string</param>
+        /// <returns>the revision number for the key</returns>
         ulong Put(string key, string value);
 
+        /// <summary>
+        ///Put a long as the value for a key
+        /// THIS IS A BETA FEATURE AND SUBJECT TO CHANGE
+        /// </summary>
+        /// <param name="key">the key</param>
+        /// <param name="value">the number</param>
+        /// <returns>the revision number for the key</returns>
         ulong Put(string key, long value);
 
+        /// <summary>
+        /// Put as the value for a key iff the key does not exist (there is no history)
+        /// or is deleted (history shows the key is deleted)
+        /// THIS IS A BETA FEATURE AND SUBJECT TO CHANGE
+        /// </summary>
+        /// <param name="key">the key</param>
+        /// <param name="value">the bytes of the value</param>
+        /// <returns>the revision number for the key</returns>
+        ulong Create(string key, byte[] value);
+
+        /// <summary>
+        /// Put as the value for a key iff the key exists and its last revision matches the expected
+        /// THIS IS A BETA FEATURE AND SUBJECT TO CHANGE
+        /// </summary>
+        /// <param name="key">the key</param>
+        /// <param name="value">the bytes of the value</param>
+        /// <param name="expectedRevision"></param>
+        /// <returns>the revision number for the key</returns>
+        ulong Update(string key, byte[] value, ulong expectedRevision);
+
+        /// <summary>
+        /// Soft deletes the key by placing a delete marker. 
+        /// THIS IS A BETA FEATURE AND SUBJECT TO CHANGE
+        /// </summary>
+        /// <param name="key">the key</param>
         void Delete(string key);
 
+        /// <summary>
+        /// Purge all values/history from the specific key. 
+        /// THIS IS A BETA FEATURE AND SUBJECT TO CHANGE
+        /// </summary>
+        /// <param name="key">the key</param>
         void Purge(string key);
 
-        KeyValueWatchSubscription Watch(string key, Action<KeyValueEntry> watcher, bool metaOnly, params KeyValueOperation[] operations);
+        /// <summary>
+        /// Watch updates for a specific key
+        /// THIS IS A BETA FEATURE AND SUBJECT TO CHANGE
+        /// </summary>
+        /// <param name="key">the key</param>
+        /// <param name="watcher">the watcher</param>
+        /// <param name="watchOptions">the watch options to apply. If multiple conflicting options are supplied, the last options wins.</param>
+        /// <returns></returns>
+        KeyValueWatchSubscription Watch(string key, IKeyValueWatcher watcher, params KeyValueWatchOption[] watchOptions);
 
-        KeyValueWatchSubscription WatchAll(Action<KeyValueEntry> watcher, bool metaOnly, params KeyValueOperation[] operations);
+        /// <summary>
+        ///
+        /// THIS IS A BETA FEATURE AND SUBJECT TO CHANGE
+        /// </summary>
+        /// <param name="watcher">the watcher</param>
+        /// <param name="watchOptions">the watch options to apply. If multiple conflicting options are supplied, the last options wins.</param>
+        /// <returns>The KeyValueWatchSubscription</returns>
+        KeyValueWatchSubscription WatchAll(IKeyValueWatcher watcher, params KeyValueWatchOption[] watchOptions);
 
+        /// <summary>
+        /// Get a list of the keys in a bucket.
+        /// THIS IS A BETA FEATURE AND SUBJECT TO CHANGE
+        /// </summary>
+        /// <returns>The list of keys</returns>
         IList<string> Keys();
 
+        /// <summary>
+        /// Get the history (list of KeyValueEntry) for a key
+        /// THIS IS A BETA FEATURE AND SUBJECT TO CHANGE
+        /// </summary>
+        /// <param name="key">the key</param>
+        /// <returns>The list of KeyValueEntry</returns>
         IList<KeyValueEntry> History(string key);
 
+        /// <summary>
+        /// Remove history from all keys that currently are deleted or purged.
+        /// THIS IS A BETA FEATURE AND SUBJECT TO CHANGE
+        /// </summary>
         void PurgeDeletes();
 
+        /// <summary>
+        /// Get the KeyValueStatus object
+        /// THIS IS A BETA FEATURE AND SUBJECT TO CHANGE
+        /// </summary>
+        /// <returns>the status object</returns>
         KeyValueStatus Status();
     }
 }

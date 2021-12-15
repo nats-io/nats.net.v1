@@ -17,12 +17,35 @@ namespace NATS.Client.KeyValue
 {
     public interface IKeyValueManagement
     {
+        /// <summary>
+        /// Create a key value store.
+        /// THIS IS A BETA FEATURE AND SUBJECT TO CHANGE
+        /// </summary>
+        /// <param name="config">the key value configuration</param>
+        /// <returns></returns>
         KeyValueStatus Create(KeyValueConfiguration config);
 
-        IList<string> GetBucketsNames();
+        /// <summary>
+        /// Get the list of bucket names.
+        /// THIS IS A BETA FEATURE AND SUBJECT TO CHANGE
+        /// </summary>
+        /// <returns>list of bucket names</returns>
+        IList<string> GetBucketNames();
 
+        /// <summary>
+        /// Gets the info for an existing bucket.
+        /// THIS IS A BETA FEATURE AND SUBJECT TO CHANGE
+        /// </summary>
+        /// <param name="bucketName">the bucket name to use</param>
+        /// <returns>the bucket status object</returns>
         KeyValueStatus GetBucketInfo(string bucketName);
 
+        /// <summary>
+        /// Deletes an existing bucket.
+        /// THIS IS A BETA FEATURE AND SUBJECT TO CHANGE
+        /// </summary>
+        /// <param name="bucketName"></param>
+        /// <returns>true if the delete succeeded. Usually throws a NATSJetStreamException otherwise</returns>
         bool Delete(string bucketName);
     }
 }

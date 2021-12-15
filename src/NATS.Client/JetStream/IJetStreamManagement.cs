@@ -45,7 +45,7 @@ namespace NATS.Client.JetStream
         /// Deletes an existing stream.
         /// </summary>
         /// <param name="streamName">The name of the stream.</param>
-        /// <returns>true if the delete succeeded</returns>
+        /// <returns>true if the delete succeeded. Usually throws a NATSJetStreamException otherwise</returns>
         bool DeleteStream(string streamName);
 
 
@@ -132,7 +132,7 @@ namespace NATS.Client.JetStream
         MessageInfo GetMessage(string streamName, ulong sequence);
 
         /// <summary>
-        /// Permanantly deletes a message from a stream.
+        /// Deletes a message from a stream.
         /// </summary>
         /// <param name="streamName">The name of the stream.</param>
         /// <param name="sequence">The stream sequence number of the message.</param>

@@ -4686,14 +4686,18 @@ namespace NATS.Client
             return new JetStreamManagement(this, options);
         }
 
+        #endregion
+
+        #region KeyValue
+
         public IKeyValue CreateKeyValueContext(string bucketName, JetStreamOptions options = null)
         {
-            return new KeyValue.KeyValue(this, bucketName);
+            return new KeyValue.KeyValue(this, bucketName, options);
         }
 
         public IKeyValueManagement CreateKeyValueManagementContext(JetStreamOptions options = null)
         {
-            return new KeyValueManagement(this);
+            return new KeyValueManagement(this, options);
         }
 
         #endregion

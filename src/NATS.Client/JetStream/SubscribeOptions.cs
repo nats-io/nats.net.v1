@@ -43,7 +43,8 @@ namespace NATS.Client.JetStream
         /// </summary>
         public string DeliverGroup => ConsumerConfiguration.DeliverGroup;
 
-        protected SubscribeOptions(ISubscribeOptionsBuilder builder, bool pull, string deliverSubject, string deliverGroup)
+        // TODO implement ordered
+        protected SubscribeOptions(ISubscribeOptionsBuilder builder, bool pull, bool ordered, string deliverSubject, string deliverGroup)
         {
             Stream = Validator.ValidateStreamName(builder.Stream, builder.Bind);
             

@@ -21,72 +21,117 @@ namespace NATS.Client.KeyValue
 {
     public class KeyValue : IKeyValue
     {
-        private JetStream.JetStream js;
-        private IJetStreamManagement jsm;
-        private string stream;
+        internal JetStream.JetStream js;
+        internal IJetStreamManagement jsm;
+        internal string StreamName { get; }
+        internal string StreamSubject { get; }
         
-        public KeyValue(IConnection connection, string bucketName) {
+        internal KeyValue(IConnection connection, string bucketName, JetStreamOptions options) {
             BucketName = Validator.ValidateKvBucketNameRequired(bucketName);
-            stream = KeyValueUtil.StreamName(BucketName);
-            js = new JetStream.JetStream(connection, null);
-            jsm = new JetStreamManagement(connection, null);
+            StreamName = KeyValueUtil.ToStreamName(BucketName);
+            StreamSubject = KeyValueUtil.ToStreamSubject(BucketName);
+            js = new JetStream.JetStream(connection, options);
+            jsm = new JetStreamManagement(connection, options);
         }
 
         public string BucketName { get; }
+        
+        internal string KeySubject(string key)
+        {
+            return KeyValueUtil.ToKeySubject(js.JetStreamOptions, BucketName, key);
+        }
 
         public KeyValueEntry Get(string key)
         {
-            Validator.ValidateNonWildcardKvKeyRequired(key);
-            string subj = string.Format(JetStreamConstants.JsapiMsgGet, stream);
-            byte[] bytes = MessageGetRequest.LastBySubjectBytes(KeyValueUtil.KeySubject(BucketName, key));
+            return GetInternal(Validator.ValidateNonWildcardKvKeyRequired(key));
+        }
+
+        internal KeyValueEntry GetInternal(string key)
+        {
+            string subj = string.Format(JetStreamConstants.JsapiMsgGet, StreamName);
+            byte[] bytes = MessageGetRequest.LastBySubjectBytes(KeySubject(key));
             Msg resp = js.RequestResponseRequired(subj, bytes, JetStreamOptions.DefaultTimeout.Millis);
             MessageInfo mi = new MessageInfo(resp, false);
-            if (mi.HasError) {
-                if (mi.ApiErrorCode == JetStreamConstants.JsNoMessageFoundErr) {
+            if (mi.HasError)
+            {
+                if (mi.ApiErrorCode == JetStreamConstants.JsNoMessageFoundErr)
+                {
                     return null; // run of the mill key not found
                 }
+
                 mi.ThrowOnHasError();
             }
+
             return new KeyValueEntry(mi);
         }
 
         public ulong Put(string key, byte[] value)
         {
             Validator.ValidateNonWildcardKvKeyRequired(key);
-            PublishAck pa = js.Publish(new Msg(KeyValueUtil.KeySubject(BucketName, key), value));
+            PublishAck pa = js.Publish(new Msg(KeySubject(key), value));
             return pa.Seq;
         }
 
         public ulong Put(string key, string value) => Put(key, Encoding.UTF8.GetBytes(value));
 
         public ulong Put(string key, long value) => Put(key, Encoding.UTF8.GetBytes(value.ToString()));
-
-        public void Delete(string key) => _deletePurge(key, KeyValueUtil.DeleteHeaders);
-
-        public void Purge(string key) => _deletePurge(key, KeyValueUtil.PurgeHeaders);
         
-        public KeyValueWatchSubscription Watch(string key, Action<KeyValueEntry> watcher, bool metaOnly, params KeyValueOperation[] operations)
+        public ulong Create(string key, byte[] value)
+        {
+            try
+            {
+                return Update(key, value, 0);
+            }
+            catch (NATSJetStreamException e)
+            {
+                if (e.ApiErrorCode == JetStreamConstants.JsWrongLastSequence)
+                {
+                    // must check if the last message for this subject is a delete or purge
+                    KeyValueEntry kve = GetInternal(key);
+                    if (kve != null && !kve.Operation.Equals(KeyValueOperation.Put)) {
+                        return Update(key, value, kve.Revision);
+                    }
+                }
+
+                throw;
+            }
+        }
+
+        public ulong Update(string key, byte[] value, ulong expectedRevision)
+        {
+            MsgHeader h = new MsgHeader 
+            {
+                [JetStreamConstants.ExpLastSubjectSeqHeader] = expectedRevision.ToString()
+            };
+            return _publishWithNonWildcardKey(key, value, h).Seq;
+        }
+
+        public void Delete(string key) => _publishWithNonWildcardKey(key, null, KeyValueUtil.DeleteHeaders);
+
+        public void Purge(string key) => _publishWithNonWildcardKey(key, null, KeyValueUtil.PurgeHeaders);
+        
+        public KeyValueWatchSubscription Watch(string key, IKeyValueWatcher watcher, params KeyValueWatchOption[] watchOptions)
         {
             Validator.ValidateKvKeyWildcardAllowedRequired(key);
             Validator.ValidateNotNull(watcher, "Watcher is required");
-            return new KeyValueWatchSubscription(js, BucketName, key, metaOnly, watcher, operations);
+            return new KeyValueWatchSubscription(this, key, watcher, watchOptions);
         }
 
-        public KeyValueWatchSubscription WatchAll(Action<KeyValueEntry> watcher, bool metaOnly, params KeyValueOperation[] operations)
+        public KeyValueWatchSubscription WatchAll(IKeyValueWatcher watcher, params KeyValueWatchOption[] watchOptions)
         {
             Validator.ValidateNotNull(watcher, "Watcher is required");
-            return new KeyValueWatchSubscription(js, BucketName, ">", metaOnly, watcher, operations);
+            return new KeyValueWatchSubscription(this, ">", watcher, watchOptions);
         }
 
-        private void _deletePurge(String key, MsgHeader h) {
+        private PublishAck _publishWithNonWildcardKey(string key, byte[] data, MsgHeader h) {
             Validator.ValidateNonWildcardKvKeyRequired(key);
-            js.Publish(new Msg(KeyValueUtil.KeySubject(BucketName, key), h, null));
+            return js.Publish(new Msg(KeySubject(key), h, data));
         }
 
         public IList<string> Keys()
         {
-            IList<String> list = new List<string>();
-            VisitSubject(KeyValueUtil.StreamSubject(BucketName), DeliverPolicy.LastPerSubject, true, false, m => {
+            IList<string> list = new List<string>();
+            VisitSubject(KeyValueUtil.ToStreamSubject(BucketName), DeliverPolicy.LastPerSubject, true, false, m => {
                 KeyValueOperation op = KeyValueUtil.GetOperation(m.Header, KeyValueOperation.Put);
                 if (op.Equals(KeyValueOperation.Put)) {
                     list.Add(new BucketAndKey(m).Key);
@@ -98,7 +143,7 @@ namespace NATS.Client.KeyValue
         public IList<KeyValueEntry> History(string key)
         {
             IList<KeyValueEntry> list = new List<KeyValueEntry>();
-            VisitSubject(KeyValueUtil.KeySubject(BucketName, key), DeliverPolicy.All, false, true, m => {
+            VisitSubject(KeySubject(key), DeliverPolicy.All, false, true, m => {
                 list.Add(new KeyValueEntry(m));
             });
             return list;
@@ -106,8 +151,8 @@ namespace NATS.Client.KeyValue
 
         public void PurgeDeletes()
         {
-            IList<String> list = new List<string>();
-            VisitSubject(KeyValueUtil.StreamSubject(BucketName), DeliverPolicy.LastPerSubject, true, false, m => {
+            IList<string> list = new List<string>();
+            VisitSubject(KeyValueUtil.ToStreamSubject(BucketName), DeliverPolicy.LastPerSubject, true, false, m => {
                 KeyValueOperation op = KeyValueUtil.GetOperation(m.Header, KeyValueOperation.Put);
                 if (!op.Equals(KeyValueOperation.Put)) {
                     list.Add(new BucketAndKey(m).Key);
@@ -116,18 +161,18 @@ namespace NATS.Client.KeyValue
 
             foreach (string key in list)
             {
-                jsm.PurgeStream(stream, PurgeOptions.WithSubject(KeyValueUtil.KeySubject(BucketName, key)));
+                jsm.PurgeStream(StreamName, PurgeOptions.WithSubject(KeySubject(key)));
             }
         }
 
         public KeyValueStatus Status()
         {
-            return new KeyValueStatus(jsm.GetStreamInfo(KeyValueUtil.StreamName(BucketName)));
+            return new KeyValueStatus(jsm.GetStreamInfo(KeyValueUtil.ToStreamName(BucketName)));
         }
  
         private void VisitSubject(string subject, DeliverPolicy deliverPolicy, bool headersOnly, bool ordered, Action<Msg> action) {
             PushSubscribeOptions pso = PushSubscribeOptions.Builder()
-                // .WithOrdered(ordered) // TODO when available
+                .WithOrdered(ordered)
                 .WithConfiguration(
                     ConsumerConfiguration.Builder()
                         .WithAckPolicy(AckPolicy.None)

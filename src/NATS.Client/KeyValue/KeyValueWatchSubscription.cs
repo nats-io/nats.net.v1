@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System;
+using NATS.Client.Internals;
 using NATS.Client.JetStream;
 
 namespace NATS.Client.KeyValue
@@ -19,47 +20,69 @@ namespace NATS.Client.KeyValue
     public class KeyValueWatchSubscription
     {
         private readonly IJetStreamPushAsyncSubscription sub;
+        private readonly InterlockedBoolean endOfDataSent;
 
-        public KeyValueWatchSubscription(IJetStream js, string bucketName, string keyPattern, 
-            bool headersOnly, Action<KeyValueEntry> watcher, params KeyValueOperation[] operations)
+        public KeyValueWatchSubscription(KeyValue kv, string keyPattern,
+            IKeyValueWatcher watcher, params KeyValueWatchOption[] watchOptions)
         {
-            string stream = KeyValueUtil.StreamName(bucketName);
-            string subject = KeyValueUtil.KeySubject(bucketName, keyPattern);
+            string subject = kv.KeySubject(keyPattern);
+            
+            // figure out the result options
+            bool headersOnly = false;
+            bool includeDeletes = true;
+            DeliverPolicy deliverPolicy = DeliverPolicy.LastPerSubject;
+            foreach (KeyValueWatchOption wo in watchOptions) {
+                switch (wo) {
+                    case KeyValueWatchOption.MetaOnly: headersOnly = true; break;
+                    case KeyValueWatchOption.IgnoreDelete: includeDeletes = false; break;
+                    case KeyValueWatchOption.UpdatesOnly: deliverPolicy = DeliverPolicy.New; break;
+                    case KeyValueWatchOption.IncludeHistory: deliverPolicy = DeliverPolicy.All; break;
+                }
+            }
+
+            if (deliverPolicy == DeliverPolicy.New) {
+                watcher.EndOfData();
+                endOfDataSent = new InterlockedBoolean(true);
+            }
+            else {
+                KeyValueEntry kveCheckPending = kv.GetInternal(keyPattern);
+                if (kveCheckPending == null) {
+                    watcher.EndOfData();
+                    endOfDataSent = new InterlockedBoolean(true);
+                }
+                else {
+                    endOfDataSent = new InterlockedBoolean(false);
+                }
+            }
             
             PushSubscribeOptions pso = PushSubscribeOptions.Builder()
-                .WithStream(stream)
-                // .WithOrdered(true) TODO WHEN ORDERED IS READY
+                .WithStream(kv.StreamName)
+                .WithOrdered(true)
                 .WithConfiguration(
                     ConsumerConfiguration.Builder()
                         .WithAckPolicy(AckPolicy.None)
-                        .WithDeliverPolicy(DeliverPolicy.LastPerSubject)
+                        .WithDeliverPolicy(deliverPolicy)
                         .WithHeadersOnly(headersOnly)
                         .WithFilterSubject(subject)
                         .Build())
                 .Build();
 
-            EventHandler<MsgHandlerEventArgs> handler;
-            if (operations == null || operations.Length == 0)
+            EventHandler<MsgHandlerEventArgs> handler = (sender, args) =>
             {
-                handler = (sender, args) => watcher.Invoke(new KeyValueEntry(args.msg));
-            }
-            else
-            {
-                handler = (sender, args) =>
+                KeyValueEntry kve = new KeyValueEntry(args.msg);
+                if (includeDeletes || kve.Operation.Equals(KeyValueOperation.Put))
                 {
-                    foreach (KeyValueOperation op in operations)
-                    {
-                        KeyValueEntry kve = new KeyValueEntry(args.msg);
-                        if (kve.Operation.Equals(op))
-                        {
-                            watcher.Invoke(kve);
-                            return;
-                        }
-                    }
-                };
-            }
+                    watcher.Watch(kve);
+                }
 
-            sub = js.PushSubscribeAsync(subject, handler, false, pso);
+                if (endOfDataSent.IsFalse() && kve.Delta == 0)
+                {
+                    watcher.EndOfData();
+                    endOfDataSent.Set(true);
+                }
+            };
+
+            sub = kv.js.PushSubscribeAsync(subject, handler, false, pso);
         }
 
         public void Unsubscribe()

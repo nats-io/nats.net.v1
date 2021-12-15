@@ -11,7 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
@@ -76,7 +75,7 @@ namespace IntegrationTests
                     t.Join(5000);
                 }
 
-                ISet<String> uniqueDatas = new HashSet<String>();
+                ISet<string> uniqueDatas = new HashSet<string>();
                 // count
                 int count = 0;
                 foreach (JsQueueSubscriber qs in subscribers) {
