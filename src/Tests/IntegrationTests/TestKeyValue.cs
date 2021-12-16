@@ -20,7 +20,6 @@ using NATS.Client;
 using NATS.Client.JetStream;
 using NATS.Client.KeyValue;
 using Xunit;
-using Xunit.Abstractions;
 using static UnitTests.TestBase;
 using static IntegrationTests.JetStreamTestBase;
 
@@ -28,11 +27,8 @@ namespace IntegrationTests
 {
     public class TestKeyValue : TestSuite<KeyValueSuiteContext>
     {
-        private readonly ITestOutputHelper output;
-
-        public TestKeyValue(ITestOutputHelper output, KeyValueSuiteContext context) : base(context)
+        public TestKeyValue(KeyValueSuiteContext context) : base(context)
         {
-            this.output = output;
         }
 
         [Fact]
