@@ -233,8 +233,8 @@ namespace NATS.Client.Internals
             if (max < 2) {
                 return 1;
             }
-            if (max > 64) {
-                throw new ArgumentException("Max History Per Key cannot be more than 64.");
+            if (max > JetStreamConstants.MaxHistoryPerKey) {
+                throw new ArgumentException($"Max History Per Key cannot be more than {JetStreamConstants.MaxHistoryPerKey}.");
             }
             return max;
         }

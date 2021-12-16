@@ -10,6 +10,11 @@ namespace NATS.Client.Internals
         public const int MaxPullSize = 256;
 
         /// <summary>
+        /// The Max History Per Key KV key
+        /// </summary>
+        public const int MaxHistoryPerKey = 64;
+
+        /// <summary>
         /// The standard JetStream Prefix prefix 
         /// </summary>
         public const string PrefixDollarJsDot = "$JS.";
