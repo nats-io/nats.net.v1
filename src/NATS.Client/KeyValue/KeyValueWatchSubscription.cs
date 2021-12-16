@@ -17,9 +17,9 @@ using NATS.Client.JetStream;
 
 namespace NATS.Client.KeyValue
 {
-    public class KeyValueWatchSubscription
+    public class KeyValueWatchSubscription : IDisposable
     {
-        private readonly IJetStreamPushAsyncSubscription sub;
+        private IJetStreamPushAsyncSubscription sub;
         private readonly InterlockedBoolean endOfDataSent;
 
         public KeyValueWatchSubscription(KeyValue kv, string keyPattern,
@@ -87,7 +87,19 @@ namespace NATS.Client.KeyValue
 
         public void Unsubscribe()
         {
-            sub.Unsubscribe();
+            try
+            {
+                sub?.Unsubscribe();
+            }
+            finally
+            {
+                sub = null;
+            }
+        }
+
+        public void Dispose()
+        {
+            Unsubscribe();
         }
     }
 }

@@ -180,19 +180,33 @@ namespace NATS.Client.KeyValue
                         .WithHeadersOnly(headersOnly)
                         .Build())
                 .Build();
+            
             IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(subject, pso);
             try
             {
-                int timeout = 5000; // give plenty of time for the first
-                while (true)
+                int timeout = 5000; // give plenty of time for the first. Also used to quit loop
+                while (timeout > 0)
                 {
                     Msg m = sub.NextMessage(timeout);
                     action.Invoke(m);
-                    timeout = 100; // the rest should come pretty quick
+                    if (m.MetaData.NumPending == 0)
+                    {
+                        timeout = 0;
+                    }
+                    else
+                    {
+                        timeout = 100; // the rest should come pretty quick
+                    }
                 }
             }
-            catch (NATSTimeoutException) { /* no more messages */ }
-            sub.Unsubscribe();
+            catch (NATSTimeoutException)
+            {
+                /* no more messages */
+            }
+            finally
+            {
+                sub.Unsubscribe();
+            }
         }
     }
 }
