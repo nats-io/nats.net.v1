@@ -14,11 +14,11 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using NATS.Client;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using Xunit;
-using Xunit.Abstractions;
 using static UnitTests.TestBase;
 using static IntegrationTests.JetStreamTestBase;
 using static NATS.Client.ClientExDetail;
@@ -27,11 +27,8 @@ namespace IntegrationTests
 {
     public class TestJetStream : TestSuite<JetStreamSuiteContext>
     {
-        private readonly ITestOutputHelper output;
-
-        public TestJetStream(ITestOutputHelper output, JetStreamSuiteContext context) : base(context) 
+        public TestJetStream(JetStreamSuiteContext context) : base(context) 
         {
-            this.output = output;
         }
 
         [Fact]
@@ -71,13 +68,18 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public void TestConnectionClosing() {
-            Context.RunInJsServer(c =>
+        public void TestConnectionClosing()
+        {
+            using (var s = NATSServer.CreateJetStreamFastAndVerify(Context.Server1.Port))
             {
+                var c = Context.OpenConnection(Context.Server1.Port);
                 c.Close();
-                Assert.Throws<NATSConnectionClosedException>(() => c.CreateJetStreamContext().Publish(new Msg(SUBJECT, null)));
-                Assert.Throws<NATSConnectionClosedException>(() => c.CreateJetStreamManagementContext().GetStreamNames());
-            });
+                Thread.Sleep(100);
+                Assert.Throws<NATSConnectionClosedException>(() =>
+                    c.CreateJetStreamContext().Publish(new Msg(SUBJECT, null)));
+                Assert.Throws<NATSConnectionClosedException>(() =>
+                    c.CreateJetStreamManagementContext().GetStreamNames());
+            }
         }
 
         [Fact]
