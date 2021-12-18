@@ -46,5 +46,10 @@ namespace NATS.Client.KeyValue
         public bool Equals(KeyValueOperation other) {
             return _id.Equals(other?._id);
         }
+
+        public override string ToString()
+        {
+            return HeaderValue;
+        }
     }
 }

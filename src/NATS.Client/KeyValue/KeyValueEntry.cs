@@ -28,6 +28,11 @@ namespace NATS.Client.KeyValue
         public KeyValueOperation Operation { get; }
         public long DataLength { get; }
 
+        public override string ToString()
+        {
+            return $"Bucket: {Bucket}, Key: {Key}, Operation: {Operation}, Revision: {Revision}, Delta: {Delta}, DataLength: {DataLength}, Created: {Created}";
+        }
+
         public KeyValueEntry(MessageInfo mi) {
             bucketAndKey = new BucketAndKey(mi.Subject);
             Value = ExtractValue(mi.Data);
@@ -51,11 +56,11 @@ namespace NATS.Client.KeyValue
         public string Bucket => bucketAndKey.Bucket;
         public string Key => bucketAndKey.Key;
 
-        public string StringValue => Value == null ? null : Encoding.UTF8.GetString(Value);
+        public string ValueAsString() => Value == null ? null : Encoding.UTF8.GetString(Value);
 
         public bool TryGetLongValue(out long lvalue)
         {
-            return long.TryParse(StringValue, out lvalue);
+            return long.TryParse(ValueAsString(), out lvalue);
         }
 
         private static byte[] ExtractValue(byte[] data) {

@@ -36,5 +36,10 @@ namespace NATS.Client.KeyValue
         public long Ttl => Config.Ttl;
 
         public string BackingStore => "JetStream";
+
+        public override string ToString()
+        {
+            return $"BucketName: {BucketName}, Description: {Description}, EntryCount: {EntryCount}, MaxHistoryPerKey: {MaxHistoryPerKey}, Ttl: {Ttl}, BackingStore: {BackingStore}";
+        }
     }
 }

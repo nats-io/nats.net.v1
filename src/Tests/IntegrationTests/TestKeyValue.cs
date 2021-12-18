@@ -92,9 +92,9 @@ namespace IntegrationTests
 
                 // if you know the value is not binary and can safely be read
                 // as a UTF-8 string, the getStringValue method is ok to use
-                Assert.Equal(byteValue1, kv.Get(byteKey).StringValue);
-                Assert.Equal(stringValue1, kv.Get(stringKey).StringValue);
-                Assert.Equal("1", kv.Get(longKey).StringValue);
+                Assert.Equal(byteValue1, kv.Get(byteKey).ValueAsString());
+                Assert.Equal(stringValue1, kv.Get(stringKey).ValueAsString());
+                Assert.Equal("1", kv.Get(longKey).ValueAsString());
 
                 // if you know the value is a long, you can use the TryGetLongValue method
                 long lvalue;
@@ -143,7 +143,7 @@ namespace IntegrationTests
                 // if the key has been deleted
                 // all varieties of get will return null
                 Assert.Null(kv.Get(byteKey).Value);
-                Assert.Null(kv.Get(byteKey).StringValue);
+                Assert.Null(kv.Get(byteKey).ValueAsString());
                 Assert.False(kv.Get(byteKey).TryGetLongValue(out lvalue));
                 Assert.Equal(0, lvalue);
 
@@ -157,7 +157,7 @@ namespace IntegrationTests
 
                 // values after updates
                 Assert.Equal(byteValue2, Encoding.UTF8.GetString(kv.Get(byteKey).Value));
-                Assert.Equal(stringValue2, kv.Get(stringKey).StringValue);
+                Assert.Equal(stringValue2, kv.Get(stringKey).ValueAsString());
                 Assert.True(kv.Get(longKey).TryGetLongValue(out lvalue));
                 Assert.Equal(2, lvalue);
 
@@ -736,7 +736,7 @@ namespace IntegrationTests
                     else {
                         Assert.NotNull(kve.Value);
                         Assert.Equal(s.Length, kve.DataLength);
-                        Assert.Equal(s, kve.StringValue);
+                        Assert.Equal(s, kve.ValueAsString());
                     }
                 }
                 else {
