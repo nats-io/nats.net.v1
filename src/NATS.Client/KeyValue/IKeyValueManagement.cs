@@ -41,11 +41,10 @@ namespace NATS.Client.KeyValue
         KeyValueStatus GetBucketInfo(string bucketName);
 
         /// <summary>
-        /// Deletes an existing bucket.
+        /// Deletes an existing bucket. Will throw a NATSJetStreamException if the delete fails.
         /// THIS IS A BETA FEATURE AND SUBJECT TO CHANGE
         /// </summary>
         /// <param name="bucketName"></param>
-        /// <returns>true if the delete succeeded. Usually throws a NATSJetStreamException otherwise</returns>
-        bool Delete(string bucketName);
+        void Delete(string bucketName);
     }
 }

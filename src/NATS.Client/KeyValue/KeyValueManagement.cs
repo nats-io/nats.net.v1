@@ -49,10 +49,10 @@ namespace NATS.Client.KeyValue
             return new KeyValueStatus(jsm.GetStreamInfo(KeyValueUtil.ToStreamName(bucketName)));
         }
 
-        public bool Delete(string bucketName)
+        public void Delete(string bucketName)
         {
             Validator.ValidateKvBucketNameRequired(bucketName);
-            return jsm.DeleteStream(KeyValueUtil.ToStreamName(bucketName));
+            jsm.DeleteStream(KeyValueUtil.ToStreamName(bucketName));
         }
     }
 }
