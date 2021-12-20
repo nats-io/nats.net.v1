@@ -15,8 +15,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NATS.Client;
+using NATS.Client.Internals;
 using NATS.Client.JetStream;
-using UnitTests;
 using Xunit;
 
 namespace IntegrationTests

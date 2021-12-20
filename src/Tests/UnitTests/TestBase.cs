@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Text;
-using System.Threading;
 using Xunit.Abstractions;
 
 namespace UnitTests
@@ -154,66 +153,6 @@ namespace UnitTests
 
         public static byte[] DataBytes(int seq) {
             return Encoding.ASCII.GetBytes(Data(seq));
-        }
-    }
-
-    // ----------------------------------------------------------------------------------------------------
-    // Atomic equivalents. See also NATS.Client.Internals.InterlockedBoolean available from int   
-    // ----------------------------------------------------------------------------------------------------
-    public class InterlockedLong
-    {
-        private long count;
-
-        public InterlockedLong() {}
-
-        public InterlockedLong(long start)
-        {
-            count = start;
-        }
-
-        public void Set(long l)
-        {
-            Interlocked.Exchange(ref count, l);
-        }
-
-        public long Increment()
-        {
-            return Interlocked.Increment(ref count);
-        }
-
-        public long Read()
-        {
-            return Interlocked.Read(ref count);
-        }
-    }
-
-    public class InterlockedInt
-    {
-        private readonly InterlockedLong il;
-
-        public InterlockedInt()
-        {
-            il = new InterlockedLong();
-        }
-
-        public InterlockedInt(long start)
-        {
-            il = new InterlockedLong(start);
-        }
-
-        public void Set(int i)
-        {
-            il.Set(i);
-        }
-
-        public int Increment()
-        {
-            return (int)il.Increment();
-        }
-
-        public int Read()
-        {
-            return (int)il.Read();
         }
     }
 }

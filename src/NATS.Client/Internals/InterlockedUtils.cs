@@ -15,6 +15,63 @@ using System.Threading;
 
 namespace NATS.Client.Internals
 {
+    public class InterlockedLong
+    {
+        private long count;
+
+        public InterlockedLong() {}
+
+        public InterlockedLong(long start)
+        {
+            count = start;
+        }
+
+        public void Set(long l)
+        {
+            Interlocked.Exchange(ref count, l);
+        }
+
+        public long Increment()
+        {
+            return Interlocked.Increment(ref count);
+        }
+
+        public long Read()
+        {
+            return Interlocked.Read(ref count);
+        }
+    }
+
+    public class InterlockedInt
+    {
+        private readonly InterlockedLong _il;
+
+        public InterlockedInt()
+        {
+            _il = new InterlockedLong();
+        }
+
+        public InterlockedInt(long start)
+        {
+            _il = new InterlockedLong(start);
+        }
+
+        public void Set(int i)
+        {
+            _il.Set(i);
+        }
+
+        public int Increment()
+        {
+            return (int)_il.Increment();
+        }
+
+        public int Read()
+        {
+            return (int)_il.Read();
+        }
+    }
+
     public class InterlockedBoolean
     {
         private long _flag;
