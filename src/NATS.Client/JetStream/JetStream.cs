@@ -188,8 +188,8 @@ namespace NATS.Client.JetStream
             }
 
             ConsumerConfiguration serverCC = null;
-            String consumerName = userCC.Durable;
-            String inboxDeliver = userCC.DeliverSubject;
+            string consumerName = userCC.Durable;
+            string inboxDeliver = userCC.DeliverSubject;
             
             // 3. Does this consumer already exist?
             if (consumerName != null) {
@@ -367,7 +367,7 @@ namespace NATS.Client.JetStream
             return si.Config.Subjects.Count == 1 ? si.Config.Subjects[0] : null;
         }
 
-        private Boolean IsFilterMatch(String subscribeSubject, String filterSubject, String stream) {
+        private Boolean IsFilterMatch(string subscribeSubject, string filterSubject, string stream) {
 
             // subscribeSubject guaranteed to not be empty or null
             // filterSubject may be null or empty or have value
@@ -378,7 +378,7 @@ namespace NATS.Client.JetStream
 
             if (string.IsNullOrWhiteSpace(filterSubject) || filterSubject.Equals(">")) {
                 // lookup stream subject returns null if there is not exactly one subject
-                String streamSubject = LookupStreamSubject(stream);
+                string streamSubject = LookupStreamSubject(stream);
                 return subscribeSubject.Equals(streamSubject);
             }
 

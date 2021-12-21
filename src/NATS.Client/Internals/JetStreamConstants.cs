@@ -10,6 +10,11 @@ namespace NATS.Client.Internals
         public const int MaxPullSize = 256;
 
         /// <summary>
+        /// The Max History Per Key KV key
+        /// </summary>
+        public const int MaxHistoryPerKey = 64;
+
+        /// <summary>
         /// The standard JetStream Prefix prefix 
         /// </summary>
         public const string PrefixDollarJsDot = "$JS.";
@@ -142,8 +147,11 @@ namespace NATS.Client.Internals
         public const string LastConsumerHeader = "Nats-Last-Consumer";
         public const string LastStreamHeader = "Nats-Last-Stream";
         public const string ConsumerStalledHeader = "Nats-Consumer-Stalled";
-        public const string RollupHeader = "Nats-Rollup";
         public const string MsgSizeHeader = "Nats-Msg-Size";
+
+        public const string RollupHeader = "Nats-Rollup";
+        public const string RollupHeaderSubject = "sub";
+        public const string RollupHeaderAll = "all";
 
         [Obsolete("This property is obsolete. Use LastConsumerHeader instead.", false)]
         public const string LastConsumerHdr = "Nats-Last-Consumer";
@@ -161,5 +169,7 @@ namespace NATS.Client.Internals
         public const string MsgSizeHdr = "Nats-Msg-Size";
 
         public const int JsConsumerNotFoundErr = 10014;
+        public const int JsNoMessageFoundErr = 10037;
+        public const int JsWrongLastSequence = 10071;
     }
 }

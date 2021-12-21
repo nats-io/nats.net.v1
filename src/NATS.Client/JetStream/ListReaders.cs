@@ -20,7 +20,7 @@ namespace NATS.Client.JetStream
 {
     internal class ListRequestEngine : ApiResponse
     {
-        private static readonly String OffsetJsonStart = "{\"offset\":";
+        private static readonly string OffsetJsonStart = "{\"offset\":";
 
         protected readonly int Total; // so always has the first "at least one more"
         protected readonly int Limit;
@@ -55,7 +55,7 @@ namespace NATS.Client.JetStream
             return Encoding.ASCII.GetBytes(OffsetJsonStart + (LastOffset + Limit) + "}");
         }
 
-        internal byte[] InternalNextJson(String fieldName, String filter)
+        internal byte[] InternalNextJson(string fieldName, string filter)
         {
             if (HasMore())
             {
@@ -71,7 +71,7 @@ namespace NATS.Client.JetStream
             return null;
         }
 
-        internal JSONArray GetNodes(String objectName)
+        internal JSONArray GetNodes(string objectName)
         {
             return JsonNode[objectName].AsArray;
         }
@@ -131,7 +131,7 @@ namespace NATS.Client.JetStream
     {
         private List<string> _strings = new List<string>();
 
-        protected StringListReader(String objectName, String filterFieldName = null) : base(objectName, filterFieldName) {}
+        protected StringListReader(string objectName, string filterFieldName = null) : base(objectName, filterFieldName) {}
 
         protected override void ProcessItem(JSONNode node)
         {

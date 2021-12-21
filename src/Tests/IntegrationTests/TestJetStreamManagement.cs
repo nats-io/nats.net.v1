@@ -362,7 +362,7 @@ namespace IntegrationTests
                 Assert.Equal(Durable(1), ci.ConsumerConfiguration.Durable);
                 Assert.Equal(Deliver(1), ci.ConsumerConfiguration.DeliverSubject);
                 
-                IList<String> consumers = jsm.GetConsumerNames(STREAM);
+                IList<string> consumers = jsm.GetConsumerNames(STREAM);
                 Assert.Equal(2, consumers.Count);
                 Assert.True(jsm.DeleteConsumer(STREAM, cc1.Durable));
                 consumers = jsm.GetConsumerNames(STREAM);
@@ -456,7 +456,7 @@ namespace IntegrationTests
             Assert.Equal(cc.MaxDeliver, cicc.MaxDeliver);
             Assert.Equal(cc.DeliverPolicy, cicc.DeliverPolicy);
 
-            IList<String> consumers = jsm.GetConsumerNames(STREAM);
+            IList<string> consumers = jsm.GetConsumerNames(STREAM);
             Assert.Single(consumers);
             Assert.Equal(cc.Durable, consumers[0]);
         }
@@ -542,7 +542,7 @@ namespace IntegrationTests
             });
         }
 
-        private void AddConsumers(IJetStreamManagement jsm, String stream, int count, String durableVary, String filterSubject)
+        private void AddConsumers(IJetStreamManagement jsm, string stream, int count, string durableVary, string filterSubject)
         {
             for (int x = 0; x < count; x++) {
                 String dur = Durable(durableVary, x + 1);
@@ -598,7 +598,7 @@ namespace IntegrationTests
                 MessageInfo mi = jsm.GetMessage(STREAM, 1);
                 Assert.Equal(SUBJECT, mi.Subject);
                 Assert.Equal(Data(1), System.Text.Encoding.ASCII.GetString(mi.Data));
-                Assert.Equal(1, mi.Seq);
+                Assert.Equal(1U, mi.Sequence);
                 Assert.True(mi.Time >= beforeCreated);
                 Assert.NotNull(mi.Headers);
                 Assert.Equal("bar", mi.Headers["foo"]);
@@ -606,7 +606,7 @@ namespace IntegrationTests
                 mi = jsm.GetMessage(STREAM, 2);
                 Assert.Equal(SUBJECT, mi.Subject);
                 Assert.Null(mi.Data);
-                Assert.Equal(2, mi.Seq);
+                Assert.Equal(2U, mi.Sequence);
                 Assert.True(mi.Time >= beforeCreated);
                 Assert.Null(mi.Headers);
 

@@ -34,6 +34,8 @@ namespace NATSExamples
         public int SubsCount { get; set; } = int.MinValue;
         public int PullSize { get; set; } = int.MinValue;
         public MsgHeader Header { get; set; }
+        public string Bucket { get; set; }
+        public string Description { get; set; }
 
         public ArgumentHelper(string title)
         {
@@ -102,6 +104,14 @@ namespace NATSExamples
                         if (split.Length != 2) { UsageThenExit(usage); }
                         Header.Add(split[0], split[1]);
                         break;
+
+                    case "-buk": 
+                        Consumer = args[i + 1];
+                        break;
+
+                    case "-desc": 
+                        Consumer = args[i + 1];
+                        break;
                 }
             }
         }
@@ -131,6 +141,8 @@ namespace NATSExamples
             _banner("Url", Url);
             _banner("Stream", Stream);
             _banner("Subject", Subject);
+            _banner("bucket", Bucket);
+            _banner("description", Description);
             _banner("Queue", Queue);
             _banner("Payload", Payload);
             _banner("Consumer", Consumer);
@@ -248,6 +260,18 @@ namespace NATSExamples
         {
             argumentHelper.Count = i;
             argumentHelper._countUnlimitedFlag = unlimitedFlag;
+            return this;
+        }
+
+        public ArgumentHelperBuilder DefaultBucket(string s)
+        {
+            argumentHelper.Bucket = s;
+            return this;
+        }
+
+        public ArgumentHelperBuilder DefaultDescription(string s)
+        {
+            argumentHelper.Description = s;
             return this;
         }
         

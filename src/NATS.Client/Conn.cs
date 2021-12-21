@@ -27,6 +27,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
+using NATS.Client.KeyValue;
 using static NATS.Client.Defaults;
 using Timeout = System.Threading.Timeout;
 
@@ -4683,6 +4684,20 @@ namespace NATS.Client
         public IJetStreamManagement CreateJetStreamManagementContext(JetStreamOptions options = null)
         {
             return new JetStreamManagement(this, options);
+        }
+
+        #endregion
+
+        #region KeyValue
+
+        public IKeyValue CreateKeyValueContext(string bucketName, JetStreamOptions options = null)
+        {
+            return new KeyValue.KeyValue(this, bucketName, options);
+        }
+
+        public IKeyValueManagement CreateKeyValueManagementContext(JetStreamOptions options = null)
+        {
+            return new KeyValueManagement(this, options);
         }
 
         #endregion

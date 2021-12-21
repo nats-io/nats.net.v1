@@ -16,7 +16,7 @@ namespace NATS.Client.JetStream
     public sealed class PullSubscribeOptions : SubscribeOptions
     {
         // Validation is done by base class
-        private PullSubscribeOptions(ISubscribeOptionsBuilder builder) : base(builder, true, null, null) {}
+        private PullSubscribeOptions(ISubscribeOptionsBuilder builder) : base(builder, true, false, null, null) {}
 
         /// <summary>
         /// Create PushSubscribeOptions where you are binding to

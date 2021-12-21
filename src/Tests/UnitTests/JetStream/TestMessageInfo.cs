@@ -25,7 +25,7 @@ namespace UnitTests.JetStream
             string json = ReadDataFile("MessageInfo1.json");
             MessageInfo mi = new MessageInfo(json);
             Assert.Equal("subject", mi.Subject);
-            Assert.Equal(1, mi.Seq);
+            Assert.Equal(1U, mi.Sequence);
             Assert.Equal("data-1", Encoding.UTF8.GetString(mi.Data));
             Assert.Equal(1, mi.Headers.Count);
             Assert.Equal("bar", mi.Headers["foo"]);
@@ -34,7 +34,7 @@ namespace UnitTests.JetStream
             json = ReadDataFile("MessageInfo2.json");
             mi = new MessageInfo(json);
             Assert.Equal("subject2", mi.Subject);
-            Assert.Equal(2, mi.Seq);
+            Assert.Equal(2U, mi.Sequence);
             Assert.Null(mi.Data);
             Assert.Null(mi.Headers);
             Assert.Null(mi.Error);

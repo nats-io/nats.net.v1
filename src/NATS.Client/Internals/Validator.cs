@@ -15,19 +15,19 @@ namespace NATS.Client.Internals
             return ValidatePrintable(s, "Subject", required);
         }
 
-        public static string ValidateReplyTo(String s, bool required) {
+        public static string ValidateReplyTo(string s, bool required) {
             return ValidatePrintableExceptWildGt(s, "Reply To", required);
         }
 
-        public static string ValidateQueueName(String s, bool required) {
+        public static string ValidateQueueName(string s, bool required) {
             return ValidatePrintableExceptWildDotGt(s, "Queue", required);
         }
 
-        public static string ValidateStreamName(String s, bool required) {
+        public static string ValidateStreamName(string s, bool required) {
             return ValidatePrintableExceptWildDotGt(s, "Stream", required);
         }
 
-        public static string ValidateDurable(String s, bool required) {
+        public static string ValidateDurable(string s, bool required) {
             return ValidatePrintableExceptWildDotGt(s, "Durable", required);
         }
 
@@ -40,7 +40,7 @@ namespace NATS.Client.Internals
                 "Durable is required and cannot contain a '.', '*' or '>' [null]");
         }
 
-        public static string ValidatePrefixOrDomain(String s, String label, bool required) {
+        public static string ValidatePrefixOrDomain(string s, string label, bool required) {
             return Validate(s, required, label, () => {
                 if (s.StartsWith("."))
                 {
@@ -53,7 +53,19 @@ namespace NATS.Client.Internals
             });
         }
 
-        public static void ValidateNotSupplied(String s, ClientExDetail detail) {
+        public static string ValidateKvBucketNameRequired(string s) {
+            return ValidateKvBucketName(s, "Bucket name", true);
+        }
+
+        public static string ValidateKvKeyWildcardAllowedRequired(string s) {
+            return ValidateWildcardKvKey(s, "Key", true);
+        }
+
+        public static string ValidateNonWildcardKvKeyRequired(string s) {
+            return ValidateNonWildcardKvKey(s, "Key", true);
+        }
+
+        public static void ValidateNotSupplied(string s, ClientExDetail detail) {
             if (!string.IsNullOrWhiteSpace(s)) {
                 throw detail.Instance();
             }
@@ -65,7 +77,7 @@ namespace NATS.Client.Internals
             }
         }
 
-        internal static String ValidateMustMatchIfBothSupplied(String s1, String s2, ClientExDetail detail) {
+        internal static string ValidateMustMatchIfBothSupplied(string s1, string s2, ClientExDetail detail) {
             // s1   | s2   || result
             // ---- | ---- || --------------
             // null | null || valid, null s2
@@ -101,11 +113,11 @@ namespace NATS.Client.Internals
             return check.Invoke();
         }
 
-        public static String ValidateJetStreamPrefix(String s) {
+        public static string ValidateJetStreamPrefix(string s) {
             return ValidatePrintableExceptWildGtDollar(s, "Prefix", false);
         }
 
-        public static string ValidateMaxLength(String s, int maxLength, bool required, String label) {
+        public static string ValidateMaxLength(string s, int maxLength, bool required, string label) {
             return Validate(s, required, label, () =>
             {
                 int len = Encoding.UTF8.GetByteCount(s);
@@ -116,7 +128,7 @@ namespace NATS.Client.Internals
             });
         }
 
-        public static string ValidatePrintable(string s, String label, bool required)
+        public static string ValidatePrintable(string s, string label, bool required)
         {
             return Validate(s, required, label, () => {
                 if (NotPrintable(s)) {
@@ -156,6 +168,36 @@ namespace NATS.Client.Internals
             });
         }
 
+        public static string ValidateKvBucketName(string s, string label, bool required)
+        {
+            return Validate(s, required, label, () => {
+                if (NotRestrictedTerm(s)) {
+                    throw new ArgumentException($"{label} must only contain A-Z, a-z, 0-9, `-` or `_` [{s}]");
+                }
+                return s;
+            });
+        }
+        
+        public static string ValidateWildcardKvKey(string s, string label, bool required)
+        {
+            return Validate(s, required, label, () => {
+                if (NotWildcardKvKey(s)) {
+                    throw new ArgumentException($"{label} must only contain A-Z, a-z, 0-9, `-`, `_`, `/`, `=` or `.` and cannot start with `.` [{s}]");
+                }
+                return s;
+            });
+        }
+            
+        public static string ValidateNonWildcardKvKey(string s, string label, bool required)
+        {
+            return Validate(s, required, label, () => {
+                if (NotNonWildcardKvKey(s)) {
+                    throw new ArgumentException($"{label} must only contain A-Z, a-z, 0-9, `-`, `_`, `/`, `=` or `.` and cannot start with `.` [{s}]");
+                }
+                return s;
+            });
+        }
+
         internal static int ValidatePullBatchSize(int pullBatchSize)
         {
             if (pullBatchSize < 1 || pullBatchSize > JetStreamConstants.MaxPullSize)
@@ -185,6 +227,16 @@ namespace NATS.Client.Internals
         internal static long ValidateMaxMessagesPerSubject(long max)
         {
             return ValidateGtZeroOrMinus1(max, "Max Messages Per Subject");
+        }
+
+        internal static int ValidateMaxHistory(int max) {
+            if (max < 2) {
+                return 1;
+            }
+            if (max > JetStreamConstants.MaxHistoryPerKey) {
+                throw new ArgumentException($"Max History Per Key cannot be more than {JetStreamConstants.MaxHistoryPerKey}.");
+            }
+            return max;
         }
 
         internal static long ValidateMaxHistoryPerKey(long max)
@@ -312,7 +364,7 @@ namespace NATS.Client.Internals
             return l;
         }
 
-        internal static long ValidateNotNegative(long l, String label) {
+        internal static long ValidateNotNegative(long l, string label) {
             if (l < 0) 
             {
                 throw new ArgumentException($"{label} cannot be negative");
@@ -324,7 +376,7 @@ namespace NATS.Client.Internals
         // Helpers
         // ----------------------------------------------------------------------------------------------------
 
-        public static bool NotPrintable(String s) {
+        public static bool NotPrintable(string s) {
             for (int x = 0; x < s.Length; x++) {
                 char c = s[x];
                 if (c < 33 || c > 126) {
@@ -334,7 +386,7 @@ namespace NATS.Client.Internals
             return false;
         }
 
-        public static bool NotPrintableOrHasChars(String s, char[] charsToNotHave) {
+        public static bool NotPrintableOrHasChars(string s, char[] charsToNotHave) {
             for (int x = 0; x < s.Length; x++) {
                 char c = s[x];
                 if (c < 33 || c > 126) {
@@ -349,34 +401,145 @@ namespace NATS.Client.Internals
             return false;
         }
 
-        private static bool NotPrintableOrHasWildGt(String s) {
+        // restricted-term  = (A-Z, a-z, 0-9, dash 45, underscore 95)+
+        public static bool NotRestrictedTerm(string s)
+        {
+            foreach (var c in s)
+            {
+                if (c < '0') { // before 0
+                    if (c == '-') { // only dash is accepted
+                        continue;
+                    }
+                    return true; // "not"
+                }
+                if (c < ':') {
+                    continue; // means it's 0 - 9
+                }
+                if (c < 'A') {
+                    return true; // between 9 and A is "not restricted"
+                }
+                if (c < '[') {
+                    continue; // means it's A - Z
+                }
+                if (c < 'a') { // before a
+                    if (c == '_') { // only underscore is accepted
+                        continue;
+                    }
+                    return true; // "not"
+                }
+                if (c > 'z') { // 122 is z, characters after of them are "not restricted"
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        // limited-term = (A-Z, a-z, 0-9, dash 45, dot 46, fwd-slash 47, equals 61, underscore 95)+
+        // kv-key-name = limited-term (dot limited-term)*
+        public static bool NotNonWildcardKvKey(string s) {
+            if (s[0] == '.') {
+                return true; // can't start with dot
+            }
+            foreach (char c in s)
+            {
+                if (c < '0') { // before 0
+                    if (c == '-' || c == '.' || c == '/') { // only dash dot and and fwd slash are accepted
+                        continue;
+                    }
+                    return true; // "not"
+                }
+                if (c < ':') {
+                    continue; // means it's 0 - 9
+                }
+                if (c < 'A') {
+                    if (c == '=') { // equals is accepted
+                        continue;
+                    }
+                    return true; // between 9 and A is "not limited"
+                }
+                if (c < '[') {
+                    continue; // means it's A - Z
+                }
+                if (c < 'a') { // before a
+                    if (c == '_') { // only underscore is accepted
+                        continue;
+                    }
+                    return true; // "not"
+                }
+                if (c > 'z') { // 122 is z, characters after of them are "not limited"
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // (A-Z, a-z, 0-9, star 42, dash 45, dot 46, fwd-slash 47, equals 61, gt 62, underscore 95)+
+        public static bool NotWildcardKvKey(string s) {
+            if (s[0] == '.') {
+                return true; // can't start with dot
+            }
+            foreach (char c in s)
+            {
+                if (c < '0') { // before 0
+                    if (c == '*' || c == '-' || c == '.' || c == '/') { // only star dash dot and fwd slash are accepted
+                        continue;
+                    }
+                    return true; // "not"
+                }
+                if (c < ':') {
+                    continue; // means it's 0 - 9
+                }
+                if (c < 'A') {
+                    if (c == '=' || c == '>') { // equals, gt is accepted
+                        continue;
+                    }
+                    return true; // between 9 and A is "not limited"
+                }
+                if (c < '[') {
+                    continue; // means it's A - Z
+                }
+                if (c < 'a') { // before a
+                    if (c == '_') { // only underscore is accepted
+                        continue;
+                    }
+                    return true; // "not"
+                }
+                if (c > 'z') { // 122 is z, characters after of them are "not limited"
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public static bool NotPrintableOrHasWildGt(string s) {
             return NotPrintableOrHasChars(s, WildGt);
         }
 
-        private static bool NotPrintableOrHasWildGtDot(String s) {
+        public static bool NotPrintableOrHasWildGtDot(string s) {
             return NotPrintableOrHasChars(s, WildGtDot);
         }
 
-        private static bool NotPrintableOrHasWildGtDollar(String s) {
+        public static bool NotPrintableOrHasWildGtDollar(string s) {
             return NotPrintableOrHasChars(s, WildGtDollar);
         }
 
-        internal static string EmptyAsNull(string s)
+        public static string EmptyAsNull(string s)
         {
             return string.IsNullOrWhiteSpace(s) ? null : s;
         }
 
-        internal static bool ZeroOrLtMinus1(long l)
+        public static bool ZeroOrLtMinus1(long l)
         {
             return l == 0 || l < -1;
         }
         
-        internal static Duration EnsureNotNullAndNotLessThanMin(Duration provided, Duration minimum, Duration dflt)
+        public static Duration EnsureNotNullAndNotLessThanMin(Duration provided, Duration minimum, Duration dflt)
         {
             return provided == null || provided.Nanos < minimum.Nanos ? dflt : provided;
         }
 
-        internal static Duration EnsureDurationNotLessThanMin(long providedMillis, Duration minimum, Duration dflt)
+        public static Duration EnsureDurationNotLessThanMin(long providedMillis, Duration minimum, Duration dflt)
         {
             return EnsureNotNullAndNotLessThanMin(Duration.OfMillis(providedMillis), minimum, dflt);
         }

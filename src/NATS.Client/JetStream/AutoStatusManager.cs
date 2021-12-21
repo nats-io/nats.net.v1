@@ -204,7 +204,7 @@ namespace NATS.Client.JetStream
             return msg;
         }
 
-        private void _processFlowControl(String fcSubject, FlowControlSource source) {
+        private void _processFlowControl(string fcSubject, FlowControlSource source) {
             // we may get multiple fc/hb messages with the same reply
             // only need to post to that subject once
             if (fcSubject != null && !fcSubject.Equals(LastFcSubject)) {

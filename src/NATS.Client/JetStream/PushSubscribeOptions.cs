@@ -16,8 +16,8 @@ namespace NATS.Client.JetStream
     public sealed class PushSubscribeOptions : SubscribeOptions
     {
         // Validation is done by base class
-        private PushSubscribeOptions(ISubscribeOptionsBuilder builder, string deliverSubject, string deliverGroup) 
-            : base(builder, false, deliverSubject, deliverGroup) {}
+        private PushSubscribeOptions(ISubscribeOptionsBuilder builder, bool ordered, string deliverSubject, string deliverGroup) 
+            : base(builder, false, ordered, deliverSubject, deliverGroup) {}
 
         /// <summary>
         /// Create PushSubscribeOptions where you are binding to
@@ -54,11 +54,23 @@ namespace NATS.Client.JetStream
         public sealed class PushSubscribeOptionsBuilder
             : SubscribeOptionsBuilder<PushSubscribeOptionsBuilder, PushSubscribeOptions>
         {
+            private bool _ordered;
             private string _deliverSubject;
             private string _deliverGroup;
 
             protected override PushSubscribeOptionsBuilder GetThis()
             {
+                return this;
+            }
+
+            /// <summary>
+            /// Set the ordered consumer flag. FOR FUTURE BEHAVIOR. TODO / NOT YET USED.
+            /// </summary>
+            /// <param name="ordered">flag indicating whether this subscription should be ordered</param>
+            /// <returns>The PushSubscribeOptionsBuilder</returns>
+            public PushSubscribeOptionsBuilder WithOrdered(bool ordered)
+            {
+                _ordered = ordered;
                 return this;
             }
 
@@ -90,7 +102,7 @@ namespace NATS.Client.JetStream
             /// <returns>The PushSubscribeOptions object.</returns>
             public override PushSubscribeOptions Build()
             {
-                return new PushSubscribeOptions(this, _deliverSubject, _deliverGroup);
+                return new PushSubscribeOptions(this, _ordered, _deliverSubject, _deliverGroup);
             }
         }
     }
