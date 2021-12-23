@@ -259,9 +259,9 @@ namespace NATS.Client.Internals
             return ValidateGtZeroOrMinus1(max, "Max Message Size");
         }
 
-        internal static long ValidateMaxValueBytes(long max)
+        internal static long ValidateMaxValueSize(long max)
         {
-            return ValidateGtZeroOrMinus1(max, "Max Value Bytes"); // max value bytes is a kv alias to max message size
+            return ValidateGtZeroOrMinus1(max, "Max Value Size"); // max value size is a kv alias to max message size
         }
 
         internal static int ValidateNumberOfReplicas(int replicas)

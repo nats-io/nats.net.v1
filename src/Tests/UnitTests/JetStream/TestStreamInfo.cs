@@ -37,7 +37,7 @@ namespace UnitTests.JetStream
             Assert.Equal(3u, si.Config.MaxBytes);
             Assert.Equal(DiscardPolicy.Old, si.Config.DiscardPolicy);
             Assert.Equal(100000000000, si.Config.MaxAge.Nanos);
-            Assert.Equal(4, si.Config.MaxMsgSize);
+            Assert.Equal(4, si.Config.MaxValueSize);
             Assert.Equal(StorageType.Memory, si.Config.StorageType);
             Assert.Equal(5, si.Config.Replicas);
             Assert.Equal(120000000000, si.Config.DuplicateWindow.Nanos);

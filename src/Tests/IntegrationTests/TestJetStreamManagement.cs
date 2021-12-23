@@ -60,7 +60,7 @@ namespace IntegrationTests
                 Assert.Equal(-1, sc.MaxConsumers);
                 Assert.Equal(-1, sc.MaxMsgs);
                 Assert.Equal(-1, sc.MaxBytes);
-                Assert.Equal(-1, sc.MaxMsgSize);
+                Assert.Equal(-1, sc.MaxValueSize);
                 Assert.Equal(1, sc.Replicas);
 
                 Assert.Equal(Duration.Zero, sc.MaxAge);
@@ -108,7 +108,7 @@ namespace IntegrationTests
                 Assert.Equal(-1, sc.MaxConsumers);
                 Assert.Equal(-1, sc.MaxMsgs);
                 Assert.Equal(-1, sc.MaxBytes);
-                Assert.Equal(-1, sc.MaxMsgSize);
+                Assert.Equal(-1, sc.MaxValueSize);
                 Assert.Equal(1, sc.Replicas);
 
                 Assert.Equal(Duration.Zero, sc.MaxAge);
@@ -140,7 +140,7 @@ namespace IntegrationTests
                 Assert.Equal(Subject(0), sc.Subjects[0]);
                 Assert.Equal(Subject(1), sc.Subjects[1]);
                 Assert.Equal(-1, sc.MaxBytes);
-                Assert.Equal(-1, sc.MaxMsgSize);
+                Assert.Equal(-1, sc.MaxValueSize);
                 Assert.Equal(Duration.Zero, sc.MaxAge);
                 Assert.Equal(StorageType.Memory, sc.StorageType);
                 Assert.Equal(DiscardPolicy.Old, sc.DiscardPolicy);
@@ -172,7 +172,7 @@ namespace IntegrationTests
                 Assert.Equal(Subject(1), sc.Subjects[1]);
                 Assert.Equal(Subject(2), sc.Subjects[2]);
                 Assert.Equal(43u, sc.MaxBytes);
-                Assert.Equal(44, sc.MaxMsgSize);
+                Assert.Equal(44, sc.MaxValueSize);
                 Assert.Equal(Duration.OfDays(100), sc.MaxAge);
                 Assert.Equal(StorageType.Memory, sc.StorageType);
                 Assert.Equal(DiscardPolicy.New, sc.DiscardPolicy);
