@@ -52,12 +52,12 @@ namespace NATS.Client.KeyValue
             return KvSubjectPrefix + bucketName + KvSubjectSuffix;
         }
 
-        public static string ToKeyApiSubject(string bucketName, string key) {
+        public static string ToKeySubject(string bucketName, string key) {
             return KvSubjectPrefix + bucketName + "." + key;
         }
 
-        public static string ToKeyPubSubSubject(JetStreamOptions jso, string bucketName, string key) {
-            return (jso.IsDefaultPrefix ? "" : jso.Prefix) + ToKeyApiSubject(bucketName, key);
+        public static string ToKeySubjectConsiderPrefix(JetStreamOptions jso, string bucketName, string key) {
+            return (jso.IsDefaultPrefix ? "" : jso.Prefix) + ToKeySubject(bucketName, key);
         }
 
         public static string GetOperationHeader(MsgHeader h) {

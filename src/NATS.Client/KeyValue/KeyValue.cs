@@ -36,14 +36,14 @@ namespace NATS.Client.KeyValue
 
         public string BucketName { get; }
         
-        internal string KeyApiSubject(string key)
+        internal string KeySubject(string key)
         {
-            return KeyValueUtil.ToKeyApiSubject(BucketName, key);
+            return KeyValueUtil.ToKeySubject(BucketName, key);
         }
         
-        internal string KeyPubSubSubject(string key)
+        internal string KeySubjectConsiderPrefix(string key)
         {
-            return KeyValueUtil.ToKeyPubSubSubject(js.JetStreamOptions, BucketName, key);
+            return KeyValueUtil.ToKeySubjectConsiderPrefix(js.JetStreamOptions, BucketName, key);
         }
 
         public KeyValueEntry Get(string key)
@@ -54,7 +54,7 @@ namespace NATS.Client.KeyValue
         internal KeyValueEntry GetLastMessage(string key)
         {
             string subj = string.Format(JetStreamConstants.JsapiMsgGet, StreamName);
-            byte[] bytes = MessageGetRequest.LastBySubjectBytes(KeyApiSubject(key));
+            byte[] bytes = MessageGetRequest.LastBySubjectBytes(KeySubject(key));
             Msg resp = js.RequestResponseRequired(subj, bytes, JetStreamOptions.DefaultTimeout.Millis);
             MessageInfo mi = new MessageInfo(resp, false);
             if (mi.HasError)
@@ -73,7 +73,7 @@ namespace NATS.Client.KeyValue
         public ulong Put(string key, byte[] value)
         {
             Validator.ValidateNonWildcardKvKeyRequired(key);
-            PublishAck pa = js.Publish(new Msg(KeyPubSubSubject(key), value));
+            PublishAck pa = js.Publish(new Msg(KeySubjectConsiderPrefix(key), value));
             return pa.Seq;
         }
 
@@ -130,13 +130,13 @@ namespace NATS.Client.KeyValue
 
         private PublishAck _publishWithNonWildcardKey(string key, byte[] data, MsgHeader h) {
             Validator.ValidateNonWildcardKvKeyRequired(key);
-            return js.Publish(new Msg(KeyPubSubSubject(key), h, data));
+            return js.Publish(new Msg(KeySubjectConsiderPrefix(key), h, data));
         }
 
         public IList<string> Keys()
         {
             IList<string> list = new List<string>();
-            VisitSubject(KeyPubSubSubject(">"), DeliverPolicy.LastPerSubject, true, false, m => {
+            VisitSubject(KeySubject(">"), DeliverPolicy.LastPerSubject, true, false, m => {
                 KeyValueOperation op = KeyValueUtil.GetOperation(m.Header, KeyValueOperation.Put);
                 if (op.Equals(KeyValueOperation.Put)) {
                     list.Add(new BucketAndKey(m).Key);
@@ -148,7 +148,7 @@ namespace NATS.Client.KeyValue
         public IList<KeyValueEntry> History(string key)
         {
             IList<KeyValueEntry> list = new List<KeyValueEntry>();
-            VisitSubject(KeyPubSubSubject(key), DeliverPolicy.All, false, true, m => {
+            VisitSubject(KeySubject(key), DeliverPolicy.All, false, true, m => {
                 list.Add(new KeyValueEntry(m));
             });
             return list;
@@ -166,7 +166,7 @@ namespace NATS.Client.KeyValue
 
             foreach (string key in list)
             {
-                jsm.PurgeStream(StreamName, PurgeOptions.WithSubject(KeyApiSubject(key)));
+                jsm.PurgeStream(StreamName, PurgeOptions.WithSubject(KeySubject(key)));
             }
         }
 
