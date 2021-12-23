@@ -543,5 +543,21 @@ namespace NATS.Client.Internals
         {
             return EnsureNotNullAndNotLessThanMin(Duration.OfMillis(providedMillis), minimum, dflt);
         }
+         
+        public static bool Equal(byte[] a, byte[] a2) {
+            // exact same object or both null
+            if (a == a2) { return true; }
+            if (a == null || a2 == null) { return false; } // only one is null
+
+            int length = a.Length;
+            if (a2.Length != length) { return false; } // diff lengths
+
+            for (int i=0; i<length; i++)
+            {
+                if (a[i] != a2[i]) { return false; } // diff byte
+            }
+
+            return true;
+        }
     }
 }

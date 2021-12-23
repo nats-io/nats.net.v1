@@ -52,8 +52,12 @@ namespace NATS.Client.KeyValue
             return KvSubjectPrefix + bucketName + KvSubjectSuffix;
         }
 
-        public static string ToKeySubject(JetStreamOptions jso, string bucketName, string key) {
-            return (jso.IsDefaultPrefix ? "" : jso.Prefix) + KvSubjectPrefix + bucketName + "." + key;
+        public static string ToKeyApiSubject(string bucketName, string key) {
+            return KvSubjectPrefix + bucketName + "." + key;
+        }
+
+        public static string ToKeyPubSubSubject(JetStreamOptions jso, string bucketName, string key) {
+            return (jso.IsDefaultPrefix ? "" : jso.Prefix) + ToKeyApiSubject(bucketName, key);
         }
 
         public static string GetOperationHeader(MsgHeader h) {
@@ -75,6 +79,27 @@ namespace NATS.Client.KeyValue
             string[] split = subject.Split('.');
             Bucket = split[1];
             Key = split[2];
+        }
+
+        public bool Equals(BucketAndKey other)
+        {
+            return Bucket == other.Bucket && Key == other.Key;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((BucketAndKey)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return ((Bucket != null ? Bucket.GetHashCode() : 0) * 397) ^ (Key != null ? Key.GetHashCode() : 0);
+            }
         }
     }
 }

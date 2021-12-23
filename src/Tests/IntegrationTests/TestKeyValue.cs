@@ -341,6 +341,50 @@ namespace IntegrationTests
         }
         
         [Fact]
+        public void TestMaxHistoryPerKey() {
+            Context.RunInJsServer(c =>
+            {
+                // get the kv management context
+                IKeyValueManagement kvm = c.CreateKeyValueManagementContext();
+
+                // default maxHistoryPerKey is 1
+                kvm.Create(KeyValueConfiguration.Builder()
+                    .WithName(Bucket(1))
+                    .WithStorageType(StorageType.Memory)
+                    .Build());
+
+                IKeyValue kv = c.CreateKeyValueContext(Bucket(1));
+                kv.Put(KEY, 1);
+                kv.Put(KEY, 2);
+
+                IList<KeyValueEntry> history = kv.History(KEY);
+                Assert.Equal(1, history.Count);
+                long l = 0;
+                history[0].TryGetLongValue(out l);
+                Assert.Equal(2, l);
+
+                kvm.Create(KeyValueConfiguration.Builder()
+                    .WithName(Bucket(2))
+                    .WithMaxHistoryPerKey(2)
+                    .WithStorageType(StorageType.Memory)
+                    .Build());
+                
+                kv = c.CreateKeyValueContext(Bucket(2));
+                kv.Put(KEY, 1);
+                kv.Put(KEY, 2);
+                kv.Put(KEY, 3);
+                
+                history = kv.History(KEY);
+                Assert.Equal(2, history.Count);
+                l = 0;
+                history[0].TryGetLongValue(out l);
+                Assert.Equal(2, l);
+                history[1].TryGetLongValue(out l);
+                Assert.Equal(3, l);
+            });
+        }
+        
+        [Fact]
         public void TestHistoryDeletePurge() {
             Context.RunInJsServer(c =>
             {

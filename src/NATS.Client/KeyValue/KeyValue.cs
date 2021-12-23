@@ -36,20 +36,25 @@ namespace NATS.Client.KeyValue
 
         public string BucketName { get; }
         
-        internal string KeySubject(string key)
+        internal string KeyApiSubject(string key)
         {
-            return KeyValueUtil.ToKeySubject(js.JetStreamOptions, BucketName, key);
+            return KeyValueUtil.ToKeyApiSubject(BucketName, key);
+        }
+        
+        internal string KeyPubSubSubject(string key)
+        {
+            return KeyValueUtil.ToKeyPubSubSubject(js.JetStreamOptions, BucketName, key);
         }
 
         public KeyValueEntry Get(string key)
         {
-            return GetInternal(Validator.ValidateNonWildcardKvKeyRequired(key));
+            return GetLastMessage(Validator.ValidateNonWildcardKvKeyRequired(key));
         }
 
-        internal KeyValueEntry GetInternal(string key)
+        internal KeyValueEntry GetLastMessage(string key)
         {
             string subj = string.Format(JetStreamConstants.JsapiMsgGet, StreamName);
-            byte[] bytes = MessageGetRequest.LastBySubjectBytes(KeySubject(key));
+            byte[] bytes = MessageGetRequest.LastBySubjectBytes(KeyApiSubject(key));
             Msg resp = js.RequestResponseRequired(subj, bytes, JetStreamOptions.DefaultTimeout.Millis);
             MessageInfo mi = new MessageInfo(resp, false);
             if (mi.HasError)
@@ -68,7 +73,7 @@ namespace NATS.Client.KeyValue
         public ulong Put(string key, byte[] value)
         {
             Validator.ValidateNonWildcardKvKeyRequired(key);
-            PublishAck pa = js.Publish(new Msg(KeySubject(key), value));
+            PublishAck pa = js.Publish(new Msg(KeyPubSubSubject(key), value));
             return pa.Seq;
         }
 
@@ -87,7 +92,7 @@ namespace NATS.Client.KeyValue
                 if (e.ApiErrorCode == JetStreamConstants.JsWrongLastSequence)
                 {
                     // must check if the last message for this subject is a delete or purge
-                    KeyValueEntry kve = GetInternal(key);
+                    KeyValueEntry kve = GetLastMessage(key);
                     if (kve != null && !kve.Operation.Equals(KeyValueOperation.Put)) {
                         return Update(key, value, kve.Revision);
                     }
@@ -125,13 +130,13 @@ namespace NATS.Client.KeyValue
 
         private PublishAck _publishWithNonWildcardKey(string key, byte[] data, MsgHeader h) {
             Validator.ValidateNonWildcardKvKeyRequired(key);
-            return js.Publish(new Msg(KeySubject(key), h, data));
+            return js.Publish(new Msg(KeyPubSubSubject(key), h, data));
         }
 
         public IList<string> Keys()
         {
             IList<string> list = new List<string>();
-            VisitSubject(KeyValueUtil.ToStreamSubject(BucketName), DeliverPolicy.LastPerSubject, true, false, m => {
+            VisitSubject(KeyPubSubSubject(">"), DeliverPolicy.LastPerSubject, true, false, m => {
                 KeyValueOperation op = KeyValueUtil.GetOperation(m.Header, KeyValueOperation.Put);
                 if (op.Equals(KeyValueOperation.Put)) {
                     list.Add(new BucketAndKey(m).Key);
@@ -143,7 +148,7 @@ namespace NATS.Client.KeyValue
         public IList<KeyValueEntry> History(string key)
         {
             IList<KeyValueEntry> list = new List<KeyValueEntry>();
-            VisitSubject(KeySubject(key), DeliverPolicy.All, false, true, m => {
+            VisitSubject(KeyPubSubSubject(key), DeliverPolicy.All, false, true, m => {
                 list.Add(new KeyValueEntry(m));
             });
             return list;
@@ -161,7 +166,7 @@ namespace NATS.Client.KeyValue
 
             foreach (string key in list)
             {
-                jsm.PurgeStream(StreamName, PurgeOptions.WithSubject(KeySubject(key)));
+                jsm.PurgeStream(StreamName, PurgeOptions.WithSubject(KeyApiSubject(key)));
             }
         }
 
