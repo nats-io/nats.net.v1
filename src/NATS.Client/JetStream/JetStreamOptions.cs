@@ -120,7 +120,7 @@ namespace NATS.Client.JetStream
             /// <returns>The JetStreamOptionsBuilder</returns>
             public JetStreamOptionsBuilder WithPrefix(string prefix) 
             {
-                _jsPrefix = EnsureEndsWithDot(ValidatePrefixOrDomain(prefix, "Prefix", true));
+                _jsPrefix = EnsureEndsWithDot(ValidatePrefixOrDomain(prefix, "Prefix", false));
                 return this;
             }
             
@@ -133,8 +133,8 @@ namespace NATS.Client.JetStream
             /// <returns>The JetStreamOptionsBuilder</returns>
             public JetStreamOptionsBuilder WithDomain(string domain) 
             {
-                string valid = ValidatePrefixOrDomain(domain, "Domain", true);
-                _jsPrefix = PrefixDollarJsDot + EnsureEndsWithDot(valid) + PrefixApiDot;
+                string valid = ValidatePrefixOrDomain(domain, "Domain", false);
+                _jsPrefix = valid == null ? null : PrefixDollarJsDot + EnsureEndsWithDot(valid) + PrefixApiDot;
                 return this;
             }
 
