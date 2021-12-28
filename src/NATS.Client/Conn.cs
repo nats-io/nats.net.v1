@@ -4690,12 +4690,12 @@ namespace NATS.Client
 
         #region KeyValue
 
-        public IKeyValue CreateKeyValueContext(string bucketName, JetStreamOptions options = null)
+        public IKeyValue CreateKeyValueContext(string bucketName, KeyValueOptions options = null)
         {
             return new KeyValue.KeyValue(this, bucketName, options);
         }
 
-        public IKeyValueManagement CreateKeyValueManagementContext(JetStreamOptions options = null)
+        public IKeyValueManagement CreateKeyValueManagementContext(KeyValueOptions options = null)
         {
             return new KeyValueManagement(this, options);
         }

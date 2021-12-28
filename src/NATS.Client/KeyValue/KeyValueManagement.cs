@@ -21,9 +21,9 @@ namespace NATS.Client.KeyValue
     {
         private readonly IJetStreamManagement jsm;
 
-        internal KeyValueManagement(IConnection connection, JetStreamOptions options)
+        internal KeyValueManagement(IConnection connection, KeyValueOptions kvo)
         {
-            jsm = connection.CreateJetStreamManagementContext(options);
+            jsm = connection.CreateJetStreamManagementContext(kvo?.JSOptions);
         }
         
         public KeyValueStatus Create(KeyValueConfiguration config)

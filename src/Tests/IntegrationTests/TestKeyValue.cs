@@ -78,7 +78,7 @@ namespace IntegrationTests
                 Assert.Equal("JetStream", status.BackingStore);
 
                 // get the kv context for the specific bucket
-                IKeyValue kv = c.CreateKeyValueContext(BUCKET, JetStreamOptions.DefaultJsOptions);  // use options here for coverage
+                IKeyValue kv = c.CreateKeyValueContext(BUCKET);
 
                 // Put some keys. Each key is put in a subject in the bucket (stream)
                 // The put returns the sequence number in the bucket (stream)
@@ -814,16 +814,16 @@ namespace IntegrationTests
                 using( IConnection connUserI = Context.ConnectionFactory.CreateConnection(acctI))
                 {
                     // some prep
-                    JetStreamOptions jsOpt_UserA_NoPrefix = JetStreamOptions.DefaultJsOptions;
+                    KeyValueOptions jsOpt_UserA_NoPrefix = KeyValueOptions.Builder().Build();
                     
-                    JetStreamOptions jsOpt_UserI_BucketA_WithPrefix = JetStreamOptions.Builder()
-                        .WithPrefix("jsFromA")
+                    KeyValueOptions jsOpt_UserI_BucketA_WithPrefix = KeyValueOptions.Builder()
                         .WithFeaturePrefix("iBucketA")
+                        .WithJetStreamOptions(JetStreamOptions.Builder().WithPrefix("jsFromA").Build())
                         .Build();
                     
-                    JetStreamOptions jsOpt_UserI_BucketI_WithPrefix = JetStreamOptions.Builder()
-                        .WithPrefix("jsFromA")
+                    KeyValueOptions jsOpt_UserI_BucketI_WithPrefix = KeyValueOptions.Builder()
                         .WithFeaturePrefix("iBucketI")
+                        .WithJetStreamOptions(JetStreamOptions.Builder().WithPrefix("jsFromA").Build())
                         .Build();
 
                     IKeyValueManagement kvmUserA = connUserA.CreateKeyValueManagementContext(jsOpt_UserA_NoPrefix);

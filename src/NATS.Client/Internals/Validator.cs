@@ -559,5 +559,9 @@ namespace NATS.Client.Internals
 
             return true;
         }
+ 
+        public static string EnsureEndsWithDot(string s) {
+            return s == null || s.EndsWith(".") ? s : s + ".";
+        }
     }
 }
