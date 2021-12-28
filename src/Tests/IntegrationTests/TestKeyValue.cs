@@ -815,10 +815,20 @@ namespace IntegrationTests
                 {
                     // some prep
                     JetStreamOptions jsOpt_UserA_NoPrefix = JetStreamOptions.DefaultJsOptions;
-                    JetStreamOptions jsOpt_UserI_WithPrefix = JetStreamOptions.Builder().WithPrefix("fromA").Build();
+                    
+                    JetStreamOptions jsOpt_UserI_BucketA_WithPrefix = JetStreamOptions.Builder()
+                        .WithPrefix("jsFromA")
+                        .WithFeaturePrefix("iBucketA")
+                        .Build();
+                    
+                    JetStreamOptions jsOpt_UserI_BucketI_WithPrefix = JetStreamOptions.Builder()
+                        .WithPrefix("jsFromA")
+                        .WithFeaturePrefix("iBucketI")
+                        .Build();
 
                     IKeyValueManagement kvmUserA = connUserA.CreateKeyValueManagementContext(jsOpt_UserA_NoPrefix);
-                    IKeyValueManagement kvmUserI = connUserI.CreateKeyValueManagementContext(jsOpt_UserI_WithPrefix);
+                    IKeyValueManagement kvmUserIBcktA = connUserI.CreateKeyValueManagementContext(jsOpt_UserI_BucketA_WithPrefix);
+                    IKeyValueManagement kvmUserIBcktI = connUserI.CreateKeyValueManagementContext(jsOpt_UserI_BucketI_WithPrefix);
 
                     KeyValueConfiguration kvcA = KeyValueConfiguration.Builder()
                         .WithName(BucketCreatedByUserA)
@@ -834,21 +844,21 @@ namespace IntegrationTests
 
                     // testing KVM API
                     Assert.Equal(BucketCreatedByUserA, kvmUserA.Create(kvcA).BucketName);
-                    Assert.Equal(BucketCreatedByUserI, kvmUserI.Create(kvcI).BucketName);
+                    Assert.Equal(BucketCreatedByUserI, kvmUserIBcktI.Create(kvcI).BucketName);
 
                     AssertKvAccountBucketNames(kvmUserA.GetBucketNames());
-                    AssertKvAccountBucketNames(kvmUserI.GetBucketNames());
+                    AssertKvAccountBucketNames(kvmUserIBcktI.GetBucketNames());
 
-                    Assert.Equal(BucketCreatedByUserA, kvmUserI.GetBucketInfo(BucketCreatedByUserA).BucketName);
                     Assert.Equal(BucketCreatedByUserA, kvmUserA.GetBucketInfo(BucketCreatedByUserA).BucketName);
+                    Assert.Equal(BucketCreatedByUserA, kvmUserIBcktA.GetBucketInfo(BucketCreatedByUserA).BucketName);
                     Assert.Equal(BucketCreatedByUserI, kvmUserA.GetBucketInfo(BucketCreatedByUserI).BucketName);
-                    Assert.Equal(BucketCreatedByUserI, kvmUserI.GetBucketInfo(BucketCreatedByUserI).BucketName);
+                    Assert.Equal(BucketCreatedByUserI, kvmUserIBcktI.GetBucketInfo(BucketCreatedByUserI).BucketName);
 
                     // some more prep
                     IKeyValue kv_connA_bucketA = connUserA.CreateKeyValueContext(BucketCreatedByUserA, jsOpt_UserA_NoPrefix);
                     IKeyValue kv_connA_bucketI = connUserA.CreateKeyValueContext(BucketCreatedByUserI, jsOpt_UserA_NoPrefix);
-                    IKeyValue kv_connI_bucketA = connUserI.CreateKeyValueContext(BucketCreatedByUserA, jsOpt_UserI_WithPrefix);
-                    IKeyValue kv_connI_bucketI = connUserI.CreateKeyValueContext(BucketCreatedByUserI, jsOpt_UserI_WithPrefix);
+                    IKeyValue kv_connI_bucketA = connUserI.CreateKeyValueContext(BucketCreatedByUserA, jsOpt_UserI_BucketA_WithPrefix);
+                    IKeyValue kv_connI_bucketI = connUserI.CreateKeyValueContext(BucketCreatedByUserI, jsOpt_UserI_BucketI_WithPrefix);
 
                     // check the names
                     Assert.Equal(BucketCreatedByUserA, kv_connA_bucketA.BucketName);

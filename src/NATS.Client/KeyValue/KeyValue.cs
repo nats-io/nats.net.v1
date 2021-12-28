@@ -25,6 +25,8 @@ namespace NATS.Client.KeyValue
         internal IJetStreamManagement jsm;
         internal string StreamName { get; }
         internal string StreamSubject { get; }
+        internal string DefaultKeyPrefix { get; }
+        internal string PublishKeyPrefix { get; }
         
         internal KeyValue(IConnection connection, string bucketName, JetStreamOptions options) {
             BucketName = Validator.ValidateKvBucketNameRequired(bucketName);
@@ -32,18 +34,20 @@ namespace NATS.Client.KeyValue
             StreamSubject = KeyValueUtil.ToStreamSubject(BucketName);
             js = new JetStream.JetStream(connection, options);
             jsm = new JetStreamManagement(connection, options);
+            DefaultKeyPrefix = KeyValueUtil.ToKeyPrefix(bucketName);
+            PublishKeyPrefix = options?.FeaturePrefix ?? DefaultKeyPrefix;
         }
 
         public string BucketName { get; }
         
-        internal string KeySubject(string key)
+        internal string DefaultKeySubject(string key)
         {
-            return KeyValueUtil.ToKeySubject(BucketName, key);
+            return DefaultKeyPrefix + key;
         }
         
-        internal string KeySubjectConsiderPrefix(string key)
+        internal string PublishKeySubject(string key)
         {
-            return KeyValueUtil.ToKeySubjectConsiderPrefix(js.JetStreamOptions, BucketName, key);
+            return PublishKeyPrefix + key;
         }
 
         public KeyValueEntry Get(string key)
@@ -54,7 +58,7 @@ namespace NATS.Client.KeyValue
         internal KeyValueEntry GetLastMessage(string key)
         {
             string subj = string.Format(JetStreamConstants.JsapiMsgGet, StreamName);
-            byte[] bytes = MessageGetRequest.LastBySubjectBytes(KeySubject(key));
+            byte[] bytes = MessageGetRequest.LastBySubjectBytes(DefaultKeySubject(key));
             Msg resp = js.RequestResponseRequired(subj, bytes, JetStreamOptions.DefaultTimeout.Millis);
             MessageInfo mi = new MessageInfo(resp, false);
             if (mi.HasError)
@@ -72,9 +76,7 @@ namespace NATS.Client.KeyValue
 
         public ulong Put(string key, byte[] value)
         {
-            Validator.ValidateNonWildcardKvKeyRequired(key);
-            PublishAck pa = js.Publish(new Msg(KeySubjectConsiderPrefix(key), value));
-            return pa.Seq;
+            return _publishWithNonWildcardKey(key, value, null).Seq;
         }
 
         public ulong Put(string key, string value) => Put(key, Encoding.UTF8.GetBytes(value));
@@ -130,13 +132,13 @@ namespace NATS.Client.KeyValue
 
         private PublishAck _publishWithNonWildcardKey(string key, byte[] data, MsgHeader h) {
             Validator.ValidateNonWildcardKvKeyRequired(key);
-            return js.Publish(new Msg(KeySubjectConsiderPrefix(key), h, data));
+            return js.Publish(new Msg(PublishKeySubject(key), h, data));
         }
 
         public IList<string> Keys()
         {
             IList<string> list = new List<string>();
-            VisitSubject(KeySubject(">"), DeliverPolicy.LastPerSubject, true, false, m => {
+            VisitSubject(DefaultKeySubject(">"), DeliverPolicy.LastPerSubject, true, false, m => {
                 KeyValueOperation op = KeyValueUtil.GetOperation(m.Header, KeyValueOperation.Put);
                 if (op.Equals(KeyValueOperation.Put)) {
                     list.Add(new BucketAndKey(m).Key);
@@ -148,7 +150,7 @@ namespace NATS.Client.KeyValue
         public IList<KeyValueEntry> History(string key)
         {
             IList<KeyValueEntry> list = new List<KeyValueEntry>();
-            VisitSubject(KeySubject(key), DeliverPolicy.All, false, true, m => {
+            VisitSubject(DefaultKeySubject(key), DeliverPolicy.All, false, true, m => {
                 list.Add(new KeyValueEntry(m));
             });
             return list;
@@ -166,7 +168,7 @@ namespace NATS.Client.KeyValue
 
             foreach (string key in list)
             {
-                jsm.PurgeStream(StreamName, PurgeOptions.WithSubject(KeySubject(key)));
+                jsm.PurgeStream(StreamName, PurgeOptions.WithSubject(DefaultKeySubject(key)));
             }
         }
 

@@ -21,16 +21,18 @@ namespace NATS.Client.JetStream
         public static readonly Duration DefaultTimeout = Duration.OfMillis(Defaults.Timeout);
         public static readonly JetStreamOptions DefaultJsOptions = Builder().Build();
 
-        private JetStreamOptions(string inPrefix, Duration requestTimeout, bool publishNoAck)
+        private JetStreamOptions(string inJsPrefix, string featurePrefix, Duration requestTimeout, bool publishNoAck)
         {
-            if (inPrefix == null) {
+            if (inJsPrefix == null) {
                 IsDefaultPrefix = true;
                 Prefix = DefaultApiPrefix;
             }
             else {
                 IsDefaultPrefix = false;
-                Prefix = inPrefix;
+                Prefix = inJsPrefix;
             }
+
+            FeaturePrefix = featurePrefix;
             RequestTimeout = requestTimeout;
             IsPublishNoAck = publishNoAck;
         }
@@ -39,6 +41,11 @@ namespace NATS.Client.JetStream
         /// Gets the prefix.
         /// </summary>
         public string Prefix { get; }
+
+        /// <summary>
+        /// Gets the feature [subject] prefix.
+        /// </summary>
+        public string FeaturePrefix { get; }
 
         /// <summary>
         /// Gets the request timeout
@@ -78,8 +85,8 @@ namespace NATS.Client.JetStream
 
         public sealed class JetStreamOptionsBuilder
         {
-            private string _prefix;
-            private string _domain;
+            private string _jsPrefix;
+            private string _featurePrefix;
             private Duration _requestTimeout = DefaultTimeout;
             private bool _publishNoAck;
 
@@ -98,12 +105,14 @@ namespace NATS.Client.JetStream
                 {
                     if (jso.IsDefaultPrefix)
                     {
-                        _prefix = null;
+                        _jsPrefix = null;
                     }
                     else
                     {
-                        _prefix = jso.Prefix;
+                        _jsPrefix = jso.Prefix;
                     }
+
+                    _featurePrefix = jso.FeaturePrefix;
                     _requestTimeout = jso.RequestTimeout;
                     _publishNoAck = jso.IsPublishNoAck;
                 }
@@ -118,9 +127,9 @@ namespace NATS.Client.JetStream
             /// <returns>The JetStreamOptionsBuilder</returns>
             public JetStreamOptionsBuilder WithPrefix(string prefix) 
             {
-                _prefix = Validator.EmptyAsNull(prefix); // validated during build
-                if (_prefix != null) {
-                    _domain = null; // build with one or the other
+                string temp = Validator.EmptyAsNull(prefix);
+                if (temp != null) {
+                    _jsPrefix = ValidateJsPrefix(temp);
                 }
                 return this;
             }
@@ -134,10 +143,21 @@ namespace NATS.Client.JetStream
             /// <returns>The JetStreamOptionsBuilder</returns>
             public JetStreamOptionsBuilder WithDomain(string domain) 
             {
-                _domain = Validator.EmptyAsNull(domain); // validated during build
-                if (_domain != null) {
-                    _prefix = null; // build with one or the other
+                string temp = Validator.EmptyAsNull(domain);
+                if (temp != null) {
+                    _jsPrefix = ValidateDomain(temp);
                 }
+                return this;
+            }
+            
+            /// <summary>
+            /// Sets the prefix for subjects in features such as KeyValue.
+            /// </summary>
+            /// <param name="prefix">The prefix.</param>
+            /// <returns>The JetStreamOptionsBuilder</returns>
+            public JetStreamOptionsBuilder WithFeaturePrefix(string prefix) 
+            {
+                _featurePrefix = ValidateFeaturePrefix(Validator.EmptyAsNull(prefix));
                 return this;
             }
 
@@ -179,22 +199,18 @@ namespace NATS.Client.JetStream
             /// <returns>The JetStreamOptions object.</returns>
             public JetStreamOptions Build()
             {
-                string calculated = null;
-                if (_domain != null)
-                {
-                    calculated = ValidateDomain(_domain);
-                }
-                else if (_prefix != null)
-                {
-                    calculated = ValidatePrefix(_prefix);
-                }
-                // _requestTimeout defaulted in WithRequestTimeout
-                return new JetStreamOptions(calculated, _requestTimeout, _publishNoAck);
+                _requestTimeout = _requestTimeout ?? DefaultTimeout;
+                return new JetStreamOptions(_jsPrefix, _featurePrefix, _requestTimeout, _publishNoAck);
             }
 
-            private string ValidatePrefix(string prefix) {
+            private string ValidateJsPrefix(string prefix) {
                 string valid = Validator.ValidatePrefixOrDomain(prefix, "Prefix", true);
                 return valid.EndsWith(".") ? valid : valid + ".";
+            }
+
+            private string ValidateFeaturePrefix(string prefix) {
+                string valid = Validator.ValidatePrefixOrDomain(prefix, "Feature Prefix", false);
+                return valid == null ? null : valid.EndsWith(".") ? valid : valid + ".";
             }
 
             private string ValidateDomain(string domain) {

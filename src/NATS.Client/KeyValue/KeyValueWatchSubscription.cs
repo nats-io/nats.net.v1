@@ -25,7 +25,7 @@ namespace NATS.Client.KeyValue
         public KeyValueWatchSubscription(KeyValue kv, string keyPattern,
             IKeyValueWatcher watcher, params KeyValueWatchOption[] watchOptions)
         {
-            string subject = kv.KeySubject(keyPattern);
+            string subject = kv.DefaultKeySubject(keyPattern);
             
             // figure out the result options
             bool headersOnly = false;

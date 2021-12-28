@@ -12,7 +12,6 @@
 // limitations under the License.
 
 using NATS.Client.Internals;
-using NATS.Client.JetStream;
 
 namespace NATS.Client.KeyValue
 {
@@ -52,12 +51,8 @@ namespace NATS.Client.KeyValue
             return KvSubjectPrefix + bucketName + KvSubjectSuffix;
         }
 
-        public static string ToKeySubject(string bucketName, string key) {
-            return KvSubjectPrefix + bucketName + "." + key;
-        }
-
-        public static string ToKeySubjectConsiderPrefix(JetStreamOptions jso, string bucketName, string key) {
-            return (jso.IsDefaultPrefix ? "" : jso.Prefix) + ToKeySubject(bucketName, key);
+        public static string ToKeyPrefix(string bucketName) {
+            return KvSubjectPrefix + bucketName + ".";
         }
 
         public static string GetOperationHeader(MsgHeader h) {
