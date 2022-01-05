@@ -13,6 +13,7 @@
 
 using NATS.Client.Internals;
 using static NATS.Client.Internals.JetStreamConstants;
+using static NATS.Client.Internals.Validator;
 
 namespace NATS.Client.JetStream
 {
@@ -21,16 +22,17 @@ namespace NATS.Client.JetStream
         public static readonly Duration DefaultTimeout = Duration.OfMillis(Defaults.Timeout);
         public static readonly JetStreamOptions DefaultJsOptions = Builder().Build();
 
-        private JetStreamOptions(string inPrefix, Duration requestTimeout, bool publishNoAck)
+        private JetStreamOptions(string inJsPrefix, Duration requestTimeout, bool publishNoAck)
         {
-            if (inPrefix == null) {
+            if (inJsPrefix == null) {
                 IsDefaultPrefix = true;
                 Prefix = DefaultApiPrefix;
             }
             else {
                 IsDefaultPrefix = false;
-                Prefix = inPrefix;
+                Prefix = inJsPrefix;
             }
+
             RequestTimeout = requestTimeout;
             IsPublishNoAck = publishNoAck;
         }
@@ -78,8 +80,7 @@ namespace NATS.Client.JetStream
 
         public sealed class JetStreamOptionsBuilder
         {
-            private string _prefix;
-            private string _domain;
+            private string _jsPrefix;
             private Duration _requestTimeout = DefaultTimeout;
             private bool _publishNoAck;
 
@@ -98,12 +99,13 @@ namespace NATS.Client.JetStream
                 {
                     if (jso.IsDefaultPrefix)
                     {
-                        _prefix = null;
+                        _jsPrefix = null;
                     }
                     else
                     {
-                        _prefix = jso.Prefix;
+                        _jsPrefix = jso.Prefix;
                     }
+
                     _requestTimeout = jso.RequestTimeout;
                     _publishNoAck = jso.IsPublishNoAck;
                 }
@@ -118,10 +120,7 @@ namespace NATS.Client.JetStream
             /// <returns>The JetStreamOptionsBuilder</returns>
             public JetStreamOptionsBuilder WithPrefix(string prefix) 
             {
-                _prefix = Validator.EmptyAsNull(prefix); // validated during build
-                if (_prefix != null) {
-                    _domain = null; // build with one or the other
-                }
+                _jsPrefix = EnsureEndsWithDot(ValidatePrefixOrDomain(prefix, "Prefix", false));
                 return this;
             }
             
@@ -134,10 +133,8 @@ namespace NATS.Client.JetStream
             /// <returns>The JetStreamOptionsBuilder</returns>
             public JetStreamOptionsBuilder WithDomain(string domain) 
             {
-                _domain = Validator.EmptyAsNull(domain); // validated during build
-                if (_domain != null) {
-                    _prefix = null; // build with one or the other
-                }
+                string valid = ValidatePrefixOrDomain(domain, "Domain", false);
+                _jsPrefix = valid == null ? null : PrefixDollarJsDot + EnsureEndsWithDot(valid) + PrefixApiDot;
                 return this;
             }
 
@@ -148,7 +145,7 @@ namespace NATS.Client.JetStream
             /// <returns>The JetStreamOptionsBuilder</returns>
             public JetStreamOptionsBuilder WithRequestTimeout(Duration requestTimeout)
             {
-                _requestTimeout = Validator.EnsureNotNullAndNotLessThanMin(requestTimeout, Duration.Zero, DefaultTimeout);
+                _requestTimeout = EnsureNotNullAndNotLessThanMin(requestTimeout, Duration.Zero, DefaultTimeout);
                 return this;
             }
 
@@ -159,7 +156,7 @@ namespace NATS.Client.JetStream
             /// <returns>The JetStreamOptionsBuilder</returns>
             public JetStreamOptionsBuilder WithRequestTimeout(long requestTimeoutMillis) 
             {
-                _requestTimeout = Validator.EnsureDurationNotLessThanMin(requestTimeoutMillis, Duration.Zero, DefaultTimeout);
+                _requestTimeout = EnsureDurationNotLessThanMin(requestTimeoutMillis, Duration.Zero, DefaultTimeout);
                 return this;
             }
 
@@ -179,30 +176,8 @@ namespace NATS.Client.JetStream
             /// <returns>The JetStreamOptions object.</returns>
             public JetStreamOptions Build()
             {
-                string calculated = null;
-                if (_domain != null)
-                {
-                    calculated = ValidateDomain(_domain);
-                }
-                else if (_prefix != null)
-                {
-                    calculated = ValidatePrefix(_prefix);
-                }
-                // _requestTimeout defaulted in WithRequestTimeout
-                return new JetStreamOptions(calculated, _requestTimeout, _publishNoAck);
-            }
-
-            private string ValidatePrefix(string prefix) {
-                string valid = Validator.ValidatePrefixOrDomain(prefix, "Prefix", true);
-                return valid.EndsWith(".") ? valid : valid + ".";
-            }
-
-            private string ValidateDomain(string domain) {
-                string valid = Validator.ValidatePrefixOrDomain(domain, "Domain", true);
-                if (valid.EndsWith(".")) {
-                    return PrefixDollarJsDot + valid + PrefixApiDot;
-                }
-                return PrefixDollarJsDot + valid + "." + PrefixApiDot;
+                _requestTimeout = _requestTimeout ?? DefaultTimeout;
+                return new JetStreamOptions(_jsPrefix, _requestTimeout, _publishNoAck);
             }
         }
     }

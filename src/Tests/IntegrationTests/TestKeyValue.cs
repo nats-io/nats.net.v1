@@ -62,21 +62,23 @@ namespace IntegrationTests
                 kvc = status.Config;
                 Assert.Equal(BUCKET, status.BucketName);
                 Assert.Equal(BUCKET, kvc.BucketName);
-                Assert.Equal(KeyValueUtil.ToStreamName(BUCKET), kvc.BackingConfig.Name);
-                Assert.Equal(-1, kvc.MaxValues);
                 Assert.Equal(3, status.MaxHistoryPerKey);
                 Assert.Equal(3, kvc.MaxHistoryPerKey);
+                Assert.Equal(-1, status.MaxBucketSize);
                 Assert.Equal(-1, kvc.MaxBucketSize);
-                Assert.Equal(-1, kvc.MaxValueBytes);
+                Assert.Equal(-1, status.MaxValueSize);
+                Assert.Equal(-1, kvc.MaxValueSize);
                 Assert.Equal(0, status.Ttl);
                 Assert.Equal(0, kvc.Ttl);
+                Assert.Equal(StorageType.Memory, status.StorageType);
                 Assert.Equal(StorageType.Memory, kvc.StorageType);
+                Assert.Equal(1, status.Replicas);
                 Assert.Equal(1, kvc.Replicas);
                 Assert.Equal(0U, status.EntryCount);
                 Assert.Equal("JetStream", status.BackingStore);
 
                 // get the kv context for the specific bucket
-                IKeyValue kv = c.CreateKeyValueContext(BUCKET, JetStreamOptions.DefaultJsOptions);  // use options here for coverage
+                IKeyValue kv = c.CreateKeyValueContext(BUCKET);
 
                 // Put some keys. Each key is put in a subject in the bucket (stream)
                 // The put returns the sequence number in the bucket (stream)
@@ -337,6 +339,50 @@ namespace IntegrationTests
                 {
                     Assert.True(keys.Contains("k" + x));
                 }
+            });
+        }
+        
+        [Fact]
+        public void TestMaxHistoryPerKey() {
+            Context.RunInJsServer(c =>
+            {
+                // get the kv management context
+                IKeyValueManagement kvm = c.CreateKeyValueManagementContext();
+
+                // default maxHistoryPerKey is 1
+                kvm.Create(KeyValueConfiguration.Builder()
+                    .WithName(Bucket(1))
+                    .WithStorageType(StorageType.Memory)
+                    .Build());
+
+                IKeyValue kv = c.CreateKeyValueContext(Bucket(1));
+                kv.Put(KEY, 1);
+                kv.Put(KEY, 2);
+
+                IList<KeyValueEntry> history = kv.History(KEY);
+                Assert.Equal(1, history.Count);
+                long l = 0;
+                history[0].TryGetLongValue(out l);
+                Assert.Equal(2, l);
+
+                kvm.Create(KeyValueConfiguration.Builder()
+                    .WithName(Bucket(2))
+                    .WithMaxHistoryPerKey(2)
+                    .WithStorageType(StorageType.Memory)
+                    .Build());
+                
+                kv = c.CreateKeyValueContext(Bucket(2));
+                kv.Put(KEY, 1);
+                kv.Put(KEY, 2);
+                kv.Put(KEY, 3);
+                
+                history = kv.History(KEY);
+                Assert.Equal(2, history.Count);
+                l = 0;
+                history[0].TryGetLongValue(out l);
+                Assert.Equal(2, l);
+                history[1].TryGetLongValue(out l);
+                Assert.Equal(3, l);
             });
         }
         
@@ -745,6 +791,181 @@ namespace IntegrationTests
                     Assert.Equal(expected, kve.Operation);
                 }
             }
+        }
+
+        const string BucketCreatedByUserA = "bucketA";
+        const string BucketCreatedByUserI = "bucketI";
+        
+        [Fact]
+        public void TestWithAccount()
+        {
+            using (NATSServer.CreateFast(Context.Server1.Port, "-js -config kv_account.conf"))
+            {
+                Options acctA = Context.GetTestOptions(Context.Server1.Port);
+                acctA.User = "a";
+                acctA.Password = "a";
+
+                Options acctI = Context.GetTestOptions(Context.Server1.Port);
+                acctI.User = "i";
+                acctI.Password = "i";
+                acctI.CustomInboxPrefix = "forI.";
+
+                using (IConnection connUserA = Context.ConnectionFactory.CreateConnection(acctA))
+                using( IConnection connUserI = Context.ConnectionFactory.CreateConnection(acctI))
+                {
+                    // some prep
+                    KeyValueOptions jsOpt_UserA_NoPrefix = KeyValueOptions.Builder().Build();
+                    
+                    KeyValueOptions jsOpt_UserI_BucketA_WithPrefix = KeyValueOptions.Builder()
+                        .WithFeaturePrefix("iBucketA")
+                        .WithJetStreamOptions(JetStreamOptions.Builder().WithPrefix("jsFromA").Build())
+                        .Build();
+                    
+                    KeyValueOptions jsOpt_UserI_BucketI_WithPrefix = KeyValueOptions.Builder()
+                        .WithFeaturePrefix("iBucketI")
+                        .WithJetStreamOptions(JetStreamOptions.Builder().WithPrefix("jsFromA").Build())
+                        .Build();
+
+                    IKeyValueManagement kvmUserA = connUserA.CreateKeyValueManagementContext(jsOpt_UserA_NoPrefix);
+                    IKeyValueManagement kvmUserIBcktA = connUserI.CreateKeyValueManagementContext(jsOpt_UserI_BucketA_WithPrefix);
+                    IKeyValueManagement kvmUserIBcktI = connUserI.CreateKeyValueManagementContext(jsOpt_UserI_BucketI_WithPrefix);
+
+                    KeyValueConfiguration kvcA = KeyValueConfiguration.Builder()
+                        .WithName(BucketCreatedByUserA)
+                        .WithStorageType(StorageType.Memory)
+                        .WithMaxHistoryPerKey(64)
+                        .Build();
+
+                    KeyValueConfiguration kvcI = KeyValueConfiguration.Builder()
+                        .WithName(BucketCreatedByUserI)
+                        .WithStorageType(StorageType.Memory)
+                        .WithMaxHistoryPerKey(64)
+                        .Build();
+
+                    // testing KVM API
+                    Assert.Equal(BucketCreatedByUserA, kvmUserA.Create(kvcA).BucketName);
+                    Assert.Equal(BucketCreatedByUserI, kvmUserIBcktI.Create(kvcI).BucketName);
+
+                    AssertKvAccountBucketNames(kvmUserA.GetBucketNames());
+                    AssertKvAccountBucketNames(kvmUserIBcktI.GetBucketNames());
+
+                    Assert.Equal(BucketCreatedByUserA, kvmUserA.GetBucketInfo(BucketCreatedByUserA).BucketName);
+                    Assert.Equal(BucketCreatedByUserA, kvmUserIBcktA.GetBucketInfo(BucketCreatedByUserA).BucketName);
+                    Assert.Equal(BucketCreatedByUserI, kvmUserA.GetBucketInfo(BucketCreatedByUserI).BucketName);
+                    Assert.Equal(BucketCreatedByUserI, kvmUserIBcktI.GetBucketInfo(BucketCreatedByUserI).BucketName);
+
+                    // some more prep
+                    IKeyValue kv_connA_bucketA = connUserA.CreateKeyValueContext(BucketCreatedByUserA, jsOpt_UserA_NoPrefix);
+                    IKeyValue kv_connA_bucketI = connUserA.CreateKeyValueContext(BucketCreatedByUserI, jsOpt_UserA_NoPrefix);
+                    IKeyValue kv_connI_bucketA = connUserI.CreateKeyValueContext(BucketCreatedByUserA, jsOpt_UserI_BucketA_WithPrefix);
+                    IKeyValue kv_connI_bucketI = connUserI.CreateKeyValueContext(BucketCreatedByUserI, jsOpt_UserI_BucketI_WithPrefix);
+
+                    // check the names
+                    Assert.Equal(BucketCreatedByUserA, kv_connA_bucketA.BucketName);
+                    Assert.Equal(BucketCreatedByUserA, kv_connI_bucketA.BucketName);
+                    Assert.Equal(BucketCreatedByUserI, kv_connA_bucketI.BucketName);
+                    Assert.Equal(BucketCreatedByUserI, kv_connI_bucketI.BucketName);
+
+                    TestKeyValueWatcher watcher_connA_BucketA = new TestKeyValueWatcher(true);
+                    TestKeyValueWatcher watcher_connA_BucketI = new TestKeyValueWatcher(true);
+                    TestKeyValueWatcher watcher_connI_BucketA = new TestKeyValueWatcher(true);
+                    TestKeyValueWatcher watcher_connI_BucketI = new TestKeyValueWatcher(true);
+
+                    kv_connA_bucketA.WatchAll(watcher_connA_BucketA);
+                    kv_connA_bucketI.WatchAll(watcher_connA_BucketI);
+                    kv_connI_bucketA.WatchAll(watcher_connI_BucketA);
+                    kv_connI_bucketI.WatchAll(watcher_connI_BucketI);
+
+                    // bucket a from user a: AA, check AA, IA
+                    AssertKveAccount(kv_connA_bucketA, Key(11), kv_connA_bucketA, kv_connI_bucketA);
+
+                    // bucket a from user i: IA, check AA, IA
+                    AssertKveAccount(kv_connI_bucketA, Key(12), kv_connA_bucketA, kv_connI_bucketA);
+
+                    // bucket i from user a: AI, check AI, II
+                    AssertKveAccount(kv_connA_bucketI, Key(21), kv_connA_bucketI, kv_connI_bucketI);
+
+                    // bucket i from user i: II, check AI, II
+                    AssertKveAccount(kv_connI_bucketI, Key(22), kv_connA_bucketI, kv_connI_bucketI);
+
+                    // check keys from each kv
+                    AssertKvAccountKeys(kv_connA_bucketA.Keys(), Key(11), Key(12));
+                    AssertKvAccountKeys(kv_connI_bucketA.Keys(), Key(11), Key(12));
+                    AssertKvAccountKeys(kv_connA_bucketI.Keys(), Key(21), Key(22));
+                    AssertKvAccountKeys(kv_connI_bucketI.Keys(), Key(21), Key(22));
+                
+                    Object[] expecteds = {
+                        Data(0), Data(1), KeyValueOperation.Delete, KeyValueOperation.Purge, Data(2),
+                        Data(0), Data(1), KeyValueOperation.Delete, KeyValueOperation.Purge, Data(2)
+                    };
+
+                    ValidateWatcher(expecteds, watcher_connA_BucketA);
+                    ValidateWatcher(expecteds, watcher_connA_BucketI);
+                    ValidateWatcher(expecteds, watcher_connI_BucketA);
+                    ValidateWatcher(expecteds, watcher_connI_BucketI);
+                }
+            }
+        }
+
+        private void AssertKvAccountBucketNames(IList<string> bnames) {
+            Assert.Equal(2, bnames.Count);
+            Assert.Contains(BucketCreatedByUserA, bnames);
+            Assert.Contains(BucketCreatedByUserI, bnames);
+        }
+
+        private void AssertKvAccountKeys(IList<string> keys, string key1, string key2) {
+            Assert.Equal(2, keys.Count);
+            Assert.Contains(key1, keys);
+            Assert.Contains(key2, keys);
+        }
+
+        private void AssertKveAccount(IKeyValue kvWorker, string key, IKeyValue kvUserA, IKeyValue kvUserI) {
+            kvWorker.Create(key, DataBytes(0));
+            AssertKveAccountGet(kvUserA, kvUserI, key, Data(0));
+
+            kvWorker.Put(key, DataBytes(1));
+            AssertKveAccountGet(kvUserA, kvUserI, key, Data(1));
+
+            kvWorker.Delete(key);
+            KeyValueEntry kveUserA = kvUserA.Get(key);
+            KeyValueEntry kveUserI = kvUserI.Get(key);
+            Assert.NotNull(kveUserA);
+            Assert.NotNull(kveUserI);
+            Assert.Equal(kveUserA, kveUserI);
+            Assert.Equal(KeyValueOperation.Delete, kveUserA.Operation);
+
+            AssertKveAccountHistory(kvUserA.History(key), Data(0), Data(1), KeyValueOperation.Delete);
+            AssertKveAccountHistory(kvUserI.History(key), Data(0), Data(1), KeyValueOperation.Delete);
+
+            kvWorker.Purge(key);
+            AssertKveAccountHistory(kvUserA.History(key), KeyValueOperation.Purge);
+            AssertKveAccountHistory(kvUserI.History(key), KeyValueOperation.Purge);
+
+            // leave data for keys checking
+            kvWorker.Put(key, DataBytes(2));
+            AssertKveAccountGet(kvUserA, kvUserI, key, Data(2));
+        }
+
+        private void AssertKveAccountHistory(IList<KeyValueEntry> history, params Object[] expecteds) {
+            Assert.Equal(expecteds.Length, history.Count);
+            for (int x = 0; x < expecteds.Length; x++) {
+                if (expecteds[x] is string expected) {
+                    Assert.Equal(expected, history[x].ValueAsString());
+                }
+                else {
+                    Assert.Equal((KeyValueOperation)expecteds[x], history[x].Operation);
+                }
+            }
+        }
+
+        private void AssertKveAccountGet(IKeyValue kvUserA, IKeyValue kvUserI, string key, string data) {
+            KeyValueEntry kveUserA = kvUserA.Get(key);
+            KeyValueEntry kveUserI = kvUserI.Get(key);
+            Assert.NotNull(kveUserA);
+            Assert.NotNull(kveUserI);
+            Assert.Equal(kveUserA, kveUserI);
+            Assert.Equal(data, kveUserA.ValueAsString());
+            Assert.Equal(KeyValueOperation.Put, kveUserA.Operation);
         }
     }
 

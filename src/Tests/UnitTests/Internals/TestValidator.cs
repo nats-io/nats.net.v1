@@ -186,15 +186,6 @@ namespace UnitTests.Internals
         }
 
         [Fact]
-        public void TestValidateMaxValueBytes()
-        {
-            Assert.Equal(1, Validator.ValidateMaxValueBytes(1));
-            Assert.Equal(-1, Validator.ValidateMaxValueBytes(-1));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxValueBytes(0));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxValueBytes(-2));
-        }
-
-        [Fact]
         public void TestValidateNumberOfReplicas()
         {
             Assert.Equal(1, Validator.ValidateNumberOfReplicas(1));

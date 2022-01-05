@@ -53,7 +53,7 @@ namespace UnitTests.JetStream
                     .WithMaxMessagesPerSubject(testSc.MaxMsgsPerSubject)
                     .WithMaxBytes(testSc.MaxBytes)
                     .WithMaxAge(testSc.MaxAge)
-                    .WithMaxMsgSize(testSc.MaxMsgSize)
+                    .WithMaxMsgSize(testSc.MaxValueSize)
                     .WithStorageType(testSc.StorageType)
                     .WithReplicas(testSc.Replicas)
                     .WithNoAck(testSc.NoAck)
@@ -236,7 +236,7 @@ namespace UnitTests.JetStream
             Assert.Equal(7311, sc.MaxMsgsPerSubject);
             Assert.Equal(732, sc.MaxBytes);
             Assert.Equal(Duration.OfNanos(42000000000L), sc.MaxAge);
-            Assert.Equal(734, sc.MaxMsgSize);
+            Assert.Equal(734, sc.MaxValueSize);
             Assert.Equal(StorageType.Memory, sc.StorageType);
             Assert.Equal(5, sc.Replicas);
             Assert.False(sc.NoAck);

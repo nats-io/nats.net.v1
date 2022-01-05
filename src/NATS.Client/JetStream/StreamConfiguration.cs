@@ -29,7 +29,7 @@ namespace NATS.Client.JetStream
         public long MaxMsgsPerSubject { get; }
         public long MaxBytes { get; }
         public Duration MaxAge { get; }
-        public long MaxMsgSize { get; }
+        public long MaxValueSize { get; }
         public StorageType StorageType { get; }
         public int Replicas { get; }
         public bool NoAck { get; }
@@ -59,7 +59,7 @@ namespace NATS.Client.JetStream
             MaxMsgsPerSubject = AsLongOrMinus1(scNode, ApiConstants.MaxMsgsPerSubject);
             MaxBytes = AsLongOrMinus1(scNode, ApiConstants.MaxBytes);
             MaxAge = AsDuration(scNode, ApiConstants.MaxAge, Duration.Zero);
-            MaxMsgSize = AsLongOrMinus1(scNode, ApiConstants.MaxMsgSize);
+            MaxValueSize = AsLongOrMinus1(scNode, ApiConstants.MaxMsgSize);
             Replicas = scNode[ApiConstants.NumReplicas].AsInt;
             NoAck = scNode[ApiConstants.NoAck].AsBool;
             TemplateOwner = scNode[ApiConstants.TemplateOwner].Value;
@@ -84,7 +84,7 @@ namespace NATS.Client.JetStream
             MaxMsgsPerSubject = builder._maxMsgsPerSubject;
             MaxBytes = builder._maxBytes;
             MaxAge = builder._maxAge;
-            MaxMsgSize = builder._maxMsgSize;
+            MaxValueSize = builder._maxMsgSize;
             StorageType = builder._storageType;
             Replicas = builder._replicas;
             NoAck = builder._noAck;
@@ -123,7 +123,7 @@ namespace NATS.Client.JetStream
                 [ApiConstants.MaxMsgsPerSubject] = MaxMsgsPerSubject,
                 [ApiConstants.MaxBytes] = MaxBytes,
                 [ApiConstants.MaxAge] = MaxAge.Nanos,
-                [ApiConstants.MaxMsgSize] = MaxMsgSize,
+                [ApiConstants.MaxMsgSize] = MaxValueSize,
                 [ApiConstants.NumReplicas] = Replicas,
                 [ApiConstants.NoAck] = NoAck,
                 [ApiConstants.TemplateOwner] = TemplateOwner,
@@ -188,7 +188,7 @@ namespace NATS.Client.JetStream
                 _maxMsgsPerSubject = sc.MaxMsgsPerSubject;
                 _maxBytes = sc.MaxBytes;
                 _maxAge = sc.MaxAge;
-                _maxMsgSize = sc.MaxMsgSize;
+                _maxMsgSize = sc.MaxValueSize;
                 _storageType = sc.StorageType;
                 _replicas = sc.Replicas;
                 _noAck = sc.NoAck;

@@ -36,6 +36,15 @@
     <None Update="config\auth_tls_timeout.conf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="config\basic_account.conf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="config\basic_account_js.conf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="config\kv_account.conf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="config\certs\ca.pem">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

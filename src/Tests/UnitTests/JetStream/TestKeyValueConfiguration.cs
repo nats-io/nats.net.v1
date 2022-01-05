@@ -25,10 +25,9 @@ namespace UnitTests.JetStream
             // builder
             KeyValueConfiguration kvc = new KeyValueConfiguration.KeyValueConfigurationBuilder()
                 .WithName("bucketName")
-                .WithMaxValues(333)
                 .WithMaxHistoryPerKey(44)
                 .WithMaxBucketSize(555)
-                .WithMaxValueBytes(666)
+                .WithMaxValueSize(666)
                 .WithTtl(Duration.OfMillis(777))
                 .WithStorageType(StorageType.Memory)
                 .WithReplicas(2)
@@ -48,10 +47,9 @@ namespace UnitTests.JetStream
 
         private void Validate(KeyValueConfiguration bc) {
             Assert.Equal("bucketName", bc.BucketName);
-            Assert.Equal(333, bc.MaxValues);
             Assert.Equal(44, bc.MaxHistoryPerKey);
             Assert.Equal(555, bc.MaxBucketSize);
-            Assert.Equal(666, bc.MaxValueBytes);
+            Assert.Equal(666, bc.MaxValueSize);
             Assert.Equal(777, bc.Ttl);
             Assert.Equal(StorageType.Memory, bc.StorageType);
             Assert.Equal(2, bc.Replicas);

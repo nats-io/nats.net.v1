@@ -28,11 +28,6 @@ namespace NATS.Client.KeyValue
         public KeyValueOperation Operation { get; }
         public long DataLength { get; }
 
-        public override string ToString()
-        {
-            return $"Bucket: {Bucket}, Key: {Key}, Operation: {Operation}, Revision: {Revision}, Delta: {Delta}, DataLength: {DataLength}, Created: {Created}";
-        }
-
         public KeyValueEntry(MessageInfo mi) {
             bucketAndKey = new BucketAndKey(mi.Subject);
             Value = ExtractValue(mi.Data);
@@ -74,6 +69,45 @@ namespace NATS.Client.KeyValue
                 return len;
             }
             return value.Length;
+        }
+ 
+        public override string ToString()
+        {
+            return $"Bucket: {Bucket}, Key: {Key}, Operation: {Operation}, Revision: {Revision}, Delta: {Delta}, DataLength: {DataLength}, Created: {Created}";
+        }
+
+        public bool Equals(KeyValueEntry other)
+        {
+            return bucketAndKey.Equals(other.bucketAndKey)
+                   && Created.Equals(other.Created)
+                   && Revision == other.Revision
+                   && Delta == other.Delta
+                   && Operation.Equals(other.Operation)
+                   && DataLength == other.DataLength
+                   && Validator.Equal(Value, other.Value);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((KeyValueEntry)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = (bucketAndKey != null ? bucketAndKey.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Value != null ? Value.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ Created.GetHashCode();
+                hashCode = (hashCode * 397) ^ Revision.GetHashCode();
+                hashCode = (hashCode * 397) ^ Delta.GetHashCode();
+                hashCode = (hashCode * 397) ^ (Operation != null ? Operation.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ DataLength.GetHashCode();
+                return hashCode;
+            }
         }
     }
 }
