@@ -1,3 +1,4 @@
+![NATS](https://raw.githubusercontent.com/nats-io/nats.net/master/documentation/large-logo.png)
 
 # NATS - .NET C# Client
 
