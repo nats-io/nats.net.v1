@@ -13,6 +13,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using NATS.Client.Internals;
 
 namespace NATS.Client.JetStream
@@ -150,6 +151,16 @@ namespace NATS.Client.JetStream
             return new MessageInfo(m, true);
         }
 
+
+        public async Task<MessageInfo> GetMessageAsync(string streamName, ulong sequence)
+        {
+            Validator.ValidateStreamName(streamName, true);
+            string subj = string.Format(JetStreamConstants.JsapiMsgGet, streamName);
+            Msg m = await RequestResponseRequiredAsync(subj, MessageGetRequest.SeqBytes(sequence), Timeout);
+            return new MessageInfo(m, true);
+        }
+
+
         public bool DeleteMessage(string streamName, ulong sequence)
         {
             Validator.ValidateStreamName(streamName, true);
@@ -158,5 +169,15 @@ namespace NATS.Client.JetStream
             Msg m = RequestResponseRequired(subj, bytes, Timeout);
             return new SuccessApiResponse(m, true).Success;
         }
+
+        public async Task<bool> DeleteMessageAsync(string streamName, ulong sequence)
+        {
+            Validator.ValidateStreamName(streamName, true);
+            string subj = string.Format(JetStreamConstants.JsapiMsgDelete, streamName);
+            byte[] bytes = JsonUtils.SimpleMessageBody(ApiConstants.Seq, sequence);
+            Msg m = await RequestResponseRequiredAsync(subj, bytes, Timeout);
+            return new SuccessApiResponse(m, true).Success;
+        }
+
     }
 }

@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using NATS.Client.Internals;
+using System.Threading.Tasks;
 
 namespace NATS.Client.JetStream
 {
@@ -72,5 +73,17 @@ namespace NATS.Client.JetStream
 
             return msg;
         }
+
+        public async Task<Msg> RequestResponseRequiredAsync(string subject, byte[] bytes, int timeout)
+        {
+            Msg msg = await Conn.RequestAsync(PrependPrefix(subject), bytes, timeout);
+            if (msg == null)
+            {
+                throw new NATSJetStreamException("Timeout or no response waiting for NATS JetStream server");
+            }
+
+            return msg;
+        }
+
     }
 }

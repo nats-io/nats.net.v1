@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace NATS.Client.JetStream
 {
@@ -132,11 +133,28 @@ namespace NATS.Client.JetStream
         MessageInfo GetMessage(string streamName, ulong sequence);
 
         /// <summary>
+        /// Gets information about a message in a stream.
+        /// </summary>
+        /// <param name="streamName">The name of the stream.</param>
+        /// <param name="sequence">The stream sequence number of the message.</param>
+        /// <returns>Message information.</returns>
+        Task<MessageInfo> GetMessageAsync(string streamName, ulong sequence);
+
+
+        /// <summary>
         /// Deletes a message from a stream.
         /// </summary>
         /// <param name="streamName">The name of the stream.</param>
         /// <param name="sequence">The stream sequence number of the message.</param>
         /// <returns>True if the message was deleted.</returns>
         bool DeleteMessage(string streamName, ulong sequence);
+
+        /// <summary>
+        /// Deletes a message from a stream.
+        /// </summary>
+        /// <param name="streamName">The name of the stream.</param>
+        /// <param name="sequence">The stream sequence number of the message.</param>
+        /// <returns>True if the message was deleted.</returns>
+        Task<bool> DeleteMessageAsync(string streamName, ulong sequence);
     }
 }
