@@ -293,5 +293,21 @@ namespace NATS.Client.JetStream
         /// <seealso cref="ISubscription.Subject"/>
         /// <seealso cref="ISubscription.Queue"/>
         IJetStreamPushSyncSubscription PushSubscribeSync(string subject, string queue, PushSubscribeOptions options);
+
+        /// <summary>
+        /// Gets information about a message in a stream.
+        /// </summary>
+        /// <param name="streamName">The name of the stream.</param>
+        /// <param name="sequence">The stream sequence number of the message.</param>
+        /// <returns>Message information.</returns>
+        Msg GetMessage(string streamName, ulong sequence);
+
+        /// <summary>
+        /// Gets information about a message in a stream.
+        /// </summary>
+        /// <param name="streamName">The name of the stream.</param>
+        /// <param name="sequence">The stream sequence number of the message.</param>
+        /// <returns>Message information.</returns>
+        Task<Msg> GetMessageAsync(string streamName, ulong sequence);
     }
 }

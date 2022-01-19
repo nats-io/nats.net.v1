@@ -449,5 +449,29 @@ namespace NATS.Client.JetStream
         }
 
         private bool IsSubjectRequired(SubscribeOptions options) => options == null || !options.Bind;
+
+
+        public Msg GetMessage(string streamName, ulong sequence)
+        {
+            Validator.ValidateStreamName(streamName, true);
+            string subj = string.Format(JetStreamConstants.JsapiMsgGet, streamName);
+            var msg = RequestResponseRequired(subj, MessageGetRequest.SeqBytes(sequence), Timeout);
+            var info = new MessageInfo(msg, true);
+
+            return new Msg(info.Subject, info.Headers, info.Data);
+
+
+        }
+
+
+        public async Task<Msg> GetMessageAsync(string streamName, ulong sequence)
+        {
+            Validator.ValidateStreamName(streamName, true);
+            string subj = string.Format(JetStreamConstants.JsapiMsgGet, streamName);
+            var msg = await RequestResponseRequiredAsync(subj, MessageGetRequest.SeqBytes(sequence), Timeout);
+            var info = new MessageInfo(msg, true);
+            return new Msg(info.Subject, info.Headers, info.Data);
+        }
+
     }
 }
