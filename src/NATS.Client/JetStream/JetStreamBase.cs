@@ -76,7 +76,7 @@ namespace NATS.Client.JetStream
 
         public async Task<Msg> RequestResponseRequiredAsync(string subject, byte[] bytes, int timeout)
         {
-            Msg msg = await Conn.RequestAsync(PrependPrefix(subject), bytes, timeout);
+            Msg msg = await Conn.RequestAsync(PrependPrefix(subject), bytes, timeout).ConfigureAwait(false);
             if (msg == null)
             {
                 throw new NATSJetStreamException("Timeout or no response waiting for NATS JetStream server");
