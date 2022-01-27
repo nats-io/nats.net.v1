@@ -14,6 +14,7 @@
     <PackageTags>CNCF NATS Messaging Cloud Publish Subscribe PubSub</PackageTags>
     <DebugType>pdbonly</DebugType>
     <DebugSymbols>true</DebugSymbols>
+    <TargetFrameworks>netstandard1.6;net60</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup Condition="$(Configuration) == 'Release'">
