@@ -186,15 +186,6 @@ namespace UnitTests.Internals
         }
 
         [Fact]
-        public void TestValidateMaxValueBytes()
-        {
-            Assert.Equal(1, Validator.ValidateMaxValueBytes(1));
-            Assert.Equal(-1, Validator.ValidateMaxValueBytes(-1));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxValueBytes(0));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxValueBytes(-2));
-        }
-
-        [Fact]
         public void TestValidateNumberOfReplicas()
         {
             Assert.Equal(1, Validator.ValidateNumberOfReplicas(1));
@@ -232,6 +223,18 @@ namespace UnitTests.Internals
         }
 
         [Fact]
+        public void TestValidateDurationNotRequiredNotLessThanMin() {
+            Duration min = Duration.OfMillis(99);
+            Duration less = Duration.OfMillis(9);
+            Duration more = Duration.OfMillis(9999);
+
+            Assert.Null(Validator.ValidateDurationNotRequiredNotLessThanMin(null, min));
+            Assert.Equal(more, Validator.ValidateDurationNotRequiredNotLessThanMin(more, min));
+
+            Assert.Throws<ArgumentException>(() => Validator.ValidateDurationNotRequiredNotLessThanMin(less, min));
+        }
+
+        [Fact]
         public void TestValidateJetStreamPrefix()
         {
             Assert.Throws<ArgumentException>(() => Validator.ValidateJetStreamPrefix(HasStar));
@@ -239,6 +242,19 @@ namespace UnitTests.Internals
             Assert.Throws<ArgumentException>(() => Validator.ValidateJetStreamPrefix(HasDollar));
             Assert.Throws<ArgumentException>(() => Validator.ValidateJetStreamPrefix(HasSpace));
             Assert.Throws<ArgumentException>(() => Validator.ValidateJetStreamPrefix(HasLow));
+        }
+        
+        [Fact]
+        public void TestValidateNotSupplied() {
+            ClientExDetail err = new ClientExDetail("TEST", 999999, "desc");
+
+            // string version
+            Validator.ValidateNotSupplied((string)null, err);
+            Validator.ValidateNotSupplied("", err);
+            Assert.Throws<NATSJetStreamClientException>(() => Validator.ValidateNotSupplied("notempty", err));
+
+            Validator.ValidateNotSupplied(0, 0, err);
+            Assert.Throws<NATSJetStreamClientException>(() => Validator.ValidateNotSupplied(1, 0, err));
         }
 
         [Fact]
@@ -296,6 +312,13 @@ namespace UnitTests.Internals
             {
                 Assert.Throws<ArgumentException>(() => test.Invoke(s, true));
             }
+        }
+
+        [Fact]
+        public void TestNatsJetStreamClientError() 
+        {
+            ClientExDetail err = new ClientExDetail("TEST", 999999, "desc");
+            Assert.Equal("[TEST-999999] desc", err.Message);
         }
     }
 }

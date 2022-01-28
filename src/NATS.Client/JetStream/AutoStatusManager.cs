@@ -114,7 +114,7 @@ namespace NATS.Client.JetStream
         {
             _sub = sub;
             if (Hb) {
-                conn.BeforeQueueProcessor = BeforeQueueProcessor;
+                _sub.BeforeChannelAddCheck = BeforeChannelAddCheck;
                 asmTimer = new AsmTimer(this);
             }
         }
@@ -170,7 +170,7 @@ namespace NATS.Client.JetStream
                 if (msg.Status.IsHeartbeat()) 
                 {
                     if (Fc) {
-                        _processFlowControl(msg.Header?[JetStreamConstants.ConsumerStalledHdr], FlowControlSource.Heartbeat);
+                        _processFlowControl(msg.Header?[JetStreamConstants.ConsumerStalledHeader], FlowControlSource.Heartbeat);
                     }
                     return true;
                     
@@ -192,19 +192,19 @@ namespace NATS.Client.JetStream
             return false;
         }
 
-        private Msg BeforeQueueProcessor(Msg msg)
+        private Msg BeforeChannelAddCheck(Msg msg)
         {
             LastMsgReceived = DateTimeOffset.Now.ToUnixTimeMilliseconds();
             if (msg.HasStatus 
                 && msg.Status.IsHeartbeat()
-                && msg.Header?[JetStreamConstants.ConsumerStalledHdr] == null) 
+                && msg.Header?[JetStreamConstants.ConsumerStalledHeader] == null) 
             {
                     return null; // plain heartbeat, no need to queue
             }
             return msg;
         }
 
-        private void _processFlowControl(String fcSubject, FlowControlSource source) {
+        private void _processFlowControl(string fcSubject, FlowControlSource source) {
             // we may get multiple fc/hb messages with the same reply
             // only need to post to that subject once
             if (fcSubject != null && !fcSubject.Equals(LastFcSubject)) {

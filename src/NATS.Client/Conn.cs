@@ -27,6 +27,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
+using NATS.Client.KeyValue;
 using static NATS.Client.Defaults;
 using Timeout = System.Threading.Timeout;
 
@@ -742,11 +743,7 @@ namespace NATS.Client
             callbackScheduler.Start();
 
             globalRequestInbox = NewInbox();
-
-            BeforeQueueProcessor = msg => msg;
         }
-
-        internal Func<Msg, Msg> BeforeQueueProcessor;
         
         private void buildPublishProtocolBuffers(int size)
         {
@@ -2195,15 +2192,7 @@ namespace NATS.Client
                             ? new JetStreamMsg(this, msgArgs, s, msgBytes, length)
                             : new Msg(msgArgs, s, msgBytes, length);
 
-                        // BeforeQueueProcessor returns null if the message
-                        // does not need to be queued, for instance heartbeats
-                        // that are not flow control and are already seen by the
-                        // auto status manager
-                        msg = BeforeQueueProcessor.Invoke(msg);
-                        if (msg != null)
-                        {
-                            s.addMessage(msg, opts.subChanLen);
-                        }
+                        s.addMessage(msg, opts.subChanLen);
                     } // maxreached == false
 
                 } // lock s.mu
@@ -4695,6 +4684,20 @@ namespace NATS.Client
         public IJetStreamManagement CreateJetStreamManagementContext(JetStreamOptions options = null)
         {
             return new JetStreamManagement(this, options);
+        }
+
+        #endregion
+
+        #region KeyValue
+
+        public IKeyValue CreateKeyValueContext(string bucketName, KeyValueOptions options = null)
+        {
+            return new KeyValue.KeyValue(this, bucketName, options);
+        }
+
+        public IKeyValueManagement CreateKeyValueManagementContext(KeyValueOptions options = null)
+        {
+            return new KeyValueManagement(this, options);
         }
 
         #endregion

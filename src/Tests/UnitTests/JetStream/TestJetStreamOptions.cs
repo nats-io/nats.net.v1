@@ -88,18 +88,18 @@ namespace UnitTests.JetStream
             AssertInvalidPrefix("." + Plain);
         }
 
-        private void AssertValidPrefix(String prefix) {
+        private void AssertValidPrefix(string prefix) {
             JetStreamOptions jso = JetStreamOptions.Builder().WithPrefix(prefix).Build();
-            String prefixWithDot = prefix.EndsWith(".") ? prefix : prefix + ".";
+            string prefixWithDot = prefix.EndsWith(".") ? prefix : prefix + ".";
             Assert.Equal(prefixWithDot, jso.Prefix);
         }
 
-        private void AssertDefaultPrefix(String prefix) {
+        private void AssertDefaultPrefix(string prefix) {
             JetStreamOptions jso = JetStreamOptions.Builder().WithPrefix(prefix).Build();
             Assert.Equal(DefaultApiPrefix, jso.Prefix);
         }
 
-        private void AssertInvalidPrefix(String prefix) {
+        private void AssertInvalidPrefix(string prefix) {
             Assert.Throws<ArgumentException>(() => JetStreamOptions.Builder().WithPrefix(prefix).Build());
         }
 
@@ -130,22 +130,22 @@ namespace UnitTests.JetStream
             AssertInvalidDomain("." + Plain);
         }
 
-        private void AssertValidDomain(String domain) {
+        private void AssertValidDomain(string domain) {
             JetStreamOptions jso = JetStreamOptions.Builder().WithDomain(domain).Build();
             if (domain.StartsWith(".")) {
                 domain = domain.Substring(1);
             }
-            String prefixWithDot = domain.EndsWith(".") ? domain : domain + ".";
-            String expected = PrefixDollarJsDot + prefixWithDot + PrefixApiDot;
+            string prefixWithDot = domain.EndsWith(".") ? domain : domain + ".";
+            string expected = PrefixDollarJsDot + prefixWithDot + PrefixApiDot;
             Assert.Equal(expected, jso.Prefix);
         }
 
-        private void AssertDefaultDomain(String domain) {
+        private void AssertDefaultDomain(string domain) {
             JetStreamOptions jso = JetStreamOptions.Builder().WithDomain(domain).Build();
             Assert.Equal(DefaultApiPrefix, jso.Prefix);
         }
 
-        private void AssertInvalidDomain(String domain) {
+        private void AssertInvalidDomain(string domain) {
             Assert.Throws<ArgumentException>(() => JetStreamOptions.Builder().WithDomain(domain).Build());
         }
     }

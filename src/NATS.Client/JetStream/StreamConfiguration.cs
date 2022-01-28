@@ -29,7 +29,7 @@ namespace NATS.Client.JetStream
         public long MaxMsgsPerSubject { get; }
         public long MaxBytes { get; }
         public Duration MaxAge { get; }
-        public long MaxMsgSize { get; }
+        public long MaxValueSize { get; }
         public StorageType StorageType { get; }
         public int Replicas { get; }
         public bool NoAck { get; }
@@ -39,6 +39,10 @@ namespace NATS.Client.JetStream
         public Placement Placement { get; }
         public Mirror Mirror { get; }
         public List<Source> Sources { get; }
+        private bool Sealed { get; }
+        private bool AllowRollup { get; }
+        private bool DenyDelete { get; }
+        private bool DenyPurge { get; }
 
         internal StreamConfiguration(string json) : this(JSON.Parse(json)) { }
         
@@ -55,7 +59,7 @@ namespace NATS.Client.JetStream
             MaxMsgsPerSubject = AsLongOrMinus1(scNode, ApiConstants.MaxMsgsPerSubject);
             MaxBytes = AsLongOrMinus1(scNode, ApiConstants.MaxBytes);
             MaxAge = AsDuration(scNode, ApiConstants.MaxAge, Duration.Zero);
-            MaxMsgSize = AsLongOrMinus1(scNode, ApiConstants.MaxMsgSize);
+            MaxValueSize = AsLongOrMinus1(scNode, ApiConstants.MaxMsgSize);
             Replicas = scNode[ApiConstants.NumReplicas].AsInt;
             NoAck = scNode[ApiConstants.NoAck].AsBool;
             TemplateOwner = scNode[ApiConstants.TemplateOwner].Value;
@@ -63,33 +67,37 @@ namespace NATS.Client.JetStream
             Placement = Placement.OptionalInstance(scNode[ApiConstants.Placement]);
             Mirror = Mirror.OptionalInstance(scNode[ApiConstants.Mirror]);
             Sources = Source.OptionalListOf(scNode[ApiConstants.Sources]);
+            Sealed = scNode[ApiConstants.Sealed].AsBool;
+            AllowRollup = scNode[ApiConstants.AllowRollupHdrs].AsBool;
+            DenyDelete = scNode[ApiConstants.DenyDelete].AsBool;
+            DenyPurge = scNode[ApiConstants.DenyPurge].AsBool;
         }
         
-        private StreamConfiguration(string name, string description, List<string> subjects, RetentionPolicy retentionPolicy, 
-            long maxConsumers, long maxMsgs, long maxMsgsPerSubject, long maxBytes, Duration maxAge, long maxMsgSize, 
-            StorageType storageType, int replicas, bool noAck, string templateOwner, 
-            DiscardPolicy discardPolicy, Duration duplicateWindow, Placement placement, Mirror mirror, 
-            List<Source> sources)
+        private StreamConfiguration(StreamConfigurationBuilder builder)
         {
-            Name = name;
-            Description = description; 
-            Subjects = subjects;
-            RetentionPolicy = retentionPolicy;
-            MaxConsumers = maxConsumers;
-            MaxMsgs = maxMsgs;
-            MaxMsgsPerSubject = maxMsgsPerSubject;
-            MaxBytes = maxBytes;
-            MaxAge = maxAge;
-            MaxMsgSize = maxMsgSize;
-            StorageType = storageType;
-            Replicas = replicas;
-            NoAck = noAck;
-            TemplateOwner = templateOwner;
-            DiscardPolicy = discardPolicy;
-            DuplicateWindow = duplicateWindow;
-            Placement = placement;
-            Mirror = mirror;
-            Sources = sources;
+            Name = builder._name;
+            Description = builder._description; 
+            Subjects = builder._subjects;
+            RetentionPolicy = builder._retentionPolicy;
+            MaxConsumers = builder._maxConsumers;
+            MaxMsgs = builder._maxMsgs;
+            MaxMsgsPerSubject = builder._maxMsgsPerSubject;
+            MaxBytes = builder._maxBytes;
+            MaxAge = builder._maxAge;
+            MaxValueSize = builder._maxMsgSize;
+            StorageType = builder._storageType;
+            Replicas = builder._replicas;
+            NoAck = builder._noAck;
+            TemplateOwner = builder._templateOwner;
+            DiscardPolicy = builder._discardPolicy;
+            DuplicateWindow = builder._duplicateWindow;
+            Placement = builder._placement;
+            Mirror = builder._mirror;
+            Sources = builder._sources;
+            Sealed = builder._sealed;
+            AllowRollup = builder._allowRollup;
+            DenyDelete = builder._denyDelete;
+            DenyPurge = builder._denyPurge;
         }
 
         internal override JSONNode ToJsonNode()
@@ -115,14 +123,18 @@ namespace NATS.Client.JetStream
                 [ApiConstants.MaxMsgsPerSubject] = MaxMsgsPerSubject,
                 [ApiConstants.MaxBytes] = MaxBytes,
                 [ApiConstants.MaxAge] = MaxAge.Nanos,
-                [ApiConstants.MaxMsgSize] = MaxMsgSize,
+                [ApiConstants.MaxMsgSize] = MaxValueSize,
                 [ApiConstants.NumReplicas] = Replicas,
                 [ApiConstants.NoAck] = NoAck,
                 [ApiConstants.TemplateOwner] = TemplateOwner,
                 [ApiConstants.DuplicateWindow] = DuplicateWindow.Nanos,
                 [ApiConstants.Placement] = Placement?.ToJsonNode(),
                 [ApiConstants.Mirror] = Mirror?.ToJsonNode(),
-                [ApiConstants.Sources] = sources
+                [ApiConstants.Sources] = sources,
+                // never write sealed
+                [ApiConstants.AllowRollupHdrs] = AllowRollup,
+                [ApiConstants.DenyDelete] = DenyDelete,
+                [ApiConstants.DenyPurge] = DenyPurge
             };
         }
 
@@ -138,25 +150,29 @@ namespace NATS.Client.JetStream
 
         public sealed class StreamConfigurationBuilder
         {
-            private string _name;
-            private string _description;
-            private readonly List<string> _subjects = new List<string>();
-            private RetentionPolicy _retentionPolicy = RetentionPolicy.Limits;
-            private long _maxConsumers = -1;
-            private long _maxMsgs = -1;
-            private long _maxMsgsPerSubject = -1;
-            private long _maxBytes = -1;
-            private Duration _maxAge = Duration.Zero;
-            private long _maxMsgSize = -1;
-            private StorageType _storageType = StorageType.File;
-            private int _replicas = 1;
-            private bool _noAck;
-            private string _templateOwner;
-            private DiscardPolicy _discardPolicy = DiscardPolicy.Old;
-            private Duration _duplicateWindow = Duration.Zero;
-            private Placement _placement;
-            private Mirror _mirror;
-            private readonly List<Source> _sources = new List<Source>();
+            internal string _name;
+            internal string _description;
+            internal readonly List<string> _subjects = new List<string>();
+            internal RetentionPolicy _retentionPolicy = RetentionPolicy.Limits;
+            internal long _maxConsumers = -1;
+            internal long _maxMsgs = -1;
+            internal long _maxMsgsPerSubject = -1;
+            internal long _maxBytes = -1;
+            internal Duration _maxAge = Duration.Zero;
+            internal long _maxMsgSize = -1;
+            internal StorageType _storageType = StorageType.File;
+            internal int _replicas = 1;
+            internal bool _noAck;
+            internal string _templateOwner;
+            internal DiscardPolicy _discardPolicy = DiscardPolicy.Old;
+            internal Duration _duplicateWindow = Duration.Zero;
+            internal Placement _placement;
+            internal Mirror _mirror;
+            internal readonly List<Source> _sources = new List<Source>();
+            internal bool _sealed;
+            internal bool _allowRollup;
+            internal bool _denyDelete;
+            internal bool _denyPurge;
 
             public StreamConfigurationBuilder() {}
             
@@ -172,7 +188,7 @@ namespace NATS.Client.JetStream
                 _maxMsgsPerSubject = sc.MaxMsgsPerSubject;
                 _maxBytes = sc.MaxBytes;
                 _maxAge = sc.MaxAge;
-                _maxMsgSize = sc.MaxMsgSize;
+                _maxMsgSize = sc.MaxValueSize;
                 _storageType = sc.StorageType;
                 _replicas = sc.Replicas;
                 _noAck = sc.NoAck;
@@ -182,6 +198,10 @@ namespace NATS.Client.JetStream
                 _placement = sc.Placement;
                 _mirror = sc.Mirror;
                 WithSources(sc.Sources);
+                _sealed = sc.Sealed;
+                _allowRollup = sc.AllowRollup;
+                _denyDelete = sc.DenyDelete;
+                _denyPurge = sc.DenyPurge;
             }
 
             /// <summary>
@@ -485,32 +505,42 @@ namespace NATS.Client.JetStream
             }
 
             /// <summary>
+            /// Sets the Allow Rollup mode of the StreamConfiguration.
+            /// </summary>
+            /// <param name="allowRollup">true to allow rollup headers.</param>
+            /// <returns>The StreamConfigurationBuilder</returns>
+            public StreamConfigurationBuilder WithAllowRollup(bool allowRollup) {
+                _allowRollup = allowRollup;
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the Deny Delete mode of the StreamConfiguration.
+            /// </summary>
+            /// <param name="denyDelete">true to deny delete.</param>
+            /// <returns>The StreamConfigurationBuilder</returns>
+            public StreamConfigurationBuilder WithDenyDelete(bool denyDelete) {
+                _denyDelete = denyDelete;
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the Deny Purge mode of the StreamConfiguration.
+            /// </summary>
+            /// <param name="denyPurge">true to deny purge.</param>
+            /// <returns>The StreamConfigurationBuilder</returns>
+            public StreamConfigurationBuilder WithDenyPurge(bool denyPurge) {
+                _denyPurge = denyPurge;
+                return this;
+            }
+
+            /// <summary>
             /// Builds the ConsumerConfiguration
             /// </summary>
             /// <returns>The StreamConfiguration</returns>
-            public StreamConfiguration Build() 
+            public StreamConfiguration Build()
             {
-                return new StreamConfiguration(
-                    _name,
-                    _description,
-                    _subjects,
-                    _retentionPolicy,
-                    _maxConsumers,
-                    _maxMsgs,
-                    _maxMsgsPerSubject,
-                    _maxBytes,
-                    _maxAge,
-                    _maxMsgSize,
-                    _storageType,
-                    _replicas,
-                    _noAck,
-                    _templateOwner,
-                    _discardPolicy,
-                    _duplicateWindow,
-                    _placement,
-                    _mirror,
-                    _sources
-                );
+                return new StreamConfiguration(this);
             }
         }
     }

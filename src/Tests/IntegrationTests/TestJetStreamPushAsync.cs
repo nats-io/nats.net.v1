@@ -16,8 +16,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using NATS.Client;
+using NATS.Client.Internals;
 using NATS.Client.JetStream;
-using UnitTests;
 using Xunit;
 using Xunit.Abstractions;
 using static UnitTests.TestBase;
@@ -54,12 +54,7 @@ namespace IntegrationTests
                 void TestHandler(object sender, MsgHandlerEventArgs args)
                 {
                     received++;
-
-                    if (args.Message.IsJetStream)
-                    {
-                        args.Message.Ack();
-                    }
-
+                    args.Message.Ack();
                     latch.Signal();
                 }
 

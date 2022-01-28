@@ -1,12 +1,47 @@
 ﻿using System;
 using System.IO;
 using System.Text;
-using System.Threading;
+using Xunit.Abstractions;
 
 namespace UnitTests
 {
     public class TestBase
     {
+        // ----------------------------------------------------------------------------------------------------
+        // console debug help 
+        // ----------------------------------------------------------------------------------------------------
+        /*
+            private readonly ITestOutputHelper output;
+
+            public TestKeyValue(ITestOutputHelper output, BlahSuiteContext context) : base(context)
+            {
+	            this.output = output;
+            }
+
+            [Fact]
+            public void TestRedirectConsole() {
+	            Console.SetOut(new ConsoleWriter(output));
+	            ...
+            }
+        */
+       
+        public class ConsoleWriter : StringWriter
+        {
+            private ITestOutputHelper output;
+            public ConsoleWriter(ITestOutputHelper output)
+            {
+                this.output = output;
+            }
+
+            public override void WriteLine(string m)
+            {
+                output.WriteLine(m);
+            }
+        }
+
+        // ----------------------------------------------------------------------------------------------------
+        // unit test 
+        // ----------------------------------------------------------------------------------------------------
         public const string Plain        = "plain";
         public const string HasSpace     = "has space";
         public const string HasPrintable = "has-print!able";
@@ -56,6 +91,8 @@ namespace UnitTests
         public const string DURABLE = "durable";
         public const string DELIVER = "deliver";
         public const string MESSAGE_ID = "mid";
+        public const string BUCKET = "bucket";
+        public const string KEY = "key";
         public const string DATA = "data";
 
         public static string Stream(int seq) {
@@ -74,7 +111,7 @@ namespace UnitTests
             return SUBJECT + "-" + seq;
         }
 
-        public static String SubjectDot(String field) {
+        public static string SubjectDot(string field) {
             return SUBJECT + "." + field;
         }
 
@@ -94,6 +131,14 @@ namespace UnitTests
             return DELIVER + "-" + seq;
         }
 
+        public static string Bucket(int seq) {
+            return BUCKET + "-" + seq;
+        }
+
+        public static string Key(int seq) {
+            return KEY + "-" + seq;
+        }
+
         public static string MessageId(int seq) {
             return MESSAGE_ID + "-" + seq;
         }
@@ -108,63 +153,6 @@ namespace UnitTests
 
         public static byte[] DataBytes(int seq) {
             return Encoding.ASCII.GetBytes(Data(seq));
-        }
-    }
-
-    public class InterlockedLong
-    {
-        private long count;
-
-        public InterlockedLong() {}
-
-        public InterlockedLong(long start)
-        {
-            this.count = start;
-        }
-
-        public void Set(long l)
-        {
-            Interlocked.Exchange(ref count, l);
-        }
-
-        public long Increment()
-        {
-            return Interlocked.Increment(ref count);
-        }
-
-        public long Read()
-        {
-            return Interlocked.Read(ref count);
-        }
-    }
-
-    public class InterlockedInt
-    {
-        private readonly InterlockedLong il;
-
-        public InterlockedInt()
-        {
-            il = new InterlockedLong();
-        }
-
-        public InterlockedInt(long start)
-        {
-            il = new InterlockedLong(start);
-        }
-
-        public void Set(int i)
-        {
-            il.Set(i);
-        }
-
-        public int Increment()
-        {
-            return (int)il.Increment();
-        }
-
-        public int Read()
-        {
-            return (int)il.Read();
         }
     }
 }

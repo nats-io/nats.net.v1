@@ -10,31 +10,31 @@ namespace NATS.Client.Internals
     {
         internal static readonly JSONNode MinusOne = new JSONNumber(-1);
 
-        internal static int AsIntOrMinus1(JSONNode node, String field)
+        internal static int AsIntOrMinus1(JSONNode node, string field)
         {
             JSONNode possible = node[field];
             return possible.IsNumber ? possible.AsInt : -1;
         }
 
-        internal static long AsLongOrZero(JSONNode node, String field)
+        internal static long AsLongOrZero(JSONNode node, string field)
         {
             JSONNode possible = node[field];
             return possible.IsNumber ? possible.AsLong : 0;
         }
 
-        internal static long AsLongOrMinus1(JSONNode node, String field)
+        internal static long AsLongOrMinus1(JSONNode node, string field)
         {
             JSONNode possible = node[field];
             return possible.IsNumber ? possible.AsLong : -1;
         }
 
-        internal static ulong AsUlongOrZero(JSONNode node, String field)
+        internal static ulong AsUlongOrZero(JSONNode node, string field)
         {
             JSONNode possible = node[field];
             return possible.IsNumber ? possible.AsUlong : 0;
         }
 
-        internal static Duration AsDuration(JSONNode node, String field, Duration dflt)
+        internal static Duration AsDuration(JSONNode node, string field, Duration dflt)
         {
             if (dflt == null)
             {
@@ -44,7 +44,7 @@ namespace NATS.Client.Internals
             return Duration.OfNanos(node.GetValueOrDefault(field, dflt.Nanos).AsLong);
         }
 
-        internal static List<string> StringList(JSONNode node, String field)
+        internal static List<string> StringList(JSONNode node, string field)
         {
             List<string> list = new List<string>();
             foreach (var child in node[field].Children)
@@ -55,7 +55,7 @@ namespace NATS.Client.Internals
             return list;
         }
 
-        internal static List<string> OptionalStringList(JSONNode node, String field)
+        internal static List<string> OptionalStringList(JSONNode node, string field)
         {
             List<string> list = StringList(node, field);
             return list.Count == 0 ? null : list;
