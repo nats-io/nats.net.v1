@@ -22,6 +22,8 @@ namespace NATS.Client
     /// </summary>
     public class SyncSubscription : Subscription, ISyncSubscription, ISubscription 
     {
+        private bool throwSlowConsumerOnNextMessage;
+
         internal SyncSubscription(Connection conn, string subject, string queue)
             : base(conn, subject, queue)
         {
@@ -89,9 +91,9 @@ namespace NATS.Client
                     throw new NATSBadSubscriptionException();
                 }
 
-                if (sc)
+                if (throwSlowConsumerOnNextMessage)
                 {
-                    sc = false;
+                    throwSlowConsumerOnNextMessage = false;
                     throw new NATSSlowConsumerException();
                 }
 
@@ -120,6 +122,10 @@ namespace NATS.Client
                 lock (mu)
                 {
                     d = tallyDeliveredMessage(msg);
+                    if (sc)
+                    {
+                        RecoverFromSlowConsumer();
+                    }
                 }
 
                 if (d == localMax)
@@ -135,6 +141,18 @@ namespace NATS.Client
             }
 
             return msg;
+        }
+
+        protected override void handleSlowConsumer(Msg msg)
+        {
+            lock (mu)
+            {
+                if (!sc)
+                {
+                    throwSlowConsumerOnNextMessage = true;
+                }
+            }
+            base.handleSlowConsumer(msg);
         }
     }
 }

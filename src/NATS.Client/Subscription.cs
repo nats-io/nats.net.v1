@@ -142,7 +142,7 @@ namespace NATS.Client
             return true;
         }
 
-        private void handleSlowConsumer(Msg msg)
+        protected virtual void handleSlowConsumer(Msg msg)
         {
             dropped++;
             if (!sc)
@@ -199,7 +199,7 @@ namespace NATS.Client
             if (msg != null)
             {
                 // Check for a Slow Consumer
-	            if ((pMsgsLimit > 0 && pMsgs > pMsgsLimit)
+                if ((pMsgsLimit > 0 && pMsgs > pMsgsLimit)
                     || (pBytesLimit > 0 && pBytes > pBytesLimit))
                 {
                     // slow consumer
@@ -220,20 +220,36 @@ namespace NATS.Client
                     }
                 }
 
-                //Recover from slow consumer.
-                //Wait for some more free capacity in the buffers before clearing the sc flag to avoid firing to many slow consumer events. 
-                const float maxBufferUsageToClearSlowConsumer = 0.8f;
-                if (sc 
-                    && (pMsgsLimit <= 0 || pMsgs < Math.Max(1, pMsgsLimit * maxBufferUsageToClearSlowConsumer)) 
-                    && (pBytesLimit <= 0 || pBytes < Math.Max(1, pBytesLimit * maxBufferUsageToClearSlowConsumer))
-                    && (mch == null || mch.Count < Math.Max(1, maxCount * maxBufferUsageToClearSlowConsumer))  
-                )
-                {
-                    sc = false;
-                }
+                RecoverFromSlowConsumer(maxCount);
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// If buffered messages drop below 80% of the limits clear slow consumer status.
+        /// </summary>
+        protected void RecoverFromSlowConsumer()
+        {
+            RecoverFromSlowConsumer(conn.Opts.SubChannelLength);
+        }
+        /// <summary>
+        /// If buffered messages drop below 80% of the limits clear slow consumer status.
+        /// </summary>
+        /// <param name="maxCount">max message channel size</param>
+        protected void RecoverFromSlowConsumer(int maxCount)
+        {
+            //Recover from slow consumer.
+            //Wait for some more free capacity in the buffers before clearing the sc flag to avoid firing too many slow consumer events. 
+            const float maxBufferUsageToClearSlowConsumer = 0.8f;
+            if (sc
+                && (pMsgsLimit <= 0 || pMsgs < Math.Max(1, pMsgsLimit * maxBufferUsageToClearSlowConsumer))
+                && (pBytesLimit <= 0 || pBytes < Math.Max(1, pBytesLimit * maxBufferUsageToClearSlowConsumer))
+                && (mch == null || mch.Count < Math.Max(1, maxCount * maxBufferUsageToClearSlowConsumer))
+            )
+            {
+                sc = false;
+            }
         }
 
         /// <summary>

@@ -74,6 +74,7 @@ namespace NATS.Client
                     return false;
 
                 d = tallyDeliveredMessage(msg);
+                if (sc) RecoverFromSlowConsumer();
 
                 localConn = conn;
                 localHandler = MessageHandler;
