@@ -20,10 +20,13 @@ namespace NATS.Client.JetStream
     public sealed class MessageInfo : ApiResponse
     {
         public string Subject { get; private set; }
-        public long Seq { get; private set; }
+        public ulong Sequence { get; private set; }
         public byte[] Data { get; private set; }
         public DateTime Time { get; private set; }
         public MsgHeader Headers { get; private set; }
+
+        [Obsolete("This property is obsolete. Use Sequence instead.", false)]
+        public long Seq => Convert.ToInt64(Sequence);
 
         internal MessageInfo(Msg msg, bool throwOnError) : base(msg, throwOnError)
         {
@@ -39,7 +42,7 @@ namespace NATS.Client.JetStream
         {
             JSONNode miNode = JsonNode[ApiConstants.Message];
             Subject = miNode[ApiConstants.Subject].Value;
-            Seq = miNode[ApiConstants.Seq].AsLong;
+            Sequence = miNode[ApiConstants.Seq].AsUlong;
             Time = JsonUtils.AsDate(miNode[ApiConstants.Time]);
             Data = JsonUtils.AsByteArrayFromBase64(miNode[ApiConstants.Data]);
             byte[] bytes = JsonUtils.AsByteArrayFromBase64(miNode[ApiConstants.Hdrs]);

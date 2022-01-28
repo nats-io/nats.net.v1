@@ -153,9 +153,9 @@ namespace NATS.Client.JetStream
 
                    || WouldBeChange(AckWait, original.AckWait)
                    || WouldBeChange(IdleHeartbeat, original.IdleHeartbeat)
-                   
                    || WouldBeChange(StartTime, original.StartTime)
                    
+                   || WouldBeChange(FilterSubject, original.FilterSubject)
                    || WouldBeChange(Description, original.Description)
                    || WouldBeChange(SampleFrequency, original.SampleFrequency)
                    || WouldBeChange(DeliverSubject, original.DeliverSubject)
@@ -163,7 +163,6 @@ namespace NATS.Client.JetStream
                    ;
 
             // do not need to check Durable because the original is retrieved by the durable name
-            // do not need to check FilterSubject because it's already validated against the original
         }
 
         private static bool WouldBeChange(string request, string original)

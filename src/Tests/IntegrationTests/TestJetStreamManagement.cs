@@ -18,7 +18,6 @@ using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using Xunit;
 using static IntegrationTests.JetStreamTestBase;
-using static NATS.Client.ClientExDetail;
 using static UnitTests.TestBase;
 
 namespace IntegrationTests
@@ -61,7 +60,7 @@ namespace IntegrationTests
                 Assert.Equal(-1, sc.MaxConsumers);
                 Assert.Equal(-1, sc.MaxMsgs);
                 Assert.Equal(-1, sc.MaxBytes);
-                Assert.Equal(-1, sc.MaxMsgSize);
+                Assert.Equal(-1, sc.MaxValueSize);
                 Assert.Equal(1, sc.Replicas);
 
                 Assert.Equal(Duration.Zero, sc.MaxAge);
@@ -109,7 +108,7 @@ namespace IntegrationTests
                 Assert.Equal(-1, sc.MaxConsumers);
                 Assert.Equal(-1, sc.MaxMsgs);
                 Assert.Equal(-1, sc.MaxBytes);
-                Assert.Equal(-1, sc.MaxMsgSize);
+                Assert.Equal(-1, sc.MaxValueSize);
                 Assert.Equal(1, sc.Replicas);
 
                 Assert.Equal(Duration.Zero, sc.MaxAge);
@@ -141,7 +140,7 @@ namespace IntegrationTests
                 Assert.Equal(Subject(0), sc.Subjects[0]);
                 Assert.Equal(Subject(1), sc.Subjects[1]);
                 Assert.Equal(-1, sc.MaxBytes);
-                Assert.Equal(-1, sc.MaxMsgSize);
+                Assert.Equal(-1, sc.MaxValueSize);
                 Assert.Equal(Duration.Zero, sc.MaxAge);
                 Assert.Equal(StorageType.Memory, sc.StorageType);
                 Assert.Equal(DiscardPolicy.Old, sc.DiscardPolicy);
@@ -173,7 +172,7 @@ namespace IntegrationTests
                 Assert.Equal(Subject(1), sc.Subjects[1]);
                 Assert.Equal(Subject(2), sc.Subjects[2]);
                 Assert.Equal(43u, sc.MaxBytes);
-                Assert.Equal(44, sc.MaxMsgSize);
+                Assert.Equal(44, sc.MaxValueSize);
                 Assert.Equal(Duration.OfDays(100), sc.MaxAge);
                 Assert.Equal(StorageType.Memory, sc.StorageType);
                 Assert.Equal(DiscardPolicy.New, sc.DiscardPolicy);
@@ -363,12 +362,42 @@ namespace IntegrationTests
                 Assert.Equal(Durable(1), ci.ConsumerConfiguration.Durable);
                 Assert.Equal(Deliver(1), ci.ConsumerConfiguration.DeliverSubject);
                 
-                IList<String> consumers = jsm.GetConsumerNames(STREAM);
+                IList<string> consumers = jsm.GetConsumerNames(STREAM);
                 Assert.Equal(2, consumers.Count);
                 Assert.True(jsm.DeleteConsumer(STREAM, cc1.Durable));
                 consumers = jsm.GetConsumerNames(STREAM);
                 Assert.Single(consumers);
                 Assert.Throws<NATSJetStreamException>(() => jsm.DeleteConsumer(STREAM, cc1.Durable));
+            });
+        }
+
+        [Fact]
+        public void TestValidConsumerUpdates()
+        {
+            Context.RunInJsServer(c =>
+            {
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                CreateMemoryStream(jsm, STREAM, SUBJECT_GT);
+
+                ConsumerConfiguration cc = PrepForUpdateTest(jsm);
+                cc = ConsumerConfiguration.Builder(cc).WithDeliverSubject(Deliver(2)).Build();
+                AssertValidAddOrUpdate(jsm, cc);
+
+                cc = PrepForUpdateTest(jsm);
+                cc = ConsumerConfiguration.Builder(cc).WithAckWait(Duration.OfSeconds(5)).Build();
+                AssertValidAddOrUpdate(jsm, cc);
+
+                cc = PrepForUpdateTest(jsm);
+                cc = ConsumerConfiguration.Builder(cc).WithRateLimit(100).Build();
+                AssertValidAddOrUpdate(jsm, cc);
+
+                cc = PrepForUpdateTest(jsm);
+                cc = ConsumerConfiguration.Builder(cc).WithMaxAckPending(100).Build();
+                AssertValidAddOrUpdate(jsm, cc);
+
+                cc = PrepForUpdateTest(jsm);
+                cc = ConsumerConfiguration.Builder(cc).WithMaxDeliver(4).Build();
+                AssertValidAddOrUpdate(jsm, cc);
             });
         }
 
@@ -380,47 +409,42 @@ namespace IntegrationTests
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
                 CreateMemoryStream(jsm, STREAM, SUBJECT_GT);
 
-                ConsumerConfiguration cc = ConsumerConfiguration.Builder()
-                    .WithDurable(Durable(1))
-                    .WithAckPolicy(AckPolicy.Explicit)
-                    .WithDeliverSubject(Deliver(1))
-                    .WithMaxDeliver(3)
-                    .WithFilterSubject(SUBJECT_GT)
-                    .Build();
-
-                AssertValidAddOrUpdate(jsm, cc);
-
-                cc = ConsumerConfiguration.Builder(cc).WithDeliverSubject(Deliver(2)).Build();
-                AssertValidAddOrUpdate(jsm, cc);
-
+                ConsumerConfiguration cc = PrepForUpdateTest(jsm);
                 cc = ConsumerConfiguration.Builder(cc).WithDeliverPolicy(DeliverPolicy.New).Build();
                 AssertInvalidConsumerUpdate(jsm, cc);
 
-                cc = ConsumerConfiguration.Builder(cc).WithAckWait(Duration.OfSeconds(5)).Build();
-                AssertInvalidConsumerUpdate(jsm, cc);
-
+                cc = PrepForUpdateTest(jsm);
                 cc = ConsumerConfiguration.Builder(cc).WithFilterSubject(SUBJECT_STAR).Build();
                 AssertInvalidConsumerUpdate(jsm, cc);
 
-                cc = ConsumerConfiguration.Builder(cc).WithRateLimit(100).Build();
-                AssertInvalidConsumerUpdate(jsm, cc);
-
-                cc = ConsumerConfiguration.Builder(cc).WithMaxAckPending(100).Build();
-                AssertInvalidConsumerUpdate(jsm, cc);
-
+                cc = PrepForUpdateTest(jsm);
                 cc = ConsumerConfiguration.Builder(cc).WithIdleHeartbeat(Duration.OfMillis(111)).Build();
                 AssertInvalidConsumerUpdate(jsm, cc);
-
-                cc = ConsumerConfiguration.Builder(cc).WithMaxDeliver(4).Build();
-                AssertInvalidConsumerUpdate(jsm, cc);
             });
+        }
+        
+        private ConsumerConfiguration PrepForUpdateTest(IJetStreamManagement jsm)
+        {
+            try {
+                jsm.DeleteConsumer(STREAM, Durable(1));
+            }
+            catch (Exception) { /* ignore */ }
+
+            ConsumerConfiguration cc = ConsumerConfiguration.Builder()
+                .WithDurable(Durable(1))
+                .WithAckPolicy(AckPolicy.Explicit)
+                .WithDeliverSubject(Deliver(1))
+                .WithMaxDeliver(3)
+                .WithFilterSubject(SUBJECT_GT)
+                .Build();
+            AssertValidAddOrUpdate(jsm, cc);
+            return cc;
         }
 
         private void AssertInvalidConsumerUpdate(IJetStreamManagement jsm, ConsumerConfiguration cc) {
             NATSJetStreamException e = Assert.Throws<NATSJetStreamException>(() => jsm.AddOrUpdateConsumer(STREAM, cc));
-            // 10013 consumer name already in use
-            // 10105 consumer already exists and is still active
-            Assert.True(e.ApiErrorCode == 10013 || e.ApiErrorCode == 10105);
+            Assert.Equal(10012, e.ApiErrorCode);
+            Assert.Equal(500, e.ErrorCode);
         }
 
         private void AssertValidAddOrUpdate(IJetStreamManagement jsm, ConsumerConfiguration cc) {
@@ -432,7 +456,7 @@ namespace IntegrationTests
             Assert.Equal(cc.MaxDeliver, cicc.MaxDeliver);
             Assert.Equal(cc.DeliverPolicy, cicc.DeliverPolicy);
 
-            IList<String> consumers = jsm.GetConsumerNames(STREAM);
+            IList<string> consumers = jsm.GetConsumerNames(STREAM);
             Assert.Single(consumers);
             Assert.Equal(cc.Durable, consumers[0]);
         }
@@ -478,29 +502,6 @@ namespace IntegrationTests
                     .WithFilterSubject(SubjectDot("F"))
                     .Build()
                 );
-
-                ConsumerConfiguration ccBadFilter = ConsumerConfiguration.Builder()
-                    .WithDurable(Durable(42)).WithFilterSubject("x").Build();
-
-                PullSubscribeOptions pullOptsBadFilter = PullSubscribeOptions.Builder()
-                    .WithConfiguration(ccBadFilter).Build();
-
-                NATSJetStreamClientException e = Assert.Throws<NATSJetStreamClientException>(() => js.PullSubscribe(SubjectDot("F"), pullOptsBadFilter));
-                Assert.Contains(JsSubSubjectDoesNotMatchFilter.Id, e.Message);
-
-                // try to filter against durable with mismatch, push
-                jsm.AddOrUpdateConsumer(STREAM, ConsumerConfiguration.Builder()
-                    .WithDurable(Durable(43))
-                    .WithDeliverSubject(Deliver(43))
-                    .WithFilterSubject(SubjectDot("F"))
-                    .Build()
-                );
-
-                ccBadFilter = ConsumerConfiguration.Builder().WithDurable(Durable(43)).WithFilterSubject("x").Build();
-
-                PushSubscribeOptions pushOptsBadFilter = PushSubscribeOptions.Builder().WithConfiguration(ccBadFilter).Build();
-                e = Assert.Throws<NATSJetStreamClientException>(() => js.PushSubscribeSync(SubjectDot("F"), pushOptsBadFilter));
-                Assert.Contains(JsSubSubjectDoesNotMatchFilter.Id, e.Message);
             });
         }
         
@@ -541,7 +542,7 @@ namespace IntegrationTests
             });
         }
 
-        private void AddConsumers(IJetStreamManagement jsm, String stream, int count, String durableVary, String filterSubject)
+        private void AddConsumers(IJetStreamManagement jsm, string stream, int count, string durableVary, string filterSubject)
         {
             for (int x = 0; x < count; x++) {
                 String dur = Durable(durableVary, x + 1);
@@ -597,7 +598,7 @@ namespace IntegrationTests
                 MessageInfo mi = jsm.GetMessage(STREAM, 1);
                 Assert.Equal(SUBJECT, mi.Subject);
                 Assert.Equal(Data(1), System.Text.Encoding.ASCII.GetString(mi.Data));
-                Assert.Equal(1, mi.Seq);
+                Assert.Equal(1U, mi.Sequence);
                 Assert.True(mi.Time >= beforeCreated);
                 Assert.NotNull(mi.Headers);
                 Assert.Equal("bar", mi.Headers["foo"]);
@@ -605,7 +606,7 @@ namespace IntegrationTests
                 mi = jsm.GetMessage(STREAM, 2);
                 Assert.Equal(SUBJECT, mi.Subject);
                 Assert.Null(mi.Data);
-                Assert.Equal(2, mi.Seq);
+                Assert.Equal(2U, mi.Sequence);
                 Assert.True(mi.Time >= beforeCreated);
                 Assert.Null(mi.Headers);
 

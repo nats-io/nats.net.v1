@@ -57,9 +57,7 @@ namespace NATS.Client.JetStream
         public StreamInfo GetStreamInfo(string streamName)
         {
             Validator.ValidateStreamName(streamName, true);
-            string subj = string.Format(JetStreamConstants.JsapiStreamInfo, streamName);
-            Msg m = RequestResponseRequired(subj, null, Timeout);
-            return new StreamInfo(m, true);
+            return GetStreamInfoInternal(streamName);
         }
 
         public PurgeResponse PurgeStream(string streamName)

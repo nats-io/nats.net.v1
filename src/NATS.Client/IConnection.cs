@@ -16,6 +16,7 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using NATS.Client.JetStream;
+using NATS.Client.KeyValue;
 
 namespace NATS.Client
 {
@@ -762,7 +763,6 @@ namespace NATS.Client
         /// </summary>
         int SubscriptionCount { get; }
 
-
         /// <summary>
         /// Gets a context for publishing and subscribing to subjects
         /// backed by Jetstream streams and consumers.
@@ -777,5 +777,20 @@ namespace NATS.Client
         /// <param name="options">Optional JetStream options.</param>
         /// <returns></returns>
         IJetStreamManagement CreateJetStreamManagementContext(JetStreamOptions options = null);
+
+        /// <summary>
+        /// Gets a context for a Key Value bucket 
+        /// </summary>
+        /// <param name="bucketName">The name of the bucket</param>
+        /// <param name="options">Optional JetStream options.</param>
+        /// <returns></returns>
+        IKeyValue CreateKeyValueContext(string bucketName, KeyValueOptions options = null);
+
+        /// <summary>
+        /// Gets a context for administrating Key Value buckets
+        /// </summary>
+        /// <param name="options">Optional JetStream options.</param>
+        /// <returns></returns>
+        IKeyValueManagement CreateKeyValueManagementContext(KeyValueOptions options = null);
     }
 }

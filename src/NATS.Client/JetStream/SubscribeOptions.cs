@@ -22,13 +22,29 @@ namespace NATS.Client.JetStream
     /// </summary>
     public abstract class SubscribeOptions
     {
-        internal string Stream { get; }
-        internal bool Pull { get;  }
-        internal bool Bind { get;  }
-        internal ConsumerConfiguration ConsumerConfiguration { get;}
-        internal int MessageAlarmTime;
+        public string Stream { get; }
+        public bool Pull { get; }
+        public bool Bind { get; }
+        public ConsumerConfiguration ConsumerConfiguration { get; }
+        internal int MessageAlarmTime { get; }
 
-        protected SubscribeOptions(ISubscribeOptionsBuilder builder, bool pull, string deliverSubject, string deliverGroup)
+        /// <summary>
+        /// Gets the durable name
+        /// </summary>
+        public string Durable => ConsumerConfiguration.Durable;
+
+        /// <summary>
+        /// Gets the deliver subject
+        /// </summary>
+        public string DeliverSubject => ConsumerConfiguration.DeliverSubject;
+
+        /// <summary>
+        /// Gets the deliver group
+        /// </summary>
+        public string DeliverGroup => ConsumerConfiguration.DeliverGroup;
+
+        // TODO implement ordered
+        protected SubscribeOptions(ISubscribeOptionsBuilder builder, bool pull, bool ordered, string deliverSubject, string deliverGroup)
         {
             Stream = Validator.ValidateStreamName(builder.Stream, builder.Bind);
             

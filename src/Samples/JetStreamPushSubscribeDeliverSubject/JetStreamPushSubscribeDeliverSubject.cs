@@ -77,7 +77,7 @@ namespace NATSExamples
                     //          and the core subscribes to the delivery subject
                     //          Order matters, you must do the JetStream subscribe first
                     //          But you also must make sure the core sub is made
-                    //          before messages are JsUtils.Published
+                    //          before messages are published
                     IJetStreamPushSyncSubscription jsSub = js.PushSubscribeSync(subjectNoAck, pso);
                     c.Flush(5000);
                     ISyncSubscription coreSub = c.SubscribeSync(deliverNoAck);

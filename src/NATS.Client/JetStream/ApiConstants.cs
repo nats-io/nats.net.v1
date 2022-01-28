@@ -19,6 +19,7 @@ namespace NATS.Client.JetStream
         internal const string AckPolicy = "ack_policy";
         internal const string AckWait = "ack_wait";
         internal const string Active = "active";
+        internal const string AllowRollupHdrs = "allow_rollup_hdrs";
         internal const string Api = "api";
         internal const string AuthRequired = "auth_required";
         internal const string Bytes = "bytes";
@@ -39,6 +40,8 @@ namespace NATS.Client.JetStream
         internal const string DeliverPolicy = "deliver_policy";
         internal const string DeliverSubject = "deliver_subject";
         internal const string Delivered = "delivered";
+        internal const string DenyDelete = "deny_delete";
+        internal const string DenyPurge = "deny_purge";
         internal const string Description = "description";
         internal const string Discard = "discard";
         internal const string Domain = "domain";
@@ -108,6 +111,7 @@ namespace NATS.Client.JetStream
         internal const string Replicas = "replicas";
         internal const string Retention = "retention";
         internal const string SampleFreq = "sample_freq";
+        internal const string Sealed = "sealed";
         internal const string Seq = "seq";
         internal const string ServerId = "server_id";
         internal const string ServerName = "server_name";

@@ -25,9 +25,9 @@ namespace NATS.Client.JetStream
         protected JetStreamBase(IConnection connection, JetStreamOptions options)
         {
             Conn = connection;
-            JetStreamOptions = options ?? JetStreamOptions.Builder().Build();
+            JetStreamOptions = options ?? JetStreamOptions.DefaultJsOptions;
             Prefix = JetStreamOptions.Prefix;
-            Timeout = (int) JetStreamOptions.RequestTimeout.Millis;
+            Timeout = JetStreamOptions.RequestTimeout.Millis;
         }
         
         // ----------------------------------------------------------------------------------------------------
@@ -48,6 +48,13 @@ namespace NATS.Client.JetStream
             var ccr = new ConsumerCreateRequest(streamName, config);
             var m = RequestResponseRequired(subj, ccr.Serialize(), Timeout);
             return new ConsumerInfo(m, true);
+        }
+
+        public StreamInfo GetStreamInfoInternal(string streamName)
+        {
+            string subj = string.Format(JetStreamConstants.JsapiStreamInfo, streamName);
+            Msg m = RequestResponseRequired(subj, null, Timeout);
+            return new StreamInfo(m, true);
         }
 
         // ----------------------------------------------------------------------------------------------------

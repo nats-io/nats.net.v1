@@ -97,10 +97,8 @@ namespace NATSExamples
             return CreateStream(jsm, streamName, StorageType.Memory, subjects);
         }
 
-        public static void CreateStreamWhenDoesNotExist(IConnection c, string stream, params string[] subjects)
+        public static void CreateStreamWhenDoesNotExist(IJetStreamManagement jsm, string stream, params string[] subjects)
         {
-            IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
-
             try
             {
                 jsm.GetStreamInfo(stream); // this throws if the stream does not exist
@@ -117,6 +115,11 @@ namespace NATSExamples
                 .WithSubjects(subjects)
                 .Build();
             jsm.AddStream(sc);
+        }
+
+        public static void CreateStreamWhenDoesNotExist(IConnection c, string stream, params string[] subjects)
+        {
+            CreateStreamWhenDoesNotExist(c.CreateJetStreamManagementContext(), stream, subjects);
         }
 
         public static StreamInfo CreateStreamOrUpdateSubjects(IJetStreamManagement jsm, string streamName, StorageType storageType, params string[] subjects) {
@@ -162,7 +165,7 @@ namespace NATSExamples
         // ----------------------------------------------------------------------------------------------------
         // PUBLISH
         // ----------------------------------------------------------------------------------------------------
-        public static void Publish(IConnection c, String subject, int count) {
+        public static void Publish(IConnection c, string subject, int count) {
             Publish(c.CreateJetStreamContext(), subject, "data", count, false);
         }
 
@@ -219,7 +222,7 @@ namespace NATSExamples
                     msg.Ack();
                     if (verbose)
                     {
-                        Console.Write(" " + Encoding.UTF8.GetString(msg.Data));
+                        Console.Write(" " + msg.Subject + " / " + Encoding.UTF8.GetString(msg.Data));
                     }
                 }
                 catch (NATSTimeoutException) // timeout means there are no messages available
