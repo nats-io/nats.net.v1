@@ -722,6 +722,11 @@ namespace NATS.Client
         {
             opts = new Options(options);
 
+            if (opts.ReconnectDelayHandler == null)
+            {
+                opts.ReconnectDelayHandler = DefaultReconnectDelayHandler;
+            }
+
             PING_P_BYTES = Encoding.UTF8.GetBytes(IC.pingProto);
             PING_P_BYTES_LEN = PING_P_BYTES.Length;
 
@@ -1620,7 +1625,7 @@ namespace NATS.Client
                             // If unset, the default handler will be called which uses an
                             // auto reset event to wait, unless kicked out of a close
                             // call.
-                            opts?.ReconnectDelayHandler(this, new ReconnectDelayEventArgs(wlf - 1));
+                            opts.ReconnectDelayHandler(this, new ReconnectDelayEventArgs(wlf - 1));
                         }
                         catch { } // swallow user exceptions
                     }

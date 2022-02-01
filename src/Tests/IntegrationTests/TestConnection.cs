@@ -501,6 +501,49 @@ namespace IntegrationTests
         }
 
         [Fact]
+        public void TestDefaultReconnectDelay()
+        {
+            var closedEv = new AutoResetEvent(false);
+            var disconnEv = new AutoResetEvent(false);
+
+            var opts = Context.GetTestOptionsWithDefaultTimeout(Context.Server1.Port);
+            opts.MaxReconnect = 3;
+            opts.ReconnectWait = 500;
+            opts.SetReconnectJitter(0, 0);
+
+            Stopwatch sw = new Stopwatch();
+
+            opts.DisconnectedEventHandler = (obj, args) =>
+            {
+                sw.Start();
+            };
+            opts.ClosedEventHandler = (obj, args) =>
+            {
+                closedEv.Set();
+                sw.Stop();
+            };
+
+            using (var s = NATSServer.CreateFastAndVerify(Context.Server1.Port))
+            {
+                using (var c = Context.ConnectionFactory.CreateConnection(opts))
+                {
+                    // shutdown the server
+                    s.Shutdown();
+
+                    // Do not count first attempt for the delay 
+                    int min = (opts.MaxReconnect-1) * opts.ReconnectWait;
+
+                    // Wait until we're closed (add slack for slow CI)
+                    Assert.True(closedEv.WaitOne(min + 1000));
+
+                    // Ensure we're not earlier than the minimum wait.
+                    Assert.True(sw.ElapsedMilliseconds >= min,
+                        $"Elapsed {sw.ElapsedMilliseconds} ms < expected minimum {min} ms");
+                }
+            }
+        }
+
+        [Fact]
         public void TestInfineReconnect()
         {
             var reconnectEv = new AutoResetEvent(false);
