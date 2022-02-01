@@ -13,12 +13,11 @@
 
 using System;
 using System.Collections.Concurrent;
-using NATS.Client;
-using System.Threading;
-using Xunit;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
-using System.Timers;
+using NATS.Client;
+using Xunit;
 
 namespace IntegrationTests
 {
@@ -534,7 +533,7 @@ namespace IntegrationTests
                     int min = (opts.MaxReconnect-1) * opts.ReconnectWait;
 
                     // Wait until we're closed (add slack for slow CI)
-                    Assert.True(closedEv.WaitOne(min + 5000));
+                    Assert.True(closedEv.WaitOne(min + 10000));
 
                     // Ensure we're not earlier than the minimum wait.
                     Assert.False(sw.ElapsedMilliseconds < min,
