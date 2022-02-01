@@ -1,4 +1,4 @@
-﻿// Copyright 2015-2018 The NATS Authors
+﻿// Copyright 2015-2022 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -534,10 +534,10 @@ namespace IntegrationTests
                     int min = (opts.MaxReconnect-1) * opts.ReconnectWait;
 
                     // Wait until we're closed (add slack for slow CI)
-                    Assert.True(closedEv.WaitOne(min + 1000));
+                    Assert.True(closedEv.WaitOne(min + 5000));
 
                     // Ensure we're not earlier than the minimum wait.
-                    Assert.True(sw.ElapsedMilliseconds >= min,
+                    Assert.False(sw.ElapsedMilliseconds < min,
                         $"Elapsed {sw.ElapsedMilliseconds} ms < expected minimum {min} ms");
                 }
             }
