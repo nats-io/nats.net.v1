@@ -1622,10 +1622,7 @@ namespace NATS.Client
                     {
                         try
                         {
-                            // If unset, the default handler will be called which uses an
-                            // auto reset event to wait, unless kicked out of a close
-                            // call.
-                            opts.ReconnectDelayHandler(this, new ReconnectDelayEventArgs(wlf - 1));
+                            opts?.ReconnectDelayHandler(this, new ReconnectDelayEventArgs(wlf - 1));
                         }
                         catch { } // swallow user exceptions
                     }
