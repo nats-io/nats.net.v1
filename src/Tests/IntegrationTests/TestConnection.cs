@@ -1,4 +1,4 @@
-﻿// Copyright 2015-2018 The NATS Authors
+﻿// Copyright 2015-2022 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -13,12 +13,11 @@
 
 using System;
 using System.Collections.Concurrent;
-using NATS.Client;
-using System.Threading;
-using Xunit;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
-using System.Timers;
+using NATS.Client;
+using Xunit;
 
 namespace IntegrationTests
 {
@@ -496,6 +495,49 @@ namespace IntegrationTests
                         Assert.NotEqual(inboxName, lastInboxName);
                         lastInboxName = inboxName;
                     }
+                }
+            }
+        }
+
+        [Fact]
+        public void TestDefaultReconnectDelay()
+        {
+            var closedEv = new AutoResetEvent(false);
+            var disconnEv = new AutoResetEvent(false);
+
+            var opts = Context.GetTestOptionsWithDefaultTimeout(Context.Server1.Port);
+            opts.MaxReconnect = 3;
+            opts.ReconnectWait = 500;
+            opts.SetReconnectJitter(0, 0);
+
+            Stopwatch sw = new Stopwatch();
+
+            opts.DisconnectedEventHandler = (obj, args) =>
+            {
+                sw.Start();
+            };
+            opts.ClosedEventHandler = (obj, args) =>
+            {
+                closedEv.Set();
+                sw.Stop();
+            };
+
+            using (var s = NATSServer.CreateFastAndVerify(Context.Server1.Port))
+            {
+                using (var c = Context.ConnectionFactory.CreateConnection(opts))
+                {
+                    // shutdown the server
+                    s.Shutdown();
+
+                    // Do not count first attempt for the delay 
+                    int min = (opts.MaxReconnect-1) * opts.ReconnectWait;
+
+                    // Wait until we're closed (add slack for slow CI)
+                    Assert.True(closedEv.WaitOne(min + 10000));
+
+                    // Ensure we're not earlier than the minimum wait.
+                    Assert.False(sw.ElapsedMilliseconds < min,
+                        $"Elapsed {sw.ElapsedMilliseconds} ms < expected minimum {min} ms");
                 }
             }
         }

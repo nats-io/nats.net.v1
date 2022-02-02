@@ -105,7 +105,6 @@ namespace NATS.Client
         /// <see cref="Options.ReconnectJitterTLS"/>
         /// </remarks>
         public EventHandler<ReconnectDelayEventArgs> ReconnectDelayHandler;
-        public EventHandler<ReconnectDelayEventArgs> ReconnectDelayHandlerOrDefault => ReconnectDelayHandler ?? DefaultReconnectDelayHandler();
 
         /// <summary>
         /// Represents the method that will handle an heartbeat alarm

@@ -191,11 +191,6 @@ namespace NATS.Client
         public static EventHandler<ErrEventArgs> DefaultAsyncErrorEventHandler() => 
             (sender, e) => WriteError("AsyncErrorEvent", e);
 
-        public static EventHandler<ReconnectDelayEventArgs> DefaultReconnectDelayHandler() => (sender, e) =>
-        {
-            Console.Error.WriteLine($"ReconnectDelay Attempts: {e.Attempts}");
-        };
-
         public static EventHandler<HeartbeatAlarmEventArgs> DefaultHeartbeatAlarmEventHandler() =>
             (sender, e) =>
                 WriteEvent("HeartbeatAlarm", e,
