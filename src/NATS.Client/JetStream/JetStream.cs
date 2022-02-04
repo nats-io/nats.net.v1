@@ -416,7 +416,7 @@ namespace NATS.Client.JetStream
 
         public IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler, bool autoAck, PushSubscribeOptions options)
         {
-            ValidateSubject(subject, true);
+            ValidateSubject(subject, IsSubjectRequired(options));
             queue = EmptyAsNull(ValidateQueueName(queue, false));
             ValidateNotNull(handler, "Handler");
             return (IJetStreamPushAsyncSubscription) CreateSubscription(subject, queue, handler, autoAck, options, null);
