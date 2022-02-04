@@ -135,6 +135,30 @@ namespace IntegrationTests
                 js.PushSubscribeAsync(SUBJECT, (o, a) => {}, false);
                 js.PushSubscribeAsync(SUBJECT, (o, a) => {}, false, null);
                 js.PushSubscribeAsync(SUBJECT, QUEUE, (o, a) => {}, false, null);
+
+                // bind with w/o subject
+                jsm.AddOrUpdateConsumer(STREAM,
+                    ConsumerConfiguration.Builder()
+                        .WithDurable(Durable(101))
+                        .WithDeliverSubject(Deliver(101))
+                        .Build());
+                PushSubscribeOptions psoBind = PushSubscribeOptions.BindTo(STREAM, Durable(101));
+                js.PushSubscribeSync(null, psoBind).Unsubscribe();
+                js.PushSubscribeSync("", psoBind).Unsubscribe();
+                js.PushSubscribeAsync(null, (o, a) => { }, false, psoBind).Unsubscribe();
+                js.PushSubscribeAsync("", (o, a) => { }, false, psoBind);
+
+                jsm.AddOrUpdateConsumer(STREAM,
+                    ConsumerConfiguration.Builder()
+                        .WithDurable(Durable(102))
+                        .WithDeliverSubject(Deliver(102))
+                        .WithDeliverGroup(Queue(102))
+                        .Build());
+                psoBind = PushSubscribeOptions.BindTo(STREAM, Durable(102));
+                js.PushSubscribeSync(null, Queue(102), psoBind).Unsubscribe();
+                js.PushSubscribeSync("", Queue(102), psoBind).Unsubscribe();
+                js.PushSubscribeAsync(null, Queue(102), (o, a) => { }, false, psoBind).Unsubscribe();
+                js.PushSubscribeAsync("", Queue(102), (o, a) => { }, false, psoBind);
             });
         }
 
