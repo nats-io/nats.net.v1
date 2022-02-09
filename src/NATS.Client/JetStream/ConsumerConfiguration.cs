@@ -32,6 +32,7 @@ namespace NATS.Client.JetStream
         private long? _rateLimit;
         private long? _maxAckPending;
         private long? _maxPullWaiting;
+        private long? _maxBatch;
         private bool? _flowControl;
         private bool? _headersOnly;
 
@@ -47,11 +48,14 @@ namespace NATS.Client.JetStream
         public DateTime StartTime { get; }
         public Duration AckWait { get; }
         public Duration IdleHeartbeat { get; }
-        public ulong StartSeq => _startSeq ?? CcNumeric.StartSeq.InitialUlong();
-        public long MaxDeliver => _maxDeliver ?? CcNumeric.MaxDeliver.Initial();
-        public long RateLimit => _rateLimit ?? CcNumeric.RateLimit.Initial();
-        public long MaxAckPending => _maxAckPending ?? CcNumeric.MaxAckPending.Initial();
-        public long MaxPullWaiting => _maxPullWaiting ?? CcNumeric.MaxPullWaiting.Initial();
+        public Duration MaxExpires { get; }
+        public Duration InactiveThreshold { get; }
+        public ulong StartSeq =>  CcChangeHelper.StartSeq.ValueOrInitialUlong(_startSeq);
+        public long MaxDeliver => CcChangeHelper.MaxDeliver.ValueOrInitial(_maxDeliver);
+        public long RateLimit => CcChangeHelper.RateLimit.ValueOrInitial(_rateLimit);
+        public long MaxAckPending => CcChangeHelper.MaxAckPending.ValueOrInitial(_maxAckPending);
+        public long MaxPullWaiting => CcChangeHelper.MaxPullWaiting.ValueOrInitial(_maxPullWaiting);
+        public long MaxBatch => CcChangeHelper.MaxBatch.ValueOrInitial(_maxBatch);
         public bool FlowControl => _flowControl ?? false;
         public bool HeadersOnly => _headersOnly ?? false;
 
@@ -73,12 +77,15 @@ namespace NATS.Client.JetStream
             StartTime = AsDate(ccNode[ApiConstants.OptStartTime]);
             AckWait = AsDuration(ccNode, ApiConstants.AckWait, null);
             IdleHeartbeat = AsDuration(ccNode, ApiConstants.IdleHeartbeat, null);
+            MaxExpires = AsDuration(ccNode, ApiConstants.MaxExpires, null);
+            InactiveThreshold = AsDuration(ccNode, ApiConstants.InactiveThreshold, null);
 
-            _startSeq = CcNumeric.StartSeq.InitialUlong(ccNode[ApiConstants.OptStartSeq].AsUlong);
-            _maxDeliver = CcNumeric.MaxDeliver.Initial(ccNode[ApiConstants.MaxDeliver].AsLong);
-            _rateLimit = CcNumeric.RateLimit.Initial(ccNode[ApiConstants.RateLimitBps].AsLong);
-            _maxAckPending = CcNumeric.MaxAckPending.Initial(ccNode[ApiConstants.MaxAckPending].AsLong);
-            _maxPullWaiting = CcNumeric.MaxPullWaiting.Initial(ccNode[ApiConstants.MaxWaiting].AsLong);
+            _startSeq = CcChangeHelper.StartSeq.ValueOrInitialUlong(ccNode[ApiConstants.OptStartSeq].AsUlong);
+            _maxDeliver = CcChangeHelper.MaxDeliver.ValueOrInitial(ccNode[ApiConstants.MaxDeliver].AsLong);
+            _rateLimit = CcChangeHelper.RateLimit.ValueOrInitial(ccNode[ApiConstants.RateLimitBps].AsLong);
+            _maxAckPending = CcChangeHelper.MaxAckPending.ValueOrInitial(ccNode[ApiConstants.MaxAckPending].AsLong);
+            _maxPullWaiting = CcChangeHelper.MaxPullWaiting.ValueOrInitial(ccNode[ApiConstants.MaxWaiting].AsLong);
+            _maxBatch = CcChangeHelper.MaxBatch.ValueOrInitial(ccNode[ApiConstants.MaxBatch].AsLong);
             _flowControl = ccNode[ApiConstants.FlowControl].AsBool;
             _headersOnly = ccNode[ApiConstants.HeadersOnly].AsBool;
         }
@@ -99,6 +106,8 @@ namespace NATS.Client.JetStream
             StartTime = builder._startTime;
             AckWait = builder._ackWait;
             IdleHeartbeat = builder._idleHeartbeat;
+            MaxExpires = builder._maxExpires;
+            InactiveThreshold = builder._inactiveThreshold;
             _flowControl = builder._flowControl;
             _headersOnly = builder._headersOnly;
 
@@ -107,6 +116,7 @@ namespace NATS.Client.JetStream
             _rateLimit = builder._rateLimit;
             _maxAckPending = builder._maxAckPending;
             _maxPullWaiting = builder._maxPullWaiting;
+            _maxBatch = builder._maxBatch;
         }
 
         internal override JSONNode ToJsonNode()
@@ -132,6 +142,9 @@ namespace NATS.Client.JetStream
             AddField(o, ApiConstants.FlowControl, FlowControl);
             AddField(o, ApiConstants.MaxWaiting, MaxPullWaiting);
             AddField(o, ApiConstants.HeadersOnly, HeadersOnly);
+            AddField(o, ApiConstants.MaxBatch, MaxBatch);
+            AddField(o, ApiConstants.MaxExpires, MaxExpires);
+            AddField(o, ApiConstants.InactiveThreshold, InactiveThreshold);
 
             return o;
         }
@@ -145,15 +158,19 @@ namespace NATS.Client.JetStream
                    || _flowControl.HasValue && _flowControl.Value != original.FlowControl
                    || _headersOnly.HasValue && _headersOnly.Value != original.HeadersOnly
 
-                   || CcNumeric.StartSeq.WouldBeChange(_startSeq, original.StartSeq)
-                   || CcNumeric.MaxDeliver.WouldBeChange(_maxDeliver, original.MaxDeliver)
-                   || CcNumeric.RateLimit.WouldBeChange(_rateLimit, original.RateLimit)
-                   || CcNumeric.MaxAckPending.WouldBeChange(_maxAckPending, original.MaxAckPending)
-                   || CcNumeric.MaxPullWaiting.WouldBeChange(_maxPullWaiting, original.MaxPullWaiting)
+                   || CcChangeHelper.StartSeq.WouldBeChange(_startSeq, original.StartSeq)
+                   || CcChangeHelper.MaxDeliver.WouldBeChange(_maxDeliver, original.MaxDeliver)
+                   || CcChangeHelper.RateLimit.WouldBeChange(_rateLimit, original.RateLimit)
+                   || CcChangeHelper.MaxAckPending.WouldBeChange(_maxAckPending, original.MaxAckPending)
+                   || CcChangeHelper.MaxPullWaiting.WouldBeChange(_maxPullWaiting, original.MaxPullWaiting)
+                   || CcChangeHelper.MaxBatch.WouldBeChange(_maxBatch, original.MaxBatch)
 
-                   || WouldBeChange(AckWait, original.AckWait)
+                   || CcChangeHelper.MaxPullWaiting.WouldBeChange(AckWait, original.AckWait)
+
                    || WouldBeChange(IdleHeartbeat, original.IdleHeartbeat)
                    || WouldBeChange(StartTime, original.StartTime)
+                   || WouldBeChange(MaxExpires, original.MaxExpires)
+                   || WouldBeChange(InactiveThreshold, original.InactiveThreshold)
                    
                    || WouldBeChange(FilterSubject, original.FilterSubject)
                    || WouldBeChange(Description, original.Description)
@@ -207,12 +224,15 @@ namespace NATS.Client.JetStream
             internal DateTime _startTime; 
             internal Duration _ackWait;
             internal Duration _idleHeartbeat;
+            internal Duration _maxExpires;
+            internal Duration _inactiveThreshold;
 
             internal ulong? _startSeq;
             internal long? _maxDeliver;
             internal long? _rateLimit;
             internal long? _maxAckPending;
             internal long? _maxPullWaiting;
+            internal long? _maxBatch;
             internal bool? _flowControl;
             internal bool? _headersOnly;
 
@@ -236,12 +256,15 @@ namespace NATS.Client.JetStream
                 _startTime = cc.StartTime;
                 _ackWait = cc.AckWait;
                 _idleHeartbeat = cc.IdleHeartbeat;
+                _maxExpires = cc.MaxExpires;
+                _inactiveThreshold = cc.InactiveThreshold;
 
                 _startSeq = cc._startSeq;
                 _maxDeliver = cc._maxDeliver;
                 _rateLimit = cc._rateLimit;
                 _maxAckPending = cc._maxAckPending;
                 _maxPullWaiting = cc._maxPullWaiting;
+                _maxBatch = cc._maxBatch;
                 _flowControl = cc._flowControl;
                 _headersOnly = cc._headersOnly;
             }
@@ -448,7 +471,7 @@ namespace NATS.Client.JetStream
             /// Set the flow control on and set the idle heartbeat
             /// </summary>
             /// <param name="idleHeartbeat">the idle heart beat as a Duration</param>
-            /// <returns>The ConsumerConfiguration</returns>
+            /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithFlowControl(Duration idleHeartbeat) {
                 _flowControl = true;
                 return WithIdleHeartbeat(idleHeartbeat);
@@ -458,10 +481,50 @@ namespace NATS.Client.JetStream
             /// Set the flow control on and set the idle heartbeat
             /// </summary>
             /// <param name="idleHeartbeatMillis">the idle heart beat as milliseconds</param>
-            /// <returns>The ConsumerConfiguration</returns>
+            /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithFlowControl(long idleHeartbeatMillis) {
                 _flowControl = true;
                 return WithIdleHeartbeat(idleHeartbeatMillis);
+            }
+
+            /// <summary>
+            /// Set the max amount of expire time for the server to allow on pull requests.
+            /// </summary>
+            /// <param name="maxExpires">the max amount of expire as a Duration</param>
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder WithMaxExpires(Duration maxExpires) {
+                _maxExpires = maxExpires;
+                return this;
+            }
+
+            /// <summary>
+            /// Set the max amount of expire time for the server to allow on pull requests.
+            /// </summary>
+            /// <param name="maxExpiresMillis">the max amount of expire as milliseconds</param>
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder WithMaxExpires(long maxExpiresMillis) {
+                _maxExpires = Duration.OfMillis(maxExpiresMillis);
+                return this;
+            }
+
+            /// <summary>
+            /// Set the amount of time before the ephemeral consumer is deemed inactive.
+            /// </summary>
+            /// <param name="inactiveThreshold">the max amount of expire as a Duration</param>
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder WithInactiveThreshold(Duration inactiveThreshold) {
+                _inactiveThreshold = inactiveThreshold;
+                return this;
+            }
+
+            /// <summary>
+            /// Set the amount of time before the ephemeral consumer is deemed inactive.
+            /// </summary>
+            /// <param name="inactiveThresholdMillis">the max amount of expire as milliseconds</param>
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder WithInactiveThreshold(long inactiveThresholdMillis) {
+                _inactiveThreshold = Duration.OfMillis(inactiveThresholdMillis);
+                return this;
             }
 
             /// <summary>
@@ -476,10 +539,21 @@ namespace NATS.Client.JetStream
             }
 
             /// <summary>
+            /// Sets the max batch size for the server to allow on pull requests.
+            /// </summary>
+            /// <param name="maxBatch">the maximum batch size</param>
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder WithMaxBatch(long? maxBatch)
+            {
+                _maxBatch = maxBatch;
+                return this;
+            }
+
+            /// <summary>
             /// Sets the headers only flag
             /// </summary>
             /// <param name="headersOnly">true to enable flow control.</param>
-            /// <returns>The ConsumerConfiguration</returns>
+            /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithHeadersOnly(bool? headersOnly) {
                 _headersOnly = headersOnly;
                 return this;
@@ -514,42 +588,46 @@ namespace NATS.Client.JetStream
         }
     }
     
-    internal class CcNumeric
+    internal class CcChangeHelper
     {
-        private long min;
-        private long initial;
-        private long server;
+        internal long Min { get; }
+        internal long Initial { get; }
+        internal long Server { get; }
+        internal ulong InitialUlong { get; }
 
-        public CcNumeric(long min, long initial, long server)
+        private CcChangeHelper(long min, long initial, long server)
         {
-            this.min = min;
-            this.initial = initial;
-            this.server = server;
+            Min = min;
+            Server = server;
+            Initial = initial;
+            InitialUlong = (ulong)initial;
         }
 
-        internal long Initial()                => initial;
-        internal long Initial(long val)        => val < min ? initial : val;
-        internal long Comparable(long val)     => val < min || val == server ? initial : val;
+        internal long ValueOrInitial(long? val) => val == null || val < Min ? Initial : val.Value;
+        internal long Comparable(long val)      => val < Min || val == Server ? Initial : val;
 
-        internal ulong InitialUlong()          => (ulong)initial;
-        internal ulong InitialUlong(ulong val) => val < (ulong)min ? (ulong)initial : val;
-        internal ulong Comparable(ulong val)   => val < (ulong)min || val == (ulong)server ? (ulong)initial : val;
+        internal ulong ValueOrInitialUlong(ulong? val) => val == null || val < (ulong)Min ? (ulong)Initial : val.Value;
+        internal ulong Comparable(ulong val)           => val < (ulong)Min || val == (ulong)Server ? (ulong)Initial : val;
 
         public bool WouldBeChange(long? user, long srvr)
         {
-            long u = user.GetValueOrDefault(long.MinValue);
-            return u != long.MinValue && Comparable(u) != Comparable(srvr);
+            return user != null && Comparable(user.Value) != Comparable(srvr);
         }
 
         public bool WouldBeChange(ulong? user, ulong srvr) {
-            ulong u = user.GetValueOrDefault(ulong.MaxValue);
-            return u != ulong.MaxValue && Comparable(u) != Comparable(srvr);
+            return user != null && Comparable(user.Value) != Comparable(srvr);
         }
 
-        internal static readonly CcNumeric StartSeq = new CcNumeric(1, 0, 0);
-        internal static readonly CcNumeric MaxDeliver = new CcNumeric(1, -1, -1);
-        internal static readonly CcNumeric RateLimit = new CcNumeric(1, -1, -1);
-        internal static readonly CcNumeric MaxAckPending = new CcNumeric(0, 0, 20000L);
-        internal static readonly CcNumeric MaxPullWaiting = new CcNumeric(0, 0, 512);
+        public bool WouldBeChange(Duration user, Duration srvr) {
+            return user != null && Comparable(user.Nanos) != Comparable(srvr.Nanos);
+        }
+
+        internal static readonly CcChangeHelper StartSeq = new CcChangeHelper(1, 0, 0);
+        internal static readonly CcChangeHelper MaxDeliver = new CcChangeHelper(1, -1, -1);
+        internal static readonly CcChangeHelper RateLimit = new CcChangeHelper(1, -1, -1);
+        internal static readonly CcChangeHelper MaxAckPending = new CcChangeHelper(0, 0, 20000L);
+        internal static readonly CcChangeHelper MaxPullWaiting = new CcChangeHelper(0, 0, 512);
+        internal static readonly CcChangeHelper MaxBatch = new CcChangeHelper(1, -1, -1);
+        internal static readonly CcChangeHelper AckWait = new CcChangeHelper(0, Duration.OfSeconds(30).Nanos, Duration.OfSeconds(30).Nanos);
     }
 }

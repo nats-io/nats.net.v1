@@ -163,7 +163,7 @@ namespace NATS.Client.JetStream
 
                 userCC = so.ConsumerConfiguration;
 
-                ValidateNotSupplied(userCC.MaxPullWaiting, 0, JsSubPushCantHaveMaxPullWaiting);
+                ValidateNotSupplied(userCC.MaxPullWaiting, CcChangeHelper.MaxPullWaiting.Initial, JsSubPushCantHaveMaxPullWaiting);
 
                 // figure out the queue name
                 qgroup = ValidateMustMatchIfBothSupplied(userCC.DeliverGroup, queueName, JsSubQueueDeliverGroupMismatch);

@@ -62,6 +62,7 @@ namespace NATS.Client.JetStream
         internal const string HeadersOnly = "headers_only";
         internal const string Host = "host";
         internal const string IdleHeartbeat = "idle_heartbeat";
+        internal const string InactiveThreshold = "inactive_threshold";
         internal const string Jetstream = "jetstream";
         internal const string Keep = "keep";
         internal const string Lag = "lag";
@@ -73,9 +74,11 @@ namespace NATS.Client.JetStream
         internal const string Limit = "limit";
         internal const string MaxAckPending = "max_ack_pending";
         internal const string MaxAge = "max_age";
+        internal const string MaxBatch = "max_batch";
         internal const string MaxBytes = "max_bytes";
         internal const string MaxConsumers = "max_consumers";
         internal const string MaxDeliver = "max_deliver";
+        internal const string MaxExpires = "max_expires";
         internal const string MaxMemory = "max_memory";
         internal const string MaxMsgSize = "max_msg_size";
         internal const string MaxMsgs = "max_msgs";
