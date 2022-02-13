@@ -11,7 +11,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 
@@ -45,6 +47,11 @@ namespace NATS.Client.JetStream
             PullInternal(batchSize, true, null);
         }
 
+        public void PullNoWait(int batchSize, int expiresInMillis)
+        {
+            PullInternal(batchSize, true, Duration.OfMillis(expiresInMillis));
+        }
+
         private void PullInternal(int batchSize, bool noWait, Duration expiresIn) {
             int batch = Validator.ValidatePullBatchSize(batchSize);
             string subj = string.Format(JetStreamConstants.JsapiConsumerMsgNext, Stream, Consumer);
@@ -68,44 +75,30 @@ namespace NATS.Client.JetStream
             return JsonUtils.Serialize(jso);
         }
 
+        private static int id = 0;
         public IList<Msg> Fetch(int batchSize, int maxWaitMillis)
         {
+            PullInternal(batchSize, false, Duration.OfMillis(maxWaitMillis));
+
             IList<Msg> messages = new List<Msg>(batchSize);
 
-            PullNoWait(batchSize);
-            Read(batchSize, maxWaitMillis, messages);
-            if (messages.Count == 0) {
-                PullExpiresIn(batchSize, Duration.OfMillis(maxWaitMillis - 10));
-                Read(batchSize, maxWaitMillis, messages);
-            }
-
-            return messages;
-        }
-
-        private const int SubsequentWaits = 500;
-
-        private void Read(int batchSize, int maxWaitMillis, IList<Msg> messages) {
             try
             {
-                Msg msg = NextMessage(maxWaitMillis);
-                while (msg != null)
-                {
-                    if (msg.IsJetStream)
-                    {
+                Stopwatch sw = Stopwatch.StartNew();
+                while (sw.ElapsedMilliseconds < maxWaitMillis && messages.Count < batchSize) {
+                    // NMI timeout is the larger of Min or the time left.
+                    Msg msg = NextMessageImpl( Math.Max(MinMillis, maxWaitMillis - (int)sw.ElapsedMilliseconds) );
+                    if (!_asm.Manage(msg)) { // not managed means JS Message
                         messages.Add(msg);
-                        if (messages.Count == batchSize)
-                        {
-                            break;
-                        }
                     }
-
-                    msg = NextMessage(SubsequentWaits);
                 }
             }
             catch (NATSTimeoutException)
             {
                 // it's fine, just end
             }
+
+            return messages;
         }
     }
 }
