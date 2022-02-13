@@ -75,7 +75,6 @@ namespace NATS.Client.JetStream
             return JsonUtils.Serialize(jso);
         }
 
-        private static int id = 0;
         public IList<Msg> Fetch(int batchSize, int maxWaitMillis)
         {
             PullInternal(batchSize, false, Duration.OfMillis(maxWaitMillis));
