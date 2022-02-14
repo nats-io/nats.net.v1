@@ -208,13 +208,17 @@ namespace NATS.Client
             for (int x = 0; x < pairs.Length; x++) {
                 sb.Append(", ").Append(pairs[x]).Append(pairs[++x]);
             }
-            Console.Error.WriteLine(sb.ToString());
+            Console.Out.WriteLine(sb.ToString());
         }
 
         private static void WriteEvent(String label, ConnEventArgs e)
         {
-            Console.Error.WriteLine(e == null ? label
-                : BeginFormatMessage(label, e.Conn, null, e.Error?.Message).ToString());
+            if (e == null)
+                Console.Out.WriteLine(label);
+            else if (e?.Error == null)
+                Console.Out.WriteLine(BeginFormatMessage(label, e.Conn, null, null).ToString());
+            else
+                Console.Error.WriteLine(BeginFormatMessage(label, e.Conn, null, e.Error.Message).ToString());
         }
 
         private static void WriteError(String label, ErrEventArgs e) {
