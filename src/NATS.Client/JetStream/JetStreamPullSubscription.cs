@@ -83,18 +83,23 @@ namespace NATS.Client.JetStream
 
             try
             {
+                // timeout > 0 process as many messages we can in that time period
+                // If we get a message that either manager handles, we try again, but
+                // with a shorter timeout based on what we already used up
+                int elapsed = 0;
                 Stopwatch sw = Stopwatch.StartNew();
-                while (sw.ElapsedMilliseconds < maxWaitMillis && messages.Count < batchSize) {
-                    // NMI timeout is the larger of Min or the time left.
-                    Msg msg = NextMessageImpl( Math.Max(MinMillis, maxWaitMillis - (int)sw.ElapsedMilliseconds) );
+                while (elapsed < maxWaitMillis && messages.Count < batchSize) {
+                    Msg msg = NextMessageImpl( Math.Max(MinMillis, maxWaitMillis - elapsed) );
                     if (!_asm.Manage(msg)) { // not managed means JS Message
                         messages.Add(msg);
                     }
+                    // managed so try again while we have time
+                    elapsed = (int)sw.ElapsedMilliseconds;
                 }
             }
             catch (NATSTimeoutException)
             {
-                // it's fine, just end
+                // regular timeout, just end
             }
 
             return messages;
