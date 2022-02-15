@@ -60,7 +60,8 @@ namespace NATS.Client.JetStream
             return msg;
         }
 
-        protected const int MinMillis = 100;
+        protected const int MinMillis = 20;
+        protected const int ExpireLessMillis = 10;
 
         public new Msg NextMessage(int timeout)
         {

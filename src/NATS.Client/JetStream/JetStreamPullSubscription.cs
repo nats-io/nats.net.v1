@@ -11,7 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using NATS.Client.Internals;
@@ -77,24 +76,36 @@ namespace NATS.Client.JetStream
 
         public IList<Msg> Fetch(int batchSize, int maxWaitMillis)
         {
-            PullInternal(batchSize, false, Duration.OfMillis(maxWaitMillis));
+            IList<Msg> messages = DrainAlreadyBuffered(batchSize);
+            
+            int batchLeft = batchSize - messages.Count;
+            if (batchLeft == 0)
+            {
+                return messages;
+            }
 
-            IList<Msg> messages = new List<Msg>(batchSize);
+            Stopwatch sw = Stopwatch.StartNew();
+
+            Duration expires = Duration.OfMillis(
+                maxWaitMillis > MinMillis
+                    ? maxWaitMillis - ExpireLessMillis
+                    : maxWaitMillis);
+            PullInternal(batchLeft, false, expires);
 
             try
             {
                 // timeout > 0 process as many messages we can in that time period
                 // If we get a message that either manager handles, we try again, but
                 // with a shorter timeout based on what we already used up
-                int elapsed = 0;
-                Stopwatch sw = Stopwatch.StartNew();
-                while (elapsed < maxWaitMillis && messages.Count < batchSize) {
-                    Msg msg = NextMessageImpl( Math.Max(MinMillis, maxWaitMillis - elapsed) );
+                int timeLeft = maxWaitMillis;
+                while (batchLeft > 0 && timeLeft > 0) {
+                    Msg msg = NextMessageImpl(timeLeft);
                     if (!_asm.Manage(msg)) { // not managed means JS Message
                         messages.Add(msg);
+                        batchLeft--;
                     }
-                    // managed so try again while we have time
-                    elapsed = (int)sw.ElapsedMilliseconds;
+                    // try again while we have time
+                    timeLeft = maxWaitMillis - (int)sw.ElapsedMilliseconds;
                 }
             }
             catch (NATSTimeoutException)
@@ -102,6 +113,26 @@ namespace NATS.Client.JetStream
                 // regular timeout, just end
             }
 
+            return messages;
+        }
+
+        private IList<Msg> DrainAlreadyBuffered(int batchSize) {
+            IList<Msg> messages = new List<Msg>(batchSize);
+            try {
+                Msg msg = NextMessageImpl(1); // shortest non zero wait 
+                while (msg != null) {
+                    if (!_asm.Manage(msg)) { // not managed means JS Message
+                        messages.Add(msg);
+                        if (messages.Count == batchSize) {
+                            return messages;
+                        }
+                    }
+                    msg = NextMessageImpl(1);
+                }
+            }
+            catch (NATSTimeoutException) {
+                // regular timeout, just end
+            }
             return messages;
         }
     }
