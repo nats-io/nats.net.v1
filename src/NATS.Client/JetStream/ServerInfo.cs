@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Linq;
 using System.Text;
 using NATS.Client.Internals.SimpleJSON;
@@ -64,6 +65,30 @@ namespace NATS.Client.JetStream
                 .Where(n => !string.IsNullOrWhiteSpace(n.Value))
                 .Select(n => n.Value)
                 .ToArray();
+        }
+
+        private string GetComparableVersion(string vString) {
+            try {
+                string[] v = vString.Replace("v", "").Replace("-", ".").Split('.');
+                int at = vString.IndexOf("-", StringComparison.Ordinal);
+                return "" + (Int32.Parse(v[0]) * 10000) + (Int32.Parse(v[1]) * 100) + Int32.Parse(v[2])
+                       + (at == -1 ? "" : vString.Substring(at));
+            }
+            catch (Exception e) {
+                return "";
+            }
+        }
+
+        public bool IsNewerVersionThan(string vTarget) {
+            return String.Compare(GetComparableVersion(Version), GetComparableVersion(vTarget), StringComparison.Ordinal) > 0;
+        }
+
+        public bool IsSameVersion(string vTarget) {
+            return String.Compare(GetComparableVersion(Version), GetComparableVersion(vTarget), StringComparison.Ordinal) == 0;
+        }
+
+        public bool IsOlderThanVersion(string vTarget) {
+            return String.Compare(GetComparableVersion(Version), GetComparableVersion(vTarget), StringComparison.Ordinal) < 0;
         }
     }
 }

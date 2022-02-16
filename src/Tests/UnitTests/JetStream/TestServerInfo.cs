@@ -19,15 +19,15 @@ namespace UnitTests.JetStream
 {
     public class TestServerInfo : TestBase
     {
+        readonly string _json = ReadDataFile("ServerInfoJson.txt");
+
         [Fact]
         public void JsonIsReadProperly()
         {
-            string json = ReadDataFile("ServerInfoJson.txt");
-
-            ServerInfo info = new ServerInfo(json);
+            ServerInfo info = new ServerInfo(_json);
             Assert.Equal("serverId", info.ServerId);
             Assert.Equal("serverName", info.ServerName);
-            Assert.Equal("0.0.0", info.Version);
+            Assert.Equal("1.2.3", info.Version);
             Assert.Equal("go0.0.0", info.GoVersion);
             Assert.Equal("host", info.Host);
             Assert.Equal(7777, info.Port);
@@ -45,6 +45,31 @@ namespace UnitTests.JetStream
             Assert.Equal("url0", info.ConnectURLs[0]);
             Assert.Equal("url1", info.ConnectURLs[1]);
             Assert.Equal("YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXo", info.Nonce);
+        }
+        
+        [Fact]
+        public void ServerVersionComparisonsWork()
+        {
+            ServerInfo info = new ServerInfo(_json);
+            ServerInfo info234 = new ServerInfo(_json.Replace("1.2.3", "2.3.4"));
+            ServerInfo info235 = new ServerInfo(_json.Replace("1.2.3", "2.3.5"));
+            ServerInfo info235Beta2 = new ServerInfo(_json.Replace("1.2.3", "2.3.5-beta.2"));
+            Assert.True(info.IsOlderThanVersion("2.3.4"));
+            Assert.True(info234.IsOlderThanVersion("2.3.5"));
+            Assert.True(info235.IsOlderThanVersion("2.3.5-beta.2"));
+            Assert.True(info.IsSameVersion("1.2.3"));
+            Assert.True(info234.IsSameVersion("2.3.4"));
+            Assert.True(info235.IsSameVersion("2.3.5"));
+            Assert.True(info235Beta2.IsSameVersion("2.3.5-beta.2"));
+            Assert.False(info235.IsSameVersion("2.3.4"));
+            Assert.False(info235Beta2.IsSameVersion("2.3.5"));
+            Assert.True(info234.IsNewerVersionThan("1.2.3"));
+            Assert.True(info235.IsNewerVersionThan("2.3.4"));
+            Assert.True(info235Beta2.IsNewerVersionThan("2.3.5"));
+
+            Assert.True(info234.IsNewerVersionThan("not-a-number"));
+            Assert.False(info234.IsNewerVersionThan("2.3.5"));
+            Assert.False(info235.IsOlderThanVersion("2.3.4"));
         }
 
         [Fact]

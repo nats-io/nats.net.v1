@@ -41,14 +41,14 @@ namespace NATS.Client.KeyValue
             }
 
             if (deliverPolicy == DeliverPolicy.New) {
-                watcher.EndOfData();
                 endOfDataSent = new InterlockedBoolean(true);
+                watcher.EndOfData();
             }
             else {
                 KeyValueEntry kveCheckPending = kv.GetLastMessage(keyPattern);
                 if (kveCheckPending == null) {
-                    watcher.EndOfData();
                     endOfDataSent = new InterlockedBoolean(true);
+                    watcher.EndOfData();
                 }
                 else {
                     endOfDataSent = new InterlockedBoolean(false);
@@ -77,12 +77,21 @@ namespace NATS.Client.KeyValue
 
                 if (endOfDataSent.IsFalse() && kve.Delta == 0)
                 {
-                    watcher.EndOfData();
                     endOfDataSent.Set(true);
+                    watcher.EndOfData();
                 }
             };
 
             sub = kv.js.PushSubscribeAsync(subject, handler, false, pso);
+            if (endOfDataSent.IsFalse())
+            {
+                ConsumerInfo ci = sub.GetConsumerInformation();
+                if (ci.NumPending + ci.Delivered.ConsumerSeq == 0)
+                {
+                    endOfDataSent.Set(true);
+                    watcher.EndOfData();
+                }
+            }
         }
 
         public void Unsubscribe()
