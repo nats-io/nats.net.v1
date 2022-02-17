@@ -165,19 +165,54 @@ namespace NATS.Client.KeyValue
             return list;
         }
 
-        public void PurgeDeletes()
+        public void PurgeDeletes() => PurgeDeletes(null);
+
+        public void PurgeDeletes(KeyValuePurgeOptions options)
         {
-            IList<string> list = new List<string>();
-            VisitSubject(KeyValueUtil.ToStreamSubject(BucketName), DeliverPolicy.LastPerSubject, true, false, m => {
-                KeyValueOperation op = KeyValueUtil.GetOperation(m.Header, KeyValueOperation.Put);
-                if (!op.Equals(KeyValueOperation.Put)) {
-                    list.Add(new BucketAndKey(m).Key);
+            long dmThresh = options == null
+                ? KeyValuePurgeOptions.DefaultThresholdMillis
+                : options.DeleteMarkersThresholdMillis;
+
+            DateTime limit;
+            if (dmThresh < 0) {
+                limit = DateTime.UtcNow.AddMilliseconds(600000); // long enough in the future to clear all
+            }
+            else if (dmThresh == 0) {
+                limit = DateTime.UtcNow.AddMilliseconds(KeyValuePurgeOptions.DefaultThresholdMillis);
+            }
+            else {
+                limit = DateTime.UtcNow.AddMilliseconds(-dmThresh);
+            }
+
+            IList<string> keepList0 = new List<string>();
+            IList<string> keepList1 = new List<string>();
+            VisitSubject(KeyValueUtil.ToStreamSubject(BucketName), DeliverPolicy.LastPerSubject, true, false, m =>
+            {
+                KeyValueEntry kve = new KeyValueEntry(m);
+                if (!kve.Operation.Equals(KeyValueOperation.Put)) {
+                    if (DateTime.Compare(kve.Created, limit) == 1) // created > limit, so created after
+                    {
+                        keepList1.Add(new BucketAndKey(m).Key);
+                    }
+                    else
+                    {
+                        keepList0.Add(new BucketAndKey(m).Key);
+                    }
                 }
             });
 
-            foreach (string key in list)
+            foreach (string key in keepList0)
             {
                 jsm.PurgeStream(StreamName, PurgeOptions.WithSubject(DefaultKeySubject(key)));
+            }
+
+            foreach (string key in keepList1)
+            {
+                PurgeOptions po = PurgeOptions.Builder()
+                    .WithSubject(DefaultKeySubject(key))
+                    .WithKeep(1)
+                    .Build();
+                jsm.PurgeStream(StreamName, po);
             }
         }
 

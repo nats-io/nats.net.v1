@@ -35,7 +35,7 @@ namespace NATS.Client.KeyValue
         public string FeaturePrefix { get; }
         
         /// <summary>
-        /// Gets the JetStreamOptions builder.
+        /// Gets a KeyValueOptionsBuilder builder.
         /// </summary>
         /// <returns>
         /// The builder
