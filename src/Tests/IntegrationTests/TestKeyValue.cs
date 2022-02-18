@@ -813,7 +813,7 @@ namespace IntegrationTests
                 Options acctI = Context.GetTestOptions(Context.Server1.Port);
                 acctI.User = "i";
                 acctI.Password = "i";
-                acctI.CustomInboxPrefix = "forI.";
+                acctI.CustomInboxPrefix = "ForI.";
 
                 using (IConnection connUserA = Context.ConnectionFactory.CreateConnection(acctA))
                 using( IConnection connUserI = Context.ConnectionFactory.CreateConnection(acctI))
@@ -822,13 +822,11 @@ namespace IntegrationTests
                     KeyValueOptions jsOpt_UserA_NoPrefix = KeyValueOptions.Builder().Build();
                     
                     KeyValueOptions jsOpt_UserI_BucketA_WithPrefix = KeyValueOptions.Builder()
-                        .WithFeaturePrefix("iBucketA")
-                        .WithJetStreamOptions(JetStreamOptions.Builder().WithPrefix("jsFromA").Build())
+                        .WithJetStreamOptions(JetStreamOptions.Builder().WithPrefix("FromA").Build())
                         .Build();
                     
                     KeyValueOptions jsOpt_UserI_BucketI_WithPrefix = KeyValueOptions.Builder()
-                        .WithFeaturePrefix("iBucketI")
-                        .WithJetStreamOptions(JetStreamOptions.Builder().WithPrefix("jsFromA").Build())
+                        .WithJetStreamOptions(JetStreamOptions.Builder().WithPrefix("FromA").Build())
                         .Build();
 
                     IKeyValueManagement kvmUserA = connUserA.CreateKeyValueManagementContext(jsOpt_UserA_NoPrefix);

@@ -12,15 +12,13 @@
 // limitations under the License.
 
 using NATS.Client.JetStream;
-using static NATS.Client.Internals.Validator;
 
 namespace NATS.Client.KeyValue
 {
     public sealed class KeyValueOptions
     {
-        private KeyValueOptions(string featurePrefix, JetStreamOptions jso)
+        private KeyValueOptions(JetStreamOptions jso)
         {
-            FeaturePrefix = featurePrefix;
             JSOptions = jso;
         }
 
@@ -28,11 +26,6 @@ namespace NATS.Client.KeyValue
         /// Gets the JetStreamOptions
         /// </summary>
         public JetStreamOptions JSOptions { get; }
-
-        /// <summary>
-        /// Gets the feature [subject] prefix.
-        /// </summary>
-        public string FeaturePrefix { get; }
         
         /// <summary>
         /// Gets a KeyValueOptionsBuilder builder.
@@ -57,36 +50,20 @@ namespace NATS.Client.KeyValue
 
         public sealed class KeyValueOptionsBuilder
         {
-            private string _featurePrefix;
-            private JetStreamOptions _jso;
+            private JetStreamOptions.JetStreamOptionsBuilder _jsoBuilder;
 
             /// <summary>
             /// Construct a builder
             /// </summary>
-            public KeyValueOptionsBuilder() {}
+            public KeyValueOptionsBuilder() : this(null) {}
 
             /// <summary>
             /// Construct a builder from an existing KeyValueOptions object
             /// </summary>
             /// <param name="kvo">an existing KeyValueOptions object</param>
-            public KeyValueOptionsBuilder(KeyValueOptions kvo) 
+            public KeyValueOptionsBuilder(KeyValueOptions kvo)
             {
-                if (kvo != null)
-                {
-                    _featurePrefix = kvo.FeaturePrefix;
-                    _jso = kvo.JSOptions;
-                }
-            }
-            
-            /// <summary>
-            /// Sets the prefix for subjects in features such as KeyValue.
-            /// </summary>
-            /// <param name="prefix">The prefix.</param>
-            /// <returns>The KeyValueOptionsBuilder</returns>
-            public KeyValueOptionsBuilder WithFeaturePrefix(string prefix)
-            {
-                _featurePrefix = EnsureEndsWithDot(ValidatePrefixOrDomain(prefix, "Feature Prefix", false));
-                return this;
+                _jsoBuilder = JetStreamOptions.Builder(kvo?.JSOptions);
             }
             
             /// <summary>
@@ -96,7 +73,33 @@ namespace NATS.Client.KeyValue
             /// <returns>The KeyValueOptionsBuilder</returns>
             public KeyValueOptionsBuilder WithJetStreamOptions(JetStreamOptions jso)
             {
-                _jso = jso;
+                _jsoBuilder = JetStreamOptions.Builder(jso);
+                return this;
+            }
+            
+            /// <summary>
+            /// Sets the prefix for JetStream subjects. A prefix can be used in conjunction with
+            /// user permissions to restrict access to certain JetStream instances.  This must
+            /// match the prefix used in the server.
+            /// </summary>
+            /// <param name="prefix">The prefix.</param>
+            /// <returns>The JetStreamOptionsBuilder</returns>
+            public KeyValueOptionsBuilder WithJsPrefix(string prefix)
+            {
+                _jsoBuilder.WithPrefix(prefix);
+                return this;
+            }
+            
+            /// <summary>
+            /// Sets the domain for JetStream subjects. A domain can be used in conjunction with
+            /// user permissions to restrict access to certain JetStream instances.  This must
+            /// match the domain used in the server.
+            /// </summary>
+            /// <param name="domain">The domain.</param>
+            /// <returns>The JetStreamOptionsBuilder</returns>
+            public KeyValueOptionsBuilder WithJsDomain(string domain) 
+            {
+                _jsoBuilder.WithDomain(domain);
                 return this;
             }
 
@@ -106,7 +109,7 @@ namespace NATS.Client.KeyValue
             /// <returns>The KeyValueOptions object.</returns>
             public KeyValueOptions Build()
             {
-                return new KeyValueOptions(_featurePrefix, _jso);
+                return new KeyValueOptions(_jsoBuilder.Build());
             }
         }
     }

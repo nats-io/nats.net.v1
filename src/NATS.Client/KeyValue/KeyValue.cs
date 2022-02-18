@@ -25,38 +25,45 @@ namespace NATS.Client.KeyValue
         internal IJetStreamManagement jsm;
         internal string StreamName { get; }
         internal string StreamSubject { get; }
-        internal string DefaultKeyPrefix { get; }
-        internal string PublishKeyPrefix { get; }
+        internal string RawKeyPrefix { get; }
+        internal string PubSubKeyPrefix { get; }
         
         internal KeyValue(IConnection connection, string bucketName, KeyValueOptions kvo) {
             BucketName = Validator.ValidateKvBucketNameRequired(bucketName);
             StreamName = KeyValueUtil.ToStreamName(BucketName);
             StreamSubject = KeyValueUtil.ToStreamSubject(BucketName);
-            DefaultKeyPrefix = KeyValueUtil.ToKeyPrefix(bucketName);
+            RawKeyPrefix = KeyValueUtil.ToKeyPrefix(bucketName);
             if (kvo == null)
             {
                 js = new JetStream.JetStream(connection, null);
                 jsm = new JetStreamManagement(connection, null);
-                PublishKeyPrefix = DefaultKeyPrefix;
+                PubSubKeyPrefix = RawKeyPrefix;
             }
             else
             {
                 js = new JetStream.JetStream(connection, kvo.JSOptions);
                 jsm = new JetStreamManagement(connection, kvo.JSOptions);
-                PublishKeyPrefix = kvo.FeaturePrefix ?? DefaultKeyPrefix;
+                if (kvo.JSOptions.IsDefaultPrefix)
+                {
+                    PubSubKeyPrefix = RawKeyPrefix;
+                }
+                else
+                {
+                    PubSubKeyPrefix = kvo.JSOptions.Prefix + RawKeyPrefix;
+                }
             }
         }
 
         public string BucketName { get; }
         
-        internal string DefaultKeySubject(string key)
+        internal string RawKeySubject(string key)
         {
-            return DefaultKeyPrefix + key;
+            return RawKeyPrefix + key;
         }
         
-        internal string PublishKeySubject(string key)
+        internal string PubSubKeySubject(string key)
         {
-            return PublishKeyPrefix + key;
+            return PubSubKeyPrefix + key;
         }
 
         public KeyValueEntry Get(string key)
@@ -67,7 +74,7 @@ namespace NATS.Client.KeyValue
         internal KeyValueEntry GetLastMessage(string key)
         {
             string subj = string.Format(JetStreamConstants.JsapiMsgGet, StreamName);
-            byte[] bytes = MessageGetRequest.LastBySubjectBytes(DefaultKeySubject(key));
+            byte[] bytes = MessageGetRequest.LastBySubjectBytes(RawKeySubject(key));
             Msg resp = js.RequestResponseRequired(subj, bytes, JetStreamOptions.DefaultTimeout.Millis);
             MessageInfo mi = new MessageInfo(resp, false);
             if (mi.HasError)
@@ -141,13 +148,13 @@ namespace NATS.Client.KeyValue
 
         private PublishAck _publishWithNonWildcardKey(string key, byte[] data, MsgHeader h) {
             Validator.ValidateNonWildcardKvKeyRequired(key);
-            return js.Publish(new Msg(PublishKeySubject(key), h, data));
+            return js.Publish(new Msg(PubSubKeySubject(key), h, data));
         }
 
         public IList<string> Keys()
         {
             IList<string> list = new List<string>();
-            VisitSubject(DefaultKeySubject(">"), DeliverPolicy.LastPerSubject, true, false, m => {
+            VisitSubject(RawKeySubject(">"), DeliverPolicy.LastPerSubject, true, false, m => {
                 KeyValueOperation op = KeyValueUtil.GetOperation(m.Header, KeyValueOperation.Put);
                 if (op.Equals(KeyValueOperation.Put)) {
                     list.Add(new BucketAndKey(m).Key);
@@ -159,7 +166,7 @@ namespace NATS.Client.KeyValue
         public IList<KeyValueEntry> History(string key)
         {
             IList<KeyValueEntry> list = new List<KeyValueEntry>();
-            VisitSubject(DefaultKeySubject(key), DeliverPolicy.All, false, true, m => {
+            VisitSubject(RawKeySubject(key), DeliverPolicy.All, false, true, m => {
                 list.Add(new KeyValueEntry(m));
             });
             return list;
@@ -203,13 +210,13 @@ namespace NATS.Client.KeyValue
 
             foreach (string key in keepList0)
             {
-                jsm.PurgeStream(StreamName, PurgeOptions.WithSubject(DefaultKeySubject(key)));
+                jsm.PurgeStream(StreamName, PurgeOptions.WithSubject(RawKeySubject(key)));
             }
 
             foreach (string key in keepList1)
             {
                 PurgeOptions po = PurgeOptions.Builder()
-                    .WithSubject(DefaultKeySubject(key))
+                    .WithSubject(RawKeySubject(key))
                     .WithKeep(1)
                     .Build();
                 jsm.PurgeStream(StreamName, po);
