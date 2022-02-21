@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
 using NATS.Client.JetStream;
 using Xunit;
 
@@ -52,6 +53,27 @@ namespace UnitTests.JetStream
             Assert.Equal(13ul, si.State.FirstSeq);
             Assert.Equal(14ul, si.State.LastSeq);
             Assert.Equal(15, si.State.ConsumerCount);
+            
+            Assert.Equal(3, si.State.SubjectCount);
+            Assert.Equal(3, si.State.Subjects.Count);
+
+            Dictionary<string, Subject> map = new Dictionary<string, Subject>();
+            foreach (Subject su in si.State.Subjects) {
+                map[su.Name] = su;
+            }
+
+            Subject s = map["sub0"];
+            Assert.NotNull(s);
+            Assert.Equal(1, s.Count);
+
+            s = map["sub1"];
+            Assert.NotNull(s);
+            Assert.Equal(2, s.Count);
+
+            s = map["x.foo"];
+            Assert.NotNull(s);
+            Assert.Equal(3, s.Count);
+
             Assert.Equal(AsDateTime("0001-01-01T00:00:00Z"), si.State.FirstTime);
             Assert.Equal(AsDateTime("2021-01-01T00:00:00Z"), si.State.LastTime);
             

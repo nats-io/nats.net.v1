@@ -245,10 +245,44 @@ namespace IntegrationTests
             {
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
                 Assert.Throws<NATSJetStreamException>(() => jsm.GetStreamInfo(STREAM));
-                CreateDefaultTestStream(c);
+
+                String[] subjects = new String[6];
+                for (int x = 0; x < 5; x++) {
+                    subjects[x] = Subject(x);
+                }
+                subjects[5] = "foo.>";
+                CreateMemoryStream(jsm, STREAM, subjects);
+
+                IJetStream js = c.CreateJetStreamContext();
+                for (int x = 0; x < 5; x++) {
+                    JsPublish(js, Subject(x), x + 1);
+                }
+                JsPublish(js, "foo.bar", 6);
 
                 StreamInfo si = jsm.GetStreamInfo(STREAM);
                 Assert.Equal(STREAM, si.Config.Name);
+                Assert.Equal(6, si.State.SubjectCount);
+                Assert.Null(si.State.Subjects);
+
+                si = jsm.GetStreamInfoWithSubjectInfo(STREAM, null);
+                Assert.Equal(STREAM, si.Config.Name);
+                Assert.Equal(6, si.State.SubjectCount);
+                IList<Subject> list = si.State.Subjects;
+                Assert.NotNull(list);
+                Assert.Equal(6, list.Count);
+                Dictionary<string, Subject> map = new Dictionary<string, Subject>();
+                foreach (Subject su in list) {
+                    map[su.Name] = su;
+                }
+                for (int x = 0; x < 5; x++)
+                {
+                    Subject subj = map[Subject(x)];
+                    Assert.NotNull(subj);
+                    Assert.Equal(x + 1, subj.Count);
+                }
+                Subject s = map["foo.bar"];
+                Assert.NotNull(s);
+                Assert.Equal(6, s.Count);
             });
         }
 

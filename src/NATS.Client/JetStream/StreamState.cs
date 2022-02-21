@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 
@@ -24,8 +25,10 @@ namespace NATS.Client.JetStream
         public ulong FirstSeq { get; }
         public ulong LastSeq { get; }
         public long ConsumerCount { get; }
+        public long SubjectCount { get; }
         public DateTime FirstTime { get; }
         public DateTime LastTime { get; }
+        public IList<Subject> Subjects { get; }
 
         internal static StreamState OptionalInstance(JSONNode streamState)
         {
@@ -39,8 +42,10 @@ namespace NATS.Client.JetStream
             FirstSeq = streamState[ApiConstants.FirstSeq].AsUlong;
             LastSeq = streamState[ApiConstants.LastSeq].AsUlong;
             ConsumerCount = streamState[ApiConstants.ConsumerCount].AsLong;
+            SubjectCount = streamState[ApiConstants.NumSubjects].AsLong;
             FirstTime = JsonUtils.AsDate(streamState[ApiConstants.FirstTs]);
             LastTime = JsonUtils.AsDate(streamState[ApiConstants.LastTs]);
+            Subjects = Subject.OptionalListOf(streamState[ApiConstants.Subjects]);
         }
 
         public override string ToString()
@@ -51,6 +56,7 @@ namespace NATS.Client.JetStream
                    ", FirstSeq=" + FirstSeq +
                    ", LastSeq=" + LastSeq +
                    ", ConsumerCount=" + ConsumerCount +
+                   ", SubjectCount=" + SubjectCount +
                    ", FirstTime=" + FirstTime +
                    ", LastTime=" + LastTime +
                    '}';

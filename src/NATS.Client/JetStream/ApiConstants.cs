@@ -98,6 +98,7 @@ namespace NATS.Client.JetStream
         internal const string NumPending = "num_pending";
         internal const string NumRedelivered = "num_redelivered";
         internal const string NumReplicas = "num_replicas";
+        internal const string NumSubjects = "num_subjects";
         internal const string NumWaiting = "num_waiting";
         internal const string Offline = "offline";
         internal const string Offset = "offset";
@@ -128,6 +129,7 @@ namespace NATS.Client.JetStream
         internal const string Streams = "streams";
         internal const string Subject = "subject";
         internal const string Subjects = "subjects";
+        internal const string SubjectsFilter = "subjects_filter";
         internal const string Success = "success";
         internal const string Tags = "tags";
         internal const string TemplateOwner = "template_owner";

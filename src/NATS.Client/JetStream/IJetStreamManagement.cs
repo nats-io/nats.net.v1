@@ -48,13 +48,20 @@ namespace NATS.Client.JetStream
         /// <returns>true if the delete succeeded. Usually throws a NATSJetStreamException otherwise</returns>
         bool DeleteStream(string streamName);
 
-
         /// <summary>
         /// Get information about a stream.
         /// </summary>
         /// <param name="streamName">The name of the stream.</param>
         /// <returns>Stream information</returns>
         StreamInfo GetStreamInfo(string streamName);
+
+        /// <summary>
+        /// Get information about a stream, and include subject info.
+        /// </summary>
+        /// <param name="streamName">The name of the stream.</param>
+        /// <param name="subjectFilter">the subject filter to use. Can be wildcard. Null is equivalent to all subjects, the same as &gt;.</param>
+        /// <returns>Stream information</returns>
+        StreamInfo GetStreamInfoWithSubjectInfo(string streamName, string subjectFilter);
 
         /// <summary>
         /// Purges all messages in a stream.
