@@ -53,7 +53,6 @@ namespace UnitTests.JetStream
             Assert.Equal(13ul, si.State.FirstSeq);
             Assert.Equal(14ul, si.State.LastSeq);
             Assert.Equal(15, si.State.ConsumerCount);
-            
             Assert.Equal(3, si.State.SubjectCount);
             Assert.Equal(3, si.State.Subjects.Count);
 
