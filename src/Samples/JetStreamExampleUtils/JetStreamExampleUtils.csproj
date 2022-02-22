@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <TargetFrameworks Condition="$(OS) == 'Windows_NT'">netstandard1.6;net46</TargetFrameworks>
-        <TargetFramework Condition="$(OS) != 'Windows_NT'">netstandard1.6</TargetFramework>
+        <TargetFrameworks Condition="$(OS) != 'Windows_NT'">netcoreapp3.1;netstandard1.6</TargetFrameworks>
         <Title>NATS JetStream Example Utils</Title>
         <PackageId>NATS.JetStreamExampleUtils</PackageId>
         <Description>NATS JetStream Example Utils Library</Description>
