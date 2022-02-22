@@ -50,9 +50,9 @@ namespace NATS.Client.JetStream
             return new ConsumerInfo(m, true);
         }
 
-        public StreamInfo GetStreamInfoInternal(string streamName, string subjectFilter)
+        public StreamInfo GetStreamInfoInternal(string streamName, StreamInfoOptions options)
         {
-            byte[] payload = subjectFilter == null ? null : StreamInfoRequest.FilterSubjects(subjectFilter);
+            byte[] payload = options == null ? null : options.Serialize();
             string subj = string.Format(JetStreamConstants.JsapiStreamInfo, streamName);
             Msg m = RequestResponseRequired(subj, payload, Timeout);
             return new StreamInfo(m, true);

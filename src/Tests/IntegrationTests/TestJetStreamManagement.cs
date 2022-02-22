@@ -253,9 +253,13 @@ namespace IntegrationTests
                 subjects[5] = "foo.>";
                 CreateMemoryStream(jsm, STREAM, subjects);
 
+                IList<PublishAck> packs = new List<PublishAck>();
                 IJetStream js = c.CreateJetStreamContext();
                 for (int x = 0; x < 5; x++) {
                     JsPublish(js, Subject(x), x + 1);
+                    PublishAck pa = JsPublish(js, Subject(x), Data(x + 2));
+                    packs.Add(pa);
+                    jsm.DeleteMessage(STREAM, pa.Seq);
                 }
                 JsPublish(js, "foo.bar", 6);
 
@@ -263,13 +267,21 @@ namespace IntegrationTests
                 Assert.Equal(STREAM, si.Config.Name);
                 Assert.Equal(6, si.State.SubjectCount);
                 Assert.Null(si.State.Subjects);
+                Assert.Equal(5, si.State.DeletedCount);
+                Assert.Empty(si.State.Deleted);
 
-                si = jsm.GetStreamInfo(STREAM, null);
+                si = jsm.GetStreamInfo(STREAM, 
+                    StreamInfoOptions.Builder()
+                        .WithAllSubjects()
+                        .WithDeletedDetails()
+                        .Build());
                 Assert.Equal(STREAM, si.Config.Name);
                 Assert.Equal(6, si.State.SubjectCount);
                 IList<Subject> list = si.State.Subjects;
                 Assert.NotNull(list);
                 Assert.Equal(6, list.Count);
+                Assert.Equal(5, si.State.DeletedCount);
+                Assert.Equal(5, si.State.Deleted.Count);
                 Dictionary<string, Subject> map = new Dictionary<string, Subject>();
                 foreach (Subject su in list) {
                     map[su.Name] = su;
@@ -283,6 +295,10 @@ namespace IntegrationTests
                 Subject s = map["foo.bar"];
                 Assert.NotNull(s);
                 Assert.Equal(6, s.Count);
+
+                foreach (PublishAck pa in packs) {
+                    Assert.True(si.State.Deleted.Contains(pa.Seq));
+                }
             });
         }
 

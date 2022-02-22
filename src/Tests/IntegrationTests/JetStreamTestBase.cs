@@ -75,6 +75,10 @@ namespace IntegrationTests
             return js.Publish(new Msg(SUBJECT, DataBytes()));
         }
 
+        public static PublishAck JsPublish(IJetStream js, string subject, string data) {
+            return js.Publish(new Msg(subject, Encoding.ASCII.GetBytes(data)));
+        }
+
         public static IList<Msg> ReadMessagesAck(ISyncSubscription sub)
         {
             IList<Msg> messages = new List<Msg>();
