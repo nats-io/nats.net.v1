@@ -60,7 +60,7 @@ namespace NATS.Client.JetStream
             return GetStreamInfoInternal(streamName, null);
         }
 
-        public StreamInfo GetStreamInfoWithSubjectInfo(string streamName, string subjectFilter)
+        public StreamInfo GetStreamInfo(string streamName, string subjectFilter)
         {
             Validator.ValidateStreamName(streamName, true);
             if (subjectFilter == null) {

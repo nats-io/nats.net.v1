@@ -264,7 +264,7 @@ namespace IntegrationTests
                 Assert.Equal(6, si.State.SubjectCount);
                 Assert.Null(si.State.Subjects);
 
-                si = jsm.GetStreamInfoWithSubjectInfo(STREAM, null);
+                si = jsm.GetStreamInfo(STREAM, null);
                 Assert.Equal(STREAM, si.Config.Name);
                 Assert.Equal(6, si.State.SubjectCount);
                 IList<Subject> list = si.State.Subjects;

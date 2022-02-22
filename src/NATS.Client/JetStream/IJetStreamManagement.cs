@@ -49,7 +49,8 @@ namespace NATS.Client.JetStream
         bool DeleteStream(string streamName);
 
         /// <summary>
-        /// Get information about a stream.
+        /// Get information about a stream. Does not retrieve subject information,
+        /// see the overloaded version that accepts subject filter
         /// </summary>
         /// <param name="streamName">The name of the stream.</param>
         /// <returns>Stream information</returns>
@@ -61,7 +62,7 @@ namespace NATS.Client.JetStream
         /// <param name="streamName">The name of the stream.</param>
         /// <param name="subjectFilter">the subject filter to use. Can be wildcard. Null is equivalent to all subjects, the same as &gt;.</param>
         /// <returns>Stream information</returns>
-        StreamInfo GetStreamInfoWithSubjectInfo(string streamName, string subjectFilter);
+        StreamInfo GetStreamInfo(string streamName, string subjectFilter);
 
         /// <summary>
         /// Purges all messages in a stream.
