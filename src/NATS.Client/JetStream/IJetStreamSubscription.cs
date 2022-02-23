@@ -62,8 +62,6 @@ namespace NATS.Client.JetStream
         /// Polls for new messages, overriding the default batch size for this pull only.
         /// </summary>
         /// <remarks>
-        /// When true a response with a 404 status header will be returned
-        /// when no messages are available.
         ///
         /// Primitive API for Advanced use only. Prefer Fetch 
         /// </remarks>
@@ -74,8 +72,6 @@ namespace NATS.Client.JetStream
         /// Do a pull in noWait mode with the specified batch size.
         /// </summary>
         /// <remarks>
-        /// When true a response with a 404 status header will be returned
-        /// when no messages are available.
         ///
         /// Primitive API for Advanced use only. Prefer Fetch 
         /// </remarks>
@@ -83,11 +79,20 @@ namespace NATS.Client.JetStream
         void PullNoWait(int batchSize);
 
         /// <summary>
+        /// Do a pull in noWait + expire mode with the specified batch size.
+        /// </summary>
+        /// <remarks>
+        ///
+        /// Primitive API for Advanced use only. Prefer Fetch 
+        /// </remarks>
+        /// <param name="batchSize">the size of the batch</param>
+        /// <param name="expiresInMillis">how long from now the server should expire this request</param>
+        void PullNoWait(int batchSize, int expiresInMillis);
+
+        /// <summary>
         /// Initiate pull for all messages available before expiration.
         /// </summary>
         /// <remarks>
-        /// Multiple 408 status messages may come. Each one indicates a
-        /// missing item from the previous batch and can be discarded.
         ///
         /// Primitive API for Advanced use only. Prefer Fetch 
         /// </remarks>
