@@ -798,8 +798,8 @@ namespace NATS.Client
             sb.AppendFormat("Name={0};", Name != null ? Name : "null");
             sb.AppendFormat("NoRandomize={0};", NoRandomize);
             sb.AppendFormat("NoEcho={0};", NoEcho);
-            sb.AppendFormat("Pendantic={0};", Pedantic);
-            sb.AppendFormat("UseOldRequestStyle={0}", UseOldRequestStyle);
+            sb.AppendFormat("Pedantic={0};", Pedantic);
+            sb.AppendFormat("UseOldRequestStyle={0};", UseOldRequestStyle);
             sb.AppendFormat("PingInterval={0};", PingInterval);
             sb.AppendFormat("ReconnectBufferSize={0};", ReconnectBufferSize);
             sb.AppendFormat("ReconnectJitter={0};", ReconnectJitter);
@@ -828,7 +828,7 @@ namespace NATS.Client
             }
             sb.AppendFormat("SubChannelLength={0};", SubChannelLength);
             sb.AppendFormat("Timeout={0};", Timeout);
-            sb.AppendFormat("Pendantic={0}", Pedantic);
+            sb.AppendFormat("Pedantic={0}", Pedantic);
             sb.Append("}");
 
             return sb.ToString();
