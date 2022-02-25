@@ -824,11 +824,10 @@ namespace NATS.Client
                     if (s != servers[servers.Length-1])
                         sb.AppendFormat(",");
                 }
-                sb.Append("}");
+                sb.Append("};");
             }
             sb.AppendFormat("SubChannelLength={0};", SubChannelLength);
-            sb.AppendFormat("Timeout={0};", Timeout);
-            sb.AppendFormat("Pedantic={0}", Pedantic);
+            sb.AppendFormat("Timeout={0}", Timeout);
             sb.Append("}");
 
             return sb.ToString();
