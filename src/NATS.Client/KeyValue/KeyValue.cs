@@ -68,26 +68,39 @@ namespace NATS.Client.KeyValue
 
         public KeyValueEntry Get(string key)
         {
-            return GetLastMessage(Validator.ValidateNonWildcardKvKeyRequired(key));
+            return _kvGetLastMessage(Validator.ValidateNonWildcardKvKeyRequired(key));
         }
 
-        internal KeyValueEntry GetLastMessage(string key)
+        public KeyValueEntry Get(string key, ulong revision)
         {
-            string subj = string.Format(JetStreamConstants.JsapiMsgGet, StreamName);
-            byte[] bytes = MessageGetRequest.LastBySubjectBytes(RawKeySubject(key));
-            Msg resp = js.RequestResponseRequired(subj, bytes, JetStreamOptions.DefaultTimeout.Millis);
-            MessageInfo mi = new MessageInfo(resp, false);
-            if (mi.HasError)
-            {
-                if (mi.ApiErrorCode == JetStreamConstants.JsNoMessageFoundErr)
-                {
-                    return null; // run of the mill key not found
-                }
+            return _kvGetMessage(Validator.ValidateNonWildcardKvKeyRequired(key), revision);
+        }
 
-                mi.ThrowOnHasError();
+        internal KeyValueEntry _kvGetLastMessage(string key)
+        {
+            try {
+                return new KeyValueEntry(jsm.GetLastMessage(StreamName, DefaultKeySubject(key)));
             }
+            catch (NATSJetStreamException njse) {
+                if (njse.ApiErrorCode == JetStreamConstants.JsNoMessageFoundErr) {
+                    return null;
+                }
+                throw;
+            }
+        }
 
-            return new KeyValueEntry(mi);
+        internal KeyValueEntry _kvGetMessage(string key, ulong revision)
+        {
+            try {
+                KeyValueEntry kve = new KeyValueEntry(jsm.GetMessage(StreamName, revision));
+                return key.Equals(kve.Key) ? kve : null;
+            }
+            catch (NATSJetStreamException njse) {
+                if (njse.ApiErrorCode == JetStreamConstants.JsNoMessageFoundErr) {
+                    return null;
+                }
+                throw;
+            }
         }
 
         public ulong Put(string key, byte[] value)
@@ -110,7 +123,7 @@ namespace NATS.Client.KeyValue
                 if (e.ApiErrorCode == JetStreamConstants.JsWrongLastSequence)
                 {
                     // must check if the last message for this subject is a delete or purge
-                    KeyValueEntry kve = GetLastMessage(key);
+                    KeyValueEntry kve = _kvGetLastMessage(key);
                     if (kve != null && !kve.Operation.Equals(KeyValueOperation.Put)) {
                         return Update(key, value, kve.Revision);
                     }

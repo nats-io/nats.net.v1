@@ -69,8 +69,17 @@ namespace NATS.Client.KeyValue
         /// THIS IS A BETA FEATURE AND SUBJECT TO CHANGE
         /// </summary>
         /// <param name="key">the key</param>
-        /// <returns></returns>
+        /// <returns>The entry</returns>
         KeyValueEntry Get(string key);
+
+        /// <summary>
+        /// Get the specific revision of an entry for a key
+        /// THIS IS A BETA FEATURE AND SUBJECT TO CHANGE
+        /// </summary>
+        /// <param name="key">the key</param>
+        /// <param name="revision">the specific revision</param>
+        /// <returns>The entry</returns>
+        KeyValueEntry Get(string key, ulong revision);
 
         /// <summary>
         /// Put a byte[] as the value for a key

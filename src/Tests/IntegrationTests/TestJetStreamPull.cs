@@ -11,12 +11,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using NATS.Client;
 using NATS.Client.JetStream;
 using Xunit;
+using Xunit.Abstractions;
 using static UnitTests.TestBase;
 using static IntegrationTests.JetStreamTestBase;
 
@@ -24,13 +26,18 @@ namespace IntegrationTests
 {
     public class TestJetStreamPull : TestSuite<JetStreamPullSuiteContext>
     {
-        public TestJetStreamPull(JetStreamPullSuiteContext context) : base(context)
+        private readonly ITestOutputHelper output;
+
+        public TestJetStreamPull(ITestOutputHelper output, JetStreamPullSuiteContext context) : base(context)
         {
+            this.output = output;
         }
 
         [Fact]
         public void TestFetch()
         {
+            Console.SetOut(new ConsoleWriter(output));
+
             Context.RunInJsServer(c =>
             {
                 // create the stream.
@@ -39,8 +46,11 @@ namespace IntegrationTests
                 // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
 
+                int fetchMs = 3000;
+                int ackWaitMs = fetchMs * 2;
+
                 ConsumerConfiguration cc = ConsumerConfiguration.Builder()
-                    .WithAckWait(2500)
+                    .WithAckWait(ackWaitMs)
                     .Build();
                 
                 PullSubscribeOptions options = PullSubscribeOptions.Builder()
@@ -52,44 +62,46 @@ namespace IntegrationTests
                 AssertSubscription(sub, STREAM, DURABLE, null, true);
                 c.Flush(DefaultTimeout); // flush outgoing communication with/to the server
                 
-                IList<Msg> messages = sub.Fetch(10, 3000);
+                IList<Msg> messages = sub.Fetch(10, fetchMs);
                 ValidateRead(0, messages.Count);
                 AckAll(messages);
+                Thread.Sleep(ackWaitMs); // let the pull expire
 
                 JsPublish(js, SUBJECT, "A", 10);
-                messages = sub.Fetch(10, 3000);
+                messages = sub.Fetch(10, fetchMs);
                 ValidateRead(10, messages.Count);
                 AckAll(messages);
 
                 JsPublish(js, SUBJECT, "B", 20);
-                messages = sub.Fetch(10, 3000);
+                messages = sub.Fetch(10, fetchMs);
                 ValidateRead(10, messages.Count);
                 AckAll(messages);
 
-                messages = sub.Fetch(10, 3000);
+                messages = sub.Fetch(10, fetchMs);
                 ValidateRead(10, messages.Count);
                 AckAll(messages);
 
                 JsPublish(js, SUBJECT, "C", 5);
-                messages = sub.Fetch(10, 3000);
+                messages = sub.Fetch(10, fetchMs);
                 ValidateRead(5, messages.Count);
                 AckAll(messages);
+                Thread.Sleep(fetchMs * 2); // let the pull expire
 
                 JsPublish(js, SUBJECT, "D", 15);
-                messages = sub.Fetch(10, 3000);
+                messages = sub.Fetch(10, fetchMs);
                 ValidateRead(10, messages.Count);
                 AckAll(messages);
 
-                messages = sub.Fetch(10, 3000);
+                messages = sub.Fetch(10, fetchMs);
                 ValidateRead(5, messages.Count);
                 AckAll(messages);
 
                 JsPublish(js, SUBJECT, "E", 10);
-                messages = sub.Fetch(10, 3000);
+                messages = sub.Fetch(10, fetchMs);
                 ValidateRead(10, messages.Count);
-                Thread.Sleep(3000);
+                Thread.Sleep(ackWaitMs);
 
-                messages = sub.Fetch(10, 3000);
+                messages = sub.Fetch(10, fetchMs);
                 ValidateRead(10, messages.Count);
                 AckAll(messages);
             });

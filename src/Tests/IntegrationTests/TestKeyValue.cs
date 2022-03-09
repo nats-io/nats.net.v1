@@ -309,6 +309,45 @@ namespace IntegrationTests
         }
         
         [Fact]
+        public void TestGetRevisions() {
+            Context.RunInJsServer(c =>
+            {
+                // get the kv management context
+                IKeyValueManagement kvm = c.CreateKeyValueManagementContext();
+
+                // create the bucket
+                kvm.Create(KeyValueConfiguration.Builder()
+                    .WithName(BUCKET)
+                    .WithMaxHistoryPerKey(2)
+                    .WithStorageType(StorageType.Memory)
+                    .Build());
+
+                IKeyValue kv = c.CreateKeyValueContext(BUCKET);
+                ulong seq1 = kv.Put(KEY, "A");
+                ulong seq2 = kv.Put(KEY, "B");
+                ulong seq3 = kv.Put(KEY, "C");
+
+                KeyValueEntry kve = kv.Get(KEY);
+                Assert.NotNull(kve);
+                Assert.Equal("C", kve.ValueAsString());
+
+                kve = kv.Get(KEY, seq3);
+                Assert.NotNull(kve);
+                Assert.Equal("C", kve.ValueAsString());
+
+                kve = kv.Get(KEY, seq2);
+                Assert.NotNull(kve);
+                Assert.Equal("B", kve.ValueAsString());
+
+                kve = kv.Get(KEY, seq1);
+                Assert.Null(kve);
+
+                kve = kv.Get("notkey", seq3);
+                Assert.Null(kve);
+            });
+        }
+        
+        [Fact]
         public void TestKeys() {
             Context.RunInJsServer(c =>
             {
