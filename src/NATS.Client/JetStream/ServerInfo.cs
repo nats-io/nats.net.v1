@@ -72,7 +72,7 @@ namespace NATS.Client.JetStream
                 string[] v = vString.Replace("v", "").Replace("-", ".").Split('.');
                 int at = vString.IndexOf("-", StringComparison.Ordinal);
                 return "" + (Int32.Parse(v[0]) * 10000) + (Int32.Parse(v[1]) * 100) + Int32.Parse(v[2])
-                       + (at == -1 ? "" : vString.Substring(at));
+                       + (at == -1 ? "~" : vString.Substring(at));
             }
             catch (Exception) {
                 return "";

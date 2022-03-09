@@ -56,7 +56,7 @@ namespace UnitTests.JetStream
             ServerInfo info235Beta2 = new ServerInfo(_json.Replace("1.2.3", "2.3.5-beta.2"));
             Assert.True(info.IsOlderThanVersion("2.3.4"));
             Assert.True(info234.IsOlderThanVersion("2.3.5"));
-            Assert.True(info235.IsOlderThanVersion("2.3.5-beta.2"));
+            Assert.True(info235.IsNewerVersionThan("2.3.5-beta.2"));
             Assert.True(info.IsSameVersion("1.2.3"));
             Assert.True(info234.IsSameVersion("2.3.4"));
             Assert.True(info235.IsSameVersion("2.3.5"));
@@ -65,7 +65,7 @@ namespace UnitTests.JetStream
             Assert.False(info235Beta2.IsSameVersion("2.3.5"));
             Assert.True(info234.IsNewerVersionThan("1.2.3"));
             Assert.True(info235.IsNewerVersionThan("2.3.4"));
-            Assert.True(info235Beta2.IsNewerVersionThan("2.3.5"));
+            Assert.True(info235Beta2.IsOlderThanVersion("2.3.5"));
 
             Assert.True(info234.IsNewerVersionThan("not-a-number"));
             Assert.False(info234.IsNewerVersionThan("2.3.5"));
