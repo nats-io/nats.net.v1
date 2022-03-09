@@ -45,7 +45,7 @@ namespace NATS.Client.KeyValue
                 endOfDataSent = new InterlockedBoolean(true);
             }
             else {
-                KeyValueEntry kveCheckPending = kv.GetLastMessage(keyPattern);
+                KeyValueEntry kveCheckPending = kv._kvGetLastMessage(keyPattern);
                 if (kveCheckPending == null) {
                     watcher.EndOfData();
                     endOfDataSent = new InterlockedBoolean(true);
