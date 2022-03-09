@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
     <TargetFrameworks Condition="$(OS) == 'Windows_NT'">netcoreapp3.1;net46</TargetFrameworks>
-    <TargetFramework Condition="$(OS) != 'Windows_NT'">netcoreapp3.1</TargetFramework>
+    <TargetFrameworks Condition="$(OS) != 'Windows_NT'">netcoreapp3.1</TargetFrameworks>
     <Version>0.0.0</Version>
     <Company>CNCF</Company>
     <Authors>The NATS Authors</Authors>
