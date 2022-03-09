@@ -13,7 +13,7 @@ namespace UnitTests
         /*
             private readonly ITestOutputHelper output;
 
-            public TestKeyValue(ITestOutputHelper output, BlahSuiteContext context) : base(context)
+            public TestMyClass(ITestOutputHelper output, BlahSuiteContext context) : base(context)
             {
 	            this.output = output;
             }

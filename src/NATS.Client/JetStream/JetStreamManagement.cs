@@ -156,6 +156,14 @@ namespace NATS.Client.JetStream
             return new MessageInfo(m, true);
         }
 
+        public MessageInfo GetLastMessage(string streamName, string subject)
+        {
+            Validator.ValidateStreamName(streamName, true);
+            string subj = string.Format(JetStreamConstants.JsapiMsgGet, streamName);
+            Msg m = RequestResponseRequired(subj, MessageGetRequest.LastBySubjectBytes(subject), Timeout);
+            return new MessageInfo(m, true);
+        }
+
         public bool DeleteMessage(string streamName, ulong sequence)
         {
             Validator.ValidateStreamName(streamName, true);

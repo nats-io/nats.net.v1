@@ -104,8 +104,7 @@ namespace NATS.Client.JetStream
         /// <param name="consumer">The name of the consumer.</param>
         /// <returns>Consumer information</returns>
         ConsumerInfo GetConsumerInfo(string streamName, string consumer);
-
-
+        
         /// <summary>
         /// Gets all consumers attached to a stream.
         /// </summary>
@@ -132,7 +131,6 @@ namespace NATS.Client.JetStream
         /// <returns>An array of stream information objects.</returns>
         IList<StreamInfo> GetStreams();
 
-
         /// <summary>
         /// Gets information about a message in a stream.
         /// </summary>
@@ -140,6 +138,14 @@ namespace NATS.Client.JetStream
         /// <param name="sequence">The stream sequence number of the message.</param>
         /// <returns>Message information.</returns>
         MessageInfo GetMessage(string streamName, ulong sequence);
+
+        /// <summary>
+        /// Gets information about the last message for a subject.
+        /// </summary>
+        /// <param name="streamName">The name of the stream.</param>
+        /// <param name="subject">The subject to get the last message for.</param>
+        /// <returns>Message information.</returns>
+        MessageInfo GetLastMessage(string streamName, string subject);
 
         /// <summary>
         /// Deletes a message from a stream.

@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System.Collections.Generic;
+using System.Diagnostics;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 
@@ -45,6 +46,11 @@ namespace NATS.Client.JetStream
             PullInternal(batchSize, true, null);
         }
 
+        public void PullNoWait(int batchSize, int expiresInMillis)
+        {
+            PullInternal(batchSize, true, Duration.OfMillis(expiresInMillis));
+        }
+
         private void PullInternal(int batchSize, bool noWait, Duration expiresIn) {
             int batch = Validator.ValidatePullBatchSize(batchSize);
             string subj = string.Format(JetStreamConstants.JsapiConsumerMsgNext, Stream, Consumer);
@@ -70,42 +76,64 @@ namespace NATS.Client.JetStream
 
         public IList<Msg> Fetch(int batchSize, int maxWaitMillis)
         {
-            IList<Msg> messages = new List<Msg>(batchSize);
+            IList<Msg> messages = DrainAlreadyBuffered(batchSize);
+            
+            int batchLeft = batchSize - messages.Count;
+            if (batchLeft == 0)
+            {
+                return messages;
+            }
 
-            PullNoWait(batchSize);
-            Read(batchSize, maxWaitMillis, messages);
-            if (messages.Count == 0) {
-                PullExpiresIn(batchSize, Duration.OfMillis(maxWaitMillis - 10));
-                Read(batchSize, maxWaitMillis, messages);
+            Stopwatch sw = Stopwatch.StartNew();
+
+            Duration expires = Duration.OfMillis(
+                maxWaitMillis > MinMillis
+                    ? maxWaitMillis - ExpireLessMillis
+                    : maxWaitMillis);
+            PullInternal(batchLeft, false, expires);
+
+            try
+            {
+                // timeout > 0 process as many messages we can in that time period
+                // If we get a message that either manager handles, we try again, but
+                // with a shorter timeout based on what we already used up
+                int timeLeft = maxWaitMillis;
+                while (batchLeft > 0 && timeLeft > 0) {
+                    Msg msg = NextMessageImpl(timeLeft);
+                    if (!_asm.Manage(msg)) { // not managed means JS Message
+                        messages.Add(msg);
+                        batchLeft--;
+                    }
+                    // try again while we have time
+                    timeLeft = maxWaitMillis - (int)sw.ElapsedMilliseconds;
+                }
+            }
+            catch (NATSTimeoutException)
+            {
+                // regular timeout, just end
             }
 
             return messages;
         }
 
-        private const int SubsequentWaits = 500;
-
-        private void Read(int batchSize, int maxWaitMillis, IList<Msg> messages) {
-            try
-            {
-                Msg msg = NextMessage(maxWaitMillis);
-                while (msg != null)
-                {
-                    if (msg.IsJetStream)
-                    {
+        private IList<Msg> DrainAlreadyBuffered(int batchSize) {
+            IList<Msg> messages = new List<Msg>(batchSize);
+            try {
+                Msg msg = NextMessageImpl(1); // shortest non zero wait 
+                while (msg != null) {
+                    if (!_asm.Manage(msg)) { // not managed means JS Message
                         messages.Add(msg);
-                        if (messages.Count == batchSize)
-                        {
-                            break;
+                        if (messages.Count == batchSize) {
+                            return messages;
                         }
                     }
-
-                    msg = NextMessage(SubsequentWaits);
+                    msg = NextMessageImpl(1);
                 }
             }
-            catch (NATSTimeoutException)
-            {
-                // it's fine, just end
+            catch (NATSTimeoutException) {
+                // regular timeout, just end
             }
+            return messages;
         }
     }
 }
