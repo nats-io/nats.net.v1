@@ -79,7 +79,7 @@ namespace NATS.Client.KeyValue
         internal KeyValueEntry _kvGetLastMessage(string key)
         {
             try {
-                return new KeyValueEntry(jsm.GetLastMessage(StreamName, DefaultKeySubject(key)));
+                return new KeyValueEntry(jsm.GetLastMessage(StreamName, RawKeySubject(key)));
             }
             catch (NATSJetStreamException njse) {
                 if (njse.ApiErrorCode == JetStreamConstants.JsNoMessageFoundErr) {
