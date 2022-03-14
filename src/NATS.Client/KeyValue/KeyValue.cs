@@ -204,29 +204,29 @@ namespace NATS.Client.KeyValue
                 limit = DateTime.UtcNow.AddMilliseconds(-dmThresh);
             }
 
-            IList<string> keepList0 = new List<string>();
-            IList<string> keepList1 = new List<string>();
+            IList<string> noKeepList = new List<string>();
+            IList<string> keepList = new List<string>();
             VisitSubject(KeyValueUtil.ToStreamSubject(BucketName), DeliverPolicy.LastPerSubject, true, false, m =>
             {
                 KeyValueEntry kve = new KeyValueEntry(m);
                 if (!kve.Operation.Equals(KeyValueOperation.Put)) {
-                    if (DateTime.Compare(kve.Created, limit) == 1) // created > limit, so created after
+                    if (kve.Created > limit) // created > limit, so created after
                     {
-                        keepList1.Add(new BucketAndKey(m).Key);
+                        keepList.Add(new BucketAndKey(m).Key);
                     }
                     else
                     {
-                        keepList0.Add(new BucketAndKey(m).Key);
+                        noKeepList.Add(new BucketAndKey(m).Key);
                     }
                 }
             });
 
-            foreach (string key in keepList0)
+            foreach (string key in noKeepList)
             {
                 jsm.PurgeStream(StreamName, PurgeOptions.WithSubject(RawKeySubject(key)));
             }
 
-            foreach (string key in keepList1)
+            foreach (string key in keepList)
             {
                 PurgeOptions po = PurgeOptions.Builder()
                     .WithSubject(RawKeySubject(key))
