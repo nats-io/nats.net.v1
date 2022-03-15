@@ -61,6 +61,12 @@ namespace NATS.Client
         string ConnectedId { get; }
 
         /// <summary>
+        /// Gets the server info for this connection to which this instance
+        /// is connected, otherwise <c>null</c>.
+        /// </summary>
+        ServerInfo ServerInfo { get; }
+
+        /// <summary>
         /// Gets an array of known server URLs for this instance.
         /// </summary>
         /// <remarks><see cref="Servers"/> also includes any additional

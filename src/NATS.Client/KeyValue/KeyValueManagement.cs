@@ -19,16 +19,21 @@ namespace NATS.Client.KeyValue
 {
     internal class KeyValueManagement : IKeyValueManagement
     {
-        private readonly IJetStreamManagement jsm;
+        private readonly JetStreamManagement jsm;
 
         internal KeyValueManagement(IConnection connection, KeyValueOptions kvo)
         {
-            jsm = connection.CreateJetStreamManagementContext(kvo?.JSOptions);
+            jsm = (JetStreamManagement)connection.CreateJetStreamManagementContext(kvo?.JSOptions);
         }
         
         public KeyValueStatus Create(KeyValueConfiguration config)
         {
-            return new KeyValueStatus(jsm.AddStream(config.BackingConfig));
+            StreamConfiguration sc = config.BackingConfig;
+            if (jsm.Conn.ServerInfo.IsOlderThanVersion("2.7.2"))
+            {
+                sc = StreamConfiguration.Builder(sc).WithDiscardPolicy(null).Build(); // null discard policy will use default
+            }
+            return new KeyValueStatus(jsm.AddStream(sc));
         }
 
         public IList<string> GetBucketNames()

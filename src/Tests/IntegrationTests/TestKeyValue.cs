@@ -20,6 +20,7 @@ using NATS.Client;
 using NATS.Client.JetStream;
 using NATS.Client.KeyValue;
 using Xunit;
+using Xunit.Abstractions;
 using static UnitTests.TestBase;
 using static IntegrationTests.JetStreamTestBase;
 
@@ -27,8 +28,11 @@ namespace IntegrationTests
 {
     public class TestKeyValue : TestSuite<KeyValueSuiteContext>
     {
-        public TestKeyValue(KeyValueSuiteContext context) : base(context)
+        private readonly ITestOutputHelper output;
+
+        public TestKeyValue(ITestOutputHelper output, KeyValueSuiteContext context) : base(context)
         {
+            this.output = output;
         }
 
         [Fact]
@@ -255,7 +259,8 @@ namespace IntegrationTests
                 AssertKeys(kv.Keys());
 
                 // clear things
-                kv.PurgeDeletes();
+                KeyValuePurgeOptions kvpo = KeyValuePurgeOptions.Builder().WithDeleteMarkersNoThreshold().Build();
+                kv.PurgeDeletes(kvpo);
                 status = kvm.GetBucketInfo(BUCKET);
                 Assert.Equal(0U, status.EntryCount); // purges are all gone
                 Assert.Equal(12U, status.BackingStreamInfo.State.LastSeq);
@@ -480,36 +485,36 @@ namespace IntegrationTests
                 kv.Purge(Key(4));
 
                 IJetStream js = c.CreateJetStreamContext();
-                IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(KeyValueUtil.ToStreamSubject(BUCKET));
+                assertPurgeDeleteEntries(js, new []{"a", null, "b", "c", null});
 
-                Msg m = sub.NextMessage(1000);
-                Assert.Equal("a", Encoding.UTF8.GetString(m.Data));
-
-                m = sub.NextMessage(1000);
-                Assert.Empty(m.Data);
-
-                m = sub.NextMessage(1000);
-                Assert.Equal("b", Encoding.UTF8.GetString(m.Data));
-
-                m = sub.NextMessage(1000);
-                Assert.Equal("c", Encoding.UTF8.GetString(m.Data));
-
-                m = sub.NextMessage(1000);
-                Assert.Empty(m.Data);
-
-                sub.Unsubscribe();
-
+                // default purge deletes uses the default threshold of 30 minutes
+                // so no markers will be deleted
                 kv.PurgeDeletes();
-                sub = js.PushSubscribeSync(KeyValueUtil.ToStreamSubject(BUCKET));
+                assertPurgeDeleteEntries(js, new []{null, "b", "c", null});
 
-                m = sub.NextMessage(1000);
-                Assert.Equal("b", Encoding.UTF8.GetString(m.Data));
-
-                m = sub.NextMessage(1000);
-                Assert.Equal("c", Encoding.UTF8.GetString(m.Data));
-
-                sub.Unsubscribe();
+                // no threshold causes all to be removed
+                kv.PurgeDeletes(KeyValuePurgeOptions.Builder().WithDeleteMarkersNoThreshold().Build());
+                assertPurgeDeleteEntries(js, new[]{"b", "c"});
             });
+        }
+
+        private void assertPurgeDeleteEntries(IJetStream js, string[] expected) {
+            IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(KeyValueUtil.ToStreamSubject(BUCKET));
+
+            foreach (string s in expected) {
+                Msg m = sub.NextMessage(1000);
+                KeyValueEntry kve = new KeyValueEntry(m);
+                if (s == null) {
+                    Assert.NotEqual(KeyValueOperation.Put, kve.Operation);
+                    Assert.Equal(0, kve.DataLength);
+                }
+                else {
+                    Assert.Equal(KeyValueOperation.Put, kve.Operation);
+                    Assert.Equal(s, Encoding.UTF8.GetString(m.Data));
+                }
+            }
+
+            sub.Unsubscribe();
         }
 
         [Fact]
@@ -847,7 +852,7 @@ namespace IntegrationTests
                 Options acctI = Context.GetTestOptions(Context.Server1.Port);
                 acctI.User = "i";
                 acctI.Password = "i";
-                acctI.CustomInboxPrefix = "forI.";
+                acctI.CustomInboxPrefix = "ForI.";
 
                 using (IConnection connUserA = Context.ConnectionFactory.CreateConnection(acctA))
                 using( IConnection connUserI = Context.ConnectionFactory.CreateConnection(acctI))
@@ -856,13 +861,11 @@ namespace IntegrationTests
                     KeyValueOptions jsOpt_UserA_NoPrefix = KeyValueOptions.Builder().Build();
                     
                     KeyValueOptions jsOpt_UserI_BucketA_WithPrefix = KeyValueOptions.Builder()
-                        .WithFeaturePrefix("iBucketA")
-                        .WithJetStreamOptions(JetStreamOptions.Builder().WithPrefix("jsFromA").Build())
+                        .WithJetStreamOptions(JetStreamOptions.Builder().WithPrefix("FromA").Build())
                         .Build();
                     
                     KeyValueOptions jsOpt_UserI_BucketI_WithPrefix = KeyValueOptions.Builder()
-                        .WithFeaturePrefix("iBucketI")
-                        .WithJetStreamOptions(JetStreamOptions.Builder().WithPrefix("jsFromA").Build())
+                        .WithJetStreamOptions(JetStreamOptions.Builder().WithPrefix("FromA").Build())
                         .Build();
 
                     IKeyValueManagement kvmUserA = connUserA.CreateKeyValueManagementContext(jsOpt_UserA_NoPrefix);

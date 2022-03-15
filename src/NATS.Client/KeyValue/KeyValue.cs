@@ -25,38 +25,45 @@ namespace NATS.Client.KeyValue
         internal IJetStreamManagement jsm;
         internal string StreamName { get; }
         internal string StreamSubject { get; }
-        internal string DefaultKeyPrefix { get; }
-        internal string PublishKeyPrefix { get; }
+        internal string RawKeyPrefix { get; }
+        internal string PubSubKeyPrefix { get; }
         
         internal KeyValue(IConnection connection, string bucketName, KeyValueOptions kvo) {
             BucketName = Validator.ValidateKvBucketNameRequired(bucketName);
             StreamName = KeyValueUtil.ToStreamName(BucketName);
             StreamSubject = KeyValueUtil.ToStreamSubject(BucketName);
-            DefaultKeyPrefix = KeyValueUtil.ToKeyPrefix(bucketName);
+            RawKeyPrefix = KeyValueUtil.ToKeyPrefix(bucketName);
             if (kvo == null)
             {
                 js = new JetStream.JetStream(connection, null);
                 jsm = new JetStreamManagement(connection, null);
-                PublishKeyPrefix = DefaultKeyPrefix;
+                PubSubKeyPrefix = RawKeyPrefix;
             }
             else
             {
                 js = new JetStream.JetStream(connection, kvo.JSOptions);
                 jsm = new JetStreamManagement(connection, kvo.JSOptions);
-                PublishKeyPrefix = kvo.FeaturePrefix ?? DefaultKeyPrefix;
+                if (kvo.JSOptions.IsDefaultPrefix)
+                {
+                    PubSubKeyPrefix = RawKeyPrefix;
+                }
+                else
+                {
+                    PubSubKeyPrefix = kvo.JSOptions.Prefix + RawKeyPrefix;
+                }
             }
         }
 
         public string BucketName { get; }
         
-        internal string DefaultKeySubject(string key)
+        internal string RawKeySubject(string key)
         {
-            return DefaultKeyPrefix + key;
+            return RawKeyPrefix + key;
         }
         
-        internal string PublishKeySubject(string key)
+        internal string PubSubKeySubject(string key)
         {
-            return PublishKeyPrefix + key;
+            return PubSubKeyPrefix + key;
         }
 
         public KeyValueEntry Get(string key)
@@ -72,7 +79,7 @@ namespace NATS.Client.KeyValue
         internal KeyValueEntry _kvGetLastMessage(string key)
         {
             try {
-                return new KeyValueEntry(jsm.GetLastMessage(StreamName, DefaultKeySubject(key)));
+                return new KeyValueEntry(jsm.GetLastMessage(StreamName, RawKeySubject(key)));
             }
             catch (NATSJetStreamException njse) {
                 if (njse.ApiErrorCode == JetStreamConstants.JsNoMessageFoundErr) {
@@ -154,13 +161,13 @@ namespace NATS.Client.KeyValue
 
         private PublishAck _publishWithNonWildcardKey(string key, byte[] data, MsgHeader h) {
             Validator.ValidateNonWildcardKvKeyRequired(key);
-            return js.Publish(new Msg(PublishKeySubject(key), h, data));
+            return js.Publish(new Msg(PubSubKeySubject(key), h, data));
         }
 
         public IList<string> Keys()
         {
             IList<string> list = new List<string>();
-            VisitSubject(DefaultKeySubject(">"), DeliverPolicy.LastPerSubject, true, false, m => {
+            VisitSubject(RawKeySubject(">"), DeliverPolicy.LastPerSubject, true, false, m => {
                 KeyValueOperation op = KeyValueUtil.GetOperation(m.Header, KeyValueOperation.Put);
                 if (op.Equals(KeyValueOperation.Put)) {
                     list.Add(new BucketAndKey(m).Key);
@@ -172,25 +179,60 @@ namespace NATS.Client.KeyValue
         public IList<KeyValueEntry> History(string key)
         {
             IList<KeyValueEntry> list = new List<KeyValueEntry>();
-            VisitSubject(DefaultKeySubject(key), DeliverPolicy.All, false, true, m => {
+            VisitSubject(RawKeySubject(key), DeliverPolicy.All, false, true, m => {
                 list.Add(new KeyValueEntry(m));
             });
             return list;
         }
 
-        public void PurgeDeletes()
+        public void PurgeDeletes() => PurgeDeletes(null);
+
+        public void PurgeDeletes(KeyValuePurgeOptions options)
         {
-            IList<string> list = new List<string>();
-            VisitSubject(KeyValueUtil.ToStreamSubject(BucketName), DeliverPolicy.LastPerSubject, true, false, m => {
-                KeyValueOperation op = KeyValueUtil.GetOperation(m.Header, KeyValueOperation.Put);
-                if (!op.Equals(KeyValueOperation.Put)) {
-                    list.Add(new BucketAndKey(m).Key);
+            long dmThresh = options == null
+                ? KeyValuePurgeOptions.DefaultThresholdMillis
+                : options.DeleteMarkersThresholdMillis;
+
+            DateTime limit;
+            if (dmThresh < 0) {
+                limit = DateTime.UtcNow.AddMilliseconds(600000); // long enough in the future to clear all
+            }
+            else if (dmThresh == 0) {
+                limit = DateTime.UtcNow.AddMilliseconds(KeyValuePurgeOptions.DefaultThresholdMillis);
+            }
+            else {
+                limit = DateTime.UtcNow.AddMilliseconds(-dmThresh);
+            }
+
+            IList<string> noKeepList = new List<string>();
+            IList<string> keepList = new List<string>();
+            VisitSubject(KeyValueUtil.ToStreamSubject(BucketName), DeliverPolicy.LastPerSubject, true, false, m =>
+            {
+                KeyValueEntry kve = new KeyValueEntry(m);
+                if (!kve.Operation.Equals(KeyValueOperation.Put)) {
+                    if (kve.Created > limit) // created > limit, so created after
+                    {
+                        keepList.Add(new BucketAndKey(m).Key);
+                    }
+                    else
+                    {
+                        noKeepList.Add(new BucketAndKey(m).Key);
+                    }
                 }
             });
 
-            foreach (string key in list)
+            foreach (string key in noKeepList)
             {
-                jsm.PurgeStream(StreamName, PurgeOptions.WithSubject(DefaultKeySubject(key)));
+                jsm.PurgeStream(StreamName, PurgeOptions.WithSubject(RawKeySubject(key)));
+            }
+
+            foreach (string key in keepList)
+            {
+                PurgeOptions po = PurgeOptions.Builder()
+                    .WithSubject(RawKeySubject(key))
+                    .WithKeep(1)
+                    .Build();
+                jsm.PurgeStream(StreamName, po);
             }
         }
 

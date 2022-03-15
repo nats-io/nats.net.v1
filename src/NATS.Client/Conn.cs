@@ -1054,6 +1054,21 @@ namespace NATS.Client
         }
 
         /// <summary>
+        /// Gets the server info for this connection to which this instance
+        /// is connected, otherwise <c>null</c>.
+        /// </summary>
+        public ServerInfo ServerInfo
+        {
+            get
+            {
+                lock (mu)
+                {
+                    return status == ConnState.CONNECTED ? info : null;
+                }
+            }
+        }
+
+        /// <summary>
         /// Gets an array of known server URLs for this instance.
         /// </summary>
         /// <remarks><see cref="Servers"/> also includes any additional

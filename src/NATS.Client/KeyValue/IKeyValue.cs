@@ -185,10 +185,17 @@ namespace NATS.Client.KeyValue
         IList<KeyValueEntry> History(string key);
 
         /// <summary>
-        /// Remove history from all keys that currently are deleted or purged.
+        /// Remove history from all keys that currently are deleted or purged,
+        /// using a default KeyValuePurgeOptions
         /// THIS IS A BETA FEATURE AND SUBJECT TO CHANGE
         /// </summary>
         void PurgeDeletes();
+
+        /// <summary>
+        /// Remove history from all keys that currently are deleted or purged
+        /// THIS IS A BETA FEATURE AND SUBJECT TO CHANGE
+        /// </summary>
+        void PurgeDeletes(KeyValuePurgeOptions options);
 
         /// <summary>
         /// Get the KeyValueStatus object
