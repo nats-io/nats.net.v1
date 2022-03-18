@@ -24,7 +24,7 @@ namespace JsMultiProducer
         private const string Subject = "sub";
         private const string Server = "nats://localhost:4222";
 
-        private const bool LatencyRun = true;
+        private const bool LatencyRun = false;
 
         static void Main(string[] args)
         {
@@ -43,9 +43,9 @@ namespace JsMultiProducer
 
             Context ctx = new Context(a);
 
-            // latency run, the consumer code sets up the stream
+            // Producer sets up the stream for normal (non-latency) runs.
             if (!LatencyRun) {
-                StreamUtils.SetupStream(Stream, Subject, ctx);
+                StreamUtils.SetupStream(Stream, ctx);
             }
 
             Run(ctx, true, true);

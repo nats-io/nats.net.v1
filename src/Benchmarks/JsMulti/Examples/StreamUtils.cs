@@ -27,8 +27,8 @@ namespace JsMulti.Examples
             SetupStream(stream, subject, OptionsFactory.GetOptions(server), OptionsFactory.GetJetStreamOptions());
         }
 
-        public static void SetupStream(string stream, string subject, Context context) {
-            SetupStream(stream, subject, context.GetOptions(), context.GetJetStreamOptions());
+        public static void SetupStream(string stream, Context context) {
+            SetupStream(stream, context.Subject, context.GetOptions(), context.GetJetStreamOptions());
         }
 
         public static void SetupStream(string stream, string subject, Options options, JetStreamOptions jso) {

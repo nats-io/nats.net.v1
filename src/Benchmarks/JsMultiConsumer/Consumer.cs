@@ -12,7 +12,6 @@
 // limitations under the License.
 
 using JsMulti;
-using JsMulti.Examples;
 using JsMulti.Settings;
 using static JsMulti.JsMulti;
 
@@ -24,29 +23,28 @@ namespace JsMultiConsumer
         private const string Subject = "sub";
         private const string Server = "nats://localhost:4222";
 
-        private const bool LatencyRun = true;
-
         static void Main(string[] args)
         {
             Arguments a = Arguments.Instance()
                 .Server(Server)
                 .Subject(Subject)
                 .Action(JsmAction.SubPull) // could be JsmAction.SubPull for example
+                // .LatencyFlag() !!! Not required on consumer, Stats figures it out.
                 .Threads(3)
                 .IndividualConnection() // versus shared
                 .ReportFrequency(10000) // report every 10K
                 .Jitter(0) // > 0 means use jitter
                 .BatchSize(100)
-                .MessageCount(100_000);
+                .MessageCount(100_000)
+                ;
 
             a.PrintCommandLine();
 
             Context ctx = new Context(a);
 
-            // latency run, the consumer code sets up the stream
-            if (LatencyRun) {
-                StreamUtils.SetupStream(Stream, Subject, ctx);
-            }
+            // Consumer sets up the stream for latency (non-normal) runs.
+            // Uncomment when 
+            // StreamUtils.SetupStream(Stream, ctx);
 
             Run(ctx, true, true);
         }
