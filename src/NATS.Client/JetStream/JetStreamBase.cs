@@ -50,10 +50,11 @@ namespace NATS.Client.JetStream
             return new ConsumerInfo(m, true);
         }
 
-        public StreamInfo GetStreamInfoInternal(string streamName)
+        public StreamInfo GetStreamInfoInternal(string streamName, StreamInfoOptions options)
         {
+            byte[] payload = options == null ? null : options.Serialize();
             string subj = string.Format(JetStreamConstants.JsapiStreamInfo, streamName);
-            Msg m = RequestResponseRequired(subj, null, Timeout);
+            Msg m = RequestResponseRequired(subj, payload, Timeout);
             return new StreamInfo(m, true);
         }
 

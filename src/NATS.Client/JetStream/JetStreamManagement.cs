@@ -57,7 +57,13 @@ namespace NATS.Client.JetStream
         public StreamInfo GetStreamInfo(string streamName)
         {
             Validator.ValidateStreamName(streamName, true);
-            return GetStreamInfoInternal(streamName);
+            return GetStreamInfoInternal(streamName, null);
+        }
+
+        public StreamInfo GetStreamInfo(string streamName, StreamInfoOptions options)
+        {
+            Validator.ValidateStreamName(streamName, true);
+            return GetStreamInfoInternal(streamName, options);
         }
 
         public PurgeResponse PurgeStream(string streamName)

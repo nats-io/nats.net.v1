@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 
@@ -24,8 +25,12 @@ namespace NATS.Client.JetStream
         public ulong FirstSeq { get; }
         public ulong LastSeq { get; }
         public long ConsumerCount { get; }
+        public long SubjectCount { get; }
+        public long DeletedCount { get; }
         public DateTime FirstTime { get; }
         public DateTime LastTime { get; }
+        public IList<Subject> Subjects { get; }
+        public IList<ulong> Deleted { get; }
 
         internal static StreamState OptionalInstance(JSONNode streamState)
         {
@@ -39,8 +44,19 @@ namespace NATS.Client.JetStream
             FirstSeq = streamState[ApiConstants.FirstSeq].AsUlong;
             LastSeq = streamState[ApiConstants.LastSeq].AsUlong;
             ConsumerCount = streamState[ApiConstants.ConsumerCount].AsLong;
+            SubjectCount = streamState[ApiConstants.NumSubjects].AsLong;
+            DeletedCount = streamState[ApiConstants.NumDeleted].AsLong;
             FirstTime = JsonUtils.AsDate(streamState[ApiConstants.FirstTs]);
             LastTime = JsonUtils.AsDate(streamState[ApiConstants.LastTs]);
+            Subjects = Subject.OptionalListOf(streamState[ApiConstants.Subjects]);
+
+            Deleted = new List<ulong>();
+            JSONNode.Enumerator e = 
+                streamState[ApiConstants.Deleted].AsArray.GetEnumerator();
+            while (e.MoveNext())
+            {
+                Deleted.Add(e.Current.Value.AsUlong);
+            }                
         }
 
         public override string ToString()
@@ -51,6 +67,8 @@ namespace NATS.Client.JetStream
                    ", FirstSeq=" + FirstSeq +
                    ", LastSeq=" + LastSeq +
                    ", ConsumerCount=" + ConsumerCount +
+                   ", SubjectCount=" + SubjectCount +
+                   ", DeletedCount=" + DeletedCount +
                    ", FirstTime=" + FirstTime +
                    ", LastTime=" + LastTime +
                    '}';

@@ -363,7 +363,7 @@ namespace NATS.Client.JetStream
         
         private string LookupStreamSubject(string stream)
         {
-            StreamInfo si = GetStreamInfoInternal(stream);
+            StreamInfo si = GetStreamInfoInternal(stream, null);
             return si.Config.Subjects.Count == 1 ? si.Config.Subjects[0] : null;
         }
 
