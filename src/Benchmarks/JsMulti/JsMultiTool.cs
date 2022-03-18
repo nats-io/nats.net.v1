@@ -24,7 +24,7 @@ using static JsMulti.Shared.Utils;
 
 namespace JsMulti
 {
-    public class JsMulti
+    public abstract class JsMultiTool
     {
         public static void Main(string[] args)
         {

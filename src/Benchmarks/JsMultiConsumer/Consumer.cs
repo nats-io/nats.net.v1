@@ -13,7 +13,6 @@
 
 using JsMulti;
 using JsMulti.Settings;
-using static JsMulti.JsMulti;
 
 namespace JsMultiConsumer
 {
@@ -29,7 +28,7 @@ namespace JsMultiConsumer
                 .Server(Server)
                 .Subject(Subject)
                 .Action(JsmAction.SubPull) // could be JsmAction.SubPull for example
-                // .LatencyFlag() !!! Not required on consumer, Stats figures it out.
+                // .LatencyFlag() !!! Auto-detected for consumers
                 .Threads(3)
                 .IndividualConnection() // versus shared
                 .ReportFrequency(10000) // report every 10K
@@ -46,7 +45,7 @@ namespace JsMultiConsumer
             // Uncomment when 
             // StreamUtils.SetupStream(Stream, ctx);
 
-            Run(ctx, true, true);
+            JsMultiTool.Run(ctx, true, true);
         }
     }
 }

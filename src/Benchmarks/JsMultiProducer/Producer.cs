@@ -14,7 +14,6 @@
 using JsMulti;
 using JsMulti.Examples;
 using JsMulti.Settings;
-using static JsMulti.JsMulti;
 
 namespace JsMultiProducer
 {
@@ -48,7 +47,7 @@ namespace JsMultiProducer
                 StreamUtils.SetupStream(Stream, ctx);
             }
 
-            Run(ctx, true, true);
+            JsMultiTool.Run(ctx, true, true);
         }
     }
 }
