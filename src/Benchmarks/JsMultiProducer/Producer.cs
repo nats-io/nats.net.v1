@@ -12,8 +12,8 @@
 // limitations under the License.
 
 using JsMulti;
-using JsMulti.Examples;
 using JsMulti.Settings;
+using JsMulti.Shared;
 
 namespace JsMultiProducer
 {
@@ -30,13 +30,15 @@ namespace JsMultiProducer
             Arguments a = Arguments.Instance()
                 .Server(Server)
                 .Subject(Subject)
-                .Action(JsmAction.PubSync) // or JsmAction.PubAsync or JsmAction.PubCore for example
-                .LatencyFlag(LatencyRun)
-                .Threads(3)
-                .IndividualConnection() // versus shared
-                .ReportFrequency(10000) // report every 10K
-                .Jitter(0) // > 0 means use jitter
-                .MessageCount(100_000);
+                .Action(JsmAction.PubSync)  // or JsmAction.PubAsync or JsmAction.PubCore for example
+                .LatencyFlag(LatencyRun)    // tells the code to add latency info to the header.
+                .MessageCount(50_000)       // default is 100_000
+                .PayloadSize(256)           // default is 128
+                .RoundSize(50)              // how often to check Async Publish Acks, default is 100
+                .Threads(3)                 // default is 1
+                .IndividualConnection()     // versus .SharedConnection()
+                .ReportFrequency(5000)      // default is 10_000
+                ;
 
             a.PrintCommandLine();
 

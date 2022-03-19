@@ -150,6 +150,7 @@ namespace JsMulti
             int retriesAvailable = ctx.MaxPubRetries;
             int pubTarget = ctx.GetPubCount(id);
             int published = 0;
+            int unReported = 0;
             while (published < pubTarget) {
                 Jitter(ctx);
                 byte[] payload = ctx.GetPayload();
@@ -157,7 +158,7 @@ namespace JsMulti
                 try {
                     p.Invoke(ctx.Subject, payload);
                     stats.StopAndCount(ctx.PayloadSize);
-                    ReportMaybe(label, ctx, ++published, "Published");
+                    unReported = ReportMaybe(label, ctx, ++published, ++unReported, "Published");
                 }
                 catch (NATSTimeoutException)
                 {
@@ -186,6 +187,7 @@ namespace JsMulti
             int roundCount = 0;
             int pubTarget = ctx.GetPubCount(id);
             int published = 0;
+            int unReported = 0;
             while (published < pubTarget) {
                 if (++roundCount >= ctx.RoundSize) {
                     ProcessFutures(futures, stats);
@@ -196,7 +198,7 @@ namespace JsMulti
                 stats.Start();
                 futures.Add(publisher.Invoke(ctx.Subject, payload));
                 stats.StopAndCount(ctx.PayloadSize);
-                ReportMaybe(label, ctx, ++published, "Published");
+                unReported = ReportMaybe(label, ctx, ++published, ++unReported, "Published");
             }
             Report(label, published, "Completed Publishing");
         }
@@ -250,6 +252,7 @@ namespace JsMulti
             int rcvd = 0;
             Msg lastUnAcked = null;
             int unAckedCount = 0;
+            int unReported = 0;
             string label = ctx.GetLabel(id);
             InterlockedLong counter = ctx.GetSubscribeCounter(ctx.GetSubDurable(id));
             while (counter.Read() < ctx.MessageCount)
@@ -266,13 +269,13 @@ namespace JsMulti
                     if ( (lastUnAcked = AckMaybe(ctx, stats, m, ++unAckedCount)) == null ) {
                         unAckedCount = 0;
                     }
-                    ReportMaybe(label, ctx, ++rcvd, "Messages Read");
+                    unReported = ReportMaybe(label, ctx, ++rcvd, ++unReported, "Messages Read");
                 }
                 catch (NATSTimeoutException)
                 {
                     // normal timeout
                     long hold = stats.Elapsed();
-                    AcceptHoldIfReceivedAny(label, stats, rcvd, hold);
+                    AcceptHoldOnceStarted(label, stats, rcvd, hold);
                 }
             }
             if (lastUnAcked != null) {
@@ -304,23 +307,31 @@ namespace JsMulti
             int rcvd = 0;
             Msg lastUnAcked = null;
             int unAckedCount = 0;
+            int unReported = 0;
             string label = ctx.GetLabel(id);
             InterlockedLong counter = ctx.GetSubscribeCounter(counterKey);
-            while (counter.Read() < ctx.MessageCount) {
+            while (counter.Read() < ctx.MessageCount)
+            {
                 stats.Start();
                 IList<Msg> list = sub.Fetch(ctx.BatchSize, 500);
                 long hold = stats.Elapsed();
                 long received = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                foreach (Msg m in list) {
-                    stats.Count(m, received);
-                    counter.Increment();
-                    if ( (lastUnAcked = AckMaybe(ctx, stats, m, ++unAckedCount)) == null ) {
-                        unAckedCount = 0;
+                int lc = list.Count;
+                if (lc > 0)
+                {
+                    foreach (Msg m in list)
+                    {
+                        stats.Count(m, received);
+                        counter.Increment();
+                        if ((lastUnAcked = AckMaybe(ctx, stats, m, ++unAckedCount)) == null)
+                        {
+                            unAckedCount = 0;
+                        }
                     }
+                    rcvd += lc;
+                    unReported = ReportMaybe(label, ctx, rcvd, unReported + lc, "Messages Read");
                 }
-                rcvd += list.Count;
-                ReportMaybe(label, ctx, rcvd, "Messages Read");
-                AcceptHoldIfReceivedAny(label, stats, rcvd, hold);
+                AcceptHoldOnceStarted(label, stats, rcvd, hold);
             }
             if (lastUnAcked != null) {
                 _ack(stats, lastUnAcked);
@@ -331,7 +342,7 @@ namespace JsMulti
         // ----------------------------------------------------------------------------------------------------
         // Helpers
         // ----------------------------------------------------------------------------------------------------
-        private static void AcceptHoldIfReceivedAny(string label, Stats stats, int rcvd, long hold) {
+        private static void AcceptHoldOnceStarted(string label, Stats stats, int rcvd, long hold) {
             if (rcvd == 0) {
                 Log(label, "Waiting for first message.");
             }
@@ -341,8 +352,10 @@ namespace JsMulti
             }
         }
 
+        // This method returns null if message is acked or policy is None
         private static Msg AckMaybe(Context ctx, Stats stats, Msg m, int unAckedCount) {
-            if (ctx.AckPolicy == AckPolicy.Explicit || ctx.AckAllFrequency < 2) {
+
+            if (ctx.AckPolicy == AckPolicy.Explicit) {
                 _ack(stats, m);
                 return null;
             }
@@ -363,14 +376,16 @@ namespace JsMulti
             stats.Stop();
         }
 
-        private static void Report(string label, int x, String message) {
-            Log(label, message + " " + Stats.Format(x));
+        private static void Report(string label, int total, String message) {
+            Log(label, message + " " + Stats.Format(total));
         }
 
-        private static void ReportMaybe(string label, Context ctx, int x, String message) {
-            if (x > 0 && x % ctx.ReportFrequency == 0) {
-                Report(label, x, message);
+        private static int ReportMaybe(string label, Context ctx, int total, int unReported, String message) {
+            if (unReported >= ctx.ReportFrequency) {
+                Report(label, total, message);
+                return 0; // there are 0 unreported now
             }
+            return unReported;
         }
 
         private static readonly Random Rand = new Random();

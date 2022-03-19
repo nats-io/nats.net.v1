@@ -27,14 +27,14 @@ namespace JsMultiConsumer
             Arguments a = Arguments.Instance()
                 .Server(Server)
                 .Subject(Subject)
-                .Action(JsmAction.SubPull) // could be JsmAction.SubPull for example
-                // .LatencyFlag() !!! Auto-detected for consumers
-                .Threads(3)
-                .IndividualConnection() // versus shared
-                .ReportFrequency(10000) // report every 10K
-                .Jitter(0) // > 0 means use jitter
-                .BatchSize(100)
-                .MessageCount(100_000)
+                .Action(JsmAction.SubPullQueue) // could be JsmAction.SubPull for example
+                .MessageCount(50_000)           // default is 100_000. Consumer needs this to know when to stop.
+                // .AckPolicy(AckPolicy.None)   // default is AckPolicy.Explicit which is the only policy allowed for PULL at the moment
+                // .AckAllFrequency(20)         // for AckPolicy.All how many message to wait before acking, DEFAULT IS 1
+                .BatchSize(20)                  // default is 10, only used with pull subs
+                .Threads(3)                     // default is 1
+                .IndividualConnection()         // versus .SharedConnection()
+                .ReportFrequency(5000)          // default is 10_000
                 ;
 
             a.PrintCommandLine();
@@ -42,7 +42,7 @@ namespace JsMultiConsumer
             Context ctx = new Context(a);
 
             // Consumer sets up the stream for latency (non-normal) runs.
-            // Uncomment when 
+            // Uncomment for latency runs
             // StreamUtils.SetupStream(Stream, ctx);
 
             JsMultiTool.Run(ctx, true, true);

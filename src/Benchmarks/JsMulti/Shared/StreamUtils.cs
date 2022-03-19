@@ -15,13 +15,12 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using JsMulti.Settings;
-using JsMulti.Shared;
 using NATS.Client;
 using NATS.Client.JetStream;
 
-namespace JsMulti.Examples
+namespace JsMulti.Shared
 {
-    public class StreamUtils
+    public abstract class StreamUtils
     {
         public static void SetupStream(string stream, string subject, string server) {
             SetupStream(stream, subject, OptionsFactory.GetOptions(server), OptionsFactory.GetJetStreamOptions());

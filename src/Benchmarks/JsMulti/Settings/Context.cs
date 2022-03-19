@@ -152,7 +152,7 @@ namespace JsMulti.Settings
             bool _latencyFlag = false;
             string _server = Defaults.Url;
             string _optionsFactoryTypeName = null;
-            int _reportFrequency = 1000;
+            int _reportFrequency = 10000;
             string _subject = "sub" + UniqueEnough();
             int _messageCount = 100_000;
             int _threads = 1;
@@ -162,7 +162,7 @@ namespace JsMulti.Settings
             int _roundSize = 100;
             AckPolicy _ackPolicy = AckPolicy.Explicit;
             int _ackAllFrequency = 1;
-            int _batchSize = 50;
+            int _batchSize = 10;
 
             if (args != null && args.Length > 0) {
                 try
@@ -199,7 +199,7 @@ namespace JsMulti.Settings
                                 _payloadSize = AsNumber("payload size", args[++x], 1048576);
                                 break;
                             case "-bs":
-                                _batchSize = AsNumber("batch size", args[++x], 256);
+                                _batchSize = AsNumber("batch size", args[++x], 200);
                                 break;
                             case "-rs":
                                 _roundSize = AsNumber("round size", args[++x], 1000);
@@ -222,7 +222,7 @@ namespace JsMulti.Settings
                                 _ackPolicy = ap.Value;
                                 break;
                             case "-kf":
-                                _ackAllFrequency = AsNumber("ack frequency", args[++x], 256);
+                                _ackAllFrequency = AsNumber("ack frequency", args[++x], 100);
                                 break;
                             case "-rf":
                                 _reportFrequency = AsNumber("report frequency", args[++x], -2);
