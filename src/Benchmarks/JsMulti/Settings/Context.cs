@@ -41,7 +41,6 @@ namespace JsMulti.Settings
         
         // once per context for now
         public readonly string QueueName = "qn" + UniqueEnough();
-        public readonly string QueueDurable = "qd" + UniqueEnough();
 
         // constant now but might change in the future
         public readonly int MaxPubRetries = 10;
@@ -53,6 +52,7 @@ namespace JsMulti.Settings
         private IOptionsFactory _optionsFactory;
         private readonly int[] _perThread;
         private readonly byte[] _payload;
+        private readonly string _subDurableWhenQueue= "qd" + UniqueEnough();
         private readonly ConcurrentDictionary<string, InterlockedLong> _subscribeCounters = new ConcurrentDictionary<string, InterlockedLong>();
 
         public void SetOptionsFactory(IOptionsFactory optionsFactory) {
@@ -71,18 +71,10 @@ namespace JsMulti.Settings
             return _payload;
         }
         
-        private string _subDurable;
         public string GetSubDurable(int durableId) {
             // is a queue, use the same durable
-            if (Action.IsQueue) {
-                if (_subDurable == null) {
-                    _subDurable = "qd" + UniqueEnough();
-                }
-                return _subDurable;
-            }
-
             // not a queue, each durable is unique
-            return "qd" + UniqueEnough() + durableId;
+            return Action.IsQueue ? _subDurableWhenQueue : "dur" + UniqueEnough() + durableId;
         }
         
         public int GetPubCount(int id) {

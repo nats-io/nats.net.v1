@@ -228,7 +228,7 @@ namespace JsMulti
             if (ctx.Action.IsQueue)
             {
                 // if we don't do this, multiple threads will try to make the same consumer because
-                // when they start, the consumer does not exist. So force them do it one at ctx time.
+                // when they start, the consumer does not exist. So force them do it one at a time.
                 lock (QueueLock)
                 {
                     sub = js.PushSubscribeSync(ctx.Subject, ctx.QueueName,
@@ -291,15 +291,21 @@ namespace JsMulti
         {
             IJetStream js = c.CreateJetStreamContext(ctx.GetJetStreamOptions());
             
+            // Really only need to lock when queueing b/c it's the same durable...
+            // To ensure protection from multiple threads trying  make the same consumer because
             string durable = ctx.GetSubDurable(id);
-            IJetStreamPullSubscription sub = js.PullSubscribe(ctx.Subject,
-                ConsumerConfiguration.Builder()
-                    .WithAckPolicy(ctx.AckPolicy)
-                    .WithAckWait(ctx.AckWaitSeconds)
-                    .WithDurable(durable)
-                    .BuildPullSubscribeOptions()
+            IJetStreamPullSubscription sub;
+            lock (QueueLock)
+            {
+                sub = js.PullSubscribe(ctx.Subject,
+                    ConsumerConfiguration.Builder()
+                        .WithAckPolicy(ctx.AckPolicy)
+                        .WithAckWait(ctx.AckWaitSeconds)
+                        .WithDurable(durable)
+                        .BuildPullSubscribeOptions()
                 );
-            
+            }
+
             _subPullFetch(ctx, stats, sub, id, durable);
         }
         
