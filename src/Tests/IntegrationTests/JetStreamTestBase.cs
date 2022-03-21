@@ -46,8 +46,16 @@ namespace IntegrationTests
         // ----------------------------------------------------------------------------------------------------
         // Publish / Read
         // ----------------------------------------------------------------------------------------------------
-        public static void JsPublish(IJetStream js, string subject, string prefix, int count) {
-            for (int x = 1; x <= count; x++) {
+
+        public static void JsPublish(IJetStream js, string subject, string prefix, int count)
+        {
+            JsPublish(js, subject, prefix, 1, count);
+        }
+        
+
+        public static void JsPublish(IJetStream js, string subject, string prefix, int startId, int count) {
+            int end = startId + count - 1;
+            for (int x = startId; x <= end; x++) {
                 string data = prefix + x;
                 js.Publish(new Msg(subject, Encoding.ASCII.GetBytes(data)));
             }

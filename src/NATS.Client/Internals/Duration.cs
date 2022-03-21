@@ -4,11 +4,11 @@ namespace NATS.Client.Internals
 {
     public sealed class Duration
     {
-        const long NanosPerMilli = 1_000_000L;
-        const long NanosPerSecond = 1_000_000_000L;
-        const long NanosPerMinute = NanosPerSecond * 60L;
-        const long NanosPerHour = NanosPerMinute * 60L;
-        const long NanosPerDay = NanosPerHour * 24L;
+        public const long NanosPerMilli = 1_000_000L;
+        public const long NanosPerSecond = 1_000_000_000L;
+        public const long NanosPerMinute = NanosPerSecond * 60L;
+        public const long NanosPerHour = NanosPerMinute * 60L;
+        public const long NanosPerDay = NanosPerHour * 24L;
 
         public static readonly Duration Zero = new Duration(0L);
         public static readonly Duration One = new Duration(1L);

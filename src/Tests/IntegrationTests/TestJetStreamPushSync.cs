@@ -18,7 +18,6 @@ using System.Threading;
 using NATS.Client;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
-using UnitTests;
 using Xunit;
 using Xunit.Abstractions;
 using static UnitTests.TestBase;
@@ -254,25 +253,10 @@ namespace IntegrationTests
                 IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(SUBJECT, options);
                 c.Flush(DefaultTimeout); // flush outgoing communication with/to the server
 
-                // NAK
-                JsPublish(js, SUBJECT, "NAK", 1);
-                
-                Msg m = sub.NextMessage(DefaultTimeout);
-                Assert.NotNull(m);
-                Assert.Equal("NAK1", Encoding.ASCII.GetString(m.Data));
-                m.Nak();
-                
-                m = sub.NextMessage(DefaultTimeout);
-                Assert.NotNull(m);
-                Assert.Equal("NAK1", Encoding.ASCII.GetString(m.Data));
-                m.Ack();
-                
-                AssertNoMoreMessages(sub);
-
                 // TERM
                 JsPublish(js, SUBJECT, "TERM", 1);
 
-                m = sub.NextMessage(DefaultTimeout);
+                Msg m = sub.NextMessage(DefaultTimeout);
                 Assert.NotNull(m);
                 Assert.Equal("TERM1", Encoding.ASCII.GetString(m.Data));
                 m.Term();
@@ -318,6 +302,53 @@ namespace IntegrationTests
                 m.AckSync(DefaultTimeout);
                 
                 AssertNoMoreMessages(sub);
+
+                // NAK
+                JsPublish(js, SUBJECT, "NAK", 1);
+                
+                m = sub.NextMessage(DefaultTimeout);
+                Assert.NotNull(m);
+                Assert.Equal("NAK1", Encoding.ASCII.GetString(m.Data));
+                m.Nak();
+                
+                m = sub.NextMessage(DefaultTimeout);
+                Assert.NotNull(m);
+                Assert.Equal("NAK1", Encoding.ASCII.GetString(m.Data));
+                m.Ack();
+                
+                AssertNoMoreMessages(sub);
+                
+                JsPublish(js, SUBJECT, "NAK", 2, 1);
+
+                m = sub.NextMessage(1000);
+                Assert.NotNull(m);
+                Assert.Equal("NAK2", Encoding.ASCII.GetString(m.Data));
+                m.NakWithDelay(3000);
+
+                Assert.Throws<NATSTimeoutException>(() => sub.NextMessage(500));
+
+                m = sub.NextMessage(3000);
+                Assert.NotNull(m);
+                Assert.Equal("NAK2", Encoding.ASCII.GetString(m.Data));
+                m.Ack();
+
+                Assert.Throws<NATSTimeoutException>(() => sub.NextMessage(500));
+
+                JsPublish(js, SUBJECT, "NAK", 3, 1);
+
+                m = sub.NextMessage(1000);
+                Assert.NotNull(m);
+                Assert.Equal("NAK3", Encoding.ASCII.GetString(m.Data));
+                m.NakWithDelay(Duration.OfSeconds(3)); // coverage to use both nakWithDelay
+
+                Assert.Throws<NATSTimeoutException>(() => sub.NextMessage(500));
+
+                m = sub.NextMessage(3000);
+                Assert.NotNull(m);
+                Assert.Equal("NAK3", Encoding.ASCII.GetString(m.Data));
+                m.Ack();
+
+                Assert.Throws<NATSTimeoutException>(() => sub.NextMessage(500));
             });
         }
 

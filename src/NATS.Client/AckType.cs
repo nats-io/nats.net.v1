@@ -17,18 +17,24 @@ namespace NATS.Client
 {
     public sealed class AckType
     {
-        public static AckType AckAck = new AckType("+ACK");
-        public static AckType AckNak = new AckType("-NAK");
-        public static AckType AckProgress = new AckType("+WPI");
-        public static AckType AckTerm = new AckType("+TERM");
+        public static AckType AckAck = new AckType("+ACK", true);
+        public static AckType AckNak = new AckType("-NAK", true);
+        public static AckType AckProgress = new AckType("+WPI", false);
+        public static AckType AckTerm = new AckType("+TERM", true);
 
         public string Text { get; }
         public byte[] Bytes { get; }
+        public bool IsTerminal { get; }
 
-        public AckType(string text)
+        public AckType(string text, bool terminal)
         {
             Text = text;
             Bytes = Encoding.ASCII.GetBytes(text);
+            IsTerminal = terminal;
+        }
+ 
+        public byte[] BodyBytes(long delayNanoseconds) {
+            return delayNanoseconds < 1 ? Bytes : Encoding.ASCII.GetBytes($"{Text} {{\"delay\": {delayNanoseconds}}}");
         }
     }
 }
