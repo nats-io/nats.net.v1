@@ -708,7 +708,7 @@ The NATS .NET client can throw the following exceptions:
 * NATSProtocolException -  This exception that is thrown when there is an internal error with the NATS protocol.
 * NATSNoServersException - The exception that is thrown when a connection cannot be made to any server.
 * NATSSecureConnRequiredException - The exception that is thrown when a secure connection is required.
-* NATSConnectionClosedException - The exception that is thrown when a an operation is performed on a connection that is closed.
+* NATSConnectionClosedException - The exception that is thrown when an operation is performed on a connection that is closed.
 * NATSSlowConsumerException - The exception that is thrown when a consumer (subscription) is slow.
 * NATSStaleConnectionException - The exception that is thrown when an operation occurs on a connection that has been determined to be stale.
 * NATSMaxPayloadException - The exception that is thrown when a message payload exceeds what the maximum configured.
@@ -764,7 +764,7 @@ previous message ID, or previous sequence number.  These are hints to the server
 it should reject messages where these are not met, primarily for enforcing your ordering
 or ensuring messages are not stored on the wrong stream.
 
-The PublishOptions are immutable, but the builder an be re-used for expectations by clearing the expected.
+The PublishOptions are immutable, but the builder can be re-used for expectations by clearing the expected.
 
 For example:
 
