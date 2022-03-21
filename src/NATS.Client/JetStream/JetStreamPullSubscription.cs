@@ -76,14 +76,9 @@ namespace NATS.Client.JetStream
 
         public IList<Msg> Fetch(int batchSize, int maxWaitMillis)
         {
-            IList<Msg> messages = DrainAlreadyBuffered(batchSize);
+            IList<Msg> messages = new List<Msg>();
+            int batchLeft = batchSize;
             
-            int batchLeft = batchSize - messages.Count;
-            if (batchLeft == 0)
-            {
-                return messages;
-            }
-
             Stopwatch sw = Stopwatch.StartNew();
 
             Duration expires = Duration.OfMillis(
@@ -113,26 +108,6 @@ namespace NATS.Client.JetStream
                 // regular timeout, just end
             }
 
-            return messages;
-        }
-
-        private IList<Msg> DrainAlreadyBuffered(int batchSize) {
-            IList<Msg> messages = new List<Msg>(batchSize);
-            try {
-                Msg msg = NextMessageImpl(1); // shortest non zero wait 
-                while (msg != null) {
-                    if (!_asm.Manage(msg)) { // not managed means JS Message
-                        messages.Add(msg);
-                        if (messages.Count == batchSize) {
-                            return messages;
-                        }
-                    }
-                    msg = NextMessageImpl(1);
-                }
-            }
-            catch (NATSTimeoutException) {
-                // regular timeout, just end
-            }
             return messages;
         }
     }

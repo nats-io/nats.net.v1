@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <Title>NATS JsMulti Consumer</Title>
+        <Description>NATS JetStream Multi Tool Consumer</Description>
+        <IsPackable>false</IsPackable>
+        <RootNamespace>JsMultiConsumer</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\NATS.Client\NATS.Client.csproj" />
+        <ProjectReference Include="..\JsMulti\JsMulti.csproj" />
+    </ItemGroup>
+
+</Project>

@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <Title>NATS JsMulti Producer</Title>
+        <Description>NATS JetStream Multi Tool Producer</Description>
+        <IsPackable>false</IsPackable>
+        <RootNamespace>JsMultiProducer</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\NATS.Client\NATS.Client.csproj" />
+        <ProjectReference Include="..\JsMulti\JsMulti.csproj" />
+    </ItemGroup>
+
+</Project>
