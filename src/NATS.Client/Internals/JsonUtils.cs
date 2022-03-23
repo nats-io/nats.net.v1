@@ -55,6 +55,17 @@ namespace NATS.Client.Internals
             return list;
         }
 
+        internal static List<Duration> DurationList(JSONNode node, string field)
+        {
+            List<Duration> list = new List<Duration>();
+            foreach (var child in node[field].Children)
+            {
+                list.Add(Duration.OfNanos(child.AsLong));
+            }
+           
+            return list;
+        }
+
         internal static List<string> OptionalStringList(JSONNode node, string field)
         {
             List<string> list = StringList(node, field);
@@ -128,7 +139,7 @@ namespace NATS.Client.Internals
                 case null:
                     return name + "=null";
                 case JsonSerializable serializable:
-                    return name + serializable.ToJsonNode().ToString();
+                    return name + serializable.ToJsonNode();
                 default:
                     return o.ToString();
             }
@@ -179,6 +190,19 @@ namespace NATS.Client.Internals
             if (value != null && value == true)
             {
                 o[field] = true;
+            }
+        }
+
+        internal static void AddField(JSONObject o, string field, IList<Duration> values)
+        {
+            if (values != null && values.Count > 0)
+            {
+                JSONArray ja = new JSONArray();
+                foreach (Duration d in values)
+                {
+                    ja.Add(d.Nanos);
+                }
+                o[field] = ja;
             }
         }
     }

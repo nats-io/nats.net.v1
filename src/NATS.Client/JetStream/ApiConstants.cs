@@ -22,6 +22,7 @@ namespace NATS.Client.JetStream
         internal const string AllowRollupHdrs = "allow_rollup_hdrs";
         internal const string Api = "api";
         internal const string AuthRequired = "auth_required";
+        internal const string Backoff = "backoff";
         internal const string Bytes = "bytes";
         internal const string ClientId = "client_id";
         internal const string ClientIp = "client_ip";

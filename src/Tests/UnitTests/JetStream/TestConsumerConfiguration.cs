@@ -50,6 +50,7 @@ namespace UnitTests.JetStream
                 .WithMaxExpires(177)
                 .WithInactiveThreshold(188)
                 .WithHeadersOnly(true)
+                .WithBackoff(1000, 2000, 3000)
                 .Build();
 
             AssertAsBuilt(c, dt);
@@ -113,6 +114,10 @@ namespace UnitTests.JetStream
             Assert.Equal(55, c.MaxBatch);
             Assert.True(c.FlowControl);
             Assert.True(c.HeadersOnly);
+            Assert.Equal(3, c.Backoff.Count);
+            Assert.Equal(Duration.OfSeconds(1), c.Backoff[0]);
+            Assert.Equal(Duration.OfSeconds(2), c.Backoff[1]);
+            Assert.Equal(Duration.OfSeconds(3), c.Backoff[2]);
         }
 
         [Fact]
@@ -143,6 +148,10 @@ namespace UnitTests.JetStream
             Assert.Equal(Duration.OfSeconds(40), c.MaxExpires);
             Assert.Equal(Duration.OfSeconds(50), c.InactiveThreshold);
             Assert.Equal(55, c.MaxBatch);
+            Assert.Equal(3, c.Backoff.Count);
+            Assert.Equal(Duration.OfSeconds(1), c.Backoff[0]);
+            Assert.Equal(Duration.OfSeconds(2), c.Backoff[1]);
+            Assert.Equal(Duration.OfSeconds(3), c.Backoff[2]);
 
             AssertDefaultCc(new ConsumerConfiguration("{}"));
         }
@@ -173,6 +182,7 @@ namespace UnitTests.JetStream
             Assert.Equal(MaxAckPending.Initial, c.MaxAckPending);
             Assert.Equal(MaxPullWaiting.Initial, c.MaxPullWaiting);
             Assert.Equal(MaxBatch.Initial, c.MaxBatch);
+            Assert.Equal(0, c.Backoff.Count);
         }
 
         [Fact]
