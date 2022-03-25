@@ -11,7 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Text;
 using NATS.Client.Internals;
 
 namespace NATS.Client.KeyValue
@@ -71,17 +70,11 @@ namespace NATS.Client.KeyValue
 
         public BucketAndKey(Msg m) : this(m.Subject) {}
 
-        public BucketAndKey(string subject) {
-            string[] split = subject.Split('.');
+        public BucketAndKey(string subject)
+        {
+            string[] split = subject.Split(new[] { '.' }, 3);
             Bucket = split[1];
-            StringBuilder sb = new StringBuilder();
-            for (int x = 2; x < split.Length; x++) {
-                if (x > 2) {
-                    sb.Append('.');
-                }
-                sb.Append(split[x]);
-            }
-            Key = sb.ToString();
+            Key = split[2];
         }
 
         public bool Equals(BucketAndKey other)
