@@ -70,8 +70,9 @@ namespace NATS.Client.KeyValue
 
         public BucketAndKey(Msg m) : this(m.Subject) {}
 
-        public BucketAndKey(string subject) {
-            string[] split = subject.Split('.');
+        public BucketAndKey(string subject)
+        {
+            string[] split = subject.Split(new[] { '.' }, 3);
             Bucket = split[1];
             Key = split[2];
         }

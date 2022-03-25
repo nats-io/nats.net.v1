@@ -383,6 +383,11 @@ namespace IntegrationTests
                 {
                     Assert.True(keys.Contains("k" + x));
                 }
+
+                string keyWithDot = "part1.part2.part3";
+                kv.Put(keyWithDot, "key has dot");
+                KeyValueEntry kve = kv.Get(keyWithDot);
+                Assert.Equal(keyWithDot, kve.Key);
             });
         }
         
