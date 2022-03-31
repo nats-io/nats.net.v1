@@ -353,6 +353,26 @@ namespace NATS.Client
         public virtual void Nak() { /* noop */ }
 
         /// <summary>
+        /// Acknowledges a JetStream message has been received but indicates
+        /// that the message is not completely processed and should be sent
+        /// again later, after at least the delay amount.
+        /// </summary>
+        /// <remarks>
+        /// This is a NOOP for standard NATS messages.
+        /// </remarks>
+        public virtual void NakWithDelay(Duration nakDelay) { /* noop */ }
+
+        /// <summary>
+        /// Acknowledges a JetStream message has been received but indicates
+        /// that the message is not completely processed and should be sent
+        /// again later, after at least the delay amount.
+        /// </summary>
+        /// <remarks>
+        /// This is a NOOP for standard NATS messages.
+        /// </remarks>
+        public virtual void NakWithDelay(long nakDelayMillis) { /* noop */ }
+
+        /// <summary>
         /// Prevents this message from ever being delivered regardless of
         /// maxDeliverCount.
         /// </summary>

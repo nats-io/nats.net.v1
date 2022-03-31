@@ -12,6 +12,8 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 using static NATS.Client.Internals.JsonUtils;
@@ -58,6 +60,7 @@ namespace NATS.Client.JetStream
         public long MaxBatch => CcChangeHelper.MaxBatch.ValueOrInitial(_maxBatch);
         public bool FlowControl => _flowControl ?? false;
         public bool HeadersOnly => _headersOnly ?? false;
+        public IList<Duration> Backoff { get; }
 
         internal ConsumerConfiguration(string json) : this(JSON.Parse(json)) {}
 
@@ -88,6 +91,8 @@ namespace NATS.Client.JetStream
             _maxBatch = CcChangeHelper.MaxBatch.ValueOrInitial(ccNode[ApiConstants.MaxBatch].AsLong);
             _flowControl = ccNode[ApiConstants.FlowControl].AsBool;
             _headersOnly = ccNode[ApiConstants.HeadersOnly].AsBool;
+
+            Backoff = DurationList(ccNode, ApiConstants.Backoff);
         }
 
         private ConsumerConfiguration(ConsumerConfigurationBuilder builder)
@@ -117,6 +122,8 @@ namespace NATS.Client.JetStream
             _maxAckPending = builder._maxAckPending;
             _maxPullWaiting = builder._maxPullWaiting;
             _maxBatch = builder._maxBatch;
+
+            Backoff = builder._backoff;
         }
 
         internal override JSONNode ToJsonNode()
@@ -145,6 +152,7 @@ namespace NATS.Client.JetStream
             AddField(o, ApiConstants.MaxBatch, MaxBatch);
             AddField(o, ApiConstants.MaxExpires, MaxExpires);
             AddField(o, ApiConstants.InactiveThreshold, InactiveThreshold);
+            AddField(o, ApiConstants.Backoff, Backoff);
 
             return o;
         }
@@ -177,6 +185,8 @@ namespace NATS.Client.JetStream
                    || WouldBeChange(SampleFrequency, original.SampleFrequency)
                    || WouldBeChange(DeliverSubject, original.DeliverSubject)
                    || WouldBeChange(DeliverGroup, original.DeliverGroup)
+                   
+                   || !Backoff.SequenceEqual(original.Backoff)
                    ;
 
             // do not need to check Durable because the original is retrieved by the durable name
@@ -235,6 +245,7 @@ namespace NATS.Client.JetStream
             internal long? _maxBatch;
             internal bool? _flowControl;
             internal bool? _headersOnly;
+            internal IList<Duration> _backoff = new List<Duration>();
 
             public ConsumerConfigurationBuilder() {}
 
@@ -267,6 +278,7 @@ namespace NATS.Client.JetStream
                 _maxBatch = cc._maxBatch;
                 _flowControl = cc._flowControl;
                 _headersOnly = cc._headersOnly;
+                _backoff = new List<Duration>(cc.Backoff);
             }
 
             /// <summary>
@@ -556,6 +568,38 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithHeadersOnly(bool? headersOnly) {
                 _headersOnly = headersOnly;
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the list of backoff
+            /// </summary>
+            /// <param name="backoffs">zero or more backoff durations or an array of backoffs</param>
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder WithBackoff(params Duration[] backoffs) {
+                _backoff.Clear();
+                if (backoffs != null) {
+                    foreach (Duration d in backoffs) {
+                        if (d != null) {
+                            _backoff.Add(d);
+                        }
+                    }
+                }
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the list of backoff
+            /// </summary>
+            /// <param name="backoffsMillis">zero or more backoff in millis or an array of backoffsMillis</param>
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder WithBackoff(params long[] backoffsMillis) {
+                _backoff.Clear();
+                if (backoffsMillis != null) {
+                    foreach (long ms in backoffsMillis) {
+                        _backoff.Add(Duration.OfMillis(ms));
+                    }
+                }
                 return this;
             }
 
