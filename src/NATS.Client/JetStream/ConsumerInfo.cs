@@ -31,6 +31,7 @@ namespace NATS.Client.JetStream
         public long NumRedelivered { get; private set; }
         public ClusterInfo ClusterInfo { get; private set; }
         public bool PushBound { get; private set; }
+        public ulong CalculatedPending => NumPending + Delivered.ConsumerSeq;
 
         internal ConsumerInfo(Msg msg, bool throwOnError) : base(msg, throwOnError)
         {

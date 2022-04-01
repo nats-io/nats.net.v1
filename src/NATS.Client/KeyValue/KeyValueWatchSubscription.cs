@@ -85,8 +85,8 @@ namespace NATS.Client.KeyValue
             sub = kv.js.PushSubscribeAsync(subject, handler, false, pso);
             if (endOfDataSent.IsFalse())
             {
-                ConsumerInfo ci = sub.GetConsumerInformation();
-                if (ci.NumPending + ci.Delivered.ConsumerSeq == 0)
+                ulong pending = sub.GetConsumerInformation().CalculatedPending;
+                if (pending == 0)
                 {
                     endOfDataSent.Set(true);
                     watcher.EndOfData();
