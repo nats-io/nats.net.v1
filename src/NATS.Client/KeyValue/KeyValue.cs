@@ -255,24 +255,29 @@ namespace NATS.Client.KeyValue
             IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(subject, pso);
             try
             {
-                int timeout = 5000; // give plenty of time for the first. Also used to quit loop
-                while (timeout > 0)
+                bool lastTimedOut = false;
+                ulong pending = sub.GetConsumerInformation().CalculatedPending;
+                while (pending > 0) // no need to loop if nothing pending
                 {
-                    Msg m = sub.NextMessage(timeout);
-                    action.Invoke(m);
-                    if (m.MetaData.NumPending == 0)
+                    try
                     {
-                        timeout = 0;
+                        Msg m = sub.NextMessage(js.Timeout);
+                        action.Invoke(m);
+                        if (--pending == 0)
+                        {
+                            return;
+                        }
+                        lastTimedOut = false;
                     }
-                    else
+                    catch (NATSTimeoutException)
                     {
-                        timeout = 100; // the rest should come pretty quick
+                        if (lastTimedOut)
+                        {
+                            return; // two timeouts in a row is enough
+                        }
+                        lastTimedOut = true;
                     }
                 }
-            }
-            catch (NATSTimeoutException)
-            {
-                /* no more messages */
             }
             finally
             {
