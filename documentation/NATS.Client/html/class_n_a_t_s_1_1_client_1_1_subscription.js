@@ -26,5 +26,6 @@ var class_n_a_t_s_1_1_client_1_1_subscription =
     [ "PendingMessages", "class_n_a_t_s_1_1_client_1_1_subscription.html#a494e13775d5b71aec4718527f36e14da", null ],
     [ "Queue", "class_n_a_t_s_1_1_client_1_1_subscription.html#ad275b73355ef820f9ce461689170c028", null ],
     [ "QueuedMessageCount", "class_n_a_t_s_1_1_client_1_1_subscription.html#a9ec19bba2b4606d7791a0db697baf962", null ],
+    [ "Sid", "class_n_a_t_s_1_1_client_1_1_subscription.html#ab651dc331ad32947ee5cc61e4d461b3f", null ],
     [ "Subject", "class_n_a_t_s_1_1_client_1_1_subscription.html#a4728f8f2ba13db85387a80c1e224d9b1", null ]
 ];

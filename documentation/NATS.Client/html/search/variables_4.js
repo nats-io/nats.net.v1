@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['length_288',['LENGTH',['../class_n_a_t_s_1_1_client_1_1_n_u_i_d.html#a15f221984d302213ea50080825170f0b',1,'NATS::Client::NUID']]]
+  ['heartbeatalarmeventhandler_0',['HeartbeatAlarmEventHandler',['../class_n_a_t_s_1_1_client_1_1_options.html#aece501bf249fe525470dc4e0aa5a05d5',1,'NATS::Client::Options']]]
 ];
