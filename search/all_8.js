@@ -1,7 +1,21 @@
 var searchData=
 [
-  ['lasterror_69',['LastError',['../class_n_a_t_s_1_1_client_1_1_connection.html#a65d51efdae179e6b5e06ae2a476cb632',1,'NATS.Client.Connection.LastError()'],['../interface_n_a_t_s_1_1_client_1_1_i_connection.html#a97322f6714fe27d8ad10a618cc70b9ea',1,'NATS.Client.IConnection.LastError()'],['../interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a68d8dc5bb51d31ccf178e5b4612924ab',1,'NATS.Client.IEncodedConnection.LastError()']]],
-  ['length_70',['LENGTH',['../class_n_a_t_s_1_1_client_1_1_n_u_i_d.html#a15f221984d302213ea50080825170f0b',1,'NATS.Client.NUID.LENGTH()'],['../class_n_a_t_s_1_1_client_1_1_n_u_i_d.html#ac5607c757e78f5206e4c3498a595790e',1,'NATS.Client.NUID.Length()']]],
-  ['loadnkeypairfromseedfile_71',['LoadNkeyPairFromSeedFile',['../class_n_a_t_s_1_1_client_1_1_default_user_j_w_t_handler.html#a82c674dd9c60ffaba6158ad5a9adfd86',1,'NATS::Client::DefaultUserJWTHandler']]],
-  ['loaduserfromfile_72',['LoadUserFromFile',['../class_n_a_t_s_1_1_client_1_1_default_user_j_w_t_handler.html#a2b18d25c42a39a5858642932f628843f',1,'NATS::Client::DefaultUserJWTHandler']]]
+  ['iasyncsubscription_0',['IAsyncSubscription',['../interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html',1,'NATS::Client']]],
+  ['iconnection_1',['IConnection',['../interface_n_a_t_s_1_1_client_1_1_i_connection.html',1,'NATS::Client']]],
+  ['iencodedconnection_2',['IEncodedConnection',['../interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html',1,'NATS::Client']]],
+  ['inbytes_3',['InBytes',['../interface_n_a_t_s_1_1_client_1_1_i_statistics.html#ad9fbd5ee688b23449991d2a3abc0c7ea',1,'NATS.Client.IStatistics.InBytes()'],['../class_n_a_t_s_1_1_client_1_1_statistics.html#a05c477b2f999fe862739c7c608e83c69',1,'NATS.Client.Statistics.InBytes()']]],
+  ['inmsgs_4',['InMsgs',['../interface_n_a_t_s_1_1_client_1_1_i_statistics.html#a57a64591aa59219d379a8074479d0dbb',1,'NATS.Client.IStatistics.InMsgs()'],['../class_n_a_t_s_1_1_client_1_1_statistics.html#a3ba3c1577ac461228e35c7dab8334a6c',1,'NATS.Client.Statistics.InMsgs()']]],
+  ['inprogress_5',['InProgress',['../class_n_a_t_s_1_1_client_1_1_msg.html#a7e4bc473073e847c7359d480b1e54e3f',1,'NATS::Client::Msg']]],
+  ['instance_6',['Instance',['../class_n_a_t_s_1_1_client_1_1_n_u_i_d.html#a1a90d871c96ce5d107eb7184485a5dc8',1,'NATS::Client::NUID']]],
+  ['isclosed_7',['IsClosed',['../class_n_a_t_s_1_1_client_1_1_connection.html#a82c6a5418690cd31523488593f443914',1,'NATS.Client.Connection.IsClosed()'],['../interface_n_a_t_s_1_1_client_1_1_i_connection.html#a8bccbc575b9550dd6ef9788866b4e47d',1,'NATS.Client.IConnection.IsClosed()'],['../interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a27ee1b7405f0e47b1cf55fbc00cbdd0c',1,'NATS.Client.IEncodedConnection.IsClosed()']]],
+  ['isdraining_8',['IsDraining',['../class_n_a_t_s_1_1_client_1_1_connection.html#a0628d9794ec3d041b038938ae99b1479',1,'NATS.Client.Connection.IsDraining()'],['../interface_n_a_t_s_1_1_client_1_1_i_connection.html#aa1a9a2ee8b7fb39353df8ad2364968d2',1,'NATS.Client.IConnection.IsDraining()'],['../interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a66e26ffe9344a89337de274500cc3147',1,'NATS.Client.IEncodedConnection.IsDraining()']]],
+  ['isjetstream_9',['IsJetStream',['../class_n_a_t_s_1_1_client_1_1_msg.html#afe2bf9957efe5c8276738d1d31c2d5c8',1,'NATS::Client::Msg']]],
+  ['isreconnecting_10',['IsReconnecting',['../class_n_a_t_s_1_1_client_1_1_connection.html#a2cbd1e9a0f4826bae4881f8a39bcbb53',1,'NATS.Client.Connection.IsReconnecting()'],['../interface_n_a_t_s_1_1_client_1_1_i_connection.html#a1db8ce32ddc16c9efa1680960005f09b',1,'NATS.Client.IConnection.IsReconnecting()'],['../interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a54788b57a510ed37103c61d956c0ce18',1,'NATS.Client.IEncodedConnection.IsReconnecting()']]],
+  ['istatistics_11',['IStatistics',['../interface_n_a_t_s_1_1_client_1_1_i_statistics.html',1,'NATS::Client']]],
+  ['isubscription_12',['ISubscription',['../interface_n_a_t_s_1_1_client_1_1_i_subscription.html',1,'NATS::Client']]],
+  ['isvalid_13',['IsValid',['../interface_n_a_t_s_1_1_client_1_1_i_subscription.html#a91c05cbdf2710acf1388bfe998107e86',1,'NATS.Client.ISubscription.IsValid()'],['../class_n_a_t_s_1_1_client_1_1_subscription.html#a3042e77473ff789028999d7e23df3862',1,'NATS.Client.Subscription.IsValid()']]],
+  ['isvalidprefix_14',['IsValidPrefix',['../class_n_a_t_s_1_1_client_1_1_subscription.html#ac0cc6bdb6eb0aa3e19d4334ed9d81a96',1,'NATS::Client::Subscription']]],
+  ['isvalidqueuegroupname_15',['IsValidQueueGroupName',['../class_n_a_t_s_1_1_client_1_1_subscription.html#a14d528fcda7d699d6ba65ae520b3cf77',1,'NATS::Client::Subscription']]],
+  ['isvalidsubject_16',['IsValidSubject',['../class_n_a_t_s_1_1_client_1_1_subscription.html#a01c2c267d8bf14af09b3a332e6d2568c',1,'NATS::Client::Subscription']]],
+  ['isyncsubscription_17',['ISyncSubscription',['../interface_n_a_t_s_1_1_client_1_1_i_sync_subscription.html',1,'NATS::Client']]]
 ];

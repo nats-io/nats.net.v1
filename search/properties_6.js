@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['lasterror_323',['LastError',['../class_n_a_t_s_1_1_client_1_1_connection.html#a65d51efdae179e6b5e06ae2a476cb632',1,'NATS.Client.Connection.LastError()'],['../interface_n_a_t_s_1_1_client_1_1_i_connection.html#a97322f6714fe27d8ad10a618cc70b9ea',1,'NATS.Client.IConnection.LastError()'],['../interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a68d8dc5bb51d31ccf178e5b4612924ab',1,'NATS.Client.IEncodedConnection.LastError()']]],
-  ['length_324',['Length',['../class_n_a_t_s_1_1_client_1_1_n_u_i_d.html#ac5607c757e78f5206e4c3498a595790e',1,'NATS::Client::NUID']]]
+  ['jwt_0',['JWT',['../class_n_a_t_s_1_1_client_1_1_user_j_w_t_event_args.html#adc3e6533214653597882e79df9da3358',1,'NATS::Client::UserJWTEventArgs']]],
+  ['jwtfile_1',['JwtFile',['../class_n_a_t_s_1_1_client_1_1_default_user_j_w_t_handler.html#a1c87ce0f0a671472ee98d0290fc7772a',1,'NATS::Client::DefaultUserJWTHandler']]]
 ];
