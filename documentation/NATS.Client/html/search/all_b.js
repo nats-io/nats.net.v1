@@ -1,9 +1,10 @@
 var searchData=
 [
-  ['ondeserialize_111',['OnDeserialize',['../class_n_a_t_s_1_1_client_1_1_encoded_connection.html#a6f128fa28130fc52f739739fed3674c0',1,'NATS.Client.EncodedConnection.OnDeserialize()'],['../interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#aa6d6bc072879cb6c16f8d41c4c88363e',1,'NATS.Client.IEncodedConnection.OnDeserialize()']]],
-  ['onserialize_112',['OnSerialize',['../class_n_a_t_s_1_1_client_1_1_encoded_connection.html#a86cc212cdb89b9fbfab6b508815a0f6f',1,'NATS.Client.EncodedConnection.OnSerialize()'],['../interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a3e64691276294278de10a0f32565c8bb',1,'NATS.Client.IEncodedConnection.OnSerialize()']]],
-  ['options_113',['Options',['../class_n_a_t_s_1_1_client_1_1_options.html',1,'NATS::Client']]],
-  ['opts_114',['Opts',['../class_n_a_t_s_1_1_client_1_1_connection.html#a4295576ae98eb4762b02256dd51f0bcd',1,'NATS.Client.Connection.Opts()'],['../interface_n_a_t_s_1_1_client_1_1_i_connection.html#a902a736d0c779192923eb6ec0519153a',1,'NATS.Client.IConnection.Opts()'],['../interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a383b84724bf37abfc69bd04065133efb',1,'NATS.Client.IEncodedConnection.Opts()']]],
-  ['outbytes_115',['OutBytes',['../interface_n_a_t_s_1_1_client_1_1_i_statistics.html#a86182b8145c3178ef1babac226fdb912',1,'NATS.Client.IStatistics.OutBytes()'],['../class_n_a_t_s_1_1_client_1_1_statistics.html#a4b6011dbbb64f5262b83f4eaea55e834',1,'NATS.Client.Statistics.OutBytes()']]],
-  ['outmsgs_116',['OutMsgs',['../interface_n_a_t_s_1_1_client_1_1_i_statistics.html#a6338566315b5d0f8099a4ec37db65360',1,'NATS.Client.IStatistics.OutMsgs()'],['../class_n_a_t_s_1_1_client_1_1_statistics.html#af35f62b148cc439f953f4dd5b5707175',1,'NATS.Client.Statistics.OutMsgs()']]]
+  ['lameduckmodeeventhandler_0',['LameDuckModeEventHandler',['../class_n_a_t_s_1_1_client_1_1_options.html#a61c548501826dd70834ad49511acf07f',1,'NATS::Client::Options']]],
+  ['lastack_1',['LastAck',['../class_n_a_t_s_1_1_client_1_1_msg.html#a76df369c3442de7dcc1fd38db1539d0c',1,'NATS::Client::Msg']]],
+  ['lasterror_2',['LastError',['../class_n_a_t_s_1_1_client_1_1_connection.html#a65d51efdae179e6b5e06ae2a476cb632',1,'NATS.Client.Connection.LastError()'],['../interface_n_a_t_s_1_1_client_1_1_i_connection.html#a97322f6714fe27d8ad10a618cc70b9ea',1,'NATS.Client.IConnection.LastError()'],['../interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a68d8dc5bb51d31ccf178e5b4612924ab',1,'NATS.Client.IEncodedConnection.LastError()']]],
+  ['length_3',['Length',['../class_n_a_t_s_1_1_client_1_1_n_u_i_d.html#ac5607c757e78f5206e4c3498a595790e',1,'NATS::Client::NUID']]],
+  ['length_4',['LENGTH',['../class_n_a_t_s_1_1_client_1_1_n_u_i_d.html#a15f221984d302213ea50080825170f0b',1,'NATS::Client::NUID']]],
+  ['loadnkeypairfromseedfile_5',['LoadNkeyPairFromSeedFile',['../class_n_a_t_s_1_1_client_1_1_default_user_j_w_t_handler.html#a82c674dd9c60ffaba6158ad5a9adfd86',1,'NATS::Client::DefaultUserJWTHandler']]],
+  ['loaduserfromfile_6',['LoadUserFromFile',['../class_n_a_t_s_1_1_client_1_1_default_user_j_w_t_handler.html#a2b18d25c42a39a5858642932f628843f',1,'NATS::Client::DefaultUserJWTHandler']]]
 ];
