@@ -19,6 +19,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NATS.Client;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IntegrationTests
 {
@@ -28,7 +29,12 @@ namespace IntegrationTests
     [Collection(DefaultSuiteContext.CollectionKey)]
     public class TestBasic : TestSuite<DefaultSuiteContext>
     {
-        public TestBasic(DefaultSuiteContext context) : base(context) { }
+        private readonly ITestOutputHelper _outputHelper;
+
+        public TestBasic(DefaultSuiteContext context, ITestOutputHelper outputHelper) : base(context)
+        {
+            _outputHelper = outputHelper;
+        }
 
         [Fact]
         public void TestConnectedServer()
@@ -1649,20 +1655,25 @@ namespace IntegrationTests
                               s6 = NATSServer.Create(Context.Server6.Port, $"-a localhost --cluster nats://127.0.0.1:{Context.ClusterServer6.Port} --routes nats://127.0.0.1:{Context.ClusterServer1.Port}"),
                               s7 = NATSServer.Create(Context.Server7.Port, $"-a localhost --cluster nats://127.0.0.1:{Context.ClusterServer7.Port} --routes nats://127.0.0.1:{Context.ClusterServer1.Port}"))
             {
+                _outputHelper.WriteLine("Created servers");
                 var opts = Context.GetTestOptions(Context.Server3.Port);
                 opts.NoRandomize = false;
 
                 using (var c = Context.ConnectionFactory.CreateConnection(opts))
                 {
+                    _outputHelper.WriteLine("Created connection");
                     Assert.True(assureClusterFormed(c, 7),
                         "Incomplete cluster with server count: " + c.Servers.Length);
                     c.Close();
+                    _outputHelper.WriteLine("Closed connection");
                 }
+                _outputHelper.WriteLine("Disposed connection");
 
                 // Create a new connection to start from scratch, and recieve 
                 // the entire server list at once.
                 using (var c = Context.ConnectionFactory.CreateConnection(opts))
                 {
+                    _outputHelper.WriteLine("Created connection");
                     Assert.True(assureClusterFormed(c, 7),
                         "Incomplete cluster with server count: " + c.Servers.Length);
 
@@ -1670,6 +1681,7 @@ namespace IntegrationTests
                     {
                         using (var c2 = Context.ConnectionFactory.CreateConnection(opts))
                         {
+                            _outputHelper.WriteLine($"Created connection {i}");
                             Assert.True(assureClusterFormed(c, 7),
                                 "Incomplete cluster with server count: " + c.Servers.Length);
 
@@ -1677,11 +1689,15 @@ namespace IntegrationTests
                             Assert.Equal(c.Servers[0], c2.Servers[0]);
 
                             c2.Close();
+                            _outputHelper.WriteLine($"Closed connection {i}");
                         }
+                        _outputHelper.WriteLine($"Disposed connection {i}");
                     }
 
                     c.Close();
+                    _outputHelper.WriteLine("Closed connection");
                 }
+                _outputHelper.WriteLine("Disposed connection");
             }
         }
 
