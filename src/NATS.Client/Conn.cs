@@ -20,6 +20,7 @@ using System.IO;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
@@ -37,7 +38,7 @@ namespace NATS.Client
     /// <summary>
     /// State of the <see cref="IConnection"/>.
     /// </summary>
-    public enum ConnState
+    public enum ConnState : int
     {
         /// <summary>
         /// The <see cref="IConnection"/> is disconnected.
@@ -2877,7 +2878,7 @@ namespace NATS.Client
 
         protected Msg request(string subject, byte[] headers, byte[] data, int offset, int count, int timeout) => requestSync(subject, headers, data, offset, count, timeout);
 
-        private void RemoveOutstandingRequest(string requestId)
+        private void RemoveOutstandingRequestSynchronized(string requestId)
         {
             _mutex.Wait();
             try
@@ -2895,7 +2896,7 @@ namespace NATS.Client
             return m != null && m.HasStatus && m.Status.IsNoResponders();
         }
 
-        private void RequestResponseHandler(object sender, MsgHandlerEventArgs args)
+        private void RequestResponseHandlerSynchronized(object sender, MsgHandlerEventArgs args)
         {
             InFlightRequest request;
             bool isClosed;
@@ -2963,13 +2964,13 @@ namespace NATS.Client
             request.Dispose();
         }
 
-        private InFlightRequest setupRequest(int timeout, CancellationToken token)
+        private InFlightRequest setupRequestSynchronized(int timeout, CancellationToken token)
         {
             var requestId = Interlocked.Increment(ref nextRequestId);
             if (requestId < 0) //Check if recycled
                 requestId = (requestId + long.MaxValue + 1);
 
-            var request = new InFlightRequest(requestId.ToString(CultureInfo.InvariantCulture), token, timeout, RemoveOutstandingRequest);
+            var request = new InFlightRequest(requestId.ToString(CultureInfo.InvariantCulture), token, timeout, RemoveOutstandingRequestSynchronized);
             request.Waiter.Task.ContinueWith(t => GC.KeepAlive(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
 
             _mutex.Wait();
@@ -2984,7 +2985,7 @@ namespace NATS.Client
 
                 if (globalRequestSubscription == null)
                     globalRequestSubscription = subscribeAsyncUnsynchronized(string.Concat(globalRequestInbox, ".*"), null,
-                        RequestResponseHandler);
+                        RequestResponseHandlerSynchronized);
             }
             finally
             {
@@ -3012,7 +3013,7 @@ namespace NATS.Client
             else
             {
 
-                using (var request = setupRequest(timeout, CancellationToken.None))
+                using (var request = setupRequestSynchronized(timeout, CancellationToken.None))
                 {
                     request.Token.ThrowIfCancellationRequested();
 
@@ -3044,7 +3045,7 @@ namespace NATS.Client
             if (opts.UseOldRequestStyle)
                 return await oldRequestAsync(subject, headers, data, offset, count, timeout, token).ConfigureAwait(false);
 
-            using (var request = setupRequest(timeout, token))
+            using (var request = setupRequestSynchronized(timeout, token))
             {
                 request.Token.ThrowIfCancellationRequested();
 
@@ -3059,7 +3060,7 @@ namespace NATS.Client
         {
             var inbox = NewInbox();
 
-            using (var s = subscribeSync(inbox, null))
+            using (var s = subscribeSyncSynchronized(inbox, null))
             {
                 s.AutoUnsubscribe(1);
 
@@ -3305,7 +3306,7 @@ namespace NATS.Client
                 // An async subscriber would be easier, but creates 
                 // yet another task internally.  The cost is it could
                 // take up to CANCEL_IVL ms to cancel.
-                SyncSubscription s = subscribeSync(inbox, null);
+                SyncSubscription s = subscribeSyncSynchronized(inbox, null);
                 s.AutoUnsubscribe(1);
 
                 publish(subject, inbox, headers, data, offset, count, true);
@@ -3781,7 +3782,7 @@ namespace NATS.Client
             return prefix + _nuid.GetNext();
         }
 
-        internal void sendSubscriptionMessage(AsyncSubscription s)
+        internal void sendSubscriptionMessageSynchronized(AsyncSubscription s)
         {
             _mutex.Wait();
             try
@@ -3907,7 +3908,7 @@ namespace NATS.Client
 
         // subscribe is the internal subscribe 
         // function that indicates interest in a subject.
-        internal SyncSubscription subscribeSync(string subject, string queue,
+        internal SyncSubscription subscribeSyncSynchronized(string subject, string queue,
             CreateSyncSubscriptionDelegate createSyncSubscriptionDelegate = null)
         {
             if (!Subscription.IsValidSubject(subject))
@@ -3966,7 +3967,7 @@ namespace NATS.Client
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public ISyncSubscription SubscribeSync(string subject)
         {
-            return subscribeSync(subject, null);
+            return subscribeSyncSynchronized(subject, null);
         }
 
         /// <summary>
@@ -4024,7 +4025,7 @@ namespace NATS.Client
         /// the given queue group.</returns>
         public ISyncSubscription SubscribeSync(string subject, string queue)
         {
-            return subscribeSync(subject, queue);
+            return subscribeSyncSynchronized(subject, queue);
         }
 
         /// <summary>
@@ -4786,16 +4787,9 @@ namespace NATS.Client
 
         private bool isReconnecting()
         {
-            // TODO: Can this be avoided?
-            _mutex.Wait();
-            try
-            {
-                return (status == ConnState.RECONNECTING);
-            }
-            finally
-            {
-                _mutex.Release(1);
-            }
+            // NOTE: Always called under a lock, also atomic read.
+            //       Could use volatile read to keep half fence.
+            return status == ConnState.RECONNECTING;
         }
 
         // Test if Conn is connected or connecting.

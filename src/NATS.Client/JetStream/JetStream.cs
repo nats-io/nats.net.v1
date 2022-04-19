@@ -293,7 +293,7 @@ namespace NATS.Client.JetStream
                     return new JetStreamPullSubscription(lConn, lSubject, asm, this, stream, consumerName, inboxDeliver);
                 }
 
-                sub = ((Connection)Conn).subscribeSync(inboxDeliver, queueName, CreateSubDelegate);
+                sub = ((Connection)Conn).subscribeSyncSynchronized(inboxDeliver, queueName, CreateSubDelegate);
             }
             else if (userHandler == null) {
                 SyncSubscription CreateSubDelegate(Connection lConn, string lSubject, string lQueue)
@@ -301,7 +301,7 @@ namespace NATS.Client.JetStream
                     return new JetStreamPushSyncSubscription(lConn, lSubject, lQueue, asm, this, stream, consumerName, inboxDeliver);
                 }
                 
-                sub = ((Connection)Conn).subscribeSync(inboxDeliver, queueName, CreateSubDelegate); 
+                sub = ((Connection)Conn).subscribeSyncSynchronized(inboxDeliver, queueName, CreateSubDelegate); 
             }
             else
             {

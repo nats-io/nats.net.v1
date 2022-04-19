@@ -164,7 +164,7 @@ namespace NATS.Client
                 if (conn == null)
                     throw new NATSBadSubscriptionException();
 
-                conn.sendSubscriptionMessage(this);
+                conn.sendSubscriptionMessageSynchronized(this);
                 enableAsyncProcessing();
             }
         }
