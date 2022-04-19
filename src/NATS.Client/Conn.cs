@@ -20,6 +20,7 @@ using System.IO;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
+using System.Runtime.ExceptionServices;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -818,7 +819,7 @@ namespace NATS.Client
         // createConn will connect to the server and wrap the appropriate
         // bufio structures. It will do the right thing when an existing
         // connection is in place.
-        private bool createConn(Srv s, out Exception ex)
+        private bool createConnUnsynchronized(Srv s, out Exception ex)
         {
             ex = null;
             try
@@ -1000,6 +1001,7 @@ namespace NATS.Client
                     if (status != ConnState.CONNECTED)
                         return null;
 
+                    // TODO: Another usage of url...
                     return url.OriginalString;
                 }
                 finally
@@ -1046,6 +1048,7 @@ namespace NATS.Client
         {
             get
             {
+                // TODO: Replace with normal read, potentially volatile
                 _mutex.Wait();
                 try
                 {
@@ -1066,6 +1069,7 @@ namespace NATS.Client
         {
             get
             {
+                // TODO: Replace with normal read, potentially volatile
                 _mutex.Wait();
                 try
                 {
@@ -1089,6 +1093,7 @@ namespace NATS.Client
         {
             get
             {
+                // TODO: Replace with normal read, potentially volatile
                 _mutex.Wait();
                 try
                 {
@@ -1175,7 +1180,7 @@ namespace NATS.Client
                 TaskScheduler.Default);
         }
 
-        internal bool connect(Srv s, out Exception exToThrow)
+        internal bool connectSynchronized(Srv s, out Exception exToThrow)
         {
             url = s.url;
             try
@@ -1192,7 +1197,7 @@ namespace NATS.Client
                         try
                         {
 
-                            if (!createConn(s, out exToThrow))
+                            if (!createConnUnsynchronized(s, out exToThrow))
                                 return false;
 
                             processConnectInitUnsynchronized(s);
@@ -1225,7 +1230,7 @@ namespace NATS.Client
             catch (Exception ex)
             {
                 exToThrow = ex;
-                close(ConnState.DISCONNECTED, false, ex);
+                closeSynchronized(ConnState.DISCONNECTED, false, ex);
 
                 // TODO: Connection.url looks suspicious, I think it might be
                 //       better to store the current URL in a field of SrvPool
@@ -1245,16 +1250,17 @@ namespace NATS.Client
             return false;
         }
 
-        internal void connect()
+        internal void connectSynchronized()
         {
             Exception exToThrow = null;
 
             setupServerPool();
 
             srvPool.ConnectToAServer((s) => {
-                return connect(s, out exToThrow);
+                return connectSynchronized(s, out exToThrow);
             });
 
+            
             _mutex.Wait();
             try
             {
@@ -1705,7 +1711,7 @@ namespace NATS.Client
                     try
                     {
                         // try to create a new connection
-                        if (!createConn(cur, out lastEx))
+                        if (!createConnUnsynchronized(cur, out lastEx))
                             continue;
                     }
                     catch (Exception)
@@ -2545,7 +2551,7 @@ namespace NATS.Client
                     _mutex.Release(1);
                 }
 
-                close(ConnState.CLOSED, invokeDelegates, ex);
+                closeSynchronized(ConnState.CLOSED, invokeDelegates, ex);
             }
         }
 
@@ -4329,7 +4335,7 @@ namespace NATS.Client
         // desired status. Also controls whether user defined callbacks
         // will be triggered. The lock should not be held entering this
         // function. This function will handle the locking manually.
-        private void close(ConnState closeState, bool invokeDelegates, Exception error = null)
+        private void closeSynchronized(ConnState closeState, bool invokeDelegates, Exception error = null)
         {
             // TODO: Why do the lock twice here?
             _mutex.Wait();
@@ -4448,7 +4454,7 @@ namespace NATS.Client
         /// <seealso cref="State"/>
         public void Close()
         {
-            close(ConnState.CLOSED, true, lastEx);
+            closeSynchronized(ConnState.CLOSED, true, lastEx);
             callbackScheduler.ScheduleStop();
             disableSubChannelPooling();
         }

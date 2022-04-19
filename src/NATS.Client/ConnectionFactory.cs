@@ -168,7 +168,7 @@ namespace NATS.Client
             Connection nc = new Connection(opts);
             try
             {
-                nc.connect();
+                nc.connectSynchronized();
             }
             catch (Exception)
             {
@@ -230,7 +230,7 @@ namespace NATS.Client
             EncodedConnection nc = new EncodedConnection(opts);
             try
             {
-                nc.connect();
+                nc.connectSynchronized();
             }
             catch (Exception)
             {
