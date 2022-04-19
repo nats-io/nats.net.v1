@@ -20,8 +20,6 @@ using System.IO;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
-using System.Runtime.CompilerServices;
-using System.Runtime.ExceptionServices;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -353,7 +351,7 @@ namespace NATS.Client
             ///     Client code
             ///          ->NetworkStream/SslStream (srvStream)
             ///              ->TCPClient (srvClient);
-            /// 
+            // NOTE: I think mu could be remove entirely
             object        mu        = new object();
             TcpClient     client    = null;
             NetworkStream stream    = null;
