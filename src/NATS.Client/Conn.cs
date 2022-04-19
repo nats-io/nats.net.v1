@@ -102,9 +102,7 @@ namespace NATS.Client
     {
         Statistics stats = new Statistics();
 
-        // NOTE: We aren't using Mutex here to support enterprises using
-        // .NET 4.0.
-        private readonly object mu = new Object();
+        private readonly SemaphoreSlim _mutex = new SemaphoreSlim(1, 1);
 
         private readonly Nuid _nuid = new Nuid();
 
@@ -695,7 +693,9 @@ namespace NATS.Client
         /// </returns>
         internal Channel<Msg> getMessageChannel()
         {
-            lock (mu)
+
+            _mutex.Wait();
+            try
             {
                 if (opts.subscriberDeliveryTaskCount > 0 && subChannelPool == null)
                 {
@@ -707,6 +707,10 @@ namespace NATS.Client
                 {
                     return subChannelPool.getChannel();
                 }
+            }
+            finally
+            {
+                _mutex.Release(1);
             }
 
             return null;
@@ -883,7 +887,8 @@ namespace NATS.Client
 
         private void pingTimerCallback(object state)
         {
-            lock (mu)
+            _mutex.Wait();
+            try
             {
                 if (status != ConnState.CONNECTED)
                 {
@@ -906,6 +911,10 @@ namespace NATS.Client
                 {
                     ptmr.Change(Opts.PingInterval, Timeout.Infinite);
                 }
+            }
+            finally
+            {
+                _mutex.Release(1);
             }
         }
 
@@ -986,12 +995,17 @@ namespace NATS.Client
         {
             get
             {
-                lock (mu)
+                _mutex.Wait();
+                try
                 {
                     if (status != ConnState.CONNECTED)
                         return null;
 
                     return url.OriginalString;
+                }
+                finally
+                {
+                    _mutex.Release(1);
                 }
             }
         }
@@ -1008,9 +1022,14 @@ namespace NATS.Client
             get
             {
                 string clientIp;
-                lock (mu)
+                _mutex.Wait();
+                try
                 {
                     clientIp = info.ClientIp;
+                }
+                finally
+                {
+                    _mutex.Release(1);
                 }
                 
                 return !String.IsNullOrEmpty(clientIp) ? IPAddress.Parse(clientIp) : null;
@@ -1028,9 +1047,14 @@ namespace NATS.Client
         {
             get
             {
-                lock (mu)
+                _mutex.Wait();
+                try
                 {
                     return info.ClientId;
+                }
+                finally
+                {
+                    _mutex.Release(1);
                 }
             }
         }
@@ -1043,12 +1067,17 @@ namespace NATS.Client
         {
             get
             {
-                lock (mu)
+                _mutex.Wait();
+                try
                 {
                     if (status != ConnState.CONNECTED)
                         return IC._EMPTY_;
 
                     return this.info.ServerId;
+                }
+                finally
+                {
+                    _mutex.Release(1);
                 }
             }
         }
@@ -1061,9 +1090,14 @@ namespace NATS.Client
         {
             get
             {
-                lock (mu)
+                _mutex.Wait();
+                try
                 {
                     return status == ConnState.CONNECTED ? info : null;
+                }
+                finally
+                {
+                    _mutex.Release(1);
                 }
             }
         }
@@ -1080,10 +1114,9 @@ namespace NATS.Client
         {
             get
             {
-                lock (mu)
-                {
-                    return srvPool.GetServerList(false);
-                }
+                // NOTE: ServerPool appears to is designed to be thread safe.
+                //       No need to lock here.
+                return srvPool.GetServerList(false);
             }
         }
 
@@ -1098,10 +1131,9 @@ namespace NATS.Client
         {
             get
             {
-                lock (mu)
-                {
-                    return srvPool.GetServerList(true);
-                }
+                // NOTE: ServerPool appears to is designed to be thread safe.
+                //       No need to lock here.
+                return srvPool.GetServerList(true);
             }
         }
 
@@ -1157,8 +1189,10 @@ namespace NATS.Client
                 {
                     try
                     {
-                        lock (mu)
+                        _mutex.Wait();
+                        try
                         {
+
                             if (!createConn(s, out exToThrow))
                                 return false;
 
@@ -1166,6 +1200,10 @@ namespace NATS.Client
                             exToThrow = null;
 
                             return true;
+                        }
+                        finally
+                        {
+                            _mutex.Release(1);
                         }
                     }
                     catch (NATSConnectionException ex)
@@ -1189,9 +1227,19 @@ namespace NATS.Client
             {
                 exToThrow = ex;
                 close(ConnState.DISCONNECTED, false, ex);
-                lock (mu)
+
+                // TODO: Connection.url looks suspicious, I think it might be
+                //       better to store the current URL in a field of SrvPool
+                //       and synchronize there if feasible.
+                //       Access to it isn't always guarded.
+                _mutex.Wait();
+                try
                 {
                     url = null;
+                }
+                finally
+                {
+                    _mutex.Release(1);
                 }
             }
 
@@ -1208,7 +1256,8 @@ namespace NATS.Client
                 return connect(s, out exToThrow);
             });
 
-            lock (mu)
+            _mutex.Wait();
+            try
             {
                 if (status != ConnState.CONNECTED)
                 {
@@ -1218,6 +1267,10 @@ namespace NATS.Client
                         throw new NATSConnectionException("Failed to connect", exToThrow);
                     throw new NATSNoServersException("Unable to connect to a server.");
                 }
+            }
+            finally
+            {
+                _mutex.Release(1);
             }
         }
 
@@ -1297,9 +1350,14 @@ namespace NATS.Client
 
         private void sendProto(byte[] value, int length)
         {
-            lock (mu)
+            _mutex.Wait();
+            try
             {
                 bw.Write(value, 0, length);
+            }
+            finally
+            {
+                _mutex.Release(1);
             }
         }
 
@@ -1490,7 +1548,8 @@ namespace NATS.Client
         // The lock should not be held on entering this function.
         private void processReconnect()
         {
-            lock (mu)
+            _mutex.Wait();
+            try
             {
                 // If we are already in the proper state, just return.
                 if (isReconnecting())
@@ -1511,13 +1570,14 @@ namespace NATS.Client
                 pending = new MemoryStream();
                 bw = new BufferedStream(pending);
 
-                Thread t = new Thread(() =>
-                {
-                    doReconnect();
-                });
+                Thread t = new Thread(() => { doReconnect(); });
                 t.IsBackground = true;
                 t.Name = generateThreadName("Reconnect");
                 t.Start();
+            }
+            finally
+            {
+                _mutex.Release(1);
             }
         }
 
@@ -1594,56 +1654,58 @@ namespace NATS.Client
             // outstanding flush points (pongs) and they were not
             // sent out, but are still in the pipe.
 
-            // Hold manually release where needed below.
 
-            var lockWasTaken = false;
+            Srv cur;
+            int wlf = 0;
+            bool doSleep = false;
 
+            //Monitor.Enter(mu, ref lockWasTaken);
+            Exception errorForHandler = null;
+            _mutex.Wait();
             try
             {
-                Monitor.Enter(mu, ref lockWasTaken);
-
                 //Keep ref to any error before clearing.
-                var errorForHandler = lastEx;
+                errorForHandler = lastEx;
+                lastEx = null;
+            }
+            finally
+            {
+                _mutex.Release();
+            }
+
+            scheduleConnEvent(Opts.DisconnectedEventHandlerOrDefault, errorForHandler);
+
+            while ((cur = srvPool.SelectNextServer(Opts.MaxReconnect)) != null)
+            {
+                // check if we've been through the list
+                if (cur == srvPool.First())
+                {
+                    doSleep = (wlf != 0);
+                    wlf++;
+                }
+                else
+                {
+                    doSleep = false;
+                }
+
+                url = cur.url;
                 lastEx = null;
 
-                scheduleConnEvent(Opts.DisconnectedEventHandlerOrDefault, errorForHandler);
-
-                Srv cur;
-                int wlf = 0;
-                bool doSleep = false;
-                while ((cur = srvPool.SelectNextServer(Opts.MaxReconnect)) != null)
+                if (doSleep)
                 {
-                    // check if we've been through the list
-                    if (cur == srvPool.First())
+                    try
                     {
-                        doSleep = (wlf != 0);
-                        wlf++;
+                        opts?.ReconnectDelayHandler(this, new ReconnectDelayEventArgs(wlf - 1));
                     }
-                    else
+                    catch
                     {
-                        doSleep = false;
-                    }
+                    } // swallow user exceptions
+                }
 
-                    url = cur.url;
-                    lastEx = null;
-
-                    if (lockWasTaken)
-                    {
-                        Monitor.Exit(mu);
-                        lockWasTaken = false;
-                    }
-
-                    if (doSleep)
-                    {
-                        try
-                        {
-                            opts?.ReconnectDelayHandler(this, new ReconnectDelayEventArgs(wlf - 1));
-                        }
-                        catch { } // swallow user exceptions
-                    }
-
-                    Monitor.Enter(mu, ref lockWasTaken);
-
+                // Monitor.Enter(mu, ref lockWasTaken);
+                _mutex.Wait();
+                try
+                {
                     if (isClosed())
                         break;
 
@@ -1652,7 +1714,7 @@ namespace NATS.Client
                     try
                     {
                         // try to create a new connection
-                        if(!createConn(cur, out lastEx))
+                        if (!createConn(cur, out lastEx))
                             continue;
                     }
                     catch (Exception)
@@ -1697,42 +1759,34 @@ namespace NATS.Client
                     status = ConnState.CONNECTED;
 
                     scheduleConnEvent(Opts.ReconnectedEventHandlerOrDefault);
-
-                    // Release lock here, we will return below
-                    if (lockWasTaken)
-                    {
-                        Monitor.Exit(mu);
-                        lockWasTaken = false;
-                    }
-
-                    // Make sure to flush everything
-                    // We have a corner case where the server we just
-                    // connected to has failed as well - let the reader
-                    // thread detect this and spawn another reconnect 
-                    // thread to simplify locking.
-                    try
-                    {
-                        Flush();
-                    }
-                    catch
-                    {
-                        // ignored
-                    }
-
-                    return;
+                }
+                finally
+                {
+                    _mutex.Release(1);
                 }
 
-                // Call into close.. we have no more servers left..
-                if (lastEx == null)
-                    lastEx = new NATSNoServersException("Unable to reconnect");
+                // Make sure to flush everything
+                // We have a corner case where the server we just
+                // connected to has failed as well - let the reader
+                // thread detect this and spawn another reconnect 
+                // thread to simplify locking.
+                try
+                {
+                    Flush();
+                }
+                catch
+                {
+                    // ignored
+                }
 
-                Close();
+                return;
             }
-            finally
-            {
-                if(lockWasTaken)
-                    Monitor.Exit(mu);
-            }
+
+            // Call into close.. we have no more servers left..
+            if (lastEx == null)
+                lastEx = new NATSNoServersException("Unable to reconnect");
+
+            Close();
         }
 
         private bool isConnecting()
@@ -1744,7 +1798,8 @@ namespace NATS.Client
         {
             bool disconnected = false;
 
-            lock (mu)
+            _mutex.Wait();
+            try
             {
                 if (isConnecting() || isClosed() || isReconnecting())
                 {
@@ -1761,6 +1816,10 @@ namespace NATS.Client
                     disconnected = true;
                     lastEx = e;
                 }
+            }
+            finally
+            {
+                _mutex.Release(1);
             }
 
             if (disconnected)
@@ -1817,9 +1876,16 @@ namespace NATS.Client
         internal void deliverMsgs(Channel<Msg> ch)
         {
             int batchSize;
-            lock (mu)
+            
+            // TODO: I don't see why this is necessary
+            _mutex.Wait();
+            try
             {
                 batchSize = opts.subscriptionBatchSize;
+            }
+            finally
+            {
+                _mutex.Release(1);
             }
 
             // dispatch buffer
@@ -1845,9 +1911,14 @@ namespace NATS.Client
                     mm[ii] = null; // do not hold onto the Msg any longer than we need to
                     if (!m.sub.processMsg(m))
                     {
-                        lock (mu)
+                        _mutex.Wait();
+                        try
                         {
                             removeSub(m.sub);
+                        }
+                        finally
+                        {
+                            _mutex.Release(1);
                         }
                     }
                 }
@@ -2192,7 +2263,8 @@ namespace NATS.Client
             bool maxReached = false;
             Subscription s;
 
-            lock (mu)
+            _mutex.Wait();
+            try
             {
                 stats.inMsgs++;
                 stats.inBytes += length;
@@ -2216,8 +2288,11 @@ namespace NATS.Client
 
                 if (maxReached)
                     removeSub(s);
-
-            } // lock conn.mu
+            }
+            finally
+            {
+                _mutex.Release(1);
+            }
         }
 
         // processSlowConsumer will set SlowConsumer state and fire the
@@ -2303,7 +2378,8 @@ namespace NATS.Client
                 if (val == false)
                     return;
 
-                lock (mu)
+                _mutex.Wait();
+                try
                 {
                     if (!isConnected())
                         return;
@@ -2314,8 +2390,15 @@ namespace NATS.Client
                         {
                             bw.Flush();
                         }
-                        catch (Exception) {  /* ignore */ }
+                        catch (Exception)
+                        {
+                            /* ignore */
+                        }
                     }
+                }
+                finally
+                {
+                    _mutex.Release(1);
                 }
 
                 // Yield for a millisecond.  This reduces resource contention,
@@ -2391,9 +2474,14 @@ namespace NATS.Client
 
         internal void processAsyncInfo(byte[] jsonBytes, int length)
         {
-            lock (mu)
-            {
+            _mutex.Wait();
+            try
+            { 
                 processInfo(Encoding.UTF8.GetString(jsonBytes, 0, length), true);
+            }
+            finally
+            {
+                _mutex.Release(1);
             }
         }
 
@@ -2432,7 +2520,8 @@ namespace NATS.Client
             else
             {
                 ex = new NATSException("Error from processErr(): " + s);
-                lock (mu)
+                _mutex.Wait();
+                try
                 {
                     lastEx = ex;
 
@@ -2440,6 +2529,10 @@ namespace NATS.Client
                     {
                         invokeDelegates = true;
                     }
+                }
+                finally
+                {
+                    _mutex.Release(1);
                 }
 
                 close(ConnState.CLOSED, invokeDelegates, ex);
@@ -2571,7 +2664,8 @@ namespace NATS.Client
                 throw new ArgumentException("Invalid offset and count for supplied data");
             }
 
-            lock (mu)
+            _mutex.Wait();
+            try
             {
                 if (isClosed())
                     throw new NATSConnectionClosedException();
@@ -2599,6 +2693,7 @@ namespace NATS.Client
                     {
                         throw new NATSNotSupportedException("Headers are not supported by the server.");
                     }
+
                     WriteHPUBProto(pubProtoBuf, subject, reply, headers.Length, count, out protoLen, out protoOffset);
                 }
                 else
@@ -2653,6 +2748,10 @@ namespace NATS.Client
                 {
                     kickFlusher();
                 }
+            }
+            finally
+            {
+                _mutex.Release(1);
             }
 
         } // publish
@@ -2764,9 +2863,14 @@ namespace NATS.Client
 
         private void RemoveOutstandingRequest(string requestId)
         {
-            lock (mu)
+            _mutex.Wait();
+            try
             {
                 waitingRequests.Remove(requestId);
+            }
+            finally
+            {
+                _mutex.Release(1);
             }
         }
 
@@ -2785,7 +2889,8 @@ namespace NATS.Client
 
             var subject = args.Message.Subject;
 
-            lock (mu)
+            _mutex.Wait();
+            try
             {
                 // if it's a typical response, process normally.
                 if (subject.StartsWith(globalRequestInbox))
@@ -2818,6 +2923,10 @@ namespace NATS.Client
 
                 isClosed = this.isClosed();
             }
+            finally
+            {
+                _mutex.Release(1);
+            }
 
             if (!isClosed)
             {
@@ -2834,6 +2943,7 @@ namespace NATS.Client
             {
                 request.Waiter.TrySetCanceled();
             }
+
             request.Dispose();
         }
 
@@ -2846,7 +2956,8 @@ namespace NATS.Client
             var request = new InFlightRequest(requestId.ToString(CultureInfo.InvariantCulture), token, timeout, RemoveOutstandingRequest);
             request.Waiter.Task.ContinueWith(t => GC.KeepAlive(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
 
-            lock (mu)
+            _mutex.Wait();
+            try
             {
                 // We shouldn't ever get an Argument exception because the ID is incrementing
                 // and since this is performant sensitive code, skipping an existence check.
@@ -2858,6 +2969,10 @@ namespace NATS.Client
                 if (globalRequestSubscription == null)
                     globalRequestSubscription = subscribeAsync(string.Concat(globalRequestInbox, ".*"), null,
                         RequestResponseHandler);
+            }
+            finally
+            {
+                _mutex.Release(1);
             }
 
             return request;
@@ -3652,7 +3767,8 @@ namespace NATS.Client
 
         internal void sendSubscriptionMessage(AsyncSubscription s)
         {
-            lock (mu)
+            _mutex.Wait();
+            try
             {
                 // We will send these for all subs when we reconnect
                 // so that we can suppress here.
@@ -3661,6 +3777,10 @@ namespace NATS.Client
                     writeString(IC.subProto, s.Subject, s.Queue, s.sid.ToNumericString());
                     kickFlusher();
                 }
+            }
+            finally
+            {
+                _mutex.Release(1);
             }
         }
 
@@ -3704,6 +3824,7 @@ namespace NATS.Client
             {
                 throw new NATSBadSubscriptionException("Invalid subject.");
             }
+
             if (queue != null && !Subscription.IsValidQueueGroupName(queue))
             {
                 throw new NATSBadSubscriptionException("Invalid queue group name.");
@@ -3711,7 +3832,8 @@ namespace NATS.Client
 
             AsyncSubscription s = null;
 
-            lock (mu)
+            _mutex.Wait();
+            try
             {
                 if (isClosed())
                     throw new NATSConnectionClosedException();
@@ -3720,7 +3842,7 @@ namespace NATS.Client
 
                 enableSubChannelPooling();
 
-                s = createAsyncSubscriptionDelegate == null 
+                s = createAsyncSubscriptionDelegate == null
                     ? new AsyncSubscription(this, subject, queue)
                     : createAsyncSubscriptionDelegate(this, subject, queue);
 
@@ -3732,19 +3854,24 @@ namespace NATS.Client
                     s.Start();
                 }
             }
+            finally
+            {
+                _mutex.Release(1);
+            }
 
             return s;
         }
-        
+
         // subscribe is the internal subscribe 
         // function that indicates interest in a subject.
-        internal SyncSubscription subscribeSync(string subject, string queue, 
+        internal SyncSubscription subscribeSync(string subject, string queue,
             CreateSyncSubscriptionDelegate createSyncSubscriptionDelegate = null)
         {
             if (!Subscription.IsValidSubject(subject))
             {
                 throw new NATSBadSubscriptionException("Invalid subject.");
             }
+
             if (queue != null && !Subscription.IsValidQueueGroupName(queue))
             {
                 throw new NATSBadSubscriptionException("Invalid queue group name.");
@@ -3752,15 +3879,16 @@ namespace NATS.Client
 
             SyncSubscription s = null;
 
-            lock (mu)
+            _mutex.Wait();
+            try
             {
                 if (isClosed())
                     throw new NATSConnectionClosedException();
                 if (IsDraining())
                     throw new NATSConnectionDrainingException();
 
-                s = createSyncSubscriptionDelegate == null 
-                    ? new SyncSubscription(this, subject, queue) 
+                s = createSyncSubscriptionDelegate == null
+                    ? new SyncSubscription(this, subject, queue)
                     : createSyncSubscriptionDelegate(this, subject, queue);
 
                 addSubscription(s);
@@ -3771,6 +3899,10 @@ namespace NATS.Client
                 {
                     writeString(IC.subProto, subject, queue, s.sid.ToNumericString());
                 }
+            }
+            finally
+            {
+                _mutex.Release(1);
             }
 
             kickFlusher();
@@ -3901,8 +4033,9 @@ namespace NATS.Client
         internal Task unsubscribe(Subscription sub, int max, bool drain, int timeout)
         {
             var task = CompletedTask.Get();
-            
-            lock (mu)
+
+            _mutex.Wait();
+            try
             {
                 if (isClosed())
                     throw new NATSConnectionClosedException();
@@ -3928,7 +4061,10 @@ namespace NATS.Client
                 // so that we can supress here.
                 if (!isReconnecting())
                     writeString(IC.unsubProto, s.sid.ToNumericString(), max.ToNumericString());
-
+            }
+            finally
+            {
+                _mutex.Release(1);
             }
 
             kickFlusher();
@@ -3938,9 +4074,14 @@ namespace NATS.Client
 
         internal void removeSubSafe(Subscription s)
         {
-            lock (mu)
+            _mutex.Wait();
+            try
             {
                 removeSub(s);
+            }
+            finally
+            {
+                _mutex.Release(1);
             }
         }
 
@@ -4030,12 +4171,17 @@ namespace NATS.Client
 
             try
             {
-                lock (mu)
+                _mutex.Wait();
+                try
                 {
                     if (isClosed())
                         throw new NATSConnectionClosedException();
 
                     sendPing(ch);
+                }
+                finally
+                {
+                    _mutex.Release(1);
                 }
 
                 bool rv = ch.get(timeout);
@@ -4089,13 +4235,18 @@ namespace NATS.Client
         /// request. See <see cref="Exception.InnerException"/> for more details.</exception>
         public void FlushBuffer()
         {
-            lock (mu)
+            _mutex.Wait();
+            try
             {
                 if (isClosed())
                     throw new NATSConnectionClosedException();
 
                 if (status == ConnState.CONNECTED)
                     bw.Flush();
+            }
+            finally
+            {
+                _mutex.Release(1);
             }
         }
 
@@ -4125,16 +4276,15 @@ namespace NATS.Client
 
         // Clears any in-flight requests by cancelling them all
         // Caller must lock
-        private void clearPendingRequestCalls()
+        private void clearPendingRequestCallsUnsynchronized()
         {
-            lock (mu)
+            // NOTE: The lock here was unnecessary, comment even says so.
+            foreach (var request in waitingRequests)
             {
-                foreach (var request in waitingRequests)
-                {
-                    request.Value.Waiter.TrySetCanceled();
-                }
-                waitingRequests.Clear();
+                request.Value.Waiter.TrySetCanceled();
             }
+
+            waitingRequests.Clear();
         }
 
 
@@ -4144,7 +4294,10 @@ namespace NATS.Client
         // function. This function will handle the locking manually.
         private void close(ConnState closeState, bool invokeDelegates, Exception error = null)
         {
-            lock (mu)
+            // TODO: Why do the lock twice here?
+            _mutex.Wait();
+
+            try
             {
                 if (isClosed())
                 {
@@ -4158,8 +4311,13 @@ namespace NATS.Client
                 // fch will be closed on finalizer
                 kickFlusher();
             }
+            finally
+            {
+                _mutex.Release(1);
+            }
 
-            lock (mu)
+            _mutex.Wait();
+            try
             {
                 // Clear any queued pongs, e.g. pending flush calls.
                 clearPendingFlushCalls();
@@ -4167,7 +4325,7 @@ namespace NATS.Client
                     pending.Dispose();
 
                 // Clear any pending request calls
-                clearPendingRequestCalls();
+                clearPendingRequestCallsUnsynchronized();
 
                 stopPingTimer();
 
@@ -4239,6 +4397,10 @@ namespace NATS.Client
 
                 status = closeState;
             }
+            finally
+            {
+                _mutex.Release(1);
+            }
         }
 
         /// <summary>
@@ -4270,9 +4432,15 @@ namespace NATS.Client
         /// <seealso cref="State"/>
         public bool IsClosed()
         {
-            lock (mu)
+            // TODO: Can this be avoided?
+            _mutex.Wait();
+            try
             {
                 return isClosed();
+            }
+            finally
+            {
+                _mutex.Release(1);
             }
         }
 
@@ -4309,10 +4477,15 @@ namespace NATS.Client
 
                 if (c == null || closed || pMsgs == 0)
                 {
-                    lock (mu)
+                    _mutex.Wait();
+                    try
                     {
                         removeSub(s);
                         return;
+                    }
+                    finally
+                    {
+                        _mutex.Release(1);
                     }
                 }
 
@@ -4341,7 +4514,8 @@ namespace NATS.Client
             ICollection<Subscription> lsubs = null;
             bool timedOut = false;
 
-            lock (mu)
+            _mutex.Wait();
+            try
             {
                 if (isClosed())
                     throw new NATSConnectionClosedException();
@@ -4352,6 +4526,10 @@ namespace NATS.Client
 
                 lsubs = subs.Values;
                 status = ConnState.DRAINING_SUBS;
+            }
+            finally
+            {
+                _mutex.Release(1);
             }
 
             Task[] tasks = new Task[lsubs.Count];
@@ -4377,9 +4555,15 @@ namespace NATS.Client
             }
 
             // flip state
-            lock (mu)
+            // TODO: Can this be avoided?
+            _mutex.Wait();
+            try
             {
                 status = ConnState.DRAINING_PUBS;
+            }
+            finally
+            {
+                _mutex.Release(1);
             }
 
             try
@@ -4499,9 +4683,15 @@ namespace NATS.Client
         /// <seealso cref="State"/>
         public bool IsDraining()
         {
-            lock (mu)
+            // TODO: Can this be avoided?
+            _mutex.Wait();
+            try
             {
                 return (status == ConnState.DRAINING_SUBS || status == ConnState.DRAINING_PUBS);
+            }
+            finally
+            {
+                _mutex.Release(1);
             }
         }
 
@@ -4514,9 +4704,14 @@ namespace NATS.Client
         /// <seealso cref="State"/>
         public bool IsReconnecting()
         {
-            lock (mu)
+            _mutex.Wait();
+            try
             {
                 return isReconnecting();
+            }
+            finally
+            {
+                _mutex.Release(1);
             }
         }
 
@@ -4528,9 +4723,15 @@ namespace NATS.Client
         {
             get
             {
-                lock (mu)
+                // TODO: Can this be avoided?
+                _mutex.Wait();
+                try
                 {
                     return status;
+                }
+                finally
+                {
+                    _mutex.Release(1);
                 }
             }
         }
@@ -4542,9 +4743,15 @@ namespace NATS.Client
 
         private bool isReconnecting()
         {
-            lock (mu)
+            // TODO: Can this be avoided?
+            _mutex.Wait();
+            try
             {
                 return (status == ConnState.RECONNECTING);
+            }
+            finally
+            {
+                _mutex.Release(1);
             }
         }
 
@@ -4562,9 +4769,14 @@ namespace NATS.Client
         {
             get
             {
-                lock (mu)
+                _mutex.Wait();
+                try
                 {
                     return new Statistics(this.stats);
+                }
+                finally
+                {
+                    _mutex.Release(1);
                 }
             }
         }
@@ -4575,9 +4787,15 @@ namespace NATS.Client
         /// <seealso cref="Stats"/>
         public void ResetStats()
         {
-            lock (mu)
+            // TODO: Can this be avoided?
+            _mutex.Wait();
+            try
             {
                 stats.clear();
+            }
+            finally
+            {
+                _mutex.Release(1);
             }
         }
 
@@ -4598,9 +4816,15 @@ namespace NATS.Client
         {
             get
             {
-                lock (mu)
+                // TODO: Can this be avoided?
+                _mutex.Wait();
+                try
                 {
                     return info.MaxPayload;
+                }
+                finally
+                {
+                    _mutex.Release(1);
                 }
             }
         }
