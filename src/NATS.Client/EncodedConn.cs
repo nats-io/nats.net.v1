@@ -402,7 +402,7 @@ namespace NATS.Client
 
         // when our base (Connection) removes a subscriber, clean up
         // our references to the encoded handler wrapper.
-        internal override void removeSub(Subscription s)
+        internal override void removeSubUnsynchronized(Subscription s)
         {
             // The subscription may not be present - request reply uses
             // a sync subscription which won't be added to the wrappers.
@@ -411,7 +411,7 @@ namespace NATS.Client
                 wrappers.Remove(s);
             }
 
-            base.removeSub(s);
+            base.removeSubUnsynchronized(s);
         }
 
         /// <summary>

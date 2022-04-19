@@ -128,7 +128,7 @@ namespace NATS.Client
             started = true;
         }
 
-        private void doAsyncProcessing() => conn.deliverMsgs(mch);
+        private void doAsyncProcessing() => conn.deliverMsgsSynchronized(mch);
 
         internal void disableAsyncProcessing()
         {

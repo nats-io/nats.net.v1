@@ -623,7 +623,7 @@ namespace NATS.Client
 
                 internal Channel<Msg> Channel { get; }
 
-                private void DeliverMessages() => connection.deliverMsgs(Channel);
+                private void DeliverMessages() => connection.deliverMsgsSynchronized(Channel);
 
                 public void Dispose()
                 {
@@ -1353,7 +1353,7 @@ namespace NATS.Client
             bw.Write(sendBytes, 0, sendBytes.Length);
         }
 
-        private void sendProto(byte[] value, int length)
+        private void sendProtoSynchronized(byte[] value, int length)
         {
             _mutex.Wait();
             try
@@ -1889,7 +1889,7 @@ namespace NATS.Client
 
         // deliverMsgs waits on the delivery channel shared with readLoop and processMsg.
         // It is used to deliver messages to asynchronous subscribers.
-        internal void deliverMsgs(Channel<Msg> ch)
+        internal void deliverMsgsSynchronized(Channel<Msg> ch)
         {
             int batchSize;
             
@@ -1930,7 +1930,7 @@ namespace NATS.Client
                         _mutex.Wait();
                         try
                         {
-                            removeSub(m.sub);
+                            removeSubUnsynchronized(m.sub);
                         }
                         finally
                         {
@@ -2274,7 +2274,7 @@ namespace NATS.Client
         // appropriate channel for processing. All subscribers have their
         // their own channel. If the channel is full, the connection is
         // considered a slow subscriber.
-        internal void processMsg(byte[] msgBytes, long length)
+        internal void processMsgSynchronized(byte[] msgBytes, long length)
         {
             bool maxReached = false;
             Subscription s;
@@ -2303,7 +2303,7 @@ namespace NATS.Client
                 } // lock s.mu
 
                 if (maxReached)
-                    removeSub(s);
+                    removeSubUnsynchronized(s);
             }
             finally
             {
@@ -2427,7 +2427,7 @@ namespace NATS.Client
         // server. The server uses this mechanism to detect dead clients.
         internal void processPing()
         {
-            sendProto(PONG_P_BYTES, PONG_P_BYTES_LEN);
+            sendProtoSynchronized(PONG_P_BYTES, PONG_P_BYTES_LEN);
         }
 
         // processPong is used to process responses to the client's ping
@@ -4092,7 +4092,7 @@ namespace NATS.Client
                 }
                 else if (drain == false)
                 {
-                    removeSub(s);
+                    removeSubUnsynchronized(s);
                 }
 
                 if (drain)
@@ -4120,7 +4120,7 @@ namespace NATS.Client
             _mutex.Wait();
             try
             {
-                removeSub(s);
+                removeSubUnsynchronized(s);
             }
             finally
             {
@@ -4129,7 +4129,7 @@ namespace NATS.Client
         }
 
         // caller must lock
-        internal virtual void removeSub(Subscription s)
+        internal virtual void removeSubUnsynchronized(Subscription s)
         {
             subs.Remove(s.sid);
             if (s.mch != null)
@@ -4523,7 +4523,7 @@ namespace NATS.Client
                     _mutex.Wait();
                     try
                     {
-                        removeSub(s);
+                        removeSubUnsynchronized(s);
                         return;
                     }
                     finally
