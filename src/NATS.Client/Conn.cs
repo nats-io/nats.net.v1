@@ -689,23 +689,13 @@ namespace NATS.Client
         /// Gets an available message channel for use with async subscribers.  It will
         /// setup the message channel pool if configured to do so.
         /// </summary>
+        /// <remarks>
+        /// Callers must wait on <see cref="_mutex"/>.
+        /// </remarks>
         /// <returns>
         /// A channel for use, null if configuration dictates not to use the 
         /// channel pool.
         /// </returns>
-        internal Channel<Msg> getMessageChannelSynchronized()
-        {
-            _mutex.Wait();
-            try
-            {
-                return getMessageChannelUnsynchronized();
-            }
-            finally
-            {
-                _mutex.Release(1);
-            }
-        }
-
         internal Channel<Msg> getMessageChannelUnsynchronized()
         {
             if (opts.subscriberDeliveryTaskCount > 0 && subChannelPool == null)

@@ -23,7 +23,7 @@ namespace NATS.Client.JetStream
 
         internal JetStreamPushAsyncSubscription(Connection conn, string subject, string queue,
             IAutoStatusManager asm, JetStream js, string stream, string consumer, string deliver)
-            : base(conn, subject, queue, conn.getMessageChannelSynchronized())
+            : base(conn, subject, queue, conn.getMessageChannelUnsynchronized())
         {
             _asm = asm;
             Context = js;
