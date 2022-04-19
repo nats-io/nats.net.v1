@@ -3828,12 +3828,6 @@ namespace NATS.Client
         internal delegate SyncSubscription CreateSyncSubscriptionDelegate(Connection conn, string subject, string queue);
         internal delegate AsyncSubscription CreateAsyncSubscriptionDelegate(Connection conn, string subject, string queue);
 
-        
-        // NOTE: NOT Synchronized when called from JetStream.*
-        // NOTE: NOT Synchronized when called from EncodedConnection.*
-        // NOTE: NOT Synchronized when called from Connection.SubscribeAsync()
-        // NOTE: NOT Synchronized when called from Connection.subscribeAsync()
-        // NOTE: Synchronized when called from setupRequest(int, CancellationToken)
         internal AsyncSubscription subscribeAsyncSynchronized(string subject, string queue,
             EventHandler<MsgHandlerEventArgs> handler, CreateAsyncSubscriptionDelegate createAsyncSubscriptionDelegate = null)
         {
@@ -3846,7 +3840,6 @@ namespace NATS.Client
             {
                 throw new NATSBadSubscriptionException("Invalid queue group name.");
             }
-
 
             _mutex.Wait();
             try
