@@ -3782,18 +3782,22 @@ namespace NATS.Client
             return prefix + _nuid.GetNext();
         }
 
+        internal void sendSubscriptionMessageUnsynchronized(AsyncSubscription s)
+        {
+            // We will send these for all subs when we reconnect
+            // so that we can suppress here.
+            if (!isReconnecting())
+            {
+                writeString(IC.subProto, s.Subject, s.Queue, s.sid.ToNumericString());
+                kickFlusher();
+            }
+        }
         internal void sendSubscriptionMessageSynchronized(AsyncSubscription s)
         {
             _mutex.Wait();
             try
             {
-                // We will send these for all subs when we reconnect
-                // so that we can suppress here.
-                if (!isReconnecting())
-                {
-                    writeString(IC.subProto, s.Subject, s.Queue, s.sid.ToNumericString());
-                    kickFlusher();
-                }
+                sendSubscriptionMessageUnsynchronized(s);
             }
             finally
             {
@@ -3879,7 +3883,7 @@ namespace NATS.Client
             }
 
 
-            return subscribeAsyncCore(subject, queue, handler, createAsyncSubscriptionDelegate, getMessageChannelSynchronized());
+            return subscribeAsyncCore(subject, queue, handler, createAsyncSubscriptionDelegate, getMessageChannelUnsynchronized());
         }
 
 
@@ -3900,7 +3904,7 @@ namespace NATS.Client
             if (handler != null)
             {
                 s.MessageHandler += handler;
-                s.Start();
+                s.StartUnsynchronized();
             }
 
             return s;

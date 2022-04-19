@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -156,6 +157,16 @@ namespace NATS.Client
         /// for this <see cref="AsyncSubscription"/>.</exception>
         public void Start()
         {
+            StartCore(callerHoldsLock: false);
+        }
+
+        internal void StartUnsynchronized()
+        {
+            StartCore(callerHoldsLock: true);
+        }
+        
+        private void StartCore(bool callerHoldsLock)
+        {
             if (started)
                 return;
 
@@ -164,7 +175,14 @@ namespace NATS.Client
                 if (conn == null)
                     throw new NATSBadSubscriptionException();
 
-                conn.sendSubscriptionMessageSynchronized(this);
+                if (callerHoldsLock)
+                {
+                    conn.sendSubscriptionMessageUnsynchronized(this);
+                }
+                else
+                {
+                    conn.sendSubscriptionMessageSynchronized(this);
+                }
                 enableAsyncProcessing();
             }
         }
