@@ -125,7 +125,7 @@ namespace NATS.Client
                 if (d == localMax)
                 {
                     // Remove subscription if we have reached max.
-                    localConn.removeSubSafe(this);
+                    localConn.removeSubSynchronized(this);
                 }
 
                 if (localMax > 0 && d > localMax)

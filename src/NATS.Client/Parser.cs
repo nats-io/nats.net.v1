@@ -236,7 +236,7 @@ namespace NATS.Client
                         int  msgSize  = conn.msgArgs.size;
                         if (msgSize == 0)
                         {
-                            conn.processMsg(msgBufBase, msgSize);
+                            conn.processMsgSynchronized(msgBufBase, msgSize);
                             state = MSG_END;
                         }
                         else
@@ -255,7 +255,7 @@ namespace NATS.Client
 
                             if ((position + writeLen) >= msgSize)
                             {
-                                conn.processMsg(msgBufBase, msgSize);
+                                conn.processMsgSynchronized(msgBufBase, msgSize);
                                 msgBufStream.Position = 0;
                                 state = MSG_END;
                             }
@@ -371,7 +371,7 @@ namespace NATS.Client
                             case '\r':
                                 break;
                             case '\n':
-                                conn.processErr(argBufStream);
+                                conn.processErrSynchronized(argBufStream);
                                 argBufStream.Position = 0;
                                 state = OP_START;
                                 break;

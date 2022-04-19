@@ -272,7 +272,7 @@ namespace NATS.Client
                 return;
             }
 
-            c.unsubscribe(this, 0, false, 0);
+            c.unsubscribeSynchronized(this, 0, false, 0);
         }
 
         /// <summary>
@@ -314,7 +314,7 @@ namespace NATS.Client
                 c = conn;
             }
 
-            c.unsubscribe(this, max, false, 0);
+            c.unsubscribeSynchronized(this, max, false, 0);
         }
 
         /// <summary>
@@ -608,7 +608,7 @@ namespace NATS.Client
                 c = conn;
             }
 
-            return c.unsubscribe(this, 0, true, timeout);
+            return c.unsubscribeSynchronized(this, 0, true, timeout);
         }
 
         public Task DrainAsync()

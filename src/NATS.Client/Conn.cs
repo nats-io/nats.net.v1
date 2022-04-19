@@ -763,7 +763,7 @@ namespace NATS.Client
         // Ensures that pubProtoBuf is appropriately sized for the given
         // subject and reply.
         // Caller must lock.
-        private void ensurePublishProtocolBuffer(string subject, string reply)
+        private void ensurePublishProtocolBufferUnsynchronized(string subject, string reply)
         {
             // Publish protocol buffer sizing:
             //
@@ -975,7 +975,7 @@ namespace NATS.Client
             ManualResetEvent flusherStartEvent = new ManualResetEvent(false);
             t = new Thread(() => {
                 flusherStartEvent.Set();
-                flusher();
+                flusherSynchronized();
             });
             t.IsBackground = true;
             t.Start();
@@ -2379,7 +2379,7 @@ namespace NATS.Client
 
         // flusher is a separate task that will process flush requests for the write
         // buffer. This allows coalescing of writes to the underlying socket.
-        private void flusher()
+        private void flusherSynchronized()
         {
             setFlusherDone(false);
 
@@ -2515,7 +2515,7 @@ namespace NATS.Client
 
         // processErr processes any error messages from the server and
         // sets the connection's lastError.
-        internal void processErr(MemoryStream errorStream)
+        internal void processErrSynchronized(MemoryStream errorStream)
         {
             bool invokeDelegates = false;
             Exception ex = null;
@@ -2696,7 +2696,7 @@ namespace NATS.Client
                 if (lastEx != null)
                     throw lastEx;
 
-                ensurePublishProtocolBuffer(subject, reply);
+                ensurePublishProtocolBufferUnsynchronized(subject, reply);
 
                 // protoLen and protoOffset provide a length and offset for
                 // copying the publish protocol buffer.  This is to avoid extra
@@ -4073,7 +4073,7 @@ namespace NATS.Client
 
         // unsubscribe performs the low level unsubscribe to the server.
         // Use Subscription.Unsubscribe()
-        internal Task unsubscribe(Subscription sub, int max, bool drain, int timeout)
+        internal Task unsubscribeSynchronized(Subscription sub, int max, bool drain, int timeout)
         {
             var task = CompletedTask.Get();
 
@@ -4097,7 +4097,7 @@ namespace NATS.Client
 
                 if (drain)
                 {
-                    task = Task.Run(() => checkDrained(s, timeout));
+                    task = Task.Run(() => checkDrainedSynchronized(s, timeout));
                 }
 
                 // We will send all subscriptions when reconnecting
@@ -4115,7 +4115,7 @@ namespace NATS.Client
             return task;
         }
 
-        internal void removeSubSafe(Subscription s)
+        internal void removeSubSynchronized(Subscription s)
         {
             _mutex.Wait();
             try
@@ -4489,7 +4489,7 @@ namespace NATS.Client
 
         // This allows us to know that whatever we have in the client pending
         // is correct and the server will not send additional information.
-        private void checkDrained(Subscription s, int timeout)
+        private void checkDrainedSynchronized(Subscription s, int timeout)
         {
             if (isClosed() || s == null)
                 return;
