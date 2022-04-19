@@ -691,29 +691,28 @@ namespace NATS.Client
         /// A channel for use, null if configuration dictates not to use the 
         /// channel pool.
         /// </returns>
-        internal Channel<Msg> getMessageChannel()
+        internal Channel<Msg> getMessageChannelSynchronized()
         {
-
             _mutex.Wait();
             try
             {
-                if (opts.subscriberDeliveryTaskCount > 0 && subChannelPool == null)
-                {
-                    subChannelPool = new SubChannelPool(this,
-                        opts.subscriberDeliveryTaskCount);
-                }
-
-                if (subChannelPool != null)
-                {
-                    return subChannelPool.getChannel();
-                }
+                return getMessageChannelUnsynchronized();
             }
             finally
             {
                 _mutex.Release(1);
             }
+        }
 
-            return null;
+        internal Channel<Msg> getMessageChannelUnsynchronized()
+        {
+            if (opts.subscriberDeliveryTaskCount > 0 && subChannelPool == null)
+            {
+                subChannelPool = new SubChannelPool(this,
+                    opts.subscriberDeliveryTaskCount);
+            }
+
+            return subChannelPool?.getChannel();
         }
 
         /// <summary>
@@ -885,7 +884,7 @@ namespace NATS.Client
             }
         }
 
-        private void pingTimerCallback(object state)
+        private void pingTimerCallbackSynchronized(object state)
         {
             _mutex.Wait();
             try
@@ -937,7 +936,7 @@ namespace NATS.Client
 
             if (Opts.PingInterval > 0)
             {
-                ptmr = new Timer(pingTimerCallback, null,
+                ptmr = new Timer(pingTimerCallbackSynchronized, null,
                     opts.PingInterval,
                     Timeout.Infinite); // do not trigger timer automatically : risk of having too many threads spawn during reconnect
             }
@@ -1139,7 +1138,7 @@ namespace NATS.Client
 
         // Process a connected connection and initialize properly.
         // Caller must lock.
-        private void processConnectInit(Srv s)
+        private void processConnectInitUnsynchronized(Srv s)
         {
             this.status = ConnState.CONNECTING;
 
@@ -1196,7 +1195,7 @@ namespace NATS.Client
                             if (!createConn(s, out exToThrow))
                                 return false;
 
-                            processConnectInit(s);
+                            processConnectInitUnsynchronized(s);
                             exToThrow = null;
 
                             return true;
@@ -1546,39 +1545,31 @@ namespace NATS.Client
 
         // This will process a disconnect when reconnect is allowed.
         // The lock should not be held on entering this function.
-        private void processReconnect()
+        private void processReconnectUnsynchronized()
         {
-            _mutex.Wait();
-            try
+            // If we are already in the proper state, just return.
+            if (isReconnecting())
+                return;
+
+            status = ConnState.RECONNECTING;
+
+            stopPingTimer();
+
+            if (conn.isSetup())
             {
-                // If we are already in the proper state, just return.
-                if (isReconnecting())
-                    return;
-
-                status = ConnState.RECONNECTING;
-
-                stopPingTimer();
-
-                if (conn.isSetup())
-                {
-                    conn.teardown();
-                }
-
-                // clear any queued pongs, e..g. pending flush calls.
-                clearPendingFlushCalls();
-
-                pending = new MemoryStream();
-                bw = new BufferedStream(pending);
-
-                Thread t = new Thread(() => { doReconnect(); });
-                t.IsBackground = true;
-                t.Name = generateThreadName("Reconnect");
-                t.Start();
+                conn.teardown();
             }
-            finally
-            {
-                _mutex.Release(1);
-            }
+
+            // clear any queued pongs, e..g. pending flush calls.
+            clearPendingFlushCalls();
+
+            pending = new MemoryStream();
+            bw = new BufferedStream(pending);
+
+            Thread t = new Thread(() => { doReconnectSynchronized(); });
+            t.IsBackground = true;
+            t.Name = generateThreadName("Reconnect");
+            t.Start();
         }
 
         // flushReconnectPending will push the pending items that were
@@ -1644,7 +1635,7 @@ namespace NATS.Client
         //
         // NOTE: locks are manually acquired/released to parallel the NATS
         // go client
-        private void doReconnect()
+        private void doReconnectSynchronized()
         {
             // We want to make sure we have the other watchers shutdown properly
             // here before we proceed past this point
@@ -1728,7 +1719,7 @@ namespace NATS.Client
                     // process our connect logic
                     try
                     {
-                        processConnectInit(cur);
+                        processConnectInitUnsynchronized(cur);
                     }
                     catch (Exception e)
                     {
@@ -1808,7 +1799,7 @@ namespace NATS.Client
 
                 if (Opts.AllowReconnect && status == ConnState.CONNECTED)
                 {
-                    processReconnect();
+                    processReconnectUnsynchronized();
                 }
                 else
                 {
@@ -2967,7 +2958,7 @@ namespace NATS.Client
                     return request;
 
                 if (globalRequestSubscription == null)
-                    globalRequestSubscription = subscribeAsync(string.Concat(globalRequestInbox, ".*"), null,
+                    globalRequestSubscription = subscribeAsyncUnsynchronized(string.Concat(globalRequestInbox, ".*"), null,
                         RequestResponseHandler);
             }
             finally
@@ -3817,7 +3808,13 @@ namespace NATS.Client
         internal delegate SyncSubscription CreateSyncSubscriptionDelegate(Connection conn, string subject, string queue);
         internal delegate AsyncSubscription CreateAsyncSubscriptionDelegate(Connection conn, string subject, string queue);
 
-        internal AsyncSubscription subscribeAsync(string subject, string queue,
+        
+        // NOTE: NOT Synchronized when called from JetStream.*
+        // NOTE: NOT Synchronized when called from EncodedConnection.*
+        // NOTE: NOT Synchronized when called from Connection.SubscribeAsync()
+        // NOTE: NOT Synchronized when called from Connection.subscribeAsync()
+        // NOTE: Synchronized when called from setupRequest(int, CancellationToken)
+        internal AsyncSubscription subscribeAsyncSynchronized(string subject, string queue,
             EventHandler<MsgHandlerEventArgs> handler, CreateAsyncSubscriptionDelegate createAsyncSubscriptionDelegate = null)
         {
             if (!Subscription.IsValidSubject(subject))
@@ -3830,33 +3827,54 @@ namespace NATS.Client
                 throw new NATSBadSubscriptionException("Invalid queue group name.");
             }
 
-            AsyncSubscription s = null;
 
             _mutex.Wait();
             try
             {
-                if (isClosed())
-                    throw new NATSConnectionClosedException();
-                if (IsDraining())
-                    throw new NATSConnectionDrainingException();
-
-                enableSubChannelPooling();
-
-                s = createAsyncSubscriptionDelegate == null
-                    ? new AsyncSubscription(this, subject, queue)
-                    : createAsyncSubscriptionDelegate(this, subject, queue);
-
-                addSubscription(s);
-
-                if (handler != null)
-                {
-                    s.MessageHandler += handler;
-                    s.Start();
-                }
+                return subscribeAsyncCore(subject, queue, handler, createAsyncSubscriptionDelegate, getMessageChannelUnsynchronized());
             }
             finally
             {
                 _mutex.Release(1);
+            }
+        }
+        
+        internal AsyncSubscription subscribeAsyncUnsynchronized(string subject, string queue,
+            EventHandler<MsgHandlerEventArgs> handler, CreateAsyncSubscriptionDelegate createAsyncSubscriptionDelegate = null)
+        {
+            if (!Subscription.IsValidSubject(subject))
+            {
+                throw new NATSBadSubscriptionException("Invalid subject.");
+            }
+
+            if (queue != null && !Subscription.IsValidQueueGroupName(queue))
+            {
+                throw new NATSBadSubscriptionException("Invalid queue group name.");
+            }
+
+
+            return subscribeAsyncCore(subject, queue, handler, createAsyncSubscriptionDelegate, getMessageChannelSynchronized());
+        }
+
+
+        private AsyncSubscription subscribeAsyncCore(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler, CreateAsyncSubscriptionDelegate createAsyncSubscriptionDelegate, Channel<Msg> messageChannel)
+        {
+            if (isClosed())
+                throw new NATSConnectionClosedException();
+            if (IsDraining())
+                throw new NATSConnectionDrainingException();
+
+            enableSubChannelPooling();
+            AsyncSubscription s = createAsyncSubscriptionDelegate == null
+                ? new AsyncSubscription(this, subject, queue, messageChannel)
+                : createAsyncSubscriptionDelegate(this, subject, queue);
+
+            addSubscription(s);
+
+            if (handler != null)
+            {
+                s.MessageHandler += handler;
+                s.Start();
             }
 
             return s;
@@ -3943,7 +3961,7 @@ namespace NATS.Client
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public IAsyncSubscription SubscribeAsync(string subject)
         {
-            return subscribeAsync(subject, null, null);
+            return subscribeAsyncSynchronized(subject, null, null);
         }
 
         /// <summary>
@@ -3965,7 +3983,7 @@ namespace NATS.Client
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public IAsyncSubscription SubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler)
         {
-            return subscribeAsync(subject, null, handler);
+            return subscribeAsyncSynchronized(subject, null, handler);
         }
 
         /// <summary>
@@ -4002,7 +4020,7 @@ namespace NATS.Client
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public IAsyncSubscription SubscribeAsync(string subject, string queue)
         {
-            return subscribeAsync(subject, queue, null);
+            return subscribeAsyncSynchronized(subject, queue, null);
         }
 
         /// <summary>
@@ -4025,7 +4043,7 @@ namespace NATS.Client
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public IAsyncSubscription SubscribeAsync(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler)
         {
-            return subscribeAsync(subject, queue, handler);
+            return subscribeAsyncSynchronized(subject, queue, handler);
         }
 
         // unsubscribe performs the low level unsubscribe to the server.

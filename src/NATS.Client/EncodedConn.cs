@@ -273,7 +273,7 @@ namespace NATS.Client
 
             EncodedHandlerWrapper echWrapper = new EncodedHandlerWrapper(this, handler);
 
-            IAsyncSubscription s = base.subscribeAsync(subject, reply,
+            IAsyncSubscription s = base.subscribeAsyncSynchronized(subject, reply,
                 echWrapper.msgHandlerToEncoderHandler);
 
             wrappers.Add(s, echWrapper);
