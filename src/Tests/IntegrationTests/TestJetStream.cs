@@ -92,6 +92,7 @@ namespace IntegrationTests
             });
         }
 
+        // Failed once with [SUB-90012] Consumer is already bound to a subscription.
         [Fact]
         public void TestJetStreamSubscribe() {
             Context.RunInJsServer(c =>
