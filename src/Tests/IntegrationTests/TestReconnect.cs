@@ -485,6 +485,7 @@ namespace IntegrationTests
             Assert.Throws<ArgumentOutOfRangeException>(() => { opts.ReconnectBufferSize = -2; });
         }
 
+        // NOTE: Extremely flaky
         [Fact]
         public void TestReconnectBufferDisabled()
         {
@@ -526,6 +527,7 @@ namespace IntegrationTests
             }
         }
 
+        // NOTE: Extremely flaky
         [Fact]
         public void TestReconnectBufferBoundary()
         {

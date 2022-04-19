@@ -639,7 +639,8 @@ namespace IntegrationTests
                 MsgHeader h = new MsgHeader();
                 h.Add("foo", "bar");
 
-                DateTime beforeCreated = DateTime.UtcNow;
+                // Apparently clock is not synchronized between dotnet and nats-server
+                DateTime beforeCreated = DateTime.UtcNow.AddMilliseconds(-30);
                 js.Publish(new Msg(SUBJECT, null, h, DataBytes(1)));
                 js.Publish(new Msg(SUBJECT, null));
 
