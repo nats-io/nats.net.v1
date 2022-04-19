@@ -3887,7 +3887,7 @@ namespace NATS.Client
         {
             if (isClosed())
                 throw new NATSConnectionClosedException();
-            if (IsDraining())
+            if (IsDrainingUnsynchronized())
                 throw new NATSConnectionDrainingException();
 
             enableSubChannelPooling();
@@ -3928,7 +3928,7 @@ namespace NATS.Client
             {
                 if (isClosed())
                     throw new NATSConnectionClosedException();
-                if (IsDraining())
+                if (IsDrainingUnsynchronized())
                     throw new NATSConnectionDrainingException();
 
                 s = createSyncSubscriptionDelegate == null
@@ -4185,6 +4185,7 @@ namespace NATS.Client
             bw.Flush();
         }
 
+        // NOTE: This looks fishy, lastEx is often used w/ synchronization
         private void saveFlushException(Exception e)
         {
             if (lastEx != null && !(lastEx is NATSSlowConsumerException))
@@ -4553,7 +4554,7 @@ namespace NATS.Client
             );
         }
 
-        private void drain(int timeout)
+        private void drainSynchronized(int timeout)
         {
             ICollection<Subscription> lsubs = null;
             bool timedOut = false;
@@ -4662,7 +4663,7 @@ namespace NATS.Client
             if (timeout <= 0)
                 throw new ArgumentOutOfRangeException(nameof(timeout), "Timeout must be greater than zero.");
 
-            drain(timeout);
+            drainSynchronized(timeout);
         }
 
         /// <summary>
@@ -4702,7 +4703,7 @@ namespace NATS.Client
             if (timeout <= 0)
                 throw new ArgumentOutOfRangeException(nameof(timeout), "Timeout must be greater than zero.");
 
-            return Task.Run(() => drain(timeout));
+            return Task.Run(() => drainSynchronized(timeout));
         }
 
         // assume the lock is held.
@@ -4731,12 +4732,17 @@ namespace NATS.Client
             _mutex.Wait();
             try
             {
-                return (status == ConnState.DRAINING_SUBS || status == ConnState.DRAINING_PUBS);
+                return IsDrainingUnsynchronized();
             }
             finally
             {
                 _mutex.Release(1);
             }
+        }
+
+        private bool IsDrainingUnsynchronized()
+        {
+            return (status == ConnState.DRAINING_SUBS || status == ConnState.DRAINING_PUBS);
         }
 
         /// <summary>
