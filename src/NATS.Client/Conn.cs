@@ -3879,7 +3879,7 @@ namespace NATS.Client
 
             enableSubChannelPooling();
             AsyncSubscription s = createAsyncSubscriptionDelegate == null
-                ? new AsyncSubscription(this, subject, queue, messageChannel)
+                ? new AsyncSubscription(this, subject, queue)
                 : createAsyncSubscriptionDelegate(this, subject, queue);
 
             addSubscription(s);

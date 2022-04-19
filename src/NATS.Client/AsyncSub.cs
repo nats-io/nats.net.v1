@@ -42,10 +42,10 @@ namespace NATS.Client
         private bool started = false;
 
  
-        internal AsyncSubscription(Connection conn, string subject, string queue, Channel<Msg> messageChannel)
+        internal AsyncSubscription(Connection conn, string subject, string queue)
             : base(conn, subject, queue)
         {
-            mch = messageChannel;
+            mch = conn.getMessageChannelUnsynchronized();
             if ((ownsChannel = (mch == null)))
             {
                 mch = new Channel<Msg>()
