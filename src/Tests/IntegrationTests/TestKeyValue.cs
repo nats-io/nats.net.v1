@@ -38,7 +38,7 @@ namespace IntegrationTests
         [Fact]
         public void TestWorkFLow()
         {
-            DateTime now = DateTime.Now;
+            DateTime now = DateTime.UtcNow;
 
             string byteKey = "byteKey";
             string stringKey = "stringKey";
@@ -627,7 +627,7 @@ namespace IntegrationTests
             else {
                 Assert.Null(entry.Value);
             }
-            Assert.True(now.CompareTo(entry.Created) < 0);
+            Assert.True(now <= entry.Created, $"now {now:o} <= entry.Created {entry.Created:o}");
             return entry;
         }
 

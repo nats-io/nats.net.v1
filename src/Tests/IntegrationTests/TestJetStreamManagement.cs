@@ -31,7 +31,7 @@ namespace IntegrationTests
         {
             Context.RunInJsServer(c =>
             {
-                DateTime now = DateTime.Now;
+                DateTime now = DateTime.UtcNow;
 
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
 
@@ -81,7 +81,7 @@ namespace IntegrationTests
         public void TestStreamCreateWithNoSubject() {
             Context.RunInJsServer(c =>
             {
-                DateTime now = DateTime.Now;
+                DateTime now = DateTime.UtcNow;
 
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
 
@@ -91,7 +91,7 @@ namespace IntegrationTests
                     .Build();
 
                 StreamInfo si = jsm.AddStream(sc);
-                Assert.True(now.CompareTo(si.Created) < 0);
+                Assert.True(now <= si.Created, $"now {now:o} <= si.Created {si.Created:o}");
 
                 sc = si.Config;
                 Assert.Equal(STREAM, sc.Name);
@@ -639,7 +639,7 @@ namespace IntegrationTests
                 MsgHeader h = new MsgHeader();
                 h.Add("foo", "bar");
 
-                DateTime beforeCreated = DateTime.Now;
+                DateTime beforeCreated = DateTime.UtcNow;
                 js.Publish(new Msg(SUBJECT, null, h, DataBytes(1)));
                 js.Publish(new Msg(SUBJECT, null));
 
@@ -649,7 +649,7 @@ namespace IntegrationTests
                 Assert.Equal(SUBJECT, mi.Subject);
                 Assert.Equal(Data(1), System.Text.Encoding.ASCII.GetString(mi.Data));
                 Assert.Equal(1U, mi.Sequence);
-                Assert.True(mi.Time >= beforeCreated);
+                Assert.True(mi.Time >= beforeCreated, $"mi.Time: {mi.Time:o} >= beforeCreated: {beforeCreated:o}");
                 Assert.NotNull(mi.Headers);
                 Assert.Equal("bar", mi.Headers["foo"]);
 
