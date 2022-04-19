@@ -896,7 +896,7 @@ namespace NATS.Client
 
                 if (Interlocked.Increment(ref pout) > Opts.MaxPingsOut)
                 {
-                    processOpError(new NATSStaleConnectionException());
+                    processOpErrorUnsynchronized(new NATSStaleConnectionException());
                     return;
                 }
 
@@ -1313,7 +1313,7 @@ namespace NATS.Client
             }
             catch (Exception e)
             {
-                processOpError(e);
+                processOpErrorUnsynchronized(e);
                 throw;
             }
             finally
@@ -1785,28 +1785,47 @@ namespace NATS.Client
             return (status == ConnState.CONNECTING);
         }
 
-        private void processOpError(Exception e)
+        private void processOpErrorUnsynchronized(Exception e)
         {
-            bool disconnected = false;
+            bool disconnected = processOpErrorCore(e);
+
+            if (disconnected)
+            {
+                Close();
+            }
+        }
+        
+        private bool processOpErrorCore(Exception e)
+        {
+            if (isConnecting() || isClosed() || isReconnecting())
+            {
+                return false;
+            }
+
+            if (Opts.AllowReconnect && status == ConnState.CONNECTED)
+            {
+                processReconnectUnsynchronized();
+                return false;
+            }
+
+            processDisconnect();
+                
+            lastEx = e;
+            return true;
+        }
+        
+        // NOTE: Synchronized when called from pingTimerCallbackSynchronized
+        // NOTE: Synchronized when called from processExpectedInfo
+        // NOTE: NOT synchronized when called from processErr
+        // NOTE: NOT synchronized when called from readLoop (new thread)
+        private void processOpErrorSynchronized(Exception e)
+        {
+            bool disconnected;
 
             _mutex.Wait();
             try
             {
-                if (isConnecting() || isClosed() || isReconnecting())
-                {
-                    return;
-                }
-
-                if (Opts.AllowReconnect && status == ConnState.CONNECTED)
-                {
-                    processReconnectUnsynchronized();
-                }
-                else
-                {
-                    processDisconnect();
-                    disconnected = true;
-                    lastEx = e;
-                }
+                disconnected = processOpErrorCore(e);
             }
             finally
             {
@@ -1854,7 +1873,7 @@ namespace NATS.Client
                 {
                     if (State != ConnState.CLOSED)
                     {
-                        processOpError(e);
+                        processOpErrorSynchronized(e);
                     }
 
                     break;
@@ -2499,14 +2518,14 @@ namespace NATS.Client
 
             if (IC.STALE_CONNECTION.Equals(s))
             {
-                processOpError(new NATSStaleConnectionException());
+                processOpErrorSynchronized(new NATSStaleConnectionException());
             }
             else if (IC.AUTH_TIMEOUT.Equals(s))
             {
                 // Protect against a timing issue where an authoriztion error
                 // is handled before the connection close from the server.
                 // This can happen in reconnect scenarios.
-                processOpError(new NATSConnectionException(IC.AUTH_TIMEOUT));
+                processOpErrorSynchronized(new NATSConnectionException(IC.AUTH_TIMEOUT));
             }
             else
             {
