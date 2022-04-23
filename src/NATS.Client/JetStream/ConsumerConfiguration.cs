@@ -30,8 +30,8 @@ namespace NATS.Client.JetStream
         private AckPolicy? _ackPolicy;
         private ReplayPolicy? _replayPolicy;
         private ulong? _startSeq;
+        private ulong? _rateLimit;
         private long? _maxDeliver;
-        private long? _rateLimit;
         private long? _maxAckPending;
         private long? _maxPullWaiting;
         private long? _maxBatch;
@@ -52,15 +52,28 @@ namespace NATS.Client.JetStream
         public Duration IdleHeartbeat { get; }
         public Duration MaxExpires { get; }
         public Duration InactiveThreshold { get; }
-        public ulong StartSeq =>  CcChangeHelper.StartSeq.ValueOrInitialUlong(_startSeq);
-        public long MaxDeliver => CcChangeHelper.MaxDeliver.ValueOrInitial(_maxDeliver);
-        public long RateLimit => CcChangeHelper.RateLimit.ValueOrInitial(_rateLimit);
-        public long MaxAckPending => CcChangeHelper.MaxAckPending.ValueOrInitial(_maxAckPending);
-        public long MaxPullWaiting => CcChangeHelper.MaxPullWaiting.ValueOrInitial(_maxPullWaiting);
-        public long MaxBatch => CcChangeHelper.MaxBatch.ValueOrInitial(_maxBatch);
+        public ulong StartSeq =>  UlongChangeHelper.StartSeq.GetOrUnset(_startSeq);
+        public long MaxDeliver => LongChangeHelper.MaxDeliver.GetOrUnset(_maxDeliver);
+        [Obsolete("This property is obsolete. Use RateLimitBps.", false)]
+        public long RateLimit => (long)UlongChangeHelper.RateLimit.GetOrUnset(_rateLimit);
+        public ulong RateLimitBps => UlongChangeHelper.RateLimit.GetOrUnset(_rateLimit);
+        public long MaxAckPending => LongChangeHelper.MaxAckPending.GetOrUnset(_maxAckPending);
+        public long MaxPullWaiting => LongChangeHelper.MaxPullWaiting.GetOrUnset(_maxPullWaiting);
+        public long MaxBatch => LongChangeHelper.MaxBatch.GetOrUnset(_maxBatch);
         public bool FlowControl => _flowControl ?? false;
         public bool HeadersOnly => _headersOnly ?? false;
         public IList<Duration> Backoff { get; }
+
+        internal bool DeliverPolicyWasSet => _deliverPolicy != null;
+        internal bool AckPolicyWasSet => _ackPolicy != null;
+        internal bool ReplyPolicyWasSet => _replayPolicy != null;
+        internal bool MaxDeliverWasSet => _maxDeliver != null;
+        internal bool RateLimitWasSet => _rateLimit != null;
+        internal bool MaxAckPendingWasSet => _maxAckPending != null;
+        internal bool MaxPullWaitingWasSet => _maxPullWaiting != null;
+        internal bool MaxBatchWasSet => _maxBatch != null;
+        internal bool FlowControlWasSet => _flowControl != null;
+        internal bool HeadersOnlyWasSet => _headersOnly != null;
 
         internal ConsumerConfiguration(string json) : this(JSON.Parse(json)) {}
 
@@ -83,12 +96,12 @@ namespace NATS.Client.JetStream
             MaxExpires = AsDuration(ccNode, ApiConstants.MaxExpires, null);
             InactiveThreshold = AsDuration(ccNode, ApiConstants.InactiveThreshold, null);
 
-            _startSeq = CcChangeHelper.StartSeq.ValueOrInitialUlong(ccNode[ApiConstants.OptStartSeq].AsUlong);
-            _maxDeliver = CcChangeHelper.MaxDeliver.ValueOrInitial(ccNode[ApiConstants.MaxDeliver].AsLong);
-            _rateLimit = CcChangeHelper.RateLimit.ValueOrInitial(ccNode[ApiConstants.RateLimitBps].AsLong);
-            _maxAckPending = CcChangeHelper.MaxAckPending.ValueOrInitial(ccNode[ApiConstants.MaxAckPending].AsLong);
-            _maxPullWaiting = CcChangeHelper.MaxPullWaiting.ValueOrInitial(ccNode[ApiConstants.MaxWaiting].AsLong);
-            _maxBatch = CcChangeHelper.MaxBatch.ValueOrInitial(ccNode[ApiConstants.MaxBatch].AsLong);
+            _startSeq = ccNode[ApiConstants.OptStartSeq].AsUlongOr(UlongChangeHelper.StartSeq.Unset);
+            _maxDeliver = ccNode[ApiConstants.MaxDeliver].AsLongOr(LongChangeHelper.MaxDeliver.Unset);
+            _rateLimit = ccNode[ApiConstants.RateLimitBps].AsUlongOr(UlongChangeHelper.RateLimit.Unset);
+            _maxAckPending = ccNode[ApiConstants.MaxAckPending].AsLongOr(LongChangeHelper.MaxAckPending.Unset);
+            _maxPullWaiting = ccNode[ApiConstants.MaxWaiting].AsLongOr(LongChangeHelper.MaxPullWaiting.Unset);
+            _maxBatch = ccNode[ApiConstants.MaxBatch].AsLongOr(LongChangeHelper.MaxBatch.Unset);
             _flowControl = ccNode[ApiConstants.FlowControl].AsBool;
             _headersOnly = ccNode[ApiConstants.HeadersOnly].AsBool;
 
@@ -143,7 +156,7 @@ namespace NATS.Client.JetStream
             AddField(o, ApiConstants.FilterSubject, FilterSubject);
             AddField(o, ApiConstants.ReplayPolicy, ReplayPolicy.GetString());
             AddField(o, ApiConstants.SampleFreq, SampleFrequency);
-            AddField(o, ApiConstants.RateLimitBps, RateLimit);
+            AddField(o, ApiConstants.RateLimitBps, RateLimitBps);
             AddField(o, ApiConstants.MaxAckPending, MaxAckPending);
             AddField(o, ApiConstants.IdleHeartbeat, IdleHeartbeat);
             AddField(o, ApiConstants.FlowControl, FlowControl);
@@ -166,14 +179,14 @@ namespace NATS.Client.JetStream
                    || _flowControl.HasValue && _flowControl.Value != original.FlowControl
                    || _headersOnly.HasValue && _headersOnly.Value != original.HeadersOnly
 
-                   || CcChangeHelper.StartSeq.WouldBeChange(_startSeq, original.StartSeq)
-                   || CcChangeHelper.MaxDeliver.WouldBeChange(_maxDeliver, original.MaxDeliver)
-                   || CcChangeHelper.RateLimit.WouldBeChange(_rateLimit, original.RateLimit)
-                   || CcChangeHelper.MaxAckPending.WouldBeChange(_maxAckPending, original.MaxAckPending)
-                   || CcChangeHelper.MaxPullWaiting.WouldBeChange(_maxPullWaiting, original.MaxPullWaiting)
-                   || CcChangeHelper.MaxBatch.WouldBeChange(_maxBatch, original.MaxBatch)
+                   || UlongChangeHelper.StartSeq.WouldBeChange(_startSeq, original._startSeq)
+                   || LongChangeHelper.MaxDeliver.WouldBeChange(_maxDeliver, original._maxDeliver)
+                   || UlongChangeHelper.RateLimit.WouldBeChange(_rateLimit, original._rateLimit)
+                   || LongChangeHelper.MaxAckPending.WouldBeChange(_maxAckPending, original._maxAckPending)
+                   || LongChangeHelper.MaxPullWaiting.WouldBeChange(_maxPullWaiting, original._maxPullWaiting)
+                   || LongChangeHelper.MaxBatch.WouldBeChange(_maxBatch, original._maxBatch)
 
-                   || CcChangeHelper.MaxPullWaiting.WouldBeChange(AckWait, original.AckWait)
+                   || DurationChangeHelper.AckWait.WouldBeChange(AckWait, original.AckWait)
 
                    || WouldBeChange(IdleHeartbeat, original.IdleHeartbeat)
                    || WouldBeChange(StartTime, original.StartTime)
@@ -238,8 +251,8 @@ namespace NATS.Client.JetStream
             internal Duration _inactiveThreshold;
 
             internal ulong? _startSeq;
+            internal ulong? _rateLimit;
             internal long? _maxDeliver;
-            internal long? _rateLimit;
             internal long? _maxAckPending;
             internal long? _maxPullWaiting;
             internal long? _maxBatch;
@@ -343,7 +356,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithStartSequence(ulong? sequence)
             {
-                _startSeq = sequence;
+                _startSeq = UlongChangeHelper.StartSeq.ForBuilder(sequence);
                 return this;
             }
 
@@ -376,7 +389,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithAckWait(Duration timeout)
             {
-                _ackWait = ValidateDurationNotRequiredNotLessThanMin(timeout, MinAckWait); 
+                _ackWait = DurationChangeHelper.AckWait.ForBuilder(timeout); 
                 return this;
             }
 
@@ -387,7 +400,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithAckWait(long timeoutMillis)
             {
-                _ackWait = ValidateDurationNotRequiredNotLessThanMin(timeoutMillis, MinAckWait);
+                _ackWait = DurationChangeHelper.AckWait.ForBuilder(Duration.OfMillis(timeoutMillis)); 
                 return this;
             }
 
@@ -398,7 +411,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithMaxDeliver(long? maxDeliver)
             {
-                _maxDeliver = maxDeliver;
+                _maxDeliver = LongChangeHelper.MaxDeliver.ForBuilder(maxDeliver);
                 return this;
             }
 
@@ -438,11 +451,34 @@ namespace NATS.Client.JetStream
             /// <summary>
             /// Set the rate limit of the ConsumerConfiguration.
             /// </summary>
-            /// <param name="msgsPerSecond">messages per second to deliver</param>
+            /// <param name="bitsPerSecond">bits per second to deliver</param>
             /// <returns>The ConsumerConfigurationBuilder</returns>
-            public ConsumerConfigurationBuilder WithRateLimit(long? msgsPerSecond)
+            [Obsolete("This method is obsolete. Use WithRateLimit with ulong parameter.", false)]
+            public ConsumerConfigurationBuilder WithRateLimit(long? bitsPerSecond)
             {
-                _rateLimit = msgsPerSecond;
+                ulong? ubps = null;
+                if (bitsPerSecond != null)
+                {
+                    if (bitsPerSecond < 0)
+                    {
+                        ubps = UlongChangeHelper.RateLimit.Unset;
+                    }
+                    else
+                    {
+                        ubps = (ulong)bitsPerSecond;
+                    }
+                }
+                return WithRateLimitBps(ubps);
+            }
+
+            /// <summary>
+            /// Set the rate limit of the ConsumerConfiguration.
+            /// </summary>
+            /// <param name="bitsPerSecond">bits per second to deliver</param>
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder WithRateLimitBps(ulong? bitsPerSecond)
+            {
+                _rateLimit = UlongChangeHelper.RateLimit.ForBuilder(bitsPerSecond);
                 return this;
             }
 
@@ -453,7 +489,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithMaxAckPending(long? maxAckPending)
             {
-                _maxAckPending = maxAckPending;
+                _maxAckPending = LongChangeHelper.MaxAckPending.ForBuilder(maxAckPending);
                 return this;
             }
 
@@ -546,7 +582,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithMaxPullWaiting(long? maxPullWaiting)
             {
-                _maxPullWaiting = maxPullWaiting;
+                _maxPullWaiting = LongChangeHelper.MaxPullWaiting.ForBuilder(maxPullWaiting);
                 return this;
             }
 
@@ -557,7 +593,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithMaxBatch(long? maxBatch)
             {
-                _maxBatch = maxBatch;
+                _maxBatch = LongChangeHelper.MaxBatch.ForBuilder(maxBatch);
                 return this;
             }
 
@@ -632,46 +668,120 @@ namespace NATS.Client.JetStream
         }
     }
     
-    internal class CcChangeHelper
-    {
-        internal long Min { get; }
-        internal long Initial { get; }
-        internal long Server { get; }
-        internal ulong InitialUlong { get; }
+    /**
+     * Helper class to manage min / default / unset / server values.
+     *
+     * These are what the server returns for a default consumer.
+     *
+     * 	"max_deliver": -1
+     * 	"max_ack_pending": 1000,
+     * 	"max_waiting": push:omitted pull:512,
+     * 	"max_batch": omitted
+     *
+     * The server will treat max_deliver of 0 as -1, that's why returns it
+     */
+    internal class LongChangeHelper {
+        internal static readonly LongChangeHelper MaxDeliver = new LongChangeHelper(1, -1, -1, -1);
+        internal static readonly LongChangeHelper MaxAckPending = new LongChangeHelper(0, -1, 1000L, 1000L);
+        internal static readonly LongChangeHelper MaxPullWaiting = new LongChangeHelper(0, -1, null, 512L);
+        internal static readonly LongChangeHelper MaxBatch = new LongChangeHelper(0, -1, null, null);
 
-        private CcChangeHelper(long min, long initial, long server)
+        internal long Min { get; }
+        internal long Unset  { get; }
+        internal long? ServerPush { get; }
+        internal long? ServerPull { get; }
+
+        private LongChangeHelper(long min, long unset, long? push, long? pull)
         {
             Min = min;
-            Server = server;
-            Initial = initial;
-            InitialUlong = (ulong)initial;
+            Unset = unset;
+            ServerPush = push;
+            ServerPull = pull;
         }
 
-        internal long ValueOrInitial(long? val) => val == null || val < Min ? Initial : val.Value;
-        internal long Comparable(long val)      => val < Min || val == Server ? Initial : val;
+        internal long GetOrUnset(long? val) {
+            return val ?? Unset;
+        }
 
-        internal ulong ValueOrInitialUlong(ulong? val) => val == null || val < (ulong)Min ? (ulong)Initial : val.Value;
-        internal ulong Comparable(ulong val)           => val < (ulong)Min || val == (ulong)Server ? (ulong)Initial : val;
+        internal bool WouldBeChange(long? user, long? server) {
+            return user != null && !user.Equals(GetOrUnset(server));
+        }
 
-        public bool WouldBeChange(long? user, long srvr)
+        internal long ForBuilder(long? proposed) {
+            if (proposed == null || proposed < Min)
+            {
+                return Unset;
+            }
+            return proposed.Value;
+        }
+    }
+    
+    internal class UlongChangeHelper {
+        internal static readonly UlongChangeHelper StartSeq = new UlongChangeHelper(null, null);
+        internal static readonly UlongChangeHelper RateLimit = new UlongChangeHelper(null, null);
+
+        internal ulong Min { get; }
+        internal ulong Unset  { get; }
+        internal ulong? ServerPush { get; }
+        internal ulong? ServerPull { get; }
+
+        private UlongChangeHelper(ulong? push, ulong? pull)
         {
-            return user != null && Comparable(user.Value) != Comparable(srvr);
+            Min = 1;
+            Unset = 0;
+            ServerPush = push;
+            ServerPull = pull;
         }
 
-        public bool WouldBeChange(ulong? user, ulong srvr) {
-            return user != null && Comparable(user.Value) != Comparable(srvr);
+        internal ulong GetOrUnset(ulong? val) {
+            return val ?? Unset;
         }
 
-        public bool WouldBeChange(Duration user, Duration srvr) {
-            return user != null && Comparable(user.Nanos) != Comparable(srvr.Nanos);
+        internal bool WouldBeChange(ulong? user, ulong? server) {
+            return user != null && !user.Equals(GetOrUnset(server));
         }
 
-        internal static readonly CcChangeHelper StartSeq = new CcChangeHelper(1, 0, 0);
-        internal static readonly CcChangeHelper MaxDeliver = new CcChangeHelper(1, -1, -1);
-        internal static readonly CcChangeHelper RateLimit = new CcChangeHelper(1, -1, -1);
-        internal static readonly CcChangeHelper MaxAckPending = new CcChangeHelper(0, 0, 20000L);
-        internal static readonly CcChangeHelper MaxPullWaiting = new CcChangeHelper(0, 0, 512);
-        internal static readonly CcChangeHelper MaxBatch = new CcChangeHelper(1, -1, -1);
-        internal static readonly CcChangeHelper AckWait = new CcChangeHelper(0, Duration.OfSeconds(30).Nanos, Duration.OfSeconds(30).Nanos);
+        internal ulong ForBuilder(ulong? proposed) {
+            if (proposed == null || proposed < Min)
+            {
+                return Unset;
+            }
+            return proposed.Value;
+        }
+    }
+    
+    internal class DurationChangeHelper {
+        internal static readonly DurationChangeHelper AckWait = new DurationChangeHelper(Duration.OfSeconds(30), Duration.OfSeconds(30));
+
+        internal Duration Min { get; }
+        internal Duration Unset  { get; }
+        internal Duration ServerPush { get; }
+        internal Duration ServerPull { get; }
+        internal long MinNanos { get; }
+
+        private DurationChangeHelper(Duration push, Duration pull)
+        {
+            Min = Duration.One;
+            Unset = Duration.Zero;
+            ServerPush = push;
+            ServerPull = pull;
+            MinNanos = 1;
+        }
+
+        internal Duration GetOrUnset(Duration val) {
+            return val ?? Unset;
+        }
+
+        internal bool WouldBeChange(Duration user, Duration server) {
+            return user != null && !user.Equals(GetOrUnset(server));
+        }
+
+        internal Duration ForBuilder(Duration proposed) {
+            if (proposed == null || proposed.Nanos < MinNanos)
+            {
+                return Unset;
+            }
+            return proposed;
+        }
     }
 }

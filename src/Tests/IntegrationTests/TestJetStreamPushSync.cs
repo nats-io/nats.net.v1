@@ -89,10 +89,8 @@ namespace IntegrationTests
             });
         }
 
-        [Theory]
-        [InlineData(null)]
-        [InlineData(DELIVER)]
-        public void TestJetStreamPushDurable(string deliverSubject)
+        [Fact]
+        public void TestJetStreamPushDurable()
         {
             Context.RunInJsServer(c =>
             {
@@ -105,10 +103,10 @@ namespace IntegrationTests
                 // Build our subscription options normally
                 PushSubscribeOptions options1 = PushSubscribeOptions.Builder()
                     .WithDurable(DURABLE)
-                    .WithDeliverSubject(deliverSubject)
+                    .WithDeliverSubject(DELIVER)
                     .Build();
 
-                _testPushDurableSubSync(deliverSubject, c, js, () => js.PushSubscribeSync(SUBJECT, options1));
+                _testPushDurableSubSync(DELIVER, c, js, () => js.PushSubscribeSync(SUBJECT, options1));
                 _testPushDurableSubAsync(js, h => js.PushSubscribeAsync(SUBJECT, h, false, options1));
 
                 // bind long form
@@ -116,14 +114,14 @@ namespace IntegrationTests
                     .WithStream(STREAM)
                     .WithDurable(DURABLE)
                     .WithBind(true)
-                    .WithDeliverSubject(deliverSubject)
+                    .WithDeliverSubject(DELIVER)
                     .Build();
-                _testPushDurableSubSync(deliverSubject, c, js, () => js.PushSubscribeSync(null, options2));
+                _testPushDurableSubSync(DELIVER, c, js, () => js.PushSubscribeSync(null, options2));
                 _testPushDurableSubAsync(js, h => js.PushSubscribeAsync(null, h, false, options2));
 
                 // bind short form
                 PushSubscribeOptions options3 = PushSubscribeOptions.BindTo(STREAM, DURABLE);
-                _testPushDurableSubSync(deliverSubject, c, js, () => js.PushSubscribeSync(null, options3));
+                _testPushDurableSubSync(DELIVER, c, js, () => js.PushSubscribeSync(null, options3));
                 _testPushDurableSubAsync(js, h => js.PushSubscribeAsync(null, h, false, options3));
             });
         }

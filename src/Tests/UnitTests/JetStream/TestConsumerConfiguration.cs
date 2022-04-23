@@ -16,7 +16,9 @@ using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 using NATS.Client.JetStream;
 using Xunit;
-using static NATS.Client.JetStream.CcChangeHelper;
+using static NATS.Client.JetStream.LongChangeHelper;
+using static NATS.Client.JetStream.UlongChangeHelper;
+using static NATS.Client.JetStream.DurationChangeHelper;
 
 namespace UnitTests.JetStream
 {
@@ -38,7 +40,7 @@ namespace UnitTests.JetStream
                 .WithFilterSubject("fs")
                 .WithMaxDeliver(5555)
                 .WithMaxAckPending(6666)
-                .WithRateLimit(4242)
+                .WithRateLimitBps(4242U)
                 .WithReplayPolicy(ReplayPolicy.Original)
                 .WithSampleFrequency("10s")
                 .WithStartSequence(2001)
@@ -106,7 +108,7 @@ namespace UnitTests.JetStream
             Assert.Equal("fs", c.FilterSubject);
             Assert.Equal(5555, c.MaxDeliver);
             Assert.Equal(6666, c.MaxAckPending);
-            Assert.Equal(4242, c.RateLimit);
+            Assert.Equal(4242U, c.RateLimitBps);
             Assert.Equal(ReplayPolicy.Original, c.ReplayPolicy);
             Assert.Equal(2001ul, c.StartSeq);
             Assert.Equal(dt, c.StartTime);
@@ -131,7 +133,7 @@ namespace UnitTests.JetStream
             Assert.Equal(Duration.OfSeconds(30), c.AckWait);
             Assert.Equal(Duration.OfSeconds(20), c.IdleHeartbeat);
             Assert.Equal(10, c.MaxDeliver);
-            Assert.Equal(73, c.RateLimit);
+            Assert.Equal(73U, c.RateLimitBps);
             Assert.Equal(ReplayPolicy.Original, c.ReplayPolicy);
             Assert.Equal(2020, c.StartTime.Year);
             Assert.Equal(21, c.StartTime.Second);
@@ -176,61 +178,63 @@ namespace UnitTests.JetStream
             Assert.False(c.FlowControl);
             Assert.False(c.HeadersOnly);
 
-            Assert.Equal(StartSeq.InitialUlong, c.StartSeq);
-            Assert.Equal(MaxDeliver.Initial, c.MaxDeliver);
-            Assert.Equal(RateLimit.Initial, c.RateLimit);
-            Assert.Equal(MaxAckPending.Initial, c.MaxAckPending);
-            Assert.Equal(MaxPullWaiting.Initial, c.MaxPullWaiting);
-            Assert.Equal(MaxBatch.Initial, c.MaxBatch);
+            Assert.Equal(-1, c.MaxDeliver);
+            Assert.Equal(-1, c.MaxAckPending);
+            Assert.Equal(-1, c.MaxPullWaiting);
+            Assert.Equal(-1, c.MaxBatch);
+            Assert.Equal(0U, c.StartSeq);
+            Assert.Equal(0U, c.RateLimitBps);
             Assert.Equal(0, c.Backoff.Count);
         }
 
         [Fact]
         public void ChangeHelperWorks()
         {
-            // value
-            Assert.False(StartSeq.WouldBeChange(2L, 2L));
-            Assert.False(MaxDeliver.WouldBeChange(2L, 2L));
-            Assert.False(RateLimit.WouldBeChange(2L, 2L));
-            Assert.False(MaxAckPending.WouldBeChange(2L, 2L));
-            Assert.False(MaxPullWaiting.WouldBeChange(2L, 2L));
-            Assert.False(MaxBatch.WouldBeChange(2L, 2L));
-            Assert.False(AckWait.WouldBeChange(Duration.OfSeconds(2), Duration.OfSeconds(2)));
+            void AssertLongChangeHelper(LongChangeHelper h)
+            {
+                Assert.False(h.WouldBeChange(h.Min, h.Min)); // has value vs server has same value
+                Assert.True(h.WouldBeChange(h.Min, h.Min + 1)); // has value vs server has different value
 
-            // null
-            Assert.False(StartSeq.WouldBeChange(null, 2L));
-            Assert.False(MaxDeliver.WouldBeChange(null, 2L));
-            Assert.False(RateLimit.WouldBeChange(null, 2L));
-            Assert.False(MaxAckPending.WouldBeChange(null, 2L));
-            Assert.False(MaxPullWaiting.WouldBeChange(null, 2L));
-            Assert.False(MaxBatch.WouldBeChange(null, 2L));
-            Assert.False(AckWait.WouldBeChange(null, Duration.OfSeconds(2)));
+                Assert.False(h.WouldBeChange(null, h.Min)); // value not set vs server has value
+                Assert.False(h.WouldBeChange(null, h.Unset)); // value not set vs server has unset value
 
-            // < min vs initial
-            Assert.False(StartSeq.WouldBeChange(-99L, StartSeq.Initial));
-            Assert.False(MaxDeliver.WouldBeChange(-99L, MaxDeliver.Initial));
-            Assert.False(RateLimit.WouldBeChange(-99L, RateLimit.Initial));
-            Assert.False(MaxAckPending.WouldBeChange(-99L, MaxAckPending.Initial));
-            Assert.False(MaxPullWaiting.WouldBeChange(-99L, MaxPullWaiting.Initial));
-            Assert.False(MaxBatch.WouldBeChange(-99L, MaxBatch.Initial));
-            Assert.False(AckWait.WouldBeChange(Duration.OfSeconds(-99), Duration.OfNanos(AckWait.Initial)));
+                Assert.True(h.WouldBeChange(h.Min, null)); // has value vs server not set
+                Assert.False(h.WouldBeChange(h.Unset, null)); // has unset value versus server not set
+            }
+            
+            void AssertUlongChangeHelper(UlongChangeHelper h)
+            {
+                Assert.False(h.WouldBeChange(h.Min, h.Min)); // has value vs server has same value
+                Assert.True(h.WouldBeChange(h.Min, h.Min + 1)); // has value vs server has different value
 
-            // server vs initial
-            Assert.False(StartSeq.WouldBeChange(StartSeq.Server, StartSeq.Initial));
-            Assert.False(MaxDeliver.WouldBeChange(MaxDeliver.Server, MaxDeliver.Initial));
-            Assert.False(RateLimit.WouldBeChange(RateLimit.Server, RateLimit.Initial));
-            Assert.False(MaxAckPending.WouldBeChange(MaxAckPending.Server, MaxAckPending.Initial));
-            Assert.False(MaxPullWaiting.WouldBeChange(MaxPullWaiting.Server, MaxPullWaiting.Initial));
-            Assert.False(MaxBatch.WouldBeChange(MaxBatch.Server, MaxBatch.Initial));
-            Assert.False(AckWait.WouldBeChange(Duration.OfNanos(AckWait.Server), Duration.OfNanos(AckWait.Initial)));
+                Assert.False(h.WouldBeChange(null, h.Min)); // value not set vs server has value
+                Assert.False(h.WouldBeChange(null, h.Unset)); // value not set vs server has unset value
 
-            Assert.True(StartSeq.WouldBeChange(1L, 2L));
-            Assert.True(MaxDeliver.WouldBeChange(1L, 2L));
-            Assert.True(RateLimit.WouldBeChange(1L, 2L));
-            Assert.True(MaxAckPending.WouldBeChange(1L, 2L));
-            Assert.True(MaxPullWaiting.WouldBeChange(1L, 2L));
-            Assert.True(MaxBatch.WouldBeChange(1L, 2L));
-            Assert.True(AckWait.WouldBeChange(Duration.OfSeconds(1), Duration.OfSeconds(2)));
+                Assert.True(h.WouldBeChange(h.Min, null)); // has value vs server not set
+                Assert.False(h.WouldBeChange(h.Unset, null)); // has unset value versus server not set
+            }
+            
+            void AssertDurationChangeHelper(DurationChangeHelper h)
+            {
+                Assert.False(h.WouldBeChange(h.Min, h.Min)); // has value vs server has same value
+                Assert.True(h.WouldBeChange(h.Min, Duration.OfNanos(h.MinNanos + 1))); // has value vs server has different value
+
+                Assert.False(h.WouldBeChange(null, h.Min)); // value not set vs server has value
+                Assert.False(h.WouldBeChange(null, h.Unset)); // value not set vs server has unset value
+
+                Assert.True(h.WouldBeChange(h.Min, null)); // has value vs server not set
+                Assert.False(h.WouldBeChange(h.Unset, null)); // has unset value versus server not set
+            }
+
+            AssertLongChangeHelper(MaxDeliver);
+            AssertLongChangeHelper(MaxAckPending);
+            AssertLongChangeHelper(MaxPullWaiting);
+            AssertLongChangeHelper(MaxBatch);
+            
+            AssertUlongChangeHelper(StartSeq);
+            AssertUlongChangeHelper(RateLimit);
+            
+            AssertDurationChangeHelper(AckWait);
         }
     }
 }

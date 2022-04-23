@@ -242,10 +242,18 @@ namespace NATS.Client
         public static readonly ClientExDetail JsSubExistingQueueDoesNotMatchRequestedQueue = new ClientExDetail(Sub, 90015, "Existing consumer deliver group does not match requested queue / deliver group.");
         public static readonly ClientExDetail JsSubExistingConsumerCannotBeModified = new ClientExDetail(Sub, 90016, "Existing consumer cannot be modified.");
         public static readonly ClientExDetail JsSubConsumerNotFoundRequiredInBind = new ClientExDetail(Sub, 90017, "Consumer not found, required in bind mode.");
+        public static readonly ClientExDetail JsSubOrderedNotAllowOnQueues = new ClientExDetail(Sub, 90018, "Ordered consumer not allowed on queues.");
+        public static readonly ClientExDetail JsSubPushCantHaveMaxBatch = new ClientExDetail(Sub, 90019, "Push subscriptions cannot supply max batch.");
 
         public static readonly ClientExDetail JsSoDurableMismatch = new ClientExDetail(So, 90101, "Builder durable must match the consumer configuration durable if both are provided.");
         public static readonly ClientExDetail JsSoDeliverGroupMismatch = new ClientExDetail(So, 90102, "Builder deliver group must match the consumer configuration deliver group if both are provided.");
         public static readonly ClientExDetail JsSoDeliverSubjectGroupMismatch = new ClientExDetail(So, 90103, "Builder deliver subject must match the consumer configuration deliver subject if both are provided.");
+        public static readonly ClientExDetail JsSoOrderedNotAllowedWithBind = new ClientExDetail(So, 90104, "Bind is not allowed with an ordered consumer.");
+        public static readonly ClientExDetail JsSoOrderedNotAllowedWithDeliverGroup = new ClientExDetail(So, 90105, "Deliver group is not allowed with an ordered consumer.");
+        public static readonly ClientExDetail JsSoOrderedNotAllowedWithDurable = new ClientExDetail(So, 90106, "Durable is not allowed with an ordered consumer.");
+        public static readonly ClientExDetail JsSoOrderedNotAllowedWithDeliverSubject = new ClientExDetail(So, 90107, "Deliver subject is not allowed with an ordered consumer.");
+        public static readonly ClientExDetail JsSoOrderedRequiresAckPolicyNone = new ClientExDetail(So, 90108, "Deliver subject is not allowed with an ordered consumer.");
+        public static readonly ClientExDetail JsSoOrderedRequiresMaxDeliver = new ClientExDetail(So, 90109, "Max deliver is limited to 1 with an ordered consumer.");
 
         private const string Sub = "SUB";
         private const string So = "SO";

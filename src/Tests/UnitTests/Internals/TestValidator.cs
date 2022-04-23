@@ -245,19 +245,6 @@ namespace UnitTests.Internals
         }
         
         [Fact]
-        public void TestValidateNotSupplied() {
-            ClientExDetail err = new ClientExDetail("TEST", 999999, "desc");
-
-            // string version
-            Validator.ValidateNotSupplied((string)null, err);
-            Validator.ValidateNotSupplied("", err);
-            Assert.Throws<NATSJetStreamClientException>(() => Validator.ValidateNotSupplied("notempty", err));
-
-            Validator.ValidateNotSupplied(0, 0, err);
-            Assert.Throws<NATSJetStreamClientException>(() => Validator.ValidateNotSupplied(1, 0, err));
-        }
-
-        [Fact]
         public void TestValidateMustMatchIfBothSupplied()
         {
             ClientExDetail detail = new ClientExDetail("TEST", 999999, "desc");

@@ -627,7 +627,7 @@ namespace IntegrationTests
                     .WithDurable(Durable(21))
                     .WithStartSequence(42)
                     .WithMaxDeliver(43)
-                    .WithRateLimit(44)
+                    .WithRateLimitBps(44)
                     .WithMaxAckPending(45)
                     .Build();
                 jsm.AddOrUpdateConsumer(STREAM, cc);
@@ -685,7 +685,7 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public void TestConsumerCannotBeModified() {
+        public void TestSubscribeDurableConsumerMustMatch() {
             Context.RunInJsServer(c =>
             {
                 IJetStream js = c.CreateJetStreamContext();
@@ -693,86 +693,83 @@ namespace IntegrationTests
 
                 CreateDefaultTestStream(jsm);
 
-                ConsumerConfiguration.ConsumerConfigurationBuilder builder = DurBuilder();
-                jsm.AddOrUpdateConsumer(STREAM, builder.Build());
+                jsm.AddOrUpdateConsumer(STREAM, PushDurableBuilder().Build());
 
-                CcbmEx(js, DurBuilder().WithDeliverPolicy(DeliverPolicy.Last));
-                CcbmEx(js, DurBuilder().WithDeliverPolicy(DeliverPolicy.New));
-                CcbmEx(js, DurBuilder().WithAckPolicy(AckPolicy.None));
-                CcbmEx(js, DurBuilder().WithAckPolicy(AckPolicy.All));
-                CcbmEx(js, DurBuilder().WithReplayPolicy(ReplayPolicy.Original));
+                ChangeExPush(js, PushDurableBuilder().WithDeliverPolicy(DeliverPolicy.Last));
+                ChangeExPush(js, PushDurableBuilder().WithDeliverPolicy(DeliverPolicy.New));
+                ChangeExPush(js, PushDurableBuilder().WithAckPolicy(AckPolicy.None));
+                ChangeExPush(js, PushDurableBuilder().WithAckPolicy(AckPolicy.All));
+                ChangeExPush(js, PushDurableBuilder().WithReplayPolicy(ReplayPolicy.Original));
 
-                CcbmEx(js, DurBuilder().WithStartTime(DateTime.Now));
-                CcbmEx(js, DurBuilder().WithAckWait(Duration.OfMillis(1)));
-                CcbmEx(js, DurBuilder().WithDescription("x"));
-                CcbmEx(js, DurBuilder().WithSampleFrequency("x"));
-                CcbmEx(js, DurBuilder().WithIdleHeartbeat(Duration.OfMillis(1000)));
+                ChangeExPush(js, PushDurableBuilder().WithStartTime(DateTime.Now));
+                ChangeExPush(js, PushDurableBuilder().WithAckWait(Duration.OfMillis(1)));
+                ChangeExPush(js, PushDurableBuilder().WithDescription("x"));
+                ChangeExPush(js, PushDurableBuilder().WithSampleFrequency("x"));
+                ChangeExPush(js, PushDurableBuilder().WithIdleHeartbeat(Duration.OfMillis(1000)));
 
-                CcbmEx(js, DurBuilder().WithStartSequence(5));
-                CcbmEx(js, DurBuilder().WithMaxDeliver(5));
-                CcbmEx(js, DurBuilder().WithRateLimit(5));
-                CcbmEx(js, DurBuilder().WithMaxAckPending(5));
+                // min
+                ChangeExPush(js, PushDurableBuilder().WithMaxDeliver(1));
+                ChangeExPush(js, PushDurableBuilder().WithMaxAckPending(0));
+                ChangeExPush(js, PushDurableBuilder().WithStartSequence(1));
+                ChangeExPush(js, PushDurableBuilder().WithRateLimitBps(1));
+                ChangeExPush(js, PushDurableBuilder().WithAckWait(1));
 
-                CcbmOk(js, DurBuilder().WithStartSequence(0));
-                CcbmOk(js, DurBuilder().WithMaxDeliver(0));
-                CcbmOk(js, DurBuilder().WithMaxDeliver(-1));
-                CcbmOk(js, DurBuilder().WithRateLimit(0));
-                CcbmOk(js, DurBuilder().WithRateLimit(-1));
-                CcbmOk(js, DurBuilder().WithMaxAckPending(20000));
-                CcbmOk(js, DurBuilder().WithMaxPullWaiting(0));
+                // unset
+                ChangeOkPush(js, PushDurableBuilder().WithMaxDeliver(-1));
+                ChangeExPush(js, PushDurableBuilder().WithMaxAckPending(-1));
+                ChangeOkPush(js, PushDurableBuilder().WithStartSequence(0));
+                ChangeOkPush(js, PushDurableBuilder().WithRateLimitBps(0));
+                ChangeExPush(js, PushDurableBuilder().WithAckWait(0));
+
+                // server + push
+                ChangeOkPush(js, PushDurableBuilder().WithMaxDeliver(-1));
+                ChangeOkPush(js, PushDurableBuilder().WithMaxAckPending(1000));
+                ChangeOkPush(js, PushDurableBuilder().WithStartSequence(null));
+                ChangeOkPush(js, PushDurableBuilder().WithRateLimitBps(null));
+                ChangeOkPush(js, PushDurableBuilder().WithAckWait(Duration.OfSeconds(30)));
                 
-                ConsumerConfiguration.ConsumerConfigurationBuilder builder2 = ConsumerConfiguration.Builder().WithDurable(Durable(2));
-                c.CreateJetStreamManagementContext().AddOrUpdateConsumer(STREAM, builder2.Build());
-                CcbmExPull(js, builder2.WithMaxPullWaiting(999));
-                CcbmOkPull(js, builder2.WithMaxPullWaiting(512)); // 512 is the default
+                jsm.AddOrUpdateConsumer(STREAM, PullDurableBuilder().Build());
 
-                jsm.DeleteConsumer(STREAM, DURABLE);
-                
-                jsm.AddOrUpdateConsumer(STREAM, DurBuilder().WithDescription("desc").WithSampleFrequency("42").Build());
-                CcbmOk(js, DurBuilder());
-                CcbmEx(js, DurBuilder().WithDescription("x"));
-                CcbmEx(js, DurBuilder().WithSampleFrequency("73"));
-                
-                jsm.DeleteConsumer(STREAM, DURABLE);
+                // min
+                ChangeExPull(js, PullDurableBuilder().WithMaxPullWaiting(0));
+                ChangeExPull(js, PullDurableBuilder().WithMaxBatch(0));
 
-                builder = DurBuilder()
-                    .WithStartSequence(5)
-                    .WithMaxDeliver(6)
-                    .WithRateLimit(7)
-                    .WithMaxAckPending(8)
-                    .WithDeliverPolicy(DeliverPolicy.ByStartSequence);
-                
-                jsm.AddOrUpdateConsumer(STREAM, builder.Build());
+                // unset
+                ChangeExPull(js, PullDurableBuilder().WithMaxPullWaiting(-1));
+                ChangeOkPull(js, PullDurableBuilder().WithMaxBatch(-1));
 
-                CcbmEx(js, builder.WithStartSequence(55));
-                CcbmEx(js, builder.WithMaxDeliver(66));
-                CcbmEx(js, builder.WithRateLimit(77));
-                CcbmEx(js, builder.WithMaxAckPending(88));
+                // server + pull
+                ChangeOkPull(js, PullDurableBuilder().WithMaxPullWaiting(512));
+                ChangeOkPull(js, PullDurableBuilder().WithMaxBatch(null));
             });
         }
 
-        private void CcbmOk(IJetStream js, ConsumerConfiguration.ConsumerConfigurationBuilder builder) {
+        private void ChangeOkPush(IJetStream js, ConsumerConfiguration.ConsumerConfigurationBuilder builder) {
             js.PushSubscribeSync(SUBJECT, PushSubscribeOptions.Builder().WithConfiguration(builder.Build()).Build()).Unsubscribe();
         }
 
-        private void CcbmOkPull(IJetStream js, ConsumerConfiguration.ConsumerConfigurationBuilder builder) {
+        private void ChangeOkPull(IJetStream js, ConsumerConfiguration.ConsumerConfigurationBuilder builder) {
             js.PullSubscribe(SUBJECT, PullSubscribeOptions.Builder().WithConfiguration(builder.Build()).Build()).Unsubscribe();
         }
 
-        private void CcbmEx(IJetStream js, ConsumerConfiguration.ConsumerConfigurationBuilder builder) {
+        private void ChangeExPush(IJetStream js, ConsumerConfiguration.ConsumerConfigurationBuilder builder) {
             NATSJetStreamClientException e = Assert.Throws<NATSJetStreamClientException>(
                 () => js.PushSubscribeSync(SUBJECT, PushSubscribeOptions.Builder().WithConfiguration(builder.Build()).Build()));
             Assert.Contains(JsSubExistingConsumerCannotBeModified.Id, e.Message);
         }
 
-        private void CcbmExPull(IJetStream js, ConsumerConfiguration.ConsumerConfigurationBuilder builder) {
+        private void ChangeExPull(IJetStream js, ConsumerConfiguration.ConsumerConfigurationBuilder builder) {
             NATSJetStreamClientException e = Assert.Throws<NATSJetStreamClientException>(
                 () => js.PullSubscribe(SUBJECT, PullSubscribeOptions.Builder().WithConfiguration(builder.Build()).Build()));
             Assert.Contains(JsSubExistingConsumerCannotBeModified.Id, e.Message);
         }
 
-        private ConsumerConfiguration.ConsumerConfigurationBuilder DurBuilder() {
-            return ConsumerConfiguration.Builder().WithDurable(DURABLE).WithDeliverSubject(DELIVER);
+        private ConsumerConfiguration.ConsumerConfigurationBuilder PushDurableBuilder() {
+            return ConsumerConfiguration.Builder().WithDurable(PUSH_DURABLE).WithDeliverSubject(DELIVER);
+        }
+
+        private ConsumerConfiguration.ConsumerConfigurationBuilder PullDurableBuilder() {
+            return ConsumerConfiguration.Builder().WithDurable(PULL_DURABLE);
         }
 
         [Fact]
