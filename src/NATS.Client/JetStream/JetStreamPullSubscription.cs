@@ -74,6 +74,8 @@ namespace NATS.Client.JetStream
             return JsonUtils.Serialize(jso);
         }
 
+        protected const int ExpireLessMillis = 10;
+
         public IList<Msg> Fetch(int batchSize, int maxWaitMillis)
         {
             IList<Msg> messages = new List<Msg>();
@@ -82,7 +84,7 @@ namespace NATS.Client.JetStream
             Stopwatch sw = Stopwatch.StartNew();
 
             Duration expires = Duration.OfMillis(
-                maxWaitMillis > MinMillis
+                maxWaitMillis > ExpireLessMillis
                     ? maxWaitMillis - ExpireLessMillis
                     : maxWaitMillis);
             PullInternal(batchLeft, false, expires);

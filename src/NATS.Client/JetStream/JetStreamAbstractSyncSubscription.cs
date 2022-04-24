@@ -11,7 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Diagnostics;
 
 namespace NATS.Client.JetStream
@@ -60,9 +59,6 @@ namespace NATS.Client.JetStream
             return msg;
         }
 
-        protected const int MinMillis = 20;
-        protected const int ExpireLessMillis = 10;
-
         public new Msg NextMessage(int timeout)
         {
             // < 0 means indefinite
@@ -70,22 +66,17 @@ namespace NATS.Client.JetStream
             {
                 return NextMessage();
             }
-
-            // 0 or very short? Try again once if it's a managed message
-            if (timeout < MinMillis)
-            {
-                Msg msg = NextMessageImpl(timeout);
-                return _asm.Manage(msg) ? NextMessageImpl(MinMillis) : msg;
-            }
             
             // int timeLeft = Math.Max(timeout, MinMillis);
             Stopwatch sw = Stopwatch.StartNew();
-            while (sw.ElapsedMilliseconds < timeout) {
-                // NMI timeout is the larger of Min or the time left.
-                Msg msg = NextMessageImpl( Math.Max(MinMillis, timeout - (int)sw.ElapsedMilliseconds) );
+            int timeLeft = timeout;
+            while (timeLeft > 0)
+            {
+                Msg msg = NextMessageImpl(timeout);
                 if (!_asm.Manage(msg)) { // not managed means JS Message
                     return msg;
                 }
+                timeLeft = timeout - (int)sw.ElapsedMilliseconds;
             }
             
             throw new NATSTimeoutException();
