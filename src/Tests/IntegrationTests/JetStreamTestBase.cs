@@ -95,9 +95,7 @@ namespace IntegrationTests
                 Msg msg = sub.NextMessage(DefaultTimeout);
                 while (msg != null) {
                     messages.Add(msg);
-                    if (msg.IsJetStream) {
-                        msg.Ack();
-                    }
+                    msg.Ack();
                     msg = sub.NextMessage(DefaultTimeout);
                 }
             }
