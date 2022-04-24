@@ -802,6 +802,11 @@ namespace IntegrationTests
                 e = Assert.Throws<NATSJetStreamClientException>(() => js.PushSubscribeSync(SUBJECT, pushCantHaveMpw));
                 Assert.Contains(JsSubPushCantHaveMaxPullWaiting.Id, e.Message);
 
+                ccCantHave = ConsumerConfiguration.Builder().WithMaxBatch(1).Build();
+                PushSubscribeOptions pushCantHaveMb = PushSubscribeOptions.Builder().WithConfiguration(ccCantHave).Build();
+                e = Assert.Throws<NATSJetStreamClientException>(() => js.PushSubscribeSync(SUBJECT, pushCantHaveMb));
+                Assert.Contains(JsSubPushCantHaveMaxBatch.Id, e.Message);
+
                 // create some consumers
                 PushSubscribeOptions psoDurNoQ = PushSubscribeOptions.Builder().WithDurable("durNoQ").Build();
                 js.PushSubscribeSync(SUBJECT, psoDurNoQ);
