@@ -10,7 +10,7 @@ namespace IntegrationTests
     public static class JetStreamTestBase
     {
         public const string JsReplyTo = "$JS.ACK.test-stream.test-consumer.1.2.3.1605139610113260000";
-        public static readonly int DefaultTimeout = 500; // millis
+        public static readonly int DefaultTimeout = 1000; // millis
 
         public static void CreateDefaultTestStream(IConnection c)
             => CreateMemoryStream(c, STREAM, SUBJECT);
