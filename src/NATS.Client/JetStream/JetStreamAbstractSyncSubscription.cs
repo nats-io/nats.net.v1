@@ -67,12 +67,11 @@ namespace NATS.Client.JetStream
                 return NextMessage();
             }
             
-            // int timeLeft = Math.Max(timeout, MinMillis);
             Stopwatch sw = Stopwatch.StartNew();
             int timeLeft = timeout;
             while (timeLeft > 0)
             {
-                Msg msg = NextMessageImpl(timeout);
+                Msg msg = NextMessageImpl(timeLeft);
                 if (!_asm.Manage(msg)) { // not managed means JS Message
                     return msg;
                 }
