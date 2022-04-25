@@ -670,33 +670,20 @@ namespace NATS.Client.JetStream
     
     /**
      * Helper class to manage min / default / unset / server values.
-     *
-     * These are what the server returns for a default consumer.
-     *
-     * 	"max_deliver": -1
-     * 	"max_ack_pending": 1000,
-     * 	"max_waiting": push:omitted pull:512,
-     * 	"max_batch": omitted
-     *
-     * The server will treat max_deliver of 0 as -1, that's why returns it
      */
     internal class LongChangeHelper {
-        internal static readonly LongChangeHelper MaxDeliver = new LongChangeHelper(1, -1, -1, -1);
-        internal static readonly LongChangeHelper MaxAckPending = new LongChangeHelper(0, -1, 1000L, 1000L);
-        internal static readonly LongChangeHelper MaxPullWaiting = new LongChangeHelper(0, -1, null, 512L);
-        internal static readonly LongChangeHelper MaxBatch = new LongChangeHelper(0, -1, null, null);
+        internal static readonly LongChangeHelper MaxDeliver = new LongChangeHelper(1, -1);
+        internal static readonly LongChangeHelper MaxAckPending = new LongChangeHelper(0, -1);
+        internal static readonly LongChangeHelper MaxPullWaiting = new LongChangeHelper(0, -1);
+        internal static readonly LongChangeHelper MaxBatch = new LongChangeHelper(0, -1);
 
         internal long Min { get; }
         internal long Unset  { get; }
-        internal long? ServerPush { get; }
-        internal long? ServerPull { get; }
 
-        private LongChangeHelper(long min, long unset, long? push, long? pull)
+        private LongChangeHelper(long min, long unset)
         {
             Min = min;
             Unset = unset;
-            ServerPush = push;
-            ServerPull = pull;
         }
 
         internal long GetOrUnset(long? val) {
@@ -716,21 +703,20 @@ namespace NATS.Client.JetStream
         }
     }
     
+    /**
+     * Helper class to manage min / default / unset / server values.
+     */
     internal class UlongChangeHelper {
-        internal static readonly UlongChangeHelper StartSeq = new UlongChangeHelper(null, null);
-        internal static readonly UlongChangeHelper RateLimit = new UlongChangeHelper(null, null);
+        internal static readonly UlongChangeHelper StartSeq = new UlongChangeHelper();
+        internal static readonly UlongChangeHelper RateLimit = new UlongChangeHelper();
 
         internal ulong Min { get; }
         internal ulong Unset  { get; }
-        internal ulong? ServerPush { get; }
-        internal ulong? ServerPull { get; }
 
-        private UlongChangeHelper(ulong? push, ulong? pull)
+        private UlongChangeHelper()
         {
             Min = 1;
             Unset = 0;
-            ServerPush = push;
-            ServerPull = pull;
         }
 
         internal ulong GetOrUnset(ulong? val) {
@@ -750,21 +736,20 @@ namespace NATS.Client.JetStream
         }
     }
     
+    /**
+     * Helper class to manage min / default / unset / server values.
+     */
     internal class DurationChangeHelper {
-        internal static readonly DurationChangeHelper AckWait = new DurationChangeHelper(Duration.OfSeconds(30), Duration.OfSeconds(30));
+        internal static readonly DurationChangeHelper AckWait = new DurationChangeHelper();
 
         internal Duration Min { get; }
         internal Duration Unset  { get; }
-        internal Duration ServerPush { get; }
-        internal Duration ServerPull { get; }
         internal long MinNanos { get; }
 
-        private DurationChangeHelper(Duration push, Duration pull)
+        private DurationChangeHelper()
         {
             Min = Duration.One;
             Unset = Duration.Zero;
-            ServerPush = push;
-            ServerPull = pull;
             MinNanos = 1;
         }
 
