@@ -273,7 +273,7 @@ namespace NATS.Client.KeyValue
                     {
                         if (lastTimedOut)
                         {
-                            return; // two timeouts in a row is enough
+                            throw; 
                         }
                         lastTimedOut = true;
                     }
