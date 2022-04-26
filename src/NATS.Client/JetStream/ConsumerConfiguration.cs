@@ -456,19 +456,8 @@ namespace NATS.Client.JetStream
             [Obsolete("This method is obsolete. Use WithRateLimit with ulong parameter.", false)]
             public ConsumerConfigurationBuilder WithRateLimit(long? bitsPerSecond)
             {
-                ulong? ubps = null;
-                if (bitsPerSecond != null)
-                {
-                    if (bitsPerSecond < 0)
-                    {
-                        ubps = UlongChangeHelper.RateLimit.Unset;
-                    }
-                    else
-                    {
-                        ubps = (ulong)bitsPerSecond;
-                    }
-                }
-                return WithRateLimitBps(ubps);
+                _rateLimit = UlongChangeHelper.RateLimit.ForBuilder(bitsPerSecond);
+                return this;
             }
 
             /// <summary>
@@ -733,6 +722,16 @@ namespace NATS.Client.JetStream
                 return Unset;
             }
             return proposed.Value;
+        }
+
+        internal ulong ForBuilder(long? proposed) {
+            if (proposed == null || proposed < 0)
+            {
+                return Unset;
+            }
+
+            ulong ulProposed = (ulong)proposed;
+            return ulProposed < Min ? Unset : ulProposed;
         }
     }
     

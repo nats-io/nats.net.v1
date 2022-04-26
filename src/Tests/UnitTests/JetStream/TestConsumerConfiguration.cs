@@ -200,6 +200,10 @@ namespace UnitTests.JetStream
 
                 Assert.True(h.WouldBeChange(h.Min, null)); // has value vs server not set
                 Assert.False(h.WouldBeChange(h.Unset, null)); // has unset value versus server not set
+
+                Assert.Equal(h.Min, h.ForBuilder(h.Min));
+                Assert.Equal(h.Unset, h.ForBuilder(h.Unset));
+                Assert.Equal(h.Min + 1, h.ForBuilder(h.Min + 1));
             }
             
             void AssertUlongChangeHelper(UlongChangeHelper h)
@@ -212,6 +216,14 @@ namespace UnitTests.JetStream
 
                 Assert.True(h.WouldBeChange(h.Min, null)); // has value vs server not set
                 Assert.False(h.WouldBeChange(h.Unset, null)); // has unset value versus server not set
+                
+                Assert.Equal(h.Min, h.ForBuilder(h.Min));
+                Assert.Equal(h.Unset, h.ForBuilder(h.Unset));
+                Assert.Equal(h.Min + 1, h.ForBuilder(h.Min + 1));
+                Assert.Equal(h.Min, h.ForBuilder((long)h.Min));
+                Assert.Equal(h.Unset, h.ForBuilder((long)h.Unset));
+                Assert.Equal(h.Min + 1, h.ForBuilder((long)(h.Min + 1)));
+                Assert.Equal(h.Unset, h.ForBuilder(-1L));
             }
             
             void AssertDurationChangeHelper(DurationChangeHelper h)
@@ -224,6 +236,10 @@ namespace UnitTests.JetStream
 
                 Assert.True(h.WouldBeChange(h.Min, null)); // has value vs server not set
                 Assert.False(h.WouldBeChange(h.Unset, null)); // has unset value versus server not set
+                
+                Assert.Equal(h.Min, h.ForBuilder(h.Min));
+                Assert.Equal(h.Unset, h.ForBuilder(h.Unset));
+                Assert.Equal(Duration.OfNanos(h.MinNanos + 1), Duration.OfNanos(h.MinNanos + 1));
             }
 
             AssertLongChangeHelper(MaxDeliver);
