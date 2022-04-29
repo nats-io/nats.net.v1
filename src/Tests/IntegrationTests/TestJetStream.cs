@@ -661,6 +661,7 @@ namespace IntegrationTests
 
                 CreateDefaultTestStream(jsm);
 
+                // push
                 jsm.AddOrUpdateConsumer(STREAM, PushDurableBuilder().Build());
 
                 ChangeExPush(js, PushDurableBuilder().WithDeliverPolicy(DeliverPolicy.Last));
@@ -689,13 +690,7 @@ namespace IntegrationTests
                 ChangeOkPush(js, PushDurableBuilder().WithRateLimitBps(0));
                 ChangeExPush(js, PushDurableBuilder().WithAckWait(0));
 
-                // server + push
-                ChangeOkPush(js, PushDurableBuilder().WithMaxDeliver(-1));
-                ChangeOkPush(js, PushDurableBuilder().WithMaxAckPending(1000));
-                ChangeOkPush(js, PushDurableBuilder().WithStartSequence(null));
-                ChangeOkPush(js, PushDurableBuilder().WithRateLimitBps(null));
-                ChangeOkPush(js, PushDurableBuilder().WithAckWait(Duration.OfSeconds(30)));
-                
+                // pull
                 jsm.AddOrUpdateConsumer(STREAM, PullDurableBuilder().Build());
 
                 // min
@@ -705,10 +700,6 @@ namespace IntegrationTests
                 // unset
                 ChangeExPull(js, PullDurableBuilder().WithMaxPullWaiting(-1));
                 ChangeOkPull(js, PullDurableBuilder().WithMaxBatch(-1));
-
-                // server + pull
-                ChangeOkPull(js, PullDurableBuilder().WithMaxPullWaiting(512));
-                ChangeOkPull(js, PullDurableBuilder().WithMaxBatch(null));
             });
         }
 
