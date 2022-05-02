@@ -676,31 +676,39 @@ namespace IntegrationTests
                 ChangeExPush(js, PushDurableBuilder().WithSampleFrequency("x"));
                 ChangeExPush(js, PushDurableBuilder().WithIdleHeartbeat(Duration.OfMillis(1000)));
 
-                // min
+                // value
                 ChangeExPush(js, PushDurableBuilder().WithMaxDeliver(1));
                 ChangeExPush(js, PushDurableBuilder().WithMaxAckPending(0));
+                ChangeExPush(js, PushDurableBuilder().WithAckWait(0));
+
+                // value unsigned
                 ChangeExPush(js, PushDurableBuilder().WithStartSequence(1));
                 ChangeExPush(js, PushDurableBuilder().WithRateLimitBps(1));
-                ChangeExPush(js, PushDurableBuilder().WithAckWait(1));
 
-                // unsets don't fail because the server does not provide a value
+                // unset doesn't fail because the server provides a value equal to the unset
                 ChangeOkPush(js, PushDurableBuilder().WithMaxDeliver(-1));
+
+                // unset doesn't fail because the server does not provide a value
                 ChangeOkPush(js, PushDurableBuilder().WithStartSequence(0));
                 ChangeOkPush(js, PushDurableBuilder().WithRateLimitBps(0));
 
-                // unsets fail b/c the server does set a value
+                // unset fail b/c the server does set a value that is not equal to the unset or the minimum
                 ChangeExPush(js, PushDurableBuilder().WithMaxAckPending(-1));
+                ChangeExPush(js, PushDurableBuilder().WithMaxAckPending(0));
+                ChangeExPush(js, PushDurableBuilder().WithAckWait(-1));
                 ChangeExPush(js, PushDurableBuilder().WithAckWait(0));
 
                 // pull
                 jsm.AddOrUpdateConsumer(STREAM, PullDurableBuilder().Build());
 
-                // min
+                // value
                 ChangeExPull(js, PullDurableBuilder().WithMaxPullWaiting(0));
                 ChangeExPull(js, PullDurableBuilder().WithMaxBatch(0));
 
-                // unset
+                // unsets fail b/c the server does set a value
                 ChangeExPull(js, PullDurableBuilder().WithMaxPullWaiting(-1));
+
+                // unset
                 ChangeOkPull(js, PullDurableBuilder().WithMaxBatch(-1));
             });
         }

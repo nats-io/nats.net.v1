@@ -176,21 +176,22 @@ namespace NATS.Client.JetStream
                    || _flowControl != null && _flowControl != original.FlowControl
                    || _headersOnly != null && _headersOnly != original.HeadersOnly
 
-                   || WouldBeChange(_startSeq, original.StartSeq)
-                   || WouldBeChange(_rateLimitBps, original.RateLimitBps)
+                   || _startSeq != null && _startSeq != original.StartSeq
+                   || _rateLimitBps != null && _rateLimitBps != original.RateLimitBps
 
-                   // MaxDeliver is a special case because both <= 0 is unset where other unsigned < 0 is unset
+                   // MaxDeliver is a special case because -1 and 0 are unset where other unsigned -1 is unset
                    || LongChangeHelper.MaxDeliver.WouldBeChange(_maxDeliver, original.MaxDeliver)
                    
-                   || WouldBeChange(_maxAckPending, original.MaxAckPending)
-                   || WouldBeChange(_maxPullWaiting, original.MaxPullWaiting)
-                   || WouldBeChange(_maxBatch, original.MaxBatch)
+                   || _maxAckPending != null && _maxAckPending != original.MaxAckPending
+                   || _maxPullWaiting != null && _maxPullWaiting != original.MaxPullWaiting
+                   || _maxBatch != null && _maxBatch != original.MaxBatch
 
-                   || WouldBeChange(AckWait, original.AckWait)
-                   || WouldBeChange(IdleHeartbeat, original.IdleHeartbeat)
+                   || AckWait != null && !AckWait.Equals(original.AckWait)
+                   || IdleHeartbeat != null && !IdleHeartbeat.Equals(original.IdleHeartbeat)
+                   || MaxExpires != null && !MaxExpires.Equals(original.MaxExpires)
+                   || InactiveThreshold != null && !InactiveThreshold.Equals(original.InactiveThreshold)
+
                    || WouldBeChange(StartTime, original.StartTime)
-                   || WouldBeChange(MaxExpires, original.MaxExpires)
-                   || WouldBeChange(InactiveThreshold, original.InactiveThreshold)
                    
                    || WouldBeChange(FilterSubject, original.FilterSubject)
                    || WouldBeChange(Description, original.Description)
@@ -213,21 +214,6 @@ namespace NATS.Client.JetStream
         private static bool WouldBeChange(DateTime request, DateTime original)
         {
             return request != DateTime.MinValue && !request.Equals(original);
-        }
-
-        private static bool WouldBeChange(long? request, long original)
-        {
-            return request != null && !request.Equals(original);
-        }
-
-        private static bool WouldBeChange(ulong? request, ulong original)
-        {
-            return request != null && !request.Equals(original);
-        }
-
-        private static bool WouldBeChange(Duration request, Duration original)
-        {
-            return request != null && !request.Equals(original);
         }
         
         private static long GetOrUnset(long? val)
