@@ -266,7 +266,7 @@ namespace NATS.Client.JetStream
                 {
                     return null;
                 }
-                if (proposed <= Unset)
+                if (proposed < Min)
                 {
                     return Unset;
                 }
