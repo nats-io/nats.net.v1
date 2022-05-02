@@ -683,11 +683,13 @@ namespace IntegrationTests
                 ChangeExPush(js, PushDurableBuilder().WithRateLimitBps(1));
                 ChangeExPush(js, PushDurableBuilder().WithAckWait(1));
 
-                // unset
+                // unsets don't fail because the server does not provide a value
                 ChangeOkPush(js, PushDurableBuilder().WithMaxDeliver(-1));
-                ChangeExPush(js, PushDurableBuilder().WithMaxAckPending(-1));
                 ChangeOkPush(js, PushDurableBuilder().WithStartSequence(0));
                 ChangeOkPush(js, PushDurableBuilder().WithRateLimitBps(0));
+
+                // unsets fail b/c the server does set a value
+                ChangeExPush(js, PushDurableBuilder().WithMaxAckPending(-1));
                 ChangeExPush(js, PushDurableBuilder().WithAckWait(0));
 
                 // pull
@@ -746,24 +748,32 @@ namespace IntegrationTests
                 CreateDefaultTestStream(c);
 
                 // general pull push validation
-                ConsumerConfiguration ccCantHave = ConsumerConfiguration.Builder().WithDurable("pulldur").WithDeliverGroup("cantHave").Build();
-                PullSubscribeOptions pullCantHaveDlvrGrp = PullSubscribeOptions.Builder().WithConfiguration(ccCantHave).Build();
+                ConsumerConfiguration ccPush = ConsumerConfiguration.Builder().WithDurable("pulldur").WithDeliverGroup("cantHave").Build();
+                PullSubscribeOptions pullCantHaveDlvrGrp = PullSubscribeOptions.Builder().WithConfiguration(ccPush).Build();
                 e = Assert.Throws<NATSJetStreamClientException>(() => js.PullSubscribe(SUBJECT, pullCantHaveDlvrGrp));
                 Assert.Contains(JsSubPullCantHaveDeliverGroup.Id, e.Message);
 
-                ccCantHave = ConsumerConfiguration.Builder().WithDurable("pulldur").WithDeliverSubject("cantHave").Build();
-                PullSubscribeOptions pullCantHaveDlvrSub = PullSubscribeOptions.Builder().WithConfiguration(ccCantHave).Build();
+                ccPush = ConsumerConfiguration.Builder().WithDurable("pulldur").WithDeliverSubject("cantHave").Build();
+                PullSubscribeOptions pullCantHaveDlvrSub = PullSubscribeOptions.Builder().WithConfiguration(ccPush).Build();
                 e = Assert.Throws<NATSJetStreamClientException>(() => js.PullSubscribe(SUBJECT, pullCantHaveDlvrSub));
                 Assert.Contains(JsSubPullCantHaveDeliverSubject.Id, e.Message);
 
-                ccCantHave = ConsumerConfiguration.Builder().WithMaxPullWaiting(1).Build();
-                PushSubscribeOptions pushCantHaveMpw = PushSubscribeOptions.Builder().WithConfiguration(ccCantHave).Build();
-                e = Assert.Throws<NATSJetStreamClientException>(() => js.PushSubscribeSync(SUBJECT, pushCantHaveMpw));
+                ccPush = ConsumerConfiguration.Builder().WithMaxPullWaiting(1).Build();
+                PushSubscribeOptions pushSo = PushSubscribeOptions.Builder().WithConfiguration(ccPush).Build();
+                e = Assert.Throws<NATSJetStreamClientException>(() => js.PushSubscribeSync(SUBJECT, pushSo));
                 Assert.Contains(JsSubPushCantHaveMaxPullWaiting.Id, e.Message);
 
-                ccCantHave = ConsumerConfiguration.Builder().WithMaxBatch(1).Build();
-                PushSubscribeOptions pushCantHaveMb = PushSubscribeOptions.Builder().WithConfiguration(ccCantHave).Build();
-                e = Assert.Throws<NATSJetStreamClientException>(() => js.PushSubscribeSync(SUBJECT, pushCantHaveMb));
+                ccPush = ConsumerConfiguration.Builder().WithMaxPullWaiting(-1).Build();
+                pushSo = PushSubscribeOptions.Builder().WithConfiguration(ccPush).Build();
+                js.PushSubscribeSync(SUBJECT, pushSo);
+
+                ccPush = ConsumerConfiguration.Builder().WithMaxBatch(1).Build();
+                pushSo = PushSubscribeOptions.Builder().WithConfiguration(ccPush).Build();
+                e = Assert.Throws<NATSJetStreamClientException>(() => js.PushSubscribeSync(SUBJECT, pushSo));
+
+                ccPush = ConsumerConfiguration.Builder().WithMaxBatch(-1).Build();
+                pushSo = PushSubscribeOptions.Builder().WithConfiguration(ccPush).Build();
+                js.PushSubscribeSync(SUBJECT, pushSo);
                 Assert.Contains(JsSubPushCantHaveMaxBatch.Id, e.Message);
 
                 // create some consumers

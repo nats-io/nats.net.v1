@@ -16,9 +16,7 @@ using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 using NATS.Client.JetStream;
 using Xunit;
-using static NATS.Client.JetStream.LongChangeHelper;
-using static NATS.Client.JetStream.UlongChangeHelper;
-using static NATS.Client.JetStream.DurationChangeHelper;
+using static NATS.Client.JetStream.ConsumerConfiguration;
 
 namespace UnitTests.JetStream
 {
@@ -27,11 +25,11 @@ namespace UnitTests.JetStream
         [Fact]
         public void BuilderWorks()
         {
-            AssertDefaultCc(ConsumerConfiguration.Builder().Build());
+            AssertDefaultCc(Builder().Build());
 
             DateTime dt = DateTime.UtcNow;
 
-            ConsumerConfiguration c = ConsumerConfiguration.Builder()
+            ConsumerConfiguration c = Builder()
                 .WithAckPolicy(AckPolicy.Explicit)
                 .WithAckWait(Duration.OfSeconds(99))
                 .WithDeliverPolicy(DeliverPolicy.ByStartSequence)
@@ -66,19 +64,19 @@ namespace UnitTests.JetStream
             AssertAsBuilt(c, dt);
 
             // flow control idle heartbeat combo
-            c = ConsumerConfiguration.Builder()
+            c = Builder()
                 .WithFlowControl(Duration.OfMillis(501)).Build();
             Assert.True(c.FlowControl);
             Assert.Equal(501, c.IdleHeartbeat.Millis);
 
-            c = ConsumerConfiguration.Builder()
+            c = Builder()
                 .WithFlowControl(502).Build();
             Assert.True(c.FlowControl);
             Assert.Equal(502, c.IdleHeartbeat.Millis);
 
             // millis instead of duration coverage
             // supply null as deliverPolicy, ackPolicy , replayPolicy,
-            c = ConsumerConfiguration.Builder()
+            c = Builder()
                 .WithDeliverPolicy(null)
                 .WithAckPolicy(null)
                 .WithReplayPolicy(null)
@@ -198,59 +196,12 @@ namespace UnitTests.JetStream
                 Assert.False(h.WouldBeChange(null, h.Min)); // value not set vs server has value
                 Assert.False(h.WouldBeChange(null, h.Unset)); // value not set vs server has unset value
 
-                Assert.True(h.WouldBeChange(h.Min, null)); // has value vs server not set
-                Assert.False(h.WouldBeChange(h.Unset, null)); // has unset value versus server not set
-
-                Assert.Equal(h.Min, h.ForBuilder(h.Min));
-                Assert.Equal(h.Unset, h.ForBuilder(h.Unset));
-                Assert.Equal(h.Min + 1, h.ForBuilder(h.Min + 1));
-            }
-            
-            void AssertUlongChangeHelper(UlongChangeHelper h)
-            {
-                Assert.False(h.WouldBeChange(h.Min, h.Min)); // has value vs server has same value
-                Assert.True(h.WouldBeChange(h.Min, h.Min + 1)); // has value vs server has different value
-
-                Assert.False(h.WouldBeChange(null, h.Min)); // value not set vs server has value
-                Assert.False(h.WouldBeChange(null, h.Unset)); // value not set vs server has unset value
-
-                Assert.True(h.WouldBeChange(h.Min, null)); // has value vs server not set
-                Assert.False(h.WouldBeChange(h.Unset, null)); // has unset value versus server not set
-                
-                Assert.Equal(h.Min, h.ForBuilder(h.Min));
-                Assert.Equal(h.Unset, h.ForBuilder(h.Unset));
-                Assert.Equal(h.Min + 1, h.ForBuilder(h.Min + 1));
-                Assert.Equal(h.Min, h.ForBuilder((long)h.Min));
-                Assert.Equal(h.Unset, h.ForBuilder((long)h.Unset));
-                Assert.Equal(h.Min + 1, h.ForBuilder((long)(h.Min + 1)));
-                Assert.Equal(h.Unset, h.ForBuilder(-1L));
-            }
-            
-            void AssertDurationChangeHelper(DurationChangeHelper h)
-            {
-                Assert.False(h.WouldBeChange(h.Min, h.Min)); // has value vs server has same value
-                Assert.True(h.WouldBeChange(h.Min, Duration.OfNanos(h.MinNanos + 1))); // has value vs server has different value
-
-                Assert.False(h.WouldBeChange(null, h.Min)); // value not set vs server has value
-                Assert.False(h.WouldBeChange(null, h.Unset)); // value not set vs server has unset value
-
-                Assert.True(h.WouldBeChange(h.Min, null)); // has value vs server not set
-                Assert.False(h.WouldBeChange(h.Unset, null)); // has unset value versus server not set
-                
-                Assert.Equal(h.Min, h.ForBuilder(h.Min));
-                Assert.Equal(h.Unset, h.ForBuilder(h.Unset));
-                Assert.Equal(Duration.OfNanos(h.MinNanos + 1), Duration.OfNanos(h.MinNanos + 1));
+                Assert.Equal(h.Min, h.Normalize(h.Min));
+                Assert.Equal(h.Unset, h.Normalize(h.Unset));
+                Assert.Equal(h.Min + 1, h.Normalize(h.Min + 1));
             }
 
-            AssertLongChangeHelper(MaxDeliver);
-            AssertLongChangeHelper(MaxAckPending);
-            AssertLongChangeHelper(MaxPullWaiting);
-            AssertLongChangeHelper(MaxBatch);
-            
-            AssertUlongChangeHelper(StartSeq);
-            AssertUlongChangeHelper(RateLimit);
-            
-            AssertDurationChangeHelper(AckWait);
+            AssertLongChangeHelper(LongChangeHelper.MaxDeliver);
         }
     }
 }

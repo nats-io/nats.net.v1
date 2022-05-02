@@ -163,11 +163,11 @@ namespace NATS.Client.JetStream
 
                 userCC = so.ConsumerConfiguration;
 
-                if (userCC.MaxPullWaitingWasSet)
+                if (!userCC.MaxPullWaiting.Equals(ConsumerConfiguration.LongUnset))
                 {
                     throw JsSubPushCantHaveMaxPullWaiting.Instance();
                 }
-                if (userCC.MaxBatchWasSet)
+                if (!userCC.MaxBatch.Equals(ConsumerConfiguration.LongUnset))
                 {
                     throw JsSubPushCantHaveMaxBatch.Instance();
                 }
