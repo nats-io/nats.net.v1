@@ -59,7 +59,7 @@ namespace NATS.Client.JetStream
         public Duration IdleHeartbeat { get; }
         public Duration MaxExpires { get; }
         public Duration InactiveThreshold { get; }
-        public ulong StartSeq =>  GetOrUnset(_startSeq);
+        public ulong StartSeq => GetOrUnset(_startSeq);
         public long MaxDeliver => LongChangeHelper.MaxDeliver.GetOrUnset(_maxDeliver);
         
         [Obsolete("This property is obsolete. Use RateLimitBps.", false)]
