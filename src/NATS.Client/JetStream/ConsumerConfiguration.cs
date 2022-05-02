@@ -693,7 +693,7 @@ namespace NATS.Client.JetStream
                         if (d != null) {
                             if (d.Nanos < DurationMinLong)
                             {
-                                throw new ArgumentException($"Backoff cannot be less than " + DurationMinLong);
+                                throw new ArgumentException($"Backoff cannot be less than {DurationMinLong}");
                             }
                             _backoff.Add(d);
                         }
@@ -713,7 +713,7 @@ namespace NATS.Client.JetStream
                     foreach (long ms in backoffsMillis) {
                         if (ms < DurationMinLong)
                         {
-                            throw new ArgumentException($"Backoff cannot be less than " + DurationMinLong);
+                            throw new ArgumentException($"Backoff cannot be less than {DurationMinLong}");
                         }
                         _backoff.Add(Duration.OfMillis(ms));
                     }
