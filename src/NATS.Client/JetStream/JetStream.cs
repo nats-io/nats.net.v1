@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using NATS.Client.Internals;
 using static NATS.Client.ClientExDetail;
@@ -207,8 +208,9 @@ namespace NATS.Client.JetStream
 
                     // check to see if the user sent a different version than the server has
                     // modifications are not allowed
-                    if (userCC.WouldBeChangeTo(serverCC)) {
-                        throw JsSubExistingConsumerCannotBeModified.Instance();
+                    IList<string> changes = userCC.GetChanges(serverCC);
+                    if (changes.Count > 0) {
+                        throw JsSubExistingConsumerCannotBeModified.Instance($"[{string.Join(",", changes)}]");
                     }
 
                     if (isPullMode) {

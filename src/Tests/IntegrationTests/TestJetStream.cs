@@ -664,26 +664,31 @@ namespace IntegrationTests
                 // push
                 jsm.AddOrUpdateConsumer(STREAM, PushDurableBuilder().Build());
 
-                ChangeExPush(js, PushDurableBuilder().WithDeliverPolicy(DeliverPolicy.Last));
-                ChangeExPush(js, PushDurableBuilder().WithDeliverPolicy(DeliverPolicy.New));
-                ChangeExPush(js, PushDurableBuilder().WithAckPolicy(AckPolicy.None));
-                ChangeExPush(js, PushDurableBuilder().WithAckPolicy(AckPolicy.All));
-                ChangeExPush(js, PushDurableBuilder().WithReplayPolicy(ReplayPolicy.Original));
+                ChangeExPush(js, PushDurableBuilder().WithDeliverPolicy(DeliverPolicy.Last), "DeliverPolicy");
+                ChangeExPush(js, PushDurableBuilder().WithDeliverPolicy(DeliverPolicy.New), "DeliverPolicy");
+                ChangeExPush(js, PushDurableBuilder().WithAckPolicy(AckPolicy.None), "AckPolicy");
+                ChangeExPush(js, PushDurableBuilder().WithAckPolicy(AckPolicy.All), "AckPolicy");
+                ChangeExPush(js, PushDurableBuilder().WithReplayPolicy(ReplayPolicy.Original), "ReplayPolicy");
 
-                ChangeExPush(js, PushDurableBuilder().WithStartTime(DateTime.Now));
-                ChangeExPush(js, PushDurableBuilder().WithAckWait(Duration.OfMillis(1)));
-                ChangeExPush(js, PushDurableBuilder().WithDescription("x"));
-                ChangeExPush(js, PushDurableBuilder().WithSampleFrequency("x"));
-                ChangeExPush(js, PushDurableBuilder().WithIdleHeartbeat(Duration.OfMillis(1000)));
+                ChangeExPush(js, PushDurableBuilder().WithFlowControl(10000), "FlowControl");
+                ChangeExPush(js, PushDurableBuilder().WithHeadersOnly(true), "HeadersOnly");
+
+                ChangeExPush(js, PushDurableBuilder().WithStartTime(DateTime.Now), "StartTime");
+                ChangeExPush(js, PushDurableBuilder().WithAckWait(Duration.OfMillis(1)), "AckWait");
+                ChangeExPush(js, PushDurableBuilder().WithDescription("x"), "Description");
+                ChangeExPush(js, PushDurableBuilder().WithSampleFrequency("x"), "SampleFrequency");
+                ChangeExPush(js, PushDurableBuilder().WithIdleHeartbeat(Duration.OfMillis(1000)), "IdleHeartbeat");
+                ChangeExPush(js, PushDurableBuilder().WithMaxExpires(Duration.OfMillis(1000)), "MaxExpires");
+                ChangeExPush(js, PushDurableBuilder().WithInactiveThreshold(Duration.OfMillis(1000)), "InactiveThreshold");
 
                 // value
-                ChangeExPush(js, PushDurableBuilder().WithMaxDeliver(1));
-                ChangeExPush(js, PushDurableBuilder().WithMaxAckPending(0));
-                ChangeExPush(js, PushDurableBuilder().WithAckWait(0));
+                ChangeExPush(js, PushDurableBuilder().WithMaxDeliver(1), "MaxDeliver");
+                ChangeExPush(js, PushDurableBuilder().WithMaxAckPending(0), "MaxAckPending");
+                ChangeExPush(js, PushDurableBuilder().WithAckWait(0), "AckWait");
 
                 // value unsigned
-                ChangeExPush(js, PushDurableBuilder().WithStartSequence(1));
-                ChangeExPush(js, PushDurableBuilder().WithRateLimitBps(1));
+                ChangeExPush(js, PushDurableBuilder().WithStartSequence(1), "StartSequence");
+                ChangeExPush(js, PushDurableBuilder().WithRateLimitBps(1), "RateLimitBps");
 
                 // unset doesn't fail because the server provides a value equal to the unset
                 ChangeOkPush(js, PushDurableBuilder().WithMaxDeliver(-1));
@@ -693,20 +698,20 @@ namespace IntegrationTests
                 ChangeOkPush(js, PushDurableBuilder().WithRateLimitBps(0));
 
                 // unset fail b/c the server does set a value that is not equal to the unset or the minimum
-                ChangeExPush(js, PushDurableBuilder().WithMaxAckPending(-1));
-                ChangeExPush(js, PushDurableBuilder().WithMaxAckPending(0));
-                ChangeExPush(js, PushDurableBuilder().WithAckWait(-1));
-                ChangeExPush(js, PushDurableBuilder().WithAckWait(0));
+                ChangeExPush(js, PushDurableBuilder().WithMaxAckPending(-1), "MaxAckPending");
+                ChangeExPush(js, PushDurableBuilder().WithMaxAckPending(0), "MaxAckPending");
+                ChangeExPush(js, PushDurableBuilder().WithAckWait(-1), "AckWait");
+                ChangeExPush(js, PushDurableBuilder().WithAckWait(0), "AckWait");
 
                 // pull
                 jsm.AddOrUpdateConsumer(STREAM, PullDurableBuilder().Build());
 
                 // value
-                ChangeExPull(js, PullDurableBuilder().WithMaxPullWaiting(0));
-                ChangeExPull(js, PullDurableBuilder().WithMaxBatch(0));
+                ChangeExPull(js, PullDurableBuilder().WithMaxPullWaiting(0), "MaxPullWaiting");
+                ChangeExPull(js, PullDurableBuilder().WithMaxBatch(0), "MaxBatch");
 
                 // unsets fail b/c the server does set a value
-                ChangeExPull(js, PullDurableBuilder().WithMaxPullWaiting(-1));
+                ChangeExPull(js, PullDurableBuilder().WithMaxPullWaiting(-1), "MaxPullWaiting");
 
                 // unset
                 ChangeOkPull(js, PullDurableBuilder().WithMaxBatch(-1));
@@ -721,16 +726,23 @@ namespace IntegrationTests
             js.PullSubscribe(SUBJECT, PullSubscribeOptions.Builder().WithConfiguration(builder.Build()).Build()).Unsubscribe();
         }
 
-        private void ChangeExPush(IJetStream js, ConsumerConfiguration.ConsumerConfigurationBuilder builder) {
+        private void ChangeExPush(IJetStream js, ConsumerConfiguration.ConsumerConfigurationBuilder builder, String changedField) {
             NATSJetStreamClientException e = Assert.Throws<NATSJetStreamClientException>(
                 () => js.PushSubscribeSync(SUBJECT, PushSubscribeOptions.Builder().WithConfiguration(builder.Build()).Build()));
-            Assert.Contains(JsSubExistingConsumerCannotBeModified.Id, e.Message);
+            _ChangeEx(e, changedField);
         }
 
-        private void ChangeExPull(IJetStream js, ConsumerConfiguration.ConsumerConfigurationBuilder builder) {
+        private void ChangeExPull(IJetStream js, ConsumerConfiguration.ConsumerConfigurationBuilder builder, String changedField) {
             NATSJetStreamClientException e = Assert.Throws<NATSJetStreamClientException>(
                 () => js.PullSubscribe(SUBJECT, PullSubscribeOptions.Builder().WithConfiguration(builder.Build()).Build()));
-            Assert.Contains(JsSubExistingConsumerCannotBeModified.Id, e.Message);
+            _ChangeEx(e, changedField);
+        }
+
+        private void _ChangeEx(NATSJetStreamClientException e, String changedField)
+        {
+            String msg = e.Message;
+            Assert.Contains(JsSubExistingConsumerCannotBeModified.Id, msg);
+            Assert.Contains(changedField, msg);
         }
 
         private ConsumerConfiguration.ConsumerConfigurationBuilder PushDurableBuilder() {

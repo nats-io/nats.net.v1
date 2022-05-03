@@ -13,7 +13,7 @@ namespace UnitTests
         /*
             private readonly ITestOutputHelper output;
 
-            public TestMyClass(ITestOutputHelper output, BlahSuiteContext context) : base(context)
+            public TestMyClass(ITestOutputHelper output)
             {
 	            this.output = output;
 	            Console.SetOut(new ConsoleWriter(output));

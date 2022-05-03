@@ -23,15 +23,20 @@ namespace NATS.Client.JetStream
 {
     public sealed class ConsumerConfiguration : JsonSerializable
     {
+        [Obsolete("This property is obsolete, it is not used.", false)]
+        public static readonly Duration MinAckWait = Duration.One;
+        [Obsolete("This property is obsolete, it is not used as a default", false)]
+        public static readonly Duration MinDefaultIdleHeartbeat = Duration.OfMillis(100);
+
+        public static readonly Duration DurationUnset = Duration.Zero;
+        public static readonly Duration MinIdleHeartbeat = Duration.OfMillis(100);
+
         public const long LongUnset = -1;
         public const ulong UlongUnset = 0;
         public const long DurationUnsetLong = 0;
         public const long DurationMinLong = 1;
-
-        public static readonly Duration DurationUnset = Duration.Zero;
-        public static readonly Duration DurationMin = Duration.One;
-        public static readonly Duration MinAckWait = DurationMin;
-        public static readonly Duration MinDefaultIdleHeartbeat = Duration.OfMillis(100);
+        public static readonly long MinIdleHeartbeatNanos = MinIdleHeartbeat.Nanos;
+        public static readonly long MinIdleHeartbeatMillis = MinIdleHeartbeat.Millis;
 
         private DeliverPolicy? _deliverPolicy;
         private AckPolicy? _ackPolicy;
@@ -166,54 +171,57 @@ namespace NATS.Client.JetStream
 
             return o;
         }
-        
-        internal bool WouldBeChangeTo(ConsumerConfiguration original)
+
+        internal IList<string> GetChanges(ConsumerConfiguration original)
         {
-            return (_deliverPolicy != null && _deliverPolicy != original.DeliverPolicy)
-                   || (_ackPolicy != null && _ackPolicy != original.AckPolicy)
-                   || (_replayPolicy != null && _replayPolicy != original.ReplayPolicy)
+            IList<string> changes = new List<string>();
+            Record(_deliverPolicy != null && _deliverPolicy != original.DeliverPolicy, "DeliverPolicy", changes);
+            Record(_ackPolicy != null && _ackPolicy != original.AckPolicy, "AckPolicy", changes);
+            Record(_replayPolicy != null && _replayPolicy != original.ReplayPolicy, "ReplayPolicy", changes);
 
-                   || _flowControl != null && _flowControl != original.FlowControl
-                   || _headersOnly != null && _headersOnly != original.HeadersOnly
+            Record(_flowControl != null && _flowControl != original.FlowControl, "FlowControl", changes);
+            Record(_headersOnly != null && _headersOnly != original.HeadersOnly, "HeadersOnly", changes);
 
-                   || _startSeq != null && _startSeq != original.StartSeq
-                   || _rateLimitBps != null && _rateLimitBps != original.RateLimitBps
+            Record(_startSeq != null && !_startSeq.Equals(original.StartSeq), "StartSequence", changes);
+            Record(_rateLimitBps != null && !_rateLimitBps.Equals(original.RateLimitBps), "RateLimitBps", changes);
 
-                   // MaxDeliver is a special case because -1 and 0 are unset where other unsigned -1 is unset
-                   || LongChangeHelper.MaxDeliver.WouldBeChange(_maxDeliver, original.MaxDeliver)
+            // MaxDeliver is a special case because -1 and 0 are unset where other unsigned -1 is unset
+            Record(LongChangeHelper.MaxDeliver.WouldBeChange(_maxDeliver, original.MaxDeliver), "MaxDeliver", changes);
                    
-                   || _maxAckPending != null && _maxAckPending != original.MaxAckPending
-                   || _maxPullWaiting != null && _maxPullWaiting != original.MaxPullWaiting
-                   || _maxBatch != null && _maxBatch != original.MaxBatch
+            Record(_maxAckPending != null && !_maxAckPending.Equals(original.MaxAckPending), "MaxAckPending", changes);
+            Record(_maxPullWaiting != null && !_maxPullWaiting.Equals(original.MaxPullWaiting), "MaxPullWaiting", changes);
+            Record(_maxBatch != null && !_maxBatch.Equals(original.MaxBatch), "MaxBatch", changes);
 
-                   || AckWait != null && !AckWait.Equals(original.AckWait)
-                   || IdleHeartbeat != null && !IdleHeartbeat.Equals(original.IdleHeartbeat)
-                   || MaxExpires != null && !MaxExpires.Equals(original.MaxExpires)
-                   || InactiveThreshold != null && !InactiveThreshold.Equals(original.InactiveThreshold)
+            Record(AckWait != null && !AckWait.Equals(original.AckWait), "AckWait", changes);
+            Record(IdleHeartbeat != null && !IdleHeartbeat.Equals(original.IdleHeartbeat), "IdleHeartbeat", changes);
+            Record(MaxExpires != null && !MaxExpires.Equals(original.MaxExpires), "MaxExpires", changes);
+            Record(InactiveThreshold != null && !InactiveThreshold.Equals(original.InactiveThreshold), "InactiveThreshold", changes);
 
-                   || WouldBeChange(StartTime, original.StartTime)
+            RecordWouldBeChange(StartTime, original.StartTime, "StartTime", changes);
                    
-                   || WouldBeChange(FilterSubject, original.FilterSubject)
-                   || WouldBeChange(Description, original.Description)
-                   || WouldBeChange(SampleFrequency, original.SampleFrequency)
-                   || WouldBeChange(DeliverSubject, original.DeliverSubject)
-                   || WouldBeChange(DeliverGroup, original.DeliverGroup)
+            RecordWouldBeChange(FilterSubject, original.FilterSubject, "FilterSubject", changes);
+            RecordWouldBeChange(Description, original.Description, "Description", changes);
+            RecordWouldBeChange(SampleFrequency, original.SampleFrequency, "SampleFrequency", changes);
+            RecordWouldBeChange(DeliverSubject, original.DeliverSubject, "DeliverSubject", changes);
+            RecordWouldBeChange(DeliverGroup, original.DeliverGroup, "DeliverGroup", changes);
                    
-                   || !Backoff.SequenceEqual(original.Backoff)
-                   ;
-
-            // do not need to check Durable because the original is retrieved by the durable name
+            Record(!Backoff.SequenceEqual(original.Backoff), "Backoff", changes);
+            return changes;
+        }
+        
+        private void Record(bool isChange, string field, IList<string> changes) {
+            if (isChange) { changes.Add(field); }
         }
 
-        private static bool WouldBeChange(string request, string original)
+        private void RecordWouldBeChange(string request, string server, string field, IList<string> changes)
         {
             string r = EmptyAsNull(request);
-            return r != null && !r.Equals(EmptyAsNull(original));
+            Record(r != null && !r.Equals(EmptyAsNull(server)), field, changes);
         }
 
-        private static bool WouldBeChange(DateTime request, DateTime original)
+        private void RecordWouldBeChange(DateTime request, DateTime server, string field, IList<string> changes)
         {
-            return request != DateTime.MinValue && !request.Equals(original);
+            Record(request != DateTime.MinValue && !request.Equals(server), field, changes);
         }
         
         private static long GetOrUnset(long? val)
@@ -559,7 +567,23 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithIdleHeartbeat(Duration idleHeartbeat)
             {
-                _idleHeartbeat = ValidateDurationNotRequiredNotLessThanMin(idleHeartbeat, MinDefaultIdleHeartbeat); 
+                if (idleHeartbeat == null) {
+                    _idleHeartbeat = null;
+                }
+                else
+                {
+                    long nanos = idleHeartbeat.Nanos;
+                    if (nanos <= DurationUnsetLong) {
+                        _idleHeartbeat = DurationUnset;
+                    }
+                    else if (nanos < MinIdleHeartbeatNanos) {
+                        throw new ArgumentException($"Duration must be greater than or equal to {MinIdleHeartbeatNanos} nanos.");
+                    }
+                    else {
+                        _idleHeartbeat = idleHeartbeat;
+                    }
+                }
+
                 return this;
             }
 
@@ -570,7 +594,15 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithIdleHeartbeat(long idleHeartbeatMillis)
             {
-                _idleHeartbeat = ValidateDurationNotRequiredNotLessThanMin(idleHeartbeatMillis, MinDefaultIdleHeartbeat); 
+                if (idleHeartbeatMillis <= DurationUnsetLong) {
+                    _idleHeartbeat = DurationUnset;
+                }
+                else if (idleHeartbeatMillis < MinIdleHeartbeatMillis) {
+                    throw new ArgumentException($"Duration must be greater than or equal to {MinIdleHeartbeatMillis} milliseconds.");
+                }
+                else {
+                    _idleHeartbeat = Duration.OfMillis(idleHeartbeatMillis);
+                }
                 return this;
             }
 

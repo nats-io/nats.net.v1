@@ -266,10 +266,20 @@ namespace NATS.Client
             Id = $"{group}-{code}";
             Message = $"[{Id}] {description}";
         }
+        internal ClientExDetail(ClientExDetail ced, string extraMessage)
+        {
+            Id = ced.Id;
+            Message = $"{ced.Message} {extraMessage}";
+        }
 
         internal NATSJetStreamClientException Instance()
         {
             return new NATSJetStreamClientException(this);
+        }
+
+        internal NATSJetStreamClientException Instance(string extraMessage)
+        {
+            return new NATSJetStreamClientException(new ClientExDetail(this, extraMessage));
         }
     }
 }
