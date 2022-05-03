@@ -172,40 +172,40 @@ namespace NATS.Client.JetStream
             return o;
         }
 
-        internal IList<string> GetChanges(ConsumerConfiguration original)
+        internal IList<string> GetChanges(ConsumerConfiguration server)
         {
             IList<string> changes = new List<string>();
-            Record(_deliverPolicy != null && _deliverPolicy != original.DeliverPolicy, "DeliverPolicy", changes);
-            Record(_ackPolicy != null && _ackPolicy != original.AckPolicy, "AckPolicy", changes);
-            Record(_replayPolicy != null && _replayPolicy != original.ReplayPolicy, "ReplayPolicy", changes);
+            Record(_deliverPolicy != null && _deliverPolicy != server.DeliverPolicy, "DeliverPolicy", changes);
+            Record(_ackPolicy != null && _ackPolicy != server.AckPolicy, "AckPolicy", changes);
+            Record(_replayPolicy != null && _replayPolicy != server.ReplayPolicy, "ReplayPolicy", changes);
 
-            Record(_flowControl != null && _flowControl != original.FlowControl, "FlowControl", changes);
-            Record(_headersOnly != null && _headersOnly != original.HeadersOnly, "HeadersOnly", changes);
+            Record(_flowControl != null && _flowControl != server.FlowControl, "FlowControl", changes);
+            Record(_headersOnly != null && _headersOnly != server.HeadersOnly, "HeadersOnly", changes);
 
-            Record(_startSeq != null && !_startSeq.Equals(original.StartSeq), "StartSequence", changes);
-            Record(_rateLimitBps != null && !_rateLimitBps.Equals(original.RateLimitBps), "RateLimitBps", changes);
+            Record(_startSeq != null && !_startSeq.Equals(server.StartSeq), "StartSequence", changes);
+            Record(_rateLimitBps != null && !_rateLimitBps.Equals(server.RateLimitBps), "RateLimitBps", changes);
 
             // MaxDeliver is a special case because -1 and 0 are unset where other unsigned -1 is unset
-            Record(LongChangeHelper.MaxDeliver.WouldBeChange(_maxDeliver, original.MaxDeliver), "MaxDeliver", changes);
+            Record(LongChangeHelper.MaxDeliver.WouldBeChange(_maxDeliver, server.MaxDeliver), "MaxDeliver", changes);
                    
-            Record(_maxAckPending != null && !_maxAckPending.Equals(original.MaxAckPending), "MaxAckPending", changes);
-            Record(_maxPullWaiting != null && !_maxPullWaiting.Equals(original.MaxPullWaiting), "MaxPullWaiting", changes);
-            Record(_maxBatch != null && !_maxBatch.Equals(original.MaxBatch), "MaxBatch", changes);
+            Record(_maxAckPending != null && !_maxAckPending.Equals(server.MaxAckPending), "MaxAckPending", changes);
+            Record(_maxPullWaiting != null && !_maxPullWaiting.Equals(server.MaxPullWaiting), "MaxPullWaiting", changes);
+            Record(_maxBatch != null && !_maxBatch.Equals(server.MaxBatch), "MaxBatch", changes);
 
-            Record(AckWait != null && !AckWait.Equals(original.AckWait), "AckWait", changes);
-            Record(IdleHeartbeat != null && !IdleHeartbeat.Equals(original.IdleHeartbeat), "IdleHeartbeat", changes);
-            Record(MaxExpires != null && !MaxExpires.Equals(original.MaxExpires), "MaxExpires", changes);
-            Record(InactiveThreshold != null && !InactiveThreshold.Equals(original.InactiveThreshold), "InactiveThreshold", changes);
+            Record(AckWait != null && !AckWait.Equals(server.AckWait), "AckWait", changes);
+            Record(IdleHeartbeat != null && !IdleHeartbeat.Equals(server.IdleHeartbeat), "IdleHeartbeat", changes);
+            Record(MaxExpires != null && !MaxExpires.Equals(server.MaxExpires), "MaxExpires", changes);
+            Record(InactiveThreshold != null && !InactiveThreshold.Equals(server.InactiveThreshold), "InactiveThreshold", changes);
 
-            RecordWouldBeChange(StartTime, original.StartTime, "StartTime", changes);
+            RecordWouldBeChange(StartTime, server.StartTime, "StartTime", changes);
                    
-            RecordWouldBeChange(FilterSubject, original.FilterSubject, "FilterSubject", changes);
-            RecordWouldBeChange(Description, original.Description, "Description", changes);
-            RecordWouldBeChange(SampleFrequency, original.SampleFrequency, "SampleFrequency", changes);
-            RecordWouldBeChange(DeliverSubject, original.DeliverSubject, "DeliverSubject", changes);
-            RecordWouldBeChange(DeliverGroup, original.DeliverGroup, "DeliverGroup", changes);
+            RecordWouldBeChange(FilterSubject, server.FilterSubject, "FilterSubject", changes);
+            RecordWouldBeChange(Description, server.Description, "Description", changes);
+            RecordWouldBeChange(SampleFrequency, server.SampleFrequency, "SampleFrequency", changes);
+            RecordWouldBeChange(DeliverSubject, server.DeliverSubject, "DeliverSubject", changes);
+            RecordWouldBeChange(DeliverGroup, server.DeliverGroup, "DeliverGroup", changes);
                    
-            Record(!Backoff.SequenceEqual(original.Backoff), "Backoff", changes);
+            Record(!Backoff.SequenceEqual(server.Backoff), "Backoff", changes);
             return changes;
         }
         
