@@ -264,7 +264,8 @@ namespace NATS.Client.JetStream
                 inboxDeliver = Conn.NewInbox();
             }
 
-            // 5. If consumer does not exist, create
+            // 5. If consumer does not exist, create and settle on the config. Name will have to wait
+            //    If the consumer exists, I know what the settled info is
             if (serverCC == null) {
                 ConsumerConfiguration.ConsumerConfigurationBuilder ccBuilder = ConsumerConfiguration.Builder(userCC);
 
@@ -284,9 +285,8 @@ namespace NATS.Client.JetStream
                 }
 
                 // createOrUpdateConsumer can fail for security reasons, maybe other reasons?
-                ConsumerInfo ci = AddOrUpdateConsumerInternal(stream, ccBuilder.Build());
-                consumerName = ci.Name;
-                serverCC = ci.ConsumerConfiguration;
+                serverCC = ccBuilder.Build();
+                consumerName = null;
             }
 
             // 6. create the subscription
@@ -345,6 +345,30 @@ namespace NATS.Client.JetStream
             }
 
             asm.SetSub(sub);
+
+            // 7. The consumer might need to be created, do it here
+            if (consumerName == null)
+            {
+                try
+                {
+                    ConsumerInfo ci = AddOrUpdateConsumerInternal(stream, serverCC);
+                    if (sub is JetStreamAbstractSyncSubscription syncSub)
+                    {
+                        syncSub.Consumer = ci.Name;
+                    }
+                    else if (sub is JetStreamPushAsyncSubscription asyncSub)
+                    {
+                        asyncSub.Consumer = ci.Name;
+                    }
+                }
+                catch
+                {
+                    // create consumer can fail, unsubscribe and then throw the exception to the user
+                    sub.Unsubscribe();
+                    throw;
+                }
+            }
+
             return sub;
         }
         

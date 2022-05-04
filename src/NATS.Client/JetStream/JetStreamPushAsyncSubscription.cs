@@ -18,7 +18,7 @@ namespace NATS.Client.JetStream
         private IAutoStatusManager _asm;
         public JetStream Context { get; }
         public string Stream { get; }
-        public string Consumer { get; }
+        public string Consumer { get; internal set; }
         public string DeliverSubject { get; }
 
         internal JetStreamPushAsyncSubscription(Connection conn, string subject, string queue,
