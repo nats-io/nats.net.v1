@@ -89,10 +89,8 @@ namespace IntegrationTests
             });
         }
 
-        [Theory]
-        [InlineData(null)]
-        [InlineData(DELIVER)]
-        public void TestJetStreamPushDurable(string deliverSubject)
+        [Fact]
+        public void TestJetStreamPushDurableSubSync()
         {
             Context.RunInJsServer(c =>
             {
@@ -101,43 +99,48 @@ namespace IntegrationTests
 
                 // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+
+                // publish some messages
+                JsPublish(js, SUBJECT, 1, 5);
 
                 // Build our subscription options normally
-                PushSubscribeOptions options1 = PushSubscribeOptions.Builder()
-                    .WithDurable(DURABLE)
-                    .WithDeliverSubject(deliverSubject)
+                PushSubscribeOptions optionsSync1 = PushSubscribeOptions.Builder()
+                    .WithDurable(Durable(1))
+                    .WithDeliverSubject(Deliver(1))
                     .Build();
-
-                _testPushDurableSubSync(deliverSubject, c, js, () => js.PushSubscribeSync(SUBJECT, options1));
-                _testPushDurableSubAsync(js, h => js.PushSubscribeAsync(SUBJECT, h, false, options1));
+                _testPushDurableSubSync(Durable(1), Deliver(1), c, () => js.PushSubscribeSync(SUBJECT, optionsSync1));
 
                 // bind long form
+                jsm.AddOrUpdateConsumer(STREAM, 
+                    ConsumerConfiguration.Builder()
+                        .WithDurable(Durable(2))
+                        .WithDeliverSubject(Deliver(2))
+                        .Build());
                 PushSubscribeOptions options2 = PushSubscribeOptions.Builder()
                     .WithStream(STREAM)
-                    .WithDurable(DURABLE)
+                    .WithDurable(Durable(2))
                     .WithBind(true)
-                    .WithDeliverSubject(deliverSubject)
                     .Build();
-                _testPushDurableSubSync(deliverSubject, c, js, () => js.PushSubscribeSync(null, options2));
-                _testPushDurableSubAsync(js, h => js.PushSubscribeAsync(null, h, false, options2));
+                _testPushDurableSubSync(Durable(2), Deliver(2), c, () => js.PushSubscribeSync(null, options2));
 
                 // bind short form
-                PushSubscribeOptions options3 = PushSubscribeOptions.BindTo(STREAM, DURABLE);
-                _testPushDurableSubSync(deliverSubject, c, js, () => js.PushSubscribeSync(null, options3));
-                _testPushDurableSubAsync(js, h => js.PushSubscribeAsync(null, h, false, options3));
+                jsm.AddOrUpdateConsumer(STREAM, 
+                    ConsumerConfiguration.Builder()
+                        .WithDurable(Durable(3))
+                        .WithDeliverSubject(Deliver(3))
+                        .Build());
+                PushSubscribeOptions options3 = PushSubscribeOptions.BindTo(STREAM, Durable(3));
+                _testPushDurableSubSync(Durable(3), Deliver(3), c, () => js.PushSubscribeSync(null, options3));
             });
         }
-        
+
         delegate IJetStreamPushSyncSubscription PushSyncSubSupplier();
-        delegate IJetStreamPushAsyncSubscription PushAsyncSubSupplier(EventHandler<MsgHandlerEventArgs> handler);
-
-        private void _testPushDurableSubSync(string deliverSubject, IConnection nc, IJetStream js, PushSyncSubSupplier supplier)
+        
+        private void _testPushDurableSubSync(string durable, string deliverSubject, IConnection nc, PushSyncSubSupplier supplier)
         {
-            // publish some messages
-            JsPublish(js, SUBJECT, 1, 5);
-
             IJetStreamPushSyncSubscription sub = supplier.Invoke();
-            AssertSubscription(sub, STREAM, DURABLE, deliverSubject, false);
+            AssertSubscription(sub, STREAM, durable, deliverSubject, false);
 
             // read what is available
             IList<Msg> messages = ReadMessagesAck(sub);
@@ -165,11 +168,57 @@ namespace IntegrationTests
             nc.Flush(1000); // flush outgoing communication with/to the server
         }
 
+        [Fact]
+        public void TestJetStreamPushDurableSubAsync()
+        {
+            Context.RunInJsServer(c =>
+            {
+                // create the stream.
+                CreateDefaultTestStream(c);
+
+                // Create our JetStream context.
+                IJetStream js = c.CreateJetStreamContext();
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+
+                // publish some messages
+                JsPublish(js, SUBJECT, 5);
+
+                // Build our subscription options normally
+                PushSubscribeOptions optionsSync1 = PushSubscribeOptions.Builder()
+                    .WithDurable(Durable(1))
+                    .WithDeliverSubject(Deliver(1))
+                    .Build();
+
+                _testPushDurableSubAsync(js, h => js.PushSubscribeAsync(SUBJECT, h, false, optionsSync1));
+
+                // bind long form
+                jsm.AddOrUpdateConsumer(STREAM, 
+                    ConsumerConfiguration.Builder()
+                        .WithDurable(Durable(2))
+                        .WithDeliverSubject(Deliver(2))
+                        .Build());
+                PushSubscribeOptions options2 = PushSubscribeOptions.Builder()
+                    .WithStream(STREAM)
+                    .WithDurable(Durable(2))
+                    .WithBind(true)
+                    .Build();
+                _testPushDurableSubAsync(js, h => js.PushSubscribeAsync(null, h, false, options2));
+
+                // bind short form
+                jsm.AddOrUpdateConsumer(STREAM, 
+                    ConsumerConfiguration.Builder()
+                        .WithDurable(Durable(3))
+                        .WithDeliverSubject(Deliver(3))
+                        .Build());
+                PushSubscribeOptions options3 = PushSubscribeOptions.BindTo(STREAM, Durable(3));
+                _testPushDurableSubAsync(js, h => js.PushSubscribeAsync(null, h, false, options3));
+            });
+        }
+        
+        delegate IJetStreamPushAsyncSubscription PushAsyncSubSupplier(EventHandler<MsgHandlerEventArgs> handler);
+
         private void _testPushDurableSubAsync(IJetStream js, PushAsyncSubSupplier supplier)
         {
-            // publish some messages
-            JsPublish(js, SUBJECT, 5);
-
             CountdownEvent latch = new CountdownEvent(5);
             int received = 0;
 

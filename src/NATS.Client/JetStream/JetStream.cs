@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using NATS.Client.Internals;
 using static NATS.Client.ClientExDetail;
@@ -163,7 +164,14 @@ namespace NATS.Client.JetStream
 
                 userCC = so.ConsumerConfiguration;
 
-                ValidateNotSupplied(userCC.MaxPullWaiting, CcChangeHelper.MaxPullWaiting.Initial, JsSubPushCantHaveMaxPullWaiting);
+                if (!userCC.MaxPullWaiting.Equals(ConsumerConfiguration.LongUnset))
+                {
+                    throw JsSubPushCantHaveMaxPullWaiting.Instance();
+                }
+                if (!userCC.MaxBatch.Equals(ConsumerConfiguration.LongUnset))
+                {
+                    throw JsSubPushCantHaveMaxBatch.Instance();
+                }
 
                 // figure out the queue name
                 qgroup = ValidateMustMatchIfBothSupplied(userCC.DeliverGroup, queueName, JsSubQueueDeliverGroupMismatch);
@@ -200,8 +208,9 @@ namespace NATS.Client.JetStream
 
                     // check to see if the user sent a different version than the server has
                     // modifications are not allowed
-                    if (userCC.WouldBeChangeTo(serverCC)) {
-                        throw JsSubExistingConsumerCannotBeModified.Instance();
+                    IList<string> changes = userCC.GetChanges(serverCC);
+                    if (changes.Count > 0) {
+                        throw JsSubExistingConsumerCannotBeModified.Instance($"[{string.Join(",", changes)}]");
                     }
 
                     if (isPullMode) {

@@ -71,12 +71,6 @@ namespace NATS.Client.Internals
             }
         }
 
-        public static void ValidateNotSupplied(long l, long dflt, ClientExDetail detail) {
-            if (l > dflt) {
-                throw detail.Instance();
-            }
-        }
-
         internal static string ValidateMustMatchIfBothSupplied(string s1, string s2, ClientExDetail detail) {
             // s1   | s2   || result
             // ---- | ---- || --------------

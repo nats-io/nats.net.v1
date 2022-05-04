@@ -13,15 +13,10 @@ namespace UnitTests
         /*
             private readonly ITestOutputHelper output;
 
-            public TestMyClass(ITestOutputHelper output, BlahSuiteContext context) : base(context)
+            public TestMyClass(ITestOutputHelper output)
             {
 	            this.output = output;
-            }
-
-            [Fact]
-            public void TestRedirectConsole() {
 	            Console.SetOut(new ConsoleWriter(output));
-	            ...
             }
         */
        
@@ -89,6 +84,8 @@ namespace UnitTests
         public const string SUBJECT_GT = SUBJECT + ".>";
         public const string QUEUE = "queue";
         public const string DURABLE = "durable";
+        public const string PUSH_DURABLE = "push-" + DURABLE;
+        public const string PULL_DURABLE = "pull-" + DURABLE;
         public const string DELIVER = "deliver";
         public const string MESSAGE_ID = "mid";
         public const string BUCKET = "bucket";

@@ -12,11 +12,12 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 using NATS.Client.JetStream;
 using Xunit;
-using static NATS.Client.JetStream.CcChangeHelper;
+using static NATS.Client.JetStream.ConsumerConfiguration;
 
 namespace UnitTests.JetStream
 {
@@ -38,7 +39,7 @@ namespace UnitTests.JetStream
                 .WithFilterSubject("fs")
                 .WithMaxDeliver(5555)
                 .WithMaxAckPending(6666)
-                .WithRateLimit(4242)
+                .WithRateLimitBps(4242U)
                 .WithReplayPolicy(ReplayPolicy.Original)
                 .WithSampleFrequency("10s")
                 .WithStartSequence(2001)
@@ -106,7 +107,7 @@ namespace UnitTests.JetStream
             Assert.Equal("fs", c.FilterSubject);
             Assert.Equal(5555, c.MaxDeliver);
             Assert.Equal(6666, c.MaxAckPending);
-            Assert.Equal(4242, c.RateLimit);
+            Assert.Equal(4242U, c.RateLimitBps);
             Assert.Equal(ReplayPolicy.Original, c.ReplayPolicy);
             Assert.Equal(2001ul, c.StartSeq);
             Assert.Equal(dt, c.StartTime);
@@ -131,7 +132,7 @@ namespace UnitTests.JetStream
             Assert.Equal(Duration.OfSeconds(30), c.AckWait);
             Assert.Equal(Duration.OfSeconds(20), c.IdleHeartbeat);
             Assert.Equal(10, c.MaxDeliver);
-            Assert.Equal(73, c.RateLimit);
+            Assert.Equal(73U, c.RateLimitBps);
             Assert.Equal(ReplayPolicy.Original, c.ReplayPolicy);
             Assert.Equal(2020, c.StartTime.Year);
             Assert.Equal(21, c.StartTime.Second);
@@ -176,61 +177,159 @@ namespace UnitTests.JetStream
             Assert.False(c.FlowControl);
             Assert.False(c.HeadersOnly);
 
-            Assert.Equal(StartSeq.InitialUlong, c.StartSeq);
-            Assert.Equal(MaxDeliver.Initial, c.MaxDeliver);
-            Assert.Equal(RateLimit.Initial, c.RateLimit);
-            Assert.Equal(MaxAckPending.Initial, c.MaxAckPending);
-            Assert.Equal(MaxPullWaiting.Initial, c.MaxPullWaiting);
-            Assert.Equal(MaxBatch.Initial, c.MaxBatch);
+            Assert.Equal(-1, c.MaxDeliver);
+            Assert.Equal(-1, c.MaxAckPending);
+            Assert.Equal(-1, c.MaxPullWaiting);
+            Assert.Equal(-1, c.MaxBatch);
+            Assert.Equal(0U, c.StartSeq);
+            Assert.Equal(0U, c.RateLimitBps);
             Assert.Equal(0, c.Backoff.Count);
+        }
+
+        private void AssertNotChange(ConsumerConfiguration original, ConsumerConfiguration server) {
+            Assert.Equal(0, original.GetChanges(server).Count);
+        }
+
+        private void AssertChange(ConsumerConfiguration original, ConsumerConfiguration server, params string[] changeFields) {
+            IList<string> changes = original.GetChanges(server);
+            Assert.Equal(changeFields.Length, changes.Count);
+            foreach (string ch in changeFields)
+            {
+                Assert.Contains(ch, changes);
+            }
+        }
+
+        private ConsumerConfigurationBuilder Builder(ConsumerConfiguration orig) {
+            return ConsumerConfiguration.Builder(orig);
+        }
+
+        [Fact]
+        public void ChangeFieldsIdentified()
+        {
+            ConsumerConfiguration orig = ConsumerConfiguration.Builder()
+                .WithAckWait(DurationUnsetLong)
+                .WithIdleHeartbeat(DurationUnsetLong)
+                .WithMaxExpires(DurationUnsetLong)
+                .WithInactiveThreshold(DurationUnsetLong)
+                .Build();
+            AssertNotChange(orig, orig);
+
+            AssertNotChange(Builder(orig).WithDeliverPolicy(DeliverPolicy.All).Build(), orig);
+            AssertChange(Builder(orig).WithDeliverPolicy(DeliverPolicy.New).Build(), orig, "DeliverPolicy");
+
+            AssertNotChange(Builder(orig).WithAckPolicy(AckPolicy.Explicit).Build(), orig);
+            AssertChange(Builder(orig).WithAckPolicy(AckPolicy.None).Build(), orig, "AckPolicy");
+
+            AssertNotChange(Builder(orig).WithReplayPolicy(ReplayPolicy.Instant).Build(), orig);
+            AssertChange(Builder(orig).WithReplayPolicy(ReplayPolicy.Original).Build(), orig, "ReplayPolicy");
+
+            AssertNotChange(Builder(orig).WithAckWait(DurationUnsetLong).Build(), orig);
+            AssertNotChange(Builder(orig).WithAckWait(null).Build(), orig);
+            AssertChange(Builder(orig).WithAckWait(DurationMinLong).Build(), orig, "AckWait");
+
+            AssertNotChange(Builder(orig).WithIdleHeartbeat(DurationUnsetLong).Build(), orig);
+            AssertNotChange(Builder(orig).WithIdleHeartbeat(null).Build(), orig);
+            AssertChange(Builder(orig).WithIdleHeartbeat(MinIdleHeartbeat).Build(), orig, "IdleHeartbeat");
+
+            AssertNotChange(Builder(orig).WithMaxExpires(DurationUnsetLong).Build(), orig);
+            AssertNotChange(Builder(orig).WithMaxExpires(null).Build(), orig);
+            AssertChange(Builder(orig).WithMaxExpires(DurationMinLong).Build(), orig, "MaxExpires");
+
+            AssertNotChange(Builder(orig).WithInactiveThreshold(DurationUnsetLong).Build(), orig);
+            AssertNotChange(Builder(orig).WithInactiveThreshold(null).Build(), orig);
+            AssertChange(Builder(orig).WithInactiveThreshold(DurationMinLong).Build(), orig, "InactiveThreshold");
+
+            ConsumerConfiguration ccTest = Builder(orig).WithFlowControl(1000).Build();
+            AssertNotChange(ccTest, ccTest);
+            AssertChange(ccTest, orig, "FlowControl", "IdleHeartbeat");
+
+            ccTest = Builder(orig).WithStartTime(DateTime.Now).Build();
+            AssertNotChange(ccTest, ccTest);
+            AssertChange(ccTest, orig, "StartTime");
+
+            AssertNotChange(Builder(orig).WithHeadersOnly(false).Build(), orig);
+            AssertChange(Builder(orig).WithHeadersOnly(true).Build(), orig, "HeadersOnly");
+
+            AssertNotChange(Builder(orig).WithStartSequence(0U).Build(), orig);
+            AssertNotChange(Builder(orig).WithStartSequence(null).Build(), orig);
+            AssertChange(Builder(orig).WithStartSequence(1).Build(), orig, "StartSequence");
+
+            AssertNotChange(Builder(orig).WithMaxDeliver(LongChangeHelper.MaxDeliver.Unset).Build(), orig);
+            AssertNotChange(Builder(orig).WithMaxDeliver(null).Build(), orig);
+            AssertChange(Builder(orig).WithMaxDeliver(LongChangeHelper.MaxDeliver.Min).Build(), orig, "MaxDeliver");
+
+            AssertNotChange(Builder(orig).WithRateLimitBps(0U).Build(), orig);
+            AssertNotChange(Builder(orig).WithRateLimitBps(null).Build(), orig);
+            AssertChange(Builder(orig).WithRateLimitBps(1U).Build(), orig, "RateLimitBps");
+
+            AssertNotChange(Builder(orig).WithMaxAckPending(-1).Build(), orig);
+            AssertNotChange(Builder(orig).WithMaxAckPending(null).Build(), orig);
+            AssertChange(Builder(orig).WithMaxAckPending(1).Build(), orig, "MaxAckPending");
+
+            AssertNotChange(Builder(orig).WithMaxPullWaiting(-1).Build(), orig);
+            AssertNotChange(Builder(orig).WithMaxPullWaiting(null).Build(), orig);
+            AssertChange(Builder(orig).WithMaxPullWaiting(1).Build(), orig, "MaxPullWaiting");
+
+            AssertNotChange(Builder(orig).WithMaxBatch(-1).Build(), orig);
+            AssertNotChange(Builder(orig).WithMaxBatch(null).Build(), orig);
+            AssertChange(Builder(orig).WithMaxBatch(1).Build(), orig, "MaxBatch");
+
+            AssertNotChange(Builder(orig).WithFilterSubject("").Build(), orig);
+            ccTest = Builder(orig).WithFilterSubject(Plain).Build();
+            AssertNotChange(ccTest, ccTest);
+            AssertChange(ccTest, orig, "FilterSubject");
+
+            AssertNotChange(Builder(orig).WithDescription("").Build(), orig);
+            ccTest = Builder(orig).WithDescription(Plain).Build();
+            AssertNotChange(ccTest, ccTest);
+            AssertChange(ccTest, orig, "Description");
+
+            AssertNotChange(Builder(orig).WithSampleFrequency("").Build(), orig);
+            ccTest = Builder(orig).WithSampleFrequency(Plain).Build();
+            AssertNotChange(ccTest, ccTest);
+            AssertChange(ccTest, orig, "SampleFrequency");
+
+            AssertNotChange(Builder(orig).WithDeliverSubject("").Build(), orig);
+            ccTest = Builder(orig).WithDeliverSubject(Plain).Build();
+            AssertNotChange(ccTest, ccTest);
+            AssertChange(ccTest, orig, "DeliverSubject");
+
+            AssertNotChange(Builder(orig).WithDeliverGroup("").Build(), orig);
+            ccTest = Builder(orig).WithDeliverGroup(Plain).Build();
+            AssertNotChange(ccTest, ccTest);
+            AssertChange(ccTest, orig, "DeliverGroup");
+
+            AssertNotChange(Builder(orig).WithBackoff((Duration[])null).Build(), orig);
+            AssertNotChange(Builder(orig).WithBackoff((Duration)null).Build(), orig);
+            AssertNotChange(Builder(orig).WithBackoff(Array.Empty<Duration>()).Build(), orig);
+            ccTest = Builder(orig).WithBackoff(1000, 2000).Build();
+            AssertNotChange(ccTest, ccTest);
+            AssertChange(ccTest, orig, "Backoff");
+
+            AssertNotChange(Builder(orig).WithBackoff((long[])null).Build(), orig);
+            AssertNotChange(Builder(orig).WithBackoff(Array.Empty<long>()).Build(), orig);
+            ccTest = Builder(orig).WithBackoff(1000, 2000).Build();
+            AssertNotChange(ccTest, ccTest);
+            AssertChange(ccTest, orig, "Backoff");
         }
 
         [Fact]
         public void ChangeHelperWorks()
         {
-            // value
-            Assert.False(StartSeq.WouldBeChange(2L, 2L));
-            Assert.False(MaxDeliver.WouldBeChange(2L, 2L));
-            Assert.False(RateLimit.WouldBeChange(2L, 2L));
-            Assert.False(MaxAckPending.WouldBeChange(2L, 2L));
-            Assert.False(MaxPullWaiting.WouldBeChange(2L, 2L));
-            Assert.False(MaxBatch.WouldBeChange(2L, 2L));
-            Assert.False(AckWait.WouldBeChange(Duration.OfSeconds(2), Duration.OfSeconds(2)));
+            void AssertLongChangeHelper(LongChangeHelper h)
+            {
+                Assert.False(h.WouldBeChange(h.Min, h.Min)); // has value vs server has same value
+                Assert.True(h.WouldBeChange(h.Min, h.Min + 1)); // has value vs server has different value
 
-            // null
-            Assert.False(StartSeq.WouldBeChange(null, 2L));
-            Assert.False(MaxDeliver.WouldBeChange(null, 2L));
-            Assert.False(RateLimit.WouldBeChange(null, 2L));
-            Assert.False(MaxAckPending.WouldBeChange(null, 2L));
-            Assert.False(MaxPullWaiting.WouldBeChange(null, 2L));
-            Assert.False(MaxBatch.WouldBeChange(null, 2L));
-            Assert.False(AckWait.WouldBeChange(null, Duration.OfSeconds(2)));
+                Assert.False(h.WouldBeChange(null, h.Min)); // value not set vs server has value
+                Assert.False(h.WouldBeChange(null, h.Unset)); // value not set vs server has unset value
 
-            // < min vs initial
-            Assert.False(StartSeq.WouldBeChange(-99L, StartSeq.Initial));
-            Assert.False(MaxDeliver.WouldBeChange(-99L, MaxDeliver.Initial));
-            Assert.False(RateLimit.WouldBeChange(-99L, RateLimit.Initial));
-            Assert.False(MaxAckPending.WouldBeChange(-99L, MaxAckPending.Initial));
-            Assert.False(MaxPullWaiting.WouldBeChange(-99L, MaxPullWaiting.Initial));
-            Assert.False(MaxBatch.WouldBeChange(-99L, MaxBatch.Initial));
-            Assert.False(AckWait.WouldBeChange(Duration.OfSeconds(-99), Duration.OfNanos(AckWait.Initial)));
+                Assert.Equal(h.Min, h.Normalize(h.Min));
+                Assert.Equal(h.Unset, h.Normalize(h.Unset));
+                Assert.Equal(h.Min + 1, h.Normalize(h.Min + 1));
+            }
 
-            // server vs initial
-            Assert.False(StartSeq.WouldBeChange(StartSeq.Server, StartSeq.Initial));
-            Assert.False(MaxDeliver.WouldBeChange(MaxDeliver.Server, MaxDeliver.Initial));
-            Assert.False(RateLimit.WouldBeChange(RateLimit.Server, RateLimit.Initial));
-            Assert.False(MaxAckPending.WouldBeChange(MaxAckPending.Server, MaxAckPending.Initial));
-            Assert.False(MaxPullWaiting.WouldBeChange(MaxPullWaiting.Server, MaxPullWaiting.Initial));
-            Assert.False(MaxBatch.WouldBeChange(MaxBatch.Server, MaxBatch.Initial));
-            Assert.False(AckWait.WouldBeChange(Duration.OfNanos(AckWait.Server), Duration.OfNanos(AckWait.Initial)));
-
-            Assert.True(StartSeq.WouldBeChange(1L, 2L));
-            Assert.True(MaxDeliver.WouldBeChange(1L, 2L));
-            Assert.True(RateLimit.WouldBeChange(1L, 2L));
-            Assert.True(MaxAckPending.WouldBeChange(1L, 2L));
-            Assert.True(MaxPullWaiting.WouldBeChange(1L, 2L));
-            Assert.True(MaxBatch.WouldBeChange(1L, 2L));
-            Assert.True(AckWait.WouldBeChange(Duration.OfSeconds(1), Duration.OfSeconds(2)));
+            AssertLongChangeHelper(LongChangeHelper.MaxDeliver);
         }
     }
 }

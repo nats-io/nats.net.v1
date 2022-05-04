@@ -438,7 +438,7 @@ namespace IntegrationTests
                 AssertValidAddOrUpdate(jsm, cc);
 
                 cc = PrepForUpdateTest(jsm);
-                cc = ConsumerConfiguration.Builder(cc).WithRateLimit(100).Build();
+                cc = ConsumerConfiguration.Builder(cc).WithRateLimitBps(100).Build();
                 AssertValidAddOrUpdate(jsm, cc);
 
                 cc = PrepForUpdateTest(jsm);

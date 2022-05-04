@@ -23,6 +23,19 @@ namespace IntegrationTests
 {
     public abstract class TestSuite<TSuiteContext> : IClassFixture<TSuiteContext> where TSuiteContext : class
     {
+        // ----------------------------------------------------------------------------------------------------
+        // console debug help 
+        // ----------------------------------------------------------------------------------------------------
+        /*
+            private readonly ITestOutputHelper output;
+
+            public TestMyClass(ITestOutputHelper output, BlahSuiteContext context) : base(context)
+            {
+	            this.output = output;
+	            Console.SetOut(new ConsoleWriter(output));
+            }
+        */
+
         protected TSuiteContext Context { get; }
 
         protected TestSuite(TSuiteContext context)

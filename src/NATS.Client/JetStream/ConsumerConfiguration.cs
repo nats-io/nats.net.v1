@@ -23,15 +23,27 @@ namespace NATS.Client.JetStream
 {
     public sealed class ConsumerConfiguration : JsonSerializable
     {
+        [Obsolete("This property is obsolete, it is not used.", false)]
         public static readonly Duration MinAckWait = Duration.One;
+        [Obsolete("This property is obsolete, it is not used as a default", false)]
         public static readonly Duration MinDefaultIdleHeartbeat = Duration.OfMillis(100);
+
+        public static readonly Duration DurationUnset = Duration.Zero;
+        public static readonly Duration MinIdleHeartbeat = Duration.OfMillis(100);
+
+        public const long LongUnset = -1;
+        public const ulong UlongUnset = 0;
+        public const long DurationUnsetLong = 0;
+        public const long DurationMinLong = 1;
+        public static readonly long MinIdleHeartbeatNanos = MinIdleHeartbeat.Nanos;
+        public static readonly long MinIdleHeartbeatMillis = MinIdleHeartbeat.Millis;
 
         private DeliverPolicy? _deliverPolicy;
         private AckPolicy? _ackPolicy;
         private ReplayPolicy? _replayPolicy;
         private ulong? _startSeq;
+        private ulong? _rateLimitBps;
         private long? _maxDeliver;
-        private long? _rateLimit;
         private long? _maxAckPending;
         private long? _maxPullWaiting;
         private long? _maxBatch;
@@ -52,16 +64,19 @@ namespace NATS.Client.JetStream
         public Duration IdleHeartbeat { get; }
         public Duration MaxExpires { get; }
         public Duration InactiveThreshold { get; }
-        public ulong StartSeq =>  CcChangeHelper.StartSeq.ValueOrInitialUlong(_startSeq);
-        public long MaxDeliver => CcChangeHelper.MaxDeliver.ValueOrInitial(_maxDeliver);
-        public long RateLimit => CcChangeHelper.RateLimit.ValueOrInitial(_rateLimit);
-        public long MaxAckPending => CcChangeHelper.MaxAckPending.ValueOrInitial(_maxAckPending);
-        public long MaxPullWaiting => CcChangeHelper.MaxPullWaiting.ValueOrInitial(_maxPullWaiting);
-        public long MaxBatch => CcChangeHelper.MaxBatch.ValueOrInitial(_maxBatch);
+        public ulong StartSeq => GetOrUnset(_startSeq);
+        public long MaxDeliver => LongChangeHelper.MaxDeliver.GetOrUnset(_maxDeliver);
+        
+        [Obsolete("This property is obsolete. Use RateLimitBps.", false)]
+        public long RateLimit => (long)GetOrUnset(_rateLimitBps);
+        public ulong RateLimitBps => GetOrUnset(_rateLimitBps);
+        public long MaxAckPending => GetOrUnset(_maxAckPending);
+        public long MaxPullWaiting => GetOrUnset(_maxPullWaiting);
+        public long MaxBatch => GetOrUnset(_maxBatch);
         public bool FlowControl => _flowControl ?? false;
         public bool HeadersOnly => _headersOnly ?? false;
         public IList<Duration> Backoff { get; }
-
+       
         internal ConsumerConfiguration(string json) : this(JSON.Parse(json)) {}
 
         internal ConsumerConfiguration(JSONNode ccNode)
@@ -83,12 +98,12 @@ namespace NATS.Client.JetStream
             MaxExpires = AsDuration(ccNode, ApiConstants.MaxExpires, null);
             InactiveThreshold = AsDuration(ccNode, ApiConstants.InactiveThreshold, null);
 
-            _startSeq = CcChangeHelper.StartSeq.ValueOrInitialUlong(ccNode[ApiConstants.OptStartSeq].AsUlong);
-            _maxDeliver = CcChangeHelper.MaxDeliver.ValueOrInitial(ccNode[ApiConstants.MaxDeliver].AsLong);
-            _rateLimit = CcChangeHelper.RateLimit.ValueOrInitial(ccNode[ApiConstants.RateLimitBps].AsLong);
-            _maxAckPending = CcChangeHelper.MaxAckPending.ValueOrInitial(ccNode[ApiConstants.MaxAckPending].AsLong);
-            _maxPullWaiting = CcChangeHelper.MaxPullWaiting.ValueOrInitial(ccNode[ApiConstants.MaxWaiting].AsLong);
-            _maxBatch = CcChangeHelper.MaxBatch.ValueOrInitial(ccNode[ApiConstants.MaxBatch].AsLong);
+            _startSeq = ccNode[ApiConstants.OptStartSeq].AsUlongOr(UlongUnset);
+            _maxDeliver = ccNode[ApiConstants.MaxDeliver].AsLongOr(LongChangeHelper.MaxDeliver.Unset);
+            _rateLimitBps = ccNode[ApiConstants.RateLimitBps].AsUlongOr(UlongUnset);
+            _maxAckPending = ccNode[ApiConstants.MaxAckPending].AsLongOr(LongUnset);
+            _maxPullWaiting = ccNode[ApiConstants.MaxWaiting].AsLongOr(LongUnset);
+            _maxBatch = ccNode[ApiConstants.MaxBatch].AsLongOr(LongUnset);
             _flowControl = ccNode[ApiConstants.FlowControl].AsBool;
             _headersOnly = ccNode[ApiConstants.HeadersOnly].AsBool;
 
@@ -118,7 +133,7 @@ namespace NATS.Client.JetStream
 
             _startSeq = builder._startSeq;
             _maxDeliver = builder._maxDeliver;
-            _rateLimit = builder._rateLimit;
+            _rateLimitBps = builder._rateLimitBps;
             _maxAckPending = builder._maxAckPending;
             _maxPullWaiting = builder._maxPullWaiting;
             _maxBatch = builder._maxBatch;
@@ -143,7 +158,7 @@ namespace NATS.Client.JetStream
             AddField(o, ApiConstants.FilterSubject, FilterSubject);
             AddField(o, ApiConstants.ReplayPolicy, ReplayPolicy.GetString());
             AddField(o, ApiConstants.SampleFreq, SampleFrequency);
-            AddField(o, ApiConstants.RateLimitBps, RateLimit);
+            AddField(o, ApiConstants.RateLimitBps, RateLimitBps);
             AddField(o, ApiConstants.MaxAckPending, MaxAckPending);
             AddField(o, ApiConstants.IdleHeartbeat, IdleHeartbeat);
             AddField(o, ApiConstants.FlowControl, FlowControl);
@@ -156,56 +171,101 @@ namespace NATS.Client.JetStream
 
             return o;
         }
-        
-        internal bool WouldBeChangeTo(ConsumerConfiguration original)
+
+        internal IList<string> GetChanges(ConsumerConfiguration server)
         {
-            return (_deliverPolicy.HasValue && _deliverPolicy.Value != original.DeliverPolicy)
-                   || (_ackPolicy.HasValue && _ackPolicy.Value != original.AckPolicy)
-                   || (_replayPolicy.HasValue && _replayPolicy.Value != original.ReplayPolicy)
+            IList<string> changes = new List<string>();
+            Record(_deliverPolicy != null && _deliverPolicy != server.DeliverPolicy, "DeliverPolicy", changes);
+            Record(_ackPolicy != null && _ackPolicy != server.AckPolicy, "AckPolicy", changes);
+            Record(_replayPolicy != null && _replayPolicy != server.ReplayPolicy, "ReplayPolicy", changes);
 
-                   || _flowControl.HasValue && _flowControl.Value != original.FlowControl
-                   || _headersOnly.HasValue && _headersOnly.Value != original.HeadersOnly
+            Record(_flowControl != null && _flowControl != server.FlowControl, "FlowControl", changes);
+            Record(_headersOnly != null && _headersOnly != server.HeadersOnly, "HeadersOnly", changes);
 
-                   || CcChangeHelper.StartSeq.WouldBeChange(_startSeq, original.StartSeq)
-                   || CcChangeHelper.MaxDeliver.WouldBeChange(_maxDeliver, original.MaxDeliver)
-                   || CcChangeHelper.RateLimit.WouldBeChange(_rateLimit, original.RateLimit)
-                   || CcChangeHelper.MaxAckPending.WouldBeChange(_maxAckPending, original.MaxAckPending)
-                   || CcChangeHelper.MaxPullWaiting.WouldBeChange(_maxPullWaiting, original.MaxPullWaiting)
-                   || CcChangeHelper.MaxBatch.WouldBeChange(_maxBatch, original.MaxBatch)
+            Record(_startSeq != null && !_startSeq.Equals(server.StartSeq), "StartSequence", changes);
+            Record(_rateLimitBps != null && !_rateLimitBps.Equals(server.RateLimitBps), "RateLimitBps", changes);
 
-                   || CcChangeHelper.MaxPullWaiting.WouldBeChange(AckWait, original.AckWait)
-
-                   || WouldBeChange(IdleHeartbeat, original.IdleHeartbeat)
-                   || WouldBeChange(StartTime, original.StartTime)
-                   || WouldBeChange(MaxExpires, original.MaxExpires)
-                   || WouldBeChange(InactiveThreshold, original.InactiveThreshold)
+            // MaxDeliver is a special case because -1 and 0 are unset where other unsigned -1 is unset
+            Record(LongChangeHelper.MaxDeliver.WouldBeChange(_maxDeliver, server.MaxDeliver), "MaxDeliver", changes);
                    
-                   || WouldBeChange(FilterSubject, original.FilterSubject)
-                   || WouldBeChange(Description, original.Description)
-                   || WouldBeChange(SampleFrequency, original.SampleFrequency)
-                   || WouldBeChange(DeliverSubject, original.DeliverSubject)
-                   || WouldBeChange(DeliverGroup, original.DeliverGroup)
-                   
-                   || !Backoff.SequenceEqual(original.Backoff)
-                   ;
+            Record(_maxAckPending != null && !_maxAckPending.Equals(server.MaxAckPending), "MaxAckPending", changes);
+            Record(_maxPullWaiting != null && !_maxPullWaiting.Equals(server.MaxPullWaiting), "MaxPullWaiting", changes);
+            Record(_maxBatch != null && !_maxBatch.Equals(server.MaxBatch), "MaxBatch", changes);
 
-            // do not need to check Durable because the original is retrieved by the durable name
+            Record(AckWait != null && !AckWait.Equals(server.AckWait), "AckWait", changes);
+            Record(IdleHeartbeat != null && !IdleHeartbeat.Equals(server.IdleHeartbeat), "IdleHeartbeat", changes);
+            Record(MaxExpires != null && !MaxExpires.Equals(server.MaxExpires), "MaxExpires", changes);
+            Record(InactiveThreshold != null && !InactiveThreshold.Equals(server.InactiveThreshold), "InactiveThreshold", changes);
+
+            RecordWouldBeChange(StartTime, server.StartTime, "StartTime", changes);
+                   
+            RecordWouldBeChange(FilterSubject, server.FilterSubject, "FilterSubject", changes);
+            RecordWouldBeChange(Description, server.Description, "Description", changes);
+            RecordWouldBeChange(SampleFrequency, server.SampleFrequency, "SampleFrequency", changes);
+            RecordWouldBeChange(DeliverSubject, server.DeliverSubject, "DeliverSubject", changes);
+            RecordWouldBeChange(DeliverGroup, server.DeliverGroup, "DeliverGroup", changes);
+                   
+            Record(!Backoff.SequenceEqual(server.Backoff), "Backoff", changes);
+            return changes;
+        }
+        
+        private void Record(bool isChange, string field, IList<string> changes) {
+            if (isChange) { changes.Add(field); }
         }
 
-        private static bool WouldBeChange(string request, string original)
+        private void RecordWouldBeChange(string request, string server, string field, IList<string> changes)
         {
             string r = EmptyAsNull(request);
-            return r != null && !r.Equals(EmptyAsNull(original));
+            Record(r != null && !r.Equals(EmptyAsNull(server)), field, changes);
         }
 
-        private static bool WouldBeChange(DateTime request, DateTime original)
+        private void RecordWouldBeChange(DateTime request, DateTime server, string field, IList<string> changes)
         {
-            return request != DateTime.MinValue && !request.Equals(original);
+            Record(request != DateTime.MinValue && !request.Equals(server), field, changes);
+        }
+        
+        private static long GetOrUnset(long? val)
+        {
+            return val ?? LongUnset;
         }
 
-        private static bool WouldBeChange(Duration request, Duration original)
+        private static ulong GetOrUnset(ulong? val)
         {
-            return request != null && !request.Equals(original);
+            return val ?? UlongUnset;
+        }
+    
+        // Helper class to manage min / default / unset / server values.
+        internal class LongChangeHelper {
+            internal static readonly LongChangeHelper MaxDeliver = new LongChangeHelper(1, -1);
+
+            internal long Min { get; }
+            internal long Unset  { get; }
+
+            private LongChangeHelper(long min, long unset)
+            {
+                Min = min;
+                Unset = unset;
+            }
+
+            internal long GetOrUnset(long? val) {
+                return val ?? Unset;
+            }
+
+            internal bool WouldBeChange(long? user, long server) {
+                return user != null && !user.Equals(server);
+            }
+
+            internal long? Normalize(long? proposed) {
+                if (proposed == null)
+                {
+                    return null;
+                }
+                if (proposed < Min)
+                {
+                    return Unset;
+                }
+                return proposed;
+            }
         }
 
         public static ConsumerConfigurationBuilder Builder()
@@ -238,14 +298,34 @@ namespace NATS.Client.JetStream
             internal Duration _inactiveThreshold;
 
             internal ulong? _startSeq;
+            internal ulong? _rateLimitBps;
             internal long? _maxDeliver;
-            internal long? _rateLimit;
             internal long? _maxAckPending;
             internal long? _maxPullWaiting;
             internal long? _maxBatch;
             internal bool? _flowControl;
             internal bool? _headersOnly;
             internal IList<Duration> _backoff = new List<Duration>();
+
+            private long? Normalize(long? l)
+            {
+                return l == null ? null : l <= LongUnset ? LongUnset : l;
+            }
+
+            private ulong? Normalize(ulong? u)
+            {
+                return u == null ? null : u <= UlongUnset ? UlongUnset : u;
+            }
+
+            private Duration Normalize(Duration d)
+            {
+                return d == null ? null : d.Nanos <= DurationUnsetLong ? DurationUnset : d;
+            }
+
+            private Duration NormalizeDuration(long millis)
+            {
+                return millis <= DurationUnsetLong ? DurationUnset : Duration.OfMillis(millis);
+            }
 
             public ConsumerConfigurationBuilder() {}
 
@@ -272,7 +352,7 @@ namespace NATS.Client.JetStream
 
                 _startSeq = cc._startSeq;
                 _maxDeliver = cc._maxDeliver;
-                _rateLimit = cc._rateLimit;
+                _rateLimitBps = cc._rateLimitBps;
                 _maxAckPending = cc._maxAckPending;
                 _maxPullWaiting = cc._maxPullWaiting;
                 _maxBatch = cc._maxBatch;
@@ -343,7 +423,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithStartSequence(ulong? sequence)
             {
-                _startSeq = sequence;
+                _startSeq = Normalize(sequence);
                 return this;
             }
 
@@ -376,7 +456,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithAckWait(Duration timeout)
             {
-                _ackWait = ValidateDurationNotRequiredNotLessThanMin(timeout, MinAckWait); 
+                _ackWait = Normalize(timeout); 
                 return this;
             }
 
@@ -387,7 +467,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithAckWait(long timeoutMillis)
             {
-                _ackWait = ValidateDurationNotRequiredNotLessThanMin(timeoutMillis, MinAckWait);
+                _ackWait = NormalizeDuration(timeoutMillis); 
                 return this;
             }
 
@@ -398,7 +478,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithMaxDeliver(long? maxDeliver)
             {
-                _maxDeliver = maxDeliver;
+                _maxDeliver = LongChangeHelper.MaxDeliver.Normalize(maxDeliver);
                 return this;
             }
 
@@ -438,11 +518,34 @@ namespace NATS.Client.JetStream
             /// <summary>
             /// Set the rate limit of the ConsumerConfiguration.
             /// </summary>
-            /// <param name="msgsPerSecond">messages per second to deliver</param>
+            /// <param name="bitsPerSecond">bits per second to deliver</param>
             /// <returns>The ConsumerConfigurationBuilder</returns>
-            public ConsumerConfigurationBuilder WithRateLimit(long? msgsPerSecond)
+            [Obsolete("This method is obsolete. Use WithRateLimit with ulong parameter.", false)]
+            public ConsumerConfigurationBuilder WithRateLimit(long? bitsPerSecond)
             {
-                _rateLimit = msgsPerSecond;
+                if (bitsPerSecond == null)
+                {
+                    _rateLimitBps = null;
+                }
+                else if (bitsPerSecond < 0)
+                {
+                    _rateLimitBps = UlongUnset;
+                }
+                else
+                {
+                    _rateLimitBps = Normalize((ulong)bitsPerSecond);
+                }
+                return this;
+            }
+
+            /// <summary>
+            /// Set the rate limit of the ConsumerConfiguration.
+            /// </summary>
+            /// <param name="bitsPerSecond">bits per second to deliver</param>
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder WithRateLimitBps(ulong? bitsPerSecond)
+            {
+                _rateLimitBps = Normalize(bitsPerSecond);
                 return this;
             }
 
@@ -453,7 +556,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithMaxAckPending(long? maxAckPending)
             {
-                _maxAckPending = maxAckPending;
+                _maxAckPending = Normalize(maxAckPending);
                 return this;
             }
 
@@ -464,7 +567,23 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithIdleHeartbeat(Duration idleHeartbeat)
             {
-                _idleHeartbeat = ValidateDurationNotRequiredNotLessThanMin(idleHeartbeat, MinDefaultIdleHeartbeat); 
+                if (idleHeartbeat == null) {
+                    _idleHeartbeat = null;
+                }
+                else
+                {
+                    long nanos = idleHeartbeat.Nanos;
+                    if (nanos <= DurationUnsetLong) {
+                        _idleHeartbeat = DurationUnset;
+                    }
+                    else if (nanos < MinIdleHeartbeatNanos) {
+                        throw new ArgumentException($"Duration must be greater than or equal to {MinIdleHeartbeatNanos} nanos.");
+                    }
+                    else {
+                        _idleHeartbeat = idleHeartbeat;
+                    }
+                }
+
                 return this;
             }
 
@@ -475,7 +594,15 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithIdleHeartbeat(long idleHeartbeatMillis)
             {
-                _idleHeartbeat = ValidateDurationNotRequiredNotLessThanMin(idleHeartbeatMillis, MinDefaultIdleHeartbeat); 
+                if (idleHeartbeatMillis <= DurationUnsetLong) {
+                    _idleHeartbeat = DurationUnset;
+                }
+                else if (idleHeartbeatMillis < MinIdleHeartbeatMillis) {
+                    throw new ArgumentException($"Duration must be greater than or equal to {MinIdleHeartbeatMillis} milliseconds.");
+                }
+                else {
+                    _idleHeartbeat = Duration.OfMillis(idleHeartbeatMillis);
+                }
                 return this;
             }
 
@@ -505,7 +632,7 @@ namespace NATS.Client.JetStream
             /// <param name="maxExpires">the max amount of expire as a Duration</param>
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithMaxExpires(Duration maxExpires) {
-                _maxExpires = maxExpires;
+                _maxExpires = Normalize(maxExpires);
                 return this;
             }
 
@@ -515,7 +642,7 @@ namespace NATS.Client.JetStream
             /// <param name="maxExpiresMillis">the max amount of expire as milliseconds</param>
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithMaxExpires(long maxExpiresMillis) {
-                _maxExpires = Duration.OfMillis(maxExpiresMillis);
+                _maxExpires = NormalizeDuration(maxExpiresMillis);
                 return this;
             }
 
@@ -525,7 +652,7 @@ namespace NATS.Client.JetStream
             /// <param name="inactiveThreshold">the max amount of expire as a Duration</param>
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithInactiveThreshold(Duration inactiveThreshold) {
-                _inactiveThreshold = inactiveThreshold;
+                _inactiveThreshold = Normalize(inactiveThreshold);
                 return this;
             }
 
@@ -535,7 +662,7 @@ namespace NATS.Client.JetStream
             /// <param name="inactiveThresholdMillis">the max amount of expire as milliseconds</param>
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithInactiveThreshold(long inactiveThresholdMillis) {
-                _inactiveThreshold = Duration.OfMillis(inactiveThresholdMillis);
+                _inactiveThreshold = NormalizeDuration(inactiveThresholdMillis);
                 return this;
             }
 
@@ -546,7 +673,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithMaxPullWaiting(long? maxPullWaiting)
             {
-                _maxPullWaiting = maxPullWaiting;
+                _maxPullWaiting = Normalize(maxPullWaiting);
                 return this;
             }
 
@@ -557,7 +684,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithMaxBatch(long? maxBatch)
             {
-                _maxBatch = maxBatch;
+                _maxBatch = Normalize(maxBatch);
                 return this;
             }
 
@@ -579,8 +706,13 @@ namespace NATS.Client.JetStream
             public ConsumerConfigurationBuilder WithBackoff(params Duration[] backoffs) {
                 _backoff.Clear();
                 if (backoffs != null) {
-                    foreach (Duration d in backoffs) {
+                    foreach (Duration d in backoffs)
+                    {
                         if (d != null) {
+                            if (d.Nanos < DurationMinLong)
+                            {
+                                throw new ArgumentException($"Backoff cannot be less than {DurationMinLong}");
+                            }
                             _backoff.Add(d);
                         }
                     }
@@ -597,6 +729,10 @@ namespace NATS.Client.JetStream
                 _backoff.Clear();
                 if (backoffsMillis != null) {
                     foreach (long ms in backoffsMillis) {
+                        if (ms < DurationMinLong)
+                        {
+                            throw new ArgumentException($"Backoff cannot be less than {DurationMinLong}");
+                        }
                         _backoff.Add(Duration.OfMillis(ms));
                     }
                 }
@@ -630,48 +766,5 @@ namespace NATS.Client.JetStream
                 return PullSubscribeOptions.Builder().WithConfiguration(Build()).Build();
             }
         }
-    }
-    
-    internal class CcChangeHelper
-    {
-        internal long Min { get; }
-        internal long Initial { get; }
-        internal long Server { get; }
-        internal ulong InitialUlong { get; }
-
-        private CcChangeHelper(long min, long initial, long server)
-        {
-            Min = min;
-            Server = server;
-            Initial = initial;
-            InitialUlong = (ulong)initial;
-        }
-
-        internal long ValueOrInitial(long? val) => val == null || val < Min ? Initial : val.Value;
-        internal long Comparable(long val)      => val < Min || val == Server ? Initial : val;
-
-        internal ulong ValueOrInitialUlong(ulong? val) => val == null || val < (ulong)Min ? (ulong)Initial : val.Value;
-        internal ulong Comparable(ulong val)           => val < (ulong)Min || val == (ulong)Server ? (ulong)Initial : val;
-
-        public bool WouldBeChange(long? user, long srvr)
-        {
-            return user != null && Comparable(user.Value) != Comparable(srvr);
-        }
-
-        public bool WouldBeChange(ulong? user, ulong srvr) {
-            return user != null && Comparable(user.Value) != Comparable(srvr);
-        }
-
-        public bool WouldBeChange(Duration user, Duration srvr) {
-            return user != null && Comparable(user.Nanos) != Comparable(srvr.Nanos);
-        }
-
-        internal static readonly CcChangeHelper StartSeq = new CcChangeHelper(1, 0, 0);
-        internal static readonly CcChangeHelper MaxDeliver = new CcChangeHelper(1, -1, -1);
-        internal static readonly CcChangeHelper RateLimit = new CcChangeHelper(1, -1, -1);
-        internal static readonly CcChangeHelper MaxAckPending = new CcChangeHelper(0, 0, 20000L);
-        internal static readonly CcChangeHelper MaxPullWaiting = new CcChangeHelper(0, 0, 512);
-        internal static readonly CcChangeHelper MaxBatch = new CcChangeHelper(1, -1, -1);
-        internal static readonly CcChangeHelper AckWait = new CcChangeHelper(0, Duration.OfSeconds(30).Nanos, Duration.OfSeconds(30).Nanos);
     }
 }
