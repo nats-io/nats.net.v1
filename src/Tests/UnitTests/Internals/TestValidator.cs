@@ -16,7 +16,6 @@ using NATS.Client;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using Xunit;
-using static NATS.Client.Internals.JetStreamConstants;
 
 namespace UnitTests.Internals
 {
@@ -104,13 +103,11 @@ namespace UnitTests.Internals
         }
 
         [Fact]
-        public void TestValidatePullBatchSize()
+        public void TestValidateValidateGtZero()
         {
-            Assert.Equal(1, Validator.ValidatePullBatchSize(1));
-            Assert.Equal(MaxPullSize, Validator.ValidatePullBatchSize(MaxPullSize));
-            Assert.Throws<ArgumentException>(() => Validator.ValidatePullBatchSize(0));
-            Assert.Throws<ArgumentException>(() => Validator.ValidatePullBatchSize(-1));
-            Assert.Throws<ArgumentException>(() => Validator.ValidatePullBatchSize(MaxPullSize + 1));
+            Assert.Equal(1, Validator.ValidateGtZero(1, "test"));
+            Assert.Throws<ArgumentException>(() => Validator.ValidateGtZero(0, "test"));
+            Assert.Throws<ArgumentException>(() => Validator.ValidateGtZero(-1, "test"));
         }
 
         [Fact]

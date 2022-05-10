@@ -192,17 +192,6 @@ namespace NATS.Client.Internals
             });
         }
 
-        internal static int ValidatePullBatchSize(int pullBatchSize)
-        {
-            if (pullBatchSize < 1 || pullBatchSize > JetStreamConstants.MaxPullSize)
-            {
-                throw new ArgumentException(
-                    $"Pull Batch Size must be between 1 and {JetStreamConstants.MaxPullSize} inclusive [{pullBatchSize}]");
-            }
-
-            return pullBatchSize;
-        }
-
         internal static long ValidateMaxConsumers(long max)
         {
             return ValidateGtZeroOrMinus1(max, "Max Consumers");
@@ -346,6 +335,16 @@ namespace NATS.Client.Internals
             }
 
             return s;
+        }
+
+        internal static int ValidateGtZero(int i, string label)
+        {
+            if (i < 1)
+            {
+                throw new ArgumentException($"{label} must be greater than zero");
+            }
+
+            return i;
         }
 
         internal static long ValidateGtZeroOrMinus1(long l, string label)

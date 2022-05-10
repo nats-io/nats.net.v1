@@ -52,7 +52,7 @@ namespace NATS.Client.JetStream
         }
 
         private void PullInternal(int batchSize, bool noWait, Duration expiresIn) {
-            int batch = Validator.ValidatePullBatchSize(batchSize);
+            int batch = Validator.ValidateGtZero(batchSize, "Pull batch size");
             string subj = string.Format(JetStreamConstants.JsapiConsumerMsgNext, Stream, Consumer);
             string publishSubject = Context.PrependPrefix(subj);
             Connection.Publish(publishSubject, Subject, GetPullJson(batch, noWait, expiresIn));
