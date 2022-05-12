@@ -27,7 +27,7 @@ namespace NATS.Client.JetStream
 
     internal class PullAutoStatusManager : IAutoStatusManager
     {
-        private static readonly IList<int> PullKnownStatusCodes = new List<int>(new []{404, 408});
+        private static readonly IList<int> PullKnownStatusCodes = new List<int>(new []{404, 408, 409});
         private Subscription _sub;
         
         public void SetSub(Subscription sub)
@@ -51,6 +51,7 @@ namespace NATS.Client.JetStream
 
     internal class PushAutoStatusManager : IAutoStatusManager
     {
+        private static readonly IList<int> PushKnownStatusCodes = new List<int>(new []{409});
         private const int Threshold = 3;
 
         private readonly Connection conn;
@@ -164,24 +165,24 @@ namespace NATS.Client.JetStream
                     if (Fc) {
                         _processFlowControl(msg.Reply, FlowControlSource.FlowControl);
                     }
-                    return true;
                 }
-
-                if (msg.Status.IsHeartbeat()) 
+                else if (msg.Status.IsHeartbeat()) 
                 {
                     if (Fc) {
                         _processFlowControl(msg.Header?[JetStreamConstants.ConsumerStalledHeader], FlowControlSource.Heartbeat);
                     }
-                    return true;
-                    
                 }
-
-                // this status is unknown to us, always use the error handler.
-                // If it's a sync call, also throw an exception
-                conn.Opts.UnhandledStatusEventHandlerOrDefault.Invoke(this, new UnhandledStatusEventArgs(conn, _sub, msg.Status));
-                if (SyncMode) 
+                else if (!PushKnownStatusCodes.Contains(msg.Status.Code))
                 {
-                    throw new NATSJetStreamStatusException(_sub, msg.Status);
+                    // If this status is unknown to us, always use the error handler.
+                    // this status is unknown to us, always use the error handler.
+                    // If it's a sync call, also throw an exception
+                    conn.Opts.UnhandledStatusEventHandlerOrDefault.Invoke(this,
+                        new UnhandledStatusEventArgs(conn, _sub, msg.Status));
+                    if (SyncMode)
+                    {
+                        throw new NATSJetStreamStatusException(_sub, msg.Status);
+                    }
                 }
                 return true;
             }
