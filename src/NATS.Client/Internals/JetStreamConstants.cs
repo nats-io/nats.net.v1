@@ -7,6 +7,7 @@ namespace NATS.Client.Internals
         /// <summary>
         /// Maximum Pull Size for Pull subscriptions.
         /// </summary>
+        [Obsolete("This property is obsolete. We do not enforce a limit on pull batch size.", false)]
         public const int MaxPullSize = 256;
 
         /// <summary>
