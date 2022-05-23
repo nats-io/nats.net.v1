@@ -31,10 +31,13 @@ namespace NATS.Client.JetStream
         public static readonly Duration DurationUnset = Duration.Zero;
         public static readonly Duration MinIdleHeartbeat = Duration.OfMillis(100);
 
+        public const int IntUnset = -1;
         public const long LongUnset = -1;
         public const ulong UlongUnset = 0;
         public const long DurationUnsetLong = 0;
         public const long DurationMinLong = 1;
+        public const int StandardMin = 0;
+        public const int MaxDeliverMin = 1;
         public static readonly long MinIdleHeartbeatNanos = MinIdleHeartbeat.Nanos;
         public static readonly long MinIdleHeartbeatMillis = MinIdleHeartbeat.Millis;
 
@@ -43,10 +46,11 @@ namespace NATS.Client.JetStream
         private ReplayPolicy? _replayPolicy;
         private ulong? _startSeq;
         private ulong? _rateLimitBps;
-        private long? _maxDeliver;
-        private long? _maxAckPending;
-        private long? _maxPullWaiting;
-        private long? _maxBatch;
+        private int? _maxDeliver;
+        private int? _maxAckPending;
+        private int? _maxPullWaiting;
+        private int? _maxBatch;
+        private int? _maxBytes;
         private bool? _flowControl;
         private bool? _headersOnly;
 
@@ -65,14 +69,15 @@ namespace NATS.Client.JetStream
         public Duration MaxExpires { get; }
         public Duration InactiveThreshold { get; }
         public ulong StartSeq => GetOrUnset(_startSeq);
-        public long MaxDeliver => LongChangeHelper.MaxDeliver.GetOrUnset(_maxDeliver);
+        public int MaxDeliver => GetOrUnset(_maxDeliver);
         
         [Obsolete("This property is obsolete. Use RateLimitBps.", false)]
         public long RateLimit => (long)GetOrUnset(_rateLimitBps);
         public ulong RateLimitBps => GetOrUnset(_rateLimitBps);
-        public long MaxAckPending => GetOrUnset(_maxAckPending);
-        public long MaxPullWaiting => GetOrUnset(_maxPullWaiting);
-        public long MaxBatch => GetOrUnset(_maxBatch);
+        public int MaxAckPending => GetOrUnset(_maxAckPending);
+        public int MaxPullWaiting => GetOrUnset(_maxPullWaiting);
+        public int MaxBatch => GetOrUnset(_maxBatch);
+        public int MaxBytes => GetOrUnset(_maxBytes);
         public bool FlowControl => _flowControl ?? false;
         public bool HeadersOnly => _headersOnly ?? false;
         public IList<Duration> Backoff { get; }
@@ -99,11 +104,12 @@ namespace NATS.Client.JetStream
             InactiveThreshold = AsDuration(ccNode, ApiConstants.InactiveThreshold, null);
 
             _startSeq = ccNode[ApiConstants.OptStartSeq].AsUlongOr(UlongUnset);
-            _maxDeliver = ccNode[ApiConstants.MaxDeliver].AsLongOr(LongChangeHelper.MaxDeliver.Unset);
+            _maxDeliver = ccNode[ApiConstants.MaxDeliver].AsIntOr(IntUnset);
             _rateLimitBps = ccNode[ApiConstants.RateLimitBps].AsUlongOr(UlongUnset);
-            _maxAckPending = ccNode[ApiConstants.MaxAckPending].AsLongOr(LongUnset);
-            _maxPullWaiting = ccNode[ApiConstants.MaxWaiting].AsLongOr(LongUnset);
-            _maxBatch = ccNode[ApiConstants.MaxBatch].AsLongOr(LongUnset);
+            _maxAckPending = ccNode[ApiConstants.MaxAckPending].AsIntOr(IntUnset);
+            _maxPullWaiting = ccNode[ApiConstants.MaxWaiting].AsIntOr(IntUnset);
+            _maxBatch = ccNode[ApiConstants.MaxBatch].AsIntOr(IntUnset);
+            _maxBytes = ccNode[ApiConstants.MaxBytes].AsIntOr(IntUnset);
             _flowControl = ccNode[ApiConstants.FlowControl].AsBool;
             _headersOnly = ccNode[ApiConstants.HeadersOnly].AsBool;
 
@@ -137,6 +143,7 @@ namespace NATS.Client.JetStream
             _maxAckPending = builder._maxAckPending;
             _maxPullWaiting = builder._maxPullWaiting;
             _maxBatch = builder._maxBatch;
+            _maxBytes = builder._maxBytes;
 
             Backoff = builder._backoff;
         }
@@ -165,6 +172,7 @@ namespace NATS.Client.JetStream
             AddField(o, ApiConstants.MaxWaiting, MaxPullWaiting);
             AddField(o, ApiConstants.HeadersOnly, HeadersOnly);
             AddField(o, ApiConstants.MaxBatch, MaxBatch);
+            AddField(o, ApiConstants.MaxBytes, MaxBytes);
             AddField(o, ApiConstants.MaxExpires, MaxExpires);
             AddField(o, ApiConstants.InactiveThreshold, InactiveThreshold);
             AddField(o, ApiConstants.Backoff, Backoff);
@@ -175,27 +183,26 @@ namespace NATS.Client.JetStream
         internal IList<string> GetChanges(ConsumerConfiguration server)
         {
             IList<string> changes = new List<string>();
-            Record(_deliverPolicy != null && _deliverPolicy != server.DeliverPolicy, "DeliverPolicy", changes);
-            Record(_ackPolicy != null && _ackPolicy != server.AckPolicy, "AckPolicy", changes);
-            Record(_replayPolicy != null && _replayPolicy != server.ReplayPolicy, "ReplayPolicy", changes);
+            if (_deliverPolicy != null && _deliverPolicy != server.DeliverPolicy) { changes.Add("DeliverPolicy"); }
+            if (_ackPolicy != null && _ackPolicy != server.AckPolicy) { changes.Add("AckPolicy"); }
+            if (_replayPolicy != null && _replayPolicy != server.ReplayPolicy) { changes.Add("ReplayPolicy"); }
 
-            Record(_flowControl != null && _flowControl != server.FlowControl, "FlowControl", changes);
-            Record(_headersOnly != null && _headersOnly != server.HeadersOnly, "HeadersOnly", changes);
+            if (_flowControl != null && _flowControl != server.FlowControl) { changes.Add("FlowControl"); }
+            if (_headersOnly != null && _headersOnly != server.HeadersOnly) { changes.Add("HeadersOnly"); }
 
-            Record(_startSeq != null && !_startSeq.Equals(server.StartSeq), "StartSequence", changes);
-            Record(_rateLimitBps != null && !_rateLimitBps.Equals(server.RateLimitBps), "RateLimitBps", changes);
+            if (_startSeq != null && !_startSeq.Equals(server.StartSeq)) { changes.Add("StartSequence"); }
+            if (_rateLimitBps != null && !_rateLimitBps.Equals(server.RateLimitBps)) { changes.Add("RateLimitBps"); }
 
-            // MaxDeliver is a special case because -1 and 0 are unset where other unsigned -1 is unset
-            Record(LongChangeHelper.MaxDeliver.WouldBeChange(_maxDeliver, server.MaxDeliver), "MaxDeliver", changes);
-                   
-            Record(_maxAckPending != null && !_maxAckPending.Equals(server.MaxAckPending), "MaxAckPending", changes);
-            Record(_maxPullWaiting != null && !_maxPullWaiting.Equals(server.MaxPullWaiting), "MaxPullWaiting", changes);
-            Record(_maxBatch != null && !_maxBatch.Equals(server.MaxBatch), "MaxBatch", changes);
+            if (_maxDeliver != null && !_maxDeliver.Equals(server.MaxDeliver)) { changes.Add("MaxDeliver"); }
+            if (_maxAckPending != null && !_maxAckPending.Equals(server.MaxAckPending)) { changes.Add("MaxAckPending"); }
+            if (_maxPullWaiting != null && !_maxPullWaiting.Equals(server.MaxPullWaiting)) { changes.Add("MaxPullWaiting"); }
+            if (_maxBatch != null && !_maxBatch.Equals(server.MaxBatch)) { changes.Add("MaxBatch"); }
+            if (_maxBytes != null && !_maxBytes.Equals(server.MaxBytes)) { changes.Add("MaxBytes"); }
 
-            Record(AckWait != null && !AckWait.Equals(server.AckWait), "AckWait", changes);
-            Record(IdleHeartbeat != null && !IdleHeartbeat.Equals(server.IdleHeartbeat), "IdleHeartbeat", changes);
-            Record(MaxExpires != null && !MaxExpires.Equals(server.MaxExpires), "MaxExpires", changes);
-            Record(InactiveThreshold != null && !InactiveThreshold.Equals(server.InactiveThreshold), "InactiveThreshold", changes);
+            if (AckWait != null && !AckWait.Equals(server.AckWait)) { changes.Add("AckWait"); }
+            if (IdleHeartbeat != null && !IdleHeartbeat.Equals(server.IdleHeartbeat)) { changes.Add("IdleHeartbeat"); }
+            if (MaxExpires != null && !MaxExpires.Equals(server.MaxExpires)) { changes.Add("MaxExpires"); }
+            if (InactiveThreshold != null && !InactiveThreshold.Equals(server.InactiveThreshold)) { changes.Add("InactiveThreshold"); }
 
             RecordWouldBeChange(StartTime, server.StartTime, "StartTime", changes);
                    
@@ -205,67 +212,60 @@ namespace NATS.Client.JetStream
             RecordWouldBeChange(DeliverSubject, server.DeliverSubject, "DeliverSubject", changes);
             RecordWouldBeChange(DeliverGroup, server.DeliverGroup, "DeliverGroup", changes);
                    
-            Record(!Backoff.SequenceEqual(server.Backoff), "Backoff", changes);
+            if (!Backoff.SequenceEqual(server.Backoff)) { changes.Add("Backoff"); }
             return changes;
-        }
-        
-        private void Record(bool isChange, string field, IList<string> changes) {
-            if (isChange) { changes.Add(field); }
         }
 
         private void RecordWouldBeChange(string request, string server, string field, IList<string> changes)
         {
             string r = EmptyAsNull(request);
-            Record(r != null && !r.Equals(EmptyAsNull(server)), field, changes);
+            if (r != null && !r.Equals(EmptyAsNull(server))) { changes.Add(field); }
         }
 
         private void RecordWouldBeChange(DateTime request, DateTime server, string field, IList<string> changes)
         {
-            Record(request != DateTime.MinValue && !request.Equals(server), field, changes);
+            if (request != DateTime.MinValue && !request.Equals(server)) { changes.Add(field); }
         }
         
-        private static long GetOrUnset(long? val)
+        private static int GetOrUnset(int? val)
         {
-            return val ?? LongUnset;
+            return val ?? IntUnset;
         }
 
         private static ulong GetOrUnset(ulong? val)
         {
             return val ?? UlongUnset;
         }
-    
-        // Helper class to manage min / default / unset / server values.
-        internal class LongChangeHelper {
-            internal static readonly LongChangeHelper MaxDeliver = new LongChangeHelper(1, -1);
 
-            internal long Min { get; }
-            internal long Unset  { get; }
-
-            private LongChangeHelper(long min, long unset)
-            {
-                Min = min;
-                Unset = unset;
+        internal static int? NormalizeToInt(long? l, long min) {
+            if (l == null) {
+                return null;
             }
 
-            internal long GetOrUnset(long? val) {
-                return val ?? Unset;
+            if (l < min) {
+                return IntUnset;
             }
 
-            internal bool WouldBeChange(long? user, long server) {
-                return user != null && !user.Equals(server);
+            if (l > int.MaxValue) {
+                return int.MaxValue;
             }
 
-            internal long? Normalize(long? proposed) {
-                if (proposed == null)
-                {
-                    return null;
-                }
-                if (proposed < Min)
-                {
-                    return Unset;
-                }
-                return proposed;
-            }
+            return (int)l;
+        }
+
+        internal static ulong? Normalize(ulong? u)
+        {
+            return u == null ? null : u <= UlongUnset ? UlongUnset : u;
+        }
+
+        internal static Duration Normalize(Duration d)
+        {
+            return d == null ? null : d.Nanos <= DurationUnsetLong ? DurationUnset : d;
+        }
+
+        internal static Duration NormalizeDuration(long millis)
+        {
+            return millis <= DurationUnsetLong ? DurationUnset : Duration.OfMillis(millis);
         }
 
         public static ConsumerConfigurationBuilder Builder()
@@ -299,33 +299,14 @@ namespace NATS.Client.JetStream
 
             internal ulong? _startSeq;
             internal ulong? _rateLimitBps;
-            internal long? _maxDeliver;
-            internal long? _maxAckPending;
-            internal long? _maxPullWaiting;
-            internal long? _maxBatch;
+            internal int? _maxDeliver;
+            internal int? _maxAckPending;
+            internal int? _maxPullWaiting;
+            internal int? _maxBatch;
+            internal int? _maxBytes;
             internal bool? _flowControl;
             internal bool? _headersOnly;
             internal IList<Duration> _backoff = new List<Duration>();
-
-            private long? Normalize(long? l)
-            {
-                return l == null ? null : l <= LongUnset ? LongUnset : l;
-            }
-
-            private ulong? Normalize(ulong? u)
-            {
-                return u == null ? null : u <= UlongUnset ? UlongUnset : u;
-            }
-
-            private Duration Normalize(Duration d)
-            {
-                return d == null ? null : d.Nanos <= DurationUnsetLong ? DurationUnset : d;
-            }
-
-            private Duration NormalizeDuration(long millis)
-            {
-                return millis <= DurationUnsetLong ? DurationUnset : Duration.OfMillis(millis);
-            }
 
             public ConsumerConfigurationBuilder() {}
 
@@ -356,6 +337,7 @@ namespace NATS.Client.JetStream
                 _maxAckPending = cc._maxAckPending;
                 _maxPullWaiting = cc._maxPullWaiting;
                 _maxBatch = cc._maxBatch;
+                _maxBytes = cc._maxBytes;
                 _flowControl = cc._flowControl;
                 _headersOnly = cc._headersOnly;
                 _backoff = new List<Duration>(cc.Backoff);
@@ -478,7 +460,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithMaxDeliver(long? maxDeliver)
             {
-                _maxDeliver = LongChangeHelper.MaxDeliver.Normalize(maxDeliver);
+                _maxDeliver = NormalizeToInt(maxDeliver, MaxDeliverMin);
                 return this;
             }
 
@@ -556,7 +538,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithMaxAckPending(long? maxAckPending)
             {
-                _maxAckPending = Normalize(maxAckPending);
+                _maxAckPending = NormalizeToInt(maxAckPending, StandardMin);
                 return this;
             }
 
@@ -673,7 +655,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithMaxPullWaiting(long? maxPullWaiting)
             {
-                _maxPullWaiting = Normalize(maxPullWaiting);
+                _maxPullWaiting = NormalizeToInt(maxPullWaiting, StandardMin);
                 return this;
             }
 
@@ -684,7 +666,18 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithMaxBatch(long? maxBatch)
             {
-                _maxBatch = Normalize(maxBatch);
+                _maxBatch = NormalizeToInt(maxBatch, StandardMin);
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the max bytes size for the server to allow on pull requests.
+            /// </summary>
+            /// <param name="maxBytes">the maximum bytes size</param>
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder WithMaxBytes(long? maxBytes)
+            {
+                _maxBytes = NormalizeToInt(maxBytes, StandardMin);
                 return this;
             }
 

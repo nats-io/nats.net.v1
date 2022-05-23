@@ -164,13 +164,17 @@ namespace NATS.Client.JetStream
 
                 userCC = so.ConsumerConfiguration;
 
-                if (!userCC.MaxPullWaiting.Equals(ConsumerConfiguration.LongUnset))
+                if (!userCC.MaxPullWaiting.Equals(ConsumerConfiguration.IntUnset))
                 {
                     throw JsSubPushCantHaveMaxPullWaiting.Instance();
                 }
-                if (!userCC.MaxBatch.Equals(ConsumerConfiguration.LongUnset))
+                if (!userCC.MaxBatch.Equals(ConsumerConfiguration.IntUnset))
                 {
                     throw JsSubPushCantHaveMaxBatch.Instance();
+                }
+                if (!userCC.MaxBytes.Equals(ConsumerConfiguration.IntUnset))
+                {
+                    throw JsSubPushCantHaveMaxBytes.Instance();
                 }
 
                 // figure out the queue name

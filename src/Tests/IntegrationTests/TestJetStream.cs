@@ -709,6 +709,7 @@ namespace IntegrationTests
                 // value
                 ChangeExPull(js, PullDurableBuilder().WithMaxPullWaiting(0), "MaxPullWaiting");
                 ChangeExPull(js, PullDurableBuilder().WithMaxBatch(0), "MaxBatch");
+                ChangeExPull(js, PullDurableBuilder().WithMaxBytes(0), "MaxBytes");
 
                 // unsets fail b/c the server does set a value
                 ChangeExPull(js, PullDurableBuilder().WithMaxPullWaiting(-1), "MaxPullWaiting");
@@ -795,6 +796,15 @@ namespace IntegrationTests
                 pushSo = PushSubscribeOptions.Builder().WithConfiguration(ccPush).Build();
                 js.PushSubscribeSync(SUBJECT, pushSo);
                 Assert.Contains(JsSubPushCantHaveMaxBatch.Id, e.Message);
+
+                ccPush = ConsumerConfiguration.Builder().WithMaxBytes(1).Build();
+                pushSo = PushSubscribeOptions.Builder().WithConfiguration(ccPush).Build();
+                e = Assert.Throws<NATSJetStreamClientException>(() => js.PushSubscribeSync(SUBJECT, pushSo));
+
+                ccPush = ConsumerConfiguration.Builder().WithMaxBytes(-1).Build();
+                pushSo = PushSubscribeOptions.Builder().WithConfiguration(ccPush).Build();
+                js.PushSubscribeSync(SUBJECT, pushSo);
+                Assert.Contains(JsSubPushCantHaveMaxBytes.Id, e.Message);
 
                 // create some consumers
                 PushSubscribeOptions psoDurNoQ = PushSubscribeOptions.Builder().WithDurable("durNoQ").Build();
