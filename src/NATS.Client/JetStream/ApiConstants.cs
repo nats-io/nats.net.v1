@@ -23,6 +23,7 @@ namespace NATS.Client.JetStream
         internal const string Api = "api";
         internal const string AuthRequired = "auth_required";
         internal const string Backoff = "backoff";
+        internal const string Batch = "batch";
         internal const string Bytes = "bytes";
         internal const string ClientId = "client_id";
         internal const string ClientIp = "client_ip";
@@ -53,6 +54,7 @@ namespace NATS.Client.JetStream
         internal const string DurableName = "durable_name";
         internal const string ErrCode = "err_code";
         internal const string Error = "error";
+        internal const string Expires = "expires";
         internal const string External = "external";
         internal const string Filter = "filter";
         internal const string FilterSubject = "filter_subject";
@@ -97,6 +99,7 @@ namespace NATS.Client.JetStream
         internal const string Name = "name";
         internal const string NoAck = "no_ack";
         internal const string Nonce = "nonce";
+        internal const string NoWait = "no_wait";
         internal const string NumAckPending = "num_ack_pending";
         internal const string NumDeleted = "num_deleted";
         internal const string NumPending = "num_pending";

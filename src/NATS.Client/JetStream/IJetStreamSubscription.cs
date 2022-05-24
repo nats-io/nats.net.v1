@@ -59,7 +59,7 @@ namespace NATS.Client.JetStream
     public interface IJetStreamPullSubscription : IJetStreamSubscription, ISyncSubscription
     {
         /// <summary>
-        /// Polls for new messages, overriding the default batch size for this pull only.
+        /// Initiate pull with the specified batch size.
         /// </summary>
         /// <remarks>
         ///
@@ -67,6 +67,16 @@ namespace NATS.Client.JetStream
         /// </remarks>
         /// <param name="batchSize">the size of the batch</param>
         void Pull(int batchSize);
+
+        /// <summary>
+        /// Initiate pull with the specified request options.
+        /// </summary>
+        /// <remarks>
+        ///
+        /// Primitive API for Advanced use only. Prefer Fetch 
+        /// </remarks>
+        /// <param name="pullRequestOptions">the options object</param>
+        void Pull(PullRequestOptions pullRequestOptions);
 
         /// <summary>
         /// Do a pull in noWait mode with the specified batch size.

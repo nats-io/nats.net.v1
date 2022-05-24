@@ -11,10 +11,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using NATS.Client.Internals;
-using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client.JetStream
 {
@@ -28,56 +28,45 @@ namespace NATS.Client.JetStream
         
         public void Pull(int batchSize)
         {
-            PullInternal(batchSize, false, null);
+            Pull(PullRequestOptions.Builder(batchSize).Build());
         }
 
-        public void PullExpiresIn(int batchSize, Duration expiresIn)
-        {
-            PullInternal(batchSize, false, expiresIn);
+        public void Pull(PullRequestOptions pullRequestOptions) {
+            string subj = string.Format(JetStreamConstants.JsapiConsumerMsgNext, Stream, Consumer);
+            string publishSubject = Context.PrependPrefix(subj);
+            Connection.Publish(publishSubject, Subject, pullRequestOptions.Serialize());
+            Connection.FlushBuffer();
         }
 
         public void PullExpiresIn(int batchSize, int expiresInMillis)
         {
-            PullInternal(batchSize, false, Duration.OfMillis(expiresInMillis));
+            DurationGtZeroRequired(expiresInMillis, "Expires In");
+            Pull(PullRequestOptions.Builder(batchSize).WithExpiresIn(expiresInMillis).Build());
         }
 
         public void PullNoWait(int batchSize)
         {
-            PullInternal(batchSize, true, null);
+            Pull(PullRequestOptions.Builder(batchSize).WithNoWait().Build());
         }
 
         public void PullNoWait(int batchSize, int expiresInMillis)
         {
-            PullInternal(batchSize, true, Duration.OfMillis(expiresInMillis));
+            DurationGtZeroRequired(expiresInMillis, "NoWait Expires In");
+            Pull(PullRequestOptions.Builder(batchSize).WithNoWait().WithExpiresIn(expiresInMillis).Build());
         }
 
-        private void PullInternal(int batchSize, bool noWait, Duration expiresIn) {
-            int batch = Validator.ValidateGtZero(batchSize, "Pull batch size");
-            string subj = string.Format(JetStreamConstants.JsapiConsumerMsgNext, Stream, Consumer);
-            string publishSubject = Context.PrependPrefix(subj);
-            Connection.Publish(publishSubject, Subject, GetPullJson(batch, noWait, expiresIn));
-            Connection.FlushBuffer();
-        }
-
-        private byte[] GetPullJson(int batch, bool noWait, Duration expiresIn)
-        {
-            JSONObject jso = new JSONObject {["batch"] = batch};
-            if (noWait)
-            {
-                jso["no_wait"] = true;
+        private void DurationGtZeroRequired(long millis, string label) {
+            if (millis <= 0) {
+                throw new ArgumentException(label + " wait duration must be supplied and greater than 0.");
             }
-            if (expiresIn != null && expiresIn.IsPositive())
-            {
-                jso["expires"] = expiresIn.Nanos;
-            }
-
-            return JsonUtils.Serialize(jso);
         }
 
         protected const int ExpireLessMillis = 10;
 
         public IList<Msg> Fetch(int batchSize, int maxWaitMillis)
         {
+            DurationGtZeroRequired(maxWaitMillis, "Fetch");
+
             IList<Msg> messages = new List<Msg>();
             int batchLeft = batchSize;
             
@@ -87,7 +76,7 @@ namespace NATS.Client.JetStream
                 maxWaitMillis > ExpireLessMillis
                     ? maxWaitMillis - ExpireLessMillis
                     : maxWaitMillis);
-            PullInternal(batchLeft, false, expires);
+            Pull(PullRequestOptions.Builder(batchLeft).WithExpiresIn(expires).Build());
 
             try
             {

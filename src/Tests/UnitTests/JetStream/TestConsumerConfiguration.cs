@@ -48,6 +48,7 @@ namespace UnitTests.JetStream
                 .WithFlowControl(Duration.OfMillis(166))
                 .WithMaxPullWaiting(73)
                 .WithMaxBatch(55)
+                .WithMaxBytes(56)
                 .WithMaxExpires(177)
                 .WithInactiveThreshold(188)
                 .WithHeadersOnly(true)
@@ -113,6 +114,7 @@ namespace UnitTests.JetStream
             Assert.Equal(dt, c.StartTime);
             Assert.Equal(73, c.MaxPullWaiting);
             Assert.Equal(55, c.MaxBatch);
+            Assert.Equal(56, c.MaxBytes);
             Assert.True(c.FlowControl);
             Assert.True(c.HeadersOnly);
             Assert.Equal(3, c.Backoff.Count);
@@ -149,6 +151,7 @@ namespace UnitTests.JetStream
             Assert.Equal(Duration.OfSeconds(40), c.MaxExpires);
             Assert.Equal(Duration.OfSeconds(50), c.InactiveThreshold);
             Assert.Equal(55, c.MaxBatch);
+            Assert.Equal(56, c.MaxBytes);
             Assert.Equal(3, c.Backoff.Count);
             Assert.Equal(Duration.OfSeconds(1), c.Backoff[0]);
             Assert.Equal(Duration.OfSeconds(2), c.Backoff[1]);
@@ -181,6 +184,7 @@ namespace UnitTests.JetStream
             Assert.Equal(-1, c.MaxAckPending);
             Assert.Equal(-1, c.MaxPullWaiting);
             Assert.Equal(-1, c.MaxBatch);
+            Assert.Equal(-1, c.MaxBytes);
             Assert.Equal(0U, c.StartSeq);
             Assert.Equal(0U, c.RateLimitBps);
             Assert.Equal(0, c.Backoff.Count);
@@ -254,9 +258,9 @@ namespace UnitTests.JetStream
             AssertNotChange(Builder(orig).WithStartSequence(null).Build(), orig);
             AssertChange(Builder(orig).WithStartSequence(1).Build(), orig, "StartSequence");
 
-            AssertNotChange(Builder(orig).WithMaxDeliver(LongChangeHelper.MaxDeliver.Unset).Build(), orig);
+            AssertNotChange(Builder(orig).WithMaxDeliver(IntUnset).Build(), orig);
             AssertNotChange(Builder(orig).WithMaxDeliver(null).Build(), orig);
-            AssertChange(Builder(orig).WithMaxDeliver(LongChangeHelper.MaxDeliver.Min).Build(), orig, "MaxDeliver");
+            AssertChange(Builder(orig).WithMaxDeliver(MaxDeliverMin).Build(), orig, "MaxDeliver");
 
             AssertNotChange(Builder(orig).WithRateLimitBps(0U).Build(), orig);
             AssertNotChange(Builder(orig).WithRateLimitBps(null).Build(), orig);
@@ -273,6 +277,10 @@ namespace UnitTests.JetStream
             AssertNotChange(Builder(orig).WithMaxBatch(-1).Build(), orig);
             AssertNotChange(Builder(orig).WithMaxBatch(null).Build(), orig);
             AssertChange(Builder(orig).WithMaxBatch(1).Build(), orig, "MaxBatch");
+
+            AssertNotChange(Builder(orig).WithMaxBytes(-1).Build(), orig);
+            AssertNotChange(Builder(orig).WithMaxBytes(null).Build(), orig);
+            AssertChange(Builder(orig).WithMaxBytes(1).Build(), orig, "MaxBytes");
 
             AssertNotChange(Builder(orig).WithFilterSubject("").Build(), orig);
             ccTest = Builder(orig).WithFilterSubject(Plain).Build();
@@ -311,25 +319,6 @@ namespace UnitTests.JetStream
             ccTest = Builder(orig).WithBackoff(1000, 2000).Build();
             AssertNotChange(ccTest, ccTest);
             AssertChange(ccTest, orig, "Backoff");
-        }
-
-        [Fact]
-        public void ChangeHelperWorks()
-        {
-            void AssertLongChangeHelper(LongChangeHelper h)
-            {
-                Assert.False(h.WouldBeChange(h.Min, h.Min)); // has value vs server has same value
-                Assert.True(h.WouldBeChange(h.Min, h.Min + 1)); // has value vs server has different value
-
-                Assert.False(h.WouldBeChange(null, h.Min)); // value not set vs server has value
-                Assert.False(h.WouldBeChange(null, h.Unset)); // value not set vs server has unset value
-
-                Assert.Equal(h.Min, h.Normalize(h.Min));
-                Assert.Equal(h.Unset, h.Normalize(h.Unset));
-                Assert.Equal(h.Min + 1, h.Normalize(h.Min + 1));
-            }
-
-            AssertLongChangeHelper(LongChangeHelper.MaxDeliver);
         }
     }
 }

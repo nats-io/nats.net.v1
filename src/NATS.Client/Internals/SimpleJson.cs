@@ -390,6 +390,8 @@ namespace NATS.Client.Internals.SimpleJSON
             set => Value = value.ToString();
         }
 
+        public virtual int AsIntOr(int dflt) => int.TryParse(Value, out var val) ? val : dflt;
+
         public virtual long AsLongOr(long dflt) => long.TryParse(Value, out var val) ? val : dflt;
 
         public virtual ulong AsUlong
