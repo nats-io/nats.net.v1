@@ -3,6 +3,11 @@ using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client.JetStream
 {
+    /// <summary>
+    /// The PullRequestOptions class specifies the options for pull requests
+    ///
+    /// IMPORTANT! PullRequestOptions ARE CURRENTLY EXPERIMENTAL AND SUBJECT TO CHANGE.  
+    /// </summary>
     public sealed class PullRequestOptions : JsonSerializable
     {
         /// <summary>

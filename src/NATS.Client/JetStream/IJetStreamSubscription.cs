@@ -74,6 +74,8 @@ namespace NATS.Client.JetStream
         /// <remarks>
         ///
         /// Primitive API for Advanced use only. Prefer Fetch 
+        ///
+        /// IMPORTANT! PullRequestOptions ARE CURRENTLY EXPERIMENTAL AND SUBJECT TO CHANGE.  
         /// </remarks>
         /// <param name="pullRequestOptions">the options object</param>
         void Pull(PullRequestOptions pullRequestOptions);
