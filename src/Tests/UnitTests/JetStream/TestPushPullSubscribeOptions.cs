@@ -89,14 +89,6 @@ namespace UnitTests.JetStream
             ConsumerConfiguration ccBadDur = ConsumerConfiguration.Builder().WithDurable(HasDot).Build();
             Assert.Throws<ArgumentException>(() => builder1.WithConfiguration(ccBadDur).Build());
 
-            // durable required direct or in configuration
-            PullSubscribeOptions.PullSubscribeOptionsSubscribeOptionsBuilder builder2 = PullSubscribeOptions.Builder();
-
-            Assert.Throws<ArgumentException>(() => builder2.Build());
-
-            ConsumerConfiguration ccNoDur = ConsumerConfiguration.Builder().Build();
-            Assert.Throws<ArgumentException>(() => builder2.WithConfiguration(ccNoDur).Build());
-
             // durable directly
             PullSubscribeOptions.Builder().WithDurable(DURABLE).Build();
 
@@ -144,12 +136,6 @@ namespace UnitTests.JetStream
             Assert.Null(PushSubscribeOptions.Builder().Build().Durable);
 
             // pull
-            Assert.Throws<ArgumentException>(() => PullSubscribeOptions.Builder()
-                .WithDurable(null)
-                .WithConfiguration(ConsumerConfiguration.Builder().WithDurable(null).Build())
-                .Build()
-                .Durable);
-
             Assert.Equal("y", PullSubscribeOptions.Builder()
                 .WithDurable(null)
                 .WithConfiguration(ConsumerConfiguration.Builder().WithDurable("y").Build())
@@ -172,8 +158,6 @@ namespace UnitTests.JetStream
                 .WithDurable("x")
                 .WithConfiguration(ConsumerConfiguration.Builder().WithDurable("y").Build())
                 .Build());
-
-            Assert.Throws<ArgumentException>(() => PullSubscribeOptions.Builder().Build());
         }
 
         [Fact]

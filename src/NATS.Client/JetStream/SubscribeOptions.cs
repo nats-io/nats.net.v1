@@ -49,7 +49,7 @@ namespace NATS.Client.JetStream
             Stream = Validator.ValidateStreamName(builder.Stream, builder.Bind);
             
             string durable = Validator.ValidateMustMatchIfBothSupplied(builder.Durable, builder.Cc?.Durable, JsSoDurableMismatch);
-            durable = Validator.ValidateDurable(durable, pull || builder.Bind);
+            durable = Validator.ValidateDurable(durable, builder.Bind);
 
             deliverGroup = Validator.ValidateMustMatchIfBothSupplied(deliverGroup, builder.Cc?.DeliverGroup, JsSoDeliverGroupMismatch);
 
