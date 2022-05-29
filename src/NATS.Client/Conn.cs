@@ -2359,27 +2359,31 @@ namespace NATS.Client
             }
 
             info = new ServerInfo(json);
-            var discoveredUrls = info.ConnectURLs;
 
-            // The discoveredUrls array could be empty/not present on initial
-            // connect if advertise is disabled on that server, or servers that
-            // did not include themselves in the async INFO protocol.
-            // If empty, do not remove the implicit servers from the pool.  
-
-            // Note about pool randomization: when the pool was first created,
-            // it was randomized (if allowed). We keep the order the same (removing
-            // implicit servers that are no longer sent to us). New URLs are sent
-            // to us in no specific order so don't need extra randomization.
-            if (discoveredUrls != null && discoveredUrls.Length > 0)
+            if (!opts.IgnoreDiscoveredServers)
             {
-                // Prune out implicit servers no longer needed.  
-                // The Add in srvPool is idempotent, so just add
-                // the entire list.
-                srvPool.PruneOutdatedServers(discoveredUrls);
-                var serverAdded = srvPool.Add(discoveredUrls, true);
-                if (notify && serverAdded)
+                var discoveredUrls = info.ConnectURLs;
+
+                // The discoveredUrls array could be empty/not present on initial
+                // connect if advertise is disabled on that server, or servers that
+                // did not include themselves in the async INFO protocol.
+                // If empty, do not remove the implicit servers from the pool.  
+
+                // Note about pool randomization: when the pool was first created,
+                // it was randomized (if allowed). We keep the order the same (removing
+                // implicit servers that are no longer sent to us). New URLs are sent
+                // to us in no specific order so don't need extra randomization.
+                if (discoveredUrls != null && discoveredUrls.Length > 0)
                 {
-                    scheduleConnEvent(opts.ServerDiscoveredEventHandlerOrDefault);
+                    // Prune out implicit servers no longer needed.  
+                    // The Add in srvPool is idempotent, so just add
+                    // the entire list.
+                    srvPool.PruneOutdatedServers(discoveredUrls);
+                    var serverAdded = srvPool.Add(discoveredUrls, true);
+                    if (notify && serverAdded)
+                    {
+                        scheduleConnEvent(opts.ServerDiscoveredEventHandlerOrDefault);
+                    }
                 }
             }
 
