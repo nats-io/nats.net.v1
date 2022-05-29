@@ -37,6 +37,7 @@ namespace NATS.Client
         bool allowReconnect = true;
         bool noEcho = false;
         bool ignoreDiscoveredServers = false;
+        IServerProvider serverProvider = null;
         int maxReconnect  = Defaults.MaxReconnect;
         int reconnectWait = Defaults.ReconnectWait;
         int pingInterval  = Defaults.PingInterval;
@@ -270,6 +271,7 @@ namespace NATS.Client
             noRandomize = o.noRandomize;
             noEcho = o.noEcho;
             ignoreDiscoveredServers = o.ignoreDiscoveredServers;
+            serverProvider = o.serverProvider;
             pedantic = o.pedantic;
             reconnectBufSize = o.reconnectBufSize;
             useOldRequestStyle = o.useOldRequestStyle;
@@ -689,6 +691,8 @@ namespace NATS.Client
         /// Whether or not to ignore discovered servers when considering for connect/reconnect
         /// </summary>
         public bool IgnoreDiscoveredServers { get => ignoreDiscoveredServers; set => ignoreDiscoveredServers = value; }
+
+        public IServerProvider ServerProvider { get => serverProvider; set => serverProvider = value; }
         
         private void appendEventHandler(StringBuilder sb, String name, Delegate eh)
         {
@@ -806,6 +810,7 @@ namespace NATS.Client
             sb.AppendFormat("NoRandomize={0};", NoRandomize);
             sb.AppendFormat("NoEcho={0};", NoEcho);
             sb.AppendFormat("IgnoreDiscoveredServers={0};", ignoreDiscoveredServers);
+            sb.AppendFormat("ServerProvider={0};", serverProvider == null ? "Default" : "Provided");
             sb.AppendFormat("Pedantic={0};", Pedantic);
             sb.AppendFormat("UseOldRequestStyle={0};", UseOldRequestStyle);
             sb.AppendFormat("PingInterval={0};", PingInterval);

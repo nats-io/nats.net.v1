@@ -118,7 +118,7 @@ namespace NATS.Client
         private readonly List<Thread> wg = new List<Thread>(2);
 
         private Uri             url     = null;
-        private ServerPool srvPool = new ServerPool();
+        private IServerProvider srvProvider;
 
         // we have a buffered reader for writing, and reading.
         // This is for both performance, and having to work around
@@ -382,7 +382,7 @@ namespace NATS.Client
                     if (Socket.OSSupportsIPv6)
                         client.Client.DualMode = true;
 
-                    var task = client.ConnectAsync(s.url.Host, s.url.Port);
+                    var task = client.ConnectAsync(s.Url.Host, s.Url.Port);
                     // avoid raising TaskScheduler.UnobservedTaskException if the timeout occurs first
                     task.ContinueWith(t => GC.KeepAlive(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
                     if (!task.Wait(TimeSpan.FromMilliseconds(timeoutMillis)))
@@ -400,7 +400,7 @@ namespace NATS.Client
                     stream = client.GetStream();
 
                     // save off the hostname
-                    hostName = s.url.Host;
+                    hostName = s.Url.Host;
                 }
             }
 
@@ -727,6 +727,8 @@ namespace NATS.Client
                 opts.ReconnectDelayHandler = DefaultReconnectDelayHandler;
             }
 
+            srvProvider = opts.ServerProvider ?? new ServerPool();
+                
             PING_P_BYTES = Encoding.UTF8.GetBytes(IC.pingProto);
             PING_P_BYTES_LEN = PING_P_BYTES.Length;
 
@@ -794,21 +796,21 @@ namespace NATS.Client
         {
             url = null;
 
-            Srv s = srvPool.First();
+            Srv s = srvProvider.First();
             if (s == null)
                 throw new NATSNoServersException("Unable to choose server; no servers available.");
 
-            url = s.url;
+            url = s.Url;
         }
 
 
         // Create the server pool using the options given.
         // We will place a Url option first, followed by any
-        // Server Options. We will randomize the server pool unlesss
+        // Server Options. We will randomize the server pool unless
         // the NoRandomize flag is set.
         private void setupServerPool()
         {
-            srvPool.Setup(Opts);
+            srvProvider.Setup(Opts);
             pickServer();
         }
 
@@ -1082,7 +1084,7 @@ namespace NATS.Client
             {
                 lock (mu)
                 {
-                    return srvPool.GetServerList(false);
+                    return srvProvider.GetServerList(false);
                 }
             }
         }
@@ -1100,7 +1102,7 @@ namespace NATS.Client
             {
                 lock (mu)
                 {
-                    return srvPool.GetServerList(true);
+                    return srvProvider.GetServerList(true);
                 }
             }
         }
@@ -1146,7 +1148,7 @@ namespace NATS.Client
 
         internal bool connect(Srv s, out Exception exToThrow)
         {
-            url = s.url;
+            url = s.Url;
             try
             {
                 exToThrow = null;
@@ -1204,9 +1206,7 @@ namespace NATS.Client
 
             setupServerPool();
 
-            srvPool.ConnectToAServer((s) => {
-                return connect(s, out exToThrow);
-            });
+            srvProvider.ConnectToAServer(srv => connect(srv, out exToThrow));
 
             lock (mu)
             {
@@ -1574,7 +1574,7 @@ namespace NATS.Client
 
         private void DefaultReconnectDelayHandler(object o, ReconnectDelayEventArgs args)
         {
-            int jitter = srvPool.HasSecureServer() ? random.Next(opts.ReconnectJitterTLS) : random.Next(opts.ReconnectJitter);
+            int jitter = srvProvider.HasSecureServer() ? random.Next(opts.ReconnectJitterTLS) : random.Next(opts.ReconnectJitter);
 
             Thread.Sleep(opts.ReconnectWait + jitter);
         }
@@ -1611,10 +1611,10 @@ namespace NATS.Client
                 Srv cur;
                 int wlf = 0;
                 bool doSleep = false;
-                while ((cur = srvPool.SelectNextServer(Opts.MaxReconnect)) != null)
+                while ((cur = srvProvider.SelectNextServer(Opts.MaxReconnect)) != null)
                 {
                     // check if we've been through the list
-                    if (cur == srvPool.First())
+                    if (cur == srvProvider.First())
                     {
                         doSleep = (wlf != 0);
                         wlf++;
@@ -1624,7 +1624,7 @@ namespace NATS.Client
                         doSleep = false;
                     }
 
-                    url = cur.url;
+                    url = cur.Url;
                     lastEx = null;
 
                     if (lockWasTaken)
@@ -1647,7 +1647,7 @@ namespace NATS.Client
                     if (isClosed())
                         break;
 
-                    cur.reconnects++;
+                    cur.Reconnects++;
 
                     try
                     {
@@ -1691,9 +1691,9 @@ namespace NATS.Client
 
                     // We are reconnected.
                     stats.reconnects++;
-                    cur.didConnect = true;
-                    cur.reconnects = 0;
-                    srvPool.CurrentServer = cur;
+                    cur.DidConnect = true;
+                    cur.Reconnects = 0;
+                    srvProvider.SetCurrentServer(cur);
                     status = ConnState.CONNECTED;
 
                     scheduleConnEvent(Opts.ReconnectedEventHandlerOrDefault);
@@ -2359,32 +2359,10 @@ namespace NATS.Client
             }
 
             info = new ServerInfo(json);
-
-            if (!opts.IgnoreDiscoveredServers)
+            var serverAdded = srvProvider.AcceptDiscoveredServers(info.ConnectURLs);
+            if (notify && serverAdded)
             {
-                var discoveredUrls = info.ConnectURLs;
-
-                // The discoveredUrls array could be empty/not present on initial
-                // connect if advertise is disabled on that server, or servers that
-                // did not include themselves in the async INFO protocol.
-                // If empty, do not remove the implicit servers from the pool.  
-
-                // Note about pool randomization: when the pool was first created,
-                // it was randomized (if allowed). We keep the order the same (removing
-                // implicit servers that are no longer sent to us). New URLs are sent
-                // to us in no specific order so don't need extra randomization.
-                if (discoveredUrls != null && discoveredUrls.Length > 0)
-                {
-                    // Prune out implicit servers no longer needed.  
-                    // The Add in srvPool is idempotent, so just add
-                    // the entire list.
-                    srvPool.PruneOutdatedServers(discoveredUrls);
-                    var serverAdded = srvPool.Add(discoveredUrls, true);
-                    if (notify && serverAdded)
-                    {
-                        scheduleConnEvent(opts.ServerDiscoveredEventHandlerOrDefault);
-                    }
-                }
+                scheduleConnEvent(opts.ServerDiscoveredEventHandlerOrDefault);
             }
 
             if (notify && info.LameDuckMode)

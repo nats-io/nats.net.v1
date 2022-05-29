@@ -17,13 +17,14 @@ using System.Linq;
 
 namespace NATS.Client
 {
-    internal sealed class ServerPool
+    internal sealed class ServerPool : IServerProvider
     {
         private readonly object poolLock = new object();
         private readonly LinkedList<Srv> sList = new LinkedList<Srv>();
-        private Srv currentServer = null;
+        private Srv currentServer;
         private readonly Random rand = new Random(DateTime.Now.Millisecond);
         private bool randomize = true;
+        private bool ignoreDiscoveredServers = true;
 
         // Used to find duplicates in the server pool.
         // Loopback is equivalent to localhost, and
@@ -49,10 +50,10 @@ namespace NATS.Client
                 if (x == null || y == null)
                     return false;
 
-                if (x.url.Equals(y.url))
+                if (x.Url.Equals(y.Url))
                     return true;
 
-                if (IsLocal(x.url) && IsLocal(y.url) && (y.url.Port == x.url.Port))
+                if (IsLocal(x.Url) && IsLocal(y.Url) && (y.Url.Port == x.Url.Port))
                     return true;
 
                 return false;
@@ -60,7 +61,7 @@ namespace NATS.Client
 
             public int GetHashCode(Srv obj)
             {
-                return obj.url.OriginalString.GetHashCode();
+                return obj.Url.OriginalString.GetHashCode();
             }
         }
 
@@ -70,27 +71,34 @@ namespace NATS.Client
         // We will place a Url option first, followed by any
         // Server Options. We will randomize the server pool unless
         // the NoRandomize flag is set.
-        internal void Setup(Options opts)
+        public void Setup(Options opts)
         {
+            randomize = !opts.NoRandomize;
+            ignoreDiscoveredServers = opts.IgnoreDiscoveredServers;
+
             if (opts.Servers != null)
             {
                 Add(opts.Servers, false);
-
-                randomize = !opts.NoRandomize;
                 if (randomize)
+                {
                     Shuffle();
+                }
             }
 
             if (!string.IsNullOrWhiteSpace(opts.Url))
+            {
                 Add(opts.Url, false);
+            }
 
             // Place default URL if pool is empty.
             if (IsEmpty())
+            {
                 Add(Defaults.Url, false);
+            }
         }
 
         // Used for initially connecting to a server.
-        internal void ConnectToAServer(Predicate<Srv> connectToServer)
+        public void ConnectToAServer(Predicate<Srv> connectToServer)
         {
             Srv s;
 
@@ -101,9 +109,9 @@ namespace NATS.Client
             {
                 if (connectToServer(s))
                 {
-                    s.didConnect = true;
-                    s.reconnects = 0;
-                    CurrentServer = s;
+                    s.DidConnect = true;
+                    s.Reconnects = 0;
+                    SetCurrentServer(s);
                     break;
                 }
             }
@@ -126,27 +134,21 @@ namespace NATS.Client
         }
 
         // Sets the currently selected server
-        internal Srv CurrentServer
+        public void SetCurrentServer(Srv value)
         {
-            set
+            lock (poolLock)
             {
-                lock (poolLock)
-                {
-                    currentServer = value;
+                currentServer = value;
 
-                    // a server was removed in the meantime, add it back.
-                    if (sList.Contains(currentServer) == false)
-                    {
-                        Add(currentServer);
-                    }
-                }
+                // make sure server is in list, it might have been removed.
+                Add(currentServer);
             }
         }
 
         // Pop the current server and put onto the end of the list. 
         // Select head of list as long as number of reconnect attempts
         // under MaxReconnect.
-        internal Srv SelectNextServer(int maxReconnect)
+        public Srv SelectNextServer(int maxReconnect)
         {
             lock (poolLock)
             {
@@ -160,7 +162,7 @@ namespace NATS.Client
                 sList.Remove(s);
 
                 if (maxReconnect == Options.ReconnectForever || 
-                   (maxReconnect > 0 && s.reconnects < maxReconnect))
+                   (maxReconnect > 0 && s.Reconnects < maxReconnect))
                 {
                     // if we haven't surpassed max reconnects, add it
                     // to try again.
@@ -174,7 +176,7 @@ namespace NATS.Client
         }
 
         // returns a copy of the list to ensure threadsafety.
-        internal string[] GetServerList(bool implicitOnly)
+        public string[] GetServerList(bool implicitOnly)
         {
             List<Srv> list;
 
@@ -192,10 +194,10 @@ namespace NATS.Client
             var rv = new List<string>();
             foreach (Srv s in list)
             {
-                if (implicitOnly && !s.isImplicit)
+                if (implicitOnly && !s.IsImplicit)
                     continue;
 
-                rv.Add(string.Format("{0}://{1}:{2}", s.url.Scheme, s.url.Host, s.url.Port));
+                rv.Add(string.Format("{0}://{1}:{2}", s.Url.Scheme, s.Url.Host, s.Url.Port));
             }
 
             return rv.ToArray();
@@ -217,7 +219,7 @@ namespace NATS.Client
                 if (sList.Contains(s, duplicateSrvCheck))
                     return false;
 
-                if (s.isImplicit && randomize)
+                if (s.IsImplicit && randomize)
                 {
                     // pick a random spot to add the server.
                     var randElem = sList.ElementAt(rand.Next(sList.Count));
@@ -232,6 +234,30 @@ namespace NATS.Client
             }
         }
 
+        // The discoveredUrls array could be empty/not present on initial
+        // connect if advertise is disabled on that server, or servers that
+        // did not include themselves in the async INFO protocol.
+        // If empty, do not remove the implicit servers from the pool.  
+        //
+        // Note about pool randomization: when the pool was first created,
+        // it was randomized (if allowed). We keep the order the same (removing
+        // implicit servers that are no longer sent to us). New URLs are sent
+        // to us in no specific order so don't need extra randomization.
+        //
+        // Prune out implicit servers no longer needed.  
+        // The Add is idempotent, so just add the entire list.
+        public bool AcceptDiscoveredServers(string[] discoveredUrls)
+        {
+            if (ignoreDiscoveredServers || discoveredUrls == null
+                                        || discoveredUrls.Length == 0)
+            {
+                return false;
+            }
+
+            PruneOutdatedServers(discoveredUrls);
+            return Add(discoveredUrls, true);
+        } 
+        
         // removes implicit servers NOT found in the provided list. 
         internal void PruneOutdatedServers(string[] newUrls)
         {
@@ -249,8 +275,8 @@ namespace NATS.Client
                     // The server returns "<host>:<port>".  We can't compare
                     // against Uri.Authority because that API may strip out 
                     // ports.
-                    string hp = string.Format("{0}:{1}", s.url.Host, s.url.Port);
-                    if (s.isImplicit && !ulist.Contains(hp) &&
+                    string hp = string.Format("{0}:{1}", s.Url.Host, s.Url.Port);
+                    if (s.IsImplicit && !ulist.Contains(hp) &&
                         s != currentServer)
                     {
                         sList.Remove(s);
@@ -320,7 +346,7 @@ namespace NATS.Client
         // It'd be possible to use the sList enumerator here and
         // implement the IEnumerable interface, but keep it simple
         // for thread safety.
-        internal Srv First()
+        public Srv First()
         {
             lock (poolLock)
             {
@@ -331,7 +357,7 @@ namespace NATS.Client
             }
         }
 
-        internal bool HasSecureServer()
+        public bool HasSecureServer()
         {
             lock (poolLock)
             {
