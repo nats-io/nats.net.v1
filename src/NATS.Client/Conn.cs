@@ -133,7 +133,6 @@ namespace NATS.Client
         bool   flusherDone     = false;
 
         private ServerInfo     info = null;
-        private Int64          ssid = 0;
 
         private Dictionary<Int64, Subscription> subs = 
             new Dictionary<Int64, Subscription>();
@@ -1175,7 +1174,7 @@ namespace NATS.Client
                         if (!ex.IsAuthorizationViolationError() && !ex.IsAuthenticationExpiredError())
                             throw;
 
-                        callbackScheduler.Add(() => opts.AsyncErrorEventHandlerOrDefault(s, new ErrEventArgs(this, null, ex.Message)));
+                        ScheduleErrorEvent(s, ex);
 
                         if (natsAuthEx == null || !natsAuthEx.Message.Equals(ex.Message, StringComparison.OrdinalIgnoreCase))
                         {
@@ -1198,6 +1197,12 @@ namespace NATS.Client
             }
 
             return false;
+        }
+
+        internal void ScheduleErrorEvent(object sender, NATSException ex, Subscription subscription = null)
+        {
+            callbackScheduler.Add(() => 
+                opts.AsyncErrorEventHandlerOrDefault(sender, new ErrEventArgs(this, subscription, ex.Message)));
         }
 
         internal void connect()
@@ -1279,6 +1284,16 @@ namespace NATS.Client
             checkForSecure(s);
         }
 
+        internal void SendUnsub(long sid, int max)
+        {
+            writeString(IC.unsubProto, sid.ToNumericString(), max.ToNumericString());
+        }
+
+        internal void SendSub(string subject, string queue, long sid)
+        {
+            writeString(IC.subProto, subject, queue, sid.ToNumericString());
+        }
+        
         private void writeString(string format, string a, string b)
         {
             writeString(string.Format(format, a, b));
@@ -3640,16 +3655,20 @@ namespace NATS.Client
                 // so that we can suppress here.
                 if (!isReconnecting())
                 {
-                    writeString(IC.subProto, s.Subject, s.Queue, s.sid.ToNumericString());
+                    SendSub(s.Subject, s.Queue, s.sid);
                     kickFlusher();
                 }
             }
         }
 
-        private void addSubscription(Subscription s)
+        internal void AddSubscription(Subscription s)
         {
-            s.sid = Interlocked.Increment(ref ssid);
             subs[s.sid] = s;
+        }
+
+        internal void RemoveSubscription(Subscription s)
+        {
+            subs.Remove(s.sid);
         }
 
         // caller must lock
@@ -3706,7 +3725,7 @@ namespace NATS.Client
                     ? new AsyncSubscription(this, subject, queue)
                     : createAsyncSubscriptionDelegate(this, subject, queue);
 
-                addSubscription(s);
+                AddSubscription(s);
 
                 if (handler != null)
                 {
@@ -3717,7 +3736,7 @@ namespace NATS.Client
 
             return s;
         }
-        
+
         // subscribe is the internal subscribe 
         // function that indicates interest in a subject.
         internal SyncSubscription subscribeSync(string subject, string queue, 
@@ -3745,13 +3764,13 @@ namespace NATS.Client
                     ? new SyncSubscription(this, subject, queue) 
                     : createSyncSubscriptionDelegate(this, subject, queue);
 
-                addSubscription(s);
+                AddSubscription(s);
 
                 // We will send these for all subs when we reconnect
                 // so that we can suppress here.
                 if (!isReconnecting())
                 {
-                    writeString(IC.subProto, subject, queue, s.sid.ToNumericString());
+                    SendSub(subject, queue, s.sid);
                 }
             }
 
@@ -3907,10 +3926,11 @@ namespace NATS.Client
                 }
 
                 // We will send all subscriptions when reconnecting
-                // so that we can supress here.
+                // so that we can suppress here.
                 if (!isReconnecting())
-                    writeString(IC.unsubProto, s.sid.ToNumericString(), max.ToNumericString());
-
+                {
+                    SendUnsub(s.sid, max);
+                }
             }
 
             kickFlusher();
@@ -4088,9 +4108,10 @@ namespace NATS.Client
             foreach (Subscription s in subs.Values)
             {
                 if (s is IAsyncSubscription)
+                {
                     ((AsyncSubscription)s).enableAsyncProcessing();
-
-                writeString(IC.subProto, s.Subject, s.Queue, s.sid.ToNumericString());
+                }
+                SendSub(s.Subject, s.Queue, s.sid);
             }
 
             bw.Flush();

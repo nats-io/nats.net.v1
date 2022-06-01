@@ -99,14 +99,13 @@ namespace NATS.Client
 
         public string Name { get; set; }
 
-        internal Channel()
-            : this(1024)
-        {
-        }
+        internal Channel() : this(1024) {}
 
-        internal Channel(int initialCapacity)
+        internal Channel(string name) : this(1024, name) {}
+
+        internal Channel(int initialCapacity, string name = null)
         {
-            Name = "Unnamed channel " + this.GetHashCode();
+            Name = name ?? "Unnamed channel " + GetHashCode();
             q = new Queue<T>(initialCapacity);
         }
 

@@ -692,7 +692,8 @@ namespace NATS.Client
         /// </summary>
         public bool IgnoreDiscoveredServers { get => ignoreDiscoveredServers; set => ignoreDiscoveredServers = value; }
 
-        public IServerProvider ServerProvider { get => serverProvider; set => serverProvider = value; }
+        // TODO After connect adr is complete
+        internal IServerProvider ServerProvider { get => serverProvider; set => serverProvider = value; }
         
         private void appendEventHandler(StringBuilder sb, String name, Delegate eh)
         {

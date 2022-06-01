@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
+using System.Threading;
 using NATS.Client;
 using NATS.Client.JetStream;
 using Xunit;
@@ -197,10 +199,29 @@ namespace IntegrationTests
             Assert.Equal(expectedJs, countedJs);
         }
 
-        private static void AssertIsStatus(Msg statusMsg, int code) {
+        public static void AssertIsStatus(Msg statusMsg, int code) {
             Assert.False(statusMsg.IsJetStream);
             Assert.True(statusMsg.HasStatus);
             Assert.Equal(code, statusMsg.Status.Code);
+        }
+
+        public static void UnsubscribeEnsureNotBound(IJetStreamSubscription sub)
+        {
+            sub.Unsubscribe();
+            EnsureNotBound(sub);
+        }
+
+        public static void EnsureNotBound(IJetStreamSubscription sub) 
+        {
+            ConsumerInfo ci = sub.GetConsumerInformation();
+            Stopwatch sw = Stopwatch.StartNew();
+            while (ci.PushBound) {
+                if (sw.ElapsedMilliseconds > 5000) {
+                    return; // don't wait forever
+                }
+                Thread.Sleep(5);
+                ci = sub.GetConsumerInformation();
+            }
         }
     }
 }

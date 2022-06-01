@@ -11,8 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-
 namespace NATS.Client
 {
     /// <summary>
@@ -25,10 +23,7 @@ namespace NATS.Client
         internal SyncSubscription(Connection conn, string subject, string queue)
             : base(conn, subject, queue)
         {
-            mch = new Channel<Msg>()
-            {
-                Name = subject + (String.IsNullOrWhiteSpace(queue) ? "" : " (queue: " + queue + ")"),
-            };
+            mch = new Channel<Msg>(SubName());
         }
 
         /// <summary>

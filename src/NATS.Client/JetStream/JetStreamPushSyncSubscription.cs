@@ -16,8 +16,9 @@ namespace NATS.Client.JetStream
     public class JetStreamPushSyncSubscription : JetStreamAbstractSyncSubscription, IJetStreamPushSyncSubscription
     {
         internal JetStreamPushSyncSubscription(Connection conn, string subject, string queue,
-            IAutoStatusManager asm, JetStream js, string stream, string consumer, string deliver)
-            : base(conn, subject, null, asm, js, stream, consumer, deliver) {}
+            JetStream js, string stream, string consumer, string deliver,
+            MessageManager[] messageManagers)
+            : base(conn, subject, queue, js, stream, consumer, deliver, messageManagers) {}
 
         public bool IsPullMode() => false;
     }

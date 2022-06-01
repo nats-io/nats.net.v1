@@ -15,7 +15,8 @@ using System;
 
 namespace NATS.Client
 {
-    public interface IServerProvider
+    // TODO After connect adr is complete
+    internal interface IServerProvider
     {
         /// <summary>
         /// Setup your provider 

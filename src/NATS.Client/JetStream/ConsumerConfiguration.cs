@@ -41,18 +41,18 @@ namespace NATS.Client.JetStream
         public static readonly long MinIdleHeartbeatNanos = MinIdleHeartbeat.Nanos;
         public static readonly long MinIdleHeartbeatMillis = MinIdleHeartbeat.Millis;
 
-        private DeliverPolicy? _deliverPolicy;
-        private AckPolicy? _ackPolicy;
-        private ReplayPolicy? _replayPolicy;
-        private ulong? _startSeq;
-        private ulong? _rateLimitBps;
-        private int? _maxDeliver;
-        private int? _maxAckPending;
-        private int? _maxPullWaiting;
-        private int? _maxBatch;
-        private int? _maxBytes;
-        private bool? _flowControl;
-        private bool? _headersOnly;
+        internal DeliverPolicy? _deliverPolicy;
+        internal AckPolicy? _ackPolicy;
+        internal ReplayPolicy? _replayPolicy;
+        internal ulong? _startSeq;
+        internal ulong? _rateLimitBps;
+        internal int? _maxDeliver;
+        internal int? _maxAckPending;
+        internal int? _maxPullWaiting;
+        internal int? _maxBatch;
+        internal int? _maxBytes;
+        internal bool? _flowControl;
+        internal bool? _headersOnly;
 
         public DeliverPolicy DeliverPolicy => _deliverPolicy ?? DeliverPolicy.All;
         public AckPolicy AckPolicy => _ackPolicy ?? AckPolicy.Explicit;
