@@ -13,14 +13,14 @@
 
 
 #if !NET46
-using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
+using IntegrationTests;
 using NATS.Client;
 using Nito.AsyncEx;
 using Xunit;
 
-namespace IntegrationTests
+namespace IntegrationTestsUsingNitoAsyncEx
 {
     public class TestAsyncAwaitDeadlocks : TestSuite<AsyncAwaitDeadlocksSuiteContext>
     {

@@ -14,10 +14,6 @@
     </PackageReference>
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
-    <PackageReference Include="Nito.AsyncEx" Version="5.1.0" />
-  </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\NATS.Client\NATS.Client.csproj" />
     <ProjectReference Include="..\UnitTests\UnitTests.csproj" />
