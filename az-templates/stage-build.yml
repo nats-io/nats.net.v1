@@ -54,7 +54,7 @@ stages:
         rerunFailedTests: True
         rerunMaxAttempts: 2
         testRunTitle: 'IntegrationTests .NetCoreApp3.1'
-  
+
     - task: VSTest@2
       displayName: 'IntegrationTests .Net4.6'
       inputs:
@@ -64,6 +64,36 @@ stages:
         rerunFailedTests: True
         rerunMaxAttempts: 2
         testRunTitle: 'IntegrationTests .Net4.6'
+
+    - task: VSTest@2
+      displayName: 'IntegrationTests Internal .NetCoreApp3.1'
+      inputs:
+        testSelector: 'testAssemblies'
+        testAssemblyVer2: 'src/Tests/IntegrationTestsInternal/bin/$(BuildConfiguration)/netcoreapp3.1/IntegrationTestsInternal.dll'
+        configuration: $(BuildConfiguration)
+        rerunFailedTests: True
+        rerunMaxAttempts: 2
+        testRunTitle: 'IntegrationTests Internal .NetCoreApp3.1'
+
+    - task: VSTest@2
+      displayName: 'IntegrationTests Internal .Net4.6'
+      inputs:
+        testSelector: 'testAssemblies'
+        testAssemblyVer2: 'src/Tests/IntegrationTestsInternal/bin/$(BuildConfiguration)/net46/IntegrationTestsInternal.dll'
+        configuration: $(BuildConfiguration)
+        rerunFailedTests: True
+        rerunMaxAttempts: 2
+        testRunTitle: 'IntegrationTests Internal .Net4.6'
+
+    - task: VSTest@2
+      displayName: 'IntegrationTests Using Nito AsyncEx .NetCoreApp3.1'
+      inputs:
+        testSelector: 'testAssemblies'
+        testAssemblyVer2: 'src/Tests/IntegrationTestsUsingNitoAsyncEx/bin/$(BuildConfiguration)/netcoreapp3.1/IntegrationTestsUsingNitoAsyncEx.dll'
+        configuration: $(BuildConfiguration)
+        rerunFailedTests: True
+        rerunMaxAttempts: 2
+        testRunTitle: 'IntegrationTests Using Nito AsyncEx .NetCoreApp3.1'
         
     - task: DotNetCoreCLI@2
       displayName: 'Pack Nupkg'

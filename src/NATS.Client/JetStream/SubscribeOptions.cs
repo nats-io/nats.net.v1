@@ -22,11 +22,14 @@ namespace NATS.Client.JetStream
     /// </summary>
     public abstract class SubscribeOptions
     {
+        public const long DefaultOrderedHeartbeat = 5000;
+
         public string Stream { get; }
         public bool Pull { get; }
         public bool Bind { get; }
-        public ConsumerConfiguration ConsumerConfiguration { get; }
+        public bool Ordered { get; }
         internal int MessageAlarmTime { get; }
+        public ConsumerConfiguration ConsumerConfiguration { get; }
 
         /// <summary>
         /// Gets the durable name
@@ -43,9 +46,18 @@ namespace NATS.Client.JetStream
         /// </summary>
         public string DeliverGroup => ConsumerConfiguration.DeliverGroup;
 
-        // TODO implement ordered
         protected SubscribeOptions(ISubscribeOptionsBuilder builder, bool pull, bool ordered, string deliverSubject, string deliverGroup)
         {
+            Pull = pull;
+            Bind = builder.Bind;
+            Ordered = ordered;
+            MessageAlarmTime = builder.MessageAlarmTime;
+
+            if (Ordered && Bind)
+            {
+                throw JsSoOrderedNotAllowedWithBind.Instance();
+            }
+            
             Stream = Validator.ValidateStreamName(builder.Stream, builder.Bind);
             
             string durable = Validator.ValidateMustMatchIfBothSupplied(builder.Durable, builder.Cc?.Durable, JsSoDurableMismatch);
@@ -55,15 +67,44 @@ namespace NATS.Client.JetStream
 
             deliverSubject = Validator.ValidateMustMatchIfBothSupplied(deliverSubject, builder.Cc?.DeliverSubject, JsSoDeliverSubjectGroupMismatch);
 
-            ConsumerConfiguration = ConsumerConfiguration.Builder(builder.Cc)
-                .WithDurable(durable)
-                .WithDeliverSubject(deliverSubject)
-                .WithDeliverGroup(deliverGroup)
-                .Build();
+            if (Ordered)
+            {
+                Validator.ValidateNotSupplied(deliverGroup, JsSoOrderedNotAllowedWithDeliverGroup);
+                Validator.ValidateNotSupplied(durable, JsSoOrderedNotAllowedWithDurable);
+                Validator.ValidateNotSupplied(deliverSubject, JsSoOrderedNotAllowedWithDeliverSubject);
+                long hb = DefaultOrderedHeartbeat;
 
-            Pull = pull;
-            Bind = builder.Bind;
-            MessageAlarmTime = builder.MessageAlarmTime;
+                if (builder.Cc != null)
+                {
+                    // want to make sure they didn't set it or they didn't set it to something other than none
+                    if (builder.Cc._ackPolicy != null && builder.Cc._ackPolicy != AckPolicy.None) {
+                        throw JsSoOrderedRequiresAckPolicyNone.Instance();
+                    }
+                    if (builder.Cc.MaxDeliver > 1) {
+                        throw JsSoOrderedRequiresMaxDeliver.Instance();
+                    }
+
+                    Duration ccHb = builder.Cc.IdleHeartbeat;
+                    if (ccHb != null && ccHb.Millis > hb)
+                    {
+                        hb = ccHb.Millis;
+                    }
+                }
+                ConsumerConfiguration = ConsumerConfiguration.Builder(builder.Cc)
+                    .WithAckPolicy(AckPolicy.None)
+                    .WithMaxDeliver(1)
+                    .WithFlowControl(hb)
+                    .WithAckWait(Duration.OfHours(22))
+                    .Build();
+            }
+            else
+            {
+                ConsumerConfiguration = ConsumerConfiguration.Builder(builder.Cc)
+                    .WithDurable(durable)
+                    .WithDeliverSubject(deliverSubject)
+                    .WithDeliverGroup(deliverGroup)
+                    .Build();
+            }
         }
         
         public interface ISubscribeOptionsBuilder

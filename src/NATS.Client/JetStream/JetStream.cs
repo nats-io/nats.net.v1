@@ -135,6 +135,13 @@ namespace NATS.Client.JetStream
         // ----------------------------------------------------------------------------------------------------
         private static readonly PushSubscribeOptions DefaultPushOpts = PushSubscribeOptions.Builder().Build();
 
+        // PushMessageManagerFactory/Impl is internal and used for testing / providing a PushMessageManager mock
+        internal delegate PushMessageManager PushMessageManagerFactory(
+            Connection conn, SubscribeOptions so, ConsumerConfiguration cc, bool queueMode, bool syncMode);
+
+        internal static PushMessageManagerFactory PushMessageManagerFactoryImpl =
+            (conn, so, cc, queueMode, syncMode) => new PushMessageManager(conn, so, cc, queueMode, syncMode);
+        
         Subscription CreateSubscription(string subject, string queueName,
             EventHandler<MsgHandlerEventArgs> userHandler, bool autoAck,
             PushSubscribeOptions pushSubscribeOptions, 
@@ -179,6 +186,9 @@ namespace NATS.Client.JetStream
 
                 // figure out the queue name
                 qgroup = ValidateMustMatchIfBothSupplied(userCC.DeliverGroup, queueName, JsSubQueueDeliverGroupMismatch);
+                if (so.Ordered && qgroup != null) {
+                    throw JsSubOrderedNotAllowOnQueues.Instance();
+                }
             }
             
             // 2A. Flow Control / heartbeat not always valid
@@ -294,61 +304,79 @@ namespace NATS.Client.JetStream
             }
 
             // 6. create the subscription
-            IAutoStatusManager asm = isPullMode
-                ? (IAutoStatusManager)new PullAutoStatusManager()
-                : new PushAutoStatusManager((Connection) Conn, so, serverCC, qgroup != null, userHandler == null);
-            
             Subscription sub;
             if (isPullMode)
             {
+                MessageManager[] managers = { new PullMessageManager() };
                 SyncSubscription CreateSubDelegate(Connection lConn, string lSubject, string lQueueNa)
                 {
-                    return new JetStreamPullSubscription(lConn, lSubject, asm, this, stream, consumerName, inboxDeliver);
+                    return new JetStreamPullSubscription(lConn, lSubject, this, stream, consumerName, inboxDeliver, managers);
                 }
 
                 sub = ((Connection)Conn).subscribeSync(inboxDeliver, queueName, CreateSubDelegate);
             }
-            else if (userHandler == null) {
-                SyncSubscription CreateSubDelegate(Connection lConn, string lSubject, string lQueue)
-                {
-                    return new JetStreamPushSyncSubscription(lConn, lSubject, lQueue, asm, this, stream, consumerName, inboxDeliver);
-                }
-                
-                sub = ((Connection)Conn).subscribeSync(inboxDeliver, queueName, CreateSubDelegate); 
-            }
             else
             {
-                EventHandler<MsgHandlerEventArgs> handler;
-                if (autoAck && serverCC.AckPolicy != AckPolicy.None)
+                bool syncMode = userHandler == null;
+                PushMessageManager pushMessageManager = 
+                    PushMessageManagerFactoryImpl((Connection)Conn, so, serverCC, qgroup != null, syncMode);
+                MessageManager[] managers;
+                if (so.Ordered)
                 {
-                    handler = (sender, args) => 
+                    managers = new MessageManager[]
                     {
-                        if (asm.Manage(args.Message)) { return; } // manager handled the message
-                        userHandler.Invoke(sender, args);
-                        if (args.Message.LastAck == null || args.Message.LastAck == AckType.AckProgress)
-                        {
-                            args.Message.Ack();
-                        }
+                        new SidCheckManager(),
+                        pushMessageManager,
+                        new OrderedMessageManager(this, stream, serverCC, syncMode)
                     };
                 }
                 else
                 {
-                    handler = (sender, args) => 
-                    {
-                        if (asm.Manage(args.Message)) { return; } // manager handled the message
-                        userHandler.Invoke(sender, args);
-                    };
-                }
-
-                AsyncSubscription CreateAsyncSubDelegate(Connection lConn, string lSubject, string lQueue)
-                {
-                    return new JetStreamPushAsyncSubscription(lConn, lSubject, lQueue, asm, this, stream, consumerName, inboxDeliver);
+                    managers = new MessageManager[] { pushMessageManager };
                 }
                 
-                sub = ((Connection)Conn).subscribeAsync(inboxDeliver, queueName, handler, CreateAsyncSubDelegate);
-            }
+                if (syncMode) {
+                    SyncSubscription CreateSubDelegate(Connection lConn, string lSubject, string lQueue)
+                    {
+                        return new JetStreamPushSyncSubscription(lConn, lSubject, lQueue, this, stream, consumerName, inboxDeliver, managers);
+                    }
+                    sub = ((Connection)Conn).subscribeSync(inboxDeliver, queueName, CreateSubDelegate); 
+                }
+                else
+                {
+                    EventHandler<MsgHandlerEventArgs> autoAckHandler;
+                    if (autoAck && serverCC.AckPolicy != AckPolicy.None)
+                    {
+                        autoAckHandler = (sender, args) => args.Message.Ack();
+                    }
+                    else
+                    {
+                        autoAckHandler = (sender, args) => {};
+                    }
+                    
+                    EventHandler<MsgHandlerEventArgs> handler = (sender, args) => 
+                    {
+                        foreach (MessageManager mm in managers)
+                        {
+                            if (mm.Manage(args.Message))
+                            {
+                                return; // manager handled the message
+                            }
+                        }
+                            
+                        userHandler.Invoke(sender, args);
+                        autoAckHandler.Invoke(sender, args);
+                    };
 
-            asm.SetSub(sub);
+                    AsyncSubscription CreateAsyncSubDelegate(Connection lConn, string lSubject, string lQueue)
+                    {
+                        return new JetStreamPushAsyncSubscription(lConn, lSubject, lQueue, this, stream, consumerName, inboxDeliver, managers);
+                    }
+               
+                    sub = ((Connection)Conn).subscribeAsync(inboxDeliver, queueName, handler, CreateAsyncSubDelegate);
+                }
+
+            }
 
             // 7. The consumer might need to be created, do it here
             if (consumerName == null)

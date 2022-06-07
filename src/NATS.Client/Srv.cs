@@ -1,4 +1,4 @@
-// Copyright 2015-2018 The NATS Authors
+// Copyright 2015-2022 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -15,57 +15,66 @@ using System;
 
 namespace NATS.Client
 {
-    // Tracks individual backend servers.
-    internal class Srv
+    // TODO After connect adr is complete
+    internal interface IServerProvider
     {
-        private const string defaultScheme = "nats://";
-        private const int defaultPort = 4222;
-        private const int noPortSpecified = -1;
-        internal Uri url = null;
-        internal bool didConnect = false;
-        internal int reconnects = 0;
-        internal DateTime lastAttempt = DateTime.Now;
-        internal bool isImplicit = false;
-        private bool secure = false;
+        /// <summary>
+        /// Setup your provider 
+        /// </summary>
+        /// <param name="opts"></param>
+        void Setup(Options opts);
+        Srv First();
+        Srv SelectNextServer(int maxReconnect);
+        string[] GetServerList(bool implicitOnly);
+        void ConnectToAServer(Predicate<Srv> connectToServer);
+        bool HasSecureServer();
+        void SetCurrentServer(Srv value);
+        bool AcceptDiscoveredServers(string[] discoveredUrls);
+    }
+
+    // Tracks individual backend servers.
+    public class Srv
+    {
+        public const string DefaultScheme = "nats://";
+        public const int DefaultPort = 4222;
+        public const int NoPortSpecified = -1;
+        
+        public Uri Url { get; }
+        public bool IsImplicit { get; }
+        public bool Secure { get; }
+        public DateTime LastAttempt { get; private set; }
+        public bool DidConnect { get; set; }
+        public int Reconnects { get; set; }
 
         // never create a srv object without a url.
         private Srv() { }
 
-        internal Srv(string urlString)
+        public Srv(string urlString)
         {
             if (!urlString.Contains("://"))
             {
-                urlString = defaultScheme + urlString;
+                urlString = DefaultScheme + urlString;
             }
             else
             {
-                secure = urlString.Contains("tls://");
+                Secure = urlString.Contains("tls://");
             }
 
             var uri = new Uri(urlString);
 
-            url = uri.Port == noPortSpecified ? new UriBuilder(uri) {Port = defaultPort}.Uri : uri;
+            Url = uri.Port == NoPortSpecified ? new UriBuilder(uri) {Port = DefaultPort}.Uri : uri;
+            
+            LastAttempt = DateTime.Now;
         }
 
-        internal Srv(string urlString, bool isUrlImplicit) : this(urlString)
+        public Srv(string urlString, bool isUrlImplicit) : this(urlString)
         {
-            isImplicit = isUrlImplicit;
+            IsImplicit = isUrlImplicit;
         }
 
-        internal void updateLastAttempt()
-        {
-            lastAttempt = DateTime.Now;
-        }
+        public void UpdateLastAttempt() => LastAttempt = DateTime.Now;
 
-        internal TimeSpan TimeSinceLastAttempt
-        {
-            get
-            {
-                return (DateTime.Now - lastAttempt);
-            }
-        }
-
-        internal bool Secure => secure;
+        public TimeSpan TimeSinceLastAttempt => (DateTime.Now - LastAttempt);
     }
 }
 

@@ -14,21 +14,28 @@
 using System;
 using System.Text;
 using System.Threading.Tasks;
+using NATS.Client.Internals;
 
 // disable XML comment warnings
 #pragma warning disable 1591
 
 namespace NATS.Client
 {
+    internal class SidGenerator
+    {
+        private static readonly InterlockedLong Generator = new InterlockedLong();
+        internal static long Next() => Generator.Increment();
+    }
     /// <summary>
     /// Represents interest in a NATS topic. This class should
     /// not be used directly.
     /// </summary>
     public class Subscription : ISubscription, IDisposable
     {
-        readonly  internal  object mu = new object(); // lock
 
-        internal  long           sid = 0; // subscriber ID.
+        internal  readonly  object mu = new object(); // lock
+
+        internal  long           sid; // subscriber ID.
         private   long           msgs;
         internal  long           delivered;
         private   long           bytes;
@@ -65,7 +72,19 @@ namespace NATS.Client
             this.subject = subject;
             this.queue = queue;
 
+            sid = SidGenerator.Next();
+            
             BeforeChannelAddCheck = msg => msg;
+        }
+                
+        internal void reSubscribe(string deliverSubject)
+        {
+            conn.SendUnsub(sid, 0);
+            conn.RemoveSubscription(this);
+            sid = SidGenerator.Next();
+            conn.AddSubscription(this);
+            conn.SendSub(deliverSubject, queue, sid);
+            subject = deliverSubject;
         }
 
         internal virtual void close()
@@ -110,6 +129,10 @@ namespace NATS.Client
         /// be processed by one member of the group.
         /// </remarks>
         public string Queue => queue;
+
+        internal string SubName() => subject + "(" + sid + ")" +
+                                (String.IsNullOrWhiteSpace(queue) ? "" : " (queue: " + queue + ")");
+
 
         /// <summary>
         /// Gets the <see cref="Connection"/> associated with this instance.
@@ -186,9 +209,7 @@ namespace NATS.Client
             }
 	
             // BeforeChannelAddCheck returns null if the message
-            // does not need to be queued, for instance heartbeats
-            // that are not flow control and are already seen by the
-            // auto status manager
+            // does not need to be queued, for instance plain heartbeats
             msg = BeforeChannelAddCheck.Invoke(msg);
             
             if (msg != null)

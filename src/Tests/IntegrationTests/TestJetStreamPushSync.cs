@@ -68,7 +68,7 @@ namespace IntegrationTests
                 IList<Msg> messages0 = ReadMessagesAck(sub);
                 total += messages0.Count;
                 ValidateRedAndTotal(0, messages0.Count, 5, total);
-                
+
                 sub.Unsubscribe();
 
                 // Subscription 2
@@ -112,7 +112,7 @@ namespace IntegrationTests
                 _testPushDurableSubSync(Durable(1), Deliver(1), c, () => js.PushSubscribeSync(SUBJECT, optionsSync1));
 
                 // bind long form
-                jsm.AddOrUpdateConsumer(STREAM, 
+                jsm.AddOrUpdateConsumer(STREAM,
                     ConsumerConfiguration.Builder()
                         .WithDurable(Durable(2))
                         .WithDeliverSubject(Deliver(2))
@@ -125,7 +125,7 @@ namespace IntegrationTests
                 _testPushDurableSubSync(Durable(2), Deliver(2), c, () => js.PushSubscribeSync(null, options2));
 
                 // bind short form
-                jsm.AddOrUpdateConsumer(STREAM, 
+                jsm.AddOrUpdateConsumer(STREAM,
                     ConsumerConfiguration.Builder()
                         .WithDurable(Durable(3))
                         .WithDeliverSubject(Deliver(3))
@@ -136,8 +136,9 @@ namespace IntegrationTests
         }
 
         delegate IJetStreamPushSyncSubscription PushSyncSubSupplier();
-        
-        private void _testPushDurableSubSync(string durable, string deliverSubject, IConnection nc, PushSyncSubSupplier supplier)
+
+        private void _testPushDurableSubSync(string durable, string deliverSubject, IConnection nc,
+            PushSyncSubSupplier supplier)
         {
             IJetStreamPushSyncSubscription sub = supplier.Invoke();
             AssertSubscription(sub, STREAM, durable, deliverSubject, false);
@@ -192,7 +193,7 @@ namespace IntegrationTests
                 _testPushDurableSubAsync(js, h => js.PushSubscribeAsync(SUBJECT, h, false, optionsSync1));
 
                 // bind long form
-                jsm.AddOrUpdateConsumer(STREAM, 
+                jsm.AddOrUpdateConsumer(STREAM,
                     ConsumerConfiguration.Builder()
                         .WithDurable(Durable(2))
                         .WithDeliverSubject(Deliver(2))
@@ -205,7 +206,7 @@ namespace IntegrationTests
                 _testPushDurableSubAsync(js, h => js.PushSubscribeAsync(null, h, false, options2));
 
                 // bind short form
-                jsm.AddOrUpdateConsumer(STREAM, 
+                jsm.AddOrUpdateConsumer(STREAM,
                     ConsumerConfiguration.Builder()
                         .WithDurable(Durable(3))
                         .WithDeliverSubject(Deliver(3))
@@ -214,7 +215,7 @@ namespace IntegrationTests
                 _testPushDurableSubAsync(js, h => js.PushSubscribeAsync(null, h, false, options3));
             });
         }
-        
+
         delegate IJetStreamPushAsyncSubscription PushAsyncSubSupplier(EventHandler<MsgHandlerEventArgs> handler);
 
         private void _testPushDurableSubAsync(IJetStream js, PushAsyncSubSupplier supplier)
@@ -250,7 +251,7 @@ namespace IntegrationTests
 
                 // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
-                
+
                 MsgHeader h = new MsgHeader();
                 h["foo"] = "bar";
                 js.Publish(new Msg(SUBJECT, h, DataBytes(1)));
@@ -291,7 +292,7 @@ namespace IntegrationTests
 
                 // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
-                
+
                 ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithAckWait(1500).Build();
 
                 // Build our subscription options.
@@ -309,7 +310,7 @@ namespace IntegrationTests
                 Assert.NotNull(m);
                 Assert.Equal("TERM1", Encoding.ASCII.GetString(m.Data));
                 m.Term();
-                
+
                 AssertNoMoreMessages(sub);
 
                 // Ack Wait timeout
@@ -320,14 +321,14 @@ namespace IntegrationTests
                 Assert.Equal("WAIT1", Encoding.ASCII.GetString(m.Data));
                 Thread.Sleep(2000);
                 m.Ack();
-                
+
                 m = sub.NextMessage(DefaultTimeout);
                 Assert.NotNull(m);
                 Assert.Equal("WAIT1", Encoding.ASCII.GetString(m.Data));
-                
+
                 // In Progress
                 JsPublish(js, SUBJECT, "PRO", 1);
-                
+
                 m = sub.NextMessage(DefaultTimeout);
                 Assert.NotNull(m);
                 Assert.Equal("PRO1", Encoding.ASCII.GetString(m.Data));
@@ -340,7 +341,7 @@ namespace IntegrationTests
                 m.InProgress();
                 Thread.Sleep(750);
                 m.Ack();
-                
+
                 AssertNoMoreMessages(sub);
 
                 // ACK Sync
@@ -349,24 +350,24 @@ namespace IntegrationTests
                 Assert.NotNull(m);
                 Assert.Equal("ACKSYNC1", Encoding.ASCII.GetString(m.Data));
                 m.AckSync(DefaultTimeout);
-                
+
                 AssertNoMoreMessages(sub);
 
                 // NAK
                 JsPublish(js, SUBJECT, "NAK", 1);
-                
+
                 m = sub.NextMessage(DefaultTimeout);
                 Assert.NotNull(m);
                 Assert.Equal("NAK1", Encoding.ASCII.GetString(m.Data));
                 m.Nak();
-                
+
                 m = sub.NextMessage(DefaultTimeout);
                 Assert.NotNull(m);
                 Assert.Equal("NAK1", Encoding.ASCII.GetString(m.Data));
                 m.Ack();
-                
+
                 AssertNoMoreMessages(sub);
-                
+
                 JsPublish(js, SUBJECT, "NAK", 2, 1);
 
                 m = sub.NextMessage(1000);
@@ -408,7 +409,7 @@ namespace IntegrationTests
             {
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
                 IJetStream js = c.CreateJetStreamContext();
-                
+
                 CreateMemoryStream(jsm, STREAM, SUBJECT_STAR);
 
                 string subjectA = SubjectDot("A");
@@ -423,8 +424,8 @@ namespace IntegrationTests
 
                 // DeliverPolicy.All
                 PushSubscribeOptions pso = PushSubscribeOptions.Builder()
-                        .WithConfiguration(ConsumerConfiguration.Builder().WithDeliverPolicy(DeliverPolicy.All).Build())
-                        .Build();
+                    .WithConfiguration(ConsumerConfiguration.Builder().WithDeliverPolicy(DeliverPolicy.All).Build())
+                    .Build();
                 IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(subjectA, pso);
                 Msg m1 = sub.NextMessage(1000);
                 AssertMessage(m1, 1);
@@ -435,8 +436,8 @@ namespace IntegrationTests
 
                 // DeliverPolicy.Last
                 pso = PushSubscribeOptions.Builder()
-                        .WithConfiguration(ConsumerConfiguration.Builder().WithDeliverPolicy(DeliverPolicy.Last).Build())
-                        .Build();
+                    .WithConfiguration(ConsumerConfiguration.Builder().WithDeliverPolicy(DeliverPolicy.Last).Build())
+                    .Build();
                 sub = js.PushSubscribeSync(subjectA, pso);
                 Msg m = sub.NextMessage(1000);
                 AssertMessage(m, 3);
@@ -444,8 +445,8 @@ namespace IntegrationTests
 
                 // DeliverPolicy.New - No new messages between subscribe and next message
                 pso = PushSubscribeOptions.Builder()
-                        .WithConfiguration(ConsumerConfiguration.Builder().WithDeliverPolicy(DeliverPolicy.New).Build())
-                        .Build();
+                    .WithConfiguration(ConsumerConfiguration.Builder().WithDeliverPolicy(DeliverPolicy.New).Build())
+                    .Build();
                 sub = js.PushSubscribeSync(subjectA, pso);
                 AssertNoMoreMessages(sub);
 
@@ -457,11 +458,11 @@ namespace IntegrationTests
 
                 // DeliverPolicy.ByStartSequence
                 pso = PushSubscribeOptions.Builder()
-                        .WithConfiguration(ConsumerConfiguration.Builder()
-                                .WithDeliverPolicy(DeliverPolicy.ByStartSequence)
-                                .WithStartSequence(3)
-                                .Build())
-                        .Build();
+                    .WithConfiguration(ConsumerConfiguration.Builder()
+                        .WithDeliverPolicy(DeliverPolicy.ByStartSequence)
+                        .WithStartSequence(3)
+                        .Build())
+                    .Build();
                 sub = js.PushSubscribeSync(subjectA, pso);
                 m = sub.NextMessage(1000);
                 AssertMessage(m, 3);
@@ -470,11 +471,11 @@ namespace IntegrationTests
 
                 // DeliverPolicy.ByStartTime
                 pso = PushSubscribeOptions.Builder()
-                        .WithConfiguration(ConsumerConfiguration.Builder()
-                                .WithDeliverPolicy(DeliverPolicy.ByStartTime)
-                                .WithStartTime(m3.MetaData.Timestamp.AddSeconds(-1))
-                                .Build())
-                        .Build();
+                    .WithConfiguration(ConsumerConfiguration.Builder()
+                        .WithDeliverPolicy(DeliverPolicy.ByStartTime)
+                        .WithStartTime(m3.MetaData.Timestamp.AddSeconds(-1))
+                        .Build())
+                    .Build();
                 sub = js.PushSubscribeSync(subjectA, pso);
                 m = sub.NextMessage(1000);
                 AssertMessage(m, 3);
@@ -483,14 +484,14 @@ namespace IntegrationTests
 
                 // DeliverPolicy.LastPerSubject
                 pso = PushSubscribeOptions.Builder()
-                        .WithConfiguration(ConsumerConfiguration.Builder()
-                                .WithDeliverPolicy(DeliverPolicy.LastPerSubject)
-                                .WithFilterSubject(subjectA)
-                                .Build())
-                        .Build();
+                    .WithConfiguration(ConsumerConfiguration.Builder()
+                        .WithDeliverPolicy(DeliverPolicy.LastPerSubject)
+                        .WithFilterSubject(subjectA)
+                        .Build())
+                    .Build();
                 sub = js.PushSubscribeSync(subjectA, pso);
                 m = sub.NextMessage(1000);
-                AssertMessage(m, 4);            
+                AssertMessage(m, 4);
 
                 // DeliverPolicy.ByStartSequence with a deleted record
                 PublishAck pa4 = js.Publish(subjectA, DataBytes(4));
@@ -503,14 +504,15 @@ namespace IntegrationTests
                     .WithDeliverPolicy(DeliverPolicy.ByStartSequence)
                     .WithStartSequence(pa4.Seq)
                     .BuildPushSubscribeOptions();
-                    
+
                 sub = js.PushSubscribeSync(subjectA, pso);
                 m = sub.NextMessage(1000);
                 AssertMessage(m, 6);
             });
         }
-        
-        private void AssertMessage(Msg m, int i) {
+
+        private void AssertMessage(Msg m, int i)
+        {
             Assert.NotNull(m);
             Assert.Equal(Data(i), Encoding.UTF8.GetString(m.Data));
         }
@@ -519,15 +521,12 @@ namespace IntegrationTests
         public void TestPushSyncFlowControl()
         {
             InterlockedInt fcps = new InterlockedInt();
-            
+
             Action<Options> optionsModifier = opts =>
             {
-                opts.FlowControlProcessedEventHandler = (sender, args) =>
-                {
-                    fcps.Increment();
-                };
+                opts.FlowControlProcessedEventHandler = (sender, args) => { fcps.Increment(); };
             };
-            
+
             Context.RunInJsServer(new TestServerInfo(TestSeedPorts.AutoPort.Increment()), optionsModifier, c =>
             {
                 // create the stream.
@@ -535,32 +534,36 @@ namespace IntegrationTests
 
                 // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
-                
+
                 byte[] data = new byte[8192];
 
                 int MSG_COUNT = 1000;
-                
-                for (int x = 100_000; x < MSG_COUNT + 100_000; x++) {
-                    byte[] fill = Encoding.ASCII.GetBytes(""+ x);
+
+                for (int x = 100_000; x < MSG_COUNT + 100_000; x++)
+                {
+                    byte[] fill = Encoding.ASCII.GetBytes("" + x);
                     Array.Copy(fill, 0, data, 0, 6);
                     js.Publish(new Msg(SUBJECT, data));
                 }
-                
+
                 InterlockedInt count = new InterlockedInt();
                 HashSet<string> set = new HashSet<string>();
-                
+
                 ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithFlowControl(1000).Build();
                 PushSubscribeOptions pso = PushSubscribeOptions.Builder().WithConfiguration(cc).Build();
 
                 IJetStreamPushSyncSubscription ssub = js.PushSubscribeSync(SUBJECT, pso);
-                for (int x = 0; x < MSG_COUNT; x++) {
+                for (int x = 0; x < MSG_COUNT; x++)
+                {
                     Msg msg = ssub.NextMessage(1000);
                     byte[] fill = new byte[6];
                     Array.Copy(msg.Data, 0, fill, 0, 6);
                     string id = Encoding.ASCII.GetString(fill);
-                    if (set.Add(id)) {
+                    if (set.Add(id))
+                    {
                         count.Increment();
                     }
+
                     msg.Ack();
                 }
 

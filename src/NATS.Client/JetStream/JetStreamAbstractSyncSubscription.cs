@@ -11,40 +11,43 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Diagnostics;
 
 namespace NATS.Client.JetStream
 {
     public class JetStreamAbstractSyncSubscription : SyncSubscription
     {
-        internal IAutoStatusManager _asm;
+        internal readonly MessageManager[] messageManagers;
         public JetStream Context { get; }
         public string Stream { get; }
         public string Consumer { get; internal set; }
         public string DeliverSubject { get; }
 
         internal JetStreamAbstractSyncSubscription(Connection conn, string subject, string queue,
-            IAutoStatusManager asm, JetStream js, string stream, string consumer, string deliver)
+            JetStream js, string stream, string consumer, string deliver, MessageManager[] messageManagers)
             : base(conn, subject, queue)
         {
-            _asm = asm;
             Context = js;
             Stream = stream;
-            Consumer = consumer;
+            Consumer = consumer; // might be null, someone will call set on ConsumerName
             DeliverSubject = deliver;
+
+            this.messageManagers = messageManagers;
+            MessageManager.Startup(this, messageManagers);
         }
 
         public ConsumerInfo GetConsumerInformation() => Context.LookupConsumerInfo(Stream, Consumer);
-                
+        
         public override void Unsubscribe()
         {
-            _asm.Shutdown();
+            MessageManager.Shutdown(messageManagers);
             base.Unsubscribe();
         }
 
         internal override void close()
         {
-            _asm.Shutdown();
+            MessageManager.Shutdown(messageManagers);
             base.close();
         }
 
@@ -53,7 +56,7 @@ namespace NATS.Client.JetStream
             // this calls is intended to block indefinitely so if there is a status
             // message it's like not getting a message at all and we keep waiting
             Msg msg = NextMessageImpl(-1);
-            while (msg != null && _asm.Manage(msg)) {
+            while (msg != null && AnyManaged(msg)) {
                 msg = NextMessageImpl(-1);
             }
             return msg;
@@ -68,17 +71,26 @@ namespace NATS.Client.JetStream
             }
             
             Stopwatch sw = Stopwatch.StartNew();
-            int timeLeft = timeout;
+            int timeLeft = Math.Max(timeout, 1); // 0 would never enter the loop
             while (timeLeft > 0)
             {
                 Msg msg = NextMessageImpl(timeLeft);
-                if (!_asm.Manage(msg)) { // not managed means JS Message
+                if (!AnyManaged(msg)) { // not managed means JS Message
                     return msg;
                 }
                 timeLeft = timeout - (int)sw.ElapsedMilliseconds;
             }
             
             throw new NATSTimeoutException();
+        }
+ 
+        protected bool AnyManaged(Msg msg) {
+            foreach (MessageManager mm in messageManagers) {
+                if (mm.Manage(msg)) {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

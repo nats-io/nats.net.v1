@@ -15,21 +15,23 @@ namespace NATS.Client.JetStream
 {
     public class JetStreamPushAsyncSubscription : AsyncSubscription, IJetStreamPushAsyncSubscription
     {
-        private IAutoStatusManager _asm;
+        internal readonly MessageManager[] messageManagers;
         public JetStream Context { get; }
         public string Stream { get; }
         public string Consumer { get; internal set; }
         public string DeliverSubject { get; }
 
         internal JetStreamPushAsyncSubscription(Connection conn, string subject, string queue,
-            IAutoStatusManager asm, JetStream js, string stream, string consumer, string deliver)
+            JetStream js, string stream, string consumer, string deliver, MessageManager[] messageManagers)
             : base(conn, subject, queue)
         {
-            _asm = asm;
             Context = js;
             Stream = stream;
-            Consumer = consumer;
+            Consumer = consumer; // might be null, someone will call set on ConsumerName
             DeliverSubject = deliver;
+
+            this.messageManagers = messageManagers;
+            MessageManager.Startup(this, messageManagers);
         }
 
         public ConsumerInfo GetConsumerInformation() => Context.LookupConsumerInfo(Stream, Consumer);
@@ -37,13 +39,13 @@ namespace NATS.Client.JetStream
         
         public override void Unsubscribe()
         {
-            _asm.Shutdown();
+            MessageManager.Shutdown(messageManagers);
             base.Unsubscribe();
         }
 
         internal override void close()
         {
-            _asm.Shutdown();
+            MessageManager.Shutdown(messageManagers);
             base.close();
         }
     }

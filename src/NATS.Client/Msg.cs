@@ -26,6 +26,7 @@ namespace NATS.Client
     {
         protected static readonly byte[] Empty = new byte[0];
         protected string subject;
+        protected long sid;
         protected string _reply;
         protected byte[] data;
         internal Subscription sub;
@@ -110,6 +111,7 @@ namespace NATS.Client
         internal Msg(MsgArg arg, Subscription s, byte[] payload, long totalLen)
         {
             subject = arg.subject;
+            sid = arg.sid;
             _reply = arg.reply;
             sub = s;
 
@@ -141,6 +143,8 @@ namespace NATS.Client
             get { return subject; }
             set { subject = value; }
         }
+
+        internal long Sid => sid;
 
         /// <summary>
         /// Gets or sets the reply subject.
