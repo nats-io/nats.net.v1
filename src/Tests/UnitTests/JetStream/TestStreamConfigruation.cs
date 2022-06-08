@@ -75,28 +75,6 @@ namespace UnitTests.JetStream
         }
 
         [Fact]
-        public void TestSourceBaseEquals()
-        {
-            string[] lines = ReadDataFileLines("SourceBaseJson.txt");
-            foreach (string l1 in lines)
-            {
-                Mirror m1 = NATS.Client.JetStream.Mirror.OptionalInstance(JSON.Parse(l1));
-                Assert.Equal(m1, m1);
-                Assert.NotEqual(m1, (Mirror)null);
-                Assert.NotEqual(m1, new Object());
-                foreach (string l2 in lines) {
-                    Mirror m2 = NATS.Client.JetStream.Mirror.OptionalInstance(JSON.Parse(l2));
-                    if (l1.Equals(l2)) {
-                        Assert.Equal(m1, m2);
-                    }
-                    else {
-                        Assert.NotEqual(m1, m2);
-                    }
-                }
-            }
-        }
-
-        [Fact]
         public void TestExternalEquals()
         {
             string[] lines = ReadDataFileLines("ExternalJson.txt");
@@ -318,7 +296,7 @@ namespace UnitTests.JetStream
             Assert.Equal("deliver1", s.External.Deliver);
             
             now = DateTime.Now;
-            s = NATS.Client.JetStream.Source.Builder()
+            s = Source.Builder()
                 .WithName("name2")
                 .WithStartSeq(2)
                 .WithStartTime(now)
@@ -331,34 +309,73 @@ namespace UnitTests.JetStream
             Assert.Equal("fs2", s.FilterSubject);
             Assert.Equal("api2", s.External.Api);
             Assert.Equal("deliver2", s.External.Deliver);
+
+            string json = ReadDataFile("MirrorsSources.json");
+            List<Source> s1 = Source.OptionalListOf(JSONNode.Parse(json));
+            Assert.Equal(5, s1.Count);
         }
 
         [Fact]
         public void TestMirror()
         {
             DateTime now = DateTime.Now;
-            Mirror s = new Mirror("name1", 1, now, "fs1", new External("api1", "deliver1"));
-            Assert.Equal("name1", s.Name);
-            Assert.Equal(1U, s.StartSeq);
-            Assert.Equal(now, s.StartTime);
-            Assert.Equal("fs1", s.FilterSubject);
-            Assert.Equal("api1", s.External.Api);
-            Assert.Equal("deliver1", s.External.Deliver);
+            Mirror m = new Mirror("name1", 1, now, "fs1", new External("api1", "deliver1"));
+            Assert.Equal("name1", m.Name);
+            Assert.Equal(1U, m.StartSeq);
+            Assert.Equal(now, m.StartTime);
+            Assert.Equal("fs1", m.FilterSubject);
+            Assert.Equal("api1", m.External.Api);
+            Assert.Equal("deliver1", m.External.Deliver);
             
             now = DateTime.Now;
-            s = NATS.Client.JetStream.Mirror.Builder()
+            m = Mirror.Builder()
                 .WithName("name2")
                 .WithStartSeq(2)
                 .WithStartTime(now)
                 .WithFilterSubject("fs2")
                 .WithExternal(new External("api2", "deliver2"))
                 .Build();
-            Assert.Equal("name2", s.Name);
-            Assert.Equal(2U, s.StartSeq);
-            Assert.Equal(now, s.StartTime);
-            Assert.Equal("fs2", s.FilterSubject);
-            Assert.Equal("api2", s.External.Api);
-            Assert.Equal("deliver2", s.External.Deliver);
+            Assert.Equal("name2", m.Name);
+            Assert.Equal(2U, m.StartSeq);
+            Assert.Equal(now, m.StartTime);
+            Assert.Equal("fs2", m.FilterSubject);
+            Assert.Equal("api2", m.External.Api);
+            Assert.Equal("deliver2", m.External.Deliver);
+
+            string[] lines = ReadDataFileLines("MirrorsSources.json");
+            ulong u = 0;
+            foreach (string l1 in lines)
+            {
+                if (l1.StartsWith("{"))
+                {
+                    u++;
+                    Mirror m1 = Mirror.OptionalInstance(JSON.Parse(l1));
+                    Assert.Equal(m1, m1);
+                    Assert.NotEqual(m1, (Mirror)null);
+                    Assert.NotEqual(m1, new Object());
+                    Assert.Equal("n" + u, m1.Name);
+                    Assert.Equal(u, m1.StartSeq);
+                    Assert.Equal("fs" + u, m1.FilterSubject);
+                    Assert.Equal("a" + u, m1.External.Api);
+                    Assert.Equal("d" + u, m1.External.Deliver);
+
+                    foreach (string l2 in lines)
+                    {
+                        if (l2.StartsWith("{"))
+                        {
+                            Mirror m2 = Mirror.OptionalInstance(JSON.Parse(l2));
+                            if (l1.Equals(l2))
+                            {
+                                Assert.Equal(m1, m2);
+                            }
+                            else
+                            {
+                                Assert.NotEqual(m1, m2);
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

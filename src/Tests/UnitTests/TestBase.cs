@@ -96,12 +96,8 @@ namespace UnitTests
             return STREAM + "-" + seq;
         }
 
-        public static string Mirror(int seq) {
-            return MIRROR + "-" + seq;
-        }
-
-        public static string Source(int seq) {
-            return SOURCE + "-" + seq;
+        public static string Field(String name, int seq) {
+            return name + "-" + seq;
         }
 
         public static string Subject(int seq) {
