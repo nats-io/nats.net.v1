@@ -292,5 +292,73 @@ namespace UnitTests.JetStream
             Assert.Equal("cluster", p.Cluster);
             Assert.Equal(2, p.Tags.Count);
         }
+
+        [Fact]
+        public void TestExternal()
+        {
+            External e = new External("api1", "deliver1");
+            Assert.Equal("api1", e.Api);
+            Assert.Equal("deliver1", e.Deliver);
+
+            e = External.Builder().WithApi("api2").WithDeliver("deliver2").Build();
+            Assert.Equal("api2", e.Api);
+            Assert.Equal("deliver2", e.Deliver);
+        }
+
+        [Fact]
+        public void TestSource()
+        {
+            DateTime now = DateTime.Now;
+            Source s = new Source("name1", 1, now, "fs1", new External("api1", "deliver1"));
+            Assert.Equal("name1", s.Name);
+            Assert.Equal(1U, s.StartSeq);
+            Assert.Equal(now, s.StartTime);
+            Assert.Equal("fs1", s.FilterSubject);
+            Assert.Equal("api1", s.External.Api);
+            Assert.Equal("deliver1", s.External.Deliver);
+            
+            now = DateTime.Now;
+            s = NATS.Client.JetStream.Source.Builder()
+                .WithName("name2")
+                .WithStartSeq(2)
+                .WithStartTime(now)
+                .WithFilterSubject("fs2")
+                .WithExternal(new External("api2", "deliver2"))
+                .Build();
+            Assert.Equal("name2", s.Name);
+            Assert.Equal(2U, s.StartSeq);
+            Assert.Equal(now, s.StartTime);
+            Assert.Equal("fs2", s.FilterSubject);
+            Assert.Equal("api2", s.External.Api);
+            Assert.Equal("deliver2", s.External.Deliver);
+        }
+
+        [Fact]
+        public void TestMirror()
+        {
+            DateTime now = DateTime.Now;
+            Mirror s = new Mirror("name1", 1, now, "fs1", new External("api1", "deliver1"));
+            Assert.Equal("name1", s.Name);
+            Assert.Equal(1U, s.StartSeq);
+            Assert.Equal(now, s.StartTime);
+            Assert.Equal("fs1", s.FilterSubject);
+            Assert.Equal("api1", s.External.Api);
+            Assert.Equal("deliver1", s.External.Deliver);
+            
+            now = DateTime.Now;
+            s = NATS.Client.JetStream.Mirror.Builder()
+                .WithName("name2")
+                .WithStartSeq(2)
+                .WithStartTime(now)
+                .WithFilterSubject("fs2")
+                .WithExternal(new External("api2", "deliver2"))
+                .Build();
+            Assert.Equal("name2", s.Name);
+            Assert.Equal(2U, s.StartSeq);
+            Assert.Equal(now, s.StartTime);
+            Assert.Equal("fs2", s.FilterSubject);
+            Assert.Equal("api2", s.External.Api);
+            Assert.Equal("deliver2", s.External.Deliver);
+        }
     }
 }
