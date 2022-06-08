@@ -17,9 +17,19 @@ using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client.JetStream
 {
+    /// <summary>
+    /// Placement requirements for a stream
+    /// </summary>
     public sealed class Placement : JsonSerializable
     {
+        /// <summary>
+        /// The desired cluster name to place the stream
+        /// </summary>
         public string Cluster { get; }
+        
+        /// <summary>
+        /// Tags required on servers hosting this stream
+        /// </summary>
         public List<string> Tags { get; }
 
         internal static Placement OptionalInstance(JSONNode placementNode)
@@ -33,10 +43,23 @@ namespace NATS.Client.JetStream
             Tags = JsonUtils.OptionalStringList(placementNode, ApiConstants.Tags);
         }
 
-        public Placement(string cluster, List<string> tags)
+        /// <summary>
+        /// Construct the Placement object
+        /// </summary>
+        /// <param name="cluster">The cluster name</param>
+        public Placement(string cluster)
         {
             Cluster = cluster;
-            Tags = tags;
+        }
+
+        /// <summary>
+        /// Construct the Placement object
+        /// </summary>
+        /// <param name="cluster">The cluster name</param>
+        /// <param name="tags">The list of tags. May be null or empty</param>
+        public Placement(string cluster, List<string> tags) : this(cluster)
+        {
+            Tags = tags == null || tags.Count == 0 ? null : tags;
         }
 
         internal override JSONNode ToJsonNode()
@@ -55,7 +78,6 @@ namespace NATS.Client.JetStream
         public static PlacementBuilder Builder() {
             return new PlacementBuilder();
         }
-
 
         /// <summary>
         /// Placement can be created using a PlacementBuilder. 
@@ -84,10 +106,10 @@ namespace NATS.Client.JetStream
                 return this;
             }
 
-            /**
-         * Build a Placement object
-         * @return the Placement
-         */
+            /// <summary>
+            /// Build a Placement object
+            /// </summary>
+            /// <returns>The Placement</returns>
             public Placement Build() {
                 Validator.Required(_cluster, "Cluster");
                 return new Placement(_cluster, _tags);
