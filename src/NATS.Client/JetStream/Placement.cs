@@ -69,7 +69,7 @@ namespace NATS.Client.JetStream
             /// </summary>
             /// <param name="cluster">the cluster</param>
             /// <returns></returns>
-            public PlacementBuilder Cluster(string cluster) {
+            public PlacementBuilder WithCluster(string cluster) {
                 _cluster = cluster;
                 return this;
             }
@@ -79,7 +79,7 @@ namespace NATS.Client.JetStream
             /// </summary>
             /// <param name="tags">tags the list of tags</param>
             /// <returns></returns>
-            public PlacementBuilder Tags(List<string> tags) {
+            public PlacementBuilder WithTags(List<string> tags) {
                 _tags = tags;
                 return this;
             }

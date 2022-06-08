@@ -278,5 +278,19 @@ namespace UnitTests.JetStream
             Assert.Equal(api, source.External.Api);
             Assert.Equal(deliver, source.External.Deliver);
         }
+
+        [Fact]
+        public void TestPlacement() {
+            Assert.Throws<ArgumentException>(() => Placement.Builder().Build());
+
+            Placement p = Placement.Builder().WithCluster("cluster").Build();
+            Assert.Equal("cluster", p.Cluster);
+            Assert.Null(p.Tags);
+
+            List<string> tags = new List<string> { "a", "b" };
+            p = Placement.Builder().WithCluster("cluster").WithTags(tags).Build();
+            Assert.Equal("cluster", p.Cluster);
+            Assert.Equal(2, p.Tags.Count);
+        }
     }
 }
