@@ -184,5 +184,31 @@ namespace NATS.Client.JetStream
                 return new Source(_name, _startSeq, _startTime, _filterSubject, _external);
             }
         }
+
+        public bool Equals(Source other)
+        {
+            return Name == other.Name && StartSeq == other.StartSeq && StartTime.Equals(other.StartTime) && FilterSubject == other.FilterSubject && Equals(External, other.External);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((Source) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = (Name != null ? Name.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ StartSeq.GetHashCode();
+                hashCode = (hashCode * 397) ^ StartTime.GetHashCode();
+                hashCode = (hashCode * 397) ^ (FilterSubject != null ? FilterSubject.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (External != null ? External.GetHashCode() : 0);
+                return hashCode;
+            }
+        }    
     }
 }

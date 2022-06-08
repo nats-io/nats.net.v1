@@ -198,5 +198,6 @@ namespace NATS.Client.JetStream
                 hashCode = (hashCode * 397) ^ (External != null ? External.GetHashCode() : 0);
                 return hashCode;
             }
-        }    }
+        }    
+    }
 }
