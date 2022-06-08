@@ -9,6 +9,14 @@ namespace NATS.Client.Internals
         private static readonly char[] WildGt = { '*', '>'};
         private static readonly char[] WildGtDot = { '*', '>', '.'};
         private static readonly char[] WildGtDollar = {'*', '>', '$'};
+        
+        internal static string Required(string s, string label) {
+            if (EmptyAsNull(s) == null) {
+                throw new ArgumentException($"{label} cannot be null or empty.");
+            }
+            return s;
+        }
+
 
         internal static string ValidateSubject(string s, bool required)
         {

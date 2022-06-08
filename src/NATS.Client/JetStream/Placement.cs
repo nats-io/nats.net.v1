@@ -33,6 +33,12 @@ namespace NATS.Client.JetStream
             Tags = JsonUtils.OptionalStringList(placementNode, ApiConstants.Tags);
         }
 
+        public Placement(string cluster, List<string> tags)
+        {
+            Cluster = cluster;
+            Tags = tags;
+        }
+
         internal override JSONNode ToJsonNode()
         {
             return new JSONObject
@@ -40,6 +46,52 @@ namespace NATS.Client.JetStream
                 [ApiConstants.Cluster] = Cluster,
                 [ApiConstants.Tags] = JsonUtils.ToArray(Tags),
             };
+        }
+
+        /// <summary>
+        /// Creates a builder for a placements object. 
+        /// </summary>
+        /// <returns>The Builder</returns>
+        public static PlacementBuilder Builder() {
+            return new PlacementBuilder();
+        }
+
+
+        /// <summary>
+        /// Placement can be created using a PlacementBuilder. 
+        /// </summary>
+        public sealed class PlacementBuilder {
+            private string _cluster;
+            private List<string> _tags;
+
+            /// <summary>
+            /// Set the cluster string.
+            /// </summary>
+            /// <param name="cluster">the cluster</param>
+            /// <returns></returns>
+            public PlacementBuilder Cluster(string cluster) {
+                _cluster = cluster;
+                return this;
+            }
+
+            /// <summary>
+            /// Set the tags 
+            /// </summary>
+            /// <param name="tags">tags the list of tags</param>
+            /// <returns></returns>
+            public PlacementBuilder Tags(List<string> tags) {
+                _tags = tags;
+                return this;
+            }
+
+            /**
+         * Build a Placement object
+         * @return the Placement
+         */
+            public Placement Build() {
+                Validator.Required(_cluster, "Cluster");
+                return new Placement(_cluster, _tags);
+            }
         }
     }
 }
