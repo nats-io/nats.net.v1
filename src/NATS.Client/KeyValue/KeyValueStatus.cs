@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using NATS.Client.Internals;
 using NATS.Client.JetStream;
 
 namespace NATS.Client.KeyValue
@@ -65,7 +66,7 @@ namespace NATS.Client.KeyValue
         /// <summary>
         /// The maximum age for a value in this bucket
         /// </summary>
-        public long Ttl => Config.Ttl;
+        public Duration Ttl => Config.Ttl;
 
         /// <summary>
         /// The storage type for this bucket

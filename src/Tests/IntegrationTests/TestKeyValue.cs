@@ -17,6 +17,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using NATS.Client;
+using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using NATS.Client.KeyValue;
 using Xunit;
@@ -72,8 +73,8 @@ namespace IntegrationTests
                 Assert.Equal(-1, kvc.MaxBucketSize);
                 Assert.Equal(-1, status.MaxValueSize);
                 Assert.Equal(-1, kvc.MaxValueSize);
-                Assert.Equal(0, status.Ttl);
-                Assert.Equal(0, kvc.Ttl);
+                Assert.Equal(Duration.Zero, status.Ttl);
+                Assert.Equal(Duration.Zero, kvc.Ttl);
                 Assert.Equal(StorageType.Memory, status.StorageType);
                 Assert.Equal(StorageType.Memory, kvc.StorageType);
                 Assert.Equal(1, status.Replicas);
@@ -464,6 +465,75 @@ namespace IntegrationTests
                 kv.Purge(KEY);
                 list = kv.History(KEY);
                 Assert.Equal(1, list.Count);
+            });
+        }
+        
+        [Fact]
+        public void TestCreateUpdate() {
+            Context.RunInJsServer(c =>
+            {
+                // get the kv management context
+                IKeyValueManagement kvm = c.CreateKeyValueManagementContext();
+
+                Assert.Throws<NATSJetStreamException>(() => kvm.GetBucketInfo(BUCKET));
+
+                KeyValueStatus kvs = kvm.Create(KeyValueConfiguration.Builder()
+                    .WithName(BUCKET)
+                    .WithStorageType(StorageType.Memory)
+                    .Build());
+
+                Assert.Equal(BUCKET, kvs.BucketName);
+                Assert.Empty(kvs.Description);
+                Assert.Equal(1, kvs.MaxHistoryPerKey);
+                Assert.Equal(-1, kvs.MaxBucketSize);
+                Assert.Equal(-1, kvs.MaxValueSize);
+                Assert.Equal(Duration.Zero, kvs.Ttl);
+                Assert.Equal(StorageType.Memory, kvs.StorageType);
+                Assert.Equal(1, kvs.Replicas);
+                Assert.Equal(0U, kvs.EntryCount);
+                Assert.Equal("JetStream", kvs.BackingStore);
+
+                IKeyValue kv = c.CreateKeyValueContext(BUCKET);
+                kv.Put(KEY, 1);
+                kv.Put(KEY, 2);
+
+                IList<KeyValueEntry> history = kv.History(KEY);
+                Assert.Equal(1, history.Count);
+                long lvalue = 0;
+                Assert.True(history[0].TryGetLongValue(out lvalue));
+                Assert.Equal(2, lvalue);
+
+                KeyValueConfiguration kvc = KeyValueConfiguration.Builder(kvs.Config)
+                    .WithDescription(Plain)
+                    .WithMaxHistoryPerKey(3)
+                    .WithMaxBucketSize(10_000)
+                    .WithMaxValueSize(100)
+                    .WithTtl(Duration.OfHours(1))
+                    .Build();
+
+                kvs = kvm.Update(kvc);
+
+                Assert.Equal(BUCKET, kvs.BucketName);
+                Assert.Equal(Plain, kvs.Description);
+                Assert.Equal(3, kvs.MaxHistoryPerKey);
+                Assert.Equal(10_000, kvs.MaxBucketSize);
+                Assert.Equal(100, kvs.MaxValueSize);
+                Assert.Equal(Duration.OfHours(1), kvs.Ttl);
+                Assert.Equal(StorageType.Memory, kvs.StorageType);
+                Assert.Equal(1, kvs.Replicas);
+                Assert.Equal(1U, kvs.EntryCount);
+                Assert.Equal("JetStream", kvs.BackingStore);
+
+                history = kv.History(KEY);
+                Assert.Equal(1, history.Count);
+                lvalue = 0;
+                Assert.True(history[0].TryGetLongValue(out lvalue));
+                Assert.Equal(2, lvalue);
+
+                KeyValueConfiguration kvcStor = KeyValueConfiguration.Builder(kvs.Config)
+                    .WithStorageType(StorageType.File)
+                    .Build();
+                Assert.Throws<NATSJetStreamException>(() => kvm.Update(kvcStor));
             });
         }
 

@@ -50,7 +50,7 @@ namespace UnitTests.JetStream
             Assert.Equal(44, bc.MaxHistoryPerKey);
             Assert.Equal(555, bc.MaxBucketSize);
             Assert.Equal(666, bc.MaxValueSize);
-            Assert.Equal(777, bc.Ttl);
+            Assert.Equal(Duration.OfMillis(777), bc.Ttl);
             Assert.Equal(StorageType.Memory, bc.StorageType);
             Assert.Equal(2, bc.Replicas);
         }

@@ -35,6 +35,11 @@ namespace NATS.Client.KeyValue
             }
             return new KeyValueStatus(jsm.AddStream(sc));
         }
+        
+        public KeyValueStatus Update(KeyValueConfiguration config)
+        {
+            return new KeyValueStatus(jsm.UpdateStream(config.BackingConfig));
+        }
 
         public IList<string> GetBucketNames()
         {
