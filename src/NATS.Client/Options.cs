@@ -309,6 +309,8 @@ namespace NATS.Client
             {
                 certificates = new X509Certificate2Collection(o.certificates);
             }
+
+            CheckCertificateRevocation = o.CheckCertificateRevocation;
         }
 
         static readonly string[] protcolSep = new[] {"://"};
@@ -781,6 +783,12 @@ namespace NATS.Client
         /// <seealso cref="ReconnectJitter"/>
         /// <seealso cref="SetReconnectJitter(int, int)"/>
         public int ReconnectJitterTLS { get => reconnectJitterTLS; }
+
+        /// <summary>
+        /// Get or set whether to check Certificate Revocation when connecting via TLS
+        /// </summary>
+        /// <seealso cref="SslStream.AuthenticateAsClientAsync(string, X509CertificateCollection, System.Security.Authentication.SslProtocols, bool)"/>
+        public bool CheckCertificateRevocation { get; set; } = true;
 
         /// <summary>
         /// Returns a string representation of the
