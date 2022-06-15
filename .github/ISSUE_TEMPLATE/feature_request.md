@@ -1,6 +1,6 @@
 ---
 name: Feature Request
-about: Request a feature for the NATS - Java Client
+about: Request a feature for the NATS - .NET C# Client
 labels: 🎉 enhancement
 ---
 
