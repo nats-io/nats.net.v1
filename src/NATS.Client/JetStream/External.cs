@@ -15,9 +15,19 @@ using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client.JetStream
 {
+    /// <summary>
+    /// Configuration referencing a stream source in another account or JetStream domain
+    /// </summary>
     public sealed class External : JsonSerializable
     {
+        /// <summary>
+        /// The subject prefix that imports the other account/domain $JS.API.CONSUMER.> subjects
+        /// </summary>
         public string Api { get; }
+        
+        /// <summary>
+        /// The delivery subject to use for the push consumer
+        /// </summary>
         public string Deliver { get; }
 
         internal static External OptionalInstance(JSONNode externalNode)
@@ -38,6 +48,62 @@ namespace NATS.Client.JetStream
                 [ApiConstants.Api] = Api,
                 [ApiConstants.Deliver] = Deliver
             };
+        }
+
+        /// <summary>
+        /// Construct the External configuration
+        /// </summary>
+        /// <param name="api">The api prefix</param>
+        /// <param name="deliver">The deliver subject</param>
+        public External(string api, string deliver)
+        {
+            Api = api;
+            Deliver = deliver;
+        }
+
+        /// <summary>
+        /// Creates a builder for an External object. 
+        /// </summary>
+        /// <returns>The Builder</returns>
+        public static ExternalBuilder Builder() {
+            return new ExternalBuilder();
+        }
+
+        /// <summary>
+        /// External can be created using a ExternalBuilder. 
+        /// </summary>
+        public sealed class ExternalBuilder
+        {
+            private string _api;
+            private string _deliver;
+            
+            /// <summary>
+            /// Set the api string.
+            /// </summary>
+            /// <param name="api">the api</param>
+            /// <returns></returns>
+            public ExternalBuilder WithApi(string api) {
+                _api = api;
+                return this;
+            }
+            
+            /// <summary>
+            /// Set the deliver string.
+            /// </summary>
+            /// <param name="deliver">the deliver</param>
+            /// <returns></returns>
+            public ExternalBuilder WithDeliver(string deliver) {
+                _deliver = deliver;
+                return this;
+            }
+
+            /// <summary>
+            /// Build a External object
+            /// </summary>
+            /// <returns>The External</returns>
+            public External Build() {
+                return new External(_api, _deliver);
+            }
         }
 
         private bool Equals(External other)
