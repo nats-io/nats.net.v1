@@ -19,6 +19,7 @@
 
     <PropertyGroup>
         <NoWarn>$(NoWarn);NU1701</NoWarn>
+        <WarningsNotAsErrors>612,618</WarningsNotAsErrors>
     </PropertyGroup>
 </Project>
 
