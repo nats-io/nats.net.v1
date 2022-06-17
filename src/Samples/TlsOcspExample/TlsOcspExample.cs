@@ -162,8 +162,6 @@ namespace NATSExamples
             Options opts = ConnectionFactory.GetDefaultOptions();
             opts.Url = url;
             opts.Secure = true;
-            
-            // or you have to do it all yourself
             opts.TLSRemoteCertificationValidationCallback = VerifyServerCert;
 
             try
