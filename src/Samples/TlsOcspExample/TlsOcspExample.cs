@@ -138,8 +138,8 @@ namespace NATSExamples
                     {
                         try
                         {
-                            Asn1OctetString asn = bcX509.GetExtensionValue(oid);
-                            Console.WriteLine("    " + oid + " " + asn);
+                            Asn1OctetString asn = bcX509.GetExtensionValue(new DerObjectIdentifier(oid));
+                            Console.WriteLine("    Oid: " + oid + " | Asn: " + asn);
                         }
                         catch (Exception e)
                         {
