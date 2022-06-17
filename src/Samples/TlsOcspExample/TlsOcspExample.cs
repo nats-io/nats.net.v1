@@ -27,28 +27,33 @@ namespace NATSExamples
             X509Certificate certificate, X509Chain chain,
             SslPolicyErrors sslPolicyErrors)
         {
+            Console.WriteLine();
+
             if (certificate is X509Certificate2 cert2)
             {
-                Console.WriteLine();
+                Console.WriteLine("X509Certificate2 Extensions");
                 foreach (X509Extension ext in cert2.Extensions)
                 {
-                    Console.WriteLine(ext.GetType().Name 
+                    Console.WriteLine("  " + ext.GetType().Name 
                                       + " | " + ext.Oid.FriendlyName 
                                       + " | " + ext.Critical 
                                       + " | " + Encoding.UTF8.GetString(ext.RawData));
                 }
+                Console.WriteLine();
             }
 
+            Console.WriteLine("sslPolicyErrors");
+            Console.WriteLine("  " + sslPolicyErrors);
             Console.WriteLine();
-            Console.WriteLine($"sslPolicyErrors {sslPolicyErrors}");
-
-            Console.WriteLine();
+            
             if (chain != null)
             {
+                Console.WriteLine("X509Chain Statuses");
                 foreach (X509ChainStatus cs in chain.ChainStatus)
                 {
-                    Console.WriteLine(cs.Status + " " + cs.StatusInformation);
+                    Console.WriteLine("  " + cs.Status + " " + cs.StatusInformation);
                 }
+                Console.WriteLine();
             }
 
             return true; // true if the cert is okay, false if it not
