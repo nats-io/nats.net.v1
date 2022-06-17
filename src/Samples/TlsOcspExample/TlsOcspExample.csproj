@@ -14,9 +14,11 @@
     </ItemGroup>
     
     <ItemGroup>
-        <None Update="client.pfx">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </None>
+      <PackageReference Include="BouncyCastle" Version="1.8.9" />
     </ItemGroup>
+
+    <PropertyGroup>
+        <NoWarn>$(NoWarn);NU1701</NoWarn>
+    </PropertyGroup>
 </Project>
 

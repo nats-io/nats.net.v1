@@ -3,26 +3,30 @@ using System.Net.Security;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using NATS.Client;
+using Org.BouncyCastle.Asn1;
+using Org.BouncyCastle.Security;
+using Org.BouncyCastle.Utilities.Collections;
 
 namespace NATSExamples
 {
     /// <summary>
-    /// This example is a shell for self handling OCSP and TLS for that matter
+    /// This example is a shell for self handling TLS
     ///
-    /// opts.AddCertificate(cert) is required for standard TLS when you don't provide a
+    /// Usually you would just use opts.AddCertificate(cert)
+    /// but self handling requires 
     /// opts.TLSRemoteCertificationValidationCallback
     ///
     /// If you provide a callback, you can do whatever you like, including checking the
     /// certificate and chain.
     /// 
-    /// The client.pfx found in this project is based on the
-    /// client-key.pem and the client-cert.pem found here:
-    ///     https://github.com/nats-io/nats-server/tree/main/test/configs/certs/ocsp
-    /// It was made following the instructions here:
-    ///     https://github.com/nats-io/nats.net/blob/master/README.md#tls
-    ///
+    /// X509 Certificate 2
+    ///     https://docs.microsoft.com/en-us/dotnet/api/system.security.cryptography.x509certificates.x509certificate2?view=net-6.0
     /// X509 Extension Class:
     ///     https://docs.microsoft.com/en-us/dotnet/api/system.security.cryptography.x509certificates.x509extension?view=net-6.0
+    ///
+    /// BouncyCastle is an industry standard crypto library https://www.bouncycastle.org/index.html
+    /// It might provide functionality that will help handling the certificate.
+    /// 
     /// </summary>
     internal static class TlsOcspExample
     {
@@ -105,20 +109,59 @@ namespace NATSExamples
                 Console.WriteLine();
             }
 
+            // ------------------------------------------------------------------------------------------
+            // BouncyCastle
+            // ------------------------------------------------------------------------------------------
+            Org.BouncyCastle.X509.X509Certificate bcX509 = DotNetUtilities.FromX509Certificate(certificate);
+            Console.WriteLine("BouncyCastle X509Certificate");
+            Console.WriteLine("  " + bcX509.CertificateStructure);
+            Console.WriteLine("  " + bcX509.IsValidNow);
+            Console.WriteLine("  " + bcX509.NotBefore);
+            Console.WriteLine("  " + bcX509.NotAfter);
+            Console.WriteLine("  " + bcX509.SigAlgName);
+            Console.WriteLine("  " + bcX509.SigAlgOid);
+            if (bcX509.GetExtendedKeyUsage().Count > 0)
+            {
+                Console.WriteLine("  Extended Key Usage");
+                foreach (var eku in bcX509.GetExtendedKeyUsage())
+                {
+                    Console.WriteLine("    " + eku);
+                }
+            }
+
+            void InspectExtension(ISet extSet, string label)
+            {
+                if (extSet.Count > 0)
+                {
+                    Console.WriteLine("  " + label);
+                    foreach (string oid in extSet)
+                    {
+                        try
+                        {
+                            Asn1OctetString asn = bcX509.GetExtensionValue(oid);
+                            Console.WriteLine("    " + oid + " " + asn);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+                    }
+                }
+            }
+
+            InspectExtension(bcX509.GetNonCriticalExtensionOids(), "Non Critical Extensions");
+            InspectExtension(bcX509.GetCriticalExtensionOids(), "Critical Extensions");
+
             return true; // true if the cert is okay, false if it not
         }
 
         public static void Main(string[] args)
         {
-            string url = "tls://127.0.0.1:59833";
-            X509Certificate2 cert = new X509Certificate2("client.pfx", "password");
+            string url = "tls://localhost:4222";
 
             Options opts = ConnectionFactory.GetDefaultOptions();
             opts.Url = url;
             opts.Secure = true;
-            
-            // either this
-            opts.AddCertificate(cert);
             
             // or you have to do it all yourself
             opts.TLSRemoteCertificationValidationCallback = VerifyServerCert;
