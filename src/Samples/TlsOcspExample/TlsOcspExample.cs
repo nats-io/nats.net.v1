@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using NATS.Client;
 
 namespace NATSExamples
@@ -12,7 +13,7 @@ namespace NATSExamples
     /// opts.TLSRemoteCertificationValidationCallback
     ///
     /// If you provide a callback, you can do whatever you like, including checking the
-    /// X509Chain
+    /// certificate and chain.
     /// 
     /// The client.pfx found in this project is based on the
     /// client-key.pem and the client-cert.pem found here:
@@ -26,7 +27,22 @@ namespace NATSExamples
             X509Certificate certificate, X509Chain chain,
             SslPolicyErrors sslPolicyErrors)
         {
-            Console.WriteLine($"\nsslPolicyErrors {sslPolicyErrors}\n");
+            if (certificate is X509Certificate2 cert2)
+            {
+                Console.WriteLine();
+                foreach (X509Extension ext in cert2.Extensions)
+                {
+                    Console.WriteLine(ext.GetType().Name 
+                                      + " | " + ext.Oid.FriendlyName 
+                                      + " | " + ext.Critical 
+                                      + " | " + Encoding.UTF8.GetString(ext.RawData));
+                }
+            }
+
+            Console.WriteLine();
+            Console.WriteLine($"sslPolicyErrors {sslPolicyErrors}");
+
+            Console.WriteLine();
             if (chain != null)
             {
                 foreach (X509ChainStatus cs in chain.ChainStatus)
@@ -40,7 +56,7 @@ namespace NATSExamples
 
         public static void Main(string[] args)
         {
-            string url = "tls://127.0.0.1:59422";
+            string url = "tls://127.0.0.1:56324";
             X509Certificate2 cert = new X509Certificate2("client.pfx", "password");
 
             Options opts = ConnectionFactory.GetDefaultOptions();
