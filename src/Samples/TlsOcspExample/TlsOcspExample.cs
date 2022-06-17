@@ -51,7 +51,7 @@ namespace NATSExamples
                 Console.WriteLine("X509Chain Statuses");
                 foreach (X509ChainStatus cs in chain.ChainStatus)
                 {
-                    Console.WriteLine("  " + cs.Status + " " + cs.StatusInformation);
+                    Console.WriteLine("  " + cs.Status + " | " + cs.StatusInformation);
                 }
                 Console.WriteLine();
             }
