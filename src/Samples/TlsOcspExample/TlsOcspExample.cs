@@ -1,4 +1,5 @@
-﻿using System.Net.Security;
+﻿using System;
+using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using NATS.Client;
 
@@ -22,7 +23,7 @@ namespace NATSExamples
     internal static class TlsOcspExample
     {
         private static bool VerifyServerCert(object sender,
-            X509Certificate? certificate, X509Chain? chain,
+            X509Certificate certificate, X509Chain chain,
             SslPolicyErrors sslPolicyErrors)
         {
             Console.WriteLine($"\nsslPolicyErrors {sslPolicyErrors}\n");
