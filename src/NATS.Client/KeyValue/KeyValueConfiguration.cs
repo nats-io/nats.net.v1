@@ -57,7 +57,7 @@ namespace NATS.Client.KeyValue
         /// <summary>
         /// The maximum age for a value in this bucket
         /// </summary>
-        public long Ttl => BackingConfig.MaxAge.Millis;
+        public Duration Ttl => BackingConfig.MaxAge;
 
         /// <summary>
         /// The storage type for this bucket

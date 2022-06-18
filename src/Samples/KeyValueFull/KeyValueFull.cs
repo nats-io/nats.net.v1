@@ -44,14 +44,14 @@ namespace NATSExamples
                     IKeyValueManagement kvm = c.CreateKeyValueManagementContext();
 
                     // create the bucket
-                    KeyValueConfiguration bc = KeyValueConfiguration.Builder()
+                    KeyValueConfiguration kvc = KeyValueConfiguration.Builder()
                         .WithName(helper.Bucket)
                         .WithDescription(helper.Description)
                         .WithMaxHistoryPerKey(5)
                         .WithStorageType(StorageType.Memory)
                         .Build();
 
-                    KeyValueStatus kvs = kvm.Create(bc);
+                    KeyValueStatus kvs = kvm.Create(kvc);
                     Console.WriteLine(kvs);
 
                     // get the kv context for the specific bucket
@@ -178,12 +178,20 @@ namespace NATSExamples
                     Console.WriteLine(LongKey + " from TryGetLongValue: " + lvalue);
 
                     // let's check the bucket info
-                    Console.WriteLine("\n9.1 Bucket before delete");
+                    Console.WriteLine("\n9.1 Bucket before update/delete");
                     kvs = kvm.GetBucketInfo(helper.Bucket);
                     Console.WriteLine(kvs);
 
+                    kvc = KeyValueConfiguration.Builder(kvs.Config)
+                        .WithDescription(helper.Description + "-changed")
+                        .WithMaxHistoryPerKey(6)
+                        .Build();
+                    kvs = kvm.Update(kvc);
+                    Console.WriteLine("\n9.2 Bucket after update");
+                    Console.WriteLine(kvs);
+
                     // delete the bucket
-                    Console.WriteLine("\n9.2 Delete");
+                    Console.WriteLine("\n9.3 Delete");
                     kvm.Delete(helper.Bucket);
 
                     try {

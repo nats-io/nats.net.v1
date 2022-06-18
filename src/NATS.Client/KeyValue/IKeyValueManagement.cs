@@ -19,22 +19,26 @@ namespace NATS.Client.KeyValue
     {
         /// <summary>
         /// Create a key value store.
-        /// THIS IS A BETA FEATURE AND SUBJECT TO CHANGE
         /// </summary>
         /// <param name="config">the key value configuration</param>
         /// <returns></returns>
         KeyValueStatus Create(KeyValueConfiguration config);
 
         /// <summary>
+        /// Update a key value store configuration. Storage type cannot change.
+        /// </summary>
+        /// <param name="config">the key value configuration</param>
+        /// <returns></returns>
+        KeyValueStatus Update(KeyValueConfiguration config);
+
+        /// <summary>
         /// Get the list of bucket names.
-        /// THIS IS A BETA FEATURE AND SUBJECT TO CHANGE
         /// </summary>
         /// <returns>list of bucket names</returns>
         IList<string> GetBucketNames();
 
         /// <summary>
         /// Gets the info for an existing bucket.
-        /// THIS IS A BETA FEATURE AND SUBJECT TO CHANGE
         /// </summary>
         /// <param name="bucketName">the bucket name to use</param>
         /// <returns>the bucket status object</returns>
@@ -42,7 +46,6 @@ namespace NATS.Client.KeyValue
 
         /// <summary>
         /// Deletes an existing bucket. Will throw a NATSJetStreamException if the delete fails.
-        /// THIS IS A BETA FEATURE AND SUBJECT TO CHANGE
         /// </summary>
         /// <param name="bucketName"></param>
         void Delete(string bucketName);
