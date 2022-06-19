@@ -95,7 +95,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntegrationTestsUsingNitoAs
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntegrationTestsInternal", "Tests\IntegrationTestsInternal\IntegrationTestsInternal.csproj", "{316A3E54-365C-4BD1-B9AB-01DB7158C01A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TlsOcspExample", "Samples\TlsOcspExample\TlsOcspExample.csproj", "{5EB47989-2656-4684-84A9-8935D7B99A8D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TlsVariationsExample", "Samples\TlsVariationsExample\TlsVariationsExample.csproj", "{5EB47989-2656-4684-84A9-8935D7B99A8D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

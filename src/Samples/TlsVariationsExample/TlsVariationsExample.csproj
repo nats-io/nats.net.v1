@@ -2,8 +2,8 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <Title>NATS OCSP Example</Title>
-        <Description>NATS OCSP Example</Description>
+        <Title>NATS TLS Variations Example</Title>
+        <Description>NATS TLS Variations Example</Description>
         <IsPackable>false</IsPackable>
         <RootNamespace>NATSExamples</RootNamespace>
     </PropertyGroup>
@@ -15,6 +15,12 @@
     
     <ItemGroup>
       <PackageReference Include="BouncyCastle" Version="1.8.9" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Update="client.pfx">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
     <PropertyGroup>

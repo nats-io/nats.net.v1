@@ -10,14 +10,14 @@ using Org.BouncyCastle.Utilities.Collections;
 namespace NATSExamples
 {
     /// <summary>
-    /// This example is a shell for self handling TLS
+    /// This example shows various ways to handle TLS, including manual verification and
+    /// OCSP revocation checking.
     ///
-    /// Usually you would just use opts.AddCertificate(cert)
-    /// but self handling requires 
-    /// opts.TLSRemoteCertificationValidationCallback
+    /// Revocation checking requires: opts.CheckCertificateRevocation = true
+    /// Manual Verification requires: opts.TLSRemoteCertificationValidationCallback = ...
     ///
-    /// If you provide a callback, you can do whatever you like, including checking the
-    /// certificate and chain.
+    /// If you provide a manual callback, you can do whatever you like, including checking
+    /// the certificate and chain.
     /// 
     /// X509 Certificate 2
     ///     https://docs.microsoft.com/en-us/dotnet/api/system.security.cryptography.x509certificates.x509certificate2?view=net-6.0
@@ -25,12 +25,50 @@ namespace NATSExamples
     ///     https://docs.microsoft.com/en-us/dotnet/api/system.security.cryptography.x509certificates.x509extension?view=net-6.0
     ///
     /// BouncyCastle is an industry standard crypto library https://www.bouncycastle.org/index.html
-    /// It might provide functionality that will help handling the certificate.
+    /// It might provide functionality that will help handling the certificate and chain.
     /// 
     /// </summary>
-    internal static class TlsOcspExample
+    internal static class TlsVariationsExample
     {
-        private static bool VerifyServerCert(object sender,
+        static readonly string Url = "tls://localhost:4222";
+
+        public static void Main(string[] args)
+        {
+            var opts = RevocationCheckingOptions();
+            // var opts = ManualVerificationOptions();
+            try
+            {
+                using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+                {
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine(ex);
+            }
+        }
+
+        private static Options RevocationCheckingOptions()
+        {
+            Options opts = ConnectionFactory.GetDefaultOptions();
+            opts.Url = Url;
+            opts.Secure = true;
+            X509Certificate2 cert = new X509Certificate2("client.pfx", "password");
+            opts.AddCertificate(cert);
+            opts.CheckCertificateRevocation = true;
+            return opts;
+        }
+
+        private static Options ManualVerificationOptions()
+        {
+            Options opts = ConnectionFactory.GetDefaultOptions();
+            opts.Url = Url;
+            opts.Secure = true;
+            opts.TLSRemoteCertificationValidationCallback = ManualServerCertVerification;
+            return opts;
+        }
+
+        private static bool ManualServerCertVerification(object sender,
             X509Certificate certificate, X509Chain chain,
             SslPolicyErrors sslPolicyErrors)
         {
@@ -153,27 +191,6 @@ namespace NATSExamples
             InspectExtension(bcX509.GetCriticalExtensionOids(), "Critical Extensions");
 
             return true; // true if the cert is okay, false if it not
-        }
-
-        public static void Main(string[] args)
-        {
-            string url = "tls://localhost:4222";
-
-            Options opts = ConnectionFactory.GetDefaultOptions();
-            opts.Url = url;
-            opts.Secure = true;
-            opts.TLSRemoteCertificationValidationCallback = VerifyServerCert;
-
-            try
-            {
-                using (IConnection c = new ConnectionFactory().CreateConnection(opts))
-                {
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine(ex);
-            }
         }
     }
 }
