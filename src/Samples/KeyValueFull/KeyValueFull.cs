@@ -31,7 +31,7 @@ namespace NATSExamples
 
         public static void Main(string[] args)
         {
-            ArgumentHelper helper = new ArgumentHelperBuilder("KeyValueFull Full", args, Usage)
+            ArgumentHelper helper = new ArgumentHelperBuilder("KeyValueFull", args, Usage)
                 .DefaultBucket("exampleBucket")
                 .DefaultDescription("Example Description")
                 .Build();
