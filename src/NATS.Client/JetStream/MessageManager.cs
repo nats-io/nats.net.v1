@@ -268,17 +268,13 @@ namespace NATS.Client.JetStream
             {
                 return false;
             }
-            Console.WriteLine("OMM 0 " + msg);
             
             ulong receivedConsumerSeq = msg.MetaData.ConsumerSequence;
-            Console.WriteLine("OMM 1 exp " + expectedConsumerSeq + " rcvd " + receivedConsumerSeq);
             if (expectedConsumerSeq != receivedConsumerSeq)
             {
                 try
                 {
                     expectedConsumerSeq = 1; // consumer always starts with consumer sequence 1
-
-                    Console.WriteLine("OMM 1-3 |" + Sub + "|");
 
                     // 1. shutdown the managers, for instance stops heartbeat timers
                     MessageManager[] managers = {};
@@ -290,19 +286,13 @@ namespace NATS.Client.JetStream
                     {
                         managers = asyncSub.messageManagers;
                     }
-                    Console.WriteLine("OMM 2 " + managers.Length);
 
                     Shutdown(managers);
-
-                    Console.WriteLine("OMM 3 " + Sub);
 
                     // 2. re-subscribe. This means kill the sub then make a new one
                     //    New sub needs a new deliver subject
                     string newDeliverSubject = Sub.Connection.NewInbox();
-                    Console.WriteLine("OMM 31 ");
                     Sub.reSubscribe(newDeliverSubject);
-                        
-                    Console.WriteLine("OMM 4 ");
 
                     // 3. make a new consumer using the same deliver subject but
                     //    with a new starting point
@@ -313,11 +303,7 @@ namespace NATS.Client.JetStream
                         .WithStartTime(DateTime.MinValue) // clear start time in case it was originally set
                         .Build();
 
-                    Console.WriteLine("OMM 5 ");
-
                     _js.AddOrUpdateConsumerInternal(_stream, userCc);
-
-                    Console.WriteLine("OMM 6 ");
 
                     // 4. re start the managers.
                     Startup(Sub, managers);
