@@ -552,6 +552,9 @@ The NATS .NET client supports TLS 1.2.  Set the secure option, add
 the certificate, and connect.  Note that .NET requires both the
 private key and certificate to be present in the same certificate file.
 
+In addition to the code found here, please refer to the sample code at
+[TlsVariationsExample](src/Samples/TlsVariationsExample/TlsVariationsExample.cs)
+
 ```c#
         Options opts = ConnectionFactory.GetDefaultOptions();
         opts.Secure = true;
@@ -565,6 +568,10 @@ private key and certificate to be present in the same certificate file.
 
         opts.AddCertificate(cert);
 
+        // Some connections like those with OCSP 
+        // require CheckCertificateRevocation
+        opts.CheckCertificateRevocation = true;
+        
         IConnection c = new ConnectionFactory().CreateConnection(opts);
 ```
 
