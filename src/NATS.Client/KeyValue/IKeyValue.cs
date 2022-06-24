@@ -143,10 +143,6 @@ namespace NATS.Client.KeyValue
 
         /// <summary>
         /// Watch updates for all keys
-        /// WARNING: This api requires an internal consumer the enforces ordering of messages.
-        /// This portion of the implementation is not complete yet. If there was some sort of
-        /// error from the server and messages were skipped or came out of order the data received
-        /// would be incomplete. While this is an edge case, it can still technically happen. 
         /// </summary>
         /// <param name="watcher">the watcher</param>
         /// <param name="watchOptions">the watch options to apply. If multiple conflicting options are supplied, the last options wins.</param>
