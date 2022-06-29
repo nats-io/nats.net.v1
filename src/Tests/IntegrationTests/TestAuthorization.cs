@@ -103,7 +103,6 @@ namespace IntegrationTests
                 }
 
                 connectEncoded("space%20space");
-                connectEncoded("space+space");
                 connectEncoded("colon%3Acolon");
                 connectEncoded("colon%3acolon"); // just making sure lower case hex
                 connectEncoded("quote%27quote");
@@ -123,7 +122,10 @@ namespace IntegrationTests
                 connectEncoded("plus%2Bplus");
                 connectEncoded("semi%3Bsemi");
                 connectEncoded("eq%3Deq");
-                connectEncoded("pct%25pct");            
+                connectEncoded("pct%25pct");
+
+                // a plus sign in a user or pass is a plus sign, not a space
+                Assert.Throws<NATSConnectionException>(() => connectEncoded("space+space"));
             }
         }
 

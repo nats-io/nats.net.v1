@@ -1334,12 +1334,12 @@ namespace NATS.Client
                 int at = u.IndexOf(':');
                 if (at == -1)
                 {
-                    token = WebUtility.UrlDecode(u);
+                    token = Uri.UnescapeDataString(u);
                 }
                 else
                 {
-                    user = WebUtility.UrlDecode(u.Substring(0, at));
-                    pass = WebUtility.UrlDecode(u.Substring(at + 1));
+                    user = Uri.UnescapeDataString(u.Substring(0, at));
+                    pass = Uri.UnescapeDataString(u.Substring(at + 1));
                 }
             }
             else
