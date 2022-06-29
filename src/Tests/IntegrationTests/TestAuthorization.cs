@@ -105,6 +105,7 @@ namespace IntegrationTests
                 connectEncoded("space%20space");
                 connectEncoded("space+space");
                 connectEncoded("colon%3Acolon");
+                connectEncoded("colon%3acolon"); // just making sure lower case hex
                 connectEncoded("quote%27quote");
                 connectEncoded("slash%2Fslash");
                 connectEncoded("question%3Fquestion");
