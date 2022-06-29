@@ -1404,9 +1404,6 @@ namespace NATS.Client
             if (opts.NoEcho && info.protocol < 1)
                 throw new NATSProtocolException("Echo is not supported by the server.");
 
-            var sb0 = new StringBuilder();
-            Console.WriteLine(info.AppendAsJsonTo(sb0));
-
             var sb = new StringBuilder().Append(IC.conProtoNoCRLF).Append(" ");
 
             return info.AppendAsJsonTo(sb).Append(IC._CRLF_).ToString();
