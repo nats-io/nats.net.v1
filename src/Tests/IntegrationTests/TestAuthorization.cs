@@ -13,6 +13,8 @@
 
 using System;
 using System.Threading;
+using System.Reflection;
+using System.Linq;
 using NATS.Client;
 using UnitTests;
 using Xunit;
@@ -25,12 +27,8 @@ namespace IntegrationTests
     /// </summary>
     public class TestAuthorization : TestSuite<AuthorizationSuiteContext>
     {
-        private readonly ITestOutputHelper output;
-
-        public TestAuthorization(ITestOutputHelper output, AuthorizationSuiteContext context) : base(context)
+        public TestAuthorization(AuthorizationSuiteContext context) : base(context)
         {
-            this.output = output;
-            Console.SetOut(new TestBase.ConsoleWriter(output));
         }
 
         int hitDisconnect;
@@ -105,6 +103,7 @@ namespace IntegrationTests
                 }
 
                 connectEncoded("space%20space");
+                connectEncoded("space+space");
                 connectEncoded("colon%3Acolon");
                 connectEncoded("quote%27quote");
                 connectEncoded("slash%2Fslash");
