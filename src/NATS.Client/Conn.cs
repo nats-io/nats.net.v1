@@ -1331,21 +1331,15 @@ namespace NATS.Client
 
             if (!string.IsNullOrEmpty(u))
             {
-                if (u.Contains(":"))
+                int at = u.IndexOf(':');
+                if (at == -1)
                 {
-                    string[] userpass = u.Split(':');
-                    if (userpass.Length > 0)
-                    {
-                        user = userpass[0];
-                    }
-                    if (userpass.Length > 1)
-                    {
-                        pass = userpass[1];
-                    }
+                    token = WebUtility.UrlDecode(u);
                 }
                 else
                 {
-                    token = u;
+                    user = WebUtility.UrlDecode(u.Substring(0, at));
+                    pass = WebUtility.UrlDecode(u.Substring(at + 1));
                 }
             }
             else
@@ -1409,6 +1403,9 @@ namespace NATS.Client
 
             if (opts.NoEcho && info.protocol < 1)
                 throw new NATSProtocolException("Echo is not supported by the server.");
+
+            var sb0 = new StringBuilder();
+            Console.WriteLine(info.AppendAsJsonTo(sb0));
 
             var sb = new StringBuilder().Append(IC.conProtoNoCRLF).Append(" ");
 
