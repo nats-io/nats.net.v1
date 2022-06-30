@@ -23,8 +23,8 @@ namespace NATS.Client.JetStream
         public string Name { get; private set; }
         public ConsumerConfiguration ConsumerConfiguration { get; private set; }
         public DateTime Created { get; private set; }
-        public SequencePair Delivered { get; private set; }
-        public SequencePair AckFloor { get; private set; }
+        public SequenceInfo Delivered { get; private set; }
+        public SequenceInfo AckFloor { get; private set; }
         public ulong NumPending { get; private set; }
         public long NumWaiting { get; private set; }
         public long NumAckPending { get; private set; }
@@ -54,8 +54,8 @@ namespace NATS.Client.JetStream
             ConsumerConfiguration = new ConsumerConfiguration(ciNode[ApiConstants.Config]);
             Name = ciNode[ApiConstants.Name].Value;
             Created = AsDate(ciNode[ApiConstants.Created]);
-            Delivered = new SequencePair(ciNode[ApiConstants.Delivered]);
-            AckFloor = new SequencePair(ciNode[ApiConstants.AckFloor]);
+            Delivered = new SequenceInfo(ciNode[ApiConstants.Delivered]);
+            AckFloor = new SequenceInfo(ciNode[ApiConstants.AckFloor]);
             NumPending = ciNode[ApiConstants.NumPending].AsUlong;
             NumWaiting = ciNode[ApiConstants.NumWaiting].AsLong;
             NumAckPending = ciNode[ApiConstants.NumAckPending].AsLong;
