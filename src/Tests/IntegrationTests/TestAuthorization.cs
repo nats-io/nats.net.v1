@@ -12,11 +12,13 @@
 // limitations under the License.
 
 using System;
-using NATS.Client;
 using System.Threading;
 using System.Reflection;
 using System.Linq;
+using NATS.Client;
+using UnitTests;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IntegrationTests
 {
@@ -25,18 +27,20 @@ namespace IntegrationTests
     /// </summary>
     public class TestAuthorization : TestSuite<AuthorizationSuiteContext>
     {
-        public TestAuthorization(AuthorizationSuiteContext context) : base(context) { }
+        public TestAuthorization(AuthorizationSuiteContext context) : base(context)
+        {
+        }
 
         int hitDisconnect;
 
-        private void connectAndFail(string url)
+        private void ConnectShouldFail(string url)
         {
             try
             {
                 hitDisconnect = 0;
                 Options opts = Context.GetTestOptions();
                 opts.Url = url;
-                opts.DisconnectedEventHandler += handleDisconnect;
+                opts.DisconnectedEventHandler += HandleDisconnect;
                 using (var c = Context.ConnectionFactory.CreateConnection(opts))
                 {
                     c.Close();
@@ -54,9 +58,17 @@ namespace IntegrationTests
             }
         }
 
-        private void handleDisconnect(object sender, ConnEventArgs e)
+        private void HandleDisconnect(object sender, ConnEventArgs e)
         {
             hitDisconnect++;
+        }
+
+        private void ConnectShouldSucceed(string url)
+        {
+            using (var c = Context.ConnectionFactory.CreateConnection(url))
+            {
+                c.Close();
+            }
         }
 
         [Fact]
@@ -64,8 +76,7 @@ namespace IntegrationTests
         {
             using (NATSServer.CreateWithConfig(Context.Server1.Port, "auth.conf"))
             {
-                using(var c = Context.ConnectionFactory.CreateConnection($"nats://username:password@localhost:{Context.Server1.Port}"))
-                    c.Close();
+                ConnectShouldSucceed($"nats://username:password@localhost:{Context.Server1.Port}");
             }
         }
 
@@ -74,10 +85,49 @@ namespace IntegrationTests
         {
             using (NATSServer.CreateWithConfig(Context.Server1.Port, "auth.conf"))
             {
-                connectAndFail($"nats://username@localhost:{Context.Server1.Port}");
-                connectAndFail($"nats://username:badpass@localhost:{Context.Server1.Port}");
-                connectAndFail(Context.Server1.Url);
-                connectAndFail($"nats://badname:password@localhost:{Context.Server1.Port}");
+                ConnectShouldFail($"nats://username@localhost:{Context.Server1.Port}");
+                ConnectShouldFail($"nats://username:badpass@localhost:{Context.Server1.Port}");
+                ConnectShouldFail(Context.Server1.Url);
+                ConnectShouldFail($"nats://badname:password@localhost:{Context.Server1.Port}");
+            }
+        }
+
+        [Fact]
+        public void TestEncodedPassword()
+        {
+            using (NATSServer.CreateWithConfig(Context.Server1.Port, "encoded_pass.conf"))
+            {
+                void connectEncoded(string encoded)
+                {
+                    ConnectShouldSucceed($"nats://u{encoded}:p{encoded}@localhost:{Context.Server1.Port}");
+                }
+
+                connectEncoded("space%20space");
+                connectEncoded("colon%3Acolon");
+                connectEncoded("colon%3acolon"); // just making sure lower case hex
+                connectEncoded("quote%27quote");
+                connectEncoded("slash%2Fslash");
+                connectEncoded("question%3Fquestion");
+                connectEncoded("pound%23pound");
+                connectEncoded("sqleft%5Bsqleft");
+                connectEncoded("sqright%5Dsqright");
+                connectEncoded("at%40at");
+                connectEncoded("bang%21bang");
+                connectEncoded("dollar%24dollar");
+                connectEncoded("amp%26amp");
+                connectEncoded("comma%2Ccomma");
+                connectEncoded("parenleft%28parenleft");
+                connectEncoded("parentright%29parentright");
+                connectEncoded("asterix%2Aasterix");
+                connectEncoded("plus%2Bplus");
+                connectEncoded("semi%3Bsemi");
+                connectEncoded("eq%3Deq");
+                connectEncoded("pct%25pct");
+#if !NET46
+                connectEncoded("%2b%3a%c2%a1%c2%a2%c2%a3%c2%a4%c2%a5%c2%a6%c2%a7%c2%a8%c2%a9%c2%aa%c2%ab%c2%ac%20%f0%9f%98%80");
+#endif
+                // a plus sign in a user or pass is a plus sign, not a space
+                Assert.Throws<NATSConnectionException>(() => connectEncoded("space+space"));
             }
         }
 
@@ -86,8 +136,8 @@ namespace IntegrationTests
         {
             using (NATSServer.Create(Context.Server1.Port, "-auth S3Cr3T0k3n!"))
             {
-                connectAndFail(Context.Server1.Url);
-                connectAndFail($"nats://invalid_token@localhost:{Context.Server1.Port}");
+                ConnectShouldFail(Context.Server1.Url);
+                ConnectShouldFail($"nats://invalid_token@localhost:{Context.Server1.Port}");
 
                 Context.ConnectionFactory.CreateConnection($"nats://S3Cr3T0k3n!@localhost:{Context.Server1.Port}").Close();
             }

@@ -1331,21 +1331,15 @@ namespace NATS.Client
 
             if (!string.IsNullOrEmpty(u))
             {
-                if (u.Contains(":"))
+                int at = u.IndexOf(':');
+                if (at == -1)
                 {
-                    string[] userpass = u.Split(':');
-                    if (userpass.Length > 0)
-                    {
-                        user = userpass[0];
-                    }
-                    if (userpass.Length > 1)
-                    {
-                        pass = userpass[1];
-                    }
+                    token = Uri.UnescapeDataString(u);
                 }
                 else
                 {
-                    token = u;
+                    user = Uri.UnescapeDataString(u.Substring(0, at));
+                    pass = Uri.UnescapeDataString(u.Substring(at + 1));
                 }
             }
             else
