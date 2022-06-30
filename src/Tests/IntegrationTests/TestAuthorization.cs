@@ -123,6 +123,7 @@ namespace IntegrationTests
                 connectEncoded("semi%3Bsemi");
                 connectEncoded("eq%3Deq");
                 connectEncoded("pct%25pct");
+                connectEncoded("utf8%F0%9F%98%80utf8");
 
                 // a plus sign in a user or pass is a plus sign, not a space
                 Assert.Throws<NATSConnectionException>(() => connectEncoded("space+space"));
