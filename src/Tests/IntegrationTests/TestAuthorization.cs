@@ -13,8 +13,12 @@
 
 using System;
 using System.Threading;
+using System.Reflection;
+using System.Linq;
 using NATS.Client;
+using UnitTests;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IntegrationTests
 {
