@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using Xunit;
@@ -26,11 +27,24 @@ namespace UnitTests.JetStream
             ConsumerInfo ci = new ConsumerInfo(json, false);
             Assert.Equal("foo-stream", ci.Stream);
             Assert.Equal("foo-consumer", ci.Name);
+            
+            SequencePair sp = ci.Delivered;
+            Assert.Equal(1u, sp.ConsumerSeq);
+            Assert.Equal(2u, sp.StreamSeq);
 
-            Assert.Equal(1u, ci.Delivered.ConsumerSeq);
-            Assert.Equal(2u, ci.Delivered.StreamSeq);
-            Assert.Equal(3u, ci.AckFloor.ConsumerSeq);
-            Assert.Equal(4u, ci.AckFloor.StreamSeq);
+            SequenceInfo sinfo = (SequenceInfo)sp;
+            Assert.Equal(1u, sinfo.ConsumerSeq);
+            Assert.Equal(2u, sinfo.StreamSeq);
+            Assert.Equal(AsDateTime("2022-06-29T19:33:21.163377Z"), sinfo.LastActive);
+
+            sp = ci.AckFloor;
+            Assert.Equal(3u, sp.ConsumerSeq);
+            Assert.Equal(4u, sp.StreamSeq);
+
+            sinfo = (SequenceInfo)sp;
+            Assert.Equal(3u, sinfo.ConsumerSeq);
+            Assert.Equal(4u, sinfo.StreamSeq);
+            Assert.Equal(AsDateTime("2022-06-29T20:33:21.163377Z"), sinfo.LastActive);
 
             Assert.Equal(24u, ci.NumPending);
             Assert.Equal(42, ci.NumAckPending);
@@ -44,6 +58,14 @@ namespace UnitTests.JetStream
             Assert.Equal(Duration.OfSeconds(30), c.AckWait);
             Assert.Equal(10, c.MaxDeliver);
             Assert.Equal(ReplayPolicy.Original, c.ReplayPolicy);
+
+            ClusterInfo clusterInfo = ci.ClusterInfo;
+            Assert.NotNull(clusterInfo);
+            Assert.Equal("clustername", clusterInfo.Name);
+            Assert.Equal("clusterleader", clusterInfo.Leader);
+            IList<Replica> reps = clusterInfo.Replicas;
+            Assert.NotNull(reps);
+            Assert.Equal(2, reps.Count);
         }
     }
 }

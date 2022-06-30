@@ -1,4 +1,4 @@
-// Copyright 2021 The NATS Authors
+// Copyright 2022 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at:
@@ -11,19 +11,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using NATS.Client.Internals.SimpleJSON;
+using static NATS.Client.Internals.JsonUtils;
 
 namespace NATS.Client.JetStream
 {
-    public class SequencePair
+    public sealed class SequenceInfo : SequencePair
     {
-        public ulong ConsumerSeq { get; }
-        public ulong StreamSeq { get; }
+        /// <summary>
+        /// The last time a message was delivered or acknowledged (for ack_floor)
+        /// </summary>
+        public DateTime LastActive { get; }
 
-        internal SequencePair(JSONNode spNode)
+        internal SequenceInfo(JSONNode spNode) : base(spNode)
         {
-            ConsumerSeq = spNode[ApiConstants.ConsumerSeq].AsUlong;
-            StreamSeq = spNode[ApiConstants.StreamSeq].AsUlong;
+            LastActive = AsDate(spNode[ApiConstants.LastActive]); 
         }
 
         public override string ToString()
@@ -31,6 +34,7 @@ namespace NATS.Client.JetStream
             return "{" +
                    "ConsumerSeq=" + ConsumerSeq +
                    ", StreamSeq=" + StreamSeq +
+                   ", LastActive=" + LastActive +
                    '}';
         }
     }
