@@ -54,6 +54,7 @@ namespace NATS.Client.JetStream
         internal const string DurableName = "durable_name";
         internal const string ErrCode = "err_code";
         internal const string Error = "error";
+        internal const string Errors = "errors";
         internal const string Expires = "expires";
         internal const string External = "external";
         internal const string Filter = "filter";
@@ -77,10 +78,12 @@ namespace NATS.Client.JetStream
         internal const string LastTs = "last_ts";
         internal const string Leader = "leader";
         internal const string Limit = "limit";
+        internal const string Limits = "limits";
         internal const string MaxAckPending = "max_ack_pending";
         internal const string MaxAge = "max_age";
         internal const string MaxBatch = "max_batch";
         internal const string MaxBytes = "max_bytes";
+        internal const string MaxBytesRequired = "max_bytes_required";
         internal const string MaxConsumers = "max_consumers";
         internal const string MaxDeliver = "max_deliver";
         internal const string MaxExpires = "max_expires";
@@ -93,6 +96,7 @@ namespace NATS.Client.JetStream
         internal const string MaxStreams = "max_streams";
         internal const string MaxWaiting = "max_waiting";
         internal const string Memory = "memory";
+        internal const string MemoryMaxStreamBytes = "memory_max_stream_bytes";
         internal const string Message = "message";
         internal const string Messages = "messages";
         internal const string Mirror = "mirror";
@@ -130,6 +134,7 @@ namespace NATS.Client.JetStream
         internal const string Sources = "sources";
         internal const string State = "state";
         internal const string Storage = "storage";
+        internal const string StorageMaxStreamBytes = "storage_max_stream_bytes";
         internal const string StreamName = "stream_name";
         internal const string StreamSeq = "stream_seq";
         internal const string Stream = "stream";
@@ -140,6 +145,7 @@ namespace NATS.Client.JetStream
         internal const string Success = "success";
         internal const string Tags = "tags";
         internal const string TemplateOwner = "template_owner";
+        internal const string Tiers = "tiers";
         internal const string Time = "time";
         internal const string Tls = "tls_required";
         internal const string Total = "total";
