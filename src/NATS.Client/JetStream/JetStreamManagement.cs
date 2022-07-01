@@ -138,6 +138,11 @@ namespace NATS.Client.JetStream
             return snr.Strings;
         }
 
+        public IList<string> GetStreamNamesBySubjectFilter(string subjectFilter)
+        {
+            return GetStreamNamesBySubjectFilterInternal(subjectFilter);
+        }
+
         public IList<StreamInfo> GetStreams()
         {
             StreamListReader slr = new StreamListReader();

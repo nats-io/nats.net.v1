@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
 using NATS.Client.Internals;
 
 namespace NATS.Client.JetStream
@@ -50,12 +51,21 @@ namespace NATS.Client.JetStream
             return new ConsumerInfo(m, true);
         }
 
-        public StreamInfo GetStreamInfoInternal(string streamName, StreamInfoOptions options)
+        internal StreamInfo GetStreamInfoInternal(string streamName, StreamInfoOptions options)
         {
             byte[] payload = options == null ? null : options.Serialize();
             string subj = string.Format(JetStreamConstants.JsapiStreamInfo, streamName);
             Msg m = RequestResponseRequired(subj, payload, Timeout);
             return new StreamInfo(m, true);
+        }
+
+        internal IList<string> GetStreamNamesBySubjectFilterInternal(string subjectFilter)
+        {
+            byte[] body = JsonUtils.SimpleMessageBody(ApiConstants.Subject, subjectFilter); 
+            Msg resp = RequestResponseRequired(JetStreamConstants.JsapiStreamNames, body, Timeout);
+            StreamNamesReader snr = new StreamNamesReader();
+            snr.Process(resp);
+            return snr.Strings;
         }
 
         // ----------------------------------------------------------------------------------------------------

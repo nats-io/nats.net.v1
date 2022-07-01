@@ -668,5 +668,50 @@ namespace IntegrationTests
                 Assert.Throws<NATSJetStreamException>(() => jsm.GetMessage(Stream(999), 1));
             });
         }
+
+        [Fact]
+        public void TestGetStreamNamesBySubjectFilter()
+        {
+            Context.RunInJsServer(c => {
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                
+                CreateMemoryStream(jsm, Stream(1), "foo");
+                CreateMemoryStream(jsm, Stream(2), "bar");
+                CreateMemoryStream(jsm, Stream(3), "a.a");
+                CreateMemoryStream(jsm, Stream(4), "a.b");
+
+                IList<string> list = jsm.GetStreamNamesBySubjectFilter("*");
+                AssertStreamNameList(list, 1, 2);
+
+                list = jsm.GetStreamNamesBySubjectFilter(">");
+                AssertStreamNameList(list, 1, 2, 3, 4);
+
+                list = jsm.GetStreamNamesBySubjectFilter("*.*");
+                AssertStreamNameList(list, 3, 4);
+
+                list = jsm.GetStreamNamesBySubjectFilter("a.>");
+                AssertStreamNameList(list, 3, 4);
+
+                list = jsm.GetStreamNamesBySubjectFilter("a.*");
+                AssertStreamNameList(list, 3, 4);
+
+                list = jsm.GetStreamNamesBySubjectFilter("foo");
+                AssertStreamNameList(list, 1);
+
+                list = jsm.GetStreamNamesBySubjectFilter("a.a");
+                AssertStreamNameList(list, 3);
+
+                list = jsm.GetStreamNamesBySubjectFilter("nomatch");
+                AssertStreamNameList(list);
+            });
+        }
+
+        private void AssertStreamNameList(IList<string> list, params int[] ids) {
+            Assert.NotNull(list);
+            Assert.Equal(ids.Length, list.Count);
+            foreach (int id in ids) {
+                Assert.Contains(Stream(id), list);
+            }
+        }
     }
 }

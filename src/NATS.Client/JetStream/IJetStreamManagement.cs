@@ -126,6 +126,13 @@ namespace NATS.Client.JetStream
         IList<string> GetStreamNames();
 
         /// <summary>
+        /// Get a list of stream names that have subjects matching the subject filter.
+        /// </summary>
+        /// <param name="subjectFilter">The subject. Wildcards are allowed.</param>
+        /// <returns></returns>
+        IList<string> GetStreamNamesBySubjectFilter(string subjectFilter);
+        
+        /// <summary>
         /// Gets stream information about all streams.
         /// </summary>
         /// <returns>An array of stream information objects.</returns>
