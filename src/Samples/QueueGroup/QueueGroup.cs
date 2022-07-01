@@ -127,10 +127,12 @@ namespace NATSExamples
 
                 while (received < count)
                 {
-                    received++;
                     Msg m = s.NextMessage();
+                    received++;
                     if (verbose)
+                    {
                         Console.WriteLine("Received Message: " + m);
+                    }
                 }
 
                 sw.Stop();
