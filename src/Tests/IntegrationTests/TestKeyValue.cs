@@ -39,7 +39,7 @@ namespace IntegrationTests
         [Fact]
         public void TestWorkFLow()
         {
-            DateTime now = DateTime.Now;
+            DateTime now = DateTime.UtcNow;
 
             string byteKey = "byteKey";
             string stringKey = "stringKey";
