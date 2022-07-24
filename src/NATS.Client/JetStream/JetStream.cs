@@ -86,7 +86,9 @@ namespace NATS.Client.JetStream
                 return null;
             }
             
-            return ProcessPublishResponse(Conn.Request(msg), options);
+            Duration timeout = options == null ? JetStreamOptions.RequestTimeout : options.StreamTimeout;
+            
+            return ProcessPublishResponse(Conn.Request(msg, timeout.Millis), options);
         }
 
         private async Task<PublishAck> PublishAsyncInternal(string subject, byte[] data, MsgHeader hdr, PublishOptions options)
