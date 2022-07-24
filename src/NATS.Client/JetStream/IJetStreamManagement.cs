@@ -127,6 +127,9 @@ namespace NATS.Client.JetStream
 
         /// <summary>
         /// Get a list of stream names that have subjects matching the subject filter.
+        ///
+        /// THIS API IS CONSIDERED EXPERIMENTAL AND SUBJECT TO CHANGE
+        ///
         /// </summary>
         /// <param name="subjectFilter">The subject. Wildcards are allowed.</param>
         /// <returns></returns>
