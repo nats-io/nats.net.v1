@@ -448,6 +448,13 @@ namespace IntegrationTests
                 cc = PrepForUpdateTest(jsm);
                 cc = ConsumerConfiguration.Builder(cc).WithMaxDeliver(4).Build();
                 AssertValidAddOrUpdate(jsm, cc);
+
+                if (c.ServerInfo.IsNewerVersionThan("2.8.4"))
+                {
+                    cc = PrepForUpdateTest(jsm);
+                    cc = ConsumerConfiguration.Builder(cc).WithFilterSubject(SUBJECT_STAR).Build();
+                    AssertValidAddOrUpdate(jsm, cc);
+                }
             });
         }
 
@@ -463,9 +470,12 @@ namespace IntegrationTests
                 cc = ConsumerConfiguration.Builder(cc).WithDeliverPolicy(DeliverPolicy.New).Build();
                 AssertInvalidConsumerUpdate(jsm, cc);
 
-                cc = PrepForUpdateTest(jsm);
-                cc = ConsumerConfiguration.Builder(cc).WithFilterSubject(SUBJECT_STAR).Build();
-                AssertInvalidConsumerUpdate(jsm, cc);
+                if (c.ServerInfo.IsSameOrOlderThanVersion("2.8.4"))
+                {
+                    cc = PrepForUpdateTest(jsm);
+                    cc = ConsumerConfiguration.Builder(cc).WithFilterSubject(SUBJECT_STAR).Build();
+                    AssertInvalidConsumerUpdate(jsm, cc);
+                }
 
                 cc = PrepForUpdateTest(jsm);
                 cc = ConsumerConfiguration.Builder(cc).WithIdleHeartbeat(Duration.OfMillis(111)).Build();
@@ -531,21 +541,18 @@ namespace IntegrationTests
                 CreateMemoryStream(jsm, STREAM, SUBJECT_STAR);
 
                 jsm.AddOrUpdateConsumer(STREAM, builder.WithFilterSubject(SubjectDot("A")).Build());
-                
-                Assert.Throws<NATSJetStreamException>(() => jsm.AddOrUpdateConsumer(STREAM,
-                    builder.WithFilterSubject(SubjectDot("not-match")).Build()));
+
+                if (c.ServerInfo.IsSameOrOlderThanVersion("2.8.4"))
+                {
+                    Assert.Throws<NATSJetStreamException>(() => jsm.AddOrUpdateConsumer(STREAM,
+                        builder.WithFilterSubject(SubjectDot("not-match")).Build()));
+                }
 
                 // gt subject
                 jsm.DeleteStream(STREAM);
                 CreateMemoryStream(jsm, STREAM, SUBJECT_GT);
 
                 jsm.AddOrUpdateConsumer(STREAM, builder.WithFilterSubject(SubjectDot("A")).Build());
-                
-                Assert.Throws<NATSJetStreamException>(() => jsm.AddOrUpdateConsumer(STREAM,
-                    builder.WithFilterSubject(SubjectDot("not-match")).Build()));
-
-                // try to filter against durable with mismatch, pull
-                IJetStream js = c.CreateJetStreamContext();
 
                 jsm.AddOrUpdateConsumer(STREAM, ConsumerConfiguration.Builder()
                     .WithDurable(Durable(42))

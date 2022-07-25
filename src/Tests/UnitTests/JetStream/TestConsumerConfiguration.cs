@@ -53,6 +53,8 @@ namespace UnitTests.JetStream
                 .WithInactiveThreshold(188)
                 .WithHeadersOnly(true)
                 .WithBackoff(1000, 2000, 3000)
+                .WithNumReplicas(5)
+                .WithMemStorage(true)
                 .Build();
 
             AssertAsBuilt(c, dt);
@@ -115,8 +117,10 @@ namespace UnitTests.JetStream
             Assert.Equal(73, c.MaxPullWaiting);
             Assert.Equal(55, c.MaxBatch);
             Assert.Equal(56, c.MaxBytes);
+            Assert.Equal(5, c.NumReplicas);
             Assert.True(c.FlowControl);
             Assert.True(c.HeadersOnly);
+            Assert.True(c.MemStorage);
             Assert.Equal(3, c.Backoff.Count);
             Assert.Equal(Duration.OfSeconds(1), c.Backoff[0]);
             Assert.Equal(Duration.OfSeconds(2), c.Backoff[1]);
@@ -145,13 +149,15 @@ namespace UnitTests.JetStream
             Assert.Equal(42, c.MaxAckPending);
             Assert.Equal("sample_freq-value", c.SampleFrequency);
             Assert.True(c.FlowControl);
-            Assert.Equal(128, c.MaxPullWaiting);
             Assert.True(c.HeadersOnly);
+            Assert.True(c.MemStorage);
+            Assert.Equal(128, c.MaxPullWaiting);
             Assert.Equal(99U, c.StartSeq);
             Assert.Equal(Duration.OfSeconds(40), c.MaxExpires);
             Assert.Equal(Duration.OfSeconds(50), c.InactiveThreshold);
             Assert.Equal(55, c.MaxBatch);
             Assert.Equal(56, c.MaxBytes);
+            Assert.Equal(5, c.NumReplicas);
             Assert.Equal(3, c.Backoff.Count);
             Assert.Equal(Duration.OfSeconds(1), c.Backoff[0]);
             Assert.Equal(Duration.OfSeconds(2), c.Backoff[1]);
@@ -179,12 +185,14 @@ namespace UnitTests.JetStream
 
             Assert.False(c.FlowControl);
             Assert.False(c.HeadersOnly);
+            Assert.False(c.MemStorage);
 
             Assert.Equal(-1, c.MaxDeliver);
             Assert.Equal(-1, c.MaxAckPending);
             Assert.Equal(-1, c.MaxPullWaiting);
             Assert.Equal(-1, c.MaxBatch);
             Assert.Equal(-1, c.MaxBytes);
+            Assert.Equal(-1, c.NumReplicas);
             Assert.Equal(0U, c.StartSeq);
             Assert.Equal(0U, c.RateLimitBps);
             Assert.Equal(0, c.Backoff.Count);
@@ -254,6 +262,9 @@ namespace UnitTests.JetStream
             AssertNotChange(Builder(orig).WithHeadersOnly(false).Build(), orig);
             AssertChange(Builder(orig).WithHeadersOnly(true).Build(), orig, "HeadersOnly");
 
+            AssertNotChange(Builder(orig).WithMemStorage(false).Build(), orig);
+            AssertChange(Builder(orig).WithMemStorage(true).Build(), orig, "MemStorage");
+
             AssertNotChange(Builder(orig).WithStartSequence(0U).Build(), orig);
             AssertNotChange(Builder(orig).WithStartSequence(null).Build(), orig);
             AssertChange(Builder(orig).WithStartSequence(1).Build(), orig, "StartSequence");
@@ -270,13 +281,16 @@ namespace UnitTests.JetStream
             AssertNotChange(Builder(orig).WithMaxAckPending(null).Build(), orig);
             AssertChange(Builder(orig).WithMaxAckPending(1).Build(), orig, "MaxAckPending");
 
-            AssertNotChange(Builder(orig).WithMaxPullWaiting(-1).Build(), orig);
+            AssertNotChange(Builder(orig).WithMaxPullWaiting(IntUnset).Build(), orig);
             AssertNotChange(Builder(orig).WithMaxPullWaiting(null).Build(), orig);
             AssertChange(Builder(orig).WithMaxPullWaiting(1).Build(), orig, "MaxPullWaiting");
 
-            AssertNotChange(Builder(orig).WithMaxBatch(-1).Build(), orig);
+            AssertNotChange(Builder(orig).WithMaxBatch(IntUnset).Build(), orig);
             AssertNotChange(Builder(orig).WithMaxBatch(null).Build(), orig);
             AssertChange(Builder(orig).WithMaxBatch(1).Build(), orig, "MaxBatch");
+
+            AssertNotChange(Builder(orig).WithNumReplicas(null).Build(), orig);
+            AssertChange(Builder(orig).WithNumReplicas(1).Build(), orig, "NumReplicas");
 
             AssertNotChange(Builder(orig).WithMaxBytes(-1).Build(), orig);
             AssertNotChange(Builder(orig).WithMaxBytes(null).Build(), orig);

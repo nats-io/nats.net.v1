@@ -51,8 +51,10 @@ namespace NATS.Client.JetStream
         internal int? _maxPullWaiting;
         internal int? _maxBatch;
         internal int? _maxBytes;
+        internal int? _numReplicas;
         internal bool? _flowControl;
         internal bool? _headersOnly;
+        internal bool? _memStorage;
 
         public DeliverPolicy DeliverPolicy => _deliverPolicy ?? DeliverPolicy.All;
         public AckPolicy AckPolicy => _ackPolicy ?? AckPolicy.Explicit;
@@ -78,8 +80,10 @@ namespace NATS.Client.JetStream
         public int MaxPullWaiting => GetOrUnset(_maxPullWaiting);
         public int MaxBatch => GetOrUnset(_maxBatch);
         public int MaxBytes => GetOrUnset(_maxBytes);
+        public int NumReplicas => GetOrUnset(_numReplicas);
         public bool FlowControl => _flowControl ?? false;
         public bool HeadersOnly => _headersOnly ?? false;
+        public bool MemStorage => _memStorage ?? false;
         public IList<Duration> Backoff { get; }
        
         internal ConsumerConfiguration(string json) : this(JSON.Parse(json)) {}
@@ -110,8 +114,10 @@ namespace NATS.Client.JetStream
             _maxPullWaiting = ccNode[ApiConstants.MaxWaiting].AsIntOr(IntUnset);
             _maxBatch = ccNode[ApiConstants.MaxBatch].AsIntOr(IntUnset);
             _maxBytes = ccNode[ApiConstants.MaxBytes].AsIntOr(IntUnset);
+            _numReplicas = ccNode[ApiConstants.NumReplicas].AsIntOr(IntUnset);
             _flowControl = ccNode[ApiConstants.FlowControl].AsBool;
             _headersOnly = ccNode[ApiConstants.HeadersOnly].AsBool;
+            _memStorage = ccNode[ApiConstants.MemStorage].AsBool;
 
             Backoff = DurationList(ccNode, ApiConstants.Backoff);
         }
@@ -136,6 +142,7 @@ namespace NATS.Client.JetStream
             InactiveThreshold = builder._inactiveThreshold;
             _flowControl = builder._flowControl;
             _headersOnly = builder._headersOnly;
+            _memStorage = builder._memStorage;
 
             _startSeq = builder._startSeq;
             _maxDeliver = builder._maxDeliver;
@@ -144,6 +151,7 @@ namespace NATS.Client.JetStream
             _maxPullWaiting = builder._maxPullWaiting;
             _maxBatch = builder._maxBatch;
             _maxBytes = builder._maxBytes;
+            _numReplicas = builder._numReplicas;
 
             Backoff = builder._backoff;
         }
@@ -176,6 +184,8 @@ namespace NATS.Client.JetStream
             AddField(o, ApiConstants.MaxExpires, MaxExpires);
             AddField(o, ApiConstants.InactiveThreshold, InactiveThreshold);
             AddField(o, ApiConstants.Backoff, Backoff);
+            AddField(o, ApiConstants.NumReplicas, NumReplicas);
+            AddField(o, ApiConstants.MemStorage, MemStorage);
 
             return o;
         }
@@ -189,6 +199,7 @@ namespace NATS.Client.JetStream
 
             if (_flowControl != null && _flowControl != server.FlowControl) { changes.Add("FlowControl"); }
             if (_headersOnly != null && _headersOnly != server.HeadersOnly) { changes.Add("HeadersOnly"); }
+            if (_memStorage != null && _memStorage != server.MemStorage) { changes.Add("MemStorage"); }
 
             if (_startSeq != null && !_startSeq.Equals(server.StartSeq)) { changes.Add("StartSequence"); }
             if (_rateLimitBps != null && !_rateLimitBps.Equals(server.RateLimitBps)) { changes.Add("RateLimitBps"); }
@@ -198,6 +209,7 @@ namespace NATS.Client.JetStream
             if (_maxPullWaiting != null && !_maxPullWaiting.Equals(server.MaxPullWaiting)) { changes.Add("MaxPullWaiting"); }
             if (_maxBatch != null && !_maxBatch.Equals(server.MaxBatch)) { changes.Add("MaxBatch"); }
             if (_maxBytes != null && !_maxBytes.Equals(server.MaxBytes)) { changes.Add("MaxBytes"); }
+            if (_numReplicas != null && !_numReplicas.Equals(server.NumReplicas)) { changes.Add("NumReplicas"); }
 
             if (AckWait != null && !AckWait.Equals(server.AckWait)) { changes.Add("AckWait"); }
             if (IdleHeartbeat != null && !IdleHeartbeat.Equals(server.IdleHeartbeat)) { changes.Add("IdleHeartbeat"); }
@@ -304,8 +316,10 @@ namespace NATS.Client.JetStream
             internal int? _maxPullWaiting;
             internal int? _maxBatch;
             internal int? _maxBytes;
+            internal int? _numReplicas;
             internal bool? _flowControl;
             internal bool? _headersOnly;
+            internal bool? _memStorage;
             internal IList<Duration> _backoff = new List<Duration>();
 
             public ConsumerConfigurationBuilder() {}
@@ -338,8 +352,10 @@ namespace NATS.Client.JetStream
                 _maxPullWaiting = cc._maxPullWaiting;
                 _maxBatch = cc._maxBatch;
                 _maxBytes = cc._maxBytes;
+                _numReplicas = cc._numReplicas;
                 _flowControl = cc._flowControl;
                 _headersOnly = cc._headersOnly;
+                _memStorage = cc._memStorage;
                 _backoff = new List<Duration>(cc.Backoff);
             }
 
@@ -682,12 +698,42 @@ namespace NATS.Client.JetStream
             }
 
             /// <summary>
+            /// Sets the number of replicas for the consumer. When set do not inherit the
+            /// replica count from the stream but specifically set it to this amount.
+            /// </summary>
+            /// <param name="numReplicas">number of replicas for the consumer</param>
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder WithNumReplicas(int? numReplicas)
+            {
+                if (numReplicas == null)
+                {
+                    _numReplicas = null;
+                }
+                else
+                {
+                    _numReplicas = ValidateNumberOfReplicas(numReplicas.Value);
+                }
+                return this;
+            }
+
+            /// <summary>
             /// Sets the headers only flag
             /// </summary>
             /// <param name="headersOnly">true to enable flow control.</param>
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithHeadersOnly(bool? headersOnly) {
                 _headersOnly = headersOnly;
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the mem storage flag to force the consumer state to be kept
+            /// in memory rather than inherit the setting from the stream
+            /// </summary>
+            /// <param name="memStorage">true to enable flow control.</param>
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder WithMemStorage(bool? memStorage) {
+                _memStorage = memStorage;
                 return this;
             }
 
