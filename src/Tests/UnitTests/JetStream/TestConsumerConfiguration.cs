@@ -247,7 +247,7 @@ namespace UnitTests.JetStream
             AssertNotChange(ccTest, ccTest);
             AssertChange(ccTest, orig, "FlowControl", "IdleHeartbeat");
 
-            ccTest = Builder(orig).WithStartTime(DateTime.Now).Build();
+            ccTest = Builder(orig).WithStartTime(DateTime.UtcNow).Build();
             AssertNotChange(ccTest, ccTest);
             AssertChange(ccTest, orig, "StartTime");
 

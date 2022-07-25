@@ -621,7 +621,7 @@ namespace IntegrationTests
                     .WithDeliverPolicy(DeliverPolicy.ByStartTime)
                     .WithDeliverSubject(Deliver(3))
                     .WithDurable(Durable(3))
-                    .WithStartTime(DateTime.Now.AddHours(1))
+                    .WithStartTime(DateTime.UtcNow.AddHours(1))
                     .Build();
                 jsm.AddOrUpdateConsumer(STREAM, cc);
 
@@ -677,7 +677,7 @@ namespace IntegrationTests
                 ChangeExPush(js, PushDurableBuilder().WithFlowControl(10000), "FlowControl");
                 ChangeExPush(js, PushDurableBuilder().WithHeadersOnly(true), "HeadersOnly");
 
-                ChangeExPush(js, PushDurableBuilder().WithStartTime(DateTime.Now), "StartTime");
+                ChangeExPush(js, PushDurableBuilder().WithStartTime(DateTime.UtcNow), "StartTime");
                 ChangeExPush(js, PushDurableBuilder().WithAckWait(Duration.OfMillis(1)), "AckWait");
                 ChangeExPush(js, PushDurableBuilder().WithDescription("x"), "Description");
                 ChangeExPush(js, PushDurableBuilder().WithSampleFrequency("x"), "SampleFrequency");

@@ -37,9 +37,9 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public void TestWorkFLow()
+        public void TestWorkFlow()
         {
-            DateTime now = DateTime.Now;
+            DateTime utcNow = DateTime.UtcNow;
 
             string byteKey = "byteKey";
             string stringKey = "stringKey";
@@ -117,13 +117,13 @@ namespace IntegrationTests
 
                 // entry gives detail about latest entry of the key
                 byteHistory.Add(
-                    AssertEntry(BUCKET, byteKey, KeyValueOperation.Put, 1, byteValue1, now, kv.Get(byteKey)));
+                    AssertEntry(BUCKET, byteKey, KeyValueOperation.Put, 1, byteValue1, utcNow, kv.Get(byteKey)));
 
                 stringHistory.Add(
-                    AssertEntry(BUCKET, stringKey, KeyValueOperation.Put, 2, stringValue1, now, kv.Get(stringKey)));
+                    AssertEntry(BUCKET, stringKey, KeyValueOperation.Put, 2, stringValue1, utcNow, kv.Get(stringKey)));
 
                 longHistory.Add(
-                    AssertEntry(BUCKET, longKey, KeyValueOperation.Put, 3, "1", now, kv.Get(longKey)));
+                    AssertEntry(BUCKET, longKey, KeyValueOperation.Put, 3, "1", utcNow, kv.Get(longKey)));
 
                 // history gives detail about the key
                 AssertHistory(byteHistory, kv.History(byteKey));
@@ -139,7 +139,7 @@ namespace IntegrationTests
                 kv.Delete(byteKey);
 
                 byteHistory.Add(
-                    AssertEntry(BUCKET, byteKey, KeyValueOperation.Delete, 4, null, now, kv.Get(byteKey)));
+                    AssertEntry(BUCKET, byteKey, KeyValueOperation.Delete, 4, null, utcNow, kv.Get(byteKey)));
                 AssertHistory(byteHistory, kv.History(byteKey));
 
                 // let's check the bucket info
@@ -170,15 +170,15 @@ namespace IntegrationTests
 
                 // entry and history after update
                 byteHistory.Add(
-                    AssertEntry(BUCKET, byteKey, KeyValueOperation.Put, 5, byteValue2, now, kv.Get(byteKey)));
+                    AssertEntry(BUCKET, byteKey, KeyValueOperation.Put, 5, byteValue2, utcNow, kv.Get(byteKey)));
                 AssertHistory(byteHistory, kv.History(byteKey));
 
                 stringHistory.Add(
-                    AssertEntry(BUCKET, stringKey, KeyValueOperation.Put, 6, stringValue2, now, kv.Get(stringKey)));
+                    AssertEntry(BUCKET, stringKey, KeyValueOperation.Put, 6, stringValue2, utcNow, kv.Get(stringKey)));
                 AssertHistory(stringHistory, kv.History(stringKey));
 
                 longHistory.Add(
-                    AssertEntry(BUCKET, longKey, KeyValueOperation.Put, 7, "2", now, kv.Get(longKey)));
+                    AssertEntry(BUCKET, longKey, KeyValueOperation.Put, 7, "2", utcNow, kv.Get(longKey)));
                 AssertHistory(longHistory, kv.History(longKey));
 
                 // let's check the bucket info
@@ -192,7 +192,7 @@ namespace IntegrationTests
                 Assert.Equal(3, lvalue);
 
                 longHistory.Add(
-                    AssertEntry(BUCKET, longKey, KeyValueOperation.Put, 8, "3", now, kv.Get(longKey)));
+                    AssertEntry(BUCKET, longKey, KeyValueOperation.Put, 8, "3", utcNow, kv.Get(longKey)));
                 AssertHistory(longHistory, kv.History(longKey));
 
                 status = kvm.GetBucketInfo(BUCKET);
@@ -208,7 +208,7 @@ namespace IntegrationTests
                 // history only retains 3 records
                 longHistory.RemoveAt(0);
                 longHistory.Add(
-                    AssertEntry(BUCKET, longKey, KeyValueOperation.Put, 9, "4", now, kv.Get(longKey)));
+                    AssertEntry(BUCKET, longKey, KeyValueOperation.Put, 9, "4", utcNow, kv.Get(longKey)));
                 AssertHistory(longHistory, kv.History(longKey));
 
                 // record count does not increase
@@ -223,7 +223,7 @@ namespace IntegrationTests
                 kv.Purge(longKey);
                 longHistory.Clear();
                 longHistory.Add(
-                    AssertEntry(BUCKET, longKey, KeyValueOperation.Purge, 10, null, now, kv.Get(longKey)));
+                    AssertEntry(BUCKET, longKey, KeyValueOperation.Purge, 10, null, utcNow, kv.Get(longKey)));
                 AssertHistory(longHistory, kv.History(longKey));
 
                 status = kvm.GetBucketInfo(BUCKET);
@@ -236,7 +236,7 @@ namespace IntegrationTests
                 kv.Purge(byteKey);
                 byteHistory.Clear();
                 byteHistory.Add(
-                    AssertEntry(BUCKET, byteKey, KeyValueOperation.Purge, 11, null, now, kv.Get(byteKey)));
+                    AssertEntry(BUCKET, byteKey, KeyValueOperation.Purge, 11, null, utcNow, kv.Get(byteKey)));
                 AssertHistory(byteHistory, kv.History(byteKey));
 
                 status = kvm.GetBucketInfo(BUCKET);
@@ -249,7 +249,7 @@ namespace IntegrationTests
                 kv.Purge(stringKey);
                 stringHistory.Clear();
                 stringHistory.Add(
-                    AssertEntry(BUCKET, stringKey, KeyValueOperation.Purge, 12, null, now, kv.Get(stringKey)));
+                    AssertEntry(BUCKET, stringKey, KeyValueOperation.Purge, 12, null, utcNow, kv.Get(stringKey)));
                 AssertHistory(stringHistory, kv.History(stringKey));
 
                 status = kvm.GetBucketInfo(BUCKET);
@@ -275,23 +275,23 @@ namespace IntegrationTests
                 // put some more
                 Assert.Equal(13U, kv.Put(longKey, 110));
                 longHistory.Add(
-                    AssertEntry(BUCKET, longKey, KeyValueOperation.Put, 13, "110", now, kv.Get(longKey)));
+                    AssertEntry(BUCKET, longKey, KeyValueOperation.Put, 13, "110", utcNow, kv.Get(longKey)));
 
                 Assert.Equal(14U, kv.Put(longKey, 111));
                 longHistory.Add(
-                    AssertEntry(BUCKET, longKey, KeyValueOperation.Put, 14, "111", now, kv.Get(longKey)));
+                    AssertEntry(BUCKET, longKey, KeyValueOperation.Put, 14, "111", utcNow, kv.Get(longKey)));
 
                 Assert.Equal(15U, kv.Put(longKey, 112));
                 longHistory.Add(
-                    AssertEntry(BUCKET, longKey, KeyValueOperation.Put, 15, "112", now, kv.Get(longKey)));
+                    AssertEntry(BUCKET, longKey, KeyValueOperation.Put, 15, "112", utcNow, kv.Get(longKey)));
 
                 Assert.Equal(16U, kv.Put(stringKey, stringValue1));
                 stringHistory.Add(
-                    AssertEntry(BUCKET, stringKey, KeyValueOperation.Put, 16, stringValue1, now, kv.Get(stringKey)));
+                    AssertEntry(BUCKET, stringKey, KeyValueOperation.Put, 16, stringValue1, utcNow, kv.Get(stringKey)));
 
                 Assert.Equal(17U, kv.Put(stringKey, stringValue2));
                 stringHistory.Add(
-                    AssertEntry(BUCKET, stringKey, KeyValueOperation.Put, 17, stringValue2, now, kv.Get(stringKey)));
+                    AssertEntry(BUCKET, stringKey, KeyValueOperation.Put, 17, stringValue2, utcNow, kv.Get(stringKey)));
 
                 AssertHistory(longHistory, kv.History(longKey));
                 AssertHistory(stringHistory, kv.History(stringKey));
@@ -686,7 +686,7 @@ namespace IntegrationTests
             }
         }
 
-        private KeyValueEntry AssertEntry(string bucket, string key, KeyValueOperation op, ulong seq, string value, DateTime now, KeyValueEntry entry) {
+        private KeyValueEntry AssertEntry(string bucket, string key, KeyValueOperation op, ulong seq, string value, DateTime utcNow, KeyValueEntry entry) {
             Assert.Equal(bucket, entry.Bucket);
             Assert.Equal(key, entry.Key);
             Assert.Equal(op, entry.Operation);
@@ -697,7 +697,7 @@ namespace IntegrationTests
             else {
                 Assert.Null(entry.Value);
             }
-            Assert.True(now.CompareTo(entry.Created) < 0);
+            Assert.True(utcNow.CompareTo(entry.Created.ToUniversalTime()) < 0);
             return entry;
         }
 
