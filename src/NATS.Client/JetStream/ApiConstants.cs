@@ -98,6 +98,7 @@ namespace NATS.Client.JetStream
         internal const string MaxWaiting = "max_waiting";
         internal const string Memory = "memory";
         internal const string MemoryMaxStreamBytes = "memory_max_stream_bytes";
+        internal const string MemStorage = "mem_storage";
         internal const string Message = "message";
         internal const string Messages = "messages";
         internal const string Mirror = "mirror";

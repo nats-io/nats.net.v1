@@ -79,16 +79,20 @@ namespace NATS.Client.JetStream
             }
         }
 
-        internal bool IsNewerVersionThan(string vTarget) {
+        public bool IsNewerVersionThan(string vTarget) {
             return String.Compare(GetComparableVersion(Version), GetComparableVersion(vTarget), StringComparison.Ordinal) > 0;
         }
 
-        internal bool IsSameVersion(string vTarget) {
+        public bool IsSameVersion(string vTarget) {
             return String.Compare(GetComparableVersion(Version), GetComparableVersion(vTarget), StringComparison.Ordinal) == 0;
         }
 
-        internal bool IsOlderThanVersion(string vTarget) {
+        public bool IsOlderThanVersion(string vTarget) {
             return String.Compare(GetComparableVersion(Version), GetComparableVersion(vTarget), StringComparison.Ordinal) < 0;
+        }
+
+        public bool IsSameOrOlderThanVersion(string vTarget) {
+            return String.Compare(GetComparableVersion(Version), GetComparableVersion(vTarget), StringComparison.Ordinal) <= 0;
         }
     }
 }
