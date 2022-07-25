@@ -286,7 +286,7 @@ namespace UnitTests.JetStream
         [Fact]
         public void TestSource()
         {
-            DateTime now = DateTime.Now;
+            DateTime now = DateTime.UtcNow;
             Source s = new Source("name1", 1, now, "fs1", new External("api1", "deliver1"));
             Assert.Equal("name1", s.Name);
             Assert.Equal(1U, s.StartSeq);
@@ -295,7 +295,7 @@ namespace UnitTests.JetStream
             Assert.Equal("api1", s.External.Api);
             Assert.Equal("deliver1", s.External.Deliver);
             
-            now = DateTime.Now;
+            now = DateTime.UtcNow;
             s = Source.Builder()
                 .WithName("name2")
                 .WithStartSeq(2)
@@ -318,7 +318,7 @@ namespace UnitTests.JetStream
         [Fact]
         public void TestMirror()
         {
-            DateTime now = DateTime.Now;
+            DateTime now = DateTime.UtcNow;
             Mirror m = new Mirror("name1", 1, now, "fs1", new External("api1", "deliver1"));
             Assert.Equal("name1", m.Name);
             Assert.Equal(1U, m.StartSeq);
@@ -327,7 +327,7 @@ namespace UnitTests.JetStream
             Assert.Equal("api1", m.External.Api);
             Assert.Equal("deliver1", m.External.Deliver);
             
-            now = DateTime.Now;
+            now = DateTime.UtcNow;
             m = Mirror.Builder()
                 .WithName("name2")
                 .WithStartSeq(2)
