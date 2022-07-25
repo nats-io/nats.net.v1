@@ -421,11 +421,8 @@ namespace NATS.Client.JetStream
 
         private string LookupStreamBySubject(string subject)
         {
-            byte[] body = JsonUtils.SimpleMessageBody(ApiConstants.Subject, subject); 
-            Msg resp = RequestResponseRequired(JetStreamConstants.JsapiStreamNames, body, Timeout);
-            StreamNamesReader snr = new StreamNamesReader();
-            snr.Process(resp);
-            return snr.Strings.Count == 1 ? snr.Strings[0] : null; 
+            IList<string> list = GetStreamNamesBySubjectFilterInternal(subject);
+            return list.Count == 1 ? list[0] : null; 
         }
         
         private string LookupStreamSubject(string stream)
