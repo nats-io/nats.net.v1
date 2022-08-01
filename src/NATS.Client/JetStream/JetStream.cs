@@ -199,7 +199,7 @@ namespace NATS.Client.JetStream
                     throw JsSubFcHbNotValidPull.Instance();
                 }
                 if (qgroup != null) {
-                    throw JsSubFcHbHbNotValidQueue.Instance();
+                    throw JsSubFcHbNotValidQueue.Instance();
                 }
             }
 
