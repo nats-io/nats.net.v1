@@ -253,7 +253,7 @@ namespace NATS.Client
         public static readonly ClientExDetail JsSoOrderedNotAllowedWithDeliverGroup = new ClientExDetail(So, 90105, "Deliver group is not allowed with an ordered consumer.");
         public static readonly ClientExDetail JsSoOrderedNotAllowedWithDurable = new ClientExDetail(So, 90106, "Durable is not allowed with an ordered consumer.");
         public static readonly ClientExDetail JsSoOrderedNotAllowedWithDeliverSubject = new ClientExDetail(So, 90107, "Deliver subject is not allowed with an ordered consumer.");
-        public static readonly ClientExDetail JsSoOrderedRequiresAckPolicyNone = new ClientExDetail(So, 90108, "Deliver subject is not allowed with an ordered consumer.");
+        public static readonly ClientExDetail JsSoOrderedRequiresAckPolicyNone = new ClientExDetail(So, 90108, "Ordered consumer requires Ack Policy None.");
         public static readonly ClientExDetail JsSoOrderedRequiresMaxDeliver = new ClientExDetail(So, 90109, "Max deliver is limited to 1 with an ordered consumer.");
 
         private const string Sub = "SUB";
