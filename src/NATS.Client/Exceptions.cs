@@ -283,7 +283,7 @@ namespace NATS.Client
             return new NATSJetStreamClientException(new ClientExDetail(this, extraMessage));
         }
 
-        [Obsolete("constant name had type, replaced with JsSubFcHbNotValidQueue")]
+        [Obsolete("constant name had typo, replaced with JsSubFcHbNotValidQueue")]
         public static readonly ClientExDetail JsSubFcHbHbNotValidQueue = new ClientExDetail(Sub, 90006, "Flow Control and/or heartbeat is not valid in queue mode.");
     }
 }
