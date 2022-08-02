@@ -13,6 +13,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text;
 using NATS.Client;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
@@ -60,7 +61,7 @@ namespace IntegrationTests
                 Assert.Equal(-1, sc.MaxConsumers);
                 Assert.Equal(-1, sc.MaxMsgs);
                 Assert.Equal(-1, sc.MaxBytes);
-                Assert.Equal(-1, sc.MaxValueSize);
+                Assert.Equal(-1, sc.MaxMsgSize);
                 Assert.Equal(1, sc.Replicas);
 
                 Assert.Equal(Duration.Zero, sc.MaxAge);
@@ -108,7 +109,7 @@ namespace IntegrationTests
                 Assert.Equal(-1, sc.MaxConsumers);
                 Assert.Equal(-1, sc.MaxMsgs);
                 Assert.Equal(-1, sc.MaxBytes);
-                Assert.Equal(-1, sc.MaxValueSize);
+                Assert.Equal(-1, sc.MaxMsgSize);
                 Assert.Equal(1, sc.Replicas);
 
                 Assert.Equal(Duration.Zero, sc.MaxAge);
@@ -140,7 +141,7 @@ namespace IntegrationTests
                 Assert.Equal(Subject(0), sc.Subjects[0]);
                 Assert.Equal(Subject(1), sc.Subjects[1]);
                 Assert.Equal(-1, sc.MaxBytes);
-                Assert.Equal(-1, sc.MaxValueSize);
+                Assert.Equal(-1, sc.MaxMsgSize);
                 Assert.Equal(Duration.Zero, sc.MaxAge);
                 Assert.Equal(StorageType.Memory, sc.StorageType);
                 Assert.Equal(DiscardPolicy.Old, sc.DiscardPolicy);
@@ -172,7 +173,7 @@ namespace IntegrationTests
                 Assert.Equal(Subject(1), sc.Subjects[1]);
                 Assert.Equal(Subject(2), sc.Subjects[2]);
                 Assert.Equal(43u, sc.MaxBytes);
-                Assert.Equal(44, sc.MaxValueSize);
+                Assert.Equal(44, sc.MaxMsgSize);
                 Assert.Equal(Duration.OfDays(100), sc.MaxAge);
                 Assert.Equal(StorageType.Memory, sc.StorageType);
                 Assert.Equal(DiscardPolicy.New, sc.DiscardPolicy);
@@ -180,7 +181,6 @@ namespace IntegrationTests
                 Assert.True(sc.NoAck);
                 Assert.Equal(Duration.OfMinutes(3), sc.DuplicateWindow);
                 Assert.Empty(sc.TemplateOwner);
-
             });
         }
         
@@ -719,6 +719,113 @@ namespace IntegrationTests
             foreach (int id in ids) {
                 Assert.Contains(Stream(id), list);
             }
+        }
+
+        [Fact]
+        public void TestConsumerReplica()
+        {
+            Context.RunInJsServer(c => {
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                CreateMemoryStream(jsm, STREAM, Subject(0), Subject(1));
+
+                ConsumerConfiguration cc0 = ConsumerConfiguration.Builder()
+                    .WithDurable(Durable(0))
+                    .Build();
+                ConsumerInfo ci = jsm.AddOrUpdateConsumer(STREAM, cc0);
+
+                // server returns 0 when value is not set
+                Assert.Equal(0, ci.ConsumerConfiguration.NumReplicas);
+                
+                ConsumerConfiguration cc1 = ConsumerConfiguration.Builder()
+                    .WithDurable(Durable(0))
+                    .WithNumReplicas(1)
+                    .Build();
+                ci = jsm.AddOrUpdateConsumer(STREAM, cc1);
+                Assert.Equal(1, ci.ConsumerConfiguration.NumReplicas);
+            });
+        }
+
+        [Fact]
+        public void TestGetDirect()
+        {
+            Context.RunInJsServer(c => {
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+
+                StreamConfiguration sc = StreamConfiguration.Builder()
+                    .WithName(STREAM)
+                    .WithStorageType(StorageType.Memory)
+                    .WithSubjects(Subject(1), Subject(2))
+                    .WithAllowDirect(true)
+                    .Build();
+
+                jsm.AddStream(sc);
+
+                IJetStream js = c.CreateJetStreamContext();
+
+                js.Publish(Subject(1), Encoding.UTF8.GetBytes("s1-q1"));
+                js.Publish(Subject(2), Encoding.UTF8.GetBytes("s2-q2"));
+                js.Publish(Subject(1), Encoding.UTF8.GetBytes("s1-q3"));
+                js.Publish(Subject(2), Encoding.UTF8.GetBytes("s2-q4"));
+                js.Publish(Subject(1), Encoding.UTF8.GetBytes("s1-q5"));
+                js.Publish(Subject(2), Encoding.UTF8.GetBytes("s2-q6"));
+
+                AssertDirect(1, 1, jsm.GetMessageDirect(STREAM, MessageGetRequest.ForSequence(1)));
+                AssertDirect(1, 5, jsm.GetMessageDirect(STREAM, MessageGetRequest.LastForSubject(Subject(1))));
+                AssertDirect(2, 6, jsm.GetMessageDirect(STREAM, MessageGetRequest.LastForSubject(Subject(2))));
+
+                AssertDirect(1, 1, jsm.GetMessageDirect(STREAM, MessageGetRequest.NextForSubject(0, Subject(1))));
+                AssertDirect(2, 2, jsm.GetMessageDirect(STREAM, MessageGetRequest.NextForSubject(0, Subject(2))));
+                AssertDirect(1, 1, jsm.GetMessageDirect(STREAM, MessageGetRequest.FirstForSubject(Subject(1))));
+                AssertDirect(2, 2, jsm.GetMessageDirect(STREAM, MessageGetRequest.FirstForSubject(Subject(2))));
+
+                AssertDirect(1, 1, jsm.GetMessageDirect(STREAM, MessageGetRequest.NextForSubject(1, Subject(1))));
+                AssertDirect(2, 2, jsm.GetMessageDirect(STREAM, MessageGetRequest.NextForSubject(1, Subject(2))));
+
+                AssertDirect(1, 3, jsm.GetMessageDirect(STREAM, MessageGetRequest.NextForSubject(2, Subject(1))));
+                AssertDirect(2, 2, jsm.GetMessageDirect(STREAM, MessageGetRequest.NextForSubject(2, Subject(2))));
+
+                AssertDirect(1, 5, jsm.GetMessageDirect(STREAM, MessageGetRequest.NextForSubject(5, Subject(1))));
+                AssertDirect(2, 6, jsm.GetMessageDirect(STREAM, MessageGetRequest.NextForSubject(5, Subject(2))));
+
+                AssertStatus(408, jsm.GetMessageDirect(STREAM, MessageGetRequest.ForSequence(0)));
+                AssertStatus(404, jsm.GetMessageDirect(STREAM, MessageGetRequest.ForSequence(9)));
+                AssertStatus(404, jsm.GetMessageDirect(STREAM, MessageGetRequest.LastForSubject("not-a-subject")));
+                AssertStatus(404, jsm.GetMessageDirect(STREAM, MessageGetRequest.FirstForSubject("not-a-subject")));
+                AssertStatus(404, jsm.GetMessageDirect(STREAM, MessageGetRequest.NextForSubject(9, Subject(1))));
+                AssertStatus(404, jsm.GetMessageDirect(STREAM, MessageGetRequest.NextForSubject(1, "not-a-subject")));
+
+                sc = StreamConfiguration.Builder()
+                    .WithName(Stream(3))
+                    .WithStorageType(StorageType.Memory)
+                    .WithSubjects(Subject(3))
+                    .Build();
+
+                jsm.AddStream(sc);
+
+                js.Publish(Subject(3), Encoding.UTF8.GetBytes("data1"));
+                js.Publish(Subject(3), Encoding.UTF8.GetBytes("data2"));
+                js.Publish(Subject(3), Encoding.UTF8.GetBytes("data3"));
+
+                Assert.Throws<NATSTimeoutException>(() => jsm.GetMessageDirect(Stream(2), MessageGetRequest.ForSequence(0)));
+                Assert.Throws<NATSTimeoutException>(() => jsm.GetMessageDirect(Stream(2), MessageGetRequest.ForSequence(1)));
+                Assert.Throws<NATSTimeoutException>(() => jsm.GetMessageDirect(Stream(2), MessageGetRequest.LastForSubject(Subject(3))));
+                Assert.Throws<NATSTimeoutException>(() => jsm.GetMessageDirect(Stream(2), MessageGetRequest.NextForSubject(1, Subject(3))));
+            });
+        }
+
+        private void AssertStatus(int status, Msg statusMsg) {
+            Assert.True(statusMsg.HasStatus);
+            Assert.Equal(status, statusMsg.Status.Code);
+        }
+
+        private void AssertDirect(int subj, long seq, Msg m)
+        {
+            MsgHeader h = m.Header;
+            Assert.Equal(STREAM, h[JetStreamConstants.NatsStream]);
+            Assert.Equal(Subject(subj), h[JetStreamConstants.NatsSubject]);
+            Assert.Equal("" + seq, h[JetStreamConstants.NatsSequence]);
+            Assert.NotNull(h[JetStreamConstants.NatsTimestamp]);
+            Assert.Equal("s" + subj + "-q" + seq, Encoding.UTF8.GetString(m.Data));
         }
     }
 }

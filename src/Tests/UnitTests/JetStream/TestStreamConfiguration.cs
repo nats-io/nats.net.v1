@@ -37,13 +37,13 @@ namespace UnitTests.JetStream
         {
             StreamConfiguration testSc = getTestConfiguration();
             // from json
-            Validate(testSc);
+            Validate(testSc, false);
 
             // Validate(new StreamConfiguration(testSc.ToJsonNode()));
-            Validate(new StreamConfiguration(testSc.ToJsonNode().ToString()));
+            Validate(new StreamConfiguration(testSc.ToJsonNode().ToString()), false);
 
             StreamConfiguration.StreamConfigurationBuilder builder = StreamConfiguration.Builder(testSc);
-            Validate(builder.Build());
+            Validate(builder.Build(), false);
             
             builder.WithName(testSc.Name)
                     .WithSubjects(testSc.Subjects)
@@ -53,7 +53,7 @@ namespace UnitTests.JetStream
                     .WithMaxMessagesPerSubject(testSc.MaxMsgsPerSubject)
                     .WithMaxBytes(testSc.MaxBytes)
                     .WithMaxAge(testSc.MaxAge)
-                    .WithMaxMsgSize(testSc.MaxValueSize)
+                    .WithMaxMsgSize(testSc.MaxMsgSize)
                     .WithStorageType(testSc.StorageType)
                     .WithReplicas(testSc.Replicas)
                     .WithNoAck(testSc.NoAck)
@@ -64,14 +64,14 @@ namespace UnitTests.JetStream
                     .WithMirror(testSc.Mirror)
                     .WithSources(testSc.Sources)
                 ;
-            Validate(builder.Build());
-            Validate(builder.AddSources((Source)null).Build());
+            Validate(builder.Build(), false);
+            Validate(builder.AddSources((Source)null).Build(), false);
 
             List<Source> sources = new List<Source>(testSc.Sources);
             sources.Add(null);
             Source copy = new Source(sources[0].ToJsonNode());
             sources.Add(copy);
-            Validate(builder.AddSources(sources).Build());
+            Validate(builder.AddSources(sources).Build(), false);
         }
 
         [Fact]
@@ -201,51 +201,62 @@ namespace UnitTests.JetStream
             Assert.Equal(DiscardPolicy.Old, builder.Build().DiscardPolicy);
         }
 
-        private void Validate(StreamConfiguration sc)
+        private void Validate(StreamConfiguration sc, bool serverTest)
         {
-            Assert.Equal("sname", sc.Name);
-            Assert.Collection(sc.Subjects,
-                item => item.Equals("foo"),
-                item => item.Equals("bar"));
+            {
+                Assert.Equal("sname", sc.Name);
+                Assert.Equal("blah blah", sc.Description);
+                Assert.Collection(sc.Subjects,
+                    item => item.Equals("foo"),
+                    item => item.Equals("bar"));
 
-            Assert.Equal(RetentionPolicy.Interest, sc.RetentionPolicy);
-            Assert.Equal(730, sc.MaxConsumers);
-            Assert.Equal(731, sc.MaxMsgs);
-            Assert.Equal(7311, sc.MaxMsgsPerSubject);
-            Assert.Equal(732, sc.MaxBytes);
-            Assert.Equal(Duration.OfNanos(42000000000L), sc.MaxAge);
-            Assert.Equal(734, sc.MaxValueSize);
-            Assert.Equal(StorageType.Memory, sc.StorageType);
-            Assert.Equal(5, sc.Replicas);
-            Assert.False(sc.NoAck);
-            Assert.Equal("twnr", sc.TemplateOwner);
-            Assert.Equal(DiscardPolicy.New, sc.DiscardPolicy);
-            Assert.Equal(Duration.OfNanos(73000000000L), sc.DuplicateWindow);
+                Assert.Equal(RetentionPolicy.Interest, sc.RetentionPolicy);
+                Assert.Equal(730, sc.MaxConsumers);
+                Assert.Equal(731, sc.MaxMsgs);
+                Assert.Equal(741, sc.MaxMsgsPerSubject);
+                Assert.Equal(732, sc.MaxBytes);
+                Assert.Equal(Duration.OfNanos(43000000000L), sc.MaxAge);
+                Assert.Equal(Duration.OfNanos(42000000000L), sc.DuplicateWindow);
+                Assert.Equal(734, sc.MaxMsgSize);
+                Assert.Equal(StorageType.Memory, sc.StorageType);
+                Assert.Equal(DiscardPolicy.New, sc.DiscardPolicy);
 
-            Assert.NotNull(sc.Placement);
-            Assert.Equal("clstr", sc.Placement.Cluster);
-            Assert.Collection(sc.Placement.Tags, item => item.Equals("tag1"), item => item.Equals("tag2"));
+                Assert.NotNull(sc.Placement);
+                Assert.Equal("clstr", sc.Placement.Cluster);
+                Assert.Collection(sc.Placement.Tags, item => item.Equals("tag1"), item => item.Equals("tag2"));
 
-            DateTime zdt = AsDateTime("2020-11-05T19:33:21.163377Z");
+                DateTime zdt = AsDateTime("2020-11-05T19:33:21.163377Z");
 
-            Assert.NotNull(sc.Mirror);
-            Assert.Equal("eman", sc.Mirror.Name);
-            Assert.Equal(736u, sc.Mirror.StartSeq);
-            Assert.Equal(zdt, sc.Mirror.StartTime);
-            Assert.Equal("mfsub", sc.Mirror.FilterSubject);
+                if (serverTest)
+                {
+                    Assert.Equal(1, sc.Replicas);
+                }
+                else
+                {
+                    Assert.True(sc.NoAck);
+                    Assert.True(sc.Sealed);
+                    Assert.True(sc.DenyDelete);
+                    Assert.True(sc.DenyPurge);
+                    Assert.True(sc.AllowRollup);
+                    Assert.True(sc.AllowDirect);
 
-            Assert.NotNull(sc.Mirror.External);
-            Assert.Equal("apithing", sc.Mirror.External.Api);
-            Assert.Equal("dlvrsub", sc.Mirror.External.Deliver);
+                    Assert.Equal(5, sc.Replicas);
+                    Assert.Equal("twnr", sc.TemplateOwner);
+                    Assert.NotNull(sc.Mirror);
+                    Assert.Equal("eman", sc.Mirror.Name);
+                    Assert.Equal(736U, sc.Mirror.StartSeq);
+                    Assert.Equal(zdt, sc.Mirror.StartTime);
+                    Assert.Equal("mfsub", sc.Mirror.FilterSubject);
 
-            Assert.Equal(2, sc.Sources.Count);
-            Assert.Collection(sc.Sources,
-                item => ValidateSource(item, "s0", 737, "s0sub", "s0api", "s0dlvrsub", zdt),
-                item => ValidateSource(item, "s1", 738, "s1sub", "s1api", "s1dlvrsub", zdt));
+                    Assert.Equal(2, sc.Sources.Count);
+                    Assert.Collection(sc.Sources,
+                        item => ValidateSource(item, "s0", 737, "s0sub", "s0api", "s0dlvrsub", zdt),
+                        item => ValidateSource(item, "s1", 738, "s1sub", "s1api", "s1dlvrsub", zdt));
+                }
+            }
         }
 
-        private void ValidateSource(Source source, string name, ulong seq, string filter, string api, string deliver,
-            DateTime zdt)
+        private void ValidateSource(Source source, string name, ulong seq, string filter, string api, string deliver, DateTime zdt)
         {
             Assert.Equal(name, source.Name);
             Assert.Equal(seq, source.StartSeq);
