@@ -1,3 +1,7 @@
+variables:
+  - name: GODEBUG
+    value: x509sha1=1
+
 stages:
 - stage: Build
   jobs:
