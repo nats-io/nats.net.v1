@@ -1,7 +1,3 @@
-variables:
-  - name: GODEBUG
-    value: x509sha1=1
-
 stages:
 - stage: Build
   jobs:
@@ -51,6 +47,9 @@ stages:
 
     - task: VSTest@2
       displayName: 'IntegrationTests .NetCoreApp3.1'
+      variables:
+        - name: GODEBUG
+          value: x509sha1=1
       inputs:
         testSelector: 'testAssemblies'
         testAssemblyVer2: 'src/Tests/IntegrationTests/bin/$(BuildConfiguration)/netcoreapp3.1/IntegrationTests.dll'
@@ -61,6 +60,9 @@ stages:
 
     - task: VSTest@2
       displayName: 'IntegrationTests .Net4.6'
+      variables:
+        - name: GODEBUG
+          value: x509sha1=1
       inputs:
         testSelector: 'testAssemblies'
         testAssemblyVer2: 'src/Tests/IntegrationTests/bin/$(BuildConfiguration)/net46/IntegrationTests.dll'
