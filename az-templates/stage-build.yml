@@ -60,9 +60,6 @@ stages:
 
     - task: VSTest@2
       displayName: 'IntegrationTests .Net4.6'
-      variables:
-        - name: GODEBUG
-          value: x509sha1=1
       inputs:
         testSelector: 'testAssemblies'
         testAssemblyVer2: 'src/Tests/IntegrationTests/bin/$(BuildConfiguration)/net46/IntegrationTests.dll'
