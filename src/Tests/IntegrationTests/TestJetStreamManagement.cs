@@ -654,7 +654,7 @@ namespace IntegrationTests
 
                 MessageInfo mi = jsm.GetMessage(STREAM, 1);
                 Assert.Equal(SUBJECT, mi.Subject);
-                Assert.Equal(Data(1), System.Text.Encoding.ASCII.GetString(mi.Data));
+                Assert.Equal(Data(1), Encoding.ASCII.GetString(mi.Data));
                 Assert.Equal(1U, mi.Sequence);
                 Assert.True(mi.Time.ToUniversalTime() >= beforeCreated);
                 Assert.NotNull(mi.Headers);
