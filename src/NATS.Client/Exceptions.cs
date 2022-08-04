@@ -231,7 +231,7 @@ namespace NATS.Client
         public static readonly ClientExDetail JsSubPushCantHaveMaxPullWaiting = new ClientExDetail(Sub, 90003, "Push subscriptions cannot supply max pull waiting.");
         public static readonly ClientExDetail JsSubQueueDeliverGroupMismatch = new ClientExDetail(Sub, 90004, "Queue / deliver group mismatch.");
         public static readonly ClientExDetail JsSubFcHbNotValidPull = new ClientExDetail(Sub, 90005, "Flow Control and/or heartbeat is not valid with a pull subscription.");
-        public static readonly ClientExDetail JsSubFcHbHbNotValidQueue = new ClientExDetail(Sub, 90006, "Flow Control and/or heartbeat is not valid in queue mode.");
+        public static readonly ClientExDetail JsSubFcHbNotValidQueue = new ClientExDetail(Sub, 90006, "Flow Control and/or heartbeat is not valid in queue mode.");
         public static readonly ClientExDetail JsSubNoMatchingStreamForSubject = new ClientExDetail(Sub, 90007, "No matching streams for subject.");
         public static readonly ClientExDetail JsSubConsumerAlreadyConfiguredAsPush = new ClientExDetail(Sub, 90008, "Consumer is already configured as a push consumer.");
         public static readonly ClientExDetail JsSubConsumerAlreadyConfiguredAsPull = new ClientExDetail(Sub, 90009, "Consumer is already configured as a pull consumer.");
@@ -253,7 +253,7 @@ namespace NATS.Client
         public static readonly ClientExDetail JsSoOrderedNotAllowedWithDeliverGroup = new ClientExDetail(So, 90105, "Deliver group is not allowed with an ordered consumer.");
         public static readonly ClientExDetail JsSoOrderedNotAllowedWithDurable = new ClientExDetail(So, 90106, "Durable is not allowed with an ordered consumer.");
         public static readonly ClientExDetail JsSoOrderedNotAllowedWithDeliverSubject = new ClientExDetail(So, 90107, "Deliver subject is not allowed with an ordered consumer.");
-        public static readonly ClientExDetail JsSoOrderedRequiresAckPolicyNone = new ClientExDetail(So, 90108, "Deliver subject is not allowed with an ordered consumer.");
+        public static readonly ClientExDetail JsSoOrderedRequiresAckPolicyNone = new ClientExDetail(So, 90108, "Ordered consumer requires Ack Policy None.");
         public static readonly ClientExDetail JsSoOrderedRequiresMaxDeliver = new ClientExDetail(So, 90109, "Max deliver is limited to 1 with an ordered consumer.");
 
         private const string Sub = "SUB";
@@ -282,5 +282,8 @@ namespace NATS.Client
         {
             return new NATSJetStreamClientException(new ClientExDetail(this, extraMessage));
         }
+
+        [Obsolete("constant name had typo, replaced with JsSubFcHbNotValidQueue")]
+        public static readonly ClientExDetail JsSubFcHbHbNotValidQueue = new ClientExDetail(Sub, 90006, "Flow Control and/or heartbeat is not valid in queue mode.");
     }
 }
