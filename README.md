@@ -946,15 +946,25 @@ Subscription creation has many checks to make sure that a valid, operable subscr
 
 | Name | Group | Code | Description |
 | --- | --- | --- | --- |
+| JsSoDurableMismatch | SO | 90101 | Builder durable must match the consumer configuration durable if both are provided. |
+| JsSoDeliverGroupMismatch | SO | 90102 | Builder deliver group must match the consumer configuration deliver group if both are provided. |
+| JsSoDeliverSubjectMismatch | SO | 90103 | Builder deliver subject must match the consumer configuration deliver subject if both are provided. |
+| JsSoOrderedNotAllowedWithBind | SO | 90104 | Bind is not allowed with an ordered consumer. |
+| JsSoOrderedNotAllowedWithDeliverGroup | SO | 90105 | Deliver group is not allowed with an ordered consumer. |
+| JsSoOrderedNotAllowedWithDurable | SO | 90106 | Durable is not allowed with an ordered consumer. |
+| JsSoOrderedNotAllowedWithDeliverSubject | SO | 90107 | Deliver subject is not allowed with an ordered consumer. |
+| JsSoOrderedRequiresAckPolicyNone | SO | 90108 | Ordered consumer requires Ack Policy None. |
+| JsSoOrderedRequiresMaxDeliver | SO | 90109 | Max deliver is limited to 1 with an ordered consumer. |
 | JsSubPullCantHaveDeliverGroup | SUB | 90001 | Pull subscriptions can't have a deliver group. |
 | JsSubPullCantHaveDeliverSubject | SUB | 90002 | Pull subscriptions can't have a deliver subject. |
 | JsSubPushCantHaveMaxPullWaiting | SUB | 90003 | Push subscriptions cannot supply max pull waiting. |
 | JsSubQueueDeliverGroupMismatch | SUB | 90004 | Queue / deliver group mismatch. |
 | JsSubFcHbNotValidPull | SUB | 90005 | Flow Control and/or heartbeat is not valid with a pull subscription. |
-| JsSubFcHbHbNotValidQueue | SUB | 90006 | Flow Control and/or heartbeat is not valid in queue mode. |
+| JsSubFcHbNotValidQueue | SUB | 90006 | Flow Control and/or heartbeat is not valid in queue mode. |
 | JsSubNoMatchingStreamForSubject | SUB | 90007 | No matching streams for subject. |
 | JsSubConsumerAlreadyConfiguredAsPush | SUB | 90008 | Consumer is already configured as a push consumer. |
 | JsSubConsumerAlreadyConfiguredAsPull | SUB | 90009 | Consumer is already configured as a pull consumer. |
+| _removed_ | SUB | 90010 | |
 | JsSubSubjectDoesNotMatchFilter | SUB | 90011 | Subject does not match consumer configuration filter. |
 | JsSubConsumerAlreadyBound | SUB | 90012 | Consumer is already bound to a subscription. |
 | JsSubExistingConsumerNotQueue | SUB | 90013 | Existing consumer is not configured as a queue / deliver group. |
@@ -962,6 +972,9 @@ Subscription creation has many checks to make sure that a valid, operable subscr
 | JsSubExistingQueueDoesNotMatchRequestedQueue | SUB | 90015 | Existing consumer deliver group does not match requested queue / deliver group. |
 | JsSubExistingConsumerCannotBeModified | SUB | 90016 | Existing consumer cannot be modified. |
 | JsSubConsumerNotFoundRequiredInBind | SUB | 90017 | Consumer not found, required in bind mode. |
+| JsSubOrderedNotAllowOnQueues | SUB | 90018 | Ordered consumer not allowed on queues. |
+| JsSubPushCantHaveMaxBatch | SUB | 90019 | Push subscriptions cannot supply max batch. |
+| JsSubPushCantHaveMaxBytes | SUB | 90020 | Push subscriptions cannot supply max bytes. |
 
 ### Message Acknowledgements
 

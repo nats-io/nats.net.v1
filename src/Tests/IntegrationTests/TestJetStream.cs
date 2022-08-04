@@ -853,11 +853,11 @@ namespace IntegrationTests
 
                 PushSubscribeOptions psoPushCcFc = PushSubscribeOptions.Builder().WithConfiguration(ccFc).Build();
                 e = Assert.Throws<NATSJetStreamClientException>(() => js.PushSubscribeSync(SUBJECT, "cantHaveQ", psoPushCcFc));
-                Assert.Contains(JsSubFcHbHbNotValidQueue.Id, e.Message);
+                Assert.Contains(JsSubFcHbNotValidQueue.Id, e.Message);
 
                 PushSubscribeOptions psoPushCcHb = PushSubscribeOptions.Builder().WithConfiguration(ccHb).Build();
                 e = Assert.Throws<NATSJetStreamClientException>(() => js.PushSubscribeSync(SUBJECT, "cantHaveQ", psoPushCcHb));
-                Assert.Contains(JsSubFcHbHbNotValidQueue.Id, e.Message);
+                Assert.Contains(JsSubFcHbNotValidQueue.Id, e.Message);
             });
         }
         
