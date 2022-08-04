@@ -169,11 +169,21 @@ namespace NATS.Client.JetStream
         Msg GetMessageDirect(string streamName, MessageGetRequest messageGetRequest);
 
         /// <summary>
-        /// Deletes a message from a stream.
+        /// Deletes a message, overwriting the message data with garbage
+        /// This can be considered an expensive (time consuming) operation, but is more secure.
         /// </summary>
         /// <param name="streamName">The name of the stream.</param>
         /// <param name="sequence">The stream sequence number of the message.</param>
         /// <returns>True if the message was deleted.</returns>
         bool DeleteMessage(string streamName, ulong sequence);
+
+        /// <summary>
+        /// Deletes a message, optionally erasing the content of the message.
+        /// </summary>
+        /// <param name="streamName">The name of the stream.</param>
+        /// <param name="sequence">The stream sequence number of the message.</param>
+        /// <param name="erase">Whether to erase the message (overwriting with garbage) or only mark it as erased.</param>
+        /// <returns>True if the message was deleted.</returns>
+        bool DeleteMessage(string streamName, ulong sequence, bool erase);
     }
 }
