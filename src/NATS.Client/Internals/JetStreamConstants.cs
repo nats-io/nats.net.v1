@@ -116,6 +116,11 @@ namespace NATS.Client.Internals
         public const string JsapiMsgGet = "STREAM.MSG.GET.{0}";
 
         /// <summary>
+        /// JSAPI_DIRECT_GET is the endpoint to directly get a message.
+        /// </summary>
+        public const string JsapiDirectGet = "DIRECT.GET.{0}";
+
+        /// <summary>
         /// JSAPI_MSG_DELETE is the endpoint to remove a message.
         /// </summary>
         public const string JsapiMsgDelete = "STREAM.MSG.DELETE.{0}";
@@ -153,6 +158,12 @@ namespace NATS.Client.Internals
         public const string RollupHeader = "Nats-Rollup";
         public const string RollupHeaderSubject = "sub";
         public const string RollupHeaderAll = "all";
+
+        public const string NatsStream       = "Nats-Stream";
+        public const string NatsSequence     = "Nats-Sequence";
+        public const string NatsTimestamp    = "Nats-Time-Stamp";
+        public const string NatsSubject      = "Nats-Subject";
+        public const string NatsLastSequence = "Nats-Last-Sequence";
 
         [Obsolete("This property is obsolete. Use LastConsumerHeader instead.", false)]
         public const string LastConsumerHdr = "Nats-Last-Consumer";

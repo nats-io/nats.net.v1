@@ -52,7 +52,7 @@ namespace NATS.Client.KeyValue
         /// <summary>
         /// The maximum size for an individual value in the bucket
         /// </summary>
-        public long MaxValueSize => BackingConfig.MaxValueSize;
+        public long MaxValueSize => BackingConfig.MaxMsgSize;
 
         /// <summary>
         /// The maximum age for a value in this bucket

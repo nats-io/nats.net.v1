@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
@@ -29,7 +30,7 @@ namespace NATS.Client.JetStream
         public long MaxMsgsPerSubject { get; }
         public long MaxBytes { get; }
         public Duration MaxAge { get; }
-        public long MaxValueSize { get; }
+        public long MaxMsgSize { get; }
         public StorageType StorageType { get; }
         public int Replicas { get; }
         public bool NoAck { get; }
@@ -39,10 +40,14 @@ namespace NATS.Client.JetStream
         public Placement Placement { get; }
         public Mirror Mirror { get; }
         public List<Source> Sources { get; }
-        private bool Sealed { get; }
-        private bool AllowRollup { get; }
-        private bool DenyDelete { get; }
-        private bool DenyPurge { get; }
+        public bool Sealed { get; }
+        public bool AllowRollup { get; }
+        public bool AllowDirect { get; }
+        public bool DenyDelete { get; }
+        public bool DenyPurge { get; }
+        
+        [Obsolete("MaxMsgSize was mistakenly renamed in a previous change.", false)]
+        public long MaxValueSize => MaxMsgSize;
 
         internal StreamConfiguration(string json) : this(JSON.Parse(json)) { }
         
@@ -59,7 +64,7 @@ namespace NATS.Client.JetStream
             MaxMsgsPerSubject = AsLongOrMinus1(scNode, ApiConstants.MaxMsgsPerSubject);
             MaxBytes = AsLongOrMinus1(scNode, ApiConstants.MaxBytes);
             MaxAge = AsDuration(scNode, ApiConstants.MaxAge, Duration.Zero);
-            MaxValueSize = AsLongOrMinus1(scNode, ApiConstants.MaxMsgSize);
+            MaxMsgSize = AsLongOrMinus1(scNode, ApiConstants.MaxMsgSize);
             Replicas = scNode[ApiConstants.NumReplicas].AsInt;
             NoAck = scNode[ApiConstants.NoAck].AsBool;
             TemplateOwner = scNode[ApiConstants.TemplateOwner].Value;
@@ -69,6 +74,7 @@ namespace NATS.Client.JetStream
             Sources = Source.OptionalListOf(scNode[ApiConstants.Sources]);
             Sealed = scNode[ApiConstants.Sealed].AsBool;
             AllowRollup = scNode[ApiConstants.AllowRollupHdrs].AsBool;
+            AllowDirect = scNode[ApiConstants.AllowDirect].AsBool;
             DenyDelete = scNode[ApiConstants.DenyDelete].AsBool;
             DenyPurge = scNode[ApiConstants.DenyPurge].AsBool;
         }
@@ -84,7 +90,7 @@ namespace NATS.Client.JetStream
             MaxMsgsPerSubject = builder._maxMsgsPerSubject;
             MaxBytes = builder._maxBytes;
             MaxAge = builder._maxAge;
-            MaxValueSize = builder._maxMsgSize;
+            MaxMsgSize = builder._maxMsgSize;
             StorageType = builder._storageType;
             Replicas = builder._replicas;
             NoAck = builder._noAck;
@@ -96,6 +102,7 @@ namespace NATS.Client.JetStream
             Sources = builder._sources;
             Sealed = builder._sealed;
             AllowRollup = builder._allowRollup;
+            AllowDirect = builder._allowDirect;
             DenyDelete = builder._denyDelete;
             DenyPurge = builder._denyPurge;
         }
@@ -123,7 +130,7 @@ namespace NATS.Client.JetStream
                 [ApiConstants.MaxMsgsPerSubject] = MaxMsgsPerSubject,
                 [ApiConstants.MaxBytes] = MaxBytes,
                 [ApiConstants.MaxAge] = MaxAge.Nanos,
-                [ApiConstants.MaxMsgSize] = MaxValueSize,
+                [ApiConstants.MaxMsgSize] = MaxMsgSize,
                 [ApiConstants.NumReplicas] = Replicas,
                 [ApiConstants.NoAck] = NoAck,
                 [ApiConstants.TemplateOwner] = TemplateOwner,
@@ -131,8 +138,9 @@ namespace NATS.Client.JetStream
                 [ApiConstants.Placement] = Placement?.ToJsonNode(),
                 [ApiConstants.Mirror] = Mirror?.ToJsonNode(),
                 [ApiConstants.Sources] = sources,
-                // never write sealed
+                [ApiConstants.Sealed] = Sealed,
                 [ApiConstants.AllowRollupHdrs] = AllowRollup,
+                [ApiConstants.AllowDirect] = AllowDirect,
                 [ApiConstants.DenyDelete] = DenyDelete,
                 [ApiConstants.DenyPurge] = DenyPurge
             };
@@ -171,6 +179,7 @@ namespace NATS.Client.JetStream
             internal readonly List<Source> _sources = new List<Source>();
             internal bool _sealed;
             internal bool _allowRollup;
+            internal bool _allowDirect;
             internal bool _denyDelete;
             internal bool _denyPurge;
 
@@ -188,7 +197,7 @@ namespace NATS.Client.JetStream
                 _maxMsgsPerSubject = sc.MaxMsgsPerSubject;
                 _maxBytes = sc.MaxBytes;
                 _maxAge = sc.MaxAge;
-                _maxMsgSize = sc.MaxValueSize;
+                _maxMsgSize = sc.MaxMsgSize;
                 _storageType = sc.StorageType;
                 _replicas = sc.Replicas;
                 _noAck = sc.NoAck;
@@ -200,6 +209,7 @@ namespace NATS.Client.JetStream
                 WithSources(sc.Sources);
                 _sealed = sc.Sealed;
                 _allowRollup = sc.AllowRollup;
+                _allowDirect = sc.AllowDirect;
                 _denyDelete = sc.DenyDelete;
                 _denyPurge = sc.DenyPurge;
             }
@@ -507,10 +517,20 @@ namespace NATS.Client.JetStream
             /// <summary>
             /// Sets the Allow Rollup mode of the StreamConfiguration.
             /// </summary>
-            /// <param name="allowRollup">true to allow rollup headers.</param>
+            /// <param name="allowRollup">true to allow rollup.</param>
             /// <returns>The StreamConfigurationBuilder</returns>
             public StreamConfigurationBuilder WithAllowRollup(bool allowRollup) {
                 _allowRollup = allowRollup;
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the Allow Direct mode of the StreamConfiguration.
+            /// </summary>
+            /// <param name="allowDirect">true to allow direct headers.</param>
+            /// <returns>The StreamConfigurationBuilder</returns>
+            public StreamConfigurationBuilder WithAllowDirect(bool allowDirect) {
+                _allowDirect = allowDirect;
                 return this;
             }
 
