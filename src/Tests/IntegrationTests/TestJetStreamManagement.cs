@@ -639,6 +639,11 @@ namespace IntegrationTests
 
         [Fact]
         public void TestGetAndDeleteMessage() {
+            MessageDeleteRequest mdr = new MessageDeleteRequest(1, true);
+            Assert.Equal("{\"seq\":1}", Encoding.UTF8.GetString(mdr.Serialize()));
+            mdr = new MessageDeleteRequest(1, false);
+            Assert.Equal("{\"seq\":1,\"no_erase\":true}", Encoding.UTF8.GetString(mdr.Serialize()));
+
             Context.RunInJsServer(c => {
                 CreateDefaultTestStream(c);
                 IJetStream js = c.CreateJetStreamContext();
@@ -667,7 +672,7 @@ namespace IntegrationTests
                 Assert.True(mi.Time.ToUniversalTime() >= beforeCreated);
                 Assert.Null(mi.Headers);
 
-                Assert.True(jsm.DeleteMessage(STREAM, 1));
+                Assert.True(jsm.DeleteMessage(STREAM, 1, false)); // added coverage for use of erase (no_erase) flag.
                 Assert.Throws<NATSJetStreamException>(() => jsm.DeleteMessage(STREAM, 1));
                 Assert.Throws<NATSJetStreamException>(() => jsm.GetMessage(STREAM, 1));
                 Assert.Throws<NATSJetStreamException>(() => jsm.GetMessage(STREAM, 3));

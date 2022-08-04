@@ -7,7 +7,7 @@ namespace NATS.Client.JetStream
     {
         internal abstract JSONNode ToJsonNode();
 
-        internal byte[] Serialize()
+        public byte[] Serialize()
         {
             return JsonUtils.Serialize(ToJsonNode());
         }

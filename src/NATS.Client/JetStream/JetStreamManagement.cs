@@ -179,10 +179,15 @@ namespace NATS.Client.JetStream
 
         public bool DeleteMessage(string streamName, ulong sequence)
         {
+            return DeleteMessage(streamName, sequence, true);
+        }
+
+        public bool DeleteMessage(string streamName, ulong sequence, bool erase)
+        {
             Validator.ValidateStreamName(streamName, true);
             string subj = string.Format(JetStreamConstants.JsapiMsgDelete, streamName);
-            byte[] bytes = JsonUtils.SimpleMessageBody(ApiConstants.Seq, sequence);
-            Msg m = RequestResponseRequired(subj, bytes, Timeout);
+            byte[] mdr = new MessageDeleteRequest(sequence, erase).Serialize();
+            Msg m = RequestResponseRequired(subj, mdr, Timeout);
             return new SuccessApiResponse(m, true).Success;
         }
     }

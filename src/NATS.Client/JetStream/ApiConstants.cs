@@ -106,6 +106,7 @@ namespace NATS.Client.JetStream
         internal const string Name = "name";
         internal const string NextBySubject = "next_by_subj";
         internal const string NoAck = "no_ack";
+        internal const string NoErase = "no_erase";
         internal const string Nonce = "nonce";
         internal const string NoWait = "no_wait";
         internal const string NumAckPending = "num_ack_pending";
