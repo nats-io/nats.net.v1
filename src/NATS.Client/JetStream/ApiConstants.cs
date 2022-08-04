@@ -20,6 +20,7 @@ namespace NATS.Client.JetStream
         internal const string AckWait = "ack_wait";
         internal const string Active = "active";
         internal const string AllowRollupHdrs = "allow_rollup_hdrs";
+        internal const string AllowDirect = "allow_direct";
         internal const string Api = "api";
         internal const string AuthRequired = "auth_required";
         internal const string Backoff = "backoff";
@@ -103,6 +104,7 @@ namespace NATS.Client.JetStream
         internal const string Messages = "messages";
         internal const string Mirror = "mirror";
         internal const string Name = "name";
+        internal const string NextBySubject = "next_by_subj";
         internal const string NoAck = "no_ack";
         internal const string Nonce = "nonce";
         internal const string NoWait = "no_wait";

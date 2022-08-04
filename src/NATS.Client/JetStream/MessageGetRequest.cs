@@ -19,32 +19,50 @@ namespace NATS.Client.JetStream
     {
         public ulong Sequence { get; }
         public string LastBySubject { get; }
+        public string NextBySubject { get; }
 
-        internal static byte[] SeqBytes(ulong sequence) {
-            return new MessageGetRequest(sequence).Serialize();
+        public static MessageGetRequest ForSequence(ulong sequence) {
+            return new MessageGetRequest(sequence, null, null);
         }
 
-        internal static byte[] LastBySubjectBytes(string lastBySubject) {
-            return new MessageGetRequest(lastBySubject).Serialize();
+        public static MessageGetRequest LastForSubject(string subject) {
+            return new MessageGetRequest(0, subject, null);
         }
 
-        internal MessageGetRequest(ulong sequence)
+        public static MessageGetRequest FirstForSubject(string subject) {
+            return new MessageGetRequest(0, null, subject);
+        }
+
+        public static MessageGetRequest NextForSubject(ulong sequence, string subject) {
+            return new MessageGetRequest(sequence, null, subject);
+        }
+
+        public MessageGetRequest(ulong sequence, string lastBySubject, string nextBySubject)
         {
             Sequence = sequence;
-        }
-
-        public MessageGetRequest(string lastBySubject)
-        {
             LastBySubject = lastBySubject;
+            NextBySubject = nextBySubject;
         }
 
         internal override JSONNode ToJsonNode()
         {
-            return new JSONObject
+            JSONObject jso = new JSONObject();
+            if (Sequence > 0)
             {
-                [ApiConstants.Seq] = Sequence,
-                [ApiConstants.LastBySubject] = LastBySubject
-            };
+                jso[ApiConstants.Seq] = Sequence;
+            }
+
+            if (LastBySubject != null)
+            {
+                jso[ApiConstants.LastBySubject] = LastBySubject;
+            }
+
+            if (NextBySubject != null)
+            {
+                jso[ApiConstants.NextBySubject] = NextBySubject;
+            }
+
+            return jso;
         }
     }
 }

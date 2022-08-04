@@ -47,6 +47,8 @@ stages:
 
     - task: VSTest@2
       displayName: 'IntegrationTests .NetCoreApp3.1'
+      env:
+        GODEBUG: x509sha1=1
       inputs:
         testSelector: 'testAssemblies'
         testAssemblyVer2: 'src/Tests/IntegrationTests/bin/$(BuildConfiguration)/netcoreapp3.1/IntegrationTests.dll'
@@ -57,6 +59,8 @@ stages:
 
     - task: VSTest@2
       displayName: 'IntegrationTests .Net4.6'
+      env:
+        GODEBUG: x509sha1=1
       inputs:
         testSelector: 'testAssemblies'
         testAssemblyVer2: 'src/Tests/IntegrationTests/bin/$(BuildConfiguration)/net46/IntegrationTests.dll'
@@ -67,6 +71,8 @@ stages:
 
     - task: VSTest@2
       displayName: 'IntegrationTests Internal .NetCoreApp3.1'
+      env:
+        GODEBUG: x509sha1=1
       inputs:
         testSelector: 'testAssemblies'
         testAssemblyVer2: 'src/Tests/IntegrationTestsInternal/bin/$(BuildConfiguration)/netcoreapp3.1/IntegrationTestsInternal.dll'
@@ -77,6 +83,8 @@ stages:
 
     - task: VSTest@2
       displayName: 'IntegrationTests Internal .Net4.6'
+      env:
+        GODEBUG: x509sha1=1
       inputs:
         testSelector: 'testAssemblies'
         testAssemblyVer2: 'src/Tests/IntegrationTestsInternal/bin/$(BuildConfiguration)/net46/IntegrationTestsInternal.dll'

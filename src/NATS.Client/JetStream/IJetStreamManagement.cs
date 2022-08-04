@@ -158,6 +158,17 @@ namespace NATS.Client.JetStream
         MessageInfo GetLastMessage(string streamName, string subject);
 
         /// <summary>
+        /// Return a message based on the stream and the information configured in the messageGetRequest.
+        /// If the stream is not configured to "allowDirect" the api call will timeout.
+        /// If a matching message is not found, a status message with a 404 code is returned.
+        /// If the message request is invalid, i.e. sequence only of zero, a status message with a 408 code is returned.
+        /// </summary>
+        /// <param name="streamName">The name of the stream.</param>
+        /// <param name="messageGetRequest">the request object.</param>
+        /// <returns>A regular message or a status message.</returns>
+        Msg GetMessageDirect(string streamName, MessageGetRequest messageGetRequest);
+
+        /// <summary>
         /// Deletes a message from a stream.
         /// </summary>
         /// <param name="streamName">The name of the stream.</param>

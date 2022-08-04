@@ -157,7 +157,7 @@ namespace NATS.Client.JetStream
         {
             Validator.ValidateStreamName(streamName, true);
             string subj = string.Format(JetStreamConstants.JsapiMsgGet, streamName);
-            Msg m = RequestResponseRequired(subj, MessageGetRequest.SeqBytes(sequence), Timeout);
+            Msg m = RequestResponseRequired(subj, MessageGetRequest.ForSequence(sequence).Serialize(), Timeout);
             return new MessageInfo(m, true);
         }
 
@@ -165,8 +165,16 @@ namespace NATS.Client.JetStream
         {
             Validator.ValidateStreamName(streamName, true);
             string subj = string.Format(JetStreamConstants.JsapiMsgGet, streamName);
-            Msg m = RequestResponseRequired(subj, MessageGetRequest.LastBySubjectBytes(subject), Timeout);
+            Msg m = RequestResponseRequired(subj, MessageGetRequest.LastForSubject(subject).Serialize(), Timeout);
             return new MessageInfo(m, true);
+        }
+
+        public Msg GetMessageDirect(string streamName, MessageGetRequest messageGetRequest)
+        {
+            Validator.ValidateStreamName(streamName, true);
+            Validator.ValidateNotNull(messageGetRequest, nameof(messageGetRequest));
+            string subj = string.Format(JetStreamConstants.JsapiDirectGet, streamName);
+            return RequestResponseRequired(subj, messageGetRequest.Serialize(), Timeout);
         }
 
         public bool DeleteMessage(string streamName, ulong sequence)
