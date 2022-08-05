@@ -137,7 +137,7 @@ namespace NATS.Client
         /// <summary>
         /// Gets the <see cref="Connection"/> associated with this instance.
         /// </summary>
-        public IConnection Connection => conn;
+        public Connection Connection => conn;
 
         //caller must lock
         internal bool tallyMessage(long bytes)

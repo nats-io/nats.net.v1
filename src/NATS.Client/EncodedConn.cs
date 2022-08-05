@@ -234,7 +234,7 @@ namespace NATS.Client
                 EncodedMessageEventArgs ehev = new EncodedMessageEventArgs();
                 try
                 {
-                    byte[] data = args.msg != null ? args.msg.Data : null;
+                    byte[] data = args.Message != null ? args.Message.Data : null;
                     ehev.obj = c.onDeserialize(data);
                 }
                 catch (Exception ex)
@@ -243,9 +243,9 @@ namespace NATS.Client
                     return;
                 }
 
-                ehev.subject = args.msg.Subject;
-                ehev.reply = args.msg.Reply;
-                ehev.msg = args.msg;
+                ehev.subject = args.Message.Subject;
+                ehev.reply = args.Message.Reply;
+                ehev.msg = args.Message;
 
                 try
                 {

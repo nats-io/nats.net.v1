@@ -144,8 +144,8 @@ namespace IntegrationTestsInternal
                 void TestHandler(object sender, MsgHandlerEventArgs args)
                 {
                     int i = received.Increment() - 1;
-                    ssFlags[i] = new InterlockedLong((long)args.msg.MetaData.StreamSequence);
-                    csFlags[i] = new InterlockedLong((long)args.msg.MetaData.ConsumerSequence);
+                    ssFlags[i] = new InterlockedLong((long)args.Message.MetaData.StreamSequence);
+                    csFlags[i] = new InterlockedLong((long)args.Message.MetaData.ConsumerSequence);
                     latch.Signal();
                 }
 

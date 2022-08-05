@@ -69,7 +69,7 @@ namespace NATS.Client.KeyValue
 
             EventHandler<MsgHandlerEventArgs> handler = (sender, args) =>
             {
-                KeyValueEntry kve = new KeyValueEntry(args.msg);
+                KeyValueEntry kve = new KeyValueEntry(args.Message);
                 if (includeDeletes || kve.Operation.Equals(KeyValueOperation.Put))
                 {
                     watcher.Watch(kve);
