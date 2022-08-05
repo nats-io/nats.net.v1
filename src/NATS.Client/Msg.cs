@@ -233,7 +233,7 @@ namespace NATS.Client
                 throw new NATSException("No Reply subject");
             }
 
-            Connection conn = ArrivalSubscription?.Connection;
+            IConnection conn = ArrivalSubscription?.Connection;
             if (conn == null)
             {
                 throw new NATSException("Message is not bound to a subscription");

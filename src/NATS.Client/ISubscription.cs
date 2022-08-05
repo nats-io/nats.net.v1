@@ -70,7 +70,7 @@ namespace NATS.Client
         /// <summary>
         /// Gets the <see cref="NATS.Client.Connection"/> associated with this instance.
         /// </summary>
-        Connection Connection { get; }
+        IConnection Connection { get; }
 
         /// <summary>
         /// Gets a value indicating whether or not the <see cref="ISubscription"/> is still valid.
