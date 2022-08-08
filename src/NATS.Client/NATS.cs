@@ -496,15 +496,16 @@ namespace NATS.Client
     /// </summary>
     public class MsgHandlerEventArgs : EventArgs
     {
-        internal Msg msg = null;
+        public MsgHandlerEventArgs(Msg message)
+        {
+            Message = message;
+        }
+    
 
         /// <summary>
         /// Retrieves the message.
         /// </summary>
-        public Msg Message
-        {
-            get { return msg; }
-        }
+        public Msg Message { get; }
     }
 
     // Borrowed from:  https://stackoverflow.com/a/7135008
