@@ -84,8 +84,7 @@ namespace NATS.Client
                 {
                     if (localHandler != null)
                     {
-                        var msgHandlerEventArgs = new MsgHandlerEventArgs();
-                        msgHandlerEventArgs.Message = msg;
+                        var msgHandlerEventArgs = new MsgHandlerEventArgs(msg);
 
                         localHandler(this, msgHandlerEventArgs);
                     }
