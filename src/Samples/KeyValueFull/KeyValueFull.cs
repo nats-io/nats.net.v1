@@ -127,32 +127,15 @@ namespace NATSExamples
                     Console.WriteLine("\n6. Delete a key");
                     kv.Delete(ByteKey);
 
-                    // it's value is now null
-                    // it's value is now null but there is a delete tombstone
+                    // if the key has been deleted or purged, get returns null
+                    // watches or history will return an entry with DELETE or PURGE for the operation
                     KeyValueEntry kve = kv.Get(ByteKey);
-                    Console.WriteLine("Delete tombstone entry: " + kve);
-                    Console.WriteLine("Revision number should be 4, got " + kve.Revision);
-                    Console.WriteLine("Deleted value should be null: " + (kve.Value == null));
+                    Console.WriteLine("Deleted key, result of get should be null: " + kve);
 
                     // if the key does not exist there is no entry at all
-                    Console.WriteLine("\n7.1 Keys does not exist");
+                    Console.WriteLine("\n7. Keys does not exist");
                     kve = kv.Get(NotFound);
                     Console.WriteLine($"Entry for {NotFound} should be null: {kve == null}");
-
-                    // if the key has been deleted there is an entry for it
-                    // but the value will be null
-                    Console.WriteLine("\n7.2 Keys not found");
-                    bvalue = kv.Get(ByteKey).Value;
-                    Console.WriteLine($"{ByteKey} byte value should be null: {bvalue == null}");
-
-                    svalue = kv.Get(ByteKey).ValueAsString();
-                    Console.WriteLine($"{ByteKey} string value should be null: " + (svalue == null));
-
-                    bLongGet = kv.Get(ByteKey).TryGetLongValue(out lvalue);
-                    if (!bLongGet)
-                    {
-                        Console.WriteLine(ByteKey + " value is not a long!");
-                    }
 
                     // Update values. You can even update a deleted key
                     Console.WriteLine("\n8.1 Update values");
@@ -191,7 +174,7 @@ namespace NATSExamples
                     Console.WriteLine(kvs);
 
                     // delete the bucket
-                    Console.WriteLine("\n9.3 Delete");
+                    Console.WriteLine("\n9.3 Delete the bucket");
                     kvm.Delete(helper.Bucket);
 
                     try {

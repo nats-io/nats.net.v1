@@ -111,9 +111,9 @@ namespace IntegrationTests
                 Assert.Equal(0, lvalue);
 
                 // going to manually track history for verification later
-                IList<KeyValueEntry> byteHistory = new List<KeyValueEntry>();
-                IList<KeyValueEntry> stringHistory = new List<KeyValueEntry>();
-                IList<KeyValueEntry> longHistory = new List<KeyValueEntry>();
+                IList<object> byteHistory = new List<object>();
+                IList<object> stringHistory = new List<object>();
+                IList<object> longHistory = new List<object>();
 
                 // entry gives detail about latest entry of the key
                 byteHistory.Add(
@@ -137,22 +137,14 @@ namespace IntegrationTests
 
                 // delete a key. Its entry will still exist, but it's value is null
                 kv.Delete(byteKey);
-
-                byteHistory.Add(
-                    AssertEntry(BUCKET, byteKey, KeyValueOperation.Delete, 4, null, utcNow, kv.Get(byteKey)));
+                Assert.Null(kv.Get(byteKey));
+                byteHistory.Add(KeyValueOperation.Delete);
                 AssertHistory(byteHistory, kv.History(byteKey));
 
                 // let's check the bucket info
                 status = kvm.GetBucketInfo(BUCKET);
                 Assert.Equal(4U, status.EntryCount);
                 Assert.Equal(4U, status.BackingStreamInfo.State.LastSeq);
-
-                // if the key has been deleted
-                // all varieties of get will return null
-                Assert.Null(kv.Get(byteKey).Value);
-                Assert.Null(kv.Get(byteKey).ValueAsString());
-                Assert.False(kv.Get(byteKey).TryGetLongValue(out lvalue));
-                Assert.Equal(0, lvalue);
 
                 // if the key does not exist (no history) there is no entry
                 Assert.Null(kv.Get(notFoundKey));
@@ -222,8 +214,8 @@ namespace IntegrationTests
                 // purge
                 kv.Purge(longKey);
                 longHistory.Clear();
-                longHistory.Add(
-                    AssertEntry(BUCKET, longKey, KeyValueOperation.Purge, 10, null, utcNow, kv.Get(longKey)));
+                Assert.Null(kv.Get(longKey));
+                longHistory.Add(KeyValueOperation.Purge);
                 AssertHistory(longHistory, kv.History(longKey));
 
                 status = kvm.GetBucketInfo(BUCKET);
@@ -235,8 +227,8 @@ namespace IntegrationTests
 
                 kv.Purge(byteKey);
                 byteHistory.Clear();
-                byteHistory.Add(
-                    AssertEntry(BUCKET, byteKey, KeyValueOperation.Purge, 11, null, utcNow, kv.Get(byteKey)));
+                Assert.Null(kv.Get(byteKey));
+                byteHistory.Add(KeyValueOperation.Purge);
                 AssertHistory(byteHistory, kv.History(byteKey));
 
                 status = kvm.GetBucketInfo(BUCKET);
@@ -248,8 +240,8 @@ namespace IntegrationTests
 
                 kv.Purge(stringKey);
                 stringHistory.Clear();
-                stringHistory.Add(
-                    AssertEntry(BUCKET, stringKey, KeyValueOperation.Purge, 12, null, utcNow, kv.Get(stringKey)));
+                Assert.Null(kv.Get(stringKey));
+                stringHistory.Add(KeyValueOperation.Purge);
                 AssertHistory(stringHistory, kv.History(stringKey));
 
                 status = kvm.GetBucketInfo(BUCKET);
@@ -679,10 +671,19 @@ namespace IntegrationTests
             }
         }
 
-        private void AssertHistory(IList<KeyValueEntry> manualHistory, IList<KeyValueEntry> apiHistory) {
+        private void AssertHistory(IList<object> manualHistory, IList<KeyValueEntry> apiHistory) {
             Assert.Equal(apiHistory.Count, manualHistory.Count);
-            for (int x = 0; x < apiHistory.Count; x++) {
-                AssertKvEquals(apiHistory[x], manualHistory[x]);
+            for (int x = 0; x < apiHistory.Count; x++)
+            {
+                object o = manualHistory[x];
+                if (o is KeyValueOperation kvOp)
+                {
+                    Assert.Equal(kvOp, apiHistory[x].Operation);
+                }
+                else
+                {
+                    AssertKvEquals((KeyValueEntry)o, apiHistory[x]);
+                }
             }
         }
 
@@ -1046,10 +1047,8 @@ namespace IntegrationTests
             kvWorker.Delete(key);
             KeyValueEntry kveUserA = kvUserA.Get(key);
             KeyValueEntry kveUserI = kvUserI.Get(key);
-            Assert.NotNull(kveUserA);
-            Assert.NotNull(kveUserI);
-            Assert.Equal(kveUserA, kveUserI);
-            Assert.Equal(KeyValueOperation.Delete, kveUserA.Operation);
+            Assert.Null(kveUserA);
+            Assert.Null(kveUserI);
 
             AssertKveAccountHistory(kvUserA.History(key), Data(0), Data(1), KeyValueOperation.Delete);
             AssertKveAccountHistory(kvUserI.History(key), Data(0), Data(1), KeyValueOperation.Delete);
