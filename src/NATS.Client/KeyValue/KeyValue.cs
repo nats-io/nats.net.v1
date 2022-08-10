@@ -68,12 +68,16 @@ namespace NATS.Client.KeyValue
 
         public KeyValueEntry Get(string key)
         {
-            return _kvGetLastMessage(Validator.ValidateNonWildcardKvKeyRequired(key));
+            return existingOnly(_kvGetLastMessage(Validator.ValidateNonWildcardKvKeyRequired(key)));
         }
 
         public KeyValueEntry Get(string key, ulong revision)
         {
-            return _kvGetMessage(Validator.ValidateNonWildcardKvKeyRequired(key), revision);
+            return existingOnly(_kvGetMessage(Validator.ValidateNonWildcardKvKeyRequired(key), revision));
+        }
+
+        private KeyValueEntry existingOnly(KeyValueEntry kve) {
+            return kve == null || !kve.Operation.Equals(KeyValueOperation.Put) ? null : kve;
         }
 
         internal KeyValueEntry _kvGetLastMessage(string key)

@@ -65,6 +65,7 @@ namespace NATS.Client.KeyValue
 
         /// <summary>
         /// Get the entry for a key
+        /// when the key exists and is live (not deleted and not purged)
         /// </summary>
         /// <param name="key">the key</param>
         /// <returns>The entry</returns>
@@ -72,6 +73,7 @@ namespace NATS.Client.KeyValue
 
         /// <summary>
         /// Get the specific revision of an entry for a key
+        /// when the key exists and is live (not deleted and not purged)
         /// </summary>
         /// <param name="key">the key</param>
         /// <param name="revision">the specific revision</param>
