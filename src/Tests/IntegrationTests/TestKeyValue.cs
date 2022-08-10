@@ -111,7 +111,6 @@ namespace IntegrationTests
                 Assert.Equal(0, lvalue);
 
                 // going to manually track history for verification later
-                Object o;
                 IList<object> byteHistory = new List<object>();
                 IList<object> stringHistory = new List<object>();
                 IList<object> longHistory = new List<object>();
