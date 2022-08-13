@@ -14,10 +14,12 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using NATS.Client;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using Xunit;
+using Xunit.Abstractions;
 using static IntegrationTests.JetStreamTestBase;
 using static UnitTests.TestBase;
 
@@ -25,7 +27,14 @@ namespace IntegrationTests
 {
     public class TestJetStreamManagement : TestSuite<JetStreamManagementSuiteContext>
     {
-        public TestJetStreamManagement(JetStreamManagementSuiteContext context) : base(context) { }
+        private readonly ITestOutputHelper output;
+
+        public TestJetStreamManagement(ITestOutputHelper output, JetStreamManagementSuiteContext context) :
+            base(context)
+        {
+            this.output = output;
+            Console.SetOut(new ConsoleWriter(output));
+        }
 
         [Fact]
         public void TestStreamCreate()
@@ -181,6 +190,12 @@ namespace IntegrationTests
                 Assert.True(sc.NoAck);
                 Assert.Equal(Duration.OfMinutes(3), sc.DuplicateWindow);
                 Assert.Empty(sc.TemplateOwner);
+                
+                // allowed to change Allow Direct
+                jsm.DeleteStream(STREAM);
+                jsm.AddStream(GetTestStreamConfigurationBuilder().WithAllowDirect(false).Build());
+                jsm.UpdateStream(GetTestStreamConfigurationBuilder().WithAllowDirect(true).Build());
+                jsm.UpdateStream(GetTestStreamConfigurationBuilder().WithAllowDirect(false).Build());
             });
         }
         
@@ -638,11 +653,18 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public void TestGetAndDeleteMessage() {
+        public void TestDeleteMessage() {
             MessageDeleteRequest mdr = new MessageDeleteRequest(1, true);
             Assert.Equal("{\"seq\":1}", Encoding.UTF8.GetString(mdr.Serialize()));
+            Assert.Equal(1U, mdr.Sequence);
+            Assert.True(mdr.Erase);
+            Assert.False(mdr.NoErase);
+            
             mdr = new MessageDeleteRequest(1, false);
             Assert.Equal("{\"seq\":1,\"no_erase\":true}", Encoding.UTF8.GetString(mdr.Serialize()));
+            Assert.Equal(1U, mdr.Sequence);
+            Assert.False(mdr.Erase);
+            Assert.True(mdr.NoErase);
 
             Context.RunInJsServer(c => {
                 CreateDefaultTestStream(c);
@@ -661,7 +683,7 @@ namespace IntegrationTests
                 Assert.Equal(SUBJECT, mi.Subject);
                 Assert.Equal(Data(1), Encoding.ASCII.GetString(mi.Data));
                 Assert.Equal(1U, mi.Sequence);
-                Assert.True(mi.Time.ToUniversalTime() >= beforeCreated);
+                Assert.True(SameOrAfter(mi.Time, beforeCreated));
                 Assert.NotNull(mi.Headers);
                 Assert.Equal("bar", mi.Headers["foo"]);
 
@@ -669,7 +691,7 @@ namespace IntegrationTests
                 Assert.Equal(SUBJECT, mi.Subject);
                 Assert.Null(mi.Data);
                 Assert.Equal(2U, mi.Sequence);
-                Assert.True(mi.Time.ToUniversalTime() >= beforeCreated);
+                Assert.True(SameOrAfter(mi.Time, beforeCreated));
                 Assert.Null(mi.Headers);
 
                 Assert.True(jsm.DeleteMessage(STREAM, 1, false)); // added coverage for use of erase (no_erase) flag.
@@ -751,22 +773,20 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public void TestGetDirect()
+        public void TestGetMessage()
         {
             Context.RunInJsServer(c => {
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                IJetStream js = c.CreateJetStreamContext();
 
                 StreamConfiguration sc = StreamConfiguration.Builder()
                     .WithName(STREAM)
                     .WithStorageType(StorageType.Memory)
                     .WithSubjects(Subject(1), Subject(2))
-                    .WithAllowDirect(true)
                     .Build();
-
-                jsm.AddStream(sc);
-
-                IJetStream js = c.CreateJetStreamContext();
-
+                StreamInfo si = jsm.AddStream(sc);
+                
+                DateTime beforeCreated = DateTime.UtcNow;
                 js.Publish(Subject(1), Encoding.UTF8.GetBytes("s1-q1"));
                 js.Publish(Subject(2), Encoding.UTF8.GetBytes("s2-q2"));
                 js.Publish(Subject(1), Encoding.UTF8.GetBytes("s1-q3"));
@@ -774,65 +794,74 @@ namespace IntegrationTests
                 js.Publish(Subject(1), Encoding.UTF8.GetBytes("s1-q5"));
                 js.Publish(Subject(2), Encoding.UTF8.GetBytes("s2-q6"));
 
-                AssertDirect(1, 1, jsm.GetMessageDirect(STREAM, MessageGetRequest.ForSequence(1)));
-                AssertDirect(1, 5, jsm.GetMessageDirect(STREAM, MessageGetRequest.LastForSubject(Subject(1))));
-                AssertDirect(2, 6, jsm.GetMessageDirect(STREAM, MessageGetRequest.LastForSubject(Subject(2))));
+                ValidateGetMessage(jsm, si, false, beforeCreated);
 
-                AssertDirect(1, 1, jsm.GetMessageDirect(STREAM, MessageGetRequest.NextForSubject(0, Subject(1))));
-                AssertDirect(2, 2, jsm.GetMessageDirect(STREAM, MessageGetRequest.NextForSubject(0, Subject(2))));
-                AssertDirect(1, 1, jsm.GetMessageDirect(STREAM, MessageGetRequest.FirstForSubject(Subject(1))));
-                AssertDirect(2, 2, jsm.GetMessageDirect(STREAM, MessageGetRequest.FirstForSubject(Subject(2))));
+                sc = StreamConfiguration.Builder(si.Config).WithAllowDirect(true).Build();
+                si = jsm.UpdateStream(sc);
+                ValidateGetMessage(jsm, si, true, beforeCreated);
 
-                AssertDirect(1, 1, jsm.GetMessageDirect(STREAM, MessageGetRequest.NextForSubject(1, Subject(1))));
-                AssertDirect(2, 2, jsm.GetMessageDirect(STREAM, MessageGetRequest.NextForSubject(1, Subject(2))));
-
-                AssertDirect(1, 3, jsm.GetMessageDirect(STREAM, MessageGetRequest.NextForSubject(2, Subject(1))));
-                AssertDirect(2, 2, jsm.GetMessageDirect(STREAM, MessageGetRequest.NextForSubject(2, Subject(2))));
-
-                AssertDirect(1, 5, jsm.GetMessageDirect(STREAM, MessageGetRequest.NextForSubject(5, Subject(1))));
-                AssertDirect(2, 6, jsm.GetMessageDirect(STREAM, MessageGetRequest.NextForSubject(5, Subject(2))));
-
-                AssertStatus(408, jsm.GetMessageDirect(STREAM, MessageGetRequest.ForSequence(0)));
-                AssertStatus(404, jsm.GetMessageDirect(STREAM, MessageGetRequest.ForSequence(9)));
-                AssertStatus(404, jsm.GetMessageDirect(STREAM, MessageGetRequest.LastForSubject("not-a-subject")));
-                AssertStatus(404, jsm.GetMessageDirect(STREAM, MessageGetRequest.FirstForSubject("not-a-subject")));
-                AssertStatus(404, jsm.GetMessageDirect(STREAM, MessageGetRequest.NextForSubject(9, Subject(1))));
-                AssertStatus(404, jsm.GetMessageDirect(STREAM, MessageGetRequest.NextForSubject(1, "not-a-subject")));
-
-/* commenting this out for now until I know what the actual expected behavior is
-                sc = StreamConfiguration.Builder()
-                    .WithName(Stream(3))
-                    .WithStorageType(StorageType.Memory)
-                    .WithSubjects(Subject(3))
-                    .Build();
-
-                jsm.AddStream(sc);
-
-                js.Publish(Subject(3), Encoding.UTF8.GetBytes("data1"));
-                js.Publish(Subject(3), Encoding.UTF8.GetBytes("data2"));
-                js.Publish(Subject(3), Encoding.UTF8.GetBytes("data3"));
-
-                Assert.Throws<NATSTimeoutException>(() => jsm.GetMessageDirect(Stream(2), MessageGetRequest.ForSequence(0)));
-                Assert.Throws<NATSTimeoutException>(() => jsm.GetMessageDirect(Stream(2), MessageGetRequest.ForSequence(1)));
-                Assert.Throws<NATSTimeoutException>(() => jsm.GetMessageDirect(Stream(2), MessageGetRequest.LastForSubject(Subject(3))));
-                Assert.Throws<NATSTimeoutException>(() => jsm.GetMessageDirect(Stream(2), MessageGetRequest.NextForSubject(1, Subject(3))));
-*/                
+                // error case stream doesn't exist
+                Assert.Throws<NATSJetStreamException>(() => jsm.GetMessage(Stream(999), 1));
             });
         }
+        
+        private void ValidateGetMessage(IJetStreamManagement jsm, StreamInfo si, bool allowDirect, DateTime beforeCreated) {
+            Assert.Equal(allowDirect, si.Config.AllowDirect);
 
-        private void AssertStatus(int status, Msg statusMsg) {
-            Assert.True(statusMsg.HasStatus);
-            Assert.Equal(status, statusMsg.Status.Code);
+            AssertMessageInfo(1, 1, jsm.GetMessage(STREAM, 1), beforeCreated);
+            AssertMessageInfo(1, 5, jsm.GetLastMessage(STREAM, Subject(1)), beforeCreated);
+            AssertMessageInfo(2, 6, jsm.GetLastMessage(STREAM, Subject(2)), beforeCreated);
+
+            AssertMessageInfo(1, 1, jsm.GetNextMessage(STREAM, 0, Subject(1)), beforeCreated);
+            AssertMessageInfo(2, 2, jsm.GetNextMessage(STREAM, 0, Subject(2)), beforeCreated);
+            AssertMessageInfo(1, 1, jsm.GetFirstMessage(STREAM, Subject(1)), beforeCreated);
+            AssertMessageInfo(2, 2, jsm.GetFirstMessage(STREAM, Subject(2)), beforeCreated);
+
+            AssertMessageInfo(1, 1, jsm.GetNextMessage(STREAM, 1, Subject(1)), beforeCreated);
+            AssertMessageInfo(2, 2, jsm.GetNextMessage(STREAM, 1, Subject(2)), beforeCreated);
+
+            AssertMessageInfo(1, 3, jsm.GetNextMessage(STREAM, 2, Subject(1)), beforeCreated);
+            AssertMessageInfo(2, 2, jsm.GetNextMessage(STREAM, 2, Subject(2)), beforeCreated);
+
+            AssertMessageInfo(1, 5, jsm.GetNextMessage(STREAM, 5, Subject(1)), beforeCreated);
+            AssertMessageInfo(2, 6, jsm.GetNextMessage(STREAM, 5, Subject(2)), beforeCreated);
+
+            AssertStatus(10003, Assert.Throws<NATSJetStreamException>(() => jsm.GetMessage(STREAM, 0)));
+            AssertStatus(10037, Assert.Throws<NATSJetStreamException>(() => jsm.GetMessage(STREAM, 9)));
+            AssertStatus(10037, Assert.Throws<NATSJetStreamException>(() => jsm.GetLastMessage(STREAM, "not-a-subject")));
+            AssertStatus(10037, Assert.Throws<NATSJetStreamException>(() => jsm.GetFirstMessage(STREAM, "not-a-subject")));
+            AssertStatus(10037, Assert.Throws<NATSJetStreamException>(() => jsm.GetNextMessage(STREAM, 9, Subject(1))));
+            AssertStatus(10037, Assert.Throws<NATSJetStreamException>(() => jsm.GetNextMessage(STREAM, 1, "not-a-subject")));
         }
 
-        private void AssertDirect(int subj, long seq, Msg m)
+        private void AssertStatus(int apiErrorCode, NATSJetStreamException e) {
+            Assert.Equal(apiErrorCode, e.ApiErrorCode);
+        }
+        
+        private void AssertMessageInfo(int subj, ulong seq, MessageInfo mi, DateTime beforeCreated) {
+            Assert.Equal(STREAM, mi.Stream);
+            Assert.Equal(Subject(subj), mi.Subject);
+            Assert.Equal(seq, mi.Sequence);
+            Assert.True(SameOrAfter(mi.Time, beforeCreated));
+            Assert.Equal("s" + subj + "-q" + seq, Encoding.UTF8.GetString(mi.Data));
+        }
+
+        [Fact]
+        public void TestMessageGetRequest()
         {
-            MsgHeader h = m.Header;
-            Assert.Equal(STREAM, h[JetStreamConstants.NatsStream]);
-            Assert.Equal(Subject(subj), h[JetStreamConstants.NatsSubject]);
-            Assert.Equal("" + seq, h[JetStreamConstants.NatsSequence]);
-            Assert.NotNull(h[JetStreamConstants.NatsTimestamp]);
-            Assert.Equal("s" + subj + "-q" + seq, Encoding.UTF8.GetString(m.Data));
+            ValidateMgr(1, null, null, MessageGetRequest.ForSequence(1));
+            ValidateMgr(0, "last", null, MessageGetRequest.LastForSubject("last"));
+            ValidateMgr(0, null, "first", MessageGetRequest.FirstForSubject("first"));
+            ValidateMgr(1, null, "first", MessageGetRequest.NextForSubject(1, "first"));
+        }
+        
+        private void ValidateMgr(ulong seq, String lastBySubject, String nextBySubject, MessageGetRequest mgr) {
+            Assert.Equal(seq, mgr.Sequence);
+            Assert.Equal(lastBySubject, mgr.LastBySubject);
+            Assert.Equal(nextBySubject, mgr.NextBySubject);
+            Assert.Equal(seq > 0 && nextBySubject == null, mgr.IsSequenceOnly);
+            Assert.Equal(lastBySubject != null, mgr.IsLastBySubject);
+            Assert.Equal(nextBySubject != null, mgr.IsNextBySubject);
         }
     }
 }

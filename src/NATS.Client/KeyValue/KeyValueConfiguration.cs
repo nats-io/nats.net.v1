@@ -207,6 +207,7 @@ namespace NATS.Client.KeyValue
                 scBuilder.WithName(KeyValueUtil.ToStreamName(_name))
                     .WithSubjects(KeyValueUtil.ToStreamSubject(_name))
                     .WithAllowRollup(true)
+                    .WithAllowDirect(true)
                     .WithDiscardPolicy(DiscardPolicy.New)
                     .WithDenyDelete(true);
                 return new KeyValueConfiguration(scBuilder.Build());

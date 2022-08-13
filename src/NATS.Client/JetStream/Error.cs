@@ -39,6 +39,13 @@ namespace NATS.Client.JetStream
             Desc = temp ?? "Unknown JetStream Error";
         }
 
+        internal Error(int code, int apiErrorCode, string desc) {
+            _node = null;
+            Code = code;
+            ApiErrorCode = apiErrorCode;
+            Desc = desc;
+        }
+
         public override string ToString()
         {
             if (ApiErrorCode == NOT_SET) {
@@ -54,5 +61,18 @@ namespace NATS.Client.JetStream
 
             return $"{Desc} [{ApiErrorCode}]";
         }
+
+        internal static Error Convert(MsgStatus status) {
+            switch (status.Code) {
+                case 404:
+                    return JsNoMessageFoundErr;
+                case 408:
+                    return JsBadRequestErr;
+            }
+            return new Error(status.Code, NOT_SET, status.Message);
+        }
+
+        internal static readonly Error JsBadRequestErr = new Error(400, 10003, "bad request");
+        internal static readonly Error JsNoMessageFoundErr = new Error(404, 10037, "no message found");
     }
 }

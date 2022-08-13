@@ -52,6 +52,16 @@ namespace NATS.Client.JetStream
         }
 
         /// <summary>
+        /// Construct a NATSJetStreamException directly from an Error
+        /// </summary>
+        /// <param name="error"></param>
+        public NATSJetStreamException(Error error) : base(error.ToString())
+        {
+            ErrorCode = error.Code;
+            ApiErrorCode = error.ApiErrorCode;
+        }
+
+        /// <summary>
         /// Construct a NATSJetStreamException from a string.
         /// </summary>
         /// <param name="s">The exception message.</param>

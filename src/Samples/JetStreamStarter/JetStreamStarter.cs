@@ -8,23 +8,28 @@ namespace NATSExamples
     /// </summary>
     internal static class JetStreamStarter
     {
-        static void Main(string[] args)
-        {
-            Options opts = ConnectionFactory.GetDefaultOptions();
-            if (args.Length == 1)
-            {
-                opts.Url = args[0];
-            }
-            else
-            {
-                opts.Url = "nats://localhost:4222";
-            }
+static void Main(string[] args)
+{
+    using (IConnection c = new ConnectionFactory().CreateConnection("localhost"))
+    {
+        IJetStream js = c.CreateJetStreamContext();
+        IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
 
-            using (IConnection c = new ConnectionFactory().CreateConnection(opts))
-            {
-                IJetStream js = c.CreateJetStreamContext();
-                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
-            }
-        }
+        try { jsm.DeleteStream("strm"); } catch (NATSJetStreamException) {}
+
+        StreamConfiguration streamConfiguration = new StreamConfiguration.StreamConfigurationBuilder()
+            .WithStorageType(StorageType.Memory)
+            .WithName("strm")
+            .WithSubjects(
+                "sub.*",
+                "sub.segment")
+            .Build();
+        jsm.AddStream(streamConfiguration);
+
+        js.Publish("sub.segment", Encoding.UTF8.GetBytes("msgs"));
+        
+        Console.WriteLine(jsm.GetStreamInfo("strm").ToString());
+    }
+}
     }
 }

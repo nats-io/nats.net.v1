@@ -24,31 +24,58 @@ namespace NATS.Client.JetStream
         public byte[] Data { get; private set; }
         public DateTime Time { get; private set; }
         public MsgHeader Headers { get; private set; }
+        public string Stream { get; private set; }
+        public ulong LastSequence { get; private set; }
 
         [Obsolete("This property is obsolete. Use Sequence instead.", false)]
         public long Seq => Convert.ToInt64(Sequence);
 
-        internal MessageInfo(Msg msg, bool throwOnError) : base(msg, throwOnError)
+        internal MessageInfo(Msg msg, String streamName, bool fromDirect, bool throwOnError) : base(msg, throwOnError, fromDirect)
         {
-            Init();
+            Init(msg, fromDirect, streamName);
         }
 
         public MessageInfo(string json) : base(json)
         {
-            Init();
+            Init(null, false, null);
         }
 
-        private void Init()
+        private void Init(Msg msg, bool fromDirect, String streamName)
         {
-            JSONNode miNode = JsonNode[ApiConstants.Message];
-            Subject = miNode[ApiConstants.Subject].Value;
-            Sequence = miNode[ApiConstants.Seq].AsUlong;
-            Time = JsonUtils.AsDate(miNode[ApiConstants.Time]);
-            Data = JsonUtils.AsByteArrayFromBase64(miNode[ApiConstants.Data]);
-            byte[] bytes = JsonUtils.AsByteArrayFromBase64(miNode[ApiConstants.Hdrs]);
-            if (bytes != null)
+            if (fromDirect)
             {
-                Headers = new HeaderStatusReader(bytes, bytes.Length).Header;
+                Headers = msg.Header;
+                Subject = msg.Header[JetStreamConstants.NatsSubject];
+                Data = msg.Data;
+                Sequence = ulong.Parse(msg.Header[JetStreamConstants.NatsSequence]);
+                Time = JsonUtils.AsDate(msg.Header[JetStreamConstants.NatsTimestamp]);
+                Stream = msg.Header[JetStreamConstants.NatsStream];
+                String temp = msg.Header[JetStreamConstants.NatsLastSequence];
+                if (temp != null)
+                {
+                    LastSequence = ulong.Parse(temp);
+                }
+                // these are control headers, not real headers so don't give them to the user.
+                msg.Header.Remove(JetStreamConstants.NatsStream);
+                msg.Header.Remove(JetStreamConstants.NatsSequence);
+                msg.Header.Remove(JetStreamConstants.NatsTimestamp);
+                msg.Header.Remove(JetStreamConstants.NatsSubject);
+                msg.Header.Remove(JetStreamConstants.NatsLastSequence);
+            }
+            else if (!HasError)
+            {
+                JSONNode miNode = JsonNode[ApiConstants.Message];
+                Subject = miNode[ApiConstants.Subject].Value;
+                Sequence = miNode[ApiConstants.Seq].AsUlong;
+                Time = JsonUtils.AsDate(miNode[ApiConstants.Time]);
+                Data = JsonUtils.AsByteArrayFromBase64(miNode[ApiConstants.Data]);
+                byte[] bytes = JsonUtils.AsByteArrayFromBase64(miNode[ApiConstants.Hdrs]);
+                if (bytes != null)
+                {
+                    Headers = new HeaderStatusReader(bytes, bytes.Length).Header;
+                }
+                Stream = streamName;
+                LastSequence = 0;
             }
         }
     }

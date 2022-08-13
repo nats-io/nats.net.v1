@@ -20,17 +20,31 @@ namespace NATS.Client.JetStream
     {
         public const string NoType = "io.nats.jetstream.api.v1.no_type";
 
-        public string Type { get; }
-        public Error Error { get; }
+        public string Type { get; private set; }
+        public Error Error { get; private set; }
 
-        internal JSONNode JsonNode { get; }
+        internal JSONNode JsonNode { get; private set; }
 
         internal ApiResponse() {}
 
-        internal ApiResponse(Msg msg, bool throwOnError = false) : 
-            this(Encoding.UTF8.GetString(msg.Data), throwOnError) {}
+        internal ApiResponse(Msg msg, bool throwOnError, bool ignoreMessage = false)
+        {
+            if (ignoreMessage)
+            {
+                
+            }
+            else
+            {
+                Init(Encoding.UTF8.GetString(msg.Data), throwOnError);
+            }
+        }
 
         internal ApiResponse(string json, bool throwOnError = false)
+        {
+            Init(json, throwOnError);
+        }
+
+        private void Init(string json, bool throwOnError)
         {
             JsonNode = JSON.Parse(json);
             Type = JsonNode[ApiConstants.Type].Value;

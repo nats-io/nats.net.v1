@@ -20,7 +20,7 @@ namespace NATS.Client.JetStream
         public string Domain { get; private set; }
         public bool Duplicate { get; private set; }
 
-        public PublishAck(Msg msg) : base(msg)
+        public PublishAck(Msg msg) : base(msg, false)
         {
             Init();
         }
