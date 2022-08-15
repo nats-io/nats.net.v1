@@ -43,7 +43,7 @@ namespace NATS.Client.JetStream
 
             string subj = string.Format(addUpdateTemplate, config.Name);
             Msg m = RequestResponseRequired(subj, config.Serialize(), Timeout);
-            return new StreamInfo(m, true);
+            return CreateAndCacheStreamInfoThrowOnError(config.Name, m);
         }
         
         public bool DeleteStream(string streamName)
@@ -150,31 +150,55 @@ namespace NATS.Client.JetStream
                 Msg m = RequestResponseRequired(JetStreamConstants.JsapiStreamList, slr.NextJson(), Timeout);
                 slr.Process(m);
             }
-            return slr.Streams;
+            return CacheStreamInfo(slr.Streams);
         }
 
         public MessageInfo GetMessage(string streamName, ulong sequence)
         {
-            Validator.ValidateStreamName(streamName, true);
-            string subj = string.Format(JetStreamConstants.JsapiMsgGet, streamName);
-            Msg m = RequestResponseRequired(subj, MessageGetRequest.ForSequence(sequence).Serialize(), Timeout);
-            return new MessageInfo(m, true);
+            return _GetMessage(streamName, MessageGetRequest.ForSequence(sequence));
         }
 
         public MessageInfo GetLastMessage(string streamName, string subject)
         {
-            Validator.ValidateStreamName(streamName, true);
-            string subj = string.Format(JetStreamConstants.JsapiMsgGet, streamName);
-            Msg m = RequestResponseRequired(subj, MessageGetRequest.LastForSubject(subject).Serialize(), Timeout);
-            return new MessageInfo(m, true);
+            return _GetMessage(streamName, MessageGetRequest.LastForSubject(subject));
         }
 
-        public Msg GetMessageDirect(string streamName, MessageGetRequest messageGetRequest)
+        public MessageInfo GetFirstMessage(string streamName, string subject)
+        {
+            return _GetMessage(streamName, MessageGetRequest.FirstForSubject(subject));
+        }
+
+        public MessageInfo GetNextMessage(string streamName, ulong sequence, string subject)
+        {
+            return _GetMessage(streamName, MessageGetRequest.NextForSubject(sequence, subject));
+        }
+
+        internal MessageInfo _GetMessage(string streamName, MessageGetRequest messageGetRequest)
         {
             Validator.ValidateStreamName(streamName, true);
-            Validator.ValidateNotNull(messageGetRequest, nameof(messageGetRequest));
-            string subj = string.Format(JetStreamConstants.JsapiDirectGet, streamName);
-            return RequestResponseRequired(subj, messageGetRequest.Serialize(), Timeout);
+            CachedStreamInfo csi = GetCachedStreamInfo(streamName);
+            if (csi.AllowDirect) {
+                string subj;
+                byte[] payload;
+                if (messageGetRequest.IsLastBySubject) {
+                    subj = string.Format(JetStreamConstants.JsapiDirectGetLast, streamName, messageGetRequest.LastBySubject);
+                    payload = null;
+                }
+                else {
+                    subj = string.Format(JetStreamConstants.JsapiDirectGet, streamName);
+                    payload = messageGetRequest.Serialize();
+                }
+                Msg resp = RequestResponseRequired(subj, payload, Timeout);
+                if (resp.HasStatus) {
+                    throw new NATSJetStreamException(Error.Convert(resp.Status));
+                }
+                return new MessageInfo(resp, streamName, true, true);
+            }
+            else {
+                string subj = string.Format(JetStreamConstants.JsapiMsgGet, streamName);
+                Msg m = RequestResponseRequired(subj, messageGetRequest.Serialize(), Timeout);
+                return new MessageInfo(m, streamName, false, true);
+            }
         }
 
         public bool DeleteMessage(string streamName, ulong sequence)

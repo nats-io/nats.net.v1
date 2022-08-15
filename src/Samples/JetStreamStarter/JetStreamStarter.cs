@@ -3,9 +3,6 @@ using NATS.Client.JetStream;
 
 namespace NATSExamples
 {
-    /// <summary>
-    /// Just some starter code to write your own example.
-    /// </summary>
     internal static class JetStreamStarter
     {
         static void Main(string[] args)

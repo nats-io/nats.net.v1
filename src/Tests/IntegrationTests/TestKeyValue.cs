@@ -29,12 +29,7 @@ namespace IntegrationTests
 {
     public class TestKeyValue : TestSuite<KeyValueSuiteContext>
     {
-        private readonly ITestOutputHelper output;
-
-        public TestKeyValue(ITestOutputHelper output, KeyValueSuiteContext context) : base(context)
-        {
-            this.output = output;
-        }
+        public TestKeyValue(KeyValueSuiteContext context) : base(context) {}
 
         [Fact]
         public void TestWorkFlow()

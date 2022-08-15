@@ -120,6 +120,9 @@ namespace NATS.Client.Internals
         /// </summary>
         public const string JsapiDirectGet = "DIRECT.GET.{0}";
 
+        // JSAPI_DIRECT_GET_LAST is the preferred endpoint to direct get a last by subject message
+        public const string JsapiDirectGetLast = "DIRECT.GET.{0}.{1}";
+
         /// <summary>
         /// JSAPI_MSG_DELETE is the endpoint to remove a message.
         /// </summary>

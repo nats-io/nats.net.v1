@@ -21,6 +21,10 @@ namespace NATS.Client.JetStream
         public string LastBySubject { get; }
         public string NextBySubject { get; }
 
+        public bool IsSequenceOnly => Sequence > 0 && NextBySubject == null;
+        public bool IsLastBySubject => LastBySubject != null;
+        public bool IsNextBySubject => NextBySubject != null;
+
         public static MessageGetRequest ForSequence(ulong sequence) {
             return new MessageGetRequest(sequence, null, null);
         }

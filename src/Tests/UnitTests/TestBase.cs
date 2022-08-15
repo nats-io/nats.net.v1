@@ -147,5 +147,11 @@ namespace UnitTests
         public static byte[] DataBytes(int seq) {
             return Encoding.ASCII.GetBytes(Data(seq));
         }
+
+        public static bool Same(DateTime t1, DateTime t2) => t1.ToUniversalTime().CompareTo(t2.ToUniversalTime()) == 0;
+        public static bool Before(DateTime t1, DateTime t2) => t1.ToUniversalTime().CompareTo(t2.ToUniversalTime()) < 0;
+        public static bool After(DateTime t1, DateTime t2) => t1.ToUniversalTime().CompareTo(t2.ToUniversalTime()) > 0;
+        public static bool SameOrBefore(DateTime t1, DateTime t2) => t1.ToUniversalTime().CompareTo(t2.ToUniversalTime()) <= 0;
+        public static bool SameOrAfter(DateTime t1, DateTime t2) => t1.ToUniversalTime().CompareTo(t2.ToUniversalTime()) >= 0;
     }
 }

@@ -11,13 +11,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using NATS.Client.Internals;
 
 namespace NATS.Client.JetStream
 {
+    internal class CachedStreamInfo
+    {
+        // currently the only thing we care about caching is the allowDirect setting
+        internal bool AllowDirect { get; }
+
+        internal CachedStreamInfo(StreamInfo si)
+        {
+            AllowDirect = si.Config.AllowDirect;
+        }        
+    }
+
     public class JetStreamBase
     {
+        private readonly ConcurrentDictionary<string, CachedStreamInfo> cachedStreamInfoDictionary =
+            new ConcurrentDictionary<string, CachedStreamInfo>();
+
         public string Prefix { get; }
         public JetStreamOptions JetStreamOptions { get; }
         public IConnection Conn { get; }
@@ -56,7 +71,24 @@ namespace NATS.Client.JetStream
             byte[] payload = options == null ? null : options.Serialize();
             string subj = string.Format(JetStreamConstants.JsapiStreamInfo, streamName);
             Msg m = RequestResponseRequired(subj, payload, Timeout);
-            return new StreamInfo(m, true);
+            return CreateAndCacheStreamInfoThrowOnError(streamName, m);
+        }
+
+        internal StreamInfo CreateAndCacheStreamInfoThrowOnError(string streamName, Msg resp) {
+            return CacheStreamInfo(streamName, new StreamInfo(resp, true));
+        }
+
+        internal StreamInfo CacheStreamInfo(string streamName, StreamInfo si) {
+            cachedStreamInfoDictionary[streamName] = new CachedStreamInfo(si);
+            return si;
+        }
+        
+        internal IList<StreamInfo> CacheStreamInfo(IList<StreamInfo> list) {
+            foreach (StreamInfo si in list)
+            {
+                cachedStreamInfoDictionary[si.Config.Name] = new CachedStreamInfo(si);
+            }
+            return list;
         }
 
         internal IList<string> GetStreamNamesBySubjectFilterInternal(string subjectFilter)
@@ -82,6 +114,17 @@ namespace NATS.Client.JetStream
             }
 
             return msg;
+        }
+ 
+        internal CachedStreamInfo GetCachedStreamInfo(string streamName) {
+            CachedStreamInfo csi;
+            cachedStreamInfoDictionary.TryGetValue(streamName, out csi);
+            if (csi != null) {
+                return csi;
+            }
+            GetStreamInfoInternal(streamName, null);
+            cachedStreamInfoDictionary.TryGetValue(streamName, out csi);
+            return csi;
         }
     }
 }

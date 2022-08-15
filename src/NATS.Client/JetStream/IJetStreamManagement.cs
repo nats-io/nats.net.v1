@@ -142,7 +142,7 @@ namespace NATS.Client.JetStream
         IList<StreamInfo> GetStreams();
 
         /// <summary>
-        /// Gets information about a message in a stream.
+        /// Get MessageInfo for the message with the exact sequence in the stream.
         /// </summary>
         /// <param name="streamName">The name of the stream.</param>
         /// <param name="sequence">The stream sequence number of the message.</param>
@@ -150,7 +150,7 @@ namespace NATS.Client.JetStream
         MessageInfo GetMessage(string streamName, ulong sequence);
 
         /// <summary>
-        /// Gets information about the last message for a subject.
+        /// Get MessageInfo for the last message of the subject.
         /// </summary>
         /// <param name="streamName">The name of the stream.</param>
         /// <param name="subject">The subject to get the last message for.</param>
@@ -158,15 +158,22 @@ namespace NATS.Client.JetStream
         MessageInfo GetLastMessage(string streamName, string subject);
 
         /// <summary>
-        /// Return a message based on the stream and the information configured in the messageGetRequest.
-        /// If the stream is not configured to "allowDirect" the api call will timeout.
-        /// If a matching message is not found, a status message with a 404 code is returned.
-        /// If the message request is invalid, i.e. sequence only of zero, a status message with a 408 code is returned.
+        /// Get MessageInfo for the first message of the subject.
         /// </summary>
         /// <param name="streamName">The name of the stream.</param>
-        /// <param name="messageGetRequest">the request object.</param>
-        /// <returns>A regular message or a status message.</returns>
-        Msg GetMessageDirect(string streamName, MessageGetRequest messageGetRequest);
+        /// <param name="subject">The subject to get the first message for.</param>
+        /// <returns>Message information.</returns>
+        MessageInfo GetFirstMessage(string streamName, string subject);
+
+        /// <summary>
+        /// Get MessageInfo for the message of the message sequence
+        /// is equal to or greater the requested sequence for the subject.
+        /// </summary>
+        /// <param name="streamName">The name of the stream.</param>
+        /// <param name="sequence">The first possible sequence number of the message.</param>
+        /// <param name="subject">The subject to get the next message for.</param>
+        /// <returns>Message information.</returns>
+        MessageInfo GetNextMessage(string streamName, ulong sequence, string subject);
 
         /// <summary>
         /// Deletes a message, overwriting the message data with garbage
