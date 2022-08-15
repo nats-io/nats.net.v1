@@ -29,22 +29,18 @@ namespace NATS.Client.JetStream
 
         internal ApiResponse(Msg msg, bool throwOnError, bool ignoreMessage = false)
         {
-            if (ignoreMessage)
+            if (!ignoreMessage)
             {
-                
-            }
-            else
-            {
-                Init(Encoding.UTF8.GetString(msg.Data), throwOnError);
+                InitJson(Encoding.UTF8.GetString(msg.Data), throwOnError);
             }
         }
 
         internal ApiResponse(string json, bool throwOnError = false)
         {
-            Init(json, throwOnError);
+            InitJson(json, throwOnError);
         }
 
-        private void Init(string json, bool throwOnError)
+        private void InitJson(string json, bool throwOnError)
         {
             JsonNode = JSON.Parse(json);
             Type = JsonNode[ApiConstants.Type].Value;
