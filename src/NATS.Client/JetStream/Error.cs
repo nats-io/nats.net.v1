@@ -23,7 +23,6 @@ namespace NATS.Client.JetStream
         public int Code { get; }
         public int ApiErrorCode { get; }
         public string Desc { get; }
-        private JSONNode _node;
         
         internal static Error OptionalInstance(JSONNode error)
         {
@@ -32,7 +31,6 @@ namespace NATS.Client.JetStream
 
         internal Error(JSONNode node)
         {
-            _node = node;
             Code = JsonUtils.AsIntOrMinus1(node, ApiConstants.Code);
             ApiErrorCode = JsonUtils.AsIntOrMinus1(node, ApiConstants.ErrCode);
             string temp = node[ApiConstants.Description];
@@ -40,7 +38,6 @@ namespace NATS.Client.JetStream
         }
 
         internal Error(int code, int apiErrorCode, string desc) {
-            _node = null;
             Code = code;
             ApiErrorCode = apiErrorCode;
             Desc = desc;

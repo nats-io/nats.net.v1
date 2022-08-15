@@ -184,7 +184,7 @@ namespace NATS.Client.JetStream
                     subj = string.Format(JetStreamConstants.JsapiDirectGetLast, streamName, messageGetRequest.LastBySubject);
                     payload = null;
                 }
-                else{
+                else {
                     subj = string.Format(JetStreamConstants.JsapiDirectGet, streamName);
                     payload = messageGetRequest.Serialize();
                 }
