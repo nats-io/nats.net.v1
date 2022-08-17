@@ -1,5 +1,5 @@
 stages:
-- stage: Build
+- stage: Build NetCoreApp 3.1
   jobs:
   - job: BuildArtifacts
     displayName: 'Builds, tests & produces artifacts under .NetCoreApp3.1'
