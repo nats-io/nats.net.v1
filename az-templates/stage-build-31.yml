@@ -1,0 +1,86 @@
+stages:
+- stage: Build
+  jobs:
+  - job: BuildArtifacts
+    displayName: 'Builds, tests & produces artifacts under .NetCoreApp3.1'
+    timeoutInMinutes: 20
+    cancelTimeoutInMinutes: 5
+    steps:
+    - task: NugetToolInstaller@1
+    - task: DotNetCoreCLI@2
+      inputs:
+        command: restore
+        projects: 'src/*.sln'
+    - task: DotNetCoreCLI@2
+      displayName: 'Build Solution'
+      inputs:
+        command: build
+        projects: 'src/*.sln'
+        arguments: '-c $(BuildConfiguration) --no-incremental --nologo -p:TreatWarningsAsErrors=true -p:Version=$(SemVer) -p:InformationalVersion=$(InfoVer)'
+  
+    - task: VSTest@2
+      displayName: 'UnitTests .NetCoreApp3.1'
+      inputs:
+        testSelector: 'testAssemblies'
+        testAssemblyVer2: 'src/Tests/UnitTests/bin/$(BuildConfiguration)/netcoreapp3.1/UnitTests.dll'
+        configuration: $(BuildConfiguration)
+        testRunTitle: 'UnitTests .NetCoreApp3.1'
+  
+    - task: PowerShell@2
+      displayName: 'Install Dependencies'
+      inputs:
+        targetType: 'inline'
+        script: |
+          Write-Host "Cloning dependency repo."
+          git clone https://github.com/nats-io/nats.net.deps.git "$(Agent.TempDirectory)\deps"
+          $natsServerDir = "$(Agent.TempDirectory)\deps\nats-server"
+          Write-Host "Appending nats-server directory $natsServerDir to path."
+          Write-Host "##vso[task.setvariable variable=PATH;]${env:PATH};$natsServerDir"
+
+    - task: VSTest@2
+      displayName: 'IntegrationTests .NetCoreApp3.1'
+      env:
+        GODEBUG: x509sha1=1
+      inputs:
+        testSelector: 'testAssemblies'
+        testAssemblyVer2: 'src/Tests/IntegrationTests/bin/$(BuildConfiguration)/netcoreapp3.1/IntegrationTests.dll'
+        configuration: $(BuildConfiguration)
+        rerunFailedTests: True
+        rerunMaxAttempts: 2
+        testRunTitle: 'IntegrationTests .NetCoreApp3.1'
+
+    - task: VSTest@2
+      displayName: 'IntegrationTests Internal .NetCoreApp3.1'
+      env:
+        GODEBUG: x509sha1=1
+      inputs:
+        testSelector: 'testAssemblies'
+        testAssemblyVer2: 'src/Tests/IntegrationTestsInternal/bin/$(BuildConfiguration)/netcoreapp3.1/IntegrationTestsInternal.dll'
+        configuration: $(BuildConfiguration)
+        rerunFailedTests: True
+        rerunMaxAttempts: 2
+        testRunTitle: 'IntegrationTests Internal .NetCoreApp3.1'
+
+    - task: VSTest@2
+      displayName: 'IntegrationTests Using Nito AsyncEx .NetCoreApp3.1'
+      inputs:
+        testSelector: 'testAssemblies'
+        testAssemblyVer2: 'src/Tests/IntegrationTestsUsingNitoAsyncEx/bin/$(BuildConfiguration)/netcoreapp3.1/IntegrationTestsUsingNitoAsyncEx.dll'
+        configuration: $(BuildConfiguration)
+        rerunFailedTests: True
+        rerunMaxAttempts: 2
+        testRunTitle: 'IntegrationTests Using Nito AsyncEx .NetCoreApp3.1'
+        
+    - task: DotNetCoreCLI@2
+      displayName: 'Pack Nupkg'
+      inputs:
+        command: custom
+        custom: pack
+        projects: 'src/*.sln'
+        arguments: '-c $(BuildConfiguration) --no-build -o $(Build.ArtifactStagingDirectory) -p:Version=$(SemVer) -p:InformationalVersion=$(InfoVer)'
+  
+    - task: PublishPipelineArtifact@1
+      displayName: 'Publish Artifacts'
+      inputs:
+        path: '$(Build.ArtifactStagingDirectory)'
+        artifact: Artifacts

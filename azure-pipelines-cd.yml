@@ -18,5 +18,6 @@ pool:
   vmImage: windows-2019
 
 stages:
-- template: az-templates/stage-build.yml
+- template: az-templates/stage-build-31.yml
+- template: az-templates/stage-build-46.yml
 - template: az-templates/stage-deploy.yml
