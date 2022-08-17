@@ -1,8 +1,8 @@
 stages:
-- stage: Build_Net_4_6
+- stage: Build
   jobs:
   - job: BuildArtifacts
-    displayName: 'Builds, tests & produces artifacts under .Net4.6'
+    displayName: 'Builds, tests & produces artifacts'
     timeoutInMinutes: 20
     cancelTimeoutInMinutes: 5
     steps:
@@ -17,6 +17,14 @@ stages:
         command: build
         projects: 'src/*.sln'
         arguments: '-c $(BuildConfiguration) --no-incremental --nologo -p:TreatWarningsAsErrors=true -p:Version=$(SemVer) -p:InformationalVersion=$(InfoVer)'
+  
+    - task: VSTest@2
+      displayName: 'UnitTests .NetCoreApp3.1'
+      inputs:
+        testSelector: 'testAssemblies'
+        testAssemblyVer2: 'src/Tests/UnitTests/bin/$(BuildConfiguration)/netcoreapp3.1/UnitTests.dll'
+        configuration: $(BuildConfiguration)
+        testRunTitle: 'UnitTests .NetCoreApp3.1'
   
     - task: VSTest@2
       displayName: 'UnitTests .Net4.6'
@@ -38,6 +46,18 @@ stages:
           Write-Host "##vso[task.setvariable variable=PATH;]${env:PATH};$natsServerDir"
 
     - task: VSTest@2
+      displayName: 'IntegrationTests .NetCoreApp3.1'
+      env:
+        GODEBUG: x509sha1=1
+      inputs:
+        testSelector: 'testAssemblies'
+        testAssemblyVer2: 'src/Tests/IntegrationTests/bin/$(BuildConfiguration)/netcoreapp3.1/IntegrationTests.dll'
+        configuration: $(BuildConfiguration)
+        rerunFailedTests: True
+        rerunMaxAttempts: 2
+        testRunTitle: 'IntegrationTests .NetCoreApp3.1'
+
+    - task: VSTest@2
       displayName: 'IntegrationTests .Net4.6'
       env:
         GODEBUG: x509sha1=1
@@ -50,6 +70,18 @@ stages:
         testRunTitle: 'IntegrationTests .Net4.6'
 
     - task: VSTest@2
+      displayName: 'IntegrationTests Internal .NetCoreApp3.1'
+      env:
+        GODEBUG: x509sha1=1
+      inputs:
+        testSelector: 'testAssemblies'
+        testAssemblyVer2: 'src/Tests/IntegrationTestsInternal/bin/$(BuildConfiguration)/netcoreapp3.1/IntegrationTestsInternal.dll'
+        configuration: $(BuildConfiguration)
+        rerunFailedTests: True
+        rerunMaxAttempts: 2
+        testRunTitle: 'IntegrationTests Internal .NetCoreApp3.1'
+
+    - task: VSTest@2
       displayName: 'IntegrationTests Internal .Net4.6'
       env:
         GODEBUG: x509sha1=1
@@ -60,6 +92,16 @@ stages:
         rerunFailedTests: True
         rerunMaxAttempts: 2
         testRunTitle: 'IntegrationTests Internal .Net4.6'
+
+    - task: VSTest@2
+      displayName: 'IntegrationTests Using Nito AsyncEx .NetCoreApp3.1'
+      inputs:
+        testSelector: 'testAssemblies'
+        testAssemblyVer2: 'src/Tests/IntegrationTestsUsingNitoAsyncEx/bin/$(BuildConfiguration)/netcoreapp3.1/IntegrationTestsUsingNitoAsyncEx.dll'
+        configuration: $(BuildConfiguration)
+        rerunFailedTests: True
+        rerunMaxAttempts: 2
+        testRunTitle: 'IntegrationTests Using Nito AsyncEx .NetCoreApp3.1'
         
     - task: DotNetCoreCLI@2
       displayName: 'Pack Nupkg'
