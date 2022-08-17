@@ -1,5 +1,5 @@
 stages:
-- stage: Build Net 4.6
+- stage: Build_Net_4_6
   jobs:
   - job: BuildArtifacts
     displayName: 'Builds, tests & produces artifacts under .Net4.6'
