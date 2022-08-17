@@ -33,7 +33,7 @@ namespace IntegrationTests
         [Fact]
         public void TestConnectedServer()
         {
-            using (NATSServer.CreateFastAndVerify())
+            using (NATSServer.CreateFastAndVerifyQuietHandlers())
             {
                 using (var c = Context.OpenConnection())
                 {
@@ -54,7 +54,7 @@ namespace IntegrationTests
         [Fact]
         public void TestMultipleClose()
         {
-            using (NATSServer.CreateFastAndVerify())
+            using (NATSServer.CreateFastAndVerifyQuietHandlers())
             {
                 using (var c = Context.OpenConnection())
                 {
@@ -73,7 +73,7 @@ namespace IntegrationTests
         [Fact]
         public void TestSimplePublish()
         {
-            using (NATSServer.CreateFastAndVerify())
+            using (NATSServer.CreateFastAndVerifyQuietHandlers())
             {
                 using (IConnection c = Context.OpenConnection())
                 {
@@ -85,7 +85,7 @@ namespace IntegrationTests
         [Fact]
         public void TestSimplePublishNoData()
         {
-            using (NATSServer.CreateFastAndVerify())
+            using (NATSServer.CreateFastAndVerifyQuietHandlers())
             {
                 using (IConnection c = Context.OpenConnection())
                 {
@@ -109,7 +109,7 @@ namespace IntegrationTests
         [Fact]
         public void TestPublishDataWithOffsets()
         {
-            using (NATSServer.CreateFastAndVerify())
+            using (NATSServer.CreateFastAndVerifyQuietHandlers())
             {
                 using (IConnection c = Context.OpenConnection())
                 {
@@ -153,13 +153,13 @@ namespace IntegrationTests
             return true;
         }
 
-        private bool compare(byte[] payload, Msg m)
+        private bool Compare(byte[] payload, Msg m)
         {
             return compare(payload, m.Data);
         }
 
         // Compares a subset of expected (offset to count) against all of actual
-        private bool compare(byte[] expected, int offset, byte[] actual, int count)
+        private static bool compare(byte[] expected, int offset, byte[] actual, int count)
         {
             // null case
             if (expected == actual)
@@ -251,12 +251,12 @@ namespace IntegrationTests
                         c.Publish("foo", omsg);
                         Msg m = s.NextMessage(1000);
 
-                        Assert.True(compare(omsg, m), "Messages are not equal.");
+                        Assert.True(Compare(omsg, m), "Messages are not equal.");
 
                         c.Publish("foo", omsg, 0, omsg.Length);
                         m = s.NextMessage(1000);
 
-                        Assert.True(compare(omsg, m), "Messages are not equal.");
+                        Assert.True(Compare(omsg, m), "Messages are not equal.");
 
                         c.Publish("foo", omsg, 2, 3);
                         m = s.NextMessage(1000);
@@ -279,12 +279,12 @@ namespace IntegrationTests
                         c.Publish("foo", "reply", omsg);
                         Msg m = s.NextMessage(1000);
 
-                        Assert.True(compare(omsg, m), "Messages are not equal.");
+                        Assert.True(Compare(omsg, m), "Messages are not equal.");
 
                         c.Publish("foo", "reply", omsg, 0, omsg.Length);
                         m = s.NextMessage(1000);
 
-                        Assert.True(compare(omsg, m), "Messages are not equal.");
+                        Assert.True(Compare(omsg, m), "Messages are not equal.");
 
                         c.Publish("foo", "reply", omsg, 1, 5);
                         m = s.NextMessage(1000);
@@ -2096,7 +2096,7 @@ namespace IntegrationTests
                 c.Publish(m);
             }
         }
-
+       
     } // class
 
 } // namespace

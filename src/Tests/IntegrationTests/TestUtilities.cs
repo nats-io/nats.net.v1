@@ -98,6 +98,20 @@ namespace IntegrationTests
         public static NATSServer CreateFastAndVerify(string args = null)
             => CreateFastAndVerify(Defaults.Port, args);
 
+        public static NATSServer CreateFastAndVerifyQuietHandlers()
+            => CreateFastAndVerify(Defaults.Port, null, opts =>
+            {
+                opts.ClosedEventHandler = (s, e) => { };
+                opts.ServerDiscoveredEventHandler = (s, e) => { };
+                opts.DisconnectedEventHandler = (s, e) => { };
+                opts.ReconnectedEventHandler = (s, e) => { };
+                opts.LameDuckModeEventHandler = (s, e) => { };
+                opts.AsyncErrorEventHandler = (s, e) => { };
+                opts.HeartbeatAlarmEventHandler = (s, e) => { };
+                opts.UnhandledStatusEventHandler = (s, e) => { };
+                opts.FlowControlProcessedEventHandler = (s, e) => { };
+            });
+
         public static NATSServer CreateFastAndVerify(int port, string args = null, Action<Options> optionsModifier = null)
         {
             var server = new NATSServer(TimeSpan.Zero, port, args);
