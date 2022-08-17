@@ -14,12 +14,10 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Threading;
 using NATS.Client;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using Xunit;
-using Xunit.Abstractions;
 using static IntegrationTests.JetStreamTestBase;
 using static UnitTests.TestBase;
 
@@ -27,22 +25,13 @@ namespace IntegrationTests
 {
     public class TestJetStreamManagement : TestSuite<JetStreamManagementSuiteContext>
     {
-        private readonly ITestOutputHelper output;
-
-        public TestJetStreamManagement(ITestOutputHelper output, JetStreamManagementSuiteContext context) :
-            base(context)
-        {
-            this.output = output;
-            Console.SetOut(new ConsoleWriter(output));
-        }
+        public TestJetStreamManagement(JetStreamManagementSuiteContext context) : base(context) {}
 
         [Fact]
         public void TestStreamCreate()
         {
             Context.RunInJsServer(c =>
             {
-                DateTime utcNow = DateTime.UtcNow;
-
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
 
                 StreamConfiguration sc = StreamConfiguration.Builder()
@@ -52,8 +41,6 @@ namespace IntegrationTests
                     .Build();
 
                 StreamInfo si = jsm.AddStream(sc);
-                Assert.True(utcNow <= si.Created.ToUniversalTime());
-
                 Assert.NotNull(si.Config);
                 sc = si.Config;
                 Assert.Equal(STREAM, sc.Name);
@@ -91,8 +78,6 @@ namespace IntegrationTests
         public void TestStreamCreateWithNoSubject() {
             Context.RunInJsServer(c =>
             {
-                DateTime utcNow = DateTime.UtcNow;
-
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
 
                 StreamConfiguration sc = StreamConfiguration.Builder()
@@ -101,8 +86,6 @@ namespace IntegrationTests
                     .Build();
 
                 StreamInfo si = jsm.AddStream(sc);
-                Assert.True(utcNow <= si.Created.ToUniversalTime());
-
                 sc = si.Config;
                 Assert.Equal(STREAM, sc.Name);
 
@@ -228,10 +211,10 @@ namespace IntegrationTests
                 Assert.Throws<NATSJetStreamException>(() => jsm.UpdateStream(scMaxCon));
 
                 // cannot change RetentionPolicy
-                StreamConfiguration scReten = GetTestStreamConfigurationBuilder()
+                StreamConfiguration scRetention = GetTestStreamConfigurationBuilder()
                     .WithRetentionPolicy(RetentionPolicy.Interest)
                     .Build();
-                Assert.Throws<NATSJetStreamException>(() => jsm.UpdateStream(scReten));
+                Assert.Throws<NATSJetStreamException>(() => jsm.UpdateStream(scRetention));
             });
         }
 
@@ -524,12 +507,12 @@ namespace IntegrationTests
 
         private void AssertValidAddOrUpdate(IJetStreamManagement jsm, ConsumerConfiguration cc) {
             ConsumerInfo ci = jsm.AddOrUpdateConsumer(STREAM, cc);
-            ConsumerConfiguration cicc = ci.ConsumerConfiguration;
+            ConsumerConfiguration ciCc = ci.ConsumerConfiguration;
             Assert.Equal(cc.Durable, ci.Name);
-            Assert.Equal(cc.Durable, cicc.Durable);
-            Assert.Equal(cc.DeliverSubject, cicc.DeliverSubject);
-            Assert.Equal(cc.MaxDeliver, cicc.MaxDeliver);
-            Assert.Equal(cc.DeliverPolicy, cicc.DeliverPolicy);
+            Assert.Equal(cc.Durable, ciCc.Durable);
+            Assert.Equal(cc.DeliverSubject, ciCc.DeliverSubject);
+            Assert.Equal(cc.MaxDeliver, ciCc.MaxDeliver);
+            Assert.Equal(cc.DeliverPolicy, ciCc.DeliverPolicy);
 
             IList<string> consumers = jsm.GetConsumerNames(STREAM);
             Assert.Single(consumers);
@@ -670,10 +653,8 @@ namespace IntegrationTests
                 CreateDefaultTestStream(c);
                 IJetStream js = c.CreateJetStreamContext();
 
-                MsgHeader h = new MsgHeader();
-                h.Add("foo", "bar");
+                MsgHeader h = new MsgHeader { { "foo", "bar" } };
 
-                DateTime beforeCreated = DateTime.UtcNow; //MessageInfo.Time is in UTC
                 js.Publish(new Msg(SUBJECT, null, h, DataBytes(1)));
                 js.Publish(new Msg(SUBJECT, null));
 
@@ -683,7 +664,6 @@ namespace IntegrationTests
                 Assert.Equal(SUBJECT, mi.Subject);
                 Assert.Equal(Data(1), Encoding.ASCII.GetString(mi.Data));
                 Assert.Equal(1U, mi.Sequence);
-                Assert.True(SameOrAfter(mi.Time, beforeCreated));
                 Assert.NotNull(mi.Headers);
                 Assert.Equal("bar", mi.Headers["foo"]);
 
@@ -691,7 +671,6 @@ namespace IntegrationTests
                 Assert.Equal(SUBJECT, mi.Subject);
                 Assert.Null(mi.Data);
                 Assert.Equal(2U, mi.Sequence);
-                Assert.True(SameOrAfter(mi.Time, beforeCreated));
                 Assert.Null(mi.Headers);
 
                 Assert.True(jsm.DeleteMessage(STREAM, 1, false)); // added coverage for use of erase (no_erase) flag.
@@ -785,8 +764,8 @@ namespace IntegrationTests
                     .WithSubjects(Subject(1), Subject(2))
                     .Build();
                 StreamInfo si = jsm.AddStream(sc);
+                Assert.False(si.Config.AllowDirect);
                 
-                DateTime beforeCreated = DateTime.UtcNow;
                 js.Publish(Subject(1), Encoding.UTF8.GetBytes("s1-q1"));
                 js.Publish(Subject(2), Encoding.UTF8.GetBytes("s2-q2"));
                 js.Publish(Subject(1), Encoding.UTF8.GetBytes("s1-q3"));
@@ -794,37 +773,37 @@ namespace IntegrationTests
                 js.Publish(Subject(1), Encoding.UTF8.GetBytes("s1-q5"));
                 js.Publish(Subject(2), Encoding.UTF8.GetBytes("s2-q6"));
 
-                ValidateGetMessage(jsm, si, false, beforeCreated);
+                ValidateGetMessage(jsm);
 
                 sc = StreamConfiguration.Builder(si.Config).WithAllowDirect(true).Build();
                 si = jsm.UpdateStream(sc);
-                ValidateGetMessage(jsm, si, true, beforeCreated);
+                Assert.True(si.Config.AllowDirect);
+                ValidateGetMessage(jsm);
 
                 // error case stream doesn't exist
                 Assert.Throws<NATSJetStreamException>(() => jsm.GetMessage(Stream(999), 1));
             });
         }
         
-        private void ValidateGetMessage(IJetStreamManagement jsm, StreamInfo si, bool allowDirect, DateTime beforeCreated) {
-            Assert.Equal(allowDirect, si.Config.AllowDirect);
+        private void ValidateGetMessage(IJetStreamManagement jsm) {
 
-            AssertMessageInfo(1, 1, jsm.GetMessage(STREAM, 1), beforeCreated);
-            AssertMessageInfo(1, 5, jsm.GetLastMessage(STREAM, Subject(1)), beforeCreated);
-            AssertMessageInfo(2, 6, jsm.GetLastMessage(STREAM, Subject(2)), beforeCreated);
+            AssertMessageInfo(1, 1, jsm.GetMessage(STREAM, 1));
+            AssertMessageInfo(1, 5, jsm.GetLastMessage(STREAM, Subject(1)));
+            AssertMessageInfo(2, 6, jsm.GetLastMessage(STREAM, Subject(2)));
 
-            AssertMessageInfo(1, 1, jsm.GetNextMessage(STREAM, 0, Subject(1)), beforeCreated);
-            AssertMessageInfo(2, 2, jsm.GetNextMessage(STREAM, 0, Subject(2)), beforeCreated);
-            AssertMessageInfo(1, 1, jsm.GetFirstMessage(STREAM, Subject(1)), beforeCreated);
-            AssertMessageInfo(2, 2, jsm.GetFirstMessage(STREAM, Subject(2)), beforeCreated);
+            AssertMessageInfo(1, 1, jsm.GetNextMessage(STREAM, 0, Subject(1)));
+            AssertMessageInfo(2, 2, jsm.GetNextMessage(STREAM, 0, Subject(2)));
+            AssertMessageInfo(1, 1, jsm.GetFirstMessage(STREAM, Subject(1)));
+            AssertMessageInfo(2, 2, jsm.GetFirstMessage(STREAM, Subject(2)));
 
-            AssertMessageInfo(1, 1, jsm.GetNextMessage(STREAM, 1, Subject(1)), beforeCreated);
-            AssertMessageInfo(2, 2, jsm.GetNextMessage(STREAM, 1, Subject(2)), beforeCreated);
+            AssertMessageInfo(1, 1, jsm.GetNextMessage(STREAM, 1, Subject(1)));
+            AssertMessageInfo(2, 2, jsm.GetNextMessage(STREAM, 1, Subject(2)));
 
-            AssertMessageInfo(1, 3, jsm.GetNextMessage(STREAM, 2, Subject(1)), beforeCreated);
-            AssertMessageInfo(2, 2, jsm.GetNextMessage(STREAM, 2, Subject(2)), beforeCreated);
+            AssertMessageInfo(1, 3, jsm.GetNextMessage(STREAM, 2, Subject(1)));
+            AssertMessageInfo(2, 2, jsm.GetNextMessage(STREAM, 2, Subject(2)));
 
-            AssertMessageInfo(1, 5, jsm.GetNextMessage(STREAM, 5, Subject(1)), beforeCreated);
-            AssertMessageInfo(2, 6, jsm.GetNextMessage(STREAM, 5, Subject(2)), beforeCreated);
+            AssertMessageInfo(1, 5, jsm.GetNextMessage(STREAM, 5, Subject(1)));
+            AssertMessageInfo(2, 6, jsm.GetNextMessage(STREAM, 5, Subject(2)));
 
             AssertStatus(10003, Assert.Throws<NATSJetStreamException>(() => jsm.GetMessage(STREAM, 0)));
             AssertStatus(10037, Assert.Throws<NATSJetStreamException>(() => jsm.GetMessage(STREAM, 9)));
@@ -838,11 +817,10 @@ namespace IntegrationTests
             Assert.Equal(apiErrorCode, e.ApiErrorCode);
         }
         
-        private void AssertMessageInfo(int subj, ulong seq, MessageInfo mi, DateTime beforeCreated) {
+        private void AssertMessageInfo(int subj, ulong seq, MessageInfo mi) {
             Assert.Equal(STREAM, mi.Stream);
             Assert.Equal(Subject(subj), mi.Subject);
             Assert.Equal(seq, mi.Sequence);
-            Assert.True(SameOrAfter(mi.Time, beforeCreated));
             Assert.Equal("s" + subj + "-q" + seq, Encoding.UTF8.GetString(mi.Data));
         }
 
