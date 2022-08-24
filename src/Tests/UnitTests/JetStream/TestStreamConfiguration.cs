@@ -22,7 +22,7 @@ namespace UnitTests.JetStream
 {
     public class TestStreamConfiguration : TestBase
     {
-        private StreamConfiguration getTestConfiguration() {
+        private StreamConfiguration GetTestConfiguration() {
             String json = ReadDataFile("StreamConfiguration.json");
             return new StreamConfiguration(json);
         }
@@ -35,7 +35,7 @@ namespace UnitTests.JetStream
         [Fact]
         public void TestConstruction()
         {
-            StreamConfiguration testSc = getTestConfiguration();
+            StreamConfiguration testSc = GetTestConfiguration();
             // from json
             Validate(testSc, false);
 
@@ -208,7 +208,8 @@ namespace UnitTests.JetStream
                 Assert.Equal("blah blah", sc.Description);
                 Assert.Collection(sc.Subjects,
                     item => item.Equals("foo"),
-                    item => item.Equals("bar"));
+                    item => item.Equals("bar"),
+                    item => item.Equals("repub.>"));
 
                 Assert.Equal(RetentionPolicy.Interest, sc.RetentionPolicy);
                 Assert.Equal(730, sc.MaxConsumers);
@@ -224,6 +225,11 @@ namespace UnitTests.JetStream
                 Assert.NotNull(sc.Placement);
                 Assert.Equal("clstr", sc.Placement.Cluster);
                 Assert.Collection(sc.Placement.Tags, item => item.Equals("tag1"), item => item.Equals("tag2"));
+
+                Assert.NotNull(sc.Republish);
+                Assert.Equal("repub.>", sc.Republish.Source);
+                Assert.Equal("dest.>", sc.Republish.Destination);
+                Assert.True(sc.Republish.HeadersOnly);
 
                 DateTime zdt = AsDateTime("2020-11-05T19:33:21.163377Z");
 

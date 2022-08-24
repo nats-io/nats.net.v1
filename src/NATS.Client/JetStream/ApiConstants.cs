@@ -48,6 +48,7 @@ namespace NATS.Client.JetStream
         internal const string DenyDelete = "deny_delete";
         internal const string DenyPurge = "deny_purge";
         internal const string Description = "description";
+        internal const string Dest = "dest";
         internal const string Discard = "discard";
         internal const string Domain = "domain";
         internal const string Duplicate = "duplicate";
@@ -121,6 +122,7 @@ namespace NATS.Client.JetStream
         internal const string OptStartSeq = "opt_start_seq";
         internal const string OptStartTime = "opt_start_time";
         internal const string Placement = "placement";
+        internal const string Republish = "republish";
         internal const string Port = "port";
         internal const string Proto = "proto";
         internal const string Purged = "purged";
@@ -137,6 +139,7 @@ namespace NATS.Client.JetStream
         internal const string ServerName = "server_name";
         internal const string Source = "source";
         internal const string Sources = "sources";
+        internal const string Src = "src";
         internal const string State = "state";
         internal const string Storage = "storage";
         internal const string StorageMaxStreamBytes = "storage_max_stream_bytes";
