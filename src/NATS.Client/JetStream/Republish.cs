@@ -124,7 +124,7 @@ namespace NATS.Client.JetStream
             /// <returns>The Republish</returns>
             public Republish Build() {
                 Validator.Required(_source, "Source");
-                Validator.Required(_source, "Source");
+                Validator.Required(_destination, "Destination");
                 return new Republish(_source, _destination, _headersOnly);
             }
         }
