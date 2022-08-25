@@ -38,6 +38,7 @@ namespace NATS.Client.JetStream
         public DiscardPolicy DiscardPolicy { get; }
         public Duration DuplicateWindow { get; }
         public Placement Placement { get; }
+        public Republish Republish { get; }
         public Mirror Mirror { get; }
         public List<Source> Sources { get; }
         public bool Sealed { get; }
@@ -70,6 +71,7 @@ namespace NATS.Client.JetStream
             TemplateOwner = scNode[ApiConstants.TemplateOwner].Value;
             DuplicateWindow = AsDuration(scNode, ApiConstants.DuplicateWindow, Duration.Zero);
             Placement = Placement.OptionalInstance(scNode[ApiConstants.Placement]);
+            Republish = Republish.OptionalInstance(scNode[ApiConstants.Republish]);
             Mirror = Mirror.OptionalInstance(scNode[ApiConstants.Mirror]);
             Sources = Source.OptionalListOf(scNode[ApiConstants.Sources]);
             Sealed = scNode[ApiConstants.Sealed].AsBool;
@@ -98,6 +100,7 @@ namespace NATS.Client.JetStream
             DiscardPolicy = builder._discardPolicy;
             DuplicateWindow = builder._duplicateWindow;
             Placement = builder._placement;
+            Republish = builder._republish;
             Mirror = builder._mirror;
             Sources = builder._sources;
             Sealed = builder._sealed;
@@ -136,6 +139,7 @@ namespace NATS.Client.JetStream
                 [ApiConstants.TemplateOwner] = TemplateOwner,
                 [ApiConstants.DuplicateWindow] = DuplicateWindow.Nanos,
                 [ApiConstants.Placement] = Placement?.ToJsonNode(),
+                [ApiConstants.Republish] = Republish?.ToJsonNode(),
                 [ApiConstants.Mirror] = Mirror?.ToJsonNode(),
                 [ApiConstants.Sources] = sources,
                 [ApiConstants.Sealed] = Sealed,
@@ -175,6 +179,7 @@ namespace NATS.Client.JetStream
             internal DiscardPolicy _discardPolicy = DiscardPolicy.Old;
             internal Duration _duplicateWindow = Duration.Zero;
             internal Placement _placement;
+            internal Republish _republish;
             internal Mirror _mirror;
             internal readonly List<Source> _sources = new List<Source>();
             internal bool _sealed;
@@ -205,6 +210,7 @@ namespace NATS.Client.JetStream
                 _discardPolicy = sc.DiscardPolicy;
                 _duplicateWindow = sc.DuplicateWindow;
                 _placement = sc.Placement;
+                _republish = sc.Republish;
                 _mirror = sc.Mirror;
                 WithSources(sc.Sources);
                 _sealed = sc.Sealed;
@@ -449,6 +455,16 @@ namespace NATS.Client.JetStream
             /// <returns>The StreamConfigurationBuilder</returns>
             public StreamConfigurationBuilder WithPlacement(Placement placement) {
                 _placement = placement;
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the republish object
+            /// </summary>
+            /// <param name="republish">the republish object</param>
+            /// <returns>The StreamConfigurationBuilder</returns>
+            public StreamConfigurationBuilder WithRepublish(Republish republish) {
+                _republish = republish;
                 return this;
             }
 
