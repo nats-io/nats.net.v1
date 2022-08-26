@@ -59,14 +59,17 @@ namespace NATS.Client.JetStream
 
         internal override JSONNode ToJsonNode()
         {
-            return new JSONObject
+            JSONObject jso = new JSONObject();
+            jso[ApiConstants.Name] = Name;
+            jso[ApiConstants.OptStartSeq] = StartSeq;
+            jso[ApiConstants.OptStartTime] = JsonUtils.ToString(StartTime);
+            jso[ApiConstants.FilterSubject] = FilterSubject;
+            if (External != null)
             {
-                [ApiConstants.Name] = Name,
-                [ApiConstants.OptStartSeq] = StartSeq,
-                [ApiConstants.OptStartTime] = JsonUtils.ToString(StartTime),
-                [ApiConstants.FilterSubject] = FilterSubject,
-                [ApiConstants.External] = External.ToJsonNode()
-            };
+                jso[ApiConstants.External] = External.ToJsonNode();
+            }
+
+            return jso;
         }
 
         internal static List<Source> OptionalListOf(JSONNode sourceListNode)
