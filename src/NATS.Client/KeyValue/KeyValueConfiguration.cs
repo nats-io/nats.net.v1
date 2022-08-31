@@ -70,6 +70,16 @@ namespace NATS.Client.KeyValue
         public int Replicas => BackingConfig.Replicas;
 
         /// <summary>
+        /// Placement directives to consider when placing replicas of this stream
+        /// </summary>
+        public Placement Placement => BackingConfig.Placement;
+
+        /// <summary>
+        /// Republish options
+        /// </summary>
+        public Republish Republish => BackingConfig.Republish;
+            
+        /// <summary>
         /// Creates a builder for the Key Value Configuration. 
         /// </summary>
         /// <returns>a stream configuration builder</returns>
@@ -191,10 +201,30 @@ namespace NATS.Client.KeyValue
             /// <summary>
             /// Sets the number of replicas a message must be stored on in the KeyValueConfiguration.
             /// </summary>
-            /// <param name="replicas"></param>
+            /// <param name="replicas">number of replicas</param>
             /// <returns>the number of replicas</returns>
             public KeyValueConfigurationBuilder WithReplicas(int replicas) {
                 scBuilder.WithReplicas(replicas <= 1 ? 1 : replicas);
+                return this;
+            }
+
+            /// <summary>
+            /// Set the placement directive
+            /// </summary>
+            /// <param name="placement">the placement</param>
+            /// <returns></returns>
+            public KeyValueConfigurationBuilder WithPlacement(Placement placement) {
+                scBuilder.WithPlacement(placement);
+                return this;
+            }
+
+            /// <summary>
+            /// Set the republish options
+            /// </summary>
+            /// <param name="republish">the republish</param>
+            /// <returns></returns>
+            public KeyValueConfigurationBuilder WithRepublish(Republish republish) {
+                scBuilder.WithRepublish(republish);
                 return this;
             }
 
@@ -216,7 +246,7 @@ namespace NATS.Client.KeyValue
 
         public override string ToString()
         {
-            return $"BucketName: {BucketName}, Description: {Description}, MaxHistoryPerKey: {MaxHistoryPerKey}, MaxBucketSize: {MaxBucketSize}, MaxValueSize: {MaxValueSize}, Ttl: {Ttl}, StorageType: {StorageType}, Replicas: {Replicas}";
+            return $"BucketName: {BucketName}, Description: {Description}, MaxHistoryPerKey: {MaxHistoryPerKey}, MaxBucketSize: {MaxBucketSize}, MaxValueSize: {MaxValueSize}, Ttl: {Ttl}, StorageType: {StorageType}, Replicas: {Replicas} Placement: {Placement}, Republish: {Republish}";
         }
     }
 }
