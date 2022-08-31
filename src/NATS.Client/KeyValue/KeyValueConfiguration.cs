@@ -246,7 +246,7 @@ namespace NATS.Client.KeyValue
 
         public override string ToString()
         {
-            return $"BucketName: {BucketName}, Description: {Description}, MaxHistoryPerKey: {MaxHistoryPerKey}, MaxBucketSize: {MaxBucketSize}, MaxValueSize: {MaxValueSize}, Ttl: {Ttl}, StorageType: {StorageType}, Replicas: {Replicas}";
+            return $"BucketName: {BucketName}, Description: {Description}, MaxHistoryPerKey: {MaxHistoryPerKey}, MaxBucketSize: {MaxBucketSize}, MaxValueSize: {MaxValueSize}, Ttl: {Ttl}, StorageType: {StorageType}, Replicas: {Replicas} Placement: {Placement}, Republish: {Republish}";
         }
     }
 }
