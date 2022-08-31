@@ -101,8 +101,8 @@ namespace NATS.Client.JetStream
             /// </summary>
             /// <param name="tags">tags the list of tags</param>
             /// <returns></returns>
-            public PlacementBuilder WithTags(List<string> tags) {
-                _tags = tags;
+            public PlacementBuilder WithTags(IList<string> tags) {
+                _tags = new List<string>(tags);
                 return this;
             }
 
