@@ -22,6 +22,9 @@ namespace UnitTests.JetStream
     {
         [Fact]
         public void TestConstructionWorks() {
+            Placement p = Placement.Builder().WithCluster("cluster").WithTags("a", "b").Build();
+            Republish r = Republish.Builder().WithSource("src").WithDestination("dest").WithHeadersOnly(true).Build();
+
             // builder
             KeyValueConfiguration kvc = new KeyValueConfiguration.KeyValueConfigurationBuilder()
                 .WithName("bucketName")
@@ -31,6 +34,8 @@ namespace UnitTests.JetStream
                 .WithTtl(Duration.OfMillis(777))
                 .WithStorageType(StorageType.Memory)
                 .WithReplicas(2)
+                .WithPlacement(p)
+                .WithRepublish(r)
                 .Build();
             Validate(kvc);
 
@@ -45,14 +50,21 @@ namespace UnitTests.JetStream
             Assert.Equal(1, kvc.MaxHistoryPerKey);
         }
 
-        private void Validate(KeyValueConfiguration bc) {
-            Assert.Equal("bucketName", bc.BucketName);
-            Assert.Equal(44, bc.MaxHistoryPerKey);
-            Assert.Equal(555, bc.MaxBucketSize);
-            Assert.Equal(666, bc.MaxValueSize);
-            Assert.Equal(Duration.OfMillis(777), bc.Ttl);
-            Assert.Equal(StorageType.Memory, bc.StorageType);
-            Assert.Equal(2, bc.Replicas);
+        private void Validate(KeyValueConfiguration kvc) {
+            Assert.Equal("bucketName", kvc.BucketName);
+            Assert.Equal(44, kvc.MaxHistoryPerKey);
+            Assert.Equal(555, kvc.MaxBucketSize);
+            Assert.Equal(666, kvc.MaxValueSize);
+            Assert.Equal(Duration.OfMillis(777), kvc.Ttl);
+            Assert.Equal(StorageType.Memory, kvc.StorageType);
+            Assert.Equal(2, kvc.Replicas);
+            Assert.NotNull(kvc.Placement);
+            Assert.Equal("cluster", kvc.Placement.Cluster);
+            Assert.Equal(2, kvc.Placement.Tags.Count);
+            Assert.NotNull(kvc.Republish);
+            Assert.Equal("src", kvc.Republish.Source);
+            Assert.Equal("dest", kvc.Republish.Destination);
+            Assert.True(kvc.Republish.HeadersOnly);
         }
     }
 }
