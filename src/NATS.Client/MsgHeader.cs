@@ -14,6 +14,7 @@
 using System;
 using System.Collections;
 using System.Collections.Specialized;
+using System.Linq;
 using System.Text;
 using NATS.Client.Internals;
 
@@ -256,6 +257,35 @@ namespace NATS.Client
         public IEnumerator GetEnumerator()
         {
             return nvc.GetEnumerator();
+        }
+
+        private bool Equals(MsgHeader other)
+        {
+            if (nvc.Count != other.nvc.Count) return false;
+            foreach (string key in nvc.AllKeys)
+            {
+                string[] thisValues = nvc.GetValues(key) ?? Array.Empty<string>();
+                string[] thatValues = other.nvc.GetValues(key) ?? Array.Empty<string>();
+                if (!thisValues.SequenceEqual(thatValues))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return ReferenceEquals(this, obj) || obj is MsgHeader other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return ((bytes != null ? bytes.GetHashCode() : 0) * 397) ^ (nvc != null ? nvc.GetHashCode() : 0);
+            }
         }
     }
 }

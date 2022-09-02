@@ -61,10 +61,6 @@ namespace NATS.Client.Internals
             });
         }
 
-        public static string ValidateKvBucketNameRequired(string s) {
-            return ValidateKvBucketName(s, "Bucket name", true);
-        }
-
         public static string ValidateKvKeyWildcardAllowedRequired(string s) {
             return ValidateWildcardKvKey(s, "Key", true);
         }
@@ -170,11 +166,11 @@ namespace NATS.Client.Internals
             });
         }
 
-        public static string ValidateKvBucketName(string s, string label, bool required)
+        public static string ValidateBucketName(string s, bool required)
         {
-            return Validate(s, required, label, () => {
+            return Validate(s, required, "Bucket Name", () => {
                 if (NotRestrictedTerm(s)) {
-                    throw new ArgumentException($"{label} must only contain A-Z, a-z, 0-9, `-` or `_` [{s}]");
+                    throw new ArgumentException($"Bucket Name must only contain A-Z, a-z, 0-9, `-` or `_` [{s}]");
                 }
                 return s;
             });

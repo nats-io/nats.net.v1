@@ -72,6 +72,23 @@ namespace NATS.Client.Internals
             return list.Count == 0 ? null : list;
         }
         
+        internal static MsgHeader AsHeaders(JSONNode node, string field)
+        {
+            MsgHeader h = new MsgHeader();
+            JSONNode hNode = node[field];
+            if (hNode != null)
+            {
+                foreach (string key in hNode.Keys)
+                {
+                    foreach (var val in hNode[key].Values)
+                    {
+                        h.Add(key, val);
+                    }
+                }
+            }
+            return h;
+        }
+        
         internal static byte[] AsByteArrayFromBase64(JSONNode node) {
             return string.IsNullOrWhiteSpace(node.Value) ? null : Convert.FromBase64String(node.Value);
         }
@@ -203,6 +220,32 @@ namespace NATS.Client.Internals
                     ja.Add(d.Nanos);
                 }
                 o[field] = ja;
+            }
+        }
+
+        internal static void AddField(JSONObject o, string field, string[] values)
+        {
+            if (values != null && values.Length > 0)
+            {
+                JSONArray ja = new JSONArray();
+                foreach (string v in values)
+                {
+                    ja.Add(v);
+                }
+                o[field] = ja;
+            }
+        }
+
+        internal static void AddField(JSONObject o, string field, MsgHeader headers)
+        {
+            if (headers != null && headers.Count > 0)
+            {
+                JSONObject h = new JSONObject();
+                foreach (string key in headers.Keys)
+                {
+                    AddField(h, key, headers.GetValues(key));
+                }
+                o[field] = h;
             }
         }
     }

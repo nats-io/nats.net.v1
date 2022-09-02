@@ -80,19 +80,19 @@ namespace NATS.Client.KeyValue
         public Republish Republish => BackingConfig.Republish;
             
         /// <summary>
-        /// Creates a builder for the Key Value Configuration. 
+        /// Creates a builder for the KeyValueConfiguration. 
         /// </summary>
-        /// <returns>a stream configuration builder</returns>
+        /// <returns>a KeyValueConfiguration builder</returns>
         public static KeyValueConfigurationBuilder Builder()
         {
             return new KeyValueConfigurationBuilder();
         }
         
         /// <summary>
-        /// Creates a builder for the Key Value Configuration. 
+        /// Creates a builder for the KeyValueConfiguration. 
         /// </summary>
         /// <param name="kvc"></param>
-        /// <returns>a stream configuration builder</returns>
+        /// <returns>a KeyValueConfiguration builder</returns>
         public static KeyValueConfigurationBuilder Builder(KeyValueConfiguration kvc)
         {
             return new KeyValueConfigurationBuilder(kvc);
@@ -233,7 +233,7 @@ namespace NATS.Client.KeyValue
             /// </summary>
             /// <returns>the KeyValueConfiguration</returns>
             public KeyValueConfiguration Build() {
-                _name = Validator.ValidateKvBucketNameRequired(_name);
+                _name = Validator.ValidateBucketName(_name, true);
                 scBuilder.WithName(KeyValueUtil.ToStreamName(_name))
                     .WithSubjects(KeyValueUtil.ToStreamSubject(_name))
                     .WithAllowRollup(true)

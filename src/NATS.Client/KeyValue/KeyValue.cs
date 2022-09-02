@@ -29,7 +29,7 @@ namespace NATS.Client.KeyValue
         internal string PubSubKeyPrefix { get; }
         
         internal KeyValue(IConnection connection, string bucketName, KeyValueOptions kvo) {
-            BucketName = Validator.ValidateKvBucketNameRequired(bucketName);
+            BucketName = Validator.ValidateBucketName(bucketName, true);
             StreamName = KeyValueUtil.ToStreamName(BucketName);
             StreamSubject = KeyValueUtil.ToStreamSubject(BucketName);
             RawKeyPrefix = KeyValueUtil.ToKeyPrefix(bucketName);
