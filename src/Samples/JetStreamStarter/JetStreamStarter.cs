@@ -19,8 +19,8 @@ namespace NATSExamples
 
             using (IConnection conn = new ConnectionFactory().CreateConnection(opts))
             {
-                IJetStream js = c.CreateJetStreamContext();
-                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                IJetStream js = conn.CreateJetStreamContext();
+                IJetStreamManagement jsm = conn.CreateJetStreamManagementContext();
             }
         }
     }
