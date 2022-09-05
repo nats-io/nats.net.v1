@@ -11,21 +11,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using NATS.Client.Internals;
 using NATS.Client.JetStream;
 
 namespace NATS.Client.ObjectStore
 {
-    public sealed class ObjectStoreOptions
+    public sealed class ObjectStoreOptions : FeatureOptions
     {
-        private ObjectStoreOptions(JetStreamOptions jso)
-        {
-            JSOptions = jso;
-        }
-
-        /// <summary>
-        /// Gets the JetStreamOptions
-        /// </summary>
-        public JetStreamOptions JSOptions { get; }
+        private ObjectStoreOptions(JetStreamOptions jso) : base(jso) {}
         
         /// <summary>
         /// Gets a ObjectStoreOptionsBuilder builder.
@@ -41,11 +34,21 @@ namespace NATS.Client.ObjectStore
         /// <summary>
         /// Gets the ObjectStoreOptions builder based on an existing ObjectStoreOptions object.
         /// </summary>
-        /// <param name="jso">an existing ObjectStoreOptions object</param>
+        /// <param name="oso">an existing ObjectStoreOptions object</param>
         /// <returns>The builder</returns>
-        public static ObjectStoreOptionsBuilder Builder(ObjectStoreOptions jso)
+        public static ObjectStoreOptionsBuilder Builder(ObjectStoreOptions oso)
         {
-            return new ObjectStoreOptionsBuilder(jso);
+            return new ObjectStoreOptionsBuilder(oso);
+        }
+        
+        /// <summary>
+        /// Gets the ObjectStoreOptions builder based on an existing JetStreamOptions object.
+        /// </summary>
+        /// <param name="jso">an existing JetStreamOptions object</param>
+        /// <returns>The builder</returns>
+        public static ObjectStoreOptionsBuilder Builder(JetStreamOptions jso)
+        {
+            return new ObjectStoreOptionsBuilder().WithJetStreamOptions(jso);
         }
 
         public sealed class ObjectStoreOptionsBuilder
@@ -60,10 +63,10 @@ namespace NATS.Client.ObjectStore
             /// <summary>
             /// Construct a builder from an existing ObjectStoreOptions object
             /// </summary>
-            /// <param name="kvo">an existing ObjectStoreOptions object</param>
-            public ObjectStoreOptionsBuilder(ObjectStoreOptions kvo)
+            /// <param name="oso">an existing ObjectStoreOptions object</param>
+            public ObjectStoreOptionsBuilder(ObjectStoreOptions oso)
             {
-                _jsoBuilder = JetStreamOptions.Builder(kvo?.JSOptions);
+                _jsoBuilder = JetStreamOptions.Builder(oso?.JSOptions);
             }
             
             /// <summary>
@@ -76,7 +79,17 @@ namespace NATS.Client.ObjectStore
                 _jsoBuilder = JetStreamOptions.Builder(jso);
                 return this;
             }
-            
+
+            /// <summary>
+            /// Sets the request timeout for JetStream API calls.
+            /// </summary>
+            /// <param name="requestTimeout">the duration to wait for responses.</param>
+            /// <returns>The ObjectStoreOptionsBuilder</returns>
+            public ObjectStoreOptionsBuilder WithRequestTimeout(Duration requestTimeout) {
+                _jsoBuilder.WithRequestTimeout(requestTimeout);
+                return this;
+            }
+
             /// <summary>
             /// Sets the prefix for JetStream subjects. A prefix can be used in conjunction with
             /// user permissions to restrict access to certain JetStream instances.  This must

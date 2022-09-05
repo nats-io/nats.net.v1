@@ -97,7 +97,7 @@ namespace NATS.Client.ObjectStore
             }
         }
 
-        internal static ObjectMetaBuilder Builder(string objectName) {
+        public static ObjectMetaBuilder Builder(string objectName) {
             return new ObjectMetaBuilder(objectName);
         }
 
@@ -105,7 +105,7 @@ namespace NATS.Client.ObjectStore
             return new ObjectMetaBuilder(om);
         }
 
-        internal static ObjectMeta ForObjectName(string objectName) {
+        public static ObjectMeta ForObjectName(string objectName) {
             return new ObjectMetaBuilder(objectName).Build();
         }
 

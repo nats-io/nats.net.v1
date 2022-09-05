@@ -30,7 +30,7 @@ namespace NATS.Client.ObjectStore
         public DateTime Modified { get; }
         public long Chunks { get; }
         public string Digest { get; }
-        public bool Deleted { get; }
+        public bool IsDeleted { get; }
         public ObjectMeta ObjectMeta { get; }
 
         public string ObjectName => ObjectMeta.ObjectName;
@@ -47,7 +47,7 @@ namespace NATS.Client.ObjectStore
             Modified = b._modified;
             Chunks = b._chunks;
             Digest = b._digest;
-            Deleted = b._deleted;
+            IsDeleted = b._deleted;
             ObjectMeta = b._metaBuilder.Build();
         }
 
@@ -63,7 +63,7 @@ namespace NATS.Client.ObjectStore
             Modified = messageTime.ToUniversalTime();
             Chunks = JsonUtils.AsIntOrMinus1(node, ApiConstants.Chunks);
             Digest = node[ApiConstants.Digest];
-            Deleted = node[ApiConstants.Deleted].AsBool;
+            IsDeleted = node[ApiConstants.Deleted].AsBool;
             ObjectMeta = new ObjectMeta(node);
         }
 
@@ -77,7 +77,7 @@ namespace NATS.Client.ObjectStore
             JsonUtils.AddField(jso, ApiConstants.Size, Size);
             JsonUtils.AddField(jso, ApiConstants.Chunks, Chunks);
             JsonUtils.AddField(jso, ApiConstants.Digest, Digest);
-            JsonUtils.AddField(jso, ApiConstants.Deleted, Deleted);
+            JsonUtils.AddField(jso, ApiConstants.Deleted, IsDeleted);
             return jso;
         }
 
@@ -85,7 +85,7 @@ namespace NATS.Client.ObjectStore
         {
             return Bucket == other.Bucket && Nuid == other.Nuid && Size == other.Size 
                    && Modified.Equals(other.Modified) && Chunks == other.Chunks 
-                   && Digest == other.Digest && Deleted == other.Deleted 
+                   && Digest == other.Digest && IsDeleted == other.IsDeleted 
                    && Equals(ObjectMeta, other.ObjectMeta);
         }
 
@@ -107,7 +107,7 @@ namespace NATS.Client.ObjectStore
                 hashCode = (hashCode * 397) ^ Modified.GetHashCode();
                 hashCode = (hashCode * 397) ^ Chunks.GetHashCode();
                 hashCode = (hashCode * 397) ^ (Digest != null ? Digest.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ Deleted.GetHashCode();
+                hashCode = (hashCode * 397) ^ IsDeleted.GetHashCode();
                 hashCode = (hashCode * 397) ^ (ObjectMeta != null ? ObjectMeta.GetHashCode() : 0);
                 return hashCode;
             }

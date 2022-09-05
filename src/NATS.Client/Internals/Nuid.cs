@@ -47,6 +47,8 @@ namespace NATS.Client.Internals
         private uint _increment;
         private ulong _sequential;
 
+        private static Nuid _global = new Nuid();
+
         /// <summary>
         /// Initializes a new instance of <see cref="Nuid"/>.
         /// </summary>
@@ -131,6 +133,11 @@ namespace NATS.Client.Internals
 
             return new string(nuidBuffer);
         }
+
+        /// <summary>
+        /// Returns the next NUID from the global instance.
+        /// </summary>
+        public static string NextGlobal() => _global.GetNext();
 
         private uint GetIncrement()
         {

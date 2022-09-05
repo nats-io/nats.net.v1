@@ -14,9 +14,9 @@
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 
-namespace NATS.Client.KeyValue
+namespace NATS.Client.ObjectStore
 {
-    public class KeyValueStatus
+    public class ObjectStoreStatus
     {
         /// <summary>
         /// The info for the stream which backs the bucket. Valid for BackingStore "JetStream"
@@ -26,15 +26,15 @@ namespace NATS.Client.KeyValue
         /// <summary>
         /// The configuration object directly
         /// </summary>
-        public KeyValueConfiguration Config { get; }
+        public ObjectStoreConfiguration Config { get; }
 
-        public KeyValueStatus(StreamInfo si) {
+        public ObjectStoreStatus(StreamInfo si) {
             BackingStreamInfo = si;
-            Config = new KeyValueConfiguration(si.Config);
+            Config = new ObjectStoreConfiguration(si.Config);
         }
 
         /// <summary>
-        /// The name of the bucket
+        /// The name of ths object store
         /// </summary>
         public string BucketName => Config.BucketName;
 
@@ -44,24 +44,14 @@ namespace NATS.Client.KeyValue
         public string Description => Config.Description;
 
         /// <summary>
-        /// The number of total entries in the bucket, including historical entries
+        /// The combined size of all data in the bucket including metadata, in bytes
         /// </summary>
-        public ulong EntryCount => BackingStreamInfo.State.Messages;
+        public ulong Size => BackingStreamInfo.State.Bytes;
 
         /// <summary>
-        /// The maximum number of history for any one key. Includes the current value
+        /// If true, indicates the stream is sealed and cannot be modified in any way
         /// </summary>
-        public long MaxHistoryPerKey => Config.MaxHistoryPerKey;
-
-        /// <summary>
-        /// The maximum number of bytes for this bucket
-        /// </summary>
-        public long MaxBucketSize => Config.MaxBucketSize;
-
-        /// <summary>
-        /// The maximum size for an individual value in the bucket
-        /// </summary>
-        public long MaxValueSize => Config.MaxValueSize;
+        public bool Sealed => Config.BackingConfig.Sealed;
 
         /// <summary>
         /// The maximum age for a value in this bucket
@@ -84,18 +74,13 @@ namespace NATS.Client.KeyValue
         public Placement Placement => Config.Placement;
 
         /// <summary>
-        /// Republish options
-        /// </summary>
-        public Republish Republish => Config.Republish;
-
-        /// <summary>
         /// The name of the type of backing store, currently only "JetStream"
         /// </summary>
         public string BackingStore => "JetStream";
 
         public override string ToString()
         {
-            return $"BucketName: {BucketName}, Description: {Description}, EntryCount: {EntryCount}, MaxHistoryPerKey: {MaxHistoryPerKey}, MaxBucketSize: {MaxBucketSize}, MaxValueSize: {MaxValueSize}, Ttl: {Ttl}, StorageType: {StorageType}, Replicas: {Replicas}, BackingStore: {BackingStore}";
+            return $"BucketName: {BucketName}, Description: {Description}, Size: {Size}, Sealed: {Sealed}, Ttl: {Ttl}, StorageType: {StorageType}, Replicas: {Replicas}, BackingStore: {BackingStore}";
         }
     }
 }

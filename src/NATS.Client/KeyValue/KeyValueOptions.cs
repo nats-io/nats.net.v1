@@ -11,21 +11,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using NATS.Client.Internals;
 using NATS.Client.JetStream;
 
 namespace NATS.Client.KeyValue
 {
-    public sealed class KeyValueOptions
+    public sealed class KeyValueOptions : FeatureOptions
     {
-        private KeyValueOptions(JetStreamOptions jso)
-        {
-            JSOptions = jso;
-        }
-
-        /// <summary>
-        /// Gets the JetStreamOptions
-        /// </summary>
-        public JetStreamOptions JSOptions { get; }
+        private KeyValueOptions(JetStreamOptions jso) : base(jso) {}
         
         /// <summary>
         /// Gets a KeyValueOptionsBuilder builder.
@@ -41,11 +34,21 @@ namespace NATS.Client.KeyValue
         /// <summary>
         /// Gets the KeyValueOptions builder based on an existing KeyValueOptions object.
         /// </summary>
-        /// <param name="jso">an existing KeyValueOptions object</param>
+        /// <param name="kvo">an existing KeyValueOptions object</param>
         /// <returns>The builder</returns>
-        public static KeyValueOptionsBuilder Builder(KeyValueOptions jso)
+        public static KeyValueOptionsBuilder Builder(KeyValueOptions kvo)
         {
-            return new KeyValueOptionsBuilder(jso);
+            return new KeyValueOptionsBuilder(kvo);
+        }
+        
+        /// <summary>
+        /// Gets the KeyValueOptions builder based on an existing JetStreamOptions object.
+        /// </summary>
+        /// <param name="jso">an existing JetStreamOptions object</param>
+        /// <returns>The builder</returns>
+        public static KeyValueOptionsBuilder Builder(JetStreamOptions jso)
+        {
+            return new KeyValueOptionsBuilder().WithJetStreamOptions(jso);
         }
 
         public sealed class KeyValueOptionsBuilder
@@ -74,6 +77,16 @@ namespace NATS.Client.KeyValue
             public KeyValueOptionsBuilder WithJetStreamOptions(JetStreamOptions jso)
             {
                 _jsoBuilder = JetStreamOptions.Builder(jso);
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the request timeout for JetStream API calls.
+            /// </summary>
+            /// <param name="requestTimeout">the duration to wait for responses.</param>
+            /// <returns>The ObjectStoreOptionsBuilder</returns>
+            public KeyValueOptionsBuilder WithRequestTimeout(Duration requestTimeout) {
+                _jsoBuilder.WithRequestTimeout(requestTimeout);
                 return this;
             }
             

@@ -15,33 +15,32 @@ using System;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 
-namespace NATS.Client.KeyValue
+namespace NATS.Client.ObjectStore
 {
-    public class KeyValueWatchSubscription : IDisposable
+    public class ObjectStoreWatchSubscription : IDisposable
     {
         private IJetStreamPushAsyncSubscription sub;
         private readonly InterlockedBoolean endOfDataSent;
 
-        public KeyValueWatchSubscription(KeyValue kv, string keyPattern,
-            IKeyValueWatcher watcher, params KeyValueWatchOption[] watchOptions)
+        public ObjectStoreWatchSubscription(ObjectStore os,
+            IObjectStoreWatcher watcher, params ObjectStoreWatchOption[] watchOptions)
         {
-            string subscribeSubject = kv.RawKeySubject(keyPattern);
+            string subscribeSubject = os.RawAllMetaSubject();
             
             // figure out the result options
             bool headersOnly = false;
             bool includeDeletes = true;
             DeliverPolicy deliverPolicy = DeliverPolicy.LastPerSubject;
-            foreach (KeyValueWatchOption wo in watchOptions) {
+            foreach (ObjectStoreWatchOption wo in watchOptions) {
                 switch (wo) {
-                    case KeyValueWatchOption.MetaOnly: headersOnly = true; break;
-                    case KeyValueWatchOption.IgnoreDelete: includeDeletes = false; break;
-                    case KeyValueWatchOption.UpdatesOnly: deliverPolicy = DeliverPolicy.New; break;
-                    case KeyValueWatchOption.IncludeHistory: deliverPolicy = DeliverPolicy.All; break;
+                    case ObjectStoreWatchOption.IgnoreDelete: includeDeletes = false; break;
+                    case ObjectStoreWatchOption.UpdatesOnly: deliverPolicy = DeliverPolicy.New; break;
+                    case ObjectStoreWatchOption.IncludeHistory: deliverPolicy = DeliverPolicy.All; break;
                 }
             }
 
             if (deliverPolicy == DeliverPolicy.New
-                || kv._getLast(subscribeSubject) == null) {
+                || os._getLast(subscribeSubject) == null) {
                 endOfDataSent = new InterlockedBoolean(true);
                 watcher.EndOfData();
             }
@@ -51,7 +50,7 @@ namespace NATS.Client.KeyValue
             }
             
             PushSubscribeOptions pso = PushSubscribeOptions.Builder()
-                .WithStream(kv.StreamName)
+                .WithStream(os.StreamName)
                 .WithOrdered(true)
                 .WithConfiguration(
                     ConsumerConfiguration.Builder()
@@ -64,20 +63,20 @@ namespace NATS.Client.KeyValue
 
             EventHandler<MsgHandlerEventArgs> handler = (sender, args) =>
             {
-                KeyValueEntry kve = new KeyValueEntry(args.Message);
-                if (includeDeletes || kve.Operation.Equals(KeyValueOperation.Put))
+                ObjectInfo oi = new ObjectInfo(args.Message);
+                if (includeDeletes || !oi.IsDeleted)
                 {
-                    watcher.Watch(kve);
+                    watcher.Watch(oi);
                 }
 
-                if (endOfDataSent.IsFalse() && kve.Delta == 0)
+                if (endOfDataSent.IsFalse() && args.Message.MetaData.NumPending == 0)
                 {
                     endOfDataSent.Set(true);
                     watcher.EndOfData();
                 }
             };
 
-            sub = kv.js.PushSubscribeAsync(subscribeSubject, handler, false, pso);
+            sub = os.js.PushSubscribeAsync(subscribeSubject, handler, false, pso);
             if (endOfDataSent.IsFalse())
             {
                 ulong pending = sub.GetConsumerInformation().CalculatedPending;

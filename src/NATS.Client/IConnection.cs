@@ -17,6 +17,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NATS.Client.JetStream;
 using NATS.Client.KeyValue;
+using NATS.Client.ObjectStore;
 
 namespace NATS.Client
 {
@@ -788,15 +789,32 @@ namespace NATS.Client
         /// Gets a context for a Key Value bucket 
         /// </summary>
         /// <param name="bucketName">The name of the bucket</param>
-        /// <param name="options">Optional JetStream options.</param>
+        /// <param name="options">Optional KeyValueOptions.</param>
         /// <returns></returns>
         IKeyValue CreateKeyValueContext(string bucketName, KeyValueOptions options = null);
 
         /// <summary>
         /// Gets a context for administrating Key Value buckets
         /// </summary>
-        /// <param name="options">Optional JetStream options.</param>
+        /// <param name="options">Optional KeyValueOptions.</param>
         /// <returns></returns>
         IKeyValueManagement CreateKeyValueManagementContext(KeyValueOptions options = null);
+
+        /// <summary>
+        /// Gets a context for a Object Store 
+        /// OBJECT STORE IMPLEMENTATION IS EXPERIMENTAL AND SUBJECT TO CHANGE.
+        /// </summary>
+        /// <param name="bucketName">The name of the bucket</param>
+        /// <param name="options">Optional ObjectStoreOptions.</param>
+        /// <returns></returns>
+        IObjectStore CreateObjectStoreContext(string bucketName, ObjectStoreOptions options = null);
+
+        /// <summary>
+        /// Gets a context for administrating Object Stores
+        /// OBJECT STORE IMPLEMENTATION IS EXPERIMENTAL AND SUBJECT TO CHANGE.
+        /// </summary>
+        /// <param name="options">Optional ObjectStoreOptions.</param>
+        /// <returns></returns>
+        IObjectStoreManagement CreateObjectStoreManagementContext(ObjectStoreOptions options = null);
     }
 }

@@ -15,47 +15,6 @@ using System.Collections.Generic;
 
 namespace NATS.Client.KeyValue
 {
-    public enum KeyValueWatchOption
-    {
-        /// <summary>
-        /// Do not include deletes or purges in results.
-        /// Default is to include deletes.
-        /// </summary>
-        IgnoreDelete,
-        
-        /// <summary>
-        /// Only get meta data, skip value when retrieving data from the server.
-        /// </summary>
-        MetaOnly,
-        
-        /// <summary>
-        /// Watch starting at the first entry for all keys.
-        /// Default is to start at the last per key.
-        /// </summary>
-        IncludeHistory,
-        
-        /// <summary>
-        /// Watch starting when there are new entries for keys.
-        /// Default is to start at the last per key.
-        /// </summary>
-        UpdatesOnly
-    }
-
-    public interface IKeyValueWatcher
-    {
-        /// <summary>
-        /// Called when a key has been updated
-        /// </summary>
-        /// <param name="kve">The entry for the updated key</param>
-        void Watch(KeyValueEntry kve);
-
-        /// <summary>
-        /// Called once if there is no data when the watch is created
-        /// or if there is data, the first time the watch exhausts all existing data.
-        /// </summary>
-        void EndOfData();
-    }
-    
     public interface IKeyValue
     {
         /// <summary>

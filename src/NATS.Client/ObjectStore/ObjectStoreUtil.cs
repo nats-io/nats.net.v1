@@ -17,7 +17,7 @@ namespace NATS.Client.ObjectStore
 {
     public static class ObjectStoreUtil
     {
-        internal const int DEFAULT_CHUNK_SIZE = 128 * 1024; // 128k
+        public const int DefaultChunkSize = 128 * 1024; // 128k
         internal const string ObjStreamPrefix = "OBJ_";
         internal static readonly int ObjStreamPrefixLen = ObjStreamPrefix.Length;
         internal const string ObjSubjectPrefix = "$O.";

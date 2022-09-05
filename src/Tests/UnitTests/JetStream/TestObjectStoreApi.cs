@@ -73,7 +73,6 @@ namespace UnitTests.JetStream
             ValidateObjectInfo(oi, now);
         }
 
-        // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
         void ValidateObjectInfo(ObjectInfo oi, DateTime modified)
         {
             Assert.Equal(BUCKET, oi.Bucket);
@@ -84,7 +83,7 @@ namespace UnitTests.JetStream
             Assert.Equal(8196, oi.ObjectMeta.ObjectMetaOptions.ChunkSize);
             Assert.Equal("nuidnuidnuid", oi.Nuid);
             Assert.Equal("SHA-256=abcdefghijklmnopqrstuvwxyz=", oi.Digest);
-            Assert.True(oi.Deleted);
+            Assert.True(oi.IsDeleted);
             Assert.Equal(modified, oi.Modified);
             Assert.Equal(2, oi.Headers.Count);
             IList<String> list = oi.Headers.GetValues(Key(1));
@@ -118,7 +117,6 @@ namespace UnitTests.JetStream
             InfoCoverage(link1A, link2);
         }
 
-        [SuppressMessage("ReSharper", "ParameterOnlyUsedForPreconditionCheck.Local")]
         private void LinkCoverage(ObjectLink link1A, ObjectLink link1B, ObjectLink link2, ObjectLink blink1A,
             ObjectLink blink1B, ObjectLink blink2)
         {

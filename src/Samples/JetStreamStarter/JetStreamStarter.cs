@@ -17,7 +17,7 @@ namespace NATSExamples
                 opts.Url = "nats://localhost:4222";
             }
 
-            using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+            using (IConnection conn = new ConnectionFactory().CreateConnection(opts))
             {
                 IJetStream js = c.CreateJetStreamContext();
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
