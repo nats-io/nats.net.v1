@@ -82,7 +82,7 @@ namespace NATS.Client.ObjectStore
         /// OBJECT STORE IMPLEMENTATION IS EXPERIMENTAL AND SUBJECT TO CHANGE.
         /// </summary>
         /// <param name="objectName">The name of the object</param>
-        /// <param name="meta">the metadata with the new or unchanged name, description and headers.
+        /// <param name="meta">the metadata with the new or unchanged name, description and headers.</param>
         /// <returns>the ObjectInfo after update</returns>
         ObjectInfo UpdateMeta(string objectName, ObjectMeta meta);
 
@@ -141,6 +141,5 @@ namespace NATS.Client.ObjectStore
         /// </summary>
         /// <returns>the status object</returns>
         ObjectStoreStatus GetStatus();
-
     }
 }
