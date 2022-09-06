@@ -25,15 +25,10 @@ namespace NATS.Client.ObjectStore
         internal const string ObjMetaPart = ".M";
         internal const string ObjChunkPart = ".C";
 
-        internal readonly static MsgHeader MetaHeaders;
-
-        static ObjectStoreUtil()
+        public static MsgHeader MetaHeaders => new MsgHeader
         {
-            MetaHeaders = new MsgHeader
-            {
-                { JetStreamConstants.RollupHeader, JetStreamConstants.RollupHeaderSubject }
-            };
-        }
+            { JetStreamConstants.RollupHeader, JetStreamConstants.RollupHeaderSubject }
+        };
 
         public static string ExtractBucketName(string streamName)
         {
