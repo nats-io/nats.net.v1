@@ -332,7 +332,7 @@ namespace IntegrationTests
         private void ValidateLink(ObjectInfo oiLink, string linkName, ObjectInfo targetStore, IObjectStore targetBucket) {
             Assert.Equal(linkName, oiLink.ObjectName);
             Assert.NotNull(oiLink.Nuid);
-            Assert.NotNull(oiLink.Modified);
+            Assert.True(oiLink.Modified > DateTime.MinValue);
 
             Assert.NotNull(oiLink.Link);
             if (targetStore == null) { // link to bucket
