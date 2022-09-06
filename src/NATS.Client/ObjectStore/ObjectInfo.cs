@@ -152,6 +152,7 @@ namespace NATS.Client.ObjectStore
                 _modified = info.Modified;
                 _chunks = info.Chunks;
                 _digest = info.Digest;
+                _deleted = info.IsDeleted;
                 _metaBuilder = ObjectMeta.Builder(info.ObjectMeta);
             }
 

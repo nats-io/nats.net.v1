@@ -70,15 +70,13 @@ namespace NATS.Client.ObjectStore
                 PubSubChunkPrefix = RawChunkPrefix;
                 PubSubMetaPrefix = RawMetaPrefix;
             }
+            else if (oso.JSOptions.IsDefaultPrefix) {
+                PubSubChunkPrefix = RawChunkPrefix;
+                PubSubMetaPrefix = RawMetaPrefix;
+            }
             else {
-                if (oso.JSOptions.IsDefaultPrefix) {
-                    PubSubChunkPrefix = RawChunkPrefix;
-                    PubSubMetaPrefix = RawMetaPrefix;
-                }
-                else {
-                    PubSubChunkPrefix = oso.JSOptions.Prefix + RawChunkPrefix;
-                    PubSubMetaPrefix = oso.JSOptions.Prefix + RawMetaPrefix;
-                }
+                PubSubChunkPrefix = oso.JSOptions.Prefix + RawChunkPrefix;
+                PubSubMetaPrefix = oso.JSOptions.Prefix + RawMetaPrefix;
             }
         }
 

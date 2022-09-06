@@ -34,16 +34,13 @@ namespace NATS.Client.KeyValue
             {
                 PubSubKeyPrefix = RawKeyPrefix;
             }
+            else if (kvo.JSOptions.IsDefaultPrefix)
+            {
+                PubSubKeyPrefix = RawKeyPrefix;
+            }
             else
             {
-                if (kvo.JSOptions.IsDefaultPrefix)
-                {
-                    PubSubKeyPrefix = RawKeyPrefix;
-                }
-                else
-                {
-                    PubSubKeyPrefix = kvo.JSOptions.Prefix + RawKeyPrefix;
-                }
+                PubSubKeyPrefix = kvo.JSOptions.Prefix + RawKeyPrefix;
             }
         }
 

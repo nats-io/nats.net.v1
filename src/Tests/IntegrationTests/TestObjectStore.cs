@@ -26,6 +26,7 @@ using static UnitTests.TestBase;
 using static IntegrationTests.JetStreamTestBase;
 using static NATS.Client.ClientExDetail;
 using static NATS.Client.JetStream.JetStreamOptions;
+using static NATS.Client.ObjectStore.ObjectStoreUtil;
 using static NATS.Client.ObjectStore.ObjectStoreWatchOption;
 
 namespace IntegrationTests
@@ -41,6 +42,7 @@ namespace IntegrationTests
             Context.RunInJsServer(nc =>
             {
                 IObjectStoreManagement osm = nc.CreateObjectStoreManagementContext();
+                nc.CreateObjectStoreManagementContext(ObjectStoreOptions.Builder(DefaultJsOptions).Build()); // coverage
 
                 // create the bucket
                 ObjectStoreConfiguration osc = ObjectStoreConfiguration.Builder(BUCKET)
@@ -50,17 +52,8 @@ namespace IntegrationTests
                     .Build();
 
                 ObjectStoreStatus status = osm.Create(osc);
-                Assert.Equal(BUCKET, status.BucketName);
-                Assert.Equal(Plain, status.Description);
-                Assert.False(status.Sealed);
-                Assert.Equal(0U, status.Size);
-                Assert.Equal(Duration.OfHours(24), status.Ttl);
-                Assert.Equal(StorageType.Memory, status.StorageType);
-                Assert.Equal(1, status.Replicas);
-                Assert.Null(status.Placement);
-                Assert.NotNull(status.Config); // coverage
-                Assert.NotNull(status.BackingStreamInfo); // coverage
-                Assert.Equal("JetStream", status.BackingStore);
+                ValidateStatus(status);
+                ValidateStatus(osm.GetStatus(BUCKET));
 
                 IJetStreamManagement jsm = nc.CreateJetStreamManagementContext();
                 Assert.NotNull(jsm.GetStreamInfo("OBJ_" + BUCKET));
@@ -71,6 +64,7 @@ namespace IntegrationTests
 
                 // put some objects into the stores
                 IObjectStore os = nc.CreateObjectStoreContext(BUCKET);
+                ValidateStatus(os.GetStatus());
 
                 // object not found errors
                 AssertClientError(OsObjectNotFound, () => os.Get("notFound", new MemoryStream()));
@@ -96,7 +90,9 @@ namespace IntegrationTests
                 if (expectedChunks * 4096 < len) {
                     expectedChunks++;
                 }
-                ObjectInfo oi1 = ValidateObjectInfo(os.Put(meta, ((FileInfo)input[1]).OpenRead()), len, expectedChunks, 4096);
+
+                FileInfo fileInfo = (FileInfo)input[1];
+                ObjectInfo oi1 = ValidateObjectInfo(os.Put(meta, fileInfo.OpenRead()), len, expectedChunks, 4096);
 
                 MemoryStream baos = ValidateGet(os, len, expectedChunks, 4096);
                 byte[] bytes = baos.ToArray();
@@ -131,16 +127,54 @@ namespace IntegrationTests
                 AssertClientError(OsObjectNotFound, () => os.Get("object-name", new MemoryStream()));
                 AssertClientError(OsObjectNotFound, () => os.UpdateMeta("object-name", ObjectMeta.ForObjectName("notFound")));
 
-                // delete object, then try to update meta
-                os.Delete(oi3.ObjectName);
-                AssertClientError(OsObjectIsDeleted, () => os.UpdateMeta(oi3.ObjectName, ObjectMeta.ForObjectName("notFound")));
+                // delete object
+                ObjectInfo delInfo = os.Delete(oi3.ObjectName);
+                Assert.Equal(oi3.ObjectName, delInfo.ObjectName);
+                Assert.True(delInfo.IsDeleted);
+
+                // delete an object a second time is fine
+                delInfo = os.Delete(oi3.ObjectName); // the second covers a path where the object is already deleted
+                Assert.Equal(oi3.ObjectName, delInfo.ObjectName);
+                Assert.True(delInfo.IsDeleted);
+
+                // try to update meta for deleted
+                ObjectInfo oiWillError = oi3;
+                AssertClientError(OsObjectIsDeleted, () => os.UpdateMeta(oiWillError.ObjectName, ObjectMeta.ForObjectName("notFound")));
 
                 // can't update meta to an existing object
-                os.Put("another1", Encoding.UTF8.GetBytes("another1"));
+                ObjectInfo oi = os.Put("another1", Encoding.UTF8.GetBytes("another1"));
                 os.Put("another2", Encoding.UTF8.GetBytes("another2"));
                 AssertClientError(OsObjectAlreadyExists, () => os.UpdateMeta("another1", ObjectMeta.ForObjectName("another2")));
 
+                // but you can update a name to a deleted object's name
+                os.UpdateMeta(oi.ObjectName, ObjectMeta.ForObjectName(oi3.ObjectName));
+
+                // alternate puts
+                String name = "put-name-input-coverage";
+                expectedChunks = len / DefaultChunkSize;
+                if (expectedChunks * DefaultChunkSize < len) {
+                    expectedChunks++;
+                }
+                ValidateObjectInfo(os.Put(name, fileInfo.OpenRead()), name, null, false, len, expectedChunks, DefaultChunkSize);
+
+                name = fileInfo.Name;
+                ValidateObjectInfo(os.Put(fileInfo), name, null, false, len, expectedChunks, DefaultChunkSize);
             });
+        }
+
+        private static void ValidateStatus(ObjectStoreStatus status)
+        {
+            Assert.Equal(BUCKET, status.BucketName);
+            Assert.Equal(Plain, status.Description);
+            Assert.False(status.Sealed);
+            Assert.Equal(0U, status.Size);
+            Assert.Equal(Duration.OfHours(24), status.Ttl);
+            Assert.Equal(StorageType.Memory, status.StorageType);
+            Assert.Equal(1, status.Replicas);
+            Assert.Null(status.Placement);
+            Assert.NotNull(status.Config); // coverage
+            Assert.NotNull(status.BackingStreamInfo); // coverage
+            Assert.Equal("JetStream", status.BackingStore);
         }
 
         private void AssertClientError(ClientExDetail ced, Action testCode)
@@ -158,10 +192,21 @@ namespace IntegrationTests
             return ms;
         }
 
-        private ObjectInfo ValidateObjectInfo(ObjectInfo oi, long size, long chunks, int chunkSize) {
+        private ObjectInfo ValidateObjectInfo(ObjectInfo oi, long size, long chunks, int chunkSize)
+        {
+            return ValidateObjectInfo(oi, "object-name", "object-desc", true, size, chunks, chunkSize);
+        }
+
+        private ObjectInfo ValidateObjectInfo(ObjectInfo oi, string objectName, string objectDesc, bool headers, long size, long chunks, int chunkSize) {
             Assert.Equal(BUCKET, oi.Bucket);
-            Assert.Equal("object-name", oi.ObjectName);
-            Assert.Equal("object-desc", oi.Description);
+            Assert.Equal(objectName, oi.ObjectName);
+            if (objectDesc == null) {
+                Assert.Null(oi.Description);
+            }
+            else {
+                Assert.Equal(objectDesc, oi.Description);
+            }
+
             Assert.Equal(size, oi.Size);
             Assert.Equal(chunks, oi.Chunks);
             Assert.NotNull(oi.Nuid);
@@ -170,15 +215,20 @@ namespace IntegrationTests
             if (chunkSize > 0) {
                 Assert.Equal(chunkSize, oi.ObjectMeta.ObjectMetaOptions.ChunkSize);
             }
-            Assert.NotNull(oi.Headers);
-            Assert.Equal(2, oi.Headers.Count);
-            IList<string> list = oi.Headers.GetValues(Key(1));
-            Assert.Equal(1, list.Count);
-            Assert.Equal(Data(1), oi.Headers[Key(1)]);
-            list = oi.Headers.GetValues(Key(2));
-            Assert.Equal(2, list.Count);
-            Assert.True(list.Contains(Data(21)));
-            Assert.True(list.Contains(Data(22)));
+
+            if (headers)
+            {
+                Assert.NotNull(oi.Headers);
+                Assert.Equal(2, oi.Headers.Count);
+                IList<string> list = oi.Headers.GetValues(Key(1));
+                Assert.Equal(1, list.Count);
+                Assert.Equal(Data(1), oi.Headers[Key(1)]);
+                list = oi.Headers.GetValues(Key(2));
+                Assert.Equal(2, list.Count);
+                Assert.True(list.Contains(Data(21)));
+                Assert.True(list.Contains(Data(22)));
+            }
+
             return oi;
         }
 
@@ -288,9 +338,20 @@ namespace IntegrationTests
 
                 // can't overwrite object with a link
                 AssertClientError(OsObjectAlreadyExists, () => os1.AddLink(info11.ObjectName, info11)); // can't overwrite object with a link
+                
+                // can overwrite a deleted link or another link
+                os1.Put("overwrite", Encoding.UTF8.GetBytes("over"));
+                os1.Delete("overwrite");
+                os1.AddLink("overwrite", info11); // over deleted
+                os1.AddLink("overwrite", info11); // over another link
 
                 // can't overwrite object with a bucket link
                 AssertClientError(OsObjectAlreadyExists, () => os1.AddBucketLink(info11.ObjectName, os1));
+                
+                // can overwrite a deleted link or another link
+                os1.Delete("overwrite");
+                os1.AddBucketLink("overwrite", os1);
+                os1.AddBucketLink("overwrite", os1);
 
                 // Link to individual object.
                 ObjectInfo linkTo11 = os1.AddLink("linkTo11", info11);
@@ -304,9 +365,16 @@ namespace IntegrationTests
 
                 ObjectInfo crossLink = os2.AddLink("crossLink", info11);
                 ValidateLink(crossLink, "crossLink", info11, null);
+                MemoryStream mem = new MemoryStream();
+                ObjectInfo crossGet = os2.Get(crossLink.ObjectName, mem);
+                Assert.Equal(info11, crossGet);
+                Assert.Equal(2, mem.Length);
 
                 ObjectInfo bucketLink = os2.AddBucketLink("bucketLink", os1);
                 ValidateLink(bucketLink, "bucketLink", null, os1);
+
+                // can't get a bucket
+                AssertClientError(OsGetLinkToBucket, () => os2.Get(bucketLink.ObjectName, new MemoryStream()));
 
                 // getInfo targetWillBeDeleted still gets info b/c the link is there
                 ObjectInfo targetWillBeDeleted = os2.AddLink("targetWillBeDeleted", info21);
@@ -336,10 +404,14 @@ namespace IntegrationTests
 
             Assert.NotNull(oiLink.Link);
             if (targetStore == null) { // link to bucket
+                Assert.True(oiLink.Link.IsBucketLink);
+                Assert.False(oiLink.Link.IsObjectLink);
                 Assert.Null(oiLink.Link.ObjectName);
                 Assert.Equal(oiLink.Link.Bucket, targetBucket.BucketName);
             }
             else {
+                Assert.False(oiLink.Link.IsBucketLink);
+                Assert.True(oiLink.Link.IsObjectLink);
                 Assert.Equal(oiLink.Link.ObjectName, targetStore.ObjectName);
                 Assert.Equal(oiLink.Link.Bucket, targetStore.Bucket);
             }
