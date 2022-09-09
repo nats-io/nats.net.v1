@@ -78,6 +78,11 @@ namespace NATS.Client.KeyValue
         /// Republish options
         /// </summary>
         public Republish Republish => BackingConfig.Republish;
+
+        /// <summary>
+        /// Allow Direct setting
+        /// </summary>
+        public bool AllowDirect => BackingConfig.AllowDirect;
             
         /// <summary>
         /// Creates a builder for the KeyValueConfiguration. 
@@ -229,6 +234,18 @@ namespace NATS.Client.KeyValue
             }
 
             /// <summary>
+            /// Set whether to allow direct message access.
+            /// This is an optimization for Key Value since
+            /// but is not available on all account / jwt configuration.
+            /// </summary>
+            /// <param name="allowDirect">true to allow direct headers.</param>
+            /// <returns>The KeyValueConfigurationBuilder</returns>
+            public KeyValueConfigurationBuilder WithAllowDirect(bool allowDirect) {
+                scBuilder.WithAllowDirect(allowDirect);
+                return this;
+            }
+
+            /// <summary>
             /// Builds the KeyValueConfiguration
             /// </summary>
             /// <returns>the KeyValueConfiguration</returns>
@@ -237,7 +254,6 @@ namespace NATS.Client.KeyValue
                 scBuilder.WithName(KeyValueUtil.ToStreamName(_name))
                     .WithSubjects(KeyValueUtil.ToStreamSubject(_name))
                     .WithAllowRollup(true)
-                    .WithAllowDirect(true)
                     .WithDiscardPolicy(DiscardPolicy.New)
                     .WithDenyDelete(true);
                 return new KeyValueConfiguration(scBuilder.Build());
