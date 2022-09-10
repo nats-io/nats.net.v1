@@ -96,7 +96,7 @@ namespace NATS.Client.ObjectStore
 
             try
             {
-                IncrementalHash hasher = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+                Digester digester = new Digester();
                 long totalSize = 0; // track total bytes read to make sure
                 int chunks = 0;
 
@@ -118,7 +118,7 @@ namespace NATS.Client.ObjectStore
                         }
 
                         // digest the actual bytes
-                        hasher.AppendData(payload);
+                        digester.AppendData(payload);
 
                         // publish the payload
                         js.Publish(chunkSubject, payload);
@@ -129,14 +129,12 @@ namespace NATS.Client.ObjectStore
                     }
                 }
 
-                var digest = GetDigestEntry(hasher);
-
                 return PublishMeta(ObjectInfo.Builder(BucketName, meta)
                     .WithSize(totalSize)
                     .WithChunks(chunks)
                     .WithNuid(nuid)
                     .WithChunkSize(chunkSize)
-                    .WithDigest(digest)
+                    .WithDigest(digester.GetDigestEntry())
                     .Build());
             }
             catch (Exception)
@@ -147,33 +145,6 @@ namespace NATS.Client.ObjectStore
                 catch (Exception) { /* ignore, there is already an error */ }
                 
                 throw;
-            }
-        }
-
-        private string GetDigestEntry(IncrementalHash hasher)
-        {
-            byte[] hash = hasher.GetHashAndReset();
-            StringBuilder digestSb = new StringBuilder("SHA-256=");
-            foreach (byte t in hash)
-            {
-                digestSb.Append(t.ToString("x2"));
-            }
-
-            string digest = digestSb.ToString();
-            return digest;
-        }
-
-        private bool DigestEntriesMatch(string de1, string de2)
-        {
-            try
-            {
-                int at = de1.IndexOf("=", StringComparison.Ordinal);
-                return de1.Substring(0, at).ToUpper().Equals(de2.Substring(0, at).ToUpper()) 
-                       && de1.Substring(at).Equals(de2.Substring(at));
-            }
-            catch (Exception)
-            {
-                return false;
             }
         }
 
@@ -215,7 +186,7 @@ namespace NATS.Client.ObjectStore
                 return js.Conn.CreateObjectStoreContext(link.Bucket, oso).Get(link.ObjectName, outputStream);
             }
 
-            IncrementalHash hasher = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+            Digester digester = new Digester();
             long totalBytes = 0;
             long totalChunks = 0;
 
@@ -227,7 +198,7 @@ namespace NATS.Client.ObjectStore
                 // write the bytes to the output file
                 totalBytes = mi.Data.Length;
                 totalChunks = 1;
-                hasher.AppendData(mi.Data);
+                digester.AppendData(mi.Data);
                 outputStream.Write(mi.Data, 0, mi.Data.Length);
             }
             else {
@@ -248,7 +219,7 @@ namespace NATS.Client.ObjectStore
                         // write the bytes to the output file
                         totalBytes += m.Data.Length;
                         totalChunks++;
-                        hasher.AppendData(m.Data);
+                        digester.AppendData(m.Data);
                         outputStream.Write(m.Data, 0, m.Data.Length);
                     }
                     catch (NATSTimeoutException)
@@ -262,7 +233,7 @@ namespace NATS.Client.ObjectStore
 
             if (totalBytes != oi.Size) { throw OsGetSizeMismatch.Instance(); }
             if (totalChunks != oi.Chunks) { throw OsGetChunksMismatch.Instance(); }
-            if (!DigestEntriesMatch(GetDigestEntry(hasher), oi.Digest)) { throw OsGetDigestMismatch.Instance(); }
+            if (!digester.DigestEntriesMatch(oi.Digest)) { throw OsGetDigestMismatch.Instance(); }
 
             return oi;
         }

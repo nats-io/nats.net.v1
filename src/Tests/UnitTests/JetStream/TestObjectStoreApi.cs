@@ -13,7 +13,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using NATS.Client;
 using NATS.Client.Internals;
