@@ -28,6 +28,7 @@ using System.Threading.Tasks;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using NATS.Client.KeyValue;
+using NATS.Client.ObjectStore;
 using static NATS.Client.Defaults;
 using Timeout = System.Threading.Timeout;
 
@@ -4712,6 +4713,20 @@ namespace NATS.Client
         public IKeyValueManagement CreateKeyValueManagementContext(KeyValueOptions options = null)
         {
             return new KeyValueManagement(this, options);
+        }
+
+        #endregion
+
+        #region ObjectStore
+
+        public IObjectStore CreateObjectStoreContext(string bucketName, ObjectStoreOptions options = null)
+        {
+            return new ObjectStore.ObjectStore(this, bucketName, options);
+        }
+
+        public IObjectStoreManagement CreateObjectStoreManagementContext(ObjectStoreOptions options = null)
+        {
+            return new ObjectStoreManagement(this, options);
         }
 
         #endregion

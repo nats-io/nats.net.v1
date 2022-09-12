@@ -1,4 +1,4 @@
-// Copyright 2021 The NATS Authors
+﻿// Copyright 2022 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at:
@@ -14,67 +14,67 @@
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 
-namespace NATS.Client.KeyValue
+namespace NATS.Client.ObjectStore
 {
-    public sealed class KeyValueOptions : FeatureOptions
+    public sealed class ObjectStoreOptions : FeatureOptions
     {
-        private KeyValueOptions(JetStreamOptions jso) : base(jso) {}
+        private ObjectStoreOptions(JetStreamOptions jso) : base(jso) {}
         
         /// <summary>
-        /// Gets a KeyValueOptionsBuilder builder.
+        /// Gets a ObjectStoreOptionsBuilder builder.
         /// </summary>
         /// <returns>
         /// The builder
         /// </returns>
-        public static KeyValueOptionsBuilder Builder()
+        public static ObjectStoreOptionsBuilder Builder()
         {
-            return new KeyValueOptionsBuilder();
+            return new ObjectStoreOptionsBuilder();
         }
         
         /// <summary>
-        /// Gets the KeyValueOptions builder based on an existing KeyValueOptions object.
+        /// Gets the ObjectStoreOptions builder based on an existing ObjectStoreOptions object.
         /// </summary>
-        /// <param name="kvo">an existing KeyValueOptions object</param>
+        /// <param name="oso">an existing ObjectStoreOptions object</param>
         /// <returns>The builder</returns>
-        public static KeyValueOptionsBuilder Builder(KeyValueOptions kvo)
+        public static ObjectStoreOptionsBuilder Builder(ObjectStoreOptions oso)
         {
-            return new KeyValueOptionsBuilder(kvo);
+            return new ObjectStoreOptionsBuilder(oso);
         }
         
         /// <summary>
-        /// Gets the KeyValueOptions builder based on an existing JetStreamOptions object.
+        /// Gets the ObjectStoreOptions builder based on an existing JetStreamOptions object.
         /// </summary>
         /// <param name="jso">an existing JetStreamOptions object</param>
         /// <returns>The builder</returns>
-        public static KeyValueOptionsBuilder Builder(JetStreamOptions jso)
+        public static ObjectStoreOptionsBuilder Builder(JetStreamOptions jso)
         {
-            return new KeyValueOptionsBuilder().WithJetStreamOptions(jso);
+            return new ObjectStoreOptionsBuilder().WithJetStreamOptions(jso);
         }
 
-        public sealed class KeyValueOptionsBuilder
+        public sealed class ObjectStoreOptionsBuilder
         {
             private JetStreamOptions.JetStreamOptionsBuilder _jsoBuilder;
 
             /// <summary>
             /// Construct a builder
             /// </summary>
-            public KeyValueOptionsBuilder() : this(null) {}
+            public ObjectStoreOptionsBuilder() : this(null) {}
 
             /// <summary>
-            /// Construct a builder from an existing KeyValueOptions object
+            /// Construct a builder from an existing ObjectStoreOptions object
             /// </summary>
-            /// <param name="kvo">an existing KeyValueOptions object</param>
-            public KeyValueOptionsBuilder(KeyValueOptions kvo)
+            /// <param name="oso">an existing ObjectStoreOptions object</param>
+            public ObjectStoreOptionsBuilder(ObjectStoreOptions oso)
             {
-                _jsoBuilder = JetStreamOptions.Builder(kvo?.JSOptions);
+                _jsoBuilder = JetStreamOptions.Builder(oso?.JSOptions);
             }
             
             /// <summary>
             /// Sets the JetStreamOptions.
             /// </summary>
             /// <param name="jso">The JetStreamOptions.</param>
-            /// <returns>The KeyValueOptionsBuilder</returns>
-            public KeyValueOptionsBuilder WithJetStreamOptions(JetStreamOptions jso)
+            /// <returns>The ObjectStoreOptionsBuilder</returns>
+            public ObjectStoreOptionsBuilder WithJetStreamOptions(JetStreamOptions jso)
             {
                 _jsoBuilder = JetStreamOptions.Builder(jso);
                 return this;
@@ -85,11 +85,11 @@ namespace NATS.Client.KeyValue
             /// </summary>
             /// <param name="requestTimeout">the duration to wait for responses.</param>
             /// <returns>The ObjectStoreOptionsBuilder</returns>
-            public KeyValueOptionsBuilder WithRequestTimeout(Duration requestTimeout) {
+            public ObjectStoreOptionsBuilder WithRequestTimeout(Duration requestTimeout) {
                 _jsoBuilder.WithRequestTimeout(requestTimeout);
                 return this;
             }
-            
+
             /// <summary>
             /// Sets the prefix for JetStream subjects. A prefix can be used in conjunction with
             /// user permissions to restrict access to certain JetStream instances.  This must
@@ -97,7 +97,7 @@ namespace NATS.Client.KeyValue
             /// </summary>
             /// <param name="prefix">The prefix.</param>
             /// <returns>The JetStreamOptionsBuilder</returns>
-            public KeyValueOptionsBuilder WithJsPrefix(string prefix)
+            public ObjectStoreOptionsBuilder WithJsPrefix(string prefix)
             {
                 _jsoBuilder.WithPrefix(prefix);
                 return this;
@@ -110,19 +110,19 @@ namespace NATS.Client.KeyValue
             /// </summary>
             /// <param name="domain">The domain.</param>
             /// <returns>The JetStreamOptionsBuilder</returns>
-            public KeyValueOptionsBuilder WithJsDomain(string domain) 
+            public ObjectStoreOptionsBuilder WithJsDomain(string domain) 
             {
                 _jsoBuilder.WithDomain(domain);
                 return this;
             }
 
             /// <summary>
-            /// Builds the KeyValueOptions
+            /// Builds the ObjectStoreOptions
             /// </summary>
-            /// <returns>The KeyValueOptions object.</returns>
-            public KeyValueOptions Build()
+            /// <returns>The ObjectStoreOptions object.</returns>
+            public ObjectStoreOptions Build()
             {
-                return new KeyValueOptions(_jsoBuilder.Build());
+                return new ObjectStoreOptions(_jsoBuilder.Build());
             }
         }
     }

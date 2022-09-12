@@ -256,8 +256,18 @@ namespace NATS.Client
         public static readonly ClientExDetail JsSoOrderedRequiresAckPolicyNone = new ClientExDetail(So, 90108, "Ordered consumer requires Ack Policy None.");
         public static readonly ClientExDetail JsSoOrderedRequiresMaxDeliver = new ClientExDetail(So, 90109, "Max deliver is limited to 1 with an ordered consumer.");
 
+        public static readonly ClientExDetail OsObjectNotFound = new ClientExDetail(Os, 90201, "The object was not found.");
+        public static readonly ClientExDetail OsObjectIsDeleted = new ClientExDetail(Os, 90202, "The object is deleted.");
+        public static readonly ClientExDetail OsObjectAlreadyExists = new ClientExDetail(Os, 90203, "An object with that name already exists.");
+        public static readonly ClientExDetail OsCantLinkToLink = new ClientExDetail(Os, 90204, "A link cannot link to another link.");
+        public static readonly ClientExDetail OsGetDigestMismatch = new ClientExDetail(Os, 90205, "Digest does not match meta data.");
+        public static readonly ClientExDetail OsGetChunksMismatch = new ClientExDetail(Os, 90206, "Number of chunks ddoes not match meta data.");
+        public static readonly ClientExDetail OsGetSizeMismatch = new ClientExDetail(Os, 90207, "Total size does not match meta data.");
+        public static readonly ClientExDetail OsGetLinkToBucket = new ClientExDetail(Os, 90208, "Cannot get object, it is a link to a bucket.");
+
         private const string Sub = "SUB";
         private const string So = "SO";
+        private const string Os = "OS";
 
         public string Id { get; }
         public string Message { get; }

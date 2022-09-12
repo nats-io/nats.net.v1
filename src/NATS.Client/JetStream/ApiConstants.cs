@@ -25,7 +25,9 @@ namespace NATS.Client.JetStream
         internal const string AuthRequired = "auth_required";
         internal const string Backoff = "backoff";
         internal const string Batch = "batch";
+        internal const string Bucket = "bucket";
         internal const string Bytes = "bytes";
+        internal const string Chunks = "chunks";
         internal const string ClientId = "client_id";
         internal const string ClientIp = "client_ip";
         internal const string Cluster = "cluster";
@@ -49,6 +51,7 @@ namespace NATS.Client.JetStream
         internal const string DenyPurge = "deny_purge";
         internal const string Description = "description";
         internal const string Dest = "dest";
+        internal const string Digest = "digest";
         internal const string Discard = "discard";
         internal const string Domain = "domain";
         internal const string Duplicate = "duplicate";
@@ -82,12 +85,14 @@ namespace NATS.Client.JetStream
         internal const string Leader = "leader";
         internal const string Limit = "limit";
         internal const string Limits = "limits";
+        internal const string Link = "link";
         internal const string MaxAckPending = "max_ack_pending";
         internal const string MaxAge = "max_age";
         internal const string MaxBatch = "max_batch";
         internal const string MaxBytes = "max_bytes";
         internal const string MaxBytesRequired = "max_bytes_required";
         internal const string MaxConsumers = "max_consumers";
+        internal const string MaxChunkSize = "max_chunk_size";
         internal const string MaxDeliver = "max_deliver";
         internal const string MaxExpires = "max_expires";
         internal const string MaxMemory = "max_memory";
@@ -110,6 +115,7 @@ namespace NATS.Client.JetStream
         internal const string NoErase = "no_erase";
         internal const string Nonce = "nonce";
         internal const string NoWait = "no_wait";
+        internal const string Nuid = "nuid";
         internal const string NumAckPending = "num_ack_pending";
         internal const string NumDeleted = "num_deleted";
         internal const string NumPending = "num_pending";
@@ -119,6 +125,7 @@ namespace NATS.Client.JetStream
         internal const string NumWaiting = "num_waiting";
         internal const string Offline = "offline";
         internal const string Offset = "offset";
+        internal const string Options = "options";
         internal const string OptStartSeq = "opt_start_seq";
         internal const string OptStartTime = "opt_start_time";
         internal const string Placement = "placement";
@@ -137,6 +144,7 @@ namespace NATS.Client.JetStream
         internal const string Seq = "seq";
         internal const string ServerId = "server_id";
         internal const string ServerName = "server_name";
+        internal const string Size = "size";
         internal const string Source = "source";
         internal const string Sources = "sources";
         internal const string Src = "src";

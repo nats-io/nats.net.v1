@@ -62,7 +62,7 @@ namespace UnitTests
             return File.ReadAllLines(FileSpec(name));
         }
 
-        private static string FileSpec(string name)
+        public static string FileSpec(string name)
         {
             string path = Directory.GetCurrentDirectory();
             return Path.Combine(path, "..", "..", "..", "Data", name);

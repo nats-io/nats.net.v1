@@ -22,22 +22,17 @@ namespace NATS.Client.KeyValue
         internal const string KvSubjectPrefix = "$KV.";
         internal const string KvSubjectSuffix = ".>";
         internal const string KvOperationHeaderKey = "KV-Operation";
+        
+        public static MsgHeader DeleteHeaders => new MsgHeader
+        {
+            { KvOperationHeaderKey, KeyValueOperation.Delete.HeaderValue }
+        };
 
-        internal readonly static MsgHeader DeleteHeaders;
-        internal readonly static MsgHeader PurgeHeaders;
-
-        static KeyValueUtil() {
-            DeleteHeaders = new MsgHeader
-            {
-                { KvOperationHeaderKey, KeyValueOperation.Delete.HeaderValue }
-            };
-
-            PurgeHeaders = new MsgHeader
-            {
-                { KvOperationHeaderKey, KeyValueOperation.Purge.HeaderValue },
-                { JetStreamConstants.RollupHeader, JetStreamConstants.RollupHeaderSubject }
-            };
-        }
+        public static readonly MsgHeader PurgeHeaders = new MsgHeader
+        {
+            { KvOperationHeaderKey, KeyValueOperation.Purge.HeaderValue },
+            { JetStreamConstants.RollupHeader, JetStreamConstants.RollupHeaderSubject }
+        };
 
         public static string ExtractBucketName(string streamName) {
             return streamName.Substring(KvStreamPrefixLen);

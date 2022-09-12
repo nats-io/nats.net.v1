@@ -36,6 +36,7 @@ namespace UnitTests.JetStream
                 .WithReplicas(2)
                 .WithPlacement(p)
                 .WithRepublish(r)
+                .WithAllowDirect(true)
                 .Build();
             Validate(kvc);
 
@@ -57,6 +58,7 @@ namespace UnitTests.JetStream
             Assert.Equal(666, kvc.MaxValueSize);
             Assert.Equal(Duration.OfMillis(777), kvc.Ttl);
             Assert.Equal(StorageType.Memory, kvc.StorageType);
+            Assert.True(kvc.AllowDirect);
             Assert.Equal(2, kvc.Replicas);
             Assert.NotNull(kvc.Placement);
             Assert.Equal("cluster", kvc.Placement.Cluster);

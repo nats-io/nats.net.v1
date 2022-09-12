@@ -21,14 +21,14 @@ namespace NATS.Client.KeyValue
         /// Create a key value store.
         /// </summary>
         /// <param name="config">the key value configuration</param>
-        /// <returns></returns>
+        /// <returns>The status</returns>
         KeyValueStatus Create(KeyValueConfiguration config);
 
         /// <summary>
         /// Update a key value store configuration. Storage type cannot change.
         /// </summary>
         /// <param name="config">the key value configuration</param>
-        /// <returns></returns>
+        /// <returns>The status</returns>
         KeyValueStatus Update(KeyValueConfiguration config);
 
         /// <summary>

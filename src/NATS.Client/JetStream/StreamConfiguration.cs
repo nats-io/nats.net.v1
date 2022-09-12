@@ -571,6 +571,15 @@ namespace NATS.Client.JetStream
             }
 
             /// <summary>
+            /// Set this stream to be sealed. This is irreversible.
+            /// </summary>
+            /// <returns>The StreamConfigurationBuilder</returns>
+            public StreamConfigurationBuilder Seal() {
+                _sealed = true;
+                return this;
+            }
+
+            /// <summary>
             /// Builds the ConsumerConfiguration
             /// </summary>
             /// <returns>The StreamConfiguration</returns>

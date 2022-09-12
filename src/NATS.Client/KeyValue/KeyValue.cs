@@ -19,38 +19,28 @@ using NATS.Client.JetStream;
 
 namespace NATS.Client.KeyValue
 {
-    public class KeyValue : IKeyValue
+    public class KeyValue : FeatureBase, IKeyValue
     {
-        internal JetStream.JetStream js;
-        internal IJetStreamManagement jsm;
-        internal string StreamName { get; }
         internal string StreamSubject { get; }
         internal string RawKeyPrefix { get; }
         internal string PubSubKeyPrefix { get; }
         
-        internal KeyValue(IConnection connection, string bucketName, KeyValueOptions kvo) {
-            BucketName = Validator.ValidateKvBucketNameRequired(bucketName);
+        internal KeyValue(IConnection connection, string bucketName, KeyValueOptions kvo) : base(connection, kvo) {
+            BucketName = Validator.ValidateBucketName(bucketName, true);
             StreamName = KeyValueUtil.ToStreamName(BucketName);
             StreamSubject = KeyValueUtil.ToStreamSubject(BucketName);
             RawKeyPrefix = KeyValueUtil.ToKeyPrefix(bucketName);
             if (kvo == null)
             {
-                js = new JetStream.JetStream(connection, null);
-                jsm = new JetStreamManagement(connection, null);
+                PubSubKeyPrefix = RawKeyPrefix;
+            }
+            else if (kvo.JSOptions.IsDefaultPrefix)
+            {
                 PubSubKeyPrefix = RawKeyPrefix;
             }
             else
             {
-                js = new JetStream.JetStream(connection, kvo.JSOptions);
-                jsm = new JetStreamManagement(connection, kvo.JSOptions);
-                if (kvo.JSOptions.IsDefaultPrefix)
-                {
-                    PubSubKeyPrefix = RawKeyPrefix;
-                }
-                else
-                {
-                    PubSubKeyPrefix = kvo.JSOptions.Prefix + RawKeyPrefix;
-                }
+                PubSubKeyPrefix = kvo.JSOptions.Prefix + RawKeyPrefix;
             }
         }
 
@@ -68,43 +58,35 @@ namespace NATS.Client.KeyValue
 
         public KeyValueEntry Get(string key)
         {
-            return existingOnly(_kvGetLastMessage(Validator.ValidateNonWildcardKvKeyRequired(key)));
+            return existingOnly(_get(Validator.ValidateNonWildcardKvKeyRequired(key)));
         }
 
         public KeyValueEntry Get(string key, ulong revision)
         {
-            return existingOnly(_kvGetMessage(Validator.ValidateNonWildcardKvKeyRequired(key), revision));
+            return existingOnly(_getBySeq(Validator.ValidateNonWildcardKvKeyRequired(key), revision));
         }
 
         private KeyValueEntry existingOnly(KeyValueEntry kve) {
             return kve == null || !kve.Operation.Equals(KeyValueOperation.Put) ? null : kve;
         }
-
-        internal KeyValueEntry _kvGetLastMessage(string key)
-        {
-            try {
-                return new KeyValueEntry(jsm.GetLastMessage(StreamName, RawKeySubject(key)));
-            }
-            catch (NATSJetStreamException njse) {
-                if (njse.ApiErrorCode == JetStreamConstants.JsNoMessageFoundErr) {
-                    return null;
-                }
-                throw;
-            }
+        
+        KeyValueEntry _get(string key) {
+            MessageInfo mi = _getLast(RawKeySubject(key));
+            return mi == null ? null : new KeyValueEntry(mi);
         }
 
-        internal KeyValueEntry _kvGetMessage(string key, ulong revision)
+        KeyValueEntry _getBySeq(string key, ulong revision)
         {
-            try {
-                KeyValueEntry kve = new KeyValueEntry(jsm.GetMessage(StreamName, revision));
-                return key.Equals(kve.Key) ? kve : null;
-            }
-            catch (NATSJetStreamException njse) {
-                if (njse.ApiErrorCode == JetStreamConstants.JsNoMessageFoundErr) {
-                    return null;
+            MessageInfo mi = _getBySeq(revision);
+            if (mi != null)
+            {
+                KeyValueEntry kve = new KeyValueEntry(mi);
+                if (key.Equals(kve.Key)) {
+                    return kve;
                 }
-                throw;
             }
+
+            return null;
         }
 
         public ulong Put(string key, byte[] value)
@@ -118,6 +100,7 @@ namespace NATS.Client.KeyValue
         
         public ulong Create(string key, byte[] value)
         {
+            Validator.ValidateNonWildcardKvKeyRequired(key);
             try
             {
                 return Update(key, value, 0);
@@ -127,7 +110,7 @@ namespace NATS.Client.KeyValue
                 if (e.ApiErrorCode == JetStreamConstants.JsWrongLastSequence)
                 {
                     // must check if the last message for this subject is a delete or purge
-                    KeyValueEntry kve = _kvGetLastMessage(key);
+                    KeyValueEntry kve = _get(key);
                     if (kve != null && !kve.Operation.Equals(KeyValueOperation.Put)) {
                         return Update(key, value, kve.Revision);
                     }
@@ -243,50 +226,6 @@ namespace NATS.Client.KeyValue
         public KeyValueStatus Status()
         {
             return new KeyValueStatus(jsm.GetStreamInfo(KeyValueUtil.ToStreamName(BucketName)));
-        }
- 
-        private void VisitSubject(string subject, DeliverPolicy deliverPolicy, bool headersOnly, bool ordered, Action<Msg> action) {
-            PushSubscribeOptions pso = PushSubscribeOptions.Builder()
-                .WithOrdered(ordered)
-                .WithConfiguration(
-                    ConsumerConfiguration.Builder()
-                        .WithAckPolicy(AckPolicy.None)
-                        .WithDeliverPolicy(deliverPolicy)
-                        .WithHeadersOnly(headersOnly)
-                        .Build())
-                .Build();
-            
-            IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(subject, pso);
-            try
-            {
-                bool lastTimedOut = false;
-                ulong pending = sub.GetConsumerInformation().CalculatedPending;
-                while (pending > 0) // no need to loop if nothing pending
-                {
-                    try
-                    {
-                        Msg m = sub.NextMessage(js.Timeout);
-                        action.Invoke(m);
-                        if (--pending == 0)
-                        {
-                            return;
-                        }
-                        lastTimedOut = false;
-                    }
-                    catch (NATSTimeoutException)
-                    {
-                        if (lastTimedOut)
-                        {
-                            return; // two timeouts in a row is enough
-                        }
-                        lastTimedOut = true;
-                    }
-                }
-            }
-            finally
-            {
-                sub.Unsubscribe();
-            }
         }
     }
 }

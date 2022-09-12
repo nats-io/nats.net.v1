@@ -78,21 +78,26 @@ namespace NATS.Client.KeyValue
         /// Republish options
         /// </summary>
         public Republish Republish => BackingConfig.Republish;
+
+        /// <summary>
+        /// Allow Direct setting
+        /// </summary>
+        public bool AllowDirect => BackingConfig.AllowDirect;
             
         /// <summary>
-        /// Creates a builder for the Key Value Configuration. 
+        /// Creates a builder for the KeyValueConfiguration. 
         /// </summary>
-        /// <returns>a stream configuration builder</returns>
+        /// <returns>a KeyValueConfiguration builder</returns>
         public static KeyValueConfigurationBuilder Builder()
         {
             return new KeyValueConfigurationBuilder();
         }
         
         /// <summary>
-        /// Creates a builder for the Key Value Configuration. 
+        /// Creates a builder for the KeyValueConfiguration. 
         /// </summary>
         /// <param name="kvc"></param>
-        /// <returns>a stream configuration builder</returns>
+        /// <returns>a KeyValueConfiguration builder</returns>
         public static KeyValueConfigurationBuilder Builder(KeyValueConfiguration kvc)
         {
             return new KeyValueConfigurationBuilder(kvc);
@@ -229,15 +234,26 @@ namespace NATS.Client.KeyValue
             }
 
             /// <summary>
+            /// Set whether to allow direct message access.
+            /// This is an optimization for Key Value since
+            /// but is not available on all account / jwt configuration.
+            /// </summary>
+            /// <param name="allowDirect">true to allow direct headers.</param>
+            /// <returns>The KeyValueConfigurationBuilder</returns>
+            public KeyValueConfigurationBuilder WithAllowDirect(bool allowDirect) {
+                scBuilder.WithAllowDirect(allowDirect);
+                return this;
+            }
+
+            /// <summary>
             /// Builds the KeyValueConfiguration
             /// </summary>
             /// <returns>the KeyValueConfiguration</returns>
             public KeyValueConfiguration Build() {
-                _name = Validator.ValidateKvBucketNameRequired(_name);
+                _name = Validator.ValidateBucketName(_name, true);
                 scBuilder.WithName(KeyValueUtil.ToStreamName(_name))
                     .WithSubjects(KeyValueUtil.ToStreamSubject(_name))
                     .WithAllowRollup(true)
-                    .WithAllowDirect(true)
                     .WithDiscardPolicy(DiscardPolicy.New)
                     .WithDenyDelete(true);
                 return new KeyValueConfiguration(scBuilder.Build());

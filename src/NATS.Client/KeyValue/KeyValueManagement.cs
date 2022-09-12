@@ -55,13 +55,13 @@ namespace NATS.Client.KeyValue
 
         public KeyValueStatus GetBucketInfo(string bucketName)
         {
-            Validator.ValidateKvBucketNameRequired(bucketName);
+            Validator.ValidateBucketName(bucketName, true);
             return new KeyValueStatus(jsm.GetStreamInfo(KeyValueUtil.ToStreamName(bucketName)));
         }
 
         public void Delete(string bucketName)
         {
-            Validator.ValidateKvBucketNameRequired(bucketName);
+            Validator.ValidateBucketName(bucketName, true);
             jsm.DeleteStream(KeyValueUtil.ToStreamName(bucketName));
         }
     }

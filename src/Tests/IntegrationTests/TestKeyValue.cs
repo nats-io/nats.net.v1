@@ -24,6 +24,7 @@ using Xunit;
 using Xunit.Abstractions;
 using static UnitTests.TestBase;
 using static IntegrationTests.JetStreamTestBase;
+using static NATS.Client.JetStream.JetStreamOptions;
 
 namespace IntegrationTests
 {
@@ -49,6 +50,7 @@ namespace IntegrationTests
             {
                 // get the kv management context
                 IKeyValueManagement kvm = c.CreateKeyValueManagementContext();
+                c.CreateKeyValueManagementContext(KeyValueOptions.Builder(DefaultJsOptions).Build()); // coverage
 
                 // create the bucket
                 KeyValueConfiguration kvc = KeyValueConfiguration.Builder()
@@ -932,11 +934,11 @@ namespace IntegrationTests
                     KeyValueOptions jsOpt_UserA_NoPrefix = KeyValueOptions.Builder().Build();
                     
                     KeyValueOptions jsOpt_UserI_BucketA_WithPrefix = KeyValueOptions.Builder()
-                        .WithJetStreamOptions(JetStreamOptions.Builder().WithPrefix("FromA").Build())
+                        .WithJetStreamOptions(Builder().WithPrefix("FromA").Build())
                         .Build();
                     
                     KeyValueOptions jsOpt_UserI_BucketI_WithPrefix = KeyValueOptions.Builder()
-                        .WithJetStreamOptions(JetStreamOptions.Builder().WithPrefix("FromA").Build())
+                        .WithJetStreamOptions(Builder().WithPrefix("FromA").Build())
                         .Build();
 
                     IKeyValueManagement kvmUserA = connUserA.CreateKeyValueManagementContext(jsOpt_UserA_NoPrefix);
