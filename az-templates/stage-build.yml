@@ -40,8 +40,8 @@ stages:
         targetType: 'inline'
         script: |
           Write-Host "Cloning dependency repo."
-          git clone https://github.com/nats-io/nats.net.deps.git "$(Agent.TempDirectory)\deps"
-          $natsServerDir = "$(Agent.TempDirectory)\deps\nats-server"
+          git clone https://github.com/nats-io/nats.client.deps.git "$(Agent.TempDirectory)\deps"
+          $natsServerDir = "$(Agent.TempDirectory)\deps\win-latest"
           Write-Host "Appending nats-server directory $natsServerDir to path."
           Write-Host "##vso[task.setvariable variable=PATH;]${env:PATH};$natsServerDir"
 
