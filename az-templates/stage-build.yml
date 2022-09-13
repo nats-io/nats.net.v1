@@ -39,11 +39,12 @@ stages:
       inputs:
         targetType: 'inline'
         script: |
-          Write-Host "Cloning dependency repo."
-          git clone https://github.com/nats-io/nats.client.deps.git "$(Agent.TempDirectory)\deps"
-          $natsServerDir = "$(Agent.TempDirectory)\deps\win-latest"
-          Write-Host "Appending nats-server directory $natsServerDir to path."
-          Write-Host "##vso[task.setvariable variable=PATH;]${env:PATH};$natsServerDir"
+          Write-Host "Getting server executable."
+          $nats = "$(Agent.TempDirectory)\nats"
+          New-Item -ItemType "directory" -Path $nats
+          wget https://github.com/nats-io/nats.client.deps/raw/main/win-latest/nats-server.exe -outfile $nats\nats-server.exe
+          Write-Host "Appending nats-server directory $nats to path."
+          Write-Host "##vso[task.setvariable variable=PATH;]${env:PATH};$nats"
 
     - task: VSTest@2
       displayName: 'IntegrationTests .NetCoreApp3.1'
