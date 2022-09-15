@@ -215,8 +215,7 @@ namespace NATS.Client
     {
         private ClientExDetail _detail;
 
-        internal NATSJetStreamClientException(ClientExDetail detail)
-            : base(detail.Message)
+        internal NATSJetStreamClientException(ClientExDetail detail) : base(detail.Message)
         {
             _detail = detail;
         }
