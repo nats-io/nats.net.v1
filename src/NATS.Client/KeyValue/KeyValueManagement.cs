@@ -14,6 +14,7 @@
 using System.Collections.Generic;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
+using static NATS.Client.JetStream.JetStreamBase;
 
 namespace NATS.Client.KeyValue
 {
@@ -29,7 +30,7 @@ namespace NATS.Client.KeyValue
         public KeyValueStatus Create(KeyValueConfiguration config)
         {
             StreamConfiguration sc = config.BackingConfig;
-            if (jsm.Conn.ServerInfo.IsOlderThanVersion("2.7.2"))
+            if (ServerInfoOrException(jsm.Conn).IsOlderThanVersion("2.7.2"))
             {
                 sc = StreamConfiguration.Builder(sc).WithDiscardPolicy(null).Build(); // null discard policy will use default
             }

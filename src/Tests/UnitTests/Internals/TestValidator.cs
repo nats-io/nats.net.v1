@@ -77,32 +77,6 @@ namespace UnitTests.Internals
         }
 
         [Fact]
-        public void TestValidateDurableRequired()
-        {
-            AllowedRequired((s, r) => Validator.ValidateDurableRequired(s, null), Plain, HasPrintable);
-            NotAllowedRequired((s, r) => Validator.ValidateDurableRequired(s, null), null, string.Empty, HasSpace, HasDot, HasStar, HasGt, HasLow, Has127);
-            NotAllowedRequired((s, r) => Validator.ValidateDurableRequired(s, null), _utfOnlyStrings);
-
-            foreach (var data in new []{Plain, HasPrintable, HasDollar})
-            {
-                ConsumerConfiguration ccAllowed = ConsumerConfiguration.Builder().WithDurable(data).Build();
-                Assert.Equal(data, Validator.ValidateDurableRequired(null, ccAllowed));
-            }
-
-            foreach (var data in new []{null, string.Empty, HasSpace, HasDot, HasStar, HasGt, HasLow, Has127})
-            {
-                ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithDurable(data).Build();
-                NotAllowedRequired((s, r) => Validator.ValidateDurableRequired(null, cc));
-            }
-
-            foreach (var data in _utfOnlyStrings)
-            {
-                ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithDurable(data).Build();
-                NotAllowedRequired((s, r) => Validator.ValidateDurableRequired(null, cc));
-            }
-        }
-
-        [Fact]
         public void TestValidateValidateGtZero()
         {
             Assert.Equal(1, Validator.ValidateGtZero(1, "test"));

@@ -45,6 +45,10 @@ namespace NATS.Client.Internals
         /// </summary>
         public const string JsapiConsumerCreate = "CONSUMER.CREATE.{0}";
 
+        public const string JsapiConsumerCreateV290 = "CONSUMER.CREATE.{0}.{1}";
+
+        public const string JsapiConsumerCreateV290WithFilter = "CONSUMER.CREATE.{0}.{1}.{2}";
+
         /// <summary>
         /// JSAPI_DURABLE_CREATE is used to create durable consumers.
         /// </summary>

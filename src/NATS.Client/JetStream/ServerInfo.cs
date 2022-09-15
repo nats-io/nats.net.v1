@@ -94,5 +94,9 @@ namespace NATS.Client.JetStream
         public bool IsSameOrOlderThanVersion(string vTarget) {
             return String.Compare(GetComparableVersion(Version), GetComparableVersion(vTarget), StringComparison.Ordinal) <= 0;
         }
+
+        public bool IsSameOrNewerThanVersion(string vTarget) {
+            return String.Compare(GetComparableVersion(Version), GetComparableVersion(vTarget), StringComparison.Ordinal) >= 0;
+        }
     }
 }

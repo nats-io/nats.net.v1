@@ -61,6 +61,7 @@ namespace NATS.Client.JetStream
         public ReplayPolicy ReplayPolicy => _replayPolicy ?? ReplayPolicy.Instant;
         public string Description { get; }
         public string Durable { get; }
+        public string Name { get; }
         public string DeliverSubject { get; }
         public string DeliverGroup { get; }
         public string FilterSubject { get; }
@@ -96,6 +97,7 @@ namespace NATS.Client.JetStream
 
             Description = ccNode[ApiConstants.Description].Value;
             Durable = ccNode[ApiConstants.DurableName].Value;
+            Name = ccNode[ApiConstants.Name].Value;
             DeliverSubject = ccNode[ApiConstants.DeliverSubject].Value;
             DeliverGroup = ccNode[ApiConstants.DeliverGroup].Value;
             FilterSubject = ccNode[ApiConstants.FilterSubject].Value;
@@ -130,6 +132,7 @@ namespace NATS.Client.JetStream
 
             Description = builder._description;
             Durable = builder._durable;
+            Name = builder._name;
             DeliverSubject = builder._deliverSubject;
             DeliverGroup = builder._deliverGroup;
             FilterSubject = builder._filterSubject;
@@ -162,6 +165,7 @@ namespace NATS.Client.JetStream
 
             AddField(o, ApiConstants.Description, Description);
             AddField(o, ApiConstants.DurableName, Durable);
+            AddField(o, ApiConstants.Name, Name);
             AddField(o, ApiConstants.DeliverPolicy, DeliverPolicy.GetString());
             AddField(o, ApiConstants.DeliverSubject, DeliverSubject);
             AddField(o, ApiConstants.DeliverGroup, DeliverGroup);
@@ -298,6 +302,7 @@ namespace NATS.Client.JetStream
             
             internal string _description;
             internal string _durable;
+            internal string _name;
             internal string _deliverSubject;
             internal string _deliverGroup;
             internal string _filterSubject;
@@ -334,6 +339,7 @@ namespace NATS.Client.JetStream
 
                 _description = cc.Description;
                 _durable = cc.Durable;
+                _name = cc.Name;
                 _deliverSubject = cc.DeliverSubject;
                 _deliverGroup = cc.DeliverGroup;
                 _filterSubject = cc.FilterSubject;
@@ -371,13 +377,26 @@ namespace NATS.Client.JetStream
             }
 
             /// <summary>
-            /// Sets the name of the durable subscription.
+            /// Sets the name of the durable consumer.
+            /// Null or empty clears the field
             /// </summary>
-            /// <param name="durable">name of the durable subscription.</param>
+            /// <param name="durable">name of the durable consumer.</param>
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithDurable(string durable)
             {
-                _durable = EmptyAsNull(durable);
+                _durable = ValidateDurable(durable, false);
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the name of the consumer.
+            /// Null or empty clears the field
+            /// </summary>
+            /// <param name="name">name of the consumer.</param>
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder WithName(string name)
+            {
+                _name = ValidateConsumerName(name, false);
                 return this;
             }
 
@@ -784,6 +803,7 @@ namespace NATS.Client.JetStream
             /// <returns>The ConsumerConfiguration</returns>
             public ConsumerConfiguration Build()
             {
+                ValidateMustMatchIfBothSupplied(_name, _durable, ClientExDetail.JsConsumerNameDurableMismatch);
                 return new ConsumerConfiguration(this);
             }
 

@@ -9,6 +9,7 @@ namespace NATS.Client.Internals
         private static readonly char[] WildGt = { '*', '>'};
         private static readonly char[] WildGtDot = { '*', '>', '.'};
         private static readonly char[] WildGtDollar = {'*', '>', '$'};
+        private static readonly char[] WildGtDotSlashes = { '*', '>', '.', '\\', '/'};
         
         internal static string Required(string s, string label) {
             if (EmptyAsNull(s) == null) {
@@ -32,20 +33,15 @@ namespace NATS.Client.Internals
         }
 
         public static string ValidateStreamName(string s, bool required) {
-            return ValidatePrintableExceptWildDotGt(s, "Stream", required);
+            return ValidatePrintableExceptWildDotGtSlashes(s, "Stream", required);
         }
 
         public static string ValidateDurable(string s, bool required) {
-            return ValidatePrintableExceptWildDotGt(s, "Durable", required);
+            return ValidatePrintableExceptWildDotGtSlashes(s, "Durable", required);
         }
 
-        public static string ValidateDurableRequired(string durable, ConsumerConfiguration cc)
-        {
-            if (durable != null) return ValidateDurable(durable, true);
-            if (cc != null) return ValidateDurable(cc.Durable, true);
-
-            throw new ArgumentException(
-                "Durable is required and cannot contain a '.', '*' or '>' [null]");
+        public static string ValidateConsumerName(string s, bool required) {
+            return ValidatePrintableExceptWildDotGtSlashes(s, "Name", required);
         }
 
         public static string ValidatePrefixOrDomain(string s, string label, bool required) {
@@ -140,6 +136,16 @@ namespace NATS.Client.Internals
         {
             return Validate(s, required, label, () => {
                 if (NotPrintableOrHasWildGtDot(s)) {
+                    throw new ArgumentException($"{label} must be in the printable ASCII range and cannot include `*` or `.` [{s}]");
+                }
+                return s;
+            });
+        }
+
+        public static string ValidatePrintableExceptWildDotGtSlashes(string s, string label, bool required)
+        {
+            return Validate(s, required, label, () => {
+                if (NotPrintableOrHasWildGtDotSlashes(s)) {
                     throw new ArgumentException($"{label} must be in the printable ASCII range and cannot include `*` or `.` [{s}]");
                 }
                 return s;
@@ -517,6 +523,10 @@ namespace NATS.Client.Internals
             return NotPrintableOrHasChars(s, WildGtDot);
         }
 
+        public static bool NotPrintableOrHasWildGtDotSlashes(string s) {
+            return NotPrintableOrHasChars(s, WildGtDotSlashes);
+        }
+        
         public static bool NotPrintableOrHasWildGtDollar(string s) {
             return NotPrintableOrHasChars(s, WildGtDollar);
         }

@@ -28,12 +28,7 @@ namespace IntegrationTests
 {
     public class TestJetStream : TestSuite<JetStreamSuiteContext>
     {
-        private readonly ITestOutputHelper output;
-
-        public TestJetStream(ITestOutputHelper output, JetStreamSuiteContext context) : base(context)
-        {
-            this.output = output;
-        }
+        public TestJetStream(JetStreamSuiteContext context) : base(context) { }
 
         [Fact]
         public void TestJetStreamContextCreate()
@@ -100,6 +95,8 @@ namespace IntegrationTests
         public void TestJetStreamSubscribe() {
             Context.RunInJsServer(c =>
             {
+                bool atLeast290 = c.ServerInfo.IsSameOrNewerThanVersion("2.9.0");
+                
                 IJetStream js = c.CreateJetStreamContext();
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
 
@@ -163,6 +160,42 @@ namespace IntegrationTests
                 js.PushSubscribeSync("", Queue(102), psoBind).Unsubscribe();
                 js.PushSubscribeAsync(null, Queue(102), (o, a) => { }, false, psoBind).Unsubscribe();
                 js.PushSubscribeAsync("", Queue(102), (o, a) => { }, false, psoBind);
+                
+                // test 2.9.0
+                if (atLeast290) {
+                    ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithName(Name(1)).Build();
+                    pso = PushSubscribeOptions.Builder().WithConfiguration(cc).Build();
+                    IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(SUBJECT, pso);
+                    m = sub.NextMessage(1000);
+                    Assert.NotNull(m);
+                    Assert.Equal(DATA, Encoding.UTF8.GetString(m.Data));
+                    ConsumerInfo ci = sub.GetConsumerInformation();
+                    Assert.Equal(Name(1), ci.Name);
+                    Assert.Equal(Name(1), ci.ConsumerConfiguration.Name);
+                    Assert.Empty(ci.ConsumerConfiguration.Durable);
+                    
+                    cc = ConsumerConfiguration.Builder().WithDurable(Durable(1)).Build();
+                    pso = PushSubscribeOptions.Builder().WithConfiguration(cc).Build();
+                    sub = js.PushSubscribeSync(SUBJECT, pso);
+                    m = sub.NextMessage(1000);
+                    Assert.NotNull(m);
+                    Assert.Equal(DATA, Encoding.UTF8.GetString(m.Data));
+                    ci = sub.GetConsumerInformation();
+                    Assert.Equal(Durable(1), ci.Name);
+                    Assert.Equal(Durable(1), ci.ConsumerConfiguration.Name);
+                    Assert.Equal(Durable(1), ci.ConsumerConfiguration.Durable);
+                    
+                    cc = ConsumerConfiguration.Builder().WithDurable(Name(2)).WithName(Name(2)).Build();
+                    pso = PushSubscribeOptions.Builder().WithConfiguration(cc).Build();
+                    sub = js.PushSubscribeSync(SUBJECT, pso);
+                    m = sub.NextMessage(1000);
+                    Assert.NotNull(m);
+                    Assert.Equal(DATA, Encoding.UTF8.GetString(m.Data));
+                    ci = sub.GetConsumerInformation();
+                    Assert.Equal(Name(2), ci.Name);
+                    Assert.Equal(Name(2), ci.ConsumerConfiguration.Name);
+                    Assert.Equal(Name(2), ci.ConsumerConfiguration.Durable);
+                }
             });
         }
 

@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using NATS.Client.Internals;
@@ -45,7 +46,18 @@ namespace NATS.Client.JetStream
             Prefix = JetStreamOptions.Prefix;
             Timeout = JetStreamOptions.RequestTimeout.Millis;
         }
-        
+
+        internal static ServerInfo ServerInfoOrException(IConnection conn)
+        {
+            ServerInfo si = conn.ServerInfo;
+            if (si == null)
+            {
+                throw new NATSConnectionClosedException();
+            }
+
+            return si;
+        }
+            
         // ----------------------------------------------------------------------------------------------------
         // Management that is also needed by regular context
         // ----------------------------------------------------------------------------------------------------
@@ -57,9 +69,40 @@ namespace NATS.Client.JetStream
 
         internal ConsumerInfo AddOrUpdateConsumerInternal(string streamName, ConsumerConfiguration config)
         {
-            string subj = string.IsNullOrWhiteSpace(config.Durable)
-                ? string.Format(JetStreamConstants.JsapiConsumerCreate, streamName)
-                : string.Format(JetStreamConstants.JsapiDurableCreate, streamName, config.Durable);
+            bool serverIs290OrLater = ServerInfoOrException(Conn).IsSameOrNewerThanVersion("2.9.0");
+            
+            string name = Validator.EmptyAsNull(config.Name);
+            if (!string.IsNullOrWhiteSpace(name) && !serverIs290OrLater)
+            {
+                throw ClientExDetail.JsConsumerCantUseNameBefore290.Instance();
+            }
+            
+            string durable = Validator.EmptyAsNull(config.Durable);
+
+            string consumerName = name ?? durable;
+
+            string subj;
+
+            if (consumerName == null) // just use old template
+            {
+                subj = string.Format(JetStreamConstants.JsapiConsumerCreate, streamName);
+            }
+            else if (serverIs290OrLater)
+            {
+                string fs = Validator.EmptyAsNull(config.FilterSubject);
+                if (fs == null || fs.Equals(">"))
+                {
+                    subj = string.Format(JetStreamConstants.JsapiConsumerCreateV290, streamName, consumerName);
+                }
+                else
+                {
+                    subj = string.Format(JetStreamConstants.JsapiConsumerCreateV290WithFilter, streamName, consumerName, fs);
+                }
+            }
+            else // server is old and consumerName must be durable since name was checked for JsConsumerCantUseNameBefore290
+            {
+                subj = string.Format(JetStreamConstants.JsapiDurableCreate, streamName, durable);
+            }
 
             var ccr = new ConsumerCreateRequest(streamName, config);
             var m = RequestResponseRequired(subj, ccr.Serialize(), Timeout);
