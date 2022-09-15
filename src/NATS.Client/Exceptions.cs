@@ -248,13 +248,14 @@ namespace NATS.Client
 
         public static readonly ClientExDetail JsSoDurableMismatch = new ClientExDetail(So, 90101, "Builder durable must match the consumer configuration durable if both are provided.");
         public static readonly ClientExDetail JsSoDeliverGroupMismatch = new ClientExDetail(So, 90102, "Builder deliver group must match the consumer configuration deliver group if both are provided.");
-        public static readonly ClientExDetail JsSoDeliverSubjectGroupMismatch = new ClientExDetail(So, 90103, "Builder deliver subject must match the consumer configuration deliver subject if both are provided.");
+        public static readonly ClientExDetail JsSoDeliverSubjectMismatch = new ClientExDetail(So, 90103, "Builder deliver subject must match the consumer configuration deliver subject if both are provided.");
         public static readonly ClientExDetail JsSoOrderedNotAllowedWithBind = new ClientExDetail(So, 90104, "Bind is not allowed with an ordered consumer.");
         public static readonly ClientExDetail JsSoOrderedNotAllowedWithDeliverGroup = new ClientExDetail(So, 90105, "Deliver group is not allowed with an ordered consumer.");
         public static readonly ClientExDetail JsSoOrderedNotAllowedWithDurable = new ClientExDetail(So, 90106, "Durable is not allowed with an ordered consumer.");
         public static readonly ClientExDetail JsSoOrderedNotAllowedWithDeliverSubject = new ClientExDetail(So, 90107, "Deliver subject is not allowed with an ordered consumer.");
         public static readonly ClientExDetail JsSoOrderedRequiresAckPolicyNone = new ClientExDetail(So, 90108, "Ordered consumer requires Ack Policy None.");
         public static readonly ClientExDetail JsSoOrderedRequiresMaxDeliver = new ClientExDetail(So, 90109, "Max deliver is limited to 1 with an ordered consumer.");
+        public static readonly ClientExDetail JsSoNameMismatch = new ClientExDetail(So, 90110, "Builder name must match the consumer configuration name if both are provided.");
 
         public static readonly ClientExDetail OsObjectNotFound = new ClientExDetail(Os, 90201, "The object was not found.");
         public static readonly ClientExDetail OsObjectIsDeleted = new ClientExDetail(Os, 90202, "The object is deleted.");
@@ -265,9 +266,13 @@ namespace NATS.Client
         public static readonly ClientExDetail OsGetSizeMismatch = new ClientExDetail(Os, 90207, "Total size does not match meta data.");
         public static readonly ClientExDetail OsGetLinkToBucket = new ClientExDetail(Os, 90208, "Cannot get object, it is a link to a bucket.");
 
+        public static readonly ClientExDetail JsConsumerCantUseNameBefore290 = new ClientExDetail(Con, 90301, "Name field not valid against pre v2.9.0 servers.");
+        public static readonly ClientExDetail JsConsumerNameDurableMismatch = new ClientExDetail(Con, 90302, "Name must match durable if both are supplied.");
+        
         private const string Sub = "SUB";
         private const string So = "SO";
         private const string Os = "OS";
+        private const string Con = "CON";
 
         public string Id { get; }
         public string Message { get; }
@@ -295,5 +300,8 @@ namespace NATS.Client
 
         [Obsolete("constant name had typo, replaced with JsSubFcHbNotValidQueue")]
         public static readonly ClientExDetail JsSubFcHbHbNotValidQueue = new ClientExDetail(Sub, 90006, "Flow Control and/or heartbeat is not valid in queue mode.");
+        
+        [Obsolete("constant name had typo, replaced with JsSoDeliverSubjectMismatch")]
+        public static readonly ClientExDetail JsSoDeliverSubjectGroupMismatch = new ClientExDetail(So, 90103, "Builder deliver subject must match the consumer configuration deliver subject if both are provided.");
     }
 }

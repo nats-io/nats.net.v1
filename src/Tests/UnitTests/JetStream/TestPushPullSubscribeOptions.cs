@@ -15,11 +15,14 @@ using System;
 using NATS.Client;
 using NATS.Client.JetStream;
 using Xunit;
+using static NATS.Client.ClientExDetail;
 
 namespace UnitTests.JetStream
 {
     public class TestSubscribeOptions : TestBase
     {
+        private static readonly string[] BadNames = {HasDot, HasGt, HasStar, HasFwdSlash, HasBackSlash};
+    
         [Fact]
         public void TestPushAffirmative()
         {
@@ -61,33 +64,47 @@ namespace UnitTests.JetStream
         [Fact]
         public void TestPushFieldValidation() 
         {
-            PushSubscribeOptions.PushSubscribeOptionsBuilder builder = PushSubscribeOptions.Builder();
-            Assert.Throws<ArgumentException>(() => builder.WithStream(HasDot).Build());
-            Assert.Throws<ArgumentException>(() => builder.WithDurable(HasDot).Build());
+            foreach (string bad in BadNames) {
+                PushSubscribeOptions.PushSubscribeOptionsBuilder pushBuilder = PushSubscribeOptions.Builder();
+                Assert.Throws<ArgumentException>(() => pushBuilder.WithStream(bad).Build());
+                Assert.Throws<ArgumentException>(() => pushBuilder.WithDurable(bad).Build());
+                Assert.Throws<ArgumentException>(() => pushBuilder.WithName(bad).Build());
+                Assert.Throws<ArgumentException>(() => ConsumerConfiguration.Builder().WithDurable(bad).Build());
+                Assert.Throws<ArgumentException>(() => ConsumerConfiguration.Builder().WithName(bad).Build());
+            }
 
-            ConsumerConfiguration ccBadDur = ConsumerConfiguration.Builder().WithDurable(HasDot).Build();
-            Assert.Throws<ArgumentException>(() => builder.WithConfiguration(ccBadDur).Build());
+            NATSJetStreamClientException e = Assert.Throws<NATSJetStreamClientException>(() => PushSubscribeOptions.Builder().WithName(NAME).WithDurable(DURABLE).Build());
+            Assert.Contains(JsConsumerNameDurableMismatch.Id, e.Message);
 
             // durable directly
             PushSubscribeOptions.Builder().WithDurable(DURABLE).Build();
+            PushSubscribeOptions.Builder().WithName(NAME).Build();
 
             // in configuration
             ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithDurable(DURABLE).Build();
             PushSubscribeOptions.Builder().WithConfiguration(cc).Build();
-            
+            cc = ConsumerConfiguration.Builder().WithName(NAME).Build();
+            PushSubscribeOptions.Builder().WithConfiguration(cc).Build();
+
             // new helper
             ConsumerConfiguration.Builder().WithDurable(DURABLE).BuildPushSubscribeOptions();
+            ConsumerConfiguration.Builder().WithName(NAME).BuildPushSubscribeOptions();
         }
 
         [Fact]
-        public void TestPullValidation() 
+        public void TestPullFieldValidation() 
         {
-            PullSubscribeOptions.PullSubscribeOptionsSubscribeOptionsBuilder builder1 = PullSubscribeOptions.Builder();
-            Assert.Throws<ArgumentException>(() => builder1.WithStream(HasDot).Build());
-            Assert.Throws<ArgumentException>(() => builder1.WithDurable(HasDot).Build());
+            foreach (string bad in BadNames) {
+                PullSubscribeOptions.PullSubscribeOptionsBuilder pullBuilder = PullSubscribeOptions.Builder();
+                Assert.Throws<ArgumentException>(() => pullBuilder.WithStream(bad).Build());
+                Assert.Throws<ArgumentException>(() => pullBuilder.WithDurable(bad).Build());
+                Assert.Throws<ArgumentException>(() => pullBuilder.WithName(bad).Build());
+                Assert.Throws<ArgumentException>(() => ConsumerConfiguration.Builder().WithDurable(bad).Build());
+                Assert.Throws<ArgumentException>(() => ConsumerConfiguration.Builder().WithName(bad).Build());
+            }
 
-            ConsumerConfiguration ccBadDur = ConsumerConfiguration.Builder().WithDurable(HasDot).Build();
-            Assert.Throws<ArgumentException>(() => builder1.WithConfiguration(ccBadDur).Build());
+            NATSJetStreamClientException e = Assert.Throws<NATSJetStreamClientException>(() => PullSubscribeOptions.Builder().WithName(NAME).WithDurable(DURABLE).Build());
+            Assert.Contains(JsConsumerNameDurableMismatch.Id, e.Message);
 
             // durable directly
             PullSubscribeOptions.Builder().WithDurable(DURABLE).Build();
@@ -95,7 +112,7 @@ namespace UnitTests.JetStream
             // in configuration
             ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithDurable(DURABLE).Build();
             PullSubscribeOptions.Builder().WithConfiguration(cc).Build();
-            
+
             // new helper
             ConsumerConfiguration.Builder().WithDurable(DURABLE).BuildPullSubscribeOptions();
         }
@@ -128,10 +145,11 @@ namespace UnitTests.JetStream
                 .Build()
                 .Durable);
 
-            Assert.Throws<NATSJetStreamClientException>(() => PushSubscribeOptions.Builder()
+            NATSJetStreamClientException e = Assert.Throws<NATSJetStreamClientException>(() => PushSubscribeOptions.Builder()
                 .WithDurable("x")
                 .WithConfiguration(ConsumerConfiguration.Builder().WithDurable("y").Build())
                 .Build());
+            Assert.Contains(JsSoDurableMismatch.Id, e.Message);
 
             Assert.Null(PushSubscribeOptions.Builder().Build().Durable);
 
@@ -154,10 +172,12 @@ namespace UnitTests.JetStream
                 .Build()
                 .Durable);
 
-            Assert.Throws<NATSJetStreamClientException>(() => PullSubscribeOptions.Builder()
+            e = Assert.Throws<NATSJetStreamClientException>(() => PullSubscribeOptions.Builder()
                 .WithDurable("x")
                 .WithConfiguration(ConsumerConfiguration.Builder().WithDurable("y").Build())
                 .Build());
+            Assert.Contains(JsSoDurableMismatch.Id, e.Message);
+
         }
 
         [Fact]
@@ -187,11 +207,11 @@ namespace UnitTests.JetStream
                 .Build()
                 .DeliverGroup);
 
-            Assert.Throws<NATSJetStreamClientException>(() => PushSubscribeOptions.Builder()
+            NATSJetStreamClientException e = Assert.Throws<NATSJetStreamClientException>(() => PushSubscribeOptions.Builder()
                 .WithDeliverGroup("x")
                 .WithConfiguration(ConsumerConfiguration.Builder().WithDeliverGroup("y").Build())
                 .Build());
-            
+            Assert.Contains(JsSoDeliverGroupMismatch.Id, e.Message);
         }
 
         [Fact]
@@ -221,11 +241,11 @@ namespace UnitTests.JetStream
                 .Build()
                 .DeliverSubject);
 
-            Assert.Throws<NATSJetStreamClientException>(() => PushSubscribeOptions.Builder()
+            NATSJetStreamClientException e = Assert.Throws<NATSJetStreamClientException>(() => PushSubscribeOptions.Builder()
                 .WithDeliverSubject("x")
                 .WithConfiguration(ConsumerConfiguration.Builder().WithDeliverSubject("y").Build())
                 .Build());
-            
+            Assert.Contains(JsSoDeliverSubjectMismatch.Id, e.Message);
         }
     }
 }

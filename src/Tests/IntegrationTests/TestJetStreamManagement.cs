@@ -381,42 +381,90 @@ namespace IntegrationTests
         {
             Context.RunInJsServer(c =>
             {
+                bool atLeast290 = c.ServerInfo.IsSameOrNewerThanVersion("2.9.0");
+
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
-                CreateMemoryStream(jsm, STREAM, Subject(0), Subject(1));
+                CreateMemoryStream(jsm, STREAM, SubjectDot(">"));
                 
                 IList<ConsumerInfo> list = jsm.GetConsumers(STREAM);
                 Assert.Empty(list);
 
-                // Assert.Throws<ArgumentException>(() => 
                 ConsumerConfiguration cc = ConsumerConfiguration.Builder().Build();
-                Assert.Throws<ArgumentException>(() => jsm.AddOrUpdateConsumer(null, cc));
-                Assert.Throws<ArgumentNullException>(() => jsm.AddOrUpdateConsumer(STREAM, null));
-                Assert.Throws<ArgumentNullException>(() => jsm.AddOrUpdateConsumer(STREAM, cc));
+                
+                ArgumentException e = Assert.Throws<ArgumentException>(
+                    () => jsm.AddOrUpdateConsumer(null, cc));
+                Assert.Contains("Stream cannot be null or empty", e.Message);
+                
+                e = Assert.Throws<ArgumentNullException>(
+                    () => jsm.AddOrUpdateConsumer(STREAM, null));
+                Assert.Contains("Value cannot be null", e.Message);
+                
+                e = Assert.Throws<ArgumentNullException>(
+                    () => jsm.AddOrUpdateConsumer(STREAM, cc));
+                Assert.Contains("Value cannot be null", e.Message);
 
-                ConsumerConfiguration cc0 = ConsumerConfiguration.Builder()
-                        .WithDurable(Durable(0))
-                        .Build();
-                ConsumerInfo ci = jsm.AddOrUpdateConsumer(STREAM, cc0);
-                Assert.Equal(Durable(0), ci.Name);
-                Assert.Equal(Durable(0), ci.ConsumerConfiguration.Durable);
-                Assert.Empty(ci.ConsumerConfiguration.DeliverSubject);
-                
-                ConsumerConfiguration cc1 = ConsumerConfiguration.Builder()
-                        .WithDurable(Durable(1))
-                        .WithDeliverSubject(Deliver(1))
-                        .Build();
-                ci = jsm.AddOrUpdateConsumer(STREAM, cc1);
-                Assert.Equal(Durable(1), ci.Name);
-                Assert.Equal(Durable(1), ci.ConsumerConfiguration.Durable);
-                Assert.Equal(Deliver(1), ci.ConsumerConfiguration.DeliverSubject);
-                
+                // with and w/o deliver subject for push/pull
+                AddConsumer(jsm, atLeast290, 1, false, null, ConsumerConfiguration.Builder()
+                    .WithDurable(Durable(1))
+                    .Build());
+
+                AddConsumer(jsm, atLeast290, 2, true, null, ConsumerConfiguration.Builder()
+                    .WithDurable(Durable(2))
+                    .WithDeliverSubject(Deliver(2))
+                    .Build());
+
+                // test delete here
                 IList<string> consumers = jsm.GetConsumerNames(STREAM);
                 Assert.Equal(2, consumers.Count);
-                Assert.True(jsm.DeleteConsumer(STREAM, cc1.Durable));
+                Assert.True(jsm.DeleteConsumer(STREAM, Durable(1)));
                 consumers = jsm.GetConsumerNames(STREAM);
-                Assert.Single(consumers);
-                Assert.Throws<NATSJetStreamException>(() => jsm.DeleteConsumer(STREAM, cc1.Durable));
+                Assert.Equal(1, consumers.Count);
+                Assert.Throws<NATSJetStreamException>(() => jsm.DeleteConsumer(STREAM, Durable(1)));
+
+                // some testing of new name
+                if (atLeast290) {
+                    AddConsumer(jsm, atLeast290, 3, false, null, ConsumerConfiguration.Builder()
+                        .WithDurable(Durable(3))
+                        .WithName(Durable(3))
+                        .Build());
+
+                    AddConsumer(jsm, atLeast290, 4, true, null, ConsumerConfiguration.Builder()
+                        .WithDurable(Durable(4))
+                        .WithName(Durable(4))
+                        .WithDeliverSubject(Deliver(4))
+                        .Build());
+
+                    AddConsumer(jsm, atLeast290, 5, false, ">", ConsumerConfiguration.Builder()
+                        .WithDurable(Durable(5))
+                        .WithFilterSubject(">")
+                        .Build());
+
+                    AddConsumer(jsm, atLeast290, 6, false, SubjectDot(">"), ConsumerConfiguration.Builder()
+                        .WithDurable(Durable(6))
+                        .WithFilterSubject(SubjectDot(">"))
+                        .Build());
+
+                    AddConsumer(jsm, atLeast290, 7, false, SubjectDot("foo"), ConsumerConfiguration.Builder()
+                        .WithDurable(Durable(7))
+                        .WithFilterSubject(SubjectDot("foo"))
+                        .Build());
+                }
             });
+        }
+
+        private static void AddConsumer(IJetStreamManagement jsm, bool atLeast290, int id, bool deliver, string fs, ConsumerConfiguration cc) {
+            ConsumerInfo ci = jsm.AddOrUpdateConsumer(STREAM, cc);
+            Assert.Equal(Durable(id), ci.Name);
+            if (atLeast290) {
+                Assert.Equal(Durable(id), ci.ConsumerConfiguration.Name);
+            }
+            Assert.Equal(Durable(id), ci.ConsumerConfiguration.Durable);
+            if (fs == null) {
+                Assert.Empty(ci.ConsumerConfiguration.FilterSubject);
+            }
+            if (deliver) {
+                Assert.Equal(Deliver(id), ci.ConsumerConfiguration.DeliverSubject);
+            }
         }
 
         [Fact]

@@ -35,7 +35,8 @@ namespace UnitTests.JetStream
                 .WithAckWait(Duration.OfSeconds(99))
                 .WithDeliverPolicy(DeliverPolicy.ByStartSequence)
                 .WithDescription("blah")
-                .WithDurable("durable")
+                .WithDurable(NAME)
+                .WithName(NAME)
                 .WithFilterSubject("fs")
                 .WithMaxDeliver(5555)
                 .WithMaxAckPending(6666)
@@ -106,7 +107,8 @@ namespace UnitTests.JetStream
             Assert.Equal("10s", c.SampleFrequency);
             Assert.Equal("deliver", c.DeliverSubject);
             Assert.Equal("blah", c.Description);
-            Assert.Equal("durable", c.Durable);
+            Assert.Equal(NAME, c.Durable);
+            Assert.Equal(NAME, c.Durable);
             Assert.Equal("fs", c.FilterSubject);
             Assert.Equal(5555, c.MaxDeliver);
             Assert.Equal(6666, c.MaxAckPending);
@@ -142,7 +144,8 @@ namespace UnitTests.JetStream
             Assert.Equal(ReplayPolicy.Original, c.ReplayPolicy);
             Assert.Equal(2020, c.StartTime.Year);
             Assert.Equal(21, c.StartTime.Second);
-            Assert.Equal("foo-durable", c.Durable);
+            Assert.Equal("foo-name", c.Durable);
+            Assert.Equal("foo-name", c.Name);
             Assert.Equal("grp", c.DeliverGroup);
             Assert.Equal("bar", c.DeliverSubject);
             Assert.Equal("foo-filter", c.FilterSubject);

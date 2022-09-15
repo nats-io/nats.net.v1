@@ -33,6 +33,8 @@ namespace NATS.Client.JetStream
         private readonly ConcurrentDictionary<string, CachedStreamInfo> cachedStreamInfoDictionary =
             new ConcurrentDictionary<string, CachedStreamInfo>();
 
+        private readonly bool _server290orLater;
+        
         public string Prefix { get; }
         public JetStreamOptions JetStreamOptions { get; }
         public IConnection Conn { get; }
@@ -44,6 +46,7 @@ namespace NATS.Client.JetStream
             JetStreamOptions = options ?? JetStreamOptions.DefaultJsOptions;
             Prefix = JetStreamOptions.Prefix;
             Timeout = JetStreamOptions.RequestTimeout.Millis;
+            _server290orLater = Conn.ServerInfo.IsSameOrNewerThanVersion("2.9.0");
         }
         
         // ----------------------------------------------------------------------------------------------------
@@ -57,9 +60,38 @@ namespace NATS.Client.JetStream
 
         internal ConsumerInfo AddOrUpdateConsumerInternal(string streamName, ConsumerConfiguration config)
         {
-            string subj = string.IsNullOrWhiteSpace(config.Durable)
-                ? string.Format(JetStreamConstants.JsapiConsumerCreate, streamName)
-                : string.Format(JetStreamConstants.JsapiDurableCreate, streamName, config.Durable);
+            string name = Validator.EmptyAsNull(config.Name);
+            if (!string.IsNullOrWhiteSpace(name) && !_server290orLater)
+            {
+                throw ClientExDetail.JsConsumerCantUseNameBefore290.Instance();
+            }
+            
+            string durable = Validator.EmptyAsNull(config.Durable);
+
+            string consumerName = name ?? durable;
+
+            string subj;
+
+            if (consumerName == null) // just use old template
+            {
+                subj = string.Format(JetStreamConstants.JsapiConsumerCreate, streamName);
+            }
+            else if (_server290orLater)
+            {
+                string fs = Validator.EmptyAsNull(config.FilterSubject);
+                if (fs == null || fs.Equals(">"))
+                {
+                    subj = string.Format(JetStreamConstants.JsapiConsumerCreateV290, streamName, consumerName);
+                }
+                else
+                {
+                    subj = string.Format(JetStreamConstants.JsapiConsumerCreateV290WithFilter, streamName, consumerName, fs);
+                }
+            }
+            else // server is old and consumerName must be durable since name was checked for JsConsumerCantUseNameBefore290
+            {
+                subj = string.Format(JetStreamConstants.JsapiDurableCreate, streamName, durable);
+            }
 
             var ccr = new ConsumerCreateRequest(streamName, config);
             var m = RequestResponseRequired(subj, ccr.Serialize(), Timeout);

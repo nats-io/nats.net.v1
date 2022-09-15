@@ -26,19 +26,24 @@ namespace NATS.Client.JetStream
         /// <param name="durable">the durable name</param>
         /// <returns>the PushSubscribeOptions</returns>
         public static PullSubscribeOptions BindTo(string stream, string durable) {
-            return new PullSubscribeOptionsSubscribeOptionsBuilder().WithStream(stream).WithDurable(durable).WithBind(true).Build();
+            return Builder().WithStream(stream).WithDurable(durable).WithBind(true).Build();
         }
 
         /// <summary>
         /// Gets the PullSubscribeOptions builder.
         /// </summary>
         /// <returns>The PullSubscribeOptionsBuilder</returns>
-        public static PullSubscribeOptionsSubscribeOptionsBuilder Builder()
+        public static PullSubscribeOptionsBuilder Builder()
         {
-            return new PullSubscribeOptionsSubscribeOptionsBuilder();
+            return new PullSubscribeOptionsBuilder();
         }
 
-        public sealed class PullSubscribeOptionsSubscribeOptionsBuilder 
+        public sealed class PullSubscribeOptionsBuilder : PullSubscribeOptionsSubscribeOptionsBuilder { }
+
+        /// <summary>
+        /// PullSubscribeOptionsSubscribeOptionsBuilder was a naming type. Please use the simpler PullSubscribeOptionsBuilder
+        /// </summary>
+        public class PullSubscribeOptionsSubscribeOptionsBuilder 
             : SubscribeOptionsBuilder<PullSubscribeOptionsSubscribeOptionsBuilder, PullSubscribeOptions>
         {
             protected override PullSubscribeOptionsSubscribeOptionsBuilder GetThis()

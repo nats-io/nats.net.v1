@@ -13,6 +13,7 @@
 
 using NATS.Client.Internals;
 using static NATS.Client.ClientExDetail;
+using static NATS.Client.Internals.Validator;
 
 namespace NATS.Client.JetStream
 {
@@ -58,20 +59,24 @@ namespace NATS.Client.JetStream
                 throw JsSoOrderedNotAllowedWithBind.Instance();
             }
             
-            Stream = Validator.ValidateStreamName(builder.Stream, builder.Bind);
+            Stream = ValidateStreamName(builder.Stream, builder.Bind);
             
-            string durable = Validator.ValidateMustMatchIfBothSupplied(builder.Durable, builder.Cc?.Durable, JsSoDurableMismatch);
-            durable = Validator.ValidateDurable(durable, builder.Bind);
+            string durable = ValidateMustMatchIfBothSupplied(builder.Durable, builder.Cc?.Durable, JsSoDurableMismatch);
+            durable = ValidateDurable(durable, builder.Bind);
 
-            deliverGroup = Validator.ValidateMustMatchIfBothSupplied(deliverGroup, builder.Cc?.DeliverGroup, JsSoDeliverGroupMismatch);
+            string name = ValidateMustMatchIfBothSupplied(builder.Name, builder.Cc?.Name, JsSoNameMismatch);
+            
+            ValidateMustMatchIfBothSupplied(name, durable, JsConsumerNameDurableMismatch);
 
-            deliverSubject = Validator.ValidateMustMatchIfBothSupplied(deliverSubject, builder.Cc?.DeliverSubject, JsSoDeliverSubjectGroupMismatch);
+            deliverGroup = ValidateMustMatchIfBothSupplied(deliverGroup, builder.Cc?.DeliverGroup, JsSoDeliverGroupMismatch);
+
+            deliverSubject = ValidateMustMatchIfBothSupplied(deliverSubject, builder.Cc?.DeliverSubject, JsSoDeliverSubjectMismatch);
 
             if (Ordered)
             {
-                Validator.ValidateNotSupplied(deliverGroup, JsSoOrderedNotAllowedWithDeliverGroup);
-                Validator.ValidateNotSupplied(durable, JsSoOrderedNotAllowedWithDurable);
-                Validator.ValidateNotSupplied(deliverSubject, JsSoOrderedNotAllowedWithDeliverSubject);
+                ValidateNotSupplied(deliverGroup, JsSoOrderedNotAllowedWithDeliverGroup);
+                ValidateNotSupplied(durable, JsSoOrderedNotAllowedWithDurable);
+                ValidateNotSupplied(deliverSubject, JsSoOrderedNotAllowedWithDeliverSubject);
                 long hb = DefaultOrderedHeartbeat;
 
                 if (builder.Cc != null)
@@ -95,6 +100,7 @@ namespace NATS.Client.JetStream
                     .WithMaxDeliver(1)
                     .WithFlowControl(hb)
                     .WithAckWait(Duration.OfHours(22))
+                    .WithName(name)
                     .Build();
             }
             else
@@ -103,6 +109,7 @@ namespace NATS.Client.JetStream
                     .WithDurable(durable)
                     .WithDeliverSubject(deliverSubject)
                     .WithDeliverGroup(deliverGroup)
+                    .WithName(name)
                     .Build();
             }
         }
@@ -112,6 +119,7 @@ namespace NATS.Client.JetStream
             string Stream { get; }
             bool Bind { get; }
             string Durable { get; }
+            string Name { get; }
             ConsumerConfiguration Cc { get; }
             int MessageAlarmTime { get; }
         }
@@ -121,12 +129,14 @@ namespace NATS.Client.JetStream
             string _stream;
             bool _bind;
             string _durable;
+            string _name;
             ConsumerConfiguration _config;
             int _messageAlarmTime = -1;
 
             public string Stream => _stream;
             public bool Bind => _bind;
             public string Durable => _durable;
+            public string Name => _name;
             public ConsumerConfiguration Cc => _config;
             public int MessageAlarmTime => _messageAlarmTime;
 
@@ -139,18 +149,31 @@ namespace NATS.Client.JetStream
             /// <returns>The builder</returns>
             public TB WithStream(string stream)
             {
-                _stream = stream;
+                _stream = ValidateStreamName(stream, false);
                 return GetThis();
             }
 
             /// <summary>
-            /// Set the durable
+            /// Sets the durable name for the consumer.
+            /// Null or empty clears the field
             /// </summary>
             /// <param name="durable">the durable value</param>
             /// <returns>The B</returns>
             public TB WithDurable(string durable)
             {
-                _durable = durable;
+                _durable = ValidateDurable(durable, false);
+                return GetThis();
+            }
+
+            /// <summary>
+            /// Sets the name for the consumer.
+            /// Null or empty clears the field
+            /// </summary>
+            /// <param name="name">the durable value</param>
+            /// <returns>The B</returns>
+            public TB WithName(string name)
+            {
+                _name = ValidateConsumerName(name, false);
                 return GetThis();
             }
 

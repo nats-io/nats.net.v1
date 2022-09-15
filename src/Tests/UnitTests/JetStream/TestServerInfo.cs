@@ -70,6 +70,17 @@ namespace UnitTests.JetStream
             Assert.True(info234.IsNewerVersionThan("not-a-number"));
             Assert.False(info234.IsNewerVersionThan("2.3.5"));
             Assert.False(info235.IsOlderThanVersion("2.3.4"));
+
+            Assert.False(info235.IsSameOrOlderThanVersion("2.3.4"));
+            Assert.False(info235Beta2.IsSameOrOlderThanVersion("2.3.4"));
+            Assert.True(info234.IsSameOrOlderThanVersion("2.3.4"));
+            Assert.True(info.IsSameOrOlderThanVersion("2.3.4"));
+
+            Assert.True(info235.IsSameOrNewerThanVersion("2.3.4"));
+            Assert.True(info235Beta2.IsSameOrNewerThanVersion("2.3.4"));
+            Assert.True(info234.IsSameOrNewerThanVersion("2.3.4"));
+            Assert.False(info.IsSameOrNewerThanVersion("2.3.4"));
+            Assert.False(info234.IsSameOrNewerThanVersion("2.3.5-beta.2"));
         }
 
         [Fact]
