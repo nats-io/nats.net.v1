@@ -44,15 +44,6 @@ namespace NATS.Client.Internals
             return ValidatePrintableExceptWildDotGtSlashes(s, "Name", required);
         }
 
-        public static string ValidateDurableRequired(string durable, ConsumerConfiguration cc)
-        {
-            if (durable != null) return ValidateDurable(durable, true);
-            if (cc != null) return ValidateDurable(cc.Durable, true);
-
-            throw new ArgumentException(
-                "Durable is required and cannot contain a '.', '*' or '>' [null]");
-        }
-
         public static string ValidatePrefixOrDomain(string s, string label, bool required) {
             return Validate(s, required, label, () => {
                 if (s.StartsWith("."))
