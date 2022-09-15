@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">0.14.5</span>
+   &#160;<span id="projectnumber">1.0.0</span>
    </div>
    <div id="projectbrief">The NATS.io .NET C# Client</div>
   </td>
@@ -199,6 +199,10 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a16d6f9547f971ce79d5ded59ee271cdb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa69ba63cd4a206c7ba8526e7d33c7934"><td class="memItemLeft" align="right" valign="top">IKeyValueManagement&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#aa69ba63cd4a206c7ba8526e7d33c7934">CreateKeyValueManagementContext</a> (KeyValueOptions options=null)</td></tr>
 <tr class="separator:aa69ba63cd4a206c7ba8526e7d33c7934"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a27866b95c0fce8ce3a2d91b7b79a8a5f"><td class="memItemLeft" align="right" valign="top">IObjectStore&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#a27866b95c0fce8ce3a2d91b7b79a8a5f">CreateObjectStoreContext</a> (string bucketName, ObjectStoreOptions options=null)</td></tr>
+<tr class="separator:a27866b95c0fce8ce3a2d91b7b79a8a5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a58f3fdfc2f88257f79f22df4d067e6d1"><td class="memItemLeft" align="right" valign="top">IObjectStoreManagement&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#a58f3fdfc2f88257f79f22df4d067e6d1">CreateObjectStoreManagementContext</a> (ObjectStoreOptions options=null)</td></tr>
+<tr class="separator:a58f3fdfc2f88257f79f22df4d067e6d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a707a183a5abd113ff9b6744a7aa84f09"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a707a183a5abd113ff9b6744a7aa84f09">Publish</a> (string subject, byte[] data)</td></tr>
 <tr class="separator:a707a183a5abd113ff9b6744a7aa84f09"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1d918d1c9350952648a189085c6b205c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a1d918d1c9350952648a189085c6b205c">Publish</a> (string subject, byte[] data, int offset, int count)</td></tr>
@@ -290,6 +294,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>Flush</b> ()</td></tr
 <tr class="separator:affe8658dec22ab2fcb9a0b97de193f87"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa388d2490a39e120b700399c1c553399"><td class="memItemLeft" align="right" valign="top">IKeyValueManagement&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#aa388d2490a39e120b700399c1c553399">CreateKeyValueManagementContext</a> (KeyValueOptions options=null)</td></tr>
 <tr class="separator:aa388d2490a39e120b700399c1c553399"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a342c2ded74c95996ca226bc8220881fd"><td class="memItemLeft" align="right" valign="top">IObjectStore&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a342c2ded74c95996ca226bc8220881fd">CreateObjectStoreContext</a> (string bucketName, ObjectStoreOptions options=null)</td></tr>
+<tr class="separator:a342c2ded74c95996ca226bc8220881fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac1c6f695e3aa2c5b800ff204d23112ba"><td class="memItemLeft" align="right" valign="top">IObjectStoreManagement&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#ac1c6f695e3aa2c5b800ff204d23112ba">CreateObjectStoreManagementContext</a> (ObjectStoreOptions options=null)</td></tr>
+<tr class="separator:ac1c6f695e3aa2c5b800ff204d23112ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-methods" name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
@@ -477,7 +485,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>SubscriptionCount</b><
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">bucketName</td><td>The name of the bucket</td></tr>
-    <tr><td class="paramname">options</td><td>Optional JetStream options.</td></tr>
+    <tr><td class="paramname">options</td><td>Optional KeyValueOptions.</td></tr>
   </table>
   </dd>
 </dl>
@@ -506,13 +514,82 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>SubscriptionCount</b><
 <p>Gets a context for administrating Key Value buckets </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">options</td><td>Optional JetStream options.</td></tr>
+    <tr><td class="paramname">options</td><td>Optional KeyValueOptions.</td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd></dd></dl>
 
 <p>Implements <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#aa388d2490a39e120b700399c1c553399">NATS.Client.IConnection</a>.</p>
+
+</div>
+</div>
+<a id="a27866b95c0fce8ce3a2d91b7b79a8a5f" name="a27866b95c0fce8ce3a2d91b7b79a8a5f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a27866b95c0fce8ce3a2d91b7b79a8a5f">&#9670;&nbsp;</a></span>CreateObjectStoreContext()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">IObjectStore NATS.Client.Connection.CreateObjectStoreContext </td>
+          <td>(</td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>bucketName</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">ObjectStoreOptions&#160;</td>
+          <td class="paramname"><em>options</em> = <code>null</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Gets a context for a Object Store OBJECT STORE IMPLEMENTATION IS EXPERIMENTAL AND SUBJECT TO CHANGE. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">bucketName</td><td>The name of the bucket</td></tr>
+    <tr><td class="paramname">options</td><td>Optional ObjectStoreOptions.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd></dd></dl>
+
+<p>Implements <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a342c2ded74c95996ca226bc8220881fd">NATS.Client.IConnection</a>.</p>
+
+</div>
+</div>
+<a id="a58f3fdfc2f88257f79f22df4d067e6d1" name="a58f3fdfc2f88257f79f22df4d067e6d1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a58f3fdfc2f88257f79f22df4d067e6d1">&#9670;&nbsp;</a></span>CreateObjectStoreManagementContext()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">IObjectStoreManagement NATS.Client.Connection.CreateObjectStoreManagementContext </td>
+          <td>(</td>
+          <td class="paramtype">ObjectStoreOptions&#160;</td>
+          <td class="paramname"><em>options</em> = <code>null</code></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Gets a context for administrating Object Stores OBJECT STORE IMPLEMENTATION IS EXPERIMENTAL AND SUBJECT TO CHANGE. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">options</td><td>Optional ObjectStoreOptions.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd></dd></dl>
+
+<p>Implements <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#ac1c6f695e3aa2c5b800ff204d23112ba">NATS.Client.IConnection</a>.</p>
 
 </div>
 </div>
