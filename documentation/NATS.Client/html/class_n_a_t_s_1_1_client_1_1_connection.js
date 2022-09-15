@@ -5,6 +5,8 @@ var class_n_a_t_s_1_1_client_1_1_connection =
     [ "CreateJetStreamManagementContext", "class_n_a_t_s_1_1_client_1_1_connection.html#a27c37411750a8b9f268b1fe57669306c", null ],
     [ "CreateKeyValueContext", "class_n_a_t_s_1_1_client_1_1_connection.html#a16d6f9547f971ce79d5ded59ee271cdb", null ],
     [ "CreateKeyValueManagementContext", "class_n_a_t_s_1_1_client_1_1_connection.html#aa69ba63cd4a206c7ba8526e7d33c7934", null ],
+    [ "CreateObjectStoreContext", "class_n_a_t_s_1_1_client_1_1_connection.html#a27866b95c0fce8ce3a2d91b7b79a8a5f", null ],
+    [ "CreateObjectStoreManagementContext", "class_n_a_t_s_1_1_client_1_1_connection.html#a58f3fdfc2f88257f79f22df4d067e6d1", null ],
     [ "Dispose", "class_n_a_t_s_1_1_client_1_1_connection.html#adf7e7a90a13e426ccdd1a970254a3bb8", null ],
     [ "Dispose", "class_n_a_t_s_1_1_client_1_1_connection.html#a017dfe347437eeeb2d91ccba1a91e91a", null ],
     [ "Drain", "class_n_a_t_s_1_1_client_1_1_connection.html#a16d89d624d9cda1f8930b86bfabd16ef", null ],
