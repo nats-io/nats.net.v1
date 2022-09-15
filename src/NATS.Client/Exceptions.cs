@@ -261,7 +261,7 @@ namespace NATS.Client
         public static readonly ClientExDetail OsObjectAlreadyExists = new ClientExDetail(Os, 90203, "An object with that name already exists.");
         public static readonly ClientExDetail OsCantLinkToLink = new ClientExDetail(Os, 90204, "A link cannot link to another link.");
         public static readonly ClientExDetail OsGetDigestMismatch = new ClientExDetail(Os, 90205, "Digest does not match meta data.");
-        public static readonly ClientExDetail OsGetChunksMismatch = new ClientExDetail(Os, 90206, "Number of chunks ddoes not match meta data.");
+        public static readonly ClientExDetail OsGetChunksMismatch = new ClientExDetail(Os, 90206, "Number of chunks does not match meta data.");
         public static readonly ClientExDetail OsGetSizeMismatch = new ClientExDetail(Os, 90207, "Total size does not match meta data.");
         public static readonly ClientExDetail OsGetLinkToBucket = new ClientExDetail(Os, 90208, "Cannot get object, it is a link to a bucket.");
 
