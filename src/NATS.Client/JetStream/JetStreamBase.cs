@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using NATS.Client.Internals;
@@ -33,8 +34,6 @@ namespace NATS.Client.JetStream
         private readonly ConcurrentDictionary<string, CachedStreamInfo> cachedStreamInfoDictionary =
             new ConcurrentDictionary<string, CachedStreamInfo>();
 
-        private readonly bool _server290orLater;
-        
         public string Prefix { get; }
         public JetStreamOptions JetStreamOptions { get; }
         public IConnection Conn { get; }
@@ -46,9 +45,19 @@ namespace NATS.Client.JetStream
             JetStreamOptions = options ?? JetStreamOptions.DefaultJsOptions;
             Prefix = JetStreamOptions.Prefix;
             Timeout = JetStreamOptions.RequestTimeout.Millis;
-            _server290orLater = Conn.ServerInfo.IsSameOrNewerThanVersion("2.9.0");
         }
-        
+
+        internal static ServerInfo ServerInfoOrException(IConnection conn)
+        {
+            ServerInfo si = conn.ServerInfo;
+            if (si == null)
+            {
+                throw new NATSConnectionClosedException();
+            }
+
+            return si;
+        }
+            
         // ----------------------------------------------------------------------------------------------------
         // Management that is also needed by regular context
         // ----------------------------------------------------------------------------------------------------
@@ -60,8 +69,10 @@ namespace NATS.Client.JetStream
 
         internal ConsumerInfo AddOrUpdateConsumerInternal(string streamName, ConsumerConfiguration config)
         {
+            bool serverIs290OrLater = ServerInfoOrException(Conn).IsSameOrNewerThanVersion("2.9.0");
+            
             string name = Validator.EmptyAsNull(config.Name);
-            if (!string.IsNullOrWhiteSpace(name) && !_server290orLater)
+            if (!string.IsNullOrWhiteSpace(name) && !serverIs290OrLater)
             {
                 throw ClientExDetail.JsConsumerCantUseNameBefore290.Instance();
             }
@@ -76,7 +87,7 @@ namespace NATS.Client.JetStream
             {
                 subj = string.Format(JetStreamConstants.JsapiConsumerCreate, streamName);
             }
-            else if (_server290orLater)
+            else if (serverIs290OrLater)
             {
                 string fs = Validator.EmptyAsNull(config.FilterSubject);
                 if (fs == null || fs.Equals(">"))
