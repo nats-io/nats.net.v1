@@ -1,5 +1,5 @@
 stages:
-  - stage: SetupTools
+  - stage: Build
     jobs:
       - job: SetupTools
         displayName: 'Set up tools.'
@@ -18,11 +18,9 @@ stages:
                 wget https://github.com/nats-io/nats.client.deps/raw/main/win-latest/nats-server.exe -outfile $nats\nats-server.exe
                 Write-Host "Appending nats-server directory $nats to path."
                 Write-Host "##vso[task.setvariable variable=PATH;]${env:PATH};$nats"
-  - stage: BuildExecutables
-    dependsOn: SetupTools
-    jobs:
       - job: BuildExecutables
         displayName: 'Build Executables'
+        dependsOn: SetupTools
         timeoutInMinutes: 5
         cancelTimeoutInMinutes: 5
         steps:
@@ -36,11 +34,9 @@ stages:
               command: build
               projects: 'src/*.sln'
               arguments: '-c $(BuildConfiguration) --no-incremental --nologo -p:TreatWarningsAsErrors=true -p:Version=$(SemVer) -p:InformationalVersion=$(InfoVer)'
-  - stage: UnitTests
-    dependsOn: BuildExecutables
-    jobs:
       - job: UnitTests
         displayName: 'Run Unit Tests'
+        dependsOn: BuildExecutables
         timeoutInMinutes: 5
         cancelTimeoutInMinutes: 5
         steps:
@@ -58,11 +54,9 @@ stages:
               testAssemblyVer2: 'src/Tests/UnitTests/bin/$(BuildConfiguration)/net46/UnitTests.dll'
               configuration: $(BuildConfiguration)
               testRunTitle: 'UnitTests .Net4.6'
-  - stage: IntegrationTests
-    dependsOn: UnitTests
-    jobs:
       - job: IntegrationTests
         displayName: 'Run Regular Integration Tests'
+        dependsOn: UnitTests
         timeoutInMinutes: 20
         cancelTimeoutInMinutes: 5
         steps:
@@ -88,11 +82,9 @@ stages:
               rerunFailedTests: True
               rerunMaxAttempts: 2
               testRunTitle: 'IntegrationTests .Net4.6'
-  - stage: InternalIntegrationTests
-    dependsOn: IntegrationTests
-    jobs:
       - job: InternalIntegrationTests
         displayName: 'Run Internal Integration Tests'
+        dependsOn: IntegrationTests
         timeoutInMinutes: 5
         cancelTimeoutInMinutes: 5
         steps:
@@ -118,11 +110,9 @@ stages:
               rerunFailedTests: True
               rerunMaxAttempts: 2
               testRunTitle: 'IntegrationTests Internal .Net4.6'
-  - stage: NitoIntegrationTests
-    dependsOn: InternalIntegrationTests
-    jobs:
       - job: NitoIntegrationTests
         displayName: 'Run Nito Integration Tests'
+        dependsOn: InternalIntegrationTests
         timeoutInMinutes: 5
         cancelTimeoutInMinutes: 5
         steps:
@@ -137,11 +127,9 @@ stages:
               rerunFailedTests: True
               rerunMaxAttempts: 2
               testRunTitle: 'IntegrationTests Using Nito AsyncEx .NetCoreApp3.1'
-  - stage: PackagePublishArtifacts
-    dependsOn: NitoIntegrationTests
-    jobs:
       - job: PackagePublishArtifacts
         displayName: 'Package Artifacts'
+        dependsOn: NitoIntegrationTests
         timeoutInMinutes: 5
         cancelTimeoutInMinutes: 5
         steps:
