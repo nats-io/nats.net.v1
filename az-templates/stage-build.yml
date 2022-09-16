@@ -1,12 +1,39 @@
 stages:
   - stage: Build
     jobs:
-      - job: SetupTools
-        displayName: 'Set up tools.'
-        timeoutInMinutes: 5
+      - job: BuildArtifacts
+        displayName: 'Builds, tests & produces artifacts'
+        timeoutInMinutes: 30
         cancelTimeoutInMinutes: 5
         steps:
           - task: NugetToolInstaller@1
+          - task: DotNetCoreCLI@2
+            inputs:
+              command: restore
+              projects: 'src/*.sln'
+          - task: DotNetCoreCLI@2
+            displayName: 'Build Solution'
+            inputs:
+              command: build
+              projects: 'src/*.sln'
+              arguments: '-c $(BuildConfiguration) --no-incremental --nologo -p:TreatWarningsAsErrors=true -p:Version=$(SemVer) -p:InformationalVersion=$(InfoVer)'
+
+          - task: VSTest@2
+            displayName: 'UnitTests .NetCoreApp3.1'
+            inputs:
+              testSelector: 'testAssemblies'
+              testAssemblyVer2: 'src/Tests/UnitTests/bin/$(BuildConfiguration)/netcoreapp3.1/UnitTests.dll'
+              configuration: $(BuildConfiguration)
+              testRunTitle: 'UnitTests .NetCoreApp3.1'
+
+          - task: VSTest@2
+            displayName: 'UnitTests .Net4.6'
+            inputs:
+              testSelector: 'testAssemblies'
+              testAssemblyVer2: 'src/Tests/UnitTests/bin/$(BuildConfiguration)/net46/UnitTests.dll'
+              configuration: $(BuildConfiguration)
+              testRunTitle: 'UnitTests .Net4.6'
+
           - task: PowerShell@2
             displayName: 'Install Dependencies'
             inputs:
@@ -18,48 +45,7 @@ stages:
                 wget https://github.com/nats-io/nats.client.deps/raw/main/win-latest/nats-server.exe -outfile $nats\nats-server.exe
                 Write-Host "Appending nats-server directory $nats to path."
                 Write-Host "##vso[task.setvariable variable=PATH;]${env:PATH};$nats"
-      - job: BuildExecutables
-        displayName: 'Build Executables'
-        dependsOn: SetupTools
-        timeoutInMinutes: 5
-        cancelTimeoutInMinutes: 5
-        steps:
-          - task: DotNetCoreCLI@2
-            inputs:
-              command: restore
-              projects: 'src/*.sln'
-          - task: DotNetCoreCLI@2
-            displayName: 'Build Solution'
-            inputs:
-              command: build
-              projects: 'src/*.sln'
-              arguments: '-c $(BuildConfiguration) --no-incremental --nologo -p:TreatWarningsAsErrors=true -p:Version=$(SemVer) -p:InformationalVersion=$(InfoVer)'
-      - job: UnitTests
-        displayName: 'Run Unit Tests'
-        dependsOn: BuildExecutables
-        timeoutInMinutes: 5
-        cancelTimeoutInMinutes: 5
-        steps:
-          - task: VSTest@2
-            displayName: 'UnitTests .NetCoreApp3.1'
-            inputs:
-              testSelector: 'testAssemblies'
-              testAssemblyVer2: 'src/Tests/UnitTests/bin/$(BuildConfiguration)/netcoreapp3.1/UnitTests.dll'
-              configuration: $(BuildConfiguration)
-              testRunTitle: 'UnitTests .NetCoreApp3.1'
-          - task: VSTest@2
-            displayName: 'UnitTests .Net4.6'
-            inputs:
-              testSelector: 'testAssemblies'
-              testAssemblyVer2: 'src/Tests/UnitTests/bin/$(BuildConfiguration)/net46/UnitTests.dll'
-              configuration: $(BuildConfiguration)
-              testRunTitle: 'UnitTests .Net4.6'
-      - job: IntegrationTests
-        displayName: 'Run Regular Integration Tests'
-        dependsOn: UnitTests
-        timeoutInMinutes: 20
-        cancelTimeoutInMinutes: 5
-        steps:
+
           - task: VSTest@2
             displayName: 'IntegrationTests .NetCoreApp3.1'
             env:
@@ -71,6 +57,7 @@ stages:
               rerunFailedTests: True
               rerunMaxAttempts: 2
               testRunTitle: 'IntegrationTests .NetCoreApp3.1'
+
           - task: VSTest@2
             displayName: 'IntegrationTests .Net4.6'
             env:
@@ -82,12 +69,7 @@ stages:
               rerunFailedTests: True
               rerunMaxAttempts: 2
               testRunTitle: 'IntegrationTests .Net4.6'
-      - job: InternalIntegrationTests
-        displayName: 'Run Internal Integration Tests'
-        dependsOn: IntegrationTests
-        timeoutInMinutes: 5
-        cancelTimeoutInMinutes: 5
-        steps:
+
           - task: VSTest@2
             displayName: 'IntegrationTests Internal .NetCoreApp3.1'
             env:
@@ -99,6 +81,7 @@ stages:
               rerunFailedTests: True
               rerunMaxAttempts: 2
               testRunTitle: 'IntegrationTests Internal .NetCoreApp3.1'
+
           - task: VSTest@2
             displayName: 'IntegrationTests Internal .Net4.6'
             env:
@@ -110,16 +93,9 @@ stages:
               rerunFailedTests: True
               rerunMaxAttempts: 2
               testRunTitle: 'IntegrationTests Internal .Net4.6'
-      - job: NitoIntegrationTests
-        displayName: 'Run Nito Integration Tests'
-        dependsOn: InternalIntegrationTests
-        timeoutInMinutes: 5
-        cancelTimeoutInMinutes: 5
-        steps:
+
           - task: VSTest@2
             displayName: 'IntegrationTests Using Nito AsyncEx .NetCoreApp3.1'
-            env:
-              GODEBUG: x509sha1=1
             inputs:
               testSelector: 'testAssemblies'
               testAssemblyVer2: 'src/Tests/IntegrationTestsUsingNitoAsyncEx/bin/$(BuildConfiguration)/netcoreapp3.1/IntegrationTestsUsingNitoAsyncEx.dll'
@@ -127,12 +103,7 @@ stages:
               rerunFailedTests: True
               rerunMaxAttempts: 2
               testRunTitle: 'IntegrationTests Using Nito AsyncEx .NetCoreApp3.1'
-      - job: PackagePublishArtifacts
-        displayName: 'Package Artifacts'
-        dependsOn: NitoIntegrationTests
-        timeoutInMinutes: 5
-        cancelTimeoutInMinutes: 5
-        steps:
+
           - task: DotNetCoreCLI@2
             displayName: 'Pack Nupkg'
             inputs:
@@ -140,6 +111,7 @@ stages:
               custom: pack
               projects: 'src/*.sln'
               arguments: '-c $(BuildConfiguration) --no-build -o $(Build.ArtifactStagingDirectory) -p:Version=$(SemVer) -p:InformationalVersion=$(InfoVer)'
+
           - task: PublishPipelineArtifact@1
             displayName: 'Publish Artifacts'
             inputs:
