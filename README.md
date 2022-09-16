@@ -87,9 +87,9 @@ JetStreamOptions jso = JetStreamOptions.Builder().WithOptOut290ConsumerCreate().
 IJetStream js = connection.CreateJetStreamContext(jso);
 IJetStreamManagement jsm = connection.CreateJetStreamManagementContext(jso);
 IKeyValue kv = connection.CreateKeyValueContext("bucket", KeyValueOptions.Builder(jso).Build());
-IKeyValueManagement kv = connection.CreateKeyValueManagementContext(KeyValueOptions.Builder(jso).Build());
-IObjectStore kv = connection.CreateObjectStoreContext("bucket", ObjectStoreOptions.Builder(jso).Build());
-IObjectStoreManagement kv = connection.CreateObjectStoreManagementContext(ObjectStoreOptions.Builder(jso).Build());
+IKeyValueManagement kvm = connection.CreateKeyValueManagementContext(KeyValueOptions.Builder(jso).Build());
+IObjectStore os = connection.CreateObjectStoreContext("bucket", ObjectStoreOptions.Builder(jso).Build());
+IObjectStoreManagement osm = connection.CreateObjectStoreManagementContext(ObjectStoreOptions.Builder(jso).Build());
 ```
 
 ## Basic Usage
