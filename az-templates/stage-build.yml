@@ -1,119 +1,159 @@
 stages:
-- stage: Build
-  jobs:
-  - job: BuildArtifacts
-    displayName: 'Builds, tests & produces artifacts'
-    timeoutInMinutes: 30
-    cancelTimeoutInMinutes: 5
-    steps:
-    - task: NugetToolInstaller@1
-    - task: DotNetCoreCLI@2
-      inputs:
-        command: restore
-        projects: 'src/*.sln'
-    - task: DotNetCoreCLI@2
-      displayName: 'Build Solution'
-      inputs:
-        command: build
-        projects: 'src/*.sln'
-        arguments: '-c $(BuildConfiguration) --no-incremental --nologo -p:TreatWarningsAsErrors=true -p:Version=$(SemVer) -p:InformationalVersion=$(InfoVer)'
-  
-    - task: VSTest@2
-      displayName: 'UnitTests .NetCoreApp3.1'
-      inputs:
-        testSelector: 'testAssemblies'
-        testAssemblyVer2: 'src/Tests/UnitTests/bin/$(BuildConfiguration)/netcoreapp3.1/UnitTests.dll'
-        configuration: $(BuildConfiguration)
-        testRunTitle: 'UnitTests .NetCoreApp3.1'
-  
-    - task: VSTest@2
-      displayName: 'UnitTests .Net4.6'
-      inputs:
-        testSelector: 'testAssemblies'
-        testAssemblyVer2: 'src/Tests/UnitTests/bin/$(BuildConfiguration)/net46/UnitTests.dll'
-        configuration: $(BuildConfiguration)
-        testRunTitle: 'UnitTests .Net4.6'
-  
-    - task: PowerShell@2
-      displayName: 'Install Dependencies'
-      inputs:
-        targetType: 'inline'
-        script: |
-          Write-Host "Getting server executable."
-          $nats = "$(Agent.TempDirectory)\nats"
-          New-Item -ItemType "directory" -Path $nats
-          wget https://github.com/nats-io/nats.client.deps/raw/main/win-latest/nats-server.exe -outfile $nats\nats-server.exe
-          Write-Host "Appending nats-server directory $nats to path."
-          Write-Host "##vso[task.setvariable variable=PATH;]${env:PATH};$nats"
-
-    - task: VSTest@2
-      displayName: 'IntegrationTests .NetCoreApp3.1'
-      env:
-        GODEBUG: x509sha1=1
-      inputs:
-        testSelector: 'testAssemblies'
-        testAssemblyVer2: 'src/Tests/IntegrationTests/bin/$(BuildConfiguration)/netcoreapp3.1/IntegrationTests.dll'
-        configuration: $(BuildConfiguration)
-        rerunFailedTests: True
-        rerunMaxAttempts: 2
-        testRunTitle: 'IntegrationTests .NetCoreApp3.1'
-
-    - task: VSTest@2
-      displayName: 'IntegrationTests .Net4.6'
-      env:
-        GODEBUG: x509sha1=1
-      inputs:
-        testSelector: 'testAssemblies'
-        testAssemblyVer2: 'src/Tests/IntegrationTests/bin/$(BuildConfiguration)/net46/IntegrationTests.dll'
-        configuration: $(BuildConfiguration)
-        rerunFailedTests: True
-        rerunMaxAttempts: 2
-        testRunTitle: 'IntegrationTests .Net4.6'
-
-    - task: VSTest@2
-      displayName: 'IntegrationTests Internal .NetCoreApp3.1'
-      env:
-        GODEBUG: x509sha1=1
-      inputs:
-        testSelector: 'testAssemblies'
-        testAssemblyVer2: 'src/Tests/IntegrationTestsInternal/bin/$(BuildConfiguration)/netcoreapp3.1/IntegrationTestsInternal.dll'
-        configuration: $(BuildConfiguration)
-        rerunFailedTests: True
-        rerunMaxAttempts: 2
-        testRunTitle: 'IntegrationTests Internal .NetCoreApp3.1'
-
-    - task: VSTest@2
-      displayName: 'IntegrationTests Internal .Net4.6'
-      env:
-        GODEBUG: x509sha1=1
-      inputs:
-        testSelector: 'testAssemblies'
-        testAssemblyVer2: 'src/Tests/IntegrationTestsInternal/bin/$(BuildConfiguration)/net46/IntegrationTestsInternal.dll'
-        configuration: $(BuildConfiguration)
-        rerunFailedTests: True
-        rerunMaxAttempts: 2
-        testRunTitle: 'IntegrationTests Internal .Net4.6'
-
-    - task: VSTest@2
-      displayName: 'IntegrationTests Using Nito AsyncEx .NetCoreApp3.1'
-      inputs:
-        testSelector: 'testAssemblies'
-        testAssemblyVer2: 'src/Tests/IntegrationTestsUsingNitoAsyncEx/bin/$(BuildConfiguration)/netcoreapp3.1/IntegrationTestsUsingNitoAsyncEx.dll'
-        configuration: $(BuildConfiguration)
-        rerunFailedTests: True
-        rerunMaxAttempts: 2
-        testRunTitle: 'IntegrationTests Using Nito AsyncEx .NetCoreApp3.1'
-        
-    - task: DotNetCoreCLI@2
-      displayName: 'Pack Nupkg'
-      inputs:
-        command: custom
-        custom: pack
-        projects: 'src/*.sln'
-        arguments: '-c $(BuildConfiguration) --no-build -o $(Build.ArtifactStagingDirectory) -p:Version=$(SemVer) -p:InformationalVersion=$(InfoVer)'
-  
-    - task: PublishPipelineArtifact@1
-      displayName: 'Publish Artifacts'
-      inputs:
-        path: '$(Build.ArtifactStagingDirectory)'
-        artifact: Artifacts
+  - stage: SetupTools
+    jobs:
+      - job: SetupTools
+        displayName: 'Set up tools.'
+        timeoutInMinutes: 5
+        cancelTimeoutInMinutes: 5
+        steps:
+          - task: NugetToolInstaller@1
+          - task: PowerShell@2
+            displayName: 'Install Dependencies'
+            inputs:
+              targetType: 'inline'
+              script: |
+                Write-Host "Getting server executable."
+                $nats = "$(Agent.TempDirectory)\nats"
+                New-Item -ItemType "directory" -Path $nats
+                wget https://github.com/nats-io/nats.client.deps/raw/main/win-latest/nats-server.exe -outfile $nats\nats-server.exe
+                Write-Host "Appending nats-server directory $nats to path."
+                Write-Host "##vso[task.setvariable variable=PATH;]${env:PATH};$nats"
+  - stage: BuildExecutables
+    dependsOn: SetupTools
+    jobs:
+      - job: BuildExecutables
+        displayName: 'Build Executables'
+        timeoutInMinutes: 5
+        cancelTimeoutInMinutes: 5
+        steps:
+          - task: DotNetCoreCLI@2
+            inputs:
+              command: restore
+              projects: 'src/*.sln'
+          - task: DotNetCoreCLI@2
+            displayName: 'Build Solution'
+            inputs:
+              command: build
+              projects: 'src/*.sln'
+              arguments: '-c $(BuildConfiguration) --no-incremental --nologo -p:TreatWarningsAsErrors=true -p:Version=$(SemVer) -p:InformationalVersion=$(InfoVer)'
+  - stage: UnitTests
+    dependsOn: BuildExecutables
+    jobs:
+      - job: UnitTests
+        displayName: 'Run Unit Tests'
+        timeoutInMinutes: 5
+        cancelTimeoutInMinutes: 5
+        steps:
+          - task: VSTest@2
+            displayName: 'UnitTests .NetCoreApp3.1'
+            inputs:
+              testSelector: 'testAssemblies'
+              testAssemblyVer2: 'src/Tests/UnitTests/bin/$(BuildConfiguration)/netcoreapp3.1/UnitTests.dll'
+              configuration: $(BuildConfiguration)
+              testRunTitle: 'UnitTests .NetCoreApp3.1'
+          - task: VSTest@2
+            displayName: 'UnitTests .Net4.6'
+            inputs:
+              testSelector: 'testAssemblies'
+              testAssemblyVer2: 'src/Tests/UnitTests/bin/$(BuildConfiguration)/net46/UnitTests.dll'
+              configuration: $(BuildConfiguration)
+              testRunTitle: 'UnitTests .Net4.6'
+  - stage: IntegrationTests
+    dependsOn: UnitTests
+    jobs:
+      - job: IntegrationTests
+        displayName: 'Run Regular Integration Tests'
+        timeoutInMinutes: 20
+        cancelTimeoutInMinutes: 5
+        steps:
+          - task: VSTest@2
+            displayName: 'IntegrationTests .NetCoreApp3.1'
+            env:
+              GODEBUG: x509sha1=1
+            inputs:
+              testSelector: 'testAssemblies'
+              testAssemblyVer2: 'src/Tests/IntegrationTests/bin/$(BuildConfiguration)/netcoreapp3.1/IntegrationTests.dll'
+              configuration: $(BuildConfiguration)
+              rerunFailedTests: True
+              rerunMaxAttempts: 2
+              testRunTitle: 'IntegrationTests .NetCoreApp3.1'
+          - task: VSTest@2
+            displayName: 'IntegrationTests .Net4.6'
+            env:
+              GODEBUG: x509sha1=1
+            inputs:
+              testSelector: 'testAssemblies'
+              testAssemblyVer2: 'src/Tests/IntegrationTests/bin/$(BuildConfiguration)/net46/IntegrationTests.dll'
+              configuration: $(BuildConfiguration)
+              rerunFailedTests: True
+              rerunMaxAttempts: 2
+              testRunTitle: 'IntegrationTests .Net4.6'
+  - stage: InternalIntegrationTests
+    dependsOn: IntegrationTests
+    jobs:
+      - job: InternalIntegrationTests
+        displayName: 'Run Internal Integration Tests'
+        timeoutInMinutes: 5
+        cancelTimeoutInMinutes: 5
+        steps:
+          - task: VSTest@2
+            displayName: 'IntegrationTests Internal .NetCoreApp3.1'
+            env:
+              GODEBUG: x509sha1=1
+            inputs:
+              testSelector: 'testAssemblies'
+              testAssemblyVer2: 'src/Tests/IntegrationTestsInternal/bin/$(BuildConfiguration)/netcoreapp3.1/IntegrationTestsInternal.dll'
+              configuration: $(BuildConfiguration)
+              rerunFailedTests: True
+              rerunMaxAttempts: 2
+              testRunTitle: 'IntegrationTests Internal .NetCoreApp3.1'
+          - task: VSTest@2
+            displayName: 'IntegrationTests Internal .Net4.6'
+            env:
+              GODEBUG: x509sha1=1
+            inputs:
+              testSelector: 'testAssemblies'
+              testAssemblyVer2: 'src/Tests/IntegrationTestsInternal/bin/$(BuildConfiguration)/net46/IntegrationTestsInternal.dll'
+              configuration: $(BuildConfiguration)
+              rerunFailedTests: True
+              rerunMaxAttempts: 2
+              testRunTitle: 'IntegrationTests Internal .Net4.6'
+  - stage: NitoIntegrationTests
+    dependsOn: InternalIntegrationTests
+    jobs:
+      - job: NitoIntegrationTests
+        displayName: 'Run Nito Integration Tests'
+        timeoutInMinutes: 5
+        cancelTimeoutInMinutes: 5
+        steps:
+          - task: VSTest@2
+            displayName: 'IntegrationTests Using Nito AsyncEx .NetCoreApp3.1'
+            env:
+              GODEBUG: x509sha1=1
+            inputs:
+              testSelector: 'testAssemblies'
+              testAssemblyVer2: 'src/Tests/IntegrationTestsUsingNitoAsyncEx/bin/$(BuildConfiguration)/netcoreapp3.1/IntegrationTestsUsingNitoAsyncEx.dll'
+              configuration: $(BuildConfiguration)
+              rerunFailedTests: True
+              rerunMaxAttempts: 2
+              testRunTitle: 'IntegrationTests Using Nito AsyncEx .NetCoreApp3.1'
+  - stage: PackagePublishArtifacts
+    dependsOn: NitoIntegrationTests
+    jobs:
+      - job: PackagePublishArtifacts
+        displayName: 'Package Artifacts'
+        timeoutInMinutes: 5
+        cancelTimeoutInMinutes: 5
+        steps:
+          - task: DotNetCoreCLI@2
+            displayName: 'Pack Nupkg'
+            inputs:
+              command: custom
+              custom: pack
+              projects: 'src/*.sln'
+              arguments: '-c $(BuildConfiguration) --no-build -o $(Build.ArtifactStagingDirectory) -p:Version=$(SemVer) -p:InformationalVersion=$(InfoVer)'
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish Artifacts'
+            inputs:
+              path: '$(Build.ArtifactStagingDirectory)'
+              artifact: Artifacts
