@@ -72,6 +72,26 @@ Doxygen is required to be installed and in the PATH.  Version 1.8 is known to wo
 
 [Current API Documentation](http://nats-io.github.io/nats.net)
 
+## Version Notes
+
+### Version 1.0.1 Consumer Create
+
+This release by default will use a new JetStream consumer create API when interacting with nats-server version 2.9.0 or higher.
+This changes the subjects used by the client to create consumers, which might in some cases require changes in access and import/export configuration.
+The developer can opt out of using this feature by using a custom JetStreamOptions and using it when creating
+JetStream, Key Value and Object Store regular and management contexts.
+
+```csharp
+JetStreamOptions jso = JetStreamOptions.Builder().WithOptOut290ConsumerCreate().Build();
+
+IJetStream js = connection.CreateJetStreamContext(jso);
+IJetStreamManagement jsm = connection.CreateJetStreamManagementContext(jso);
+IKeyValue kv = connection.CreateKeyValueContext("bucket", KeyValueOptions.Builder(jso).Build());
+IKeyValueManagement kv = connection.CreateKeyValueManagementContext(KeyValueOptions.Builder(jso).Build());
+IObjectStore kv = connection.CreateObjectStoreContext("bucket", ObjectStoreOptions.Builder(jso).Build());
+IObjectStoreManagement kv = connection.CreateObjectStoreManagementContext(ObjectStoreOptions.Builder(jso).Build());
+```
+
 ## Basic Usage
 
 NATS .NET C# Client uses interfaces to reference most NATS client objects, and delegates for all types of events.
@@ -984,7 +1004,7 @@ Subscription creation has many checks to make sure that a valid, operable subscr
 | OsGetChunksMismatch                          | OS    | 90206 | Number of chunks does not match meta data.                                                          |
 | OsGetSizeMismatch                            | OS    | 90207 | Total size does not match meta data.                                                                |
 | OsGetLinkToBucket                            | OS    | 90208 | Cannot get object, it is a link to a bucket.                                                        |
-| JsConsumerCantUseNameBefore290               | CON   | 90301 | Name field not valid against pre v2.9.0 servers.                                                    |
+| JsConsumerCreate290NotAvailable              | CON   | 90301 | Name field not valid when v2.9.0 consumer create api is not available.                              |
 | JsConsumerNameDurableMismatch                | CON   | 90302 | Name must match durable if both are supplied.                                                       |
 
 ### Message Acknowledgements

@@ -23,15 +23,19 @@ namespace UnitTests.JetStream
     public class TestJetStreamOptions : TestBase
     {
         [Fact]
-        public void TestPushAffirmative()
+        public void TestBuilder()
         {
             JetStreamOptions jso = JetStreamOptions.Builder().Build();
             Assert.Equal(DefaultApiPrefix, jso.Prefix);
             Assert.Equal(Duration.OfMillis(Defaults.Timeout), jso.RequestTimeout);
+            Assert.False(jso.IsPublishNoAck);
+            Assert.False(jso.OptOut290ConsumerCreate);
 
             jso = JetStreamOptions.Builder(jso).Build();
             Assert.Equal(DefaultApiPrefix, jso.Prefix);
             Assert.Equal(Duration.OfMillis(Defaults.Timeout), jso.RequestTimeout);
+            Assert.False(jso.IsPublishNoAck);
+            Assert.False(jso.OptOut290ConsumerCreate);
 
             jso = JetStreamOptions.Builder()
                 .WithPrefix("pre")
@@ -40,11 +44,13 @@ namespace UnitTests.JetStream
             Assert.Equal("pre.", jso.Prefix);
             Assert.Equal(Duration.OfSeconds(42), jso.RequestTimeout);
             Assert.False(jso.IsPublishNoAck);
+            Assert.False(jso.OptOut290ConsumerCreate);
 
             jso = JetStreamOptions.Builder(jso).Build();
             Assert.Equal("pre.", jso.Prefix);
             Assert.Equal(Duration.OfSeconds(42), jso.RequestTimeout);
             Assert.False(jso.IsPublishNoAck);
+            Assert.False(jso.OptOut290ConsumerCreate);
             
             jso = JetStreamOptions.Builder()
                 .WithPrefix("pre.")
@@ -54,11 +60,16 @@ namespace UnitTests.JetStream
             Assert.Equal("pre.", jso.Prefix);
             Assert.Equal(Duration.OfSeconds(42), jso.RequestTimeout);
             Assert.True(jso.IsPublishNoAck);
+            Assert.False(jso.OptOut290ConsumerCreate);
 
             jso = JetStreamOptions.Builder(jso).Build();
             Assert.Equal("pre.", jso.Prefix);
             Assert.Equal(Duration.OfSeconds(42), jso.RequestTimeout);
             Assert.True(jso.IsPublishNoAck);
+            Assert.False(jso.OptOut290ConsumerCreate);
+
+            jso = JetStreamOptions.Builder(jso).WithOptOut290ConsumerCreate().Build();
+            Assert.True(jso.OptOut290ConsumerCreate);
         }
 
         [Fact]

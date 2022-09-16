@@ -3,7 +3,7 @@ stages:
   jobs:
   - job: BuildArtifacts
     displayName: 'Builds, tests & produces artifacts'
-    timeoutInMinutes: 30
+    timeoutInMinutes: 60
     cancelTimeoutInMinutes: 5
     steps:
     - task: NugetToolInstaller@1
