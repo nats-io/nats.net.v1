@@ -27,12 +27,7 @@ namespace IntegrationTestsInternal
 {
     public class TestOrderedConsumer : TestSuite<JetStreamSuiteContext>
     {
-        private readonly ITestOutputHelper output;
-
-        public TestOrderedConsumer(ITestOutputHelper output, JetStreamSuiteContext context) : base(context)
-        {
-            this.output = output;
-        }
+        public TestOrderedConsumer(JetStreamSuiteContext context) : base(context) { }
 
         // ------------------------------------------------------------------------------------------
         // this allows me to intercept messages before it gets to the connection queue
@@ -67,8 +62,6 @@ namespace IntegrationTestsInternal
         [Fact]
         public void TestOrderedConsumerSync()
         {
-            Console.SetOut(new ConsoleWriter(output));
-
             Context.RunInJsServer(c =>
             {
                 // Setup
@@ -113,8 +106,6 @@ namespace IntegrationTestsInternal
         [Fact]
         public void TestOrderedConsumerAsync()
         {
-            Console.SetOut(new ConsoleWriter(output));
-
             Context.RunInJsServer(c =>
             {
                 // Setup
