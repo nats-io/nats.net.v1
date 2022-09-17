@@ -161,7 +161,7 @@ namespace IntegrationTestsInternal
                 // Loop through the messages to make sure I get stream sequence 1 to 6
                 for (int idx = 0; idx < 6; idx++)
                 {
-                    Assert.Equal((ulong)idx, (ulong)ssFlags[idx].Read());
+                    Assert.Equal((ulong)idx + 1, (ulong)ssFlags[idx].Read());
                     Assert.Equal(ExpectedConSeqNums[idx], (ulong)csFlags[idx].Read());
                 }
             });
