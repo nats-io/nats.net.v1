@@ -35,7 +35,7 @@ namespace NATS.Client.JetStream
 
             RequestTimeout = b._requestTimeout;
             IsPublishNoAck = b._publishNoAck;
-            OptOut290ConsumerCreate = b._optOut290ConsumerCreate;
+            IsOptOut290ConsumerCreate = b._optOut290ConsumerCreate;
         }
 
         /// <summary>
@@ -54,14 +54,14 @@ namespace NATS.Client.JetStream
         public bool IsPublishNoAck { get; }
         
         /// <summary>
-        /// Gets whether the opt-out of the server v2.9.0 consumer create api is set
-        /// </summary>
-        public bool OptOut290ConsumerCreate { get; }
-        
-        /// <summary>
         /// True if the prefix for this options is the default prefix.
         /// </summary>
         public bool IsDefaultPrefix { get; }
+        
+        /// <summary>
+        /// Gets whether the opt-out of the server v2.9.0 consumer create api is set
+        /// </summary>
+        public bool IsOptOut290ConsumerCreate { get; }
         
         /// <summary>
         /// Gets the JetStreamOptions builder.
@@ -115,7 +115,7 @@ namespace NATS.Client.JetStream
 
                     _requestTimeout = jso.RequestTimeout;
                     _publishNoAck = jso.IsPublishNoAck;
-                    _optOut290ConsumerCreate = jso.OptOut290ConsumerCreate;
+                    _optOut290ConsumerCreate = jso.IsOptOut290ConsumerCreate;
                 }
             }
             
@@ -179,11 +179,12 @@ namespace NATS.Client.JetStream
             }
 
             /// <summary>
-            /// Sets opt-out of the server v2.9.0 consumer create api
+            /// Sets whether to opt-out of the server v2.9.0 consumer create api. Default is false (opt-in)
             /// </summary>
+            /// <param name="optOut"></param>
             /// <returns>The JetStreamOptionsBuilder</returns>
-            public JetStreamOptionsBuilder WithOptOut290ConsumerCreate() {
-                this._optOut290ConsumerCreate = true;
+            public JetStreamOptionsBuilder WithOptOut290ConsumerCreate(bool optOut) {
+                this._optOut290ConsumerCreate = optOut;
                 return this;
             }
 

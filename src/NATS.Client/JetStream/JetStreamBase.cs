@@ -69,7 +69,7 @@ namespace NATS.Client.JetStream
 
         internal ConsumerInfo AddOrUpdateConsumerInternal(string streamName, ConsumerConfiguration config)
         {
-            bool consumerCreate290Available = ServerInfoOrException(Conn).IsSameOrNewerThanVersion("2.9.0") && !JetStreamOptions.OptOut290ConsumerCreate;
+            bool consumerCreate290Available = ServerInfoOrException(Conn).IsSameOrNewerThanVersion("2.9.0") && !JetStreamOptions.IsOptOut290ConsumerCreate;
             
             string name = Validator.EmptyAsNull(config.Name);
             if (!string.IsNullOrWhiteSpace(name) && !consumerCreate290Available)

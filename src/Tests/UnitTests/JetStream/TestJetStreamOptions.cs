@@ -25,51 +25,63 @@ namespace UnitTests.JetStream
         [Fact]
         public void TestBuilder()
         {
+            // default
             JetStreamOptions jso = JetStreamOptions.Builder().Build();
-            Assert.Equal(DefaultApiPrefix, jso.Prefix);
             Assert.Equal(Duration.OfMillis(Defaults.Timeout), jso.RequestTimeout);
+            Assert.Equal(DefaultApiPrefix, jso.Prefix);
+            Assert.True(jso.IsDefaultPrefix);
             Assert.False(jso.IsPublishNoAck);
-            Assert.False(jso.OptOut290ConsumerCreate);
+            Assert.False(jso.IsOptOut290ConsumerCreate);
 
+            // default copy
             jso = JetStreamOptions.Builder(jso).Build();
-            Assert.Equal(DefaultApiPrefix, jso.Prefix);
             Assert.Equal(Duration.OfMillis(Defaults.Timeout), jso.RequestTimeout);
+            Assert.Equal(DefaultApiPrefix, jso.Prefix);
+            Assert.True(jso.IsDefaultPrefix);
             Assert.False(jso.IsPublishNoAck);
-            Assert.False(jso.OptOut290ConsumerCreate);
+            Assert.False(jso.IsOptOut290ConsumerCreate);
 
+            // affirmative
             jso = JetStreamOptions.Builder()
                 .WithPrefix("pre")
                 .WithRequestTimeout(Duration.OfSeconds(42))
+                .WithPublishNoAck(true)
+                .WithOptOut290ConsumerCreate(true)
                 .Build();
-            Assert.Equal("pre.", jso.Prefix);
             Assert.Equal(Duration.OfSeconds(42), jso.RequestTimeout);
-            Assert.False(jso.IsPublishNoAck);
-            Assert.False(jso.OptOut290ConsumerCreate);
+            Assert.Equal("pre.", jso.Prefix);
+            Assert.False(jso.IsDefaultPrefix);
+            Assert.True(jso.IsPublishNoAck);
+            Assert.True(jso.IsOptOut290ConsumerCreate);
 
+            // affirmative copy
             jso = JetStreamOptions.Builder(jso).Build();
-            Assert.Equal("pre.", jso.Prefix);
             Assert.Equal(Duration.OfSeconds(42), jso.RequestTimeout);
-            Assert.False(jso.IsPublishNoAck);
-            Assert.False(jso.OptOut290ConsumerCreate);
-            
+            Assert.Equal("pre.", jso.Prefix);
+            Assert.False(jso.IsDefaultPrefix);
+            Assert.True(jso.IsPublishNoAck);
+            Assert.True(jso.IsOptOut290ConsumerCreate);
+
+            // variations / coverage
             jso = JetStreamOptions.Builder()
                 .WithPrefix("pre.")
-                .WithPublishNoAck(true)
                 .WithRequestTimeout(42000)
+                .WithPublishNoAck(false)
+                .WithOptOut290ConsumerCreate(false)
                 .Build();
-            Assert.Equal("pre.", jso.Prefix);
             Assert.Equal(Duration.OfSeconds(42), jso.RequestTimeout);
-            Assert.True(jso.IsPublishNoAck);
-            Assert.False(jso.OptOut290ConsumerCreate);
+            Assert.False(jso.IsDefaultPrefix);
+            Assert.Equal("pre.", jso.Prefix);
+            Assert.False(jso.IsPublishNoAck);
+            Assert.False(jso.IsOptOut290ConsumerCreate);
 
+            // variations / coverage copy
             jso = JetStreamOptions.Builder(jso).Build();
-            Assert.Equal("pre.", jso.Prefix);
             Assert.Equal(Duration.OfSeconds(42), jso.RequestTimeout);
-            Assert.True(jso.IsPublishNoAck);
-            Assert.False(jso.OptOut290ConsumerCreate);
-
-            jso = JetStreamOptions.Builder(jso).WithOptOut290ConsumerCreate().Build();
-            Assert.True(jso.OptOut290ConsumerCreate);
+            Assert.False(jso.IsDefaultPrefix);
+            Assert.Equal("pre.", jso.Prefix);
+            Assert.False(jso.IsPublishNoAck);
+            Assert.False(jso.IsOptOut290ConsumerCreate);
         }
 
         [Fact]

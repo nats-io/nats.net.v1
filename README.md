@@ -82,7 +82,7 @@ The developer can opt out of using this feature by using a custom JetStreamOptio
 JetStream, Key Value and Object Store regular and management contexts.
 
 ```csharp
-JetStreamOptions jso = JetStreamOptions.Builder().WithOptOut290ConsumerCreate().Build();
+JetStreamOptions jso = JetStreamOptions.Builder().WithOptOut290ConsumerCreate(true).Build();
 
 IJetStream js = connection.CreateJetStreamContext(jso);
 IJetStreamManagement jsm = connection.CreateJetStreamManagementContext(jso);

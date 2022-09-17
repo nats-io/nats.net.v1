@@ -197,7 +197,7 @@ namespace IntegrationTests
                     Assert.Equal(Name(2), ci.ConsumerConfiguration.Durable);
 
                     // test opt out
-                    JetStreamOptions jso = JetStreamOptions.Builder().WithOptOut290ConsumerCreate().Build();
+                    JetStreamOptions jso = JetStreamOptions.Builder().WithOptOut290ConsumerCreate(true).Build();
                     IJetStream jsOptOut = c.CreateJetStreamContext(jso);
                     ConsumerConfiguration ccOptOut = ConsumerConfiguration.Builder().WithName(Name(99)).Build();
                     PushSubscribeOptions psoOptOut = PushSubscribeOptions.Builder().WithConfiguration(ccOptOut).Build();
