@@ -156,7 +156,7 @@ namespace IntegrationTestsInternal
                 JsPublish(js, subject, 101, 6);
 
                 // wait for the messages
-                latch.Wait(TimeSpan.FromMinutes(5));
+                latch.Wait(TimeSpan.FromMinutes(1));
 
                 // Loop through the messages to make sure I get stream sequence 1 to 6
                 for (int idx = 0; idx < 6; idx++)
