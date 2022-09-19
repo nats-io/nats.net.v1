@@ -85,6 +85,9 @@ namespace NATS.Client.ObjectStore
             Validator.ValidateNotNull(meta, "ObjectMeta");
             Validator.ValidateNotNull(meta.ObjectName, "ObjectMeta name");
             Validator.ValidateNotNull(inputStream, "InputStream");
+            if (meta.ObjectMetaOptions.Link != null) {
+                throw OsLinkNotAllowOnPut.Instance();
+            }
 
             String nuid = Nuid.NextGlobal();
             String chunkSubject = PubSubChunkSubject(nuid);
@@ -165,8 +168,8 @@ namespace NATS.Client.ObjectStore
 
         public ObjectInfo Get(string objectName, Stream outputStream)
         {
-            ObjectInfo oi = GetInfo(objectName);
-            if (oi == null || oi.IsDeleted) {
+            ObjectInfo oi = GetInfo(objectName, false);
+            if (oi == null) {
                 throw OsObjectNotFound.Instance();
             }
 
@@ -240,8 +243,18 @@ namespace NATS.Client.ObjectStore
 
         public ObjectInfo GetInfo(string objectName)
         {
+            return GetInfo(objectName, false);
+        }
+
+        public ObjectInfo GetInfo(string objectName, bool includingDeleted)
+        {
             MessageInfo mi = _getLast(RawMetaSubject(objectName));
-            return mi == null ? null : new ObjectInfo(mi);
+            if (mi == null)
+            {
+                return null;
+            }
+            ObjectInfo info = new ObjectInfo(mi);
+            return includingDeleted || !info.IsDeleted ? info : null;
         }
 
         public ObjectInfo UpdateMeta(string objectName, ObjectMeta meta)
@@ -250,7 +263,7 @@ namespace NATS.Client.ObjectStore
             Validator.ValidateNotNull(meta, "ObjectMeta");
             Validator.ValidateNotNull(meta.ObjectName, "ObjectMeta name");
 
-            ObjectInfo currentInfo = GetInfo(objectName);
+            ObjectInfo currentInfo = GetInfo(objectName, true);
             if (currentInfo == null) {
                 throw OsObjectNotFound.Instance();
             }
@@ -260,8 +273,7 @@ namespace NATS.Client.ObjectStore
 
             bool nameChange = !objectName.Equals(meta.ObjectName);
             if (nameChange) {
-                ObjectInfo infoForNewName = GetInfo(meta.ObjectName);
-                if (infoForNewName != null && !infoForNewName.IsDeleted) {
+                if (GetInfo(meta.ObjectName, false) != null) {
                     throw OsObjectAlreadyExists.Instance();
                 }
             }
@@ -282,7 +294,7 @@ namespace NATS.Client.ObjectStore
 
         public ObjectInfo Delete(string objectName)
         {
-            ObjectInfo info = GetInfo(objectName);
+            ObjectInfo info = GetInfo(objectName, true);
             if (info == null) {
                 throw OsObjectNotFound.Instance();
             }
@@ -316,8 +328,8 @@ namespace NATS.Client.ObjectStore
                 throw OsCantLinkToLink.Instance();
             }
 
-            ObjectInfo info = GetInfo(objectName);
-            if (info != null && !info.IsDeleted && !info.IsLink) {
+            ObjectInfo info = GetInfo(objectName, false);
+            if (info != null && !info.IsLink) {
                 throw OsObjectAlreadyExists.Instance();
             }
 
@@ -332,8 +344,8 @@ namespace NATS.Client.ObjectStore
             Validator.ValidateNotNull(objectName, "object name");
             Validator.ValidateNotNull(toStore, "Link-To ObjectStore");
 
-            ObjectInfo info = GetInfo(objectName);
-            if (info != null && !info.IsDeleted && !info.IsLink) {
+            ObjectInfo info = GetInfo(objectName, false);
+            if (info != null && !info.IsLink) {
                 throw OsObjectAlreadyExists.Instance();
             }
 

@@ -70,12 +70,21 @@ namespace NATS.Client.ObjectStore
         ObjectInfo Get(string objectName, Stream outputStream);
 
         /// <summary>
-        /// Get the info for an object if the object exists or did exist and is now deleted.
+        /// Get the info for an object if the object exists exists / is not deleted.
         /// OBJECT STORE IMPLEMENTATION IS EXPERIMENTAL AND SUBJECT TO CHANGE.
         /// </summary>
         /// <param name="objectName">The name of the object</param>
         /// <returns>the ObjectInfo for the object name or throw an exception if it does not exist.</returns>
         ObjectInfo GetInfo(string objectName);
+
+        /// <summary>
+        /// Get the info for an object if the object exists, optionally including deleted.
+        /// OBJECT STORE IMPLEMENTATION IS EXPERIMENTAL AND SUBJECT TO CHANGE.
+        /// </summary>
+        /// <param name="objectName">The name of the object</param>
+        /// <param name="includingDeleted">Whether to return info for deleted objects</param>
+        /// <returns>the ObjectInfo for the object name or throw an exception if it does not exist.</returns>
+        ObjectInfo GetInfo(string objectName, bool includingDeleted);
 
         /// <summary>
         /// Update the metadata of name, description or headers. All other changes are ignored.

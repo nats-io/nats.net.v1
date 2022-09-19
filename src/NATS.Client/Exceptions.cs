@@ -264,6 +264,7 @@ namespace NATS.Client
         public static readonly ClientExDetail OsGetChunksMismatch = new ClientExDetail(Os, 90206, "Number of chunks does not match meta data.");
         public static readonly ClientExDetail OsGetSizeMismatch = new ClientExDetail(Os, 90207, "Total size does not match meta data.");
         public static readonly ClientExDetail OsGetLinkToBucket = new ClientExDetail(Os, 90208, "Cannot get object, it is a link to a bucket.");
+        public static readonly ClientExDetail OsLinkNotAllowOnPut = new ClientExDetail(Os, 90209, "Link not allowed in metadata when putting an object.");
 
         public static readonly ClientExDetail JsConsumerCreate290NotAvailable = new ClientExDetail(Con, 90301, "Name field not valid when v2.9.0 consumer create api is not available.");
         public static readonly ClientExDetail JsConsumerNameDurableMismatch = new ClientExDetail(Con, 90302, "Name must match durable if both are supplied.");
