@@ -265,7 +265,7 @@ namespace NATS.Client
         public static readonly ClientExDetail OsGetSizeMismatch = new ClientExDetail(Os, 90207, "Total size does not match meta data.");
         public static readonly ClientExDetail OsGetLinkToBucket = new ClientExDetail(Os, 90208, "Cannot get object, it is a link to a bucket.");
 
-        public static readonly ClientExDetail JsConsumerCantUseNameBefore290 = new ClientExDetail(Con, 90301, "Name field not valid against pre v2.9.0 servers.");
+        public static readonly ClientExDetail JsConsumerCreate290NotAvailable = new ClientExDetail(Con, 90301, "Name field not valid when v2.9.0 consumer create api is not available.");
         public static readonly ClientExDetail JsConsumerNameDurableMismatch = new ClientExDetail(Con, 90302, "Name must match durable if both are supplied.");
         
         private const string Sub = "SUB";
@@ -302,5 +302,8 @@ namespace NATS.Client
         
         [Obsolete("constant name had typo, replaced with JsSoDeliverSubjectMismatch")]
         public static readonly ClientExDetail JsSoDeliverSubjectGroupMismatch = new ClientExDetail(So, 90103, "Builder deliver subject must match the consumer configuration deliver subject if both are provided.");
+
+        [Obsolete("replaced with more comprehensive name, replaced with JsConsumerCreate290NotAvailable")]
+        public static readonly ClientExDetail JsConsumerCantUseNameBefore290 = new ClientExDetail(Con, 90301, "Name field not valid against pre v2.9.0 servers.");
     }
 }

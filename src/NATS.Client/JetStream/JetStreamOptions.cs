@@ -22,19 +22,20 @@ namespace NATS.Client.JetStream
         public static readonly Duration DefaultTimeout = Duration.OfMillis(Defaults.Timeout);
         public static readonly JetStreamOptions DefaultJsOptions = Builder().Build();
 
-        private JetStreamOptions(string inJsPrefix, Duration requestTimeout, bool publishNoAck)
+        private JetStreamOptions(JetStreamOptionsBuilder b)
         {
-            if (inJsPrefix == null) {
+            if (b._jsPrefix == null) {
                 IsDefaultPrefix = true;
                 Prefix = DefaultApiPrefix;
             }
             else {
                 IsDefaultPrefix = false;
-                Prefix = inJsPrefix;
+                Prefix = b._jsPrefix;
             }
 
-            RequestTimeout = requestTimeout;
-            IsPublishNoAck = publishNoAck;
+            RequestTimeout = b._requestTimeout;
+            IsPublishNoAck = b._publishNoAck;
+            IsOptOut290ConsumerCreate = b._optOut290ConsumerCreate;
         }
 
         /// <summary>
@@ -56,6 +57,11 @@ namespace NATS.Client.JetStream
         /// True if the prefix for this options is the default prefix.
         /// </summary>
         public bool IsDefaultPrefix { get; }
+        
+        /// <summary>
+        /// Gets whether the opt-out of the server v2.9.0 consumer create api is set
+        /// </summary>
+        public bool IsOptOut290ConsumerCreate { get; }
         
         /// <summary>
         /// Gets the JetStreamOptions builder.
@@ -80,9 +86,10 @@ namespace NATS.Client.JetStream
 
         public sealed class JetStreamOptionsBuilder
         {
-            private string _jsPrefix;
-            private Duration _requestTimeout = DefaultTimeout;
-            private bool _publishNoAck;
+            internal string _jsPrefix;
+            internal Duration _requestTimeout = DefaultTimeout;
+            internal bool _publishNoAck;
+            internal bool _optOut290ConsumerCreate;
 
             /// <summary>
             /// Construct a builder
@@ -108,6 +115,7 @@ namespace NATS.Client.JetStream
 
                     _requestTimeout = jso.RequestTimeout;
                     _publishNoAck = jso.IsPublishNoAck;
+                    _optOut290ConsumerCreate = jso.IsOptOut290ConsumerCreate;
                 }
             }
             
@@ -171,13 +179,23 @@ namespace NATS.Client.JetStream
             }
 
             /// <summary>
+            /// Sets whether to opt-out of the server v2.9.0 consumer create api. Default is false (opt-in)
+            /// </summary>
+            /// <param name="optOut"></param>
+            /// <returns>The JetStreamOptionsBuilder</returns>
+            public JetStreamOptionsBuilder WithOptOut290ConsumerCreate(bool optOut) {
+                this._optOut290ConsumerCreate = optOut;
+                return this;
+            }
+
+            /// <summary>
             /// Builds the JetStreamOptions
             /// </summary>
             /// <returns>The JetStreamOptions object.</returns>
             public JetStreamOptions Build()
             {
                 _requestTimeout = _requestTimeout ?? DefaultTimeout;
-                return new JetStreamOptions(_jsPrefix, _requestTimeout, _publishNoAck);
+                return new JetStreamOptions(this);
             }
         }
     }

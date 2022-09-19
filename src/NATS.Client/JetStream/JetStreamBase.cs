@@ -69,12 +69,12 @@ namespace NATS.Client.JetStream
 
         internal ConsumerInfo AddOrUpdateConsumerInternal(string streamName, ConsumerConfiguration config)
         {
-            bool serverIs290OrLater = ServerInfoOrException(Conn).IsSameOrNewerThanVersion("2.9.0");
+            bool consumerCreate290Available = ServerInfoOrException(Conn).IsSameOrNewerThanVersion("2.9.0") && !JetStreamOptions.IsOptOut290ConsumerCreate;
             
             string name = Validator.EmptyAsNull(config.Name);
-            if (!string.IsNullOrWhiteSpace(name) && !serverIs290OrLater)
+            if (!string.IsNullOrWhiteSpace(name) && !consumerCreate290Available)
             {
-                throw ClientExDetail.JsConsumerCantUseNameBefore290.Instance();
+                throw ClientExDetail.JsConsumerCreate290NotAvailable.Instance();
             }
             
             string durable = Validator.EmptyAsNull(config.Durable);
@@ -87,7 +87,7 @@ namespace NATS.Client.JetStream
             {
                 subj = string.Format(JetStreamConstants.JsapiConsumerCreate, streamName);
             }
-            else if (serverIs290OrLater)
+            else if (consumerCreate290Available)
             {
                 string fs = Validator.EmptyAsNull(config.FilterSubject);
                 if (fs == null || fs.Equals(">"))
@@ -99,7 +99,7 @@ namespace NATS.Client.JetStream
                     subj = string.Format(JetStreamConstants.JsapiConsumerCreateV290WithFilter, streamName, consumerName, fs);
                 }
             }
-            else // server is old and consumerName must be durable since name was checked for JsConsumerCantUseNameBefore290
+            else // server is old and consumerName must be durable since name was checked for JsConsumerCreate290NotAvailable
             {
                 subj = string.Format(JetStreamConstants.JsapiDurableCreate, streamName, durable);
             }

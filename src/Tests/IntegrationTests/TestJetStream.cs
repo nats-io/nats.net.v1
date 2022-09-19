@@ -195,6 +195,14 @@ namespace IntegrationTests
                     Assert.Equal(Name(2), ci.Name);
                     Assert.Equal(Name(2), ci.ConsumerConfiguration.Name);
                     Assert.Equal(Name(2), ci.ConsumerConfiguration.Durable);
+
+                    // test opt out
+                    JetStreamOptions jso = JetStreamOptions.Builder().WithOptOut290ConsumerCreate(true).Build();
+                    IJetStream jsOptOut = c.CreateJetStreamContext(jso);
+                    ConsumerConfiguration ccOptOut = ConsumerConfiguration.Builder().WithName(Name(99)).Build();
+                    PushSubscribeOptions psoOptOut = PushSubscribeOptions.Builder().WithConfiguration(ccOptOut).Build();
+                    NATSJetStreamClientException e = Assert.Throws<NATSJetStreamClientException>(() => jsOptOut.PushSubscribeSync(SUBJECT, psoOptOut));
+                    Assert.Contains(JsConsumerCreate290NotAvailable.Id, e.Message);
                 }
             });
         }

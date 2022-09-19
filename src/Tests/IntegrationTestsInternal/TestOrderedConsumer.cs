@@ -27,12 +27,7 @@ namespace IntegrationTestsInternal
 {
     public class TestOrderedConsumer : TestSuite<JetStreamSuiteContext>
     {
-        private readonly ITestOutputHelper output;
-
-        public TestOrderedConsumer(ITestOutputHelper output, JetStreamSuiteContext context) : base(context)
-        {
-            this.output = output;
-        }
+        public TestOrderedConsumer(JetStreamSuiteContext context) : base(context) { }
 
         // ------------------------------------------------------------------------------------------
         // this allows me to intercept messages before it gets to the connection queue
@@ -67,8 +62,6 @@ namespace IntegrationTestsInternal
         [Fact]
         public void TestOrderedConsumerSync()
         {
-            Console.SetOut(new ConsoleWriter(output));
-
             Context.RunInJsServer(c =>
             {
                 // Setup
@@ -113,8 +106,6 @@ namespace IntegrationTestsInternal
         [Fact]
         public void TestOrderedConsumerAsync()
         {
-            Console.SetOut(new ConsoleWriter(output));
-
             Context.RunInJsServer(c =>
             {
                 // Setup
@@ -156,15 +147,13 @@ namespace IntegrationTestsInternal
                 JsPublish(js, subject, 101, 6);
 
                 // wait for the messages
-                latch.Wait();
+                latch.Wait(TimeSpan.FromMinutes(1));
 
                 // Loop through the messages to make sure I get stream sequence 1 to 6
-                ulong expectedStreamSeq = 1;
-                while (expectedStreamSeq <= 6) {
-                    int idx = (int)expectedStreamSeq - 1;
-                    Assert.Equal(expectedStreamSeq, (ulong)ssFlags[idx].Read());
+                for (int idx = 0; idx < 6; idx++)
+                {
+                    Assert.Equal((ulong)idx + 1, (ulong)ssFlags[idx].Read());
                     Assert.Equal(ExpectedConSeqNums[idx], (ulong)csFlags[idx].Read());
-                    ++expectedStreamSeq;
                 }
             });
         }
