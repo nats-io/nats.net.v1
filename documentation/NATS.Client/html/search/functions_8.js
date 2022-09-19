@@ -1,8 +1,0 @@
-var searchData=
-[
-  ['nak_0',['Nak',['../class_n_a_t_s_1_1_client_1_1_msg.html#aee0058ca922b8ade4e6887e17bafd5e2',1,'NATS::Client::Msg']]],
-  ['nakwithdelay_1',['NakWithDelay',['../class_n_a_t_s_1_1_client_1_1_msg.html#ab20a2ea77eecdd4a2d459cd3862631cf',1,'NATS.Client.Msg.NakWithDelay(Duration nakDelay)'],['../class_n_a_t_s_1_1_client_1_1_msg.html#a341e615fc12b38958db4bc8a8947586d',1,'NATS.Client.Msg.NakWithDelay(long nakDelayMillis)']]],
-  ['newinbox_2',['NewInbox',['../class_n_a_t_s_1_1_client_1_1_connection.html#a4cd43a9a76fba369ea5c61210ce0910d',1,'NATS.Client.Connection.NewInbox()'],['../interface_n_a_t_s_1_1_client_1_1_i_connection.html#aaa605bdb14aca0c3cbc7101282c3a056',1,'NATS.Client.IConnection.NewInbox()'],['../interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#ac55915181ede3958e47386c4a3933dcf',1,'NATS.Client.IEncodedConnection.NewInbox()']]],
-  ['nextmessage_3',['NextMessage',['../interface_n_a_t_s_1_1_client_1_1_i_sync_subscription.html#abff4071c0c522ca556f57ad899baa353',1,'NATS.Client.ISyncSubscription.NextMessage()'],['../interface_n_a_t_s_1_1_client_1_1_i_sync_subscription.html#a29d8865c23b821cc03aba53c700e4794',1,'NATS.Client.ISyncSubscription.NextMessage(int timeout)'],['../class_n_a_t_s_1_1_client_1_1_sync_subscription.html#a5cf9ae0f625d031556825d5032f55a96',1,'NATS.Client.SyncSubscription.NextMessage()'],['../class_n_a_t_s_1_1_client_1_1_sync_subscription.html#a5cab1198002ff904aa025891ee47d30a',1,'NATS.Client.SyncSubscription.NextMessage(int timeout)']]],
-  ['nuid_4',['NUID',['../class_n_a_t_s_1_1_client_1_1_n_u_i_d.html#a64a36fc8ce4db7a9ba0172823cec5135',1,'NATS::Client::NUID']]]
-];
