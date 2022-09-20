@@ -380,8 +380,10 @@ namespace IntegrationTests
                 ObjectInfo targetWillBeDeleted = os2.AddLink("targetWillBeDeleted", info21);
                 ValidateLink(targetWillBeDeleted, "targetWillBeDeleted", info21, null);
                 os2.Delete(info21.ObjectName);
-                ObjectInfo oiDeleted = os2.GetInfo(info21.ObjectName);
-                Assert.True(oiDeleted.IsDeleted); // object is deleted
+                ObjectInfo oiDeleted = os2.GetInfo(info21.ObjectName, true);
+                Assert.True(oiDeleted.IsDeleted); // object is deleted but includingDeleted = true
+                Assert.Null(os2.GetInfo(info21.ObjectName)); // does includingDeleted = false
+                Assert.Null(os2.GetInfo(info21.ObjectName, false)); // explicit includingDeleted = false
                 AssertClientError(OsObjectIsDeleted, () => os2.AddLink("willException", oiDeleted));
                 ObjectInfo oiLink = os2.GetInfo("targetWillBeDeleted");
                 Assert.NotNull(oiLink); // link is still there but link target is deleted
@@ -394,6 +396,9 @@ namespace IntegrationTests
                 Assert.Equal(info12, crossInfo12);
                 Assert.Equal(2, ms.Length);
                 Assert.Equal("12", Encoding.UTF8.GetString(ms.ToArray()));
+                
+                ObjectMeta linkInPut = ObjectMeta.Builder("linkInPut").WithLink(ObjectLink.ForObject("na", "na")).Build();
+                AssertClientError(OsLinkNotAllowOnPut, () => os2.Put(linkInPut, new MemoryStream()));
             });
         }
 
@@ -418,7 +423,7 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public void TestObjectList() {
+        public void TestList() {
             Context.RunInJsServer(nc =>
             {
                 IObjectStoreManagement osm = nc.CreateObjectStoreManagementContext();
