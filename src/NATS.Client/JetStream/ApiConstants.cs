@@ -53,6 +53,7 @@ namespace NATS.Client.JetStream
         internal const string Dest = "dest";
         internal const string Digest = "digest";
         internal const string Discard = "discard";
+        internal const string DiscardNewPerSubject = "discard_new_per_subject";
         internal const string Domain = "domain";
         internal const string Duplicate = "duplicate";
         internal const string DuplicateWindow = "duplicate_window";

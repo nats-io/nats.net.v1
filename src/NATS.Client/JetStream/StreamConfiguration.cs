@@ -46,6 +46,7 @@ namespace NATS.Client.JetStream
         public bool AllowDirect { get; }
         public bool DenyDelete { get; }
         public bool DenyPurge { get; }
+        public bool DiscardNewPerSubject { get; }
         
         [Obsolete("MaxMsgSize was mistakenly renamed in a previous change.", false)]
         public long MaxValueSize => MaxMsgSize;
@@ -79,6 +80,7 @@ namespace NATS.Client.JetStream
             AllowDirect = scNode[ApiConstants.AllowDirect].AsBool;
             DenyDelete = scNode[ApiConstants.DenyDelete].AsBool;
             DenyPurge = scNode[ApiConstants.DenyPurge].AsBool;
+            DiscardNewPerSubject = scNode[ApiConstants.DiscardNewPerSubject].AsBool;
         }
         
         private StreamConfiguration(StreamConfigurationBuilder builder)
@@ -108,6 +110,7 @@ namespace NATS.Client.JetStream
             AllowDirect = builder._allowDirect;
             DenyDelete = builder._denyDelete;
             DenyPurge = builder._denyPurge;
+            DiscardNewPerSubject = builder._discardNewPerSubject;
         }
 
         internal override JSONNode ToJsonNode()
@@ -146,7 +149,8 @@ namespace NATS.Client.JetStream
                 [ApiConstants.AllowRollupHdrs] = AllowRollup,
                 [ApiConstants.AllowDirect] = AllowDirect,
                 [ApiConstants.DenyDelete] = DenyDelete,
-                [ApiConstants.DenyPurge] = DenyPurge
+                [ApiConstants.DenyPurge] = DenyPurge,
+                [ApiConstants.DiscardNewPerSubject] = DiscardNewPerSubject
             };
         }
 
@@ -187,6 +191,7 @@ namespace NATS.Client.JetStream
             internal bool _allowDirect;
             internal bool _denyDelete;
             internal bool _denyPurge;
+            internal bool _discardNewPerSubject;
 
             public StreamConfigurationBuilder() {}
             
@@ -218,6 +223,7 @@ namespace NATS.Client.JetStream
                 _allowDirect = sc.AllowDirect;
                 _denyDelete = sc.DenyDelete;
                 _denyPurge = sc.DenyPurge;
+                _discardNewPerSubject = sc.DiscardNewPerSubject;
             }
 
             /// <summary>
@@ -567,6 +573,16 @@ namespace NATS.Client.JetStream
             /// <returns>The StreamConfigurationBuilder</returns>
             public StreamConfigurationBuilder WithDenyPurge(bool denyPurge) {
                 _denyPurge = denyPurge;
+                return this;
+            }
+
+            /// <summary>
+            /// Set whether discard policy new with max message per subject applies to existing subjects, not just new subjects.
+            /// </summary>
+            /// <param name="discardNewPerSubject">true to deny purge.</param>
+            /// <returns>The StreamConfigurationBuilder</returns>
+            public StreamConfigurationBuilder WithDiscardNewPerSubject(bool discardNewPerSubject) {
+                _discardNewPerSubject = discardNewPerSubject;
                 return this;
             }
 

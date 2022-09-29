@@ -63,6 +63,11 @@ namespace UnitTests.JetStream
                     .WithPlacement(testSc.Placement)
                     .WithMirror(testSc.Mirror)
                     .WithSources(testSc.Sources)
+                    .WithAllowRollup(testSc.AllowRollup)
+                    .WithAllowDirect(testSc.AllowDirect)
+                    .WithDenyDelete(testSc.DenyDelete)
+                    .WithDenyPurge(testSc.DenyPurge)
+                    .WithDiscardNewPerSubject(testSc.DiscardNewPerSubject);
                 ;
             Validate(builder.Build(), false);
             Validate(builder.AddSources((Source)null).Build(), false);
@@ -243,6 +248,7 @@ namespace UnitTests.JetStream
                     Assert.True(sc.Sealed);
                     Assert.True(sc.DenyDelete);
                     Assert.True(sc.DenyPurge);
+                    Assert.True(sc.DiscardNewPerSubject);
                     Assert.True(sc.AllowRollup);
                     Assert.True(sc.AllowDirect);
 
