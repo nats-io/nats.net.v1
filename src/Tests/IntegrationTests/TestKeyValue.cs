@@ -129,9 +129,8 @@ namespace IntegrationTests
 
                 // let's check the bucket info
                 status = kvm.GetBucketInfo(BUCKET);
-                Assert.Equal(3U, status.EntryCount);
-                Assert.Equal(3U, status.BackingStreamInfo.State.LastSeq);
-
+                AssertState(status, 3, 3); 
+                    
                 // delete a key. Its entry will still exist, but it's value is null
                 kv.Delete(byteKey);
                 Assert.Null(kv.Get(byteKey));
@@ -140,9 +139,8 @@ namespace IntegrationTests
 
                 // let's check the bucket info
                 status = kvm.GetBucketInfo(BUCKET);
-                Assert.Equal(4U, status.EntryCount);
-                Assert.Equal(4U, status.BackingStreamInfo.State.LastSeq);
-
+                AssertState(status, 4, 4);
+                
                 // if the key does not exist (no history) there is no entry
                 Assert.Null(kv.Get(notFoundKey));
 
@@ -172,9 +170,8 @@ namespace IntegrationTests
 
                 // let's check the bucket info
                 status = kvm.GetBucketInfo(BUCKET);
-                Assert.Equal(7U, status.EntryCount);
-                Assert.Equal(7U, status.BackingStreamInfo.State.LastSeq);
-
+                AssertState(status, 7, 7);
+                
                 // make sure it only keeps the correct amount of history
                 Assert.Equal(8U, kv.Put(longKey, 3));
                 Assert.True(kv.Get(longKey).TryGetLongValue(out lvalue));
@@ -185,9 +182,8 @@ namespace IntegrationTests
                 AssertHistory(longHistory, kv.History(longKey));
 
                 status = kvm.GetBucketInfo(BUCKET);
-                Assert.Equal(8U, status.EntryCount);
-                Assert.Equal(8U, status.BackingStreamInfo.State.LastSeq);
-
+                AssertState(status, 8, 8);
+                
                 // this would be the 4th entry for the longKey
                 // sp the total records will stay the same
                 Assert.Equal(9U, kv.Put(longKey, 4));
@@ -202,9 +198,8 @@ namespace IntegrationTests
 
                 // record count does not increase
                 status = kvm.GetBucketInfo(BUCKET);
-                Assert.Equal(8U, status.EntryCount);
-                Assert.Equal(9U, status.BackingStreamInfo.State.LastSeq);
-
+                AssertState(status, 8, 9);
+                
                 // should have exactly these 3 keys
                 AssertKeys(kv.Keys(), byteKey, stringKey, longKey);
 
@@ -216,8 +211,7 @@ namespace IntegrationTests
                 AssertHistory(longHistory, kv.History(longKey));
 
                 status = kvm.GetBucketInfo(BUCKET);
-                Assert.Equal(6U, status.EntryCount); // includes 1 purge
-                Assert.Equal(10U, status.BackingStreamInfo.State.LastSeq);
+                AssertState(status, 6, 10); 
 
                 // only 2 keys now
                 AssertKeys(kv.Keys(), byteKey, stringKey);
@@ -229,9 +223,8 @@ namespace IntegrationTests
                 AssertHistory(byteHistory, kv.History(byteKey));
 
                 status = kvm.GetBucketInfo(BUCKET);
-                Assert.Equal(4U, status.EntryCount); // includes 2 purges
-                Assert.Equal(11U, status.BackingStreamInfo.State.LastSeq);
-
+                AssertState(status, 4, 11);
+                
                 // only 1 key now
                 AssertKeys(kv.Keys(), stringKey);
 
@@ -242,9 +235,8 @@ namespace IntegrationTests
                 AssertHistory(stringHistory, kv.History(stringKey));
 
                 status = kvm.GetBucketInfo(BUCKET);
-                Assert.Equal(3U, status.EntryCount); // 3 purges
-                Assert.Equal(12U, status.BackingStreamInfo.State.LastSeq);
-
+                AssertState(status, 3, 12);
+                
                 // no more keys left
                 AssertKeys(kv.Keys());
 
@@ -252,9 +244,8 @@ namespace IntegrationTests
                 KeyValuePurgeOptions kvpo = KeyValuePurgeOptions.Builder().WithDeleteMarkersNoThreshold().Build();
                 kv.PurgeDeletes(kvpo);
                 status = kvm.GetBucketInfo(BUCKET);
-                Assert.Equal(0U, status.EntryCount); // purges are all gone
-                Assert.Equal(12U, status.BackingStreamInfo.State.LastSeq);
-
+                AssertState(status, 0, 12);
+                
                 longHistory.Clear();
                 AssertHistory(longHistory, kv.History(longKey));
 
@@ -286,9 +277,8 @@ namespace IntegrationTests
                 AssertHistory(stringHistory, kv.History(stringKey));
 
                 status = kvm.GetBucketInfo(BUCKET);
-                Assert.Equal(5U, status.EntryCount);
-                Assert.Equal(17U, status.BackingStreamInfo.State.LastSeq);
-
+                AssertState(status, 5, 17);
+                
                 // delete the bucket
                 kvm.Delete(BUCKET);
                 Assert.Throws<NATSJetStreamException>(() => kvm.Delete(BUCKET));
@@ -296,6 +286,12 @@ namespace IntegrationTests
 
                 Assert.Equal(0, kvm.GetBucketNames().Count);
             });
+        }
+
+        private static void AssertState(KeyValueStatus status, ulong entryCount, ulong lastSeq) {
+            Assert.Equal(entryCount, status.EntryCount);
+            Assert.Equal(lastSeq, status.BackingStreamInfo.State.LastSeq);
+            Assert.Equal(status.Bytes, status.BackingStreamInfo.State.Bytes);
         }
         
         [Fact]
