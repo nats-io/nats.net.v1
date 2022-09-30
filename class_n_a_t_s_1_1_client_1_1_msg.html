@@ -91,6 +91,8 @@ $(document).ready(function(){initNavTree('class_n_a_t_s_1_1_client_1_1_msg.html'
   <div class="headertitle"><div class="title">NATS.Client.Msg Class Reference</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p>Inherited by NATS.Client.JetStream.JetStreamMsg.</p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
@@ -157,7 +159,7 @@ MsgStatus&#160;</td><td class="memItemRight" valign="bottom"><b>Status</b><code>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>HasStatus</b><code> [get]</code></td></tr>
 <tr class="separator:ab42da21f2c1db1b99bc7f3f05b8b8e84"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1e876a9a2084d9dfff10e2a4e6925177"><td class="memItemLeft" align="right" valign="top"><a id="a1e876a9a2084d9dfff10e2a4e6925177" name="a1e876a9a2084d9dfff10e2a4e6925177"></a>
-virtual JetStream.MetaData&#160;</td><td class="memItemRight" valign="bottom"><b>MetaData</b><code> [get]</code></td></tr>
+virtual <a class="el" href="class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_meta_data.html">JetStream.MetaData</a>&#160;</td><td class="memItemRight" valign="bottom"><b>MetaData</b><code> [get]</code></td></tr>
 <tr class="separator:a1e876a9a2084d9dfff10e2a4e6925177"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a76df369c3442de7dcc1fd38db1539d0c"><td class="memItemLeft" align="right" valign="top">AckType&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_msg.html#a76df369c3442de7dcc1fd38db1539d0c">LastAck</a><code> [get]</code></td></tr>
 <tr class="separator:a76df369c3442de7dcc1fd38db1539d0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -393,7 +395,7 @@ virtual JetStream.MetaData&#160;</td><td class="memItemRight" valign="bottom"><b
 </table>
 </div><div class="memdoc">
 
-<p>Acknowledges a JetStream messages received from a Consumer, indicating the message will not be resent. </p>
+<p>Acknowledges a <a class="el" href="namespace_n_a_t_s_1_1_client_1_1_jet_stream.html">JetStream</a> messages received from a Consumer, indicating the message will not be resent. </p>
 <p >This is a NOOP for standard <a class="el" href="namespace_n_a_t_s.html">NATS</a> messages. </p>
 
 </div>
@@ -422,7 +424,7 @@ virtual JetStream.MetaData&#160;</td><td class="memItemRight" valign="bottom"><b
 </table>
 </div><div class="memdoc">
 
-<p>Acknowledges a JetStream message received from a Consumer, indicating the message should not be received again later. A timeout of zero does not confirm the acknowledgement. </p>
+<p>Acknowledges a <a class="el" href="namespace_n_a_t_s_1_1_client_1_1_jet_stream.html">JetStream</a> message received from a Consumer, indicating the message should not be received again later. A timeout of zero does not confirm the acknowledgement. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">timeout</td><td>the duration to wait for an ack confirmation</td></tr>
@@ -512,7 +514,7 @@ virtual JetStream.MetaData&#160;</td><td class="memItemRight" valign="bottom"><b
 </table>
 </div><div class="memdoc">
 
-<p>Acknowledges a JetStream message has been received but indicates that the message is not completely processed and should be sent again later. </p>
+<p>Acknowledges a <a class="el" href="namespace_n_a_t_s_1_1_client_1_1_jet_stream.html">JetStream</a> message has been received but indicates that the message is not completely processed and should be sent again later. </p>
 <p >This is a NOOP for standard <a class="el" href="namespace_n_a_t_s.html">NATS</a> messages. </p>
 
 </div>
@@ -541,7 +543,7 @@ virtual JetStream.MetaData&#160;</td><td class="memItemRight" valign="bottom"><b
 </table>
 </div><div class="memdoc">
 
-<p>Acknowledges a JetStream message has been received but indicates that the message is not completely processed and should be sent again later, after at least the delay amount. </p>
+<p>Acknowledges a <a class="el" href="namespace_n_a_t_s_1_1_client_1_1_jet_stream.html">JetStream</a> message has been received but indicates that the message is not completely processed and should be sent again later, after at least the delay amount. </p>
 <p >This is a NOOP for standard <a class="el" href="namespace_n_a_t_s.html">NATS</a> messages. </p>
 
 </div>
@@ -570,7 +572,7 @@ virtual JetStream.MetaData&#160;</td><td class="memItemRight" valign="bottom"><b
 </table>
 </div><div class="memdoc">
 
-<p>Acknowledges a JetStream message has been received but indicates that the message is not completely processed and should be sent again later, after at least the delay amount. </p>
+<p>Acknowledges a <a class="el" href="namespace_n_a_t_s_1_1_client_1_1_jet_stream.html">JetStream</a> message has been received but indicates that the message is not completely processed and should be sent again later, after at least the delay amount. </p>
 <p >This is a NOOP for standard <a class="el" href="namespace_n_a_t_s.html">NATS</a> messages. </p>
 
 </div>
@@ -703,7 +705,7 @@ virtual JetStream.MetaData&#160;</td><td class="memItemRight" valign="bottom"><b
 </div><div class="memdoc">
 
 <p>Checks if a message is from Jetstream or is a standard message. </p>
-<dl class="section return"><dt>Returns</dt><dd>True if this is a JetStream Message.</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>True if this is a <a class="el" href="namespace_n_a_t_s_1_1_client_1_1_jet_stream.html">JetStream</a> Message.</dd></dl>
 
 </div>
 </div>

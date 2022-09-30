@@ -1,11 +1,13 @@
 var searchData=
 [
-  ['unhandledstatuseventargs_0',['UnhandledStatusEventArgs',['../class_n_a_t_s_1_1_client_1_1_unhandled_status_event_args.html',1,'NATS::Client']]],
-  ['unhandledstatuseventhandler_1',['UnhandledStatusEventHandler',['../class_n_a_t_s_1_1_client_1_1_options.html#a944e38f10bebad03333fa0ba919cee26',1,'NATS::Client::Options']]],
-  ['unsubscribe_2',['Unsubscribe',['../class_n_a_t_s_1_1_client_1_1_async_subscription.html#a115fe1e77495e4864b1480a7c2cccdb6',1,'NATS.Client.AsyncSubscription.Unsubscribe()'],['../interface_n_a_t_s_1_1_client_1_1_i_subscription.html#ab51e1cbf3f877328371c80e36226d669',1,'NATS.Client.ISubscription.Unsubscribe()'],['../class_n_a_t_s_1_1_client_1_1_subscription.html#a542989445c672c6ac24f29a40f52b6a3',1,'NATS.Client.Subscription.Unsubscribe()']]],
-  ['url_3',['Url',['../class_n_a_t_s_1_1_client_1_1_options.html#a4952cb3e82ca4692896f289d9825682a',1,'NATS::Client::Options']]],
-  ['useoldrequeststyle_4',['UseOldRequestStyle',['../class_n_a_t_s_1_1_client_1_1_options.html#a0dd67697b2487a4fbb5abf0f4fd06509',1,'NATS::Client::Options']]],
-  ['user_5',['User',['../class_n_a_t_s_1_1_client_1_1_options.html#a92c60e7ef8aa92144a39dbd9706f4ea9',1,'NATS::Client::Options']]],
-  ['userjwteventargs_6',['UserJWTEventArgs',['../class_n_a_t_s_1_1_client_1_1_user_j_w_t_event_args.html',1,'NATS::Client']]],
-  ['usersignatureeventargs_7',['UserSignatureEventArgs',['../class_n_a_t_s_1_1_client_1_1_user_signature_event_args.html',1,'NATS::Client']]]
+  ['tags_0',['Tags',['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_placement.html#ae6f97e82c4e0bce2c4a227addfd986be',1,'NATS::Client::JetStream::Placement']]],
+  ['tallydeliveredmessage_1',['tallyDeliveredMessage',['../class_n_a_t_s_1_1_client_1_1_subscription.html#a975cad27f659d1d66924850383467e2e',1,'NATS::Client::Subscription']]],
+  ['term_2',['Term',['../class_n_a_t_s_1_1_client_1_1_msg.html#a9ba1db2a20ee31ae391978cfac09efc8',1,'NATS::Client::Msg']]],
+  ['this_5bstring_20name_5d_3',['this[string name]',['../class_n_a_t_s_1_1_client_1_1_msg_header.html#ada3a264e6616e805ddace4a2672f24a1',1,'NATS::Client::MsgHeader']]],
+  ['timeout_4',['Timeout',['../class_n_a_t_s_1_1_client_1_1_options.html#a20342f2f3c596083d5989d12ee656155',1,'NATS::Client::Options']]],
+  ['timestamp_5',['Timestamp',['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_meta_data.html#a2183fe42a90e0f3611f2b56b40645772',1,'NATS::Client::JetStream::MetaData']]],
+  ['timestampnanos_6',['TimestampNanos',['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_meta_data.html#a52c62b6c43b350ef3fd3547fcac117cd',1,'NATS::Client::JetStream::MetaData']]],
+  ['tlsremotecertificationvalidationcallback_7',['TLSRemoteCertificationValidationCallback',['../class_n_a_t_s_1_1_client_1_1_options.html#a3ee9fbb7b3cfbc49a9b3a314f883904d',1,'NATS::Client::Options']]],
+  ['token_8',['Token',['../class_n_a_t_s_1_1_client_1_1_options.html#ab82e941a962699f7aeca2a3508a7f2d7',1,'NATS::Client::Options']]],
+  ['tostring_9',['ToString',['../class_n_a_t_s_1_1_client_1_1_connection.html#a34224ab966c267101b87030459895fcb',1,'NATS.Client.Connection.ToString()'],['../class_n_a_t_s_1_1_client_1_1_msg.html#a6bc71a9bed471b1d9da6907dee108480',1,'NATS.Client.Msg.ToString()'],['../class_n_a_t_s_1_1_client_1_1_options.html#a06f85fd3986c1a735b867153cab4ba26',1,'NATS.Client.Options.ToString()'],['../class_n_a_t_s_1_1_client_1_1_subscription.html#a918e83aca8f684549d669eb725125be7',1,'NATS.Client.Subscription.ToString()']]]
 ];

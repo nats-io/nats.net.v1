@@ -187,9 +187,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>Flush</b> ()</td></tr
 <tr class="separator:a921deb6275bb7b3247f76f78b0f66d5c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa1a9a2ee8b7fb39353df8ad2364968d2"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#aa1a9a2ee8b7fb39353df8ad2364968d2">IsDraining</a> ()</td></tr>
 <tr class="separator:aa1a9a2ee8b7fb39353df8ad2364968d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a35fbe184e030f2cdc59e8d8513067b73"><td class="memItemLeft" align="right" valign="top">IJetStream&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a35fbe184e030f2cdc59e8d8513067b73">CreateJetStreamContext</a> (JetStreamOptions options=null)</td></tr>
+<tr class="memitem:a35fbe184e030f2cdc59e8d8513067b73"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream.html">IJetStream</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a35fbe184e030f2cdc59e8d8513067b73">CreateJetStreamContext</a> (JetStreamOptions options=null)</td></tr>
 <tr class="separator:a35fbe184e030f2cdc59e8d8513067b73"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acd5ef8fa7f9c1940a1350f5b31bad78c"><td class="memItemLeft" align="right" valign="top">IJetStreamManagement&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#acd5ef8fa7f9c1940a1350f5b31bad78c">CreateJetStreamManagementContext</a> (JetStreamOptions options=null)</td></tr>
+<tr class="memitem:acd5ef8fa7f9c1940a1350f5b31bad78c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html">IJetStreamManagement</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#acd5ef8fa7f9c1940a1350f5b31bad78c">CreateJetStreamManagementContext</a> (JetStreamOptions options=null)</td></tr>
 <tr class="separator:acd5ef8fa7f9c1940a1350f5b31bad78c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:affe8658dec22ab2fcb9a0b97de193f87"><td class="memItemLeft" align="right" valign="top">IKeyValue&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#affe8658dec22ab2fcb9a0b97de193f87">CreateKeyValueContext</a> (string bucketName, KeyValueOptions options=null)</td></tr>
 <tr class="separator:affe8658dec22ab2fcb9a0b97de193f87"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -267,7 +267,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>SubscriptionCount</b><
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">IJetStream NATS.Client.IConnection.CreateJetStreamContext </td>
+          <td class="memname"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream.html">IJetStream</a> NATS.Client.IConnection.CreateJetStreamContext </td>
           <td>(</td>
           <td class="paramtype">JetStreamOptions&#160;</td>
           <td class="paramname"><em>options</em> = <code>null</code></td><td>)</td>
@@ -279,7 +279,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>SubscriptionCount</b><
 <p>Gets a context for publishing and subscribing to subjects backed by Jetstream streams and consumers. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">options</td><td>Optional JetStream options.</td></tr>
+    <tr><td class="paramname">options</td><td>Optional <a class="el" href="namespace_n_a_t_s_1_1_client_1_1_jet_stream.html">JetStream</a> options.</td></tr>
   </table>
   </dd>
 </dl>
@@ -296,7 +296,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>SubscriptionCount</b><
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">IJetStreamManagement NATS.Client.IConnection.CreateJetStreamManagementContext </td>
+          <td class="memname"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html">IJetStreamManagement</a> NATS.Client.IConnection.CreateJetStreamManagementContext </td>
           <td>(</td>
           <td class="paramtype">JetStreamOptions&#160;</td>
           <td class="paramname"><em>options</em> = <code>null</code></td><td>)</td>
@@ -305,10 +305,10 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>SubscriptionCount</b><
       </table>
 </div><div class="memdoc">
 
-<p>Gets a context for administrating JetStream. </p>
+<p>Gets a context for administrating <a class="el" href="namespace_n_a_t_s_1_1_client_1_1_jet_stream.html">JetStream</a>. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">options</td><td>Optional JetStream options.</td></tr>
+    <tr><td class="paramname">options</td><td>Optional <a class="el" href="namespace_n_a_t_s_1_1_client_1_1_jet_stream.html">JetStream</a> options.</td></tr>
   </table>
   </dd>
 </dl>

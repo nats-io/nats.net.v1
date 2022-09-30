@@ -2,6 +2,32 @@ var annotated_dup =
 [
     [ "NATS", "namespace_n_a_t_s.html", [
       [ "Client", "namespace_n_a_t_s_1_1_client.html", [
+        [ "JetStream", "namespace_n_a_t_s_1_1_client_1_1_jet_stream.html", [
+          [ "External", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_external.html", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_external" ],
+          [ "IJetStream", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream.html", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream" ],
+          [ "IJetStreamManagement", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management" ],
+          [ "IJetStreamPullSubscription", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_pull_subscription.html", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_pull_subscription" ],
+          [ "MetaData", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_meta_data.html", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_meta_data" ],
+          [ "Mirror", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_mirror.html", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_mirror" ],
+          [ "NATSJetStreamException", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_n_a_t_s_jet_stream_exception.html", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_n_a_t_s_jet_stream_exception" ],
+          [ "Placement", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_placement.html", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_placement" ],
+          [ "PullRequestOptions", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_pull_request_options.html", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_pull_request_options" ],
+          [ "Republish", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_republish.html", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_republish" ],
+          [ "Source", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_source.html", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_source" ],
+          [ "SubscribeOptions", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_subscribe_options.html", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_subscribe_options" ]
+        ] ],
+        [ "ObjectStore", "namespace_n_a_t_s_1_1_client_1_1_object_store.html", [
+          [ "ObjectInfo", "class_n_a_t_s_1_1_client_1_1_object_store_1_1_object_info.html", null ],
+          [ "ObjectLink", "class_n_a_t_s_1_1_client_1_1_object_store_1_1_object_link.html", null ],
+          [ "ObjectMeta", "class_n_a_t_s_1_1_client_1_1_object_store_1_1_object_meta.html", null ],
+          [ "ObjectMetaOptions", "class_n_a_t_s_1_1_client_1_1_object_store_1_1_object_meta_options.html", null ]
+        ] ],
+        [ "Rx", "namespace_n_a_t_s_1_1_client_1_1_rx.html", [
+          [ "INATSObservable", "interface_n_a_t_s_1_1_client_1_1_rx_1_1_i_n_a_t_s_observable.html", null ],
+          [ "NATSObservable", "class_n_a_t_s_1_1_client_1_1_rx_1_1_n_a_t_s_observable.html", "class_n_a_t_s_1_1_client_1_1_rx_1_1_n_a_t_s_observable" ],
+          [ "NATSObservableSubscription", "class_n_a_t_s_1_1_client_1_1_rx_1_1_n_a_t_s_observable_subscription.html", null ],
+          [ "NATSRxException", "class_n_a_t_s_1_1_client_1_1_rx_1_1_n_a_t_s_rx_exception.html", null ]
+        ] ],
         [ "AsyncSubscription", "class_n_a_t_s_1_1_client_1_1_async_subscription.html", "class_n_a_t_s_1_1_client_1_1_async_subscription" ],
         [ "Connection", "class_n_a_t_s_1_1_client_1_1_connection.html", "class_n_a_t_s_1_1_client_1_1_connection" ],
         [ "ConnectionFactory", "class_n_a_t_s_1_1_client_1_1_connection_factory.html", "class_n_a_t_s_1_1_client_1_1_connection_factory" ],

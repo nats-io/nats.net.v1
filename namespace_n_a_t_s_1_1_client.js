@@ -1,5 +1,18 @@
 var namespace_n_a_t_s_1_1_client =
 [
+    [ "Internals", "namespace_n_a_t_s_1_1_client_1_1_internals.html", "namespace_n_a_t_s_1_1_client_1_1_internals" ],
+    [ "JetStream", "namespace_n_a_t_s_1_1_client_1_1_jet_stream.html", "namespace_n_a_t_s_1_1_client_1_1_jet_stream" ],
+    [ "KeyValue", "namespace_n_a_t_s_1_1_client_1_1_key_value.html", [
+      [ "KeyValueWatchOption", "namespace_n_a_t_s_1_1_client_1_1_key_value.html#aff02c6f7c04a14949cfd1401baf3e247", [
+        [ "IgnoreDelete", "namespace_n_a_t_s_1_1_client_1_1_key_value.html#aff02c6f7c04a14949cfd1401baf3e247a33c69d1e2d481d669903dcd4e6789fd3", null ],
+        [ "MetaOnly", "namespace_n_a_t_s_1_1_client_1_1_key_value.html#aff02c6f7c04a14949cfd1401baf3e247a240781a71364c3f15e6d701183b7b733", null ],
+        [ "IncludeHistory", "namespace_n_a_t_s_1_1_client_1_1_key_value.html#aff02c6f7c04a14949cfd1401baf3e247afd8b3201c11e46aa0461aab5e63a81ce", null ],
+        [ "UpdatesOnly", "namespace_n_a_t_s_1_1_client_1_1_key_value.html#aff02c6f7c04a14949cfd1401baf3e247aa3a4b1cae23411e91b5dc04e9c25942a", null ]
+      ] ]
+    ] ],
+    [ "NaCl", "namespace_n_a_t_s_1_1_client_1_1_na_cl.html", "namespace_n_a_t_s_1_1_client_1_1_na_cl" ],
+    [ "ObjectStore", "namespace_n_a_t_s_1_1_client_1_1_object_store.html", "namespace_n_a_t_s_1_1_client_1_1_object_store" ],
+    [ "Rx", "namespace_n_a_t_s_1_1_client_1_1_rx.html", "namespace_n_a_t_s_1_1_client_1_1_rx" ],
     [ "AsyncSubscription", "class_n_a_t_s_1_1_client_1_1_async_subscription.html", "class_n_a_t_s_1_1_client_1_1_async_subscription" ],
     [ "Connection", "class_n_a_t_s_1_1_client_1_1_connection.html", "class_n_a_t_s_1_1_client_1_1_connection" ],
     [ "ConnectionFactory", "class_n_a_t_s_1_1_client_1_1_connection_factory.html", "class_n_a_t_s_1_1_client_1_1_connection_factory" ],
