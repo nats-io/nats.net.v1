@@ -49,6 +49,11 @@ namespace NATS.Client.KeyValue
         public ulong EntryCount => BackingStreamInfo.State.Messages;
 
         /// <summary>
+        /// The size of the bucket in bytes
+        /// </summary>
+        public ulong Bytes => BackingStreamInfo.State.Bytes;
+
+        /// <summary>
         /// The maximum number of history for any one key. Includes the current value
         /// </summary>
         public long MaxHistoryPerKey => Config.MaxHistoryPerKey;
