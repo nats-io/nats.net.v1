@@ -628,7 +628,7 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public void TestManageGetBucketNames() {
+        public void TestManageGetBucketNamesStatuses() {
             Context.RunInJsServer(c =>
             {
                 // get the kv management context
@@ -648,11 +648,21 @@ namespace IntegrationTests
 
                 CreateMemoryStream(c, Stream(1));
                 CreateMemoryStream(c, Stream(2));
-
-                IList<string> buckets = kvm.GetBucketNames();
+                
+                IList<KeyValueStatus> infos = kvm.GetStatuses();
+                Assert.Equal(2, infos.Count);
+                IList<string> buckets = new List<string>();
+                foreach (KeyValueStatus status in infos) {
+                    buckets.Add(status.BucketName);
+                }
                 Assert.Equal(2, buckets.Count);
-                Assert.Contains(Bucket(1), buckets);
-                Assert.Contains(Bucket(2), buckets);
+                Assert.True(buckets.Contains(Bucket(1)));
+                Assert.True(buckets.Contains(Bucket(2)));
+
+                buckets = kvm.GetBucketNames();
+                Assert.Equal(2, buckets.Count);
+                Assert.True(buckets.Contains(Bucket(1)));
+                Assert.True(buckets.Contains(Bucket(2)));
             });
         }
 

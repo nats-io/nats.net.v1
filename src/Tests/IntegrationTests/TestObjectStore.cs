@@ -265,7 +265,7 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public void TestManageGetBucketNames() {
+        public void TestManageGetBucketNamesStatuses() {
             Context.RunInJsServer(nc =>
             {
                 IObjectStoreManagement osm = nc.CreateObjectStoreManagementContext();
@@ -283,7 +283,17 @@ namespace IntegrationTests
                 CreateMemoryStream(nc, Stream(1));
                 CreateMemoryStream(nc, Stream(2));
 
-                IList<string> buckets = osm.GetBucketNames();
+                IList<ObjectStoreStatus> infos = osm.GetStatuses();
+                Assert.Equal(2, infos.Count);
+                IList<string> buckets = new List<string>();
+                foreach (ObjectStoreStatus status in infos) {
+                    buckets.Add(status.BucketName);
+                }
+                Assert.Equal(2, buckets.Count);
+                Assert.True(buckets.Contains(Bucket(1)));
+                Assert.True(buckets.Contains(Bucket(2)));
+
+                buckets = osm.GetBucketNames();
                 Assert.Equal(2, buckets.Count);
                 Assert.True(buckets.Contains(Bucket(1)));
                 Assert.True(buckets.Contains(Bucket(2)));

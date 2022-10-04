@@ -34,11 +34,17 @@ namespace NATS.Client.ObjectStore
         IList<String> GetBucketNames();
 
         /// <summary>
-        /// Gets the info for an existing object store.
+        /// Gets the status for an existing object store.
         /// OBJECT STORE IMPLEMENTATION IS EXPERIMENTAL AND SUBJECT TO CHANGE.
         /// </summary>
         /// <param name="bucketName">the object store bucket name to get info for</param>
-        ObjectStoreStatus GetStatus(String bucketName);
+        ObjectStoreStatus GetStatus(string bucketName);
+
+        /// <summary>
+        /// Gets the status for all object store buckets.
+        /// </summary>
+        /// <returns>the bucket status object</returns>
+        IList<ObjectStoreStatus> GetStatuses();
 
         /// <summary>
         /// Deletes an existing object store. Will throw a JetStreamApiException if the delete fails.

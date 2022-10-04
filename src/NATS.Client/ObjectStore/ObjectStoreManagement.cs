@@ -2,6 +2,7 @@
 using System.IO;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
+using static NATS.Client.ObjectStore.ObjectStoreUtil;
 
 namespace NATS.Client.ObjectStore
 {
@@ -30,8 +31,8 @@ namespace NATS.Client.ObjectStore
             IList<string> buckets = new List<string>();
             IList<string> names = jsm.GetStreamNames();
             foreach (string name in names) {
-                if (name.StartsWith(ObjectStoreUtil.ObjStreamPrefix)) {
-                    buckets.Add(ObjectStoreUtil.ExtractBucketName(name));
+                if (name.StartsWith(ObjStreamPrefix)) {
+                    buckets.Add(ExtractBucketName(name));
                 }
             }
             return buckets;
@@ -40,13 +41,23 @@ namespace NATS.Client.ObjectStore
         public ObjectStoreStatus GetStatus(string bucketName)
         {
             Validator.ValidateBucketName(bucketName, true);
-            return new ObjectStoreStatus(jsm.GetStreamInfo(ObjectStoreUtil.ToStreamName(bucketName)));
+            return new ObjectStoreStatus(jsm.GetStreamInfo(ToStreamName(bucketName)));
+        }
+        
+        public IList<ObjectStoreStatus> GetStatuses()
+        {
+            IList<string> bucketNames = GetBucketNames();
+            IList<ObjectStoreStatus> statuses = new List<ObjectStoreStatus>();
+            foreach (string name in bucketNames) {
+                statuses.Add(new ObjectStoreStatus(jsm.GetStreamInfo(ToStreamName(name))));
+            }
+            return statuses;
         }
 
         public void Delete(string bucketName)
         {
             Validator.ValidateBucketName(bucketName, true);
-            jsm.DeleteStream(ObjectStoreUtil.ToStreamName(bucketName));
+            jsm.DeleteStream(ToStreamName(bucketName));
         }
     }
 }
