@@ -162,7 +162,7 @@ namespace NATSExamples
 
                     // let's check the bucket info
                     Console.WriteLine("\n9.1 Bucket before update/delete");
-                    kvs = kvm.GetBucketInfo(helper.Bucket);
+                    kvs = kvm.GetStatus(helper.Bucket);
                     Console.WriteLine(kvs);
 
                     kvc = KeyValueConfiguration.Builder(kvs.Config)
@@ -178,7 +178,7 @@ namespace NATSExamples
                     kvm.Delete(helper.Bucket);
 
                     try {
-                        kvm.GetBucketInfo(helper.Bucket);
+                        kvm.GetStatus(helper.Bucket);
                         Console.WriteLine("UH OH! Bucket should not have been found!");
                     }
                     catch (NATSJetStreamException) {
