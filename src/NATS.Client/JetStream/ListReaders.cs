@@ -42,7 +42,7 @@ namespace NATS.Client.JetStream
 
         internal bool HasMore()
         {
-            return Total > (LastOffset + Limit);
+            return Total > NextOffset();
         }
 
         internal byte[] InternalNextJson()
@@ -52,7 +52,7 @@ namespace NATS.Client.JetStream
 
         internal byte[] NoFilterJson()
         {
-            return Encoding.ASCII.GetBytes(OffsetJsonStart + (LastOffset + Limit) + "}");
+            return Encoding.ASCII.GetBytes(OffsetJsonStart + NextOffset() + "}");
         }
 
         internal byte[] InternalNextJson(string fieldName, string filter)
@@ -64,11 +64,16 @@ namespace NATS.Client.JetStream
                     return NoFilterJson();
                 }
 
-                return Encoding.ASCII.GetBytes(OffsetJsonStart + (LastOffset + Limit) + ",\"" + fieldName + "\":\"" +
+                return Encoding.ASCII.GetBytes(OffsetJsonStart + NextOffset() + ",\"" + fieldName + "\":\"" +
                                                filter + "\"}");
             }
 
             return null;
+        }
+
+        internal int NextOffset()
+        {
+            return (LastOffset + Limit);
         }
 
         internal JSONArray GetNodes(string objectName)
@@ -148,7 +153,7 @@ namespace NATS.Client.JetStream
 
     internal class StreamNamesReader : StringListReader
     {
-        internal StreamNamesReader() : base(ApiConstants.Streams) {}
+        internal StreamNamesReader() : base(ApiConstants.Streams, ApiConstants.Subject) {}
     }
 
     internal class ConsumerListReader : AbstractListReader
@@ -169,7 +174,7 @@ namespace NATS.Client.JetStream
     {
         private List<StreamInfo> _streamInfos = new List<StreamInfo>();
 
-        internal StreamListReader() : base(ApiConstants.Streams) {}
+        internal StreamListReader() : base(ApiConstants.Streams, ApiConstants.Subject) {}
 
         protected override void ProcessItem(JSONNode node)
         {
@@ -177,5 +182,59 @@ namespace NATS.Client.JetStream
         }
 
         public List<StreamInfo> Streams => _streamInfos;
+    }
+
+    internal class StreamInfoReader
+    {
+        internal StreamInfo StreamInfo { get; private set; }
+        private ListRequestEngine engine;
+
+        public StreamInfoReader()
+        {
+            engine = new ListRequestEngine();
+        }
+
+        internal void Process(Msg msg)
+        {
+            engine = new ListRequestEngine(msg);
+            StreamInfo si = new StreamInfo(msg, true);
+            if (StreamInfo == null)
+            {
+                StreamInfo = si;
+            }
+            else
+            {
+                foreach (Subject s in si.State.Subjects)
+                {
+                    StreamInfo.State.Subjects.Add(s);
+                }
+            }
+        }
+
+        internal byte[] NextJson(StreamInfoOptions options)
+        {
+            JSONNode node = new JSONObject();
+            node["offset"] = engine.NextOffset();
+
+            if (options != null)
+            {
+                if (options.SubjectsFilter != null)
+                {
+                    node[ApiConstants.SubjectsFilter] = options.SubjectsFilter;
+                }
+
+                if (options.DeletedDetails)
+                {
+                    node[ApiConstants.DeletedDetails] = true;
+                }
+            }
+
+            return Encoding.ASCII.GetBytes(node.ToString());
+        }
+
+        internal bool HasMore()
+        {
+            return engine.HasMore();
+        }
     }
 }

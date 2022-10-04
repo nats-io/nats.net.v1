@@ -421,7 +421,7 @@ namespace NATS.Client.JetStream
 
         private string LookupStreamBySubject(string subject)
         {
-            IList<string> list = GetStreamNamesBySubjectFilterInternal(subject);
+            IList<string> list = GetStreamNamesInternal(subject);
             return list.Count == 1 ? list[0] : null; 
         }
         

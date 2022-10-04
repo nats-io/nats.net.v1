@@ -264,7 +264,7 @@ namespace IntegrationTests
                 StreamInfo si = jsm.GetStreamInfo(STREAM);
                 Assert.Equal(STREAM, si.Config.Name);
                 Assert.Equal(6, si.State.SubjectCount);
-                Assert.Null(si.State.Subjects);
+                Assert.Equal(0, si.State.Subjects.Count);
                 Assert.Equal(5, si.State.DeletedCount);
                 Assert.Empty(si.State.Deleted);
 
@@ -298,6 +298,185 @@ namespace IntegrationTests
                     Assert.True(si.State.Deleted.Contains(pa.Seq));
                 }
             });
+        }
+
+        [Fact]
+        public void TestGetStreamInfoSubjectPagination()
+        {
+            Context.RunInJsServer(Context.Server1, "pagination.conf", c =>
+            {
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                IJetStream js = c.CreateJetStreamContext();
+                
+                long rounds = 101;
+                long size = 1000;
+                long count = rounds * size;
+                
+                jsm.AddStream(StreamConfiguration.Builder()
+                    .WithName(Stream(1))
+                    .WithStorageType(StorageType.Memory)
+                    .WithSubjects("s.*.*")
+                    .Build());
+                
+                jsm.AddStream(StreamConfiguration.Builder()
+                    .WithName(Stream(2))
+                    .WithStorageType(StorageType.Memory)
+                    .WithSubjects("t.*.*")
+                    .Build());
+
+                for (int x = 1; x <= rounds; x++) {
+                    for (int y = 1; y <= size; y++) {
+                        js.Publish("s." + x + "." + y, null);
+                    }
+                }
+
+                for (int y = 1; y <= size; y++) {
+                    js.Publish("t.7." + y, null);
+                }
+
+                StreamInfo si = jsm.GetStreamInfo(Stream(1));
+                ValidateStreamInfo(si.State, 0, 0, count);
+
+                si = jsm.GetStreamInfo(Stream(1), StreamInfoOptions.Builder().WithAllSubjects().Build());
+                ValidateStreamInfo(si.State, count, count, count);
+
+                si = jsm.GetStreamInfo(Stream(1), StreamInfoOptions.Builder().WithFilterSubjects("s.7.*").Build());
+                ValidateStreamInfo(si.State, size, size, count);
+
+                si = jsm.GetStreamInfo(Stream(1), StreamInfoOptions.Builder().WithFilterSubjects("s.7.1").Build());
+                ValidateStreamInfo(si.State, 1L, 1, count);
+
+                si = jsm.GetStreamInfo(Stream(2), StreamInfoOptions.Builder().WithFilterSubjects("t.7.*").Build());
+                ValidateStreamInfo(si.State, size, size, size);
+
+                si = jsm.GetStreamInfo(Stream(2), StreamInfoOptions.Builder().WithFilterSubjects("t.7.1").Build());
+                ValidateStreamInfo(si.State, 1L, 1, size);
+
+                IList<StreamInfo> infos = jsm.GetStreams();
+                Assert.Equal(2, infos.Count);
+                si = infos[0];
+                if (si.Config.Subjects[0].Equals("s.*.*")) {
+                    ValidateStreamInfo(si.State, 0, 0, count);
+                    ValidateStreamInfo(infos[1].State, 0, 0, size);
+                }
+                else {
+                    ValidateStreamInfo(si.State, 0, 0, size);
+                    ValidateStreamInfo(infos[1].State, 0, 0, count);
+                }
+
+                infos = jsm.GetStreams(">");
+                Assert.Equal(2, infos.Count);
+
+                infos = jsm.GetStreams("*.7.*");
+                Assert.Equal(2, infos.Count);
+
+                infos = jsm.GetStreams("*.7.1");
+                Assert.Equal(2, infos.Count);
+
+                infos = jsm.GetStreams("s.7.*");
+                Assert.Equal(1, infos.Count);
+                Assert.Equal("s.*.*", infos[0].Config.Subjects[0]);
+
+                infos = jsm.GetStreams("t.7.1");
+                Assert.Equal(1, infos.Count);
+                Assert.Equal("t.*.*", infos[0].Config.Subjects[0]);
+            });
+        }
+
+        private void ValidateStreamInfo(StreamState streamState, long subjectsList, long filteredCount, long subjectCount) {
+            Assert.Equal(subjectsList, streamState.Subjects.Count);
+            Assert.Equal(filteredCount, streamState.Subjects.Count);
+            Assert.Equal(subjectCount, streamState.SubjectCount);
+        }
+
+        [Fact]
+        public void TestGetStreamInfoOrNamesPaginationFilter()
+        {
+            Context.RunInJsServer(c => {
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+
+                // getStreams pages at 256
+                // getStreamNames pages at 1024
+
+                AddStreams(jsm, 300, 0, "x256");
+
+                IList<StreamInfo> list = jsm.GetStreams();
+                Assert.Equal(300, list.Count);
+                
+                IList<string> names = jsm.GetStreamNames();
+                Assert.Equal(300, names.Count);
+
+                AddStreams(jsm, 1100, 300, "x1024");
+                
+                list = jsm.GetStreams();
+                Assert.Equal(1400, list.Count);
+
+                names = jsm.GetStreamNames();
+                Assert.Equal(1400, names.Count);
+
+                list = jsm.GetStreams("*.x256.*");
+                Assert.Equal(300, list.Count);
+
+                names = jsm.GetStreamNames("*.x256.*");
+                Assert.Equal(300, names.Count);
+
+                list = jsm.GetStreams("*.x1024.*");
+                Assert.Equal(1100, list.Count);
+
+                names = jsm.GetStreamNames("*.x1024.*");
+                Assert.Equal(1100, names.Count);
+            });
+        }
+
+        private void AddStreams(IJetStreamManagement jsm, int count, int adj, string div) {
+            for (int x = 0; x < count; x++) {
+                CreateMemoryStream(jsm, "stream-" + (x + adj), "sub" + (x + adj) + "." + div + ".*");
+            }
+        }
+
+        [Fact]
+        public void TestGetStreamNamesBySubjectFilter()
+        {
+            Context.RunInJsServer(c => {
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                
+                CreateMemoryStream(jsm, Stream(1), "foo");
+                CreateMemoryStream(jsm, Stream(2), "bar");
+                CreateMemoryStream(jsm, Stream(3), "a.a");
+                CreateMemoryStream(jsm, Stream(4), "a.b");
+
+                IList<string> list = jsm.GetStreamNames("*");
+                AssertStreamNameList(list, 1, 2);
+
+                list = jsm.GetStreamNames(">");
+                AssertStreamNameList(list, 1, 2, 3, 4);
+
+                list = jsm.GetStreamNames("*.*");
+                AssertStreamNameList(list, 3, 4);
+
+                list = jsm.GetStreamNames("a.>");
+                AssertStreamNameList(list, 3, 4);
+
+                list = jsm.GetStreamNames("a.*");
+                AssertStreamNameList(list, 3, 4);
+
+                list = jsm.GetStreamNames("foo");
+                AssertStreamNameList(list, 1);
+
+                list = jsm.GetStreamNames("a.a");
+                AssertStreamNameList(list, 3);
+
+                list = jsm.GetStreamNames("nomatch");
+                AssertStreamNameList(list);
+            });
+        }
+
+        private void AssertStreamNameList(IList<string> list, params int[] ids) {
+            Assert.NotNull(list);
+            Assert.Equal(ids.Length, list.Count);
+            foreach (int id in ids) {
+                Assert.Contains(Stream(id), list);
+            }
         }
 
         [Fact]
@@ -661,29 +840,6 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public void TestGetStreams()
-        {
-            Context.RunInJsServer(c => {
-                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
-
-                AddStreams(jsm, 600, 0); // getStreams pages at 256
-
-                IList<StreamInfo> list = jsm.GetStreams();
-                Assert.Equal(600, list.Count);
-
-                AddStreams(jsm, 500, 600); // getStreamNames pages at 1024
-                IList<string> names = jsm.GetStreamNames();
-                Assert.Equal(1100, names.Count);
-            });
-        }
-
-        private void AddStreams(IJetStreamManagement jsm, int count, int adj) {
-            for (int x = 0; x < count; x++) {
-                CreateMemoryStream(jsm, Stream(x + adj), Subject(x + adj));
-            }
-        }
-
-        [Fact]
         public void TestDeleteMessage() {
             MessageDeleteRequest mdr = new MessageDeleteRequest(1, true);
             Assert.Equal("{\"seq\":1}", Encoding.UTF8.GetString(mdr.Serialize()));
@@ -728,51 +884,6 @@ namespace IntegrationTests
                 Assert.Throws<NATSJetStreamException>(() => jsm.DeleteMessage(Stream(999), 1));
                 Assert.Throws<NATSJetStreamException>(() => jsm.GetMessage(Stream(999), 1));
             });
-        }
-
-        [Fact]
-        public void TestGetStreamNamesBySubjectFilter()
-        {
-            Context.RunInJsServer(c => {
-                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
-                
-                CreateMemoryStream(jsm, Stream(1), "foo");
-                CreateMemoryStream(jsm, Stream(2), "bar");
-                CreateMemoryStream(jsm, Stream(3), "a.a");
-                CreateMemoryStream(jsm, Stream(4), "a.b");
-
-                IList<string> list = jsm.GetStreamNamesBySubjectFilter("*");
-                AssertStreamNameList(list, 1, 2);
-
-                list = jsm.GetStreamNamesBySubjectFilter(">");
-                AssertStreamNameList(list, 1, 2, 3, 4);
-
-                list = jsm.GetStreamNamesBySubjectFilter("*.*");
-                AssertStreamNameList(list, 3, 4);
-
-                list = jsm.GetStreamNamesBySubjectFilter("a.>");
-                AssertStreamNameList(list, 3, 4);
-
-                list = jsm.GetStreamNamesBySubjectFilter("a.*");
-                AssertStreamNameList(list, 3, 4);
-
-                list = jsm.GetStreamNamesBySubjectFilter("foo");
-                AssertStreamNameList(list, 1);
-
-                list = jsm.GetStreamNamesBySubjectFilter("a.a");
-                AssertStreamNameList(list, 3);
-
-                list = jsm.GetStreamNamesBySubjectFilter("nomatch");
-                AssertStreamNameList(list);
-            });
-        }
-
-        private void AssertStreamNameList(IList<string> list, params int[] ids) {
-            Assert.NotNull(list);
-            Assert.Equal(ids.Length, list.Count);
-            foreach (int id in ids) {
-                Assert.Contains(Stream(id), list);
-            }
         }
 
         [Fact]

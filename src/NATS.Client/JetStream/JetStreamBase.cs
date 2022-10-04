@@ -111,10 +111,14 @@ namespace NATS.Client.JetStream
 
         internal StreamInfo GetStreamInfoInternal(string streamName, StreamInfoOptions options)
         {
-            byte[] payload = options == null ? null : options.Serialize();
             string subj = string.Format(JetStreamConstants.JsapiStreamInfo, streamName);
-            Msg m = RequestResponseRequired(subj, payload, Timeout);
-            return CreateAndCacheStreamInfoThrowOnError(streamName, m);
+            StreamInfoReader sir = new StreamInfoReader();
+            while (sir.HasMore())
+            {
+                Msg resp = RequestResponseRequired(subj, sir.NextJson(options), Timeout);
+                sir.Process(resp);
+            }
+            return CacheStreamInfo(streamName, sir.StreamInfo);
         }
 
         internal StreamInfo CreateAndCacheStreamInfoThrowOnError(string streamName, Msg resp) {
@@ -134,12 +138,13 @@ namespace NATS.Client.JetStream
             return list;
         }
 
-        internal IList<string> GetStreamNamesBySubjectFilterInternal(string subjectFilter)
+        internal IList<string> GetStreamNamesInternal(string subjectFilter)
         {
-            byte[] body = JsonUtils.SimpleMessageBody(ApiConstants.Subject, subjectFilter); 
-            Msg resp = RequestResponseRequired(JetStreamConstants.JsapiStreamNames, body, Timeout);
             StreamNamesReader snr = new StreamNamesReader();
-            snr.Process(resp);
+            while (snr.HasMore()) {
+                Msg m = RequestResponseRequired(JetStreamConstants.JsapiStreamNames, snr.NextJson(subjectFilter), Timeout);
+                snr.Process(m);
+            }
             return snr.Strings;
         }
 

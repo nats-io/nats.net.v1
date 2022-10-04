@@ -48,7 +48,7 @@ namespace NATS.Client.JetStream
             DeletedCount = streamState[ApiConstants.NumDeleted].AsLong;
             FirstTime = JsonUtils.AsDate(streamState[ApiConstants.FirstTs]);
             LastTime = JsonUtils.AsDate(streamState[ApiConstants.LastTs]);
-            Subjects = Subject.OptionalListOf(streamState[ApiConstants.Subjects]);
+            Subjects = new List<Subject>();
 
             Deleted = new List<ulong>();
             JSONNode.Enumerator e = 
@@ -56,7 +56,20 @@ namespace NATS.Client.JetStream
             while (e.MoveNext())
             {
                 Deleted.Add(e.Current.Value.AsUlong);
-            }                
+            }          
+            
+            AddAll(Subject.OptionalListOf(streamState[ApiConstants.Subjects]));
+        }
+
+        internal void AddAll(IList<Subject> addSubjects)
+        {
+            if (addSubjects != null && addSubjects.Count > 0)
+            {
+                foreach (Subject s in addSubjects)
+                {
+                    Subjects.Add(s);
+                }
+            }
         }
 
         public override string ToString()
