@@ -294,15 +294,15 @@ namespace UnitTests.JetStream
             // okay if you set it to true
             cc = ConsumerConfiguration.Builder().WithMemStorage(true).Build();
             PushSubscribeOptions.Builder().WithConfiguration(cc).WithOrdered(true).Build();
+
+            // okay if you set it to 1
+            cc = ConsumerConfiguration.Builder().WithNumReplicas(1).Build();
+            PushSubscribeOptions.Builder().WithConfiguration(cc).WithOrdered(true).Build();
                 
             // not okay if you set it to false
             ConsumerConfiguration ccMs = ConsumerConfiguration.Builder().WithMemStorage(false).Build();
             AssertClientError(JsSoOrderedMemStorageNotSuppliedOrTrue,
                 () => PushSubscribeOptions.Builder().WithConfiguration(ccMs).WithOrdered(true).Build());
-
-            // okay if you set it to true
-            cc = ConsumerConfiguration.Builder().WithNumReplicas(1).Build();
-            PushSubscribeOptions.Builder().WithConfiguration(cc).WithOrdered(true).Build();
 
             // not okay if you set it to something other than 1
             ConsumerConfiguration ccR = ConsumerConfiguration.Builder().WithNumReplicas(3).Build();
