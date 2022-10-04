@@ -255,6 +255,8 @@ namespace NATS.Client
         public static readonly ClientExDetail JsSoOrderedRequiresAckPolicyNone = new ClientExDetail(So, 90108, "Ordered consumer requires Ack Policy None.");
         public static readonly ClientExDetail JsSoOrderedRequiresMaxDeliver = new ClientExDetail(So, 90109, "Max deliver is limited to 1 with an ordered consumer.");
         public static readonly ClientExDetail JsSoNameMismatch = new ClientExDetail(So, 90110, "Builder name must match the consumer configuration name if both are provided.");
+        public static readonly ClientExDetail JsSoOrderedMemStorageNotSuppliedOrTrue = new ClientExDetail(So, 90112, "MemStorage must be true is supplied.");
+        public static readonly ClientExDetail JsSoOrderedReplicasNotSuppliedOrOne = new ClientExDetail(So, 90113, "Replicas must be 1 if supplied.");
 
         public static readonly ClientExDetail OsObjectNotFound = new ClientExDetail(Os, 90201, "The object was not found.");
         public static readonly ClientExDetail OsObjectIsDeleted = new ClientExDetail(Os, 90202, "The object is deleted.");

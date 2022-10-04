@@ -16,6 +16,7 @@ using NATS.Client;
 using NATS.Client.JetStream;
 using Xunit;
 using static NATS.Client.ClientExDetail;
+using static NATS.Client.JetStream.SubscribeOptions;
 
 namespace UnitTests.JetStream
 {
@@ -89,6 +90,8 @@ namespace UnitTests.JetStream
             // new helper
             ConsumerConfiguration.Builder().WithDurable(DURABLE).BuildPushSubscribeOptions();
             ConsumerConfiguration.Builder().WithName(NAME).BuildPushSubscribeOptions();
+            
+            // ordered rules
         }
 
         [Fact]
@@ -246,6 +249,65 @@ namespace UnitTests.JetStream
                 .WithConfiguration(ConsumerConfiguration.Builder().WithDeliverSubject("y").Build())
                 .Build());
             Assert.Contains(JsSoDeliverSubjectMismatch.Id, e.Message);
+        }
+
+        [Fact]
+        public void TestOrderedCreation() {
+            ConsumerConfiguration ccEmpty = ConsumerConfiguration.Builder().Build();
+            PushSubscribeOptions.Builder().WithConfiguration(ccEmpty).WithOrdered(true).Build();
+
+            AssertClientError(JsSoOrderedNotAllowedWithBind,
+                () => PushSubscribeOptions.Builder().WithStream(STREAM).WithBind(true).WithOrdered(true).Build());
+
+            AssertClientError(JsSoOrderedNotAllowedWithDeliverGroup,
+                () => PushSubscribeOptions.Builder().WithDeliverGroup(DELIVER).WithOrdered(true).Build());
+
+            AssertClientError(JsSoOrderedNotAllowedWithDurable,
+                () => PushSubscribeOptions.Builder().WithDurable(DURABLE).WithOrdered(true).Build());
+
+            AssertClientError(JsSoOrderedNotAllowedWithDeliverSubject,
+                () => PushSubscribeOptions.Builder().WithDeliverSubject(DELIVER).WithOrdered(true).Build());
+
+            ConsumerConfiguration ccAckNotNone1 = ConsumerConfiguration.Builder().WithAckPolicy(AckPolicy.All).Build();
+            AssertClientError(JsSoOrderedRequiresAckPolicyNone,
+                () => PushSubscribeOptions.Builder().WithConfiguration(ccAckNotNone1).WithOrdered(true).Build());
+
+            ConsumerConfiguration ccAckNotNone2 = ConsumerConfiguration.Builder().WithAckPolicy(AckPolicy.Explicit).Build();
+            AssertClientError(JsSoOrderedRequiresAckPolicyNone,
+                () => PushSubscribeOptions.Builder().WithConfiguration(ccAckNotNone2).WithOrdered(true).Build());
+
+            ConsumerConfiguration ccAckNoneOk = ConsumerConfiguration.Builder().WithAckPolicy(AckPolicy.None).Build();
+            PushSubscribeOptions.Builder().WithConfiguration(ccAckNoneOk).WithOrdered(true).Build();
+
+            ConsumerConfiguration ccMax = ConsumerConfiguration.Builder().WithMaxDeliver(2).Build();
+            AssertClientError(JsSoOrderedRequiresMaxDeliver,
+                () => PushSubscribeOptions.Builder().WithConfiguration(ccMax).WithOrdered(true).Build());
+
+            ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithIdleHeartbeat(100).Build();
+            PushSubscribeOptions pso = PushSubscribeOptions.Builder().WithConfiguration(cc).WithOrdered(true).Build();
+            Assert.Equal(DefaultOrderedHeartbeat, (long)pso.ConsumerConfiguration.IdleHeartbeat.Millis);
+
+            cc = ConsumerConfiguration.Builder().WithIdleHeartbeat(DefaultOrderedHeartbeat + 1).Build();
+            pso = PushSubscribeOptions.Builder().WithConfiguration(cc).WithOrdered(true).Build();
+            Assert.Equal(DefaultOrderedHeartbeat + 1, (long)pso.ConsumerConfiguration.IdleHeartbeat.Millis);
+
+            // okay if you set it to true
+            cc = ConsumerConfiguration.Builder().WithMemStorage(true).Build();
+            PushSubscribeOptions.Builder().WithConfiguration(cc).WithOrdered(true).Build();
+                
+            // not okay if you set it to false
+            ConsumerConfiguration ccMs = ConsumerConfiguration.Builder().WithMemStorage(false).Build();
+            AssertClientError(JsSoOrderedMemStorageNotSuppliedOrTrue,
+                () => PushSubscribeOptions.Builder().WithConfiguration(ccMs).WithOrdered(true).Build());
+
+            // okay if you set it to true
+            cc = ConsumerConfiguration.Builder().WithNumReplicas(1).Build();
+            PushSubscribeOptions.Builder().WithConfiguration(cc).WithOrdered(true).Build();
+
+            // not okay if you set it to something other than 1
+            ConsumerConfiguration ccR = ConsumerConfiguration.Builder().WithNumReplicas(3).Build();
+            AssertClientError(JsSoOrderedReplicasNotSuppliedOrOne,
+                () => PushSubscribeOptions.Builder().WithConfiguration(ccR).WithOrdered(true).Build());
         }
     }
 }
