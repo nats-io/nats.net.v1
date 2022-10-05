@@ -1,4 +1,4 @@
-﻿// Copyright 2021 The NATS Authors
+// Copyright 2021 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -204,10 +204,7 @@ namespace NATS.Client.JetStream
             }
             else
             {
-                foreach (Subject s in si.State.Subjects)
-                {
-                    StreamInfo.State.Subjects.Add(s);
-                }
+                StreamInfo.State.AddAll(si.State.Subjects);
             }
         }
 
