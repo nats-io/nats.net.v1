@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 
 namespace NATS.Client.KeyValue
@@ -42,7 +43,21 @@ namespace NATS.Client.KeyValue
         /// </summary>
         /// <param name="bucketName">the bucket name to use</param>
         /// <returns>the bucket status object</returns>
+        [Obsolete("This method will soon be deprecated. Use GetStatus instead.")]
         KeyValueStatus GetBucketInfo(string bucketName);
+
+        /// <summary>
+        /// Gets the status for an existing bucket.
+        /// </summary>
+        /// <param name="bucketName">the bucket name to use</param>
+        /// <returns>the bucket status object</returns>
+        KeyValueStatus GetStatus(string bucketName);
+
+        /// <summary>
+        /// Gets the status for all buckets.
+        /// </summary>
+        /// <returns>the list of statuses</returns>
+        IList<KeyValueStatus> GetStatuses();
 
         /// <summary>
         /// Deletes an existing bucket. Will throw a NATSJetStreamException if the delete fails.

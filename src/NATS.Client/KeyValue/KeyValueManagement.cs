@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using static NATS.Client.JetStream.JetStreamBase;
+using static NATS.Client.KeyValue.KeyValueUtil;
 
 namespace NATS.Client.KeyValue
 {
@@ -47,23 +48,35 @@ namespace NATS.Client.KeyValue
             IList<string> buckets = new List<string>();
             IList<string> names = jsm.GetStreamNames();
             foreach (string name in names) {
-                if (name.StartsWith(KeyValueUtil.KvStreamPrefix)) {
-                    buckets.Add(KeyValueUtil.ExtractBucketName(name));
+                if (name.StartsWith(KvStreamPrefix)) {
+                    buckets.Add(ExtractBucketName(name));
                 }
             }
             return buckets;
         }
 
-        public KeyValueStatus GetBucketInfo(string bucketName)
+        public KeyValueStatus GetBucketInfo(string bucketName) => GetStatus(bucketName);
+
+        public KeyValueStatus GetStatus(string bucketName)
         {
             Validator.ValidateBucketName(bucketName, true);
-            return new KeyValueStatus(jsm.GetStreamInfo(KeyValueUtil.ToStreamName(bucketName)));
+            return new KeyValueStatus(jsm.GetStreamInfo(ToStreamName(bucketName)));
+        }
+
+        public IList<KeyValueStatus> GetStatuses()
+        {
+            IList<string> bucketNames = GetBucketNames();
+            IList<KeyValueStatus> statuses = new List<KeyValueStatus>();
+            foreach (string name in bucketNames) {
+                statuses.Add(new KeyValueStatus(jsm.GetStreamInfo(ToStreamName(name))));
+            }
+            return statuses;
         }
 
         public void Delete(string bucketName)
         {
             Validator.ValidateBucketName(bucketName, true);
-            jsm.DeleteStream(KeyValueUtil.ToStreamName(bucketName));
+            jsm.DeleteStream(ToStreamName(bucketName));
         }
     }
 }
