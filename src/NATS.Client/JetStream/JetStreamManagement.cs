@@ -130,24 +130,24 @@ namespace NATS.Client.JetStream
 
         public IList<string> GetStreamNames()
         {
-            StreamNamesReader snr = new StreamNamesReader();
-            while (snr.HasMore()) {
-                Msg m = RequestResponseRequired(JetStreamConstants.JsapiStreamNames, snr.NextJson(), Timeout);
-                snr.Process(m);
-            }
-            return snr.Strings;
+            return GetStreamNamesInternal(null);
         }
 
-        public IList<string> GetStreamNamesBySubjectFilter(string subjectFilter)
+        public IList<string> GetStreamNames(string subjectFilter)
         {
-            return GetStreamNamesBySubjectFilterInternal(subjectFilter);
+            return GetStreamNamesInternal(subjectFilter);
         }
 
         public IList<StreamInfo> GetStreams()
         {
+            return GetStreams(null);
+        }
+
+        public IList<StreamInfo> GetStreams(string subjectFilter)
+        {
             StreamListReader slr = new StreamListReader();
             while (slr.HasMore()) {
-                Msg m = RequestResponseRequired(JetStreamConstants.JsapiStreamList, slr.NextJson(), Timeout);
+                Msg m = RequestResponseRequired(JetStreamConstants.JsapiStreamList, slr.NextJson(subjectFilter), Timeout);
                 slr.Process(m);
             }
             return CacheStreamInfo(slr.Streams);

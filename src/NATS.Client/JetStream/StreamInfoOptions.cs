@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client.JetStream
@@ -53,7 +54,7 @@ namespace NATS.Client.JetStream
 
             public StreamInfoOptionsBuilder WithFilterSubjects(string subjectsFilter)
             {
-                _subjectsFilter = subjectsFilter;
+                _subjectsFilter = Validator.EmptyAsNull(subjectsFilter);
                 return this;
             }
 

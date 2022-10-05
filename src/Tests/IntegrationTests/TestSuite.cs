@@ -136,6 +136,24 @@ namespace IntegrationTests
             }
         }
 
+        public void RunInJsServer(TestServerInfo testServerInfo, string config, Action<IConnection> test)
+        {
+            using (var s = NATSServer.CreateJetStreamWithConfig(testServerInfo.Port, config))
+            {
+                using (var c = OpenConnection(testServerInfo.Port))
+                {
+                    try
+                    {
+                        test(c);
+                    }
+                    finally
+                    {
+                        cleanupJs(c);
+                    }
+                }
+            }
+        }
+
         public void RunInJsServer(TestServerInfo testServerInfo, Action<Options> optionsModifier, Action<IConnection> test)
         {
             using (var s = NATSServer.CreateJetStreamFastAndVerify(testServerInfo.Port, optionsModifier))

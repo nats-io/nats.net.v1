@@ -153,6 +153,9 @@ namespace IntegrationTests
         public static NATSServer CreateWithConfig(int port, string configFile)
             => new NATSServer(DefaultDelay, port, $"-config {configFile}");
 
+        public static NATSServer CreateJetStreamWithConfig(int port, string configFile)
+            => new NATSServer(DefaultDelay, port, $"-js -config {configFile}");
+
         private void addArgument(ProcessStartInfo psi, string arg)
         {
             if (psi.Arguments == null)
