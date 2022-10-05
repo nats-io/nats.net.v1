@@ -177,12 +177,6 @@ namespace IntegrationTests
             Assert.Equal("JetStream", status.BackingStore);
         }
 
-        private void AssertClientError(ClientExDetail ced, Action testCode)
-        {
-            NATSJetStreamClientException e = Assert.Throws<NATSJetStreamClientException>(testCode);
-            Assert.Contains(ced.Id, e.Message);
-        }
-
         private MemoryStream ValidateGet(IObjectStore os, long len, long chunks, int chunkSize) {
             MemoryStream ms = new MemoryStream();
             ObjectInfo oi = os.Get("object-name", ms);
