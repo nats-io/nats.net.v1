@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using NATS.Client;
+using Xunit;
 using Xunit.Abstractions;
 
 namespace UnitTests
@@ -168,6 +170,12 @@ namespace UnitTests
         public static byte[] DataBytes(int seq)
         {
             return Encoding.ASCII.GetBytes(Data(seq));
+        }
+ 
+        public static void AssertClientError(ClientExDetail ced, Action testCode)
+        {
+            NATSJetStreamClientException e = Assert.Throws<NATSJetStreamClientException>(testCode);
+            Assert.Contains(ced.Id, e.Message);
         }
     }
 }

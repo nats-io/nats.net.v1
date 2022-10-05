@@ -77,6 +77,18 @@ namespace NATS.Client.JetStream
                 ValidateNotSupplied(deliverGroup, JsSoOrderedNotAllowedWithDeliverGroup);
                 ValidateNotSupplied(durable, JsSoOrderedNotAllowedWithDurable);
                 ValidateNotSupplied(deliverSubject, JsSoOrderedNotAllowedWithDeliverSubject);
+                bool? ms = builder.Cc?._memStorage;
+                if (ms != null && !ms.Value)
+                {
+                    throw JsSoOrderedMemStorageNotSuppliedOrTrue.Instance();
+                }
+
+                int? r = builder.Cc?._numReplicas;
+                if (r != null && r != 1)
+                {
+                    throw JsSoOrderedReplicasNotSuppliedOrOne.Instance();
+                }
+
                 long hb = DefaultOrderedHeartbeat;
 
                 if (builder.Cc != null)
@@ -101,6 +113,8 @@ namespace NATS.Client.JetStream
                     .WithFlowControl(hb)
                     .WithAckWait(Duration.OfHours(22))
                     .WithName(name)
+                    .WithMemStorage(true)
+                    .WithNumReplicas(1)
                     .Build();
             }
             else
