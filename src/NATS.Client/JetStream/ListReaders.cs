@@ -204,10 +204,7 @@ namespace NATS.Client.JetStream
             }
             else
             {
-                foreach (Subject s in si.State.Subjects)
-                {
-                    StreamInfo.State.Subjects.Add(s);
-                }
+                StreamInfo.State.AddAll(si.State.Subjects);
             }
         }
 
