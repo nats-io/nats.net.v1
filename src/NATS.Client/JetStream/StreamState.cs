@@ -48,9 +48,7 @@ namespace NATS.Client.JetStream
             DeletedCount = streamState[ApiConstants.NumDeleted].AsLong;
             FirstTime = JsonUtils.AsDate(streamState[ApiConstants.FirstTs]);
             LastTime = JsonUtils.AsDate(streamState[ApiConstants.LastTs]);
-
-            Subjects = new List<Subject>();
-            AddAll(Subject.OptionalListOf(streamState[ApiConstants.Subjects]));
+            Subjects = Subject.GetList(streamState[ApiConstants.Subjects]);
 
             Deleted = new List<ulong>();
             JSONNode.Enumerator e = 
