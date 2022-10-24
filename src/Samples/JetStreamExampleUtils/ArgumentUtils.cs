@@ -60,7 +60,7 @@ namespace NATSExamples
                         break;
 
                     case "-stream": 
-                        Subject = args[i + 1];
+                        Stream = args[i + 1];
                         break;
 
                     case "-subject": 
