@@ -91,7 +91,7 @@ namespace NATSExamples
                         Consumer = args[i + 1];
                         break;
 
-                    case "-dur": 
+                    case "-durable": 
                         Durable = args[i + 1];
                         break;
 
