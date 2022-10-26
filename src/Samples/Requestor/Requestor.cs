@@ -19,22 +19,24 @@ using NATS.Client;
 
 namespace NATSExamples
 {
+    /// <summary>
+    /// Requestor makes requests which the Replier will respond to.
+    /// The Replier must be started before the Requestor is run.
+    /// You can also try without the Replier running to see "No responders".
+    /// </summary>
     class Requestor
     {
         Dictionary<string, string> parsedArgs = new Dictionary<string, string>();
 
-        int count = 20000;
+        int count = 10;
         string url = Defaults.Url;
-        string subject = "foo";
-        byte[] payload = null;
-        string creds = null;
+        string subject = "RequestReply";
+        string creds;
 
         public void Run(string[] args)
         {
-            Stopwatch sw = null;
-
-            parseArgs(args);
-            banner();
+            ParseArgs(args);
+            Banner();
 
             Options opts = ConnectionFactory.GetDefaultOptions();
             opts.Url = url;
@@ -45,25 +47,26 @@ namespace NATSExamples
 
             using (IConnection c = new ConnectionFactory().CreateConnection(opts))
             {
-                sw = Stopwatch.StartNew();
+                Stopwatch sw = Stopwatch.StartNew();
 
-                for (int i = 0; i < count; i++)
+                for (int i = 1; i <= count; i++)
                 {
-                    c.Request(subject, payload);
+                    string payload = $"Request #{i}";
+                    Console.WriteLine($"\r\nRequesting message with subject \"{subject}\" and payload \"{payload}\".");
+                    Msg reply = c.Request(subject, Encoding.ASCII.GetBytes(payload));
+                    Console.WriteLine($"Received \"{Encoding.ASCII.GetString(reply.Data)}\" as reply for payload \"{payload}\".");
                 }
                 c.Flush();
 
                 sw.Stop();
 
                 Console.Write("Completed {0} requests in {1} seconds ", count, sw.Elapsed.TotalSeconds);
-                Console.WriteLine("({0} requests/second).",
-                    (int)(count / sw.Elapsed.TotalSeconds));
-                printStats(c);
-
+                Console.WriteLine("({0} requests/second).", (int)(count / sw.Elapsed.TotalSeconds));
+                PrintStats(c);
             }
         }
 
-        private void printStats(IConnection c)
+        private void PrintStats(IConnection c)
         {
             IStatistics s = c.Stats;
             Console.WriteLine("Statistics:  ");
@@ -73,7 +76,7 @@ namespace NATSExamples
             Console.WriteLine("   Outgoing Messages: {0}", s.OutMsgs);
         }
 
-        private void usage()
+        private void Usage()
         {
             Console.Error.WriteLine(
                 "Usage:  Requestor [-url url] [-subject subject] " +
@@ -82,7 +85,7 @@ namespace NATSExamples
             Environment.Exit(-1);
         }
 
-        private void parseArgs(string[] args)
+        private void ParseArgs(string[] args)
         {
             if (args == null)
                 return;
@@ -90,7 +93,7 @@ namespace NATSExamples
             for (int i = 0; i < args.Length; i++)
             {
                 if (i + 1 == args.Length)
-                    usage();
+                    Usage();
 
                 parsedArgs.Add(args[i], args[i + 1]);
                 i++;
@@ -105,20 +108,14 @@ namespace NATSExamples
             if (parsedArgs.ContainsKey("-subject"))
                 subject = parsedArgs["-subject"];
 
-            if (parsedArgs.ContainsKey("-payload"))
-                payload = Encoding.UTF8.GetBytes(parsedArgs["-payload"]);
-
             if (parsedArgs.ContainsKey("-creds"))
                 creds = parsedArgs["-creds"];
         }
 
-        private void banner()
+        private void Banner()
         {
-            Console.WriteLine("Sending {0} requests on subject {1}",
-                count, subject);
+            Console.WriteLine("Sending {0} requests on subject {1}", count, subject);
             Console.WriteLine("  Url: {0}", url);
-            Console.WriteLine("  Payload is {0} bytes.",
-                payload != null ? payload.Length : 0);
         }
 
         public static void Main(string[] args)

@@ -24,19 +24,17 @@ namespace NATSExamples
     {
         Dictionary<string, string> parsedArgs = new Dictionary<string, string>();
 
-        int count = 20000;
+        int count = 10;
         string url = Defaults.Url;
-        string subject = "foo";
+        string subject = "RequestReply";
         bool sync = false;
-        int received = 0;
-        bool verbose = false;
-        Msg replyMsg = new Msg();
         string creds = null;
+        int received = 0;
 
         public void Run(string[] args)
         {
-            parseArgs(args);
-            banner();
+            ParseArgs(args);
+            Banner();
 
             Options opts = ConnectionFactory.GetDefaultOptions();
             opts.Url = url;
@@ -45,30 +43,27 @@ namespace NATSExamples
                 opts.SetUserCredentials(creds);
             }
 
-            replyMsg.Data = Encoding.UTF8.GetBytes("reply"); 
-
             using (IConnection c = new ConnectionFactory().CreateConnection(opts))
             {
                 TimeSpan elapsed;
 
                 if (sync)
                 {
-                    elapsed = receiveSyncSubscriber(c);
+                    elapsed = ReceiveSyncSubscriber(c);
                 }
                 else
                 {
-                    elapsed = receiveAsyncSubscriber(c);
+                    elapsed = ReceiveAsyncSubscriber(c);
                 }
 
                 Console.Write("Replied to {0} msgs in {1} seconds ", received, elapsed.TotalSeconds);
-                Console.WriteLine("({0} replies/second).",
-                    (int)(received / elapsed.TotalSeconds));
-                printStats(c);
+                Console.WriteLine("({0} replies/second).", (int)(received / elapsed.TotalSeconds));
+                PrintStats(c);
 
             }
         }
 
-        private void printStats(IConnection c)
+        private void PrintStats(IConnection c)
         {
             IStatistics s = c.Stats;
             Console.WriteLine("Statistics:  ");
@@ -78,73 +73,63 @@ namespace NATSExamples
             Console.WriteLine("   Outgoing Messages: {0}", s.OutMsgs);
         }
 
-        private TimeSpan receiveAsyncSubscriber(IConnection c)
+        private void ProcessRequest(IConnection c, Msg msg)
         {
-            Stopwatch sw = null;
+            string msgSubject = msg.Subject;
+            string msgPayload = Encoding.ASCII.GetString(msg.Data);
+            Console.WriteLine($"\r\nReceived message with subject \"{msgSubject}\" and payload \"{msgPayload}\".");
+            c.Publish(new Msg(msg.Reply, Encoding.ASCII.GetBytes("Replying to " + msgPayload)));
+            c.Flush();
+        }
+
+        private TimeSpan ReceiveAsyncSubscriber(IConnection c)
+        {
+            Stopwatch sw = new Stopwatch();
             AutoResetEvent subDone = new AutoResetEvent(false);
 
-            EventHandler<MsgHandlerEventArgs> msgHandler = (sender, args) =>
+            void MsgHandler(object sender, MsgHandlerEventArgs args)
             {
                 if (received == 0)
                 {
-                    sw = new Stopwatch();
                     sw.Start();
                 }
 
-                received++;
-
-                if (verbose)
-                    Console.WriteLine("Received: " + args.Message);
-
-                replyMsg.Subject = args.Message.Reply;
-                c.Publish(replyMsg);
-                c.Flush();
-
-                if (received == count)
+                ProcessRequest(c, args.Message);
+                if (++received == count)
                 {
                     sw.Stop();
                     subDone.Set();
                 }
-            };
+            }
 
-            using (IAsyncSubscription s = c.SubscribeAsync(subject, msgHandler))
+            using (IAsyncSubscription s = c.SubscribeAsync(subject, MsgHandler))
             {
                 // just wait to complete
                 subDone.WaitOne();
             }
-
             return sw.Elapsed;
         }
-
-
-        private TimeSpan receiveSyncSubscriber(IConnection c)
+        
+        private TimeSpan ReceiveSyncSubscriber(IConnection c)
         {
             using (ISyncSubscription s = c.SubscribeSync(subject))
             {
                 Stopwatch sw = new Stopwatch();
-
                 while (received < count)
                 {
                     if (received == 0)
+                    {
                         sw.Start();
-
-                    Msg m = s.NextMessage();
+                    }
+                    ProcessRequest(c, s.NextMessage());
                     received++; 
-                    
-                    if (verbose)
-                        Console.WriteLine("Received: " + m);
-
-                    replyMsg.Subject = m.Reply;
-                    c.Publish(replyMsg);
                 }
-
                 sw.Stop();
-
                 return sw.Elapsed;
             }
         }
 
-        private void usage()
+        private void Usage()
         {
             Console.Error.WriteLine(
                 "Usage:  Replier [-url url] [-subject subject] " +
@@ -153,22 +138,21 @@ namespace NATSExamples
             Environment.Exit(-1);
         }
 
-        private void parseArgs(string[] args)
+        private void ParseArgs(string[] args)
         {
             if (args == null)
                 return;
 
             for (int i = 0; i < args.Length; i++)
             {
-                if (args[i].Equals("-sync") ||
-                    args[i].Equals("-verbose"))
+                if (args[i].Equals("-sync"))
                 {
                     parsedArgs.Add(args[i], "true");
                 }
                 else
                 {
                     if (i + 1 == args.Length)
-                        usage();
+                        Usage();
 
                     parsedArgs.Add(args[i], args[i + 1]);
                     i++;
@@ -188,20 +172,15 @@ namespace NATSExamples
             if (parsedArgs.ContainsKey("-sync"))
                 sync = true;
 
-            if (parsedArgs.ContainsKey("-verbose"))
-                verbose = true;
-
             if (parsedArgs.ContainsKey("-creds"))
                 creds = parsedArgs["-creds"];
         }
 
-        private void banner()
+        private void Banner()
         {
-            Console.WriteLine("Receiving {0} messages on subject {1}",
-                count, subject);
+            Console.WriteLine("Receiving {0} messages on subject {1}", count, subject);
             Console.WriteLine("  Url: {0}", url);
-            Console.WriteLine("  Receiving: {0}",
-                sync ? "Synchronously" : "Asynchronously");
+            Console.WriteLine("  Receiving: {0}", sync ? "Synchronously" : "Asynchronously");
         }
 
         public static void Main(string[] args)
