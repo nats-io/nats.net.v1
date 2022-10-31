@@ -1298,6 +1298,20 @@ namespace IntegrationTests
                 }
             }
         }
+
+        [Fact]
+        public void TestRtt()
+        {
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
+            {
+                using (var c = Context.OpenConnection(Context.Server1.Port))
+                {
+                    Assert.True(c.RTT().TotalMilliseconds < 1000);
+                    c.Close();
+                    Assert.Throws<NATSConnectionClosedException>(() => c.RTT());
+                }
+            }
+        }
     }
 
     public class TestConnectionMemoryLeaks : TestSuite<ConnectionMemoryLeaksSuiteContext>

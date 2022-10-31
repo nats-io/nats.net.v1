@@ -4055,13 +4055,66 @@ namespace NATS.Client
                     saveFlushException(e);
                     throw;
                 }
-                else
+                
+                // wrap other system exceptions
+                var ex = new NATSException("Flush error.", e);
+                saveFlushException(ex);
+                throw ex;
+            }
+        }
+
+        /// <summary>
+        /// <returns>A timespan representing the elapsed time.</returns>
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="NATSConnectionClosedException">If the connection is closed.</exception>
+        /// <exception cref="NATSException">Miscellaneous other exceptions</exception>
+        public TimeSpan RTT()
+        {
+            Stopwatch sw = new Stopwatch();
+            SingleUseChannel<bool> ch = SingleUseChannel<bool>.GetOrCreate();
+
+            try
+            {
+                lock (mu)
                 {
-                    // wrap other system exceptions
-                    var ex = new NATSException("Flush error.", e);
-                    saveFlushException(ex);
-                    throw ex;
+                    if (isClosed())
+                    {
+                        throw new NATSConnectionClosedException();
+                    }
+
+                    sw.Start();
+                    sendPing(ch);
                 }
+
+                bool rv = ch.get(opts.Timeout);
+                sw.Stop();
+                if (!rv)
+                {
+                    throw new NATSConnectionClosedException();
+                }
+
+                SingleUseChannel<bool>.Return(ch);
+                
+                return sw.Elapsed;
+            }
+            catch (Exception e)
+            {
+                removeFlushEntry(ch);
+
+                // Note, don't call saveFlushException in a finally clause
+                // because we don't know if the caller will handle the rethrown 
+                // exception.
+                if (e is NATSTimeoutException || e is NATSConnectionClosedException)
+                {
+                    saveFlushException(e);
+                    throw;
+                }
+
+                // wrap other system exceptions
+                var ex = new NATSException("RTT error.", e);
+                saveFlushException(ex);
+                throw ex;
             }
         }
 

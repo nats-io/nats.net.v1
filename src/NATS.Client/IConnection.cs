@@ -623,6 +623,12 @@ namespace NATS.Client
         void Flush(int timeout);
 
         /// <summary>
+        /// Calculates the round trip time between this client and the server.
+        /// </summary>
+        /// <returns>A timespan representing the elapsed time.</returns>
+        TimeSpan RTT();
+        
+        /// <summary>
         /// Performs a round trip to the server and returns when it receives the internal reply.
         /// </summary>
         void Flush();
