@@ -13,6 +13,7 @@
 
 using NATS.Client.Internals;
 using static NATS.Client.Internals.JetStreamConstants;
+using static NATS.Client.Internals.NatsConstants;
 using static NATS.Client.Internals.Validator;
 
 namespace NATS.Client.JetStream
@@ -62,7 +63,13 @@ namespace NATS.Client.JetStream
         /// Gets whether the opt-out of the server v2.9.0 consumer create api is set
         /// </summary>
         public bool IsOptOut290ConsumerCreate { get; }
-        
+                    
+        internal static string ConvertDomainToPrefix(string domain) {
+            string valid = ValidatePrefixOrDomain(domain, "Domain", false);
+            return valid == null ? null 
+                : PrefixDollarJsDot + EnsureEndsWithDot(valid) + PrefixApi;
+        }
+
         /// <summary>
         /// Gets the JetStreamOptions builder.
         /// </summary>
@@ -141,8 +148,8 @@ namespace NATS.Client.JetStream
             /// <returns>The JetStreamOptionsBuilder</returns>
             public JetStreamOptionsBuilder WithDomain(string domain) 
             {
-                string valid = ValidatePrefixOrDomain(domain, "Domain", false);
-                _jsPrefix = valid == null ? null : PrefixDollarJsDot + EnsureEndsWithDot(valid) + PrefixApiDot;
+                string prefix = ConvertDomainToPrefix(domain);
+                _jsPrefix = prefix == null ? null : prefix + Dot;
                 return this;
             }
 

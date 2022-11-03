@@ -65,6 +65,7 @@ namespace UnitTests.JetStream
                     .WithSources(testSc.Sources)
                     .WithAllowRollup(testSc.AllowRollup)
                     .WithAllowDirect(testSc.AllowDirect)
+                    .WithMirrorDirect(testSc.MirrorDirect)
                     .WithDenyDelete(testSc.DenyDelete)
                     .WithDenyPurge(testSc.DenyPurge)
                     .WithDiscardNewPerSubject(testSc.DiscardNewPerSubject);

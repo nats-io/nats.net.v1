@@ -22,38 +22,38 @@ namespace NATS.Client.KeyValue
     public class KeyValue : FeatureBase, IKeyValue
     {
         internal string StreamSubject { get; }
-        internal string RawKeyPrefix { get; }
-        internal string PubSubKeyPrefix { get; }
+        internal string ReadPrefix { get; }
+        internal string WritePrefix { get; }
         
         internal KeyValue(IConnection connection, string bucketName, KeyValueOptions kvo) : base(connection, kvo) {
             BucketName = Validator.ValidateBucketName(bucketName, true);
             StreamName = KeyValueUtil.ToStreamName(BucketName);
             StreamSubject = KeyValueUtil.ToStreamSubject(BucketName);
-            RawKeyPrefix = KeyValueUtil.ToKeyPrefix(bucketName);
+            ReadPrefix = KeyValueUtil.ToKeyPrefix(bucketName);
             if (kvo == null)
             {
-                PubSubKeyPrefix = RawKeyPrefix;
+                WritePrefix = ReadPrefix;
             }
             else if (kvo.JSOptions.IsDefaultPrefix)
             {
-                PubSubKeyPrefix = RawKeyPrefix;
+                WritePrefix = ReadPrefix;
             }
             else
             {
-                PubSubKeyPrefix = kvo.JSOptions.Prefix + RawKeyPrefix;
+                WritePrefix = kvo.JSOptions.Prefix + ReadPrefix;
             }
         }
 
         public string BucketName { get; }
         
-        internal string RawKeySubject(string key)
+        internal string ReadSubject(string key)
         {
-            return RawKeyPrefix + key;
+            return ReadPrefix + key;
         }
         
         internal string PubSubKeySubject(string key)
         {
-            return PubSubKeyPrefix + key;
+            return WritePrefix + key;
         }
 
         public KeyValueEntry Get(string key)
@@ -71,7 +71,7 @@ namespace NATS.Client.KeyValue
         }
         
         KeyValueEntry _get(string key) {
-            MessageInfo mi = _getLast(RawKeySubject(key));
+            MessageInfo mi = _getLast(ReadSubject(key));
             return mi == null ? null : new KeyValueEntry(mi);
         }
 
@@ -154,7 +154,7 @@ namespace NATS.Client.KeyValue
         public IList<string> Keys()
         {
             IList<string> list = new List<string>();
-            VisitSubject(RawKeySubject(">"), DeliverPolicy.LastPerSubject, true, false, m => {
+            VisitSubject(ReadSubject(">"), DeliverPolicy.LastPerSubject, true, false, m => {
                 KeyValueOperation op = KeyValueUtil.GetOperation(m.Header, KeyValueOperation.Put);
                 if (op.Equals(KeyValueOperation.Put)) {
                     list.Add(new BucketAndKey(m).Key);
@@ -166,7 +166,7 @@ namespace NATS.Client.KeyValue
         public IList<KeyValueEntry> History(string key)
         {
             IList<KeyValueEntry> list = new List<KeyValueEntry>();
-            VisitSubject(RawKeySubject(key), DeliverPolicy.All, false, true, m => {
+            VisitSubject(ReadSubject(key), DeliverPolicy.All, false, true, m => {
                 list.Add(new KeyValueEntry(m));
             });
             return list;
@@ -210,13 +210,13 @@ namespace NATS.Client.KeyValue
 
             foreach (string key in noKeepList)
             {
-                jsm.PurgeStream(StreamName, PurgeOptions.WithSubject(RawKeySubject(key)));
+                jsm.PurgeStream(StreamName, PurgeOptions.WithSubject(ReadSubject(key)));
             }
 
             foreach (string key in keepList)
             {
                 PurgeOptions po = PurgeOptions.Builder()
-                    .WithSubject(RawKeySubject(key))
+                    .WithSubject(ReadSubject(key))
                     .WithKeep(1)
                     .Build();
                 jsm.PurgeStream(StreamName, po);

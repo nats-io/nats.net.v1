@@ -113,6 +113,14 @@ namespace NATS.Client.JetStream
         }
         
         /// <summary>
+        /// Creates a builder for a source object based on an existing source object.
+        /// </summary>
+        /// <returns>The Builder</returns>
+        public static SourceBuilder Builder(Source source) {
+            return new SourceBuilder(source);
+        }
+
+        /// <summary>
         /// Source can be created using a SourceBuilder. 
         /// </summary>
         public sealed class SourceBuilder
@@ -122,6 +130,17 @@ namespace NATS.Client.JetStream
             private DateTime _startTime;
             private string _filterSubject;
             private External _external;
+
+            public SourceBuilder() { }
+
+            public SourceBuilder(Source source)
+            {
+                _name = source.Name;
+                _startSeq = source.StartSeq;
+                _startTime = source.StartTime;
+                _filterSubject = source.FilterSubject;
+                _external = source.External;
+            }
 
             /// <summary>
             /// Set the source name.
@@ -175,6 +194,18 @@ namespace NATS.Client.JetStream
             public SourceBuilder WithExternal(External external)
             {
                 _external = external;
+                return this;
+            }
+
+            /// <summary>
+            /// Set the external reference by using a domain based prefix.
+            /// </summary>
+            /// <param name="domain">the domain</param>
+            /// <returns>The Builder</returns>
+            public SourceBuilder WithDomain(string domain)
+            {
+                string prefix = JetStreamOptions.ConvertDomainToPrefix(domain);
+                _external = prefix == null ? null : External.Builder().WithApi(prefix).Build();
                 return this;
             }
 

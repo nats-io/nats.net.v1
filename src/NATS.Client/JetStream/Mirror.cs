@@ -97,6 +97,14 @@ namespace NATS.Client.JetStream
         public static MirrorBuilder Builder() {
             return new MirrorBuilder();
         }
+
+        /// <summary>
+        /// Creates a builder for a mirror object based on an existing mirror object.
+        /// </summary>
+        /// <returns>The Builder</returns>
+        public static MirrorBuilder Builder(Mirror mirror) {
+            return new MirrorBuilder(mirror);
+        }
         
         /// <summary>
         /// Mirror can be created using a MirrorBuilder. 
@@ -108,6 +116,17 @@ namespace NATS.Client.JetStream
             private DateTime _startTime;
             private string _filterSubject;
             private External _external;
+
+            public MirrorBuilder() { }
+
+            public MirrorBuilder(Mirror mirror)
+            {
+                _name = mirror.Name;
+                _startSeq = mirror.StartSeq;
+                _startTime = mirror.StartTime;
+                _filterSubject = mirror.FilterSubject;
+                _external = mirror.External;
+            }
 
             /// <summary>
             /// Set the mirror name.
@@ -161,6 +180,18 @@ namespace NATS.Client.JetStream
             public MirrorBuilder WithExternal(External external)
             {
                 _external = external;
+                return this;
+            }
+
+            /// <summary>
+            /// Set the external reference by using a domain based prefix.
+            /// </summary>
+            /// <param name="domain">the domain</param>
+            /// <returns>The Builder</returns>
+            public MirrorBuilder WithDomain(string domain)
+            {
+                string prefix = JetStreamOptions.ConvertDomainToPrefix(domain);
+                _external = prefix == null ? null : External.Builder().WithApi(prefix).Build();
                 return this;
             }
 

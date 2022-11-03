@@ -29,6 +29,7 @@ namespace NATS.Client.Internals
         internal const string SerializedHeaderCannotBeNullOrEmpty = "Serialized header cannot be null or empty.";
         
         internal const string Empty = "";
+        internal const char Dot = '.';
 
         internal const byte Sp = (byte)' ';
         internal const byte Colon = (byte)':';

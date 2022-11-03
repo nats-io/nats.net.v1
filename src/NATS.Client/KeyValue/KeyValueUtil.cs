@@ -50,6 +50,17 @@ namespace NATS.Client.KeyValue
             return KvSubjectPrefix + bucketName + ".";
         }
 
+        public static bool HasPrefix(string bucketName) {
+            return bucketName.StartsWith(KvStreamPrefix);
+        }
+
+        public static string TrimPrefix(string bucketName) {
+            if (bucketName.StartsWith(KvStreamPrefix)) {
+                return bucketName.Substring(KvStreamPrefix.Length);
+            }
+            return bucketName;
+        }
+
         public static string GetOperationHeader(MsgHeader h) {
             return h?[KvOperationHeaderKey];
         }
