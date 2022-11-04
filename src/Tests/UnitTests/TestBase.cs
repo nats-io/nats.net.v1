@@ -162,7 +162,7 @@ namespace UnitTests
             return KEY + "-" + seq;
         }
 
-        public static string Mir(int seq)
+        public static string Mrrr(int seq)
         {
             return MIRROR + "-" + seq;
         }

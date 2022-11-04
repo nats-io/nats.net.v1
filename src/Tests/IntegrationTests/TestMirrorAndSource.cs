@@ -33,7 +33,7 @@ namespace IntegrationTests
         static readonly string U1 = Subject(1);
         static readonly string U2 = Subject(2);
         static readonly string U3 = Subject(3);
-        static readonly string M1 = Mir(1);
+        static readonly string M1 = Mrrr(1);
         static readonly string R1 = Src(1);
         static readonly string R2 = Src(2);
 
@@ -84,39 +84,39 @@ namespace IntegrationTests
 
                 // Create second mirror
                 sc = StreamConfiguration.Builder()
-                    .WithName(Mir(2))
+                    .WithName(Mrrr(2))
                     .WithStorageType(StorageType.Memory)
                     .WithMirror(mirror)
                     .Build();
                 jsm.AddStream(sc);
 
                 // Check the state
-                AssertMirror(jsm, Mir(2), S1, 50L, 101L);
+                AssertMirror(jsm, Mrrr(2), S1, 50L, 101L);
 
                 JsPublish(js, U3, 100);
 
                 // third mirror checks start seq
                 sc = StreamConfiguration.Builder()
-                    .WithName(Mir(3))
+                    .WithName(Mrrr(3))
                     .WithStorageType(StorageType.Memory)
                     .WithMirror(Mirror.Builder().WithName(S1).WithStartSeq(150).Build())
                     .Build();
                 jsm.AddStream(sc);
 
                 // Check the state
-                AssertMirror(jsm, Mir(3), S1, 101L, 150L);
+                AssertMirror(jsm, Mrrr(3), S1, 101L, 150L);
 
                 // third mirror checks start seq
                 DateTime zdt = DateTime.Now.AddHours(-2);
                 sc = StreamConfiguration.Builder()
-                    .WithName(Mir(4))
+                    .WithName(Mrrr(4))
                     .WithStorageType(StorageType.Memory)
                     .WithMirror(Mirror.Builder().WithName(S1).WithStartTime(zdt).Build())
                     .Build();
                 jsm.AddStream(sc);
 
                 // Check the state
-                AssertMirror(jsm, Mir(4), S1, 150L, 101L);
+                AssertMirror(jsm, Mrrr(4), S1, 150L, 101L);
             });
         }
 
@@ -198,7 +198,7 @@ namespace IntegrationTests
                 Mirror mirror = Mirror.Builder().WithName(STREAM).Build();
 
                 StreamConfiguration scEx = StreamConfiguration.Builder()
-                    .WithName(Mir(99))
+                    .WithName(Mrrr(99))
                     .WithSubjects(Subject(1))
                     .WithMirror(mirror)
                     .Build();
