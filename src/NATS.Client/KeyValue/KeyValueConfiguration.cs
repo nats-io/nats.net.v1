@@ -301,6 +301,18 @@ namespace NATS.Client.KeyValue
             }
 
             /// <summary>
+            /// Add a source into the KeyValueConfiguration.
+            /// </summary>
+            /// <param name="source"></param>
+            /// <returns>The KeyValueConfigurationBuilder</returns>
+            public KeyValueConfigurationBuilder AddSource(Source source) {
+                if (source != null && !_sources.Contains(source)) {
+                    _sources.Add(source);
+                }
+                return this;
+            }
+
+            /// <summary>
             /// Set whether to allow direct message access.
             /// This is an optimization for Key Value since
             /// but is not available on all account / jwt configuration.
