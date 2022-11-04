@@ -11,9 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using static NATS.Client.JetStream.StreamConfiguration;
+using static NATS.Client.KeyValue.KeyValueUtil;
 
 namespace NATS.Client.KeyValue
 {
@@ -31,7 +33,7 @@ namespace NATS.Client.KeyValue
         internal KeyValueConfiguration(StreamConfiguration sc)
         {
             BackingConfig = sc;
-            BucketName = KeyValueUtil.ExtractBucketName(sc.Name);
+            BucketName = ExtractBucketName(sc.Name);
         }
 
         /// <summary>
@@ -110,6 +112,8 @@ namespace NATS.Client.KeyValue
         public sealed class KeyValueConfigurationBuilder
         {
             string _name;
+            Mirror _mirror;
+            List<Source> _sources = new List<Source>();
             StreamConfigurationBuilder scBuilder;
 
             /// <summary>
@@ -129,7 +133,7 @@ namespace NATS.Client.KeyValue
                 }
                 else {
                     scBuilder = new StreamConfigurationBuilder(kvc.BackingConfig);
-                    _name = KeyValueUtil.ExtractBucketName(kvc.BackingConfig.Name);
+                    _name = ExtractBucketName(kvc.BackingConfig.Name);
                 }
             }
 
@@ -227,9 +231,72 @@ namespace NATS.Client.KeyValue
             /// Set the republish options
             /// </summary>
             /// <param name="republish">the republish</param>
-            /// <returns></returns>
+            /// <returns>The KeyValueConfigurationBuilder</returns>
             public KeyValueConfigurationBuilder WithRepublish(Republish republish) {
                 scBuilder.WithRepublish(republish);
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the mirror in the KeyValueConfiguration.
+            /// </summary>
+            /// <param name="mirror">the mirror</param>
+            /// <returns>The KeyValueConfigurationBuilder</returns>
+            public KeyValueConfigurationBuilder WithMirror(Mirror mirror)
+            {
+                this._mirror = mirror;
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the sources in the KeyValueConfiguration.
+            /// </summary>
+            /// <param name="sources">the KeyValue's sources</param>
+            /// <returns>The KeyValueConfigurationBuilder</returns>
+            public KeyValueConfigurationBuilder WithSources(params Source[] sources) {
+                this._sources.Clear();
+                return AddSources(sources);
+            }
+
+            /// <summary>
+            /// Sets the sources in the KeyValueConfiguration.
+            /// </summary>
+            /// <param name="sources">the KeyValue's sources</param>
+            /// <returns>The KeyValueConfigurationBuilder</returns>
+            public KeyValueConfigurationBuilder WithSources(List<Source> sources) {
+                this._sources.Clear();
+                return AddSources(sources);
+            }
+
+            /// <summary>
+            /// Sets the sources in the KeyValueConfiguration.
+            /// </summary>
+            /// <param name="sources">the KeyValue's sources</param>
+            /// <returns>The KeyValueConfigurationBuilder</returns>
+            public KeyValueConfigurationBuilder AddSources(params Source[] sources) {
+                if (sources != null) {
+                    foreach (Source source in sources) {
+                        if (source != null && !this._sources.Contains(source)) {
+                            this._sources.Add(source);
+                        }
+                    }
+                }
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the sources in the KeyValueConfiguration.
+            /// </summary>
+            /// <param name="sources">the KeyValue's sources</param>
+            /// <returns>The KeyValueConfigurationBuilder</returns>
+            public KeyValueConfigurationBuilder AddSources(List<Source> sources) {
+                if (sources != null) {
+                    foreach (Source source in sources) {
+                        if (source != null && !this._sources.Contains(source)) {
+                            this._sources.Add(source);
+                        }
+                    }
+                }
                 return this;
             }
 
@@ -251,11 +318,43 @@ namespace NATS.Client.KeyValue
             /// <returns>the KeyValueConfiguration</returns>
             public KeyValueConfiguration Build() {
                 _name = Validator.ValidateBucketName(_name, true);
-                scBuilder.WithName(KeyValueUtil.ToStreamName(_name))
-                    .WithSubjects(KeyValueUtil.ToStreamSubject(_name))
+                scBuilder.WithName(ToStreamName(_name))
+                    .WithSubjects(ToStreamSubject(_name))
                     .WithAllowRollup(true)
                     .WithDiscardPolicy(DiscardPolicy.New)
                     .WithDenyDelete(true);
+                
+                if (_mirror != null) {
+                    scBuilder.WithMirrorDirect(true);
+                    string name = _mirror.Name;
+                    if (HasPrefix(name)) {
+                        scBuilder.WithMirror(_mirror);
+                    }
+                    else {
+                        scBuilder.WithMirror(
+                            Mirror.Builder(_mirror)
+                                .WithName(ToStreamName(name))
+                                .Build());
+                    }
+                }
+                else if (_sources.Count > 0) {
+                    foreach (Source source in _sources) {
+                        string name = source.Name;
+                        if (HasPrefix(name)) {
+                            scBuilder.AddSource(source);
+                        }
+                        else {
+                            scBuilder.AddSource(
+                                Source.Builder(source)
+                                    .WithName(ToStreamName(name))
+                                    .Build());
+                        }
+                    }
+                }
+                else {
+                    scBuilder.WithSubjects(ToStreamSubject(_name));
+                }
+                
                 return new KeyValueConfiguration(scBuilder.Build());
             }
         }
