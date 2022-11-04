@@ -58,14 +58,16 @@ namespace NATS.Client.JetStream
 
         internal override JSONNode ToJsonNode()
         {
-            return new JSONObject
+            JSONObject jso = new JSONObject();
+            JsonUtils.AddField(jso, ApiConstants.Name, Name);
+            JsonUtils.AddField(jso, ApiConstants.OptStartSeq, StartSeq);
+            JsonUtils.AddField(jso, ApiConstants.OptStartTime, JsonUtils.ToString(StartTime));
+            JsonUtils.AddField(jso, ApiConstants.FilterSubject, FilterSubject);
+            if (External != null)
             {
-                [ApiConstants.Name] = Name,
-                [ApiConstants.OptStartSeq] = StartSeq,
-                [ApiConstants.OptStartTime] = JsonUtils.ToString(StartTime),
-                [ApiConstants.FilterSubject] = FilterSubject,
-                [ApiConstants.External] = External.ToJsonNode()
-            };
+                jso[ApiConstants.External] = External.ToJsonNode();
+            }
+            return jso;
         }
 
         internal static Mirror OptionalInstance(JSONNode mirrorNode)

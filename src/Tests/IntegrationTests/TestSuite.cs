@@ -13,10 +13,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using NATS.Client;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
+using UnitTests;
 using Xunit;
 
 namespace IntegrationTests
@@ -66,6 +68,7 @@ namespace IntegrationTests
         public const int RxSuite = 11517; //1pc
         public const int AsyncAwaitDeadlocksSuite = 11518; //1pc
         public const int ConnectionIpV6Suite = 11519; //1pc
+        public const int KvSuite = 11520; //3pc
 
         public static InterlockedInt AutoPort = new InterlockedInt(11520);
     }
@@ -130,7 +133,7 @@ namespace IntegrationTests
                     }
                     finally
                     {
-                        cleanupJs(c);
+                        CleanupJs(c);
                     }
                 }
             }
@@ -148,7 +151,7 @@ namespace IntegrationTests
                     }
                     finally
                     {
-                        cleanupJs(c);
+                        CleanupJs(c);
                     }
                 }
             }
@@ -166,19 +169,75 @@ namespace IntegrationTests
                     }
                     finally
                     {
-                        cleanupJs(c);
+                        CleanupJs(c);
                     }
                 }
             }
         }
 
-        private void cleanupJs(IConnection c)
+        public void RunInJsHubLeaf(TestServerInfo hubServerInfo,
+            TestServerInfo hubLeafInfo, 
+            TestServerInfo leafServerInfo, Action<IConnection, IConnection> test)
         {
-            IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
-            IList<string> streams = jsm.GetStreamNames();
-            foreach (string s in streams)
+            string hubConfFile = TestBase.TempConfFile();
+            StreamWriter streamWriter = File.CreateText(hubConfFile);
+            streamWriter.WriteLine("port: " + hubServerInfo.Port); 
+            streamWriter.WriteLine("server_name: HUB");
+            streamWriter.WriteLine("jetstream {");
+            streamWriter.WriteLine("    domain: HUB");
+            streamWriter.WriteLine("}");
+            streamWriter.WriteLine("leafnodes {");
+            streamWriter.WriteLine("  listen = 127.0.0.1:" + hubLeafInfo.Port);
+            streamWriter.WriteLine("}");
+            streamWriter.Flush();
+            streamWriter.Close();
+
+            string leafConfFile = TestBase.TempConfFile();
+            streamWriter = File.CreateText(leafConfFile);
+            streamWriter.WriteLine("port: " + leafServerInfo.Port); 
+            streamWriter.WriteLine("server_name: LEAF");
+            streamWriter.WriteLine("jetstream {");
+            streamWriter.WriteLine("    domain: LEAF");
+            streamWriter.WriteLine("}");
+            streamWriter.WriteLine("leafnodes {");
+            streamWriter.WriteLine("  remotes = [ { url: \"leaf://127.0.0.1:" + hubLeafInfo.Port + "\" } ]");
+            streamWriter.WriteLine("}");
+            streamWriter.Flush();
+            streamWriter.Close();
+            
+            using (var hub = NATSServer.CreateJetStreamFast(int.MinValue, $"--config {hubConfFile}"))
+            using (var leaf = NATSServer.CreateJetStreamFast(int.MinValue, $"--config {leafConfFile}"))
             {
-                jsm.DeleteStream(s);
+                using (var cHub = OpenConnection(hubServerInfo.Port))
+                using (var cLeaf = OpenConnection(leafServerInfo.Port))
+                {
+                    try
+                    {
+                        test(cHub, cLeaf);
+                    }
+                    finally
+                    {
+                        CleanupJs(cHub);
+                        CleanupJs(cLeaf);
+                    }
+                }
+            }
+        }
+
+        private void CleanupJs(IConnection c)
+        {
+            try
+            {
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                IList<string> streams = jsm.GetStreamNames();
+                foreach (string s in streams)
+                {
+                    jsm.DeleteStream(s);
+                }
+            }
+            catch (Exception)
+            {
+                // ignored
             }
         }
     }
@@ -355,8 +414,22 @@ namespace IntegrationTests
     public class JetStreamPushSyncSuiteContext : OneServerSuiteContext {}
     public class JetStreamPushSyncQueueSuiteContext : OneServerSuiteContext {}
     public class JetStreamPullSuiteContext : OneServerSuiteContext {}
-    public class KeyValueSuiteContext : OneServerSuiteContext {}
     public class ObjectStoreSuiteContext : OneServerSuiteContext {}
+    public class MirrorSourceSuiteContext : OneServerSuiteContext {}
+
+    public class KeyValueSuiteContext : SuiteContext
+    {
+        private const int SeedPort = TestSeedPorts.KvSuite;
+
+        public readonly TestServerInfo Server1 = new TestServerInfo(SeedPort);
+        public readonly TestServerInfo Server2 = new TestServerInfo(SeedPort + 1);
+        public readonly TestServerInfo Server3 = new TestServerInfo(SeedPort + 2);
+
+        public void RunInJsServer(Action<IConnection> test) => base.RunInJsServer(Server1, test);
+        public void RunInServer(Action<IConnection> test) => base.RunInServer(Server1, test);
+        public void RunInJsHubLeaf(Action<IConnection, IConnection> test) => 
+            base.RunInJsHubLeaf(Server1, Server2, Server3, test);
+    }
     
     public class OneServerSuiteContext : SuiteContext
     {

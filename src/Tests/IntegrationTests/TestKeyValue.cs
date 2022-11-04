@@ -24,6 +24,7 @@ using Xunit;
 using static UnitTests.TestBase;
 using static IntegrationTests.JetStreamTestBase;
 using static NATS.Client.JetStream.JetStreamOptions;
+using static NATS.Client.KeyValue.KeyValuePurgeOptions;
 
 namespace IntegrationTests
 {
@@ -939,11 +940,11 @@ namespace IntegrationTests
                     KeyValueOptions jsOpt_UserA_NoPrefix = KeyValueOptions.Builder().Build();
                     
                     KeyValueOptions jsOpt_UserI_BucketA_WithPrefix = KeyValueOptions.Builder()
-                        .WithJetStreamOptions(Builder().WithPrefix("FromA").Build())
+                        .WithJetStreamOptions(JetStreamOptions.Builder().WithPrefix("FromA").Build())
                         .Build();
                     
                     KeyValueOptions jsOpt_UserI_BucketI_WithPrefix = KeyValueOptions.Builder()
-                        .WithJetStreamOptions(Builder().WithPrefix("FromA").Build())
+                        .WithJetStreamOptions(JetStreamOptions.Builder().WithPrefix("FromA").Build())
                         .Build();
 
                     IKeyValueManagement kvmUserA = connUserA.CreateKeyValueManagementContext(jsOpt_UserA_NoPrefix);
@@ -1085,6 +1086,150 @@ namespace IntegrationTests
             Assert.Equal(data, kveUserA.ValueAsString());
             Assert.Equal(KeyValueOperation.Put, kveUserA.Operation);
         }
+
+        [Fact]
+        public void TestKeyValueEntryEqualsImpl() {
+            Assert.Equal(DefaultThresholdMillis,
+                KeyValuePurgeOptions.Builder().WithDeleteMarkersThreshold(null).Build()
+                    .DeleteMarkersThresholdMillis);
+
+            Assert.Equal(DefaultThresholdMillis,
+                KeyValuePurgeOptions.Builder().WithDeleteMarkersThreshold(Duration.Zero).Build()
+                    .DeleteMarkersThresholdMillis);
+
+            Assert.Equal(1,
+                KeyValuePurgeOptions.Builder().WithDeleteMarkersThreshold(Duration.OfMillis(1)).Build()
+                    .DeleteMarkersThresholdMillis);
+
+            Assert.Equal(-1,
+                KeyValuePurgeOptions.Builder().WithDeleteMarkersThreshold(Duration.OfMillis(-1)).Build()
+                    .DeleteMarkersThresholdMillis);
+
+            Assert.Equal(DefaultThresholdMillis,
+                KeyValuePurgeOptions.Builder().WithDeleteMarkersThresholdMillis(0).Build()
+                    .DeleteMarkersThresholdMillis);
+
+            Assert.Equal(1,
+                KeyValuePurgeOptions.Builder().WithDeleteMarkersThresholdMillis(1).Build()
+                    .DeleteMarkersThresholdMillis);
+
+            Assert.Equal(-1,
+                KeyValuePurgeOptions.Builder().WithDeleteMarkersThresholdMillis(-1).Build()
+                    .DeleteMarkersThresholdMillis);
+
+            Assert.Equal(-1,
+                KeyValuePurgeOptions.Builder().WithDeleteMarkersNoThreshold().Build()
+                    .DeleteMarkersThresholdMillis);
+        }
+
+        [Fact]
+        public void TestCreateDiscardPolicy()
+        {
+            Context.RunInJsServer(c =>
+            {
+                IKeyValueManagement kvm = c.CreateKeyValueManagementContext();
+                
+                // create bucket
+                KeyValueStatus status = kvm.Create(KeyValueConfiguration.Builder()
+                    .WithName(Bucket(1))
+                    .WithStorageType(StorageType.Memory)
+                    .Build());
+
+                DiscardPolicy dp = status.BackingStreamInfo.Config.DiscardPolicy;
+                if (c.ServerInfo.IsSameOrNewerThanVersion("2.7.2")) {
+                    Assert.Equal(DiscardPolicy.New, dp);
+                }
+                else {
+                    Assert.True(dp == DiscardPolicy.New || dp == DiscardPolicy.Old);
+                }
+            });
+        }
+
+        [Fact]
+        public void TestKeyValueMirrorCrossDomains()
+        {
+            Context.RunInJsHubLeaf((hub, leaf) =>
+            {
+                IKeyValueManagement hubKvm = hub.CreateKeyValueManagementContext();
+                IKeyValueManagement leafKvm = leaf.CreateKeyValueManagementContext();
+
+                // Create main KV on HUB
+                KeyValueStatus hubStatus = hubKvm.Create(KeyValueConfiguration.Builder()
+                    .WithName("TEST")
+                    .WithStorageType(StorageType.Memory)
+                    .Build());            
+              
+                IKeyValue hubKv = hub.CreateKeyValueContext("TEST");
+                hubKv.Put("key1", "aaa0");
+                hubKv.Put("key2", "bb0");
+                hubKv.Put("key3", "c0");
+                hubKv.Delete("key3");
+
+                StreamInfo si = hub.CreateJetStreamManagementContext().GetStreamInfo("KV_TEST");
+                Assert.False(si.Config.MirrorDirect);
+                Assert.Equal(3U, si.State.Messages);
+
+                leafKvm.Create(KeyValueConfiguration.Builder()
+                    .WithName("MIRROR")
+                    .WithMirror(Mirror.Builder()
+                        .WithName("TEST")
+                        .WithDomain(null)  // just for coverage!
+                        .WithDomain("HUB") // it will take this since it comes last
+                        .Build())
+                    .Build());
+                
+                Thread.Sleep(200); // make sure things get a chance to propagate
+                si = leaf.CreateJetStreamManagementContext().GetStreamInfo("KV_MIRROR");
+                Assert.True(si.Config.MirrorDirect);
+                Assert.Equal(3U, si.State.Messages);
+
+                IKeyValue leafKv = leaf.CreateKeyValueContext("MIRROR");
+                _testMirror(hubKv, leafKv, 1);
+
+                // Bind through leafnode connection but to origin KV.
+                IKeyValue hubViaLeafKv =
+                    leaf.CreateKeyValueContext("TEST", KeyValueOptions.Builder().WithJsDomain("HUB").Build());
+                _testMirror(hubKv, hubViaLeafKv, 2);
+
+                hub.Close();
+                _testMirror(null, leafKv, 3);
+                _testMirror(null, hubViaLeafKv, 4);
+            });
+        }
+        
+        private void _testMirror(IKeyValue okv, IKeyValue mkv, int num) {
+            mkv.Put("key1", "aaa" + num);
+            mkv.Put("key3", "c" + num);
+
+            Thread.Sleep(200); // make sure things get a chance to propagate
+            KeyValueEntry kve = mkv.Get("key3");
+            Assert.Equal("c" + num, kve.ValueAsString());
+
+            mkv.Delete("key3");
+            Thread.Sleep(200); // make sure things get a chance to propagate
+            Assert.Null(mkv.Get("key3"));
+
+            kve = mkv.Get("key1");
+            Assert.Equal("aaa" + num, kve.ValueAsString());
+
+            // Make sure we can create a watcher on the mirror KV.
+            TestKeyValueWatcher mWatcher = new TestKeyValueWatcher(false);
+            using (KeyValueWatchSubscription mWatchSub = mkv.WatchAll(mWatcher)) 
+            {
+                Thread.Sleep(200); // give the messages time to propagate
+            }
+            ValidateWatcher(new Object[]{"bb0", "aaa" + num, KeyValueOperation.Delete}, mWatcher);
+
+            // Does the origin data match?
+            if (okv != null) {
+                TestKeyValueWatcher oWatcher = new TestKeyValueWatcher(false);
+                using (KeyValueWatchSubscription oWatchSub = mkv.WatchAll(oWatcher)) 
+                {
+                    Thread.Sleep(200); // give the messages time to propagate
+                }
+                ValidateWatcher(new Object[]{"bb0", "aaa" + num, KeyValueOperation.Delete}, oWatcher);
+            }
+        }    
     }
 
     class TestKeyValueWatcher : IKeyValueWatcher 

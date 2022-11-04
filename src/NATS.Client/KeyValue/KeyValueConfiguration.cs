@@ -331,7 +331,6 @@ namespace NATS.Client.KeyValue
             public KeyValueConfiguration Build() {
                 _name = Validator.ValidateBucketName(_name, true);
                 scBuilder.WithName(ToStreamName(_name))
-                    .WithSubjects(ToStreamSubject(_name))
                     .WithAllowRollup(true)
                     .WithDiscardPolicy(DiscardPolicy.New)
                     .WithDenyDelete(true);

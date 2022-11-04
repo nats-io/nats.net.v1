@@ -77,6 +77,16 @@ namespace UnitTests
             return DateTime.Parse(dtString).ToUniversalTime();
         }
 
+        public static string TempConfFile()
+        {
+            return Path.GetTempPath() + "nats_net_test" + Guid.NewGuid() + ".conf";
+        }
+
+        public string[] SplitLines(String text)
+        {
+            return text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+        }
+
         // ----------------------------------------------------------------------------------------------------
         // data makers
         // ----------------------------------------------------------------------------------------------------
@@ -150,6 +160,16 @@ namespace UnitTests
         public static string Key(int seq)
         {
             return KEY + "-" + seq;
+        }
+
+        public static string Mir(int seq)
+        {
+            return MIRROR + "-" + seq;
+        }
+
+        public static string Src(int seq)
+        {
+            return SOURCE + "-" + seq;
         }
 
         public static string MessageId(int seq)

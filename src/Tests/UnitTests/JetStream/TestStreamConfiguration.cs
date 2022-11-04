@@ -23,13 +23,8 @@ namespace UnitTests.JetStream
     public class TestStreamConfiguration : TestBase
     {
         private StreamConfiguration GetTestConfiguration() {
-            String json = ReadDataFile("StreamConfiguration.json");
+            string json = ReadDataFile("StreamConfiguration.json");
             return new StreamConfiguration(json);
-        }
-
-        [Fact]
-        public void BuilderWorks()
-        {
         }
 
         [Fact]
@@ -78,6 +73,16 @@ namespace UnitTests.JetStream
             Source copy = new Source(sources[0].ToJsonNode());
             sources.Add(copy);
             Validate(builder.AddSources(sources).Build(), false);
+            
+            // covering add a single source
+            sources = new List<Source>(testSc.Sources);
+            builder.WithSources(new List<Source>()); // clears the sources
+            builder.AddSource(null); // coverage
+            foreach (Source source in sources) {
+                builder.AddSource(source);
+            }
+            builder.AddSource(sources[0]);
+            Validate(builder.Build(), false);
         }
 
         [Fact]
@@ -131,7 +136,7 @@ namespace UnitTests.JetStream
             AssertSubjects(builder.Build(), 101, 102);
 
             // Subjects(...) replaces
-            List<String> list45 = new List<String>();
+            List<string> list45 = new List<string>();
             list45.Add(Subject(4));
             list45.Add(Subject(5));
             builder.WithSubjects(list45);
@@ -142,7 +147,7 @@ namespace UnitTests.JetStream
             AssertSubjects(builder.Build(), 4, 5, 6);
 
             // AddSubjects(...) adds unique
-            List<String> list678 = new List<String>();
+            List<string> list678 = new List<string>();
             list678.Add(Subject(6));
             list678.Add(Subject(7));
             list678.Add(Subject(8));
@@ -150,11 +155,11 @@ namespace UnitTests.JetStream
             AssertSubjects(builder.Build(), 4, 5, 6, 7, 8);
 
             // AddSubjects(...) null check
-            builder.AddSubjects((String[]) null);
+            builder.AddSubjects((string[]) null);
             AssertSubjects(builder.Build(), 4, 5, 6, 7, 8);
 
             // AddSubjects(...) null check
-            builder.AddSubjects((List<String>) null);
+            builder.AddSubjects((List<string>) null);
             AssertSubjects(builder.Build(), 4, 5, 6, 7, 8);
         }
 
@@ -252,6 +257,7 @@ namespace UnitTests.JetStream
                     Assert.True(sc.DiscardNewPerSubject);
                     Assert.True(sc.AllowRollup);
                     Assert.True(sc.AllowDirect);
+                    Assert.True(sc.MirrorDirect);
 
                     Assert.Equal(5, sc.Replicas);
                     Assert.Equal("twnr", sc.TemplateOwner);
@@ -335,8 +341,35 @@ namespace UnitTests.JetStream
             Assert.Equal("deliver2", s.External.Deliver);
 
             string json = ReadDataFile("MirrorsSources.json");
-            List<Source> s1 = Source.OptionalListOf(JSONNode.Parse(json));
-            Assert.Equal(5, s1.Count);
+            List<Source> slist = Source.OptionalListOf(JSONNode.Parse(json));
+            Assert.Equal(5, slist.Count);
+            
+            string[] lines = SplitLines(json);
+            foreach (string l1 in lines) {
+                if (l1.StartsWith("{")) {
+                    Mirror m1 = new Mirror(JSON.Parse(l1));
+                    Assert.Equal(m1, m1);
+                    Assert.Equal(m1, Mirror.Builder(m1).Build());
+                    Source s1 = new Source(JSON.Parse(l1));
+                    Assert.Equal(s1, s1);
+                    Assert.Equal(s1, Source.Builder(s1).Build());
+                    Assert.NotEqual(m1, new Object());
+                    foreach (string l2 in lines) {
+                        if (l2.StartsWith("{")) {
+                            Mirror m2 = new Mirror(JSON.Parse(l2));
+                            Source s2 = new Source(JSON.Parse(l2));
+                            if (l1.Equals(l2)) {
+                                Assert.Equal(m1, m2);
+                                Assert.Equal(s1, s2);
+                            }
+                            else {
+                                Assert.NotEqual(m1, m2);
+                                Assert.NotEqual(s1, s2);
+                            }
+                        }
+                    }
+                }
+            }        
         }
 
         [Fact]
