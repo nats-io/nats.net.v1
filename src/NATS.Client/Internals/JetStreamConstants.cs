@@ -26,6 +26,11 @@ namespace NATS.Client.Internals
         public const string PrefixApiDot = "API.";
 
         /// <summary>
+        /// The standard JetStream Prefix suffix without the dot at the end 
+        /// </summary>
+        public const string PrefixApi = "API";
+
+        /// <summary>
         /// The standard JetStream Prefix
         /// </summary>
         public const string DefaultApiPrefix = "$JS.API.";

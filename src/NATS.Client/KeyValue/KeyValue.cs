@@ -16,44 +16,60 @@ using System.Collections.Generic;
 using System.Text;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
+using static NATS.Client.Internals.NatsConstants;
+using static NATS.Client.KeyValue.KeyValueUtil;
 
 namespace NATS.Client.KeyValue
 {
     public class KeyValue : FeatureBase, IKeyValue
     {
         internal string StreamSubject { get; }
-        internal string RawKeyPrefix { get; }
-        internal string PubSubKeyPrefix { get; }
+        internal string ReadPrefix { get; }
+        internal string WritePrefix { get; }
         
         internal KeyValue(IConnection connection, string bucketName, KeyValueOptions kvo) : base(connection, kvo) {
             BucketName = Validator.ValidateBucketName(bucketName, true);
-            StreamName = KeyValueUtil.ToStreamName(BucketName);
-            StreamSubject = KeyValueUtil.ToStreamSubject(BucketName);
-            RawKeyPrefix = KeyValueUtil.ToKeyPrefix(bucketName);
-            if (kvo == null)
+            StreamName = ToStreamName(BucketName);
+
+            StreamInfo si = jsm.GetStreamInfo(StreamName);
+
+            StreamSubject = ToStreamSubject(BucketName);
+            ReadPrefix = ToKeyPrefix(bucketName);
+
+            Mirror m = si.Config.Mirror;
+            if (m != null)
             {
-                PubSubKeyPrefix = RawKeyPrefix;
+                string bName = TrimPrefix(m.Name);
+                if (m.External?.Api == null)
+                {
+                    WritePrefix = ToKeyPrefix(bName);
+                }
+                else
+                {
+                    ReadPrefix = ToKeyPrefix(bName);
+                    WritePrefix = m.External.Api + Dot + ToKeyPrefix(bName);
+                }
             }
-            else if (kvo.JSOptions.IsDefaultPrefix)
+            else if (kvo == null || kvo.JSOptions.IsDefaultPrefix)
             {
-                PubSubKeyPrefix = RawKeyPrefix;
+                WritePrefix = ReadPrefix;
             }
             else
             {
-                PubSubKeyPrefix = kvo.JSOptions.Prefix + RawKeyPrefix;
+                WritePrefix = kvo.JSOptions.Prefix + ReadPrefix;
             }
         }
 
         public string BucketName { get; }
         
-        internal string RawKeySubject(string key)
+        internal string ReadSubject(string key)
         {
-            return RawKeyPrefix + key;
+            return ReadPrefix + key;
         }
         
-        internal string PubSubKeySubject(string key)
+        internal string WriteSubject(string key)
         {
-            return PubSubKeyPrefix + key;
+            return WritePrefix + key;
         }
 
         public KeyValueEntry Get(string key)
@@ -71,7 +87,7 @@ namespace NATS.Client.KeyValue
         }
         
         KeyValueEntry _get(string key) {
-            MessageInfo mi = _getLast(RawKeySubject(key));
+            MessageInfo mi = _getLast(ReadSubject(key));
             return mi == null ? null : new KeyValueEntry(mi);
         }
 
@@ -91,7 +107,7 @@ namespace NATS.Client.KeyValue
 
         public ulong Put(string key, byte[] value)
         {
-            return _publishWithNonWildcardKey(key, value, null).Seq;
+            return _write(key, value, null).Seq;
         }
 
         public ulong Put(string key, string value) => Put(key, Encoding.UTF8.GetBytes(value));
@@ -126,12 +142,12 @@ namespace NATS.Client.KeyValue
             {
                 [JetStreamConstants.ExpLastSubjectSeqHeader] = expectedRevision.ToString()
             };
-            return _publishWithNonWildcardKey(key, value, h).Seq;
+            return _write(key, value, h).Seq;
         }
 
-        public void Delete(string key) => _publishWithNonWildcardKey(key, null, KeyValueUtil.DeleteHeaders);
+        public void Delete(string key) => _write(key, null, DeleteHeaders);
 
-        public void Purge(string key) => _publishWithNonWildcardKey(key, null, KeyValueUtil.PurgeHeaders);
+        public void Purge(string key) => _write(key, null, PurgeHeaders);
         
         public KeyValueWatchSubscription Watch(string key, IKeyValueWatcher watcher, params KeyValueWatchOption[] watchOptions)
         {
@@ -146,16 +162,16 @@ namespace NATS.Client.KeyValue
             return new KeyValueWatchSubscription(this, ">", watcher, watchOptions);
         }
 
-        private PublishAck _publishWithNonWildcardKey(string key, byte[] data, MsgHeader h) {
+        private PublishAck _write(string key, byte[] data, MsgHeader h) {
             Validator.ValidateNonWildcardKvKeyRequired(key);
-            return js.Publish(new Msg(PubSubKeySubject(key), h, data));
+            return js.Publish(new Msg(WriteSubject(key), h, data));
         }
 
         public IList<string> Keys()
         {
             IList<string> list = new List<string>();
-            VisitSubject(RawKeySubject(">"), DeliverPolicy.LastPerSubject, true, false, m => {
-                KeyValueOperation op = KeyValueUtil.GetOperation(m.Header, KeyValueOperation.Put);
+            VisitSubject(ReadSubject(">"), DeliverPolicy.LastPerSubject, true, false, m => {
+                KeyValueOperation op = GetOperation(m.Header, KeyValueOperation.Put);
                 if (op.Equals(KeyValueOperation.Put)) {
                     list.Add(new BucketAndKey(m).Key);
                 }
@@ -166,7 +182,7 @@ namespace NATS.Client.KeyValue
         public IList<KeyValueEntry> History(string key)
         {
             IList<KeyValueEntry> list = new List<KeyValueEntry>();
-            VisitSubject(RawKeySubject(key), DeliverPolicy.All, false, true, m => {
+            VisitSubject(ReadSubject(key), DeliverPolicy.All, false, true, m => {
                 list.Add(new KeyValueEntry(m));
             });
             return list;
@@ -193,7 +209,7 @@ namespace NATS.Client.KeyValue
 
             IList<string> noKeepList = new List<string>();
             IList<string> keepList = new List<string>();
-            VisitSubject(KeyValueUtil.ToStreamSubject(BucketName), DeliverPolicy.LastPerSubject, true, false, m =>
+            VisitSubject(ToStreamSubject(BucketName), DeliverPolicy.LastPerSubject, true, false, m =>
             {
                 KeyValueEntry kve = new KeyValueEntry(m);
                 if (!kve.Operation.Equals(KeyValueOperation.Put)) {
@@ -210,13 +226,13 @@ namespace NATS.Client.KeyValue
 
             foreach (string key in noKeepList)
             {
-                jsm.PurgeStream(StreamName, PurgeOptions.WithSubject(RawKeySubject(key)));
+                jsm.PurgeStream(StreamName, PurgeOptions.WithSubject(ReadSubject(key)));
             }
 
             foreach (string key in keepList)
             {
                 PurgeOptions po = PurgeOptions.Builder()
-                    .WithSubject(RawKeySubject(key))
+                    .WithSubject(ReadSubject(key))
                     .WithKeep(1)
                     .Build();
                 jsm.PurgeStream(StreamName, po);
@@ -225,7 +241,7 @@ namespace NATS.Client.KeyValue
 
         public KeyValueStatus Status()
         {
-            return new KeyValueStatus(jsm.GetStreamInfo(KeyValueUtil.ToStreamName(BucketName)));
+            return new KeyValueStatus(jsm.GetStreamInfo(ToStreamName(BucketName)));
         }
     }
 }

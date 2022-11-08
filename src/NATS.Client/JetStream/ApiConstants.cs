@@ -111,6 +111,7 @@ namespace NATS.Client.JetStream
         internal const string Message = "message";
         internal const string Messages = "messages";
         internal const string Mirror = "mirror";
+        internal const string MirrorDirect = "mirror_direct";
         internal const string Msgs = "msgs";
         internal const string Name = "name";
         internal const string NextBySubject = "next_by_subj";
@@ -170,6 +171,5 @@ namespace NATS.Client.JetStream
         internal const string Total = "total";
         internal const string Type = "type";
         internal const string Version = "version";
-
     }
 }

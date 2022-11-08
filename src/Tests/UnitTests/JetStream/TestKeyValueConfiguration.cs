@@ -11,14 +11,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using NATS.Client.KeyValue;
 using Xunit;
+using static NATS.Client.Internals.NatsConstants;
 
 namespace UnitTests.JetStream
 {
-    public class TestKeyValueConfiguration
+    public class TestKeyValueConfiguration : TestBase
     {
         [Fact]
         public void TestConstructionWorks() {
@@ -67,6 +69,82 @@ namespace UnitTests.JetStream
             Assert.Equal("src", kvc.Republish.Source);
             Assert.Equal("dest", kvc.Republish.Destination);
             Assert.True(kvc.Republish.HeadersOnly);
+        }
+
+        [Fact]
+        public void TestCoverBucketAndKey() {
+            BucketAndKey bak1 = new BucketAndKey(Dot + BUCKET + Dot + KEY);
+            BucketAndKey bak2 = new BucketAndKey(Dot + BUCKET + Dot + KEY);
+            BucketAndKey bak3 = new BucketAndKey(Dot + Bucket(1) + Dot + KEY);
+            BucketAndKey bak4 = new BucketAndKey(Dot + BUCKET + Dot + Key(1));
+            Assert.Equal(BUCKET, bak1.Bucket);
+            Assert.Equal(KEY, bak1.Key);
+            Assert.Equal(bak1, bak1);
+            Assert.Equal(bak1, bak2);
+            Assert.Equal(bak2, bak1);
+            Assert.NotEqual(bak1, bak3);
+            Assert.NotEqual(bak1, bak4);
+            Assert.NotEqual(bak3, bak1);
+            Assert.NotEqual(bak4, bak1);
+            Assert.False(bak4.Equals(new object()));        
+        }
+
+        [Fact]
+        public void TestCoverPrefix() {
+            Assert.True(KeyValueUtil.HasPrefix("KV_has"));
+            Assert.False(KeyValueUtil.HasPrefix("doesn't"));
+            Assert.Equal("has", KeyValueUtil.TrimPrefix("KV_has"));
+            Assert.Equal("doesn't", KeyValueUtil.TrimPrefix("doesn't"));
+        }
+
+        [Fact]
+        public void TestMirrorSourceBuilderPrefixConversion()
+        {
+            KeyValueConfiguration kvc = KeyValueConfiguration.Builder()
+                .WithName(BUCKET)
+                .WithMirror(Mirror.Builder().WithName("name").Build())
+                .Build();
+            Assert.Equal("KV_name", kvc.BackingConfig.Mirror.Name);
+
+            kvc = KeyValueConfiguration.Builder()
+                .WithName(BUCKET)
+                .WithMirror(Mirror.Builder().WithName("KV_name").Build())
+                .Build();
+            Assert.Equal("KV_name", kvc.BackingConfig.Mirror.Name);
+
+            Source s1 = Source.Builder().WithName("s1").Build();
+            Source s2 = Source.Builder().WithName("s2").Build();
+            Source s3 = Source.Builder().WithName("s3").Build();
+            Source s4 = Source.Builder().WithName("s4").Build();
+            Source s5 = Source.Builder().WithName("KV_s5").Build();
+            Source s6 = Source.Builder().WithName("KV_s6").Build();
+
+            kvc = KeyValueConfiguration.Builder()
+                .WithName(BUCKET)
+                .WithSources(s3, s4)
+                .WithSources(new List<Source>(new []{s1, s2}))
+                .AddSources(s1, s2)
+                .AddSources(new List<Source>(new []{s1, s2, null}))
+                .AddSources(s3, s4)
+                .AddSource(null)
+                .AddSource(s5)
+                .AddSource(s5)
+                .AddSources(s6)
+                .AddSources((Source[])null)
+                .AddSources((List<Source>)null)
+                .Build();
+
+            Assert.Equal(6, kvc.BackingConfig.Sources.Count);
+            List<string> names = new List<string>();
+            foreach (Source source in kvc.BackingConfig.Sources) {
+                names.Add(source.Name);
+            }
+            Assert.Contains("KV_s1", names);
+            Assert.Contains("KV_s2", names);
+            Assert.Contains("KV_s3", names);
+            Assert.Contains("KV_s4", names);
+            Assert.Contains("KV_s5", names);
+            Assert.Contains("KV_s6", names);        
         }
     }
 }

@@ -44,6 +44,7 @@ namespace NATS.Client.JetStream
         public bool Sealed { get; }
         public bool AllowRollup { get; }
         public bool AllowDirect { get; }
+        public bool MirrorDirect { get; }
         public bool DenyDelete { get; }
         public bool DenyPurge { get; }
         public bool DiscardNewPerSubject { get; }
@@ -78,6 +79,7 @@ namespace NATS.Client.JetStream
             Sealed = scNode[ApiConstants.Sealed].AsBool;
             AllowRollup = scNode[ApiConstants.AllowRollupHdrs].AsBool;
             AllowDirect = scNode[ApiConstants.AllowDirect].AsBool;
+            MirrorDirect = scNode[ApiConstants.MirrorDirect].AsBool;
             DenyDelete = scNode[ApiConstants.DenyDelete].AsBool;
             DenyPurge = scNode[ApiConstants.DenyPurge].AsBool;
             DiscardNewPerSubject = scNode[ApiConstants.DiscardNewPerSubject].AsBool;
@@ -108,6 +110,7 @@ namespace NATS.Client.JetStream
             Sealed = builder._sealed;
             AllowRollup = builder._allowRollup;
             AllowDirect = builder._allowDirect;
+            MirrorDirect = builder._mirrorDirect;
             DenyDelete = builder._denyDelete;
             DenyPurge = builder._denyPurge;
             DiscardNewPerSubject = builder._discardNewPerSubject;
@@ -148,6 +151,7 @@ namespace NATS.Client.JetStream
                 [ApiConstants.Sealed] = Sealed,
                 [ApiConstants.AllowRollupHdrs] = AllowRollup,
                 [ApiConstants.AllowDirect] = AllowDirect,
+                [ApiConstants.MirrorDirect] = MirrorDirect,
                 [ApiConstants.DenyDelete] = DenyDelete,
                 [ApiConstants.DenyPurge] = DenyPurge,
                 [ApiConstants.DiscardNewPerSubject] = DiscardNewPerSubject
@@ -189,6 +193,7 @@ namespace NATS.Client.JetStream
             internal bool _sealed;
             internal bool _allowRollup;
             internal bool _allowDirect;
+            internal bool _mirrorDirect;
             internal bool _denyDelete;
             internal bool _denyPurge;
             internal bool _discardNewPerSubject;
@@ -221,6 +226,7 @@ namespace NATS.Client.JetStream
                 _sealed = sc.Sealed;
                 _allowRollup = sc.AllowRollup;
                 _allowDirect = sc.AllowDirect;
+                _mirrorDirect = sc.MirrorDirect;
                 _denyDelete = sc.DenyDelete;
                 _denyPurge = sc.DenyPurge;
                 _discardNewPerSubject = sc.DiscardNewPerSubject;
@@ -537,6 +543,18 @@ namespace NATS.Client.JetStream
             }
 
             /// <summary>
+            /// Add a source into the StreamConfiguration.
+            /// </summary>
+            /// <param name="source"></param>
+            /// <returns>The StreamConfigurationBuilder</returns>
+            public StreamConfigurationBuilder AddSource(Source source) {
+                if (source != null && !_sources.Contains(source)) {
+                    _sources.Add(source);
+                }
+                return this;
+            }
+
+            /// <summary>
             /// Sets the Allow Rollup mode of the StreamConfiguration.
             /// </summary>
             /// <param name="allowRollup">true to allow rollup.</param>
@@ -547,12 +565,22 @@ namespace NATS.Client.JetStream
             }
 
             /// <summary>
-            /// Sets the Allow Direct mode of the StreamConfiguration.
+            /// Set whether to allow direct message access for a stream
             /// </summary>
-            /// <param name="allowDirect">true to allow direct headers.</param>
+            /// <param name="allowDirect">the allow direct setting.</param>
             /// <returns>The StreamConfigurationBuilder</returns>
             public StreamConfigurationBuilder WithAllowDirect(bool allowDirect) {
                 _allowDirect = allowDirect;
+                return this;
+            }
+
+            /// <summary>
+            /// Set whether to allow unified direct access for mirrors
+            /// </summary>
+            /// <param name="mirrorDirect">the mirror direct setting.</param>
+            /// <returns>The StreamConfigurationBuilder</returns>
+            public StreamConfigurationBuilder WithMirrorDirect(bool mirrorDirect) {
+                _mirrorDirect = mirrorDirect;
                 return this;
             }
 

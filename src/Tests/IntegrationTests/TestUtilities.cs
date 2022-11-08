@@ -49,15 +49,26 @@ namespace IntegrationTests
             cleanupExistingServers();
         }
 
-        private NATSServer(TimeSpan delay, int port, string args = null)
+        private NATSServer(TimeSpan delay, int port, string inArgs = null)
         {
             psInfo = createProcessStartInfo();
 
-            args = args == null
-                ? $"-p {port}"
-                : $"-p {port} {args}";
+            string args = "";
+            if (port != int.MinValue)
+            {
+                args = inArgs == null
+                    ? $"-p {port}"
+                    : $"-p {port} {inArgs}";
+            }
+            else if (inArgs != null)
+            {
+                args = inArgs;
+            }
 
-            addArgument(psInfo, args);
+            if (args.Length > 0)
+            {
+                addArgument(psInfo, args);
+            }
 
             p = Process.Start(psInfo);
 

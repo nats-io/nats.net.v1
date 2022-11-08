@@ -179,6 +179,12 @@ namespace IntegrationTests
                 jsm.AddStream(GetTestStreamConfigurationBuilder().WithAllowDirect(false).Build());
                 jsm.UpdateStream(GetTestStreamConfigurationBuilder().WithAllowDirect(true).Build());
                 jsm.UpdateStream(GetTestStreamConfigurationBuilder().WithAllowDirect(false).Build());
+                
+                // allowed to change Mirror Direct
+                jsm.DeleteStream(STREAM);
+                jsm.AddStream(GetTestStreamConfigurationBuilder().WithMirrorDirect(false).Build());
+                jsm.UpdateStream(GetTestStreamConfigurationBuilder().WithMirrorDirect(true).Build());
+                jsm.UpdateStream(GetTestStreamConfigurationBuilder().WithMirrorDirect(false).Build());
             });
         }
         

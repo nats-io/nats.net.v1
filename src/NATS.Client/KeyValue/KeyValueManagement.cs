@@ -31,6 +31,9 @@ namespace NATS.Client.KeyValue
         public KeyValueStatus Create(KeyValueConfiguration config)
         {
             StreamConfiguration sc = config.BackingConfig;
+
+            // most validation / KVC setup is done in the KeyValueConfiguration Builder
+            // but this is done here because the context has a connection which has the server info with a version
             if (ServerInfoOrException(jsm.Conn).IsOlderThanVersion("2.7.2"))
             {
                 sc = StreamConfiguration.Builder(sc).WithDiscardPolicy(null).Build(); // null discard policy will use default
