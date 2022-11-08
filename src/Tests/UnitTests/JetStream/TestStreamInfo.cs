@@ -73,8 +73,22 @@ namespace UnitTests.JetStream
             Assert.NotNull(s);
             Assert.Equal(3, s.Count);
 
+            Assert.Equal(6, si.State.DeletedCount);
+            Assert.Equal(6, si.State.Deleted.Count);
+            for (ulong x = 91; x <= 96; x++) {
+                Assert.True(si.State.Deleted.Contains(x));
+            }
+
+            LostStreamData lost = si.State.LostStreamData;
+            Assert.NotNull(lost);
+            Assert.Equal(3, lost.Messages.Count);
+            for (ulong x = 101; x <= 103; x++) {
+                Assert.True(lost.Messages.Contains(x));
+            }
+            Assert.Equal(104U, lost.Bytes);
+
             Assert.Equal(AsDateTime("0001-01-01T00:00:00Z"), si.State.FirstTime);
-            Assert.Equal(AsDateTime("2021-01-01T00:00:00Z"), si.State.LastTime);
+            Assert.Equal(AsDateTime("0002-01-01T00:00:00Z"), si.State.LastTime);
             
             // ClusterInfo ClusterInfo
             Assert.Equal("clustername", si.ClusterInfo.Name);

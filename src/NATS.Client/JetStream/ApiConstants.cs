@@ -87,6 +87,7 @@ namespace NATS.Client.JetStream
         internal const string Limit = "limit";
         internal const string Limits = "limits";
         internal const string Link = "link";
+        internal const string Lost = "lost";
         internal const string MaxAckPending = "max_ack_pending";
         internal const string MaxAge = "max_age";
         internal const string MaxBatch = "max_batch";
@@ -111,6 +112,7 @@ namespace NATS.Client.JetStream
         internal const string Messages = "messages";
         internal const string Mirror = "mirror";
         internal const string MirrorDirect = "mirror_direct";
+        internal const string Msgs = "msgs";
         internal const string Name = "name";
         internal const string NextBySubject = "next_by_subj";
         internal const string NoAck = "no_ack";

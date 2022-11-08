@@ -31,6 +31,7 @@ namespace NATS.Client.JetStream
         public DateTime LastTime { get; }
         public IList<Subject> Subjects { get; }
         public IList<ulong> Deleted { get; }
+        public LostStreamData LostStreamData { get; }
 
         internal static StreamState OptionalInstance(JSONNode streamState)
         {
@@ -56,7 +57,9 @@ namespace NATS.Client.JetStream
             while (e.MoveNext())
             {
                 Deleted.Add(e.Current.Value.AsUlong);
-            }          
+            }      
+            
+            LostStreamData = LostStreamData.OptionalInstance(streamState[ApiConstants.Lost]);
         }
 
         internal void AddAll(IList<Subject> optional)
