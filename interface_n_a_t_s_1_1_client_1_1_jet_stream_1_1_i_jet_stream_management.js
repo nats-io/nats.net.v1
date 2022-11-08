@@ -17,8 +17,9 @@ var interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management =
     [ "GetStreamInfo", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#a24d6e975faa8fa52f2b7b24849a31691", null ],
     [ "GetStreamInfo", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#a9e1ce695178e24f12330c9b728d0a6df", null ],
     [ "GetStreamNames", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#a803d1564f56c3fbf29a1b0588673c6de", null ],
-    [ "GetStreamNamesBySubjectFilter", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#a474b6b88360e895085699dbe4975393e", null ],
+    [ "GetStreamNames", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#ae5e180fe48c85ad706498d02b5c037e9", null ],
     [ "GetStreams", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#a0c21e82734c0545803952aa3a124b175", null ],
+    [ "GetStreams", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#a3f3ec5cdb0e6442aa8d0b6cf0c961a2c", null ],
     [ "PurgeStream", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#aea32e85e5bd25f461d2320f80906f9ce", null ],
     [ "PurgeStream", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#aa52f66ba76144a66463b705aa63c060e", null ],
     [ "UpdateStream", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#a40de8a074ad7f267a327bddf46a1cdd6", null ]

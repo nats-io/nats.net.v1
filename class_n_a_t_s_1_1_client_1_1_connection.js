@@ -43,6 +43,7 @@ var class_n_a_t_s_1_1_client_1_1_connection =
     [ "RequestAsync", "class_n_a_t_s_1_1_client_1_1_connection.html#a203113a61f0f7807feb58f9ec24db221", null ],
     [ "RequestAsync", "class_n_a_t_s_1_1_client_1_1_connection.html#a3d24d78fbb4e94b5f21047975c15ca66", null ],
     [ "ResetStats", "class_n_a_t_s_1_1_client_1_1_connection.html#a3e9d06d2b9fd56b38866ef64186c4836", null ],
+    [ "RTT", "class_n_a_t_s_1_1_client_1_1_connection.html#a9f2abb43868d1200135c21ca2e18face", null ],
     [ "SubscribeAsync", "class_n_a_t_s_1_1_client_1_1_connection.html#afbe804d241c3b8a7606a0cdaaaa6f671", null ],
     [ "SubscribeAsync", "class_n_a_t_s_1_1_client_1_1_connection.html#acb027e1d94597e3584ce143d25a41edd", null ],
     [ "SubscribeAsync", "class_n_a_t_s_1_1_client_1_1_connection.html#ac05552c22b24dc348723be8552fce881", null ],

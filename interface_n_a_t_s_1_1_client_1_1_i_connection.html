@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">1.0.1</span>
+   &#160;<span id="projectnumber">1.0.2</span>
    </div>
    <div id="projectbrief">The NATS.io .NET C# Client</div>
   </td>
@@ -164,6 +164,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a2bd84c68207748ab316fbae933a536be"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a491851ff65f7f9e49dd1a62992d7a05d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a491851ff65f7f9e49dd1a62992d7a05d">Flush</a> (int timeout)</td></tr>
 <tr class="separator:a491851ff65f7f9e49dd1a62992d7a05d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4c2f3130ae9dbb07299d5aca8793061c"><td class="memItemLeft" align="right" valign="top">TimeSpan&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a4c2f3130ae9dbb07299d5aca8793061c">RTT</a> ()</td></tr>
+<tr class="separator:a4c2f3130ae9dbb07299d5aca8793061c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6aa942af0cea9db31b4487f38f7fd241"><td class="memItemLeft" align="right" valign="top"><a id="a6aa942af0cea9db31b4487f38f7fd241" name="a6aa942af0cea9db31b4487f38f7fd241"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>Flush</b> ()</td></tr>
 <tr class="separator:a6aa942af0cea9db31b4487f38f7fd241"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1797,6 +1799,28 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>SubscriptionCount</b><
 <dl class="section see"><dt>See also</dt><dd><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#ab55fbcc44bb4ee7ca3589055ef1e276d" title="Gets the statistics tracked for the IConnection.">Stats</a></dd></dl>
 
 <p>Implemented in <a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#a3e9d06d2b9fd56b38866ef64186c4836">NATS.Client.Connection</a>.</p>
+
+</div>
+</div>
+<a id="a4c2f3130ae9dbb07299d5aca8793061c" name="a4c2f3130ae9dbb07299d5aca8793061c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4c2f3130ae9dbb07299d5aca8793061c">&#9670;&nbsp;</a></span>RTT()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">TimeSpan NATS.Client.IConnection.RTT </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Calculates the round trip time between this client and the server. </p>
+<dl class="section return"><dt>Returns</dt><dd>A timespan representing the elapsed time.</dd></dl>
+
+<p>Implemented in <a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#a9f2abb43868d1200135c21ca2e18face">NATS.Client.Connection</a>.</p>
 
 </div>
 </div>
