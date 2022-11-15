@@ -27,17 +27,23 @@ namespace IntegrationTestsInternal
 {
     public class TestOrderedConsumer : TestSuite<JetStreamSuiteContext>
     {
-        public TestOrderedConsumer(JetStreamSuiteContext context) : base(context) { }
+        private readonly ITestOutputHelper output;
+
+        public TestOrderedConsumer(ITestOutputHelper output, JetStreamSuiteContext context) : base(context) {
+            this.output = output;
+            Console.SetOut(new ConsoleWriter(output));
+        }
 
         // ------------------------------------------------------------------------------------------
         // this allows me to intercept messages before it gets to the connection queue
         // which is before the messages is available for nextMessage or before
         // it gets dispatched to a handler.
-        class OrderedTestDropSimulator : PushMessageManager
+        class OrderedTestDropSimulator : OrderedMessageManager
         {
             public OrderedTestDropSimulator(
-                Connection conn, SubscribeOptions so, ConsumerConfiguration cc, bool queueMode, bool syncMode)
-                : base(conn, so, cc, queueMode, syncMode) { }
+                Connection conn, JetStream js, string stream, SubscribeOptions so, ConsumerConfiguration cc,
+                bool queueMode, bool syncMode)
+                : base(conn, js, stream, so, cc, queueMode, syncMode) {}
 
             protected override Msg BeforeChannelAddCheck(Msg msg)
             {
@@ -71,8 +77,8 @@ namespace IntegrationTestsInternal
 
                 // Get this in place before any subscriptions are made
                 JetStream.PushMessageManagerFactoryImpl = 
-                    (conn, so, cc, queueMode, syncMode) => 
-                        new OrderedTestDropSimulator(conn, so, cc, queueMode, syncMode);
+                    (conn, lJs, lStream, so, cc, queueMode, syncMode) => 
+                        new OrderedTestDropSimulator(conn, lJs, lStream, so, cc, queueMode, syncMode);
 
                 // The options will be used in various ways
                 PushSubscribeOptions pso = PushSubscribeOptions.Builder().WithOrdered(true).Build();
@@ -88,13 +94,13 @@ namespace IntegrationTestsInternal
                 // Published messages will be intercepted by the OrderedTestDropSimulator
                 JsPublish(js, subject, 101, 6);
 
-                ulong streamSeq = 1;
-                while (streamSeq < 7) {
+                ulong expectedStreamSeq = 1;
+                while (expectedStreamSeq <= 6) {
                     Msg m = sub.NextMessage(1000);
                     if (m != null) {
-                        Assert.Equal(streamSeq, m.MetaData.StreamSequence);
-                        Assert.Equal(ExpectedConSeqNums[streamSeq-1], m.MetaData.ConsumerSequence);
-                        ++streamSeq;
+                        Assert.Equal(expectedStreamSeq, m.MetaData.StreamSequence);
+                        Assert.Equal(ExpectedConSeqNums[expectedStreamSeq-1], m.MetaData.ConsumerSequence);
+                        ++expectedStreamSeq;
                     }
                 }
 
@@ -115,8 +121,8 @@ namespace IntegrationTestsInternal
 
                 // Get this in place before any subscriptions are made
                 JetStream.PushMessageManagerFactoryImpl = 
-                    (conn, so, cc, queueMode, syncMode) => 
-                        new OrderedTestDropSimulator(conn, so, cc, queueMode, syncMode);
+                    (conn, lJs, lStream, so, cc, queueMode, syncMode) => 
+                        new OrderedTestDropSimulator(conn, lJs, lStream, so, cc, queueMode, syncMode);
 
                 // The options will be used in various ways
                 PushSubscribeOptions pso = PushSubscribeOptions.Builder().WithOrdered(true).Build();

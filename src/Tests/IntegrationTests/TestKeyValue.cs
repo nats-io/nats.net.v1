@@ -1165,10 +1165,6 @@ namespace IntegrationTests
                 hubKv.Put("key3", "c0");
                 hubKv.Delete("key3");
 
-                StreamInfo si = hub.CreateJetStreamManagementContext().GetStreamInfo("KV_TEST");
-                Assert.False(si.Config.MirrorDirect);
-                Assert.Equal(3U, si.State.Messages);
-
                 leafKvm.Create(KeyValueConfiguration.Builder()
                     .WithName("MIRROR")
                     .WithMirror(Mirror.Builder()
@@ -1178,9 +1174,12 @@ namespace IntegrationTests
                         .Build())
                     .Build());
                 
-                Thread.Sleep(200); // make sure things get a chance to propagate
-                si = leaf.CreateJetStreamManagementContext().GetStreamInfo("KV_MIRROR");
-                Assert.True(si.Config.MirrorDirect);
+                Thread.Sleep(1000); // make sure things get a chance to propagate
+                StreamInfo si = leaf.CreateJetStreamManagementContext().GetStreamInfo("KV_MIRROR");
+                if (hub.ServerInfo.IsSameOrNewerThanVersion("2.9.0"))
+                {
+                    Assert.True(si.Config.MirrorDirect);
+                }
                 Assert.Equal(3U, si.State.Messages);
 
                 IKeyValue leafKv = leaf.CreateKeyValueContext("MIRROR");

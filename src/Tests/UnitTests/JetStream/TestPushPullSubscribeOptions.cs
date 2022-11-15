@@ -285,7 +285,7 @@ namespace UnitTests.JetStream
 
             ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithIdleHeartbeat(100).Build();
             PushSubscribeOptions pso = PushSubscribeOptions.Builder().WithConfiguration(cc).WithOrdered(true).Build();
-            Assert.Equal(DefaultOrderedHeartbeat, (long)pso.ConsumerConfiguration.IdleHeartbeat.Millis);
+            Assert.Equal(100, pso.ConsumerConfiguration.IdleHeartbeat.Millis);
 
             cc = ConsumerConfiguration.Builder().WithIdleHeartbeat(DefaultOrderedHeartbeat + 1).Build();
             pso = PushSubscribeOptions.Builder().WithConfiguration(cc).WithOrdered(true).Build();
