@@ -36,6 +36,11 @@ namespace NATS.Client.Internals
             return Interlocked.Increment(ref count);
         }
 
+        public long Decrement()
+        {
+            return Add(-1);
+        }
+
         public long Add(long value)
         {
             if (value == 0)
@@ -73,6 +78,11 @@ namespace NATS.Client.Internals
         public int Increment()
         {
             return (int)_il.Increment();
+        }
+
+        public int Decrement()
+        {
+            return (int)_il.Add(-1);
         }
 
         public long Add(int value)

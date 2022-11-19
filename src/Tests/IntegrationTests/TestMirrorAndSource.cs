@@ -305,7 +305,7 @@ namespace IntegrationTests
 
         private void AssertMirror(IJetStreamManagement jsm, 
             string stream, string mirroring, ulong? msgCount, ulong? firstSeq) {
-            Thread.Sleep(1000);
+            Thread.Sleep(1500);
             StreamInfo si = jsm.GetStreamInfo(stream);
 
             MirrorInfo msi = si.MirrorInfo;

@@ -102,7 +102,7 @@ namespace NATS.Client.JetStream
                     }
 
                     Duration ccHb = builder.Cc.IdleHeartbeat;
-                    if (ccHb != null && ccHb.Millis > hb)
+                    if (ccHb != null)
                     {
                         hb = ccHb.Millis;
                     }

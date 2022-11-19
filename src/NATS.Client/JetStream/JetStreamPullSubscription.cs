@@ -22,8 +22,8 @@ namespace NATS.Client.JetStream
     {
         internal JetStreamPullSubscription(Connection conn, string subject,
             JetStream js, string stream, string consumer, string deliver,
-            MessageManager[] messageManagers)
-            : base(conn, subject, null, js, stream, consumer, deliver, messageManagers) {}
+            MessageManager messageManager)
+            : base(conn, subject, null, js, stream, consumer, deliver, messageManager) {}
 
         public bool IsPullMode() => true;
         
@@ -87,7 +87,7 @@ namespace NATS.Client.JetStream
                 int timeLeft = maxWaitMillis;
                 while (batchLeft > 0 && timeLeft > 0) {
                     Msg msg = NextMessageImpl(timeLeft);
-                    if (!AnyManaged(msg)) { // not managed means JS Message
+                    if (!messageManager.Manage(msg)) { // not managed means JS Message
                         messages.Add(msg);
                         batchLeft--;
                     }

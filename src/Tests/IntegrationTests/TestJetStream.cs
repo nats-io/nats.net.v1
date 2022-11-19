@@ -19,7 +19,6 @@ using NATS.Client;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using Xunit;
-using Xunit.Abstractions;
 using static UnitTests.TestBase;
 using static IntegrationTests.JetStreamTestBase;
 using static NATS.Client.ClientExDetail;
@@ -143,10 +142,11 @@ namespace IntegrationTests
                         .WithDurable(Durable(101))
                         .WithDeliverSubject(Deliver(101))
                         .Build());
+                
                 PushSubscribeOptions psoBind = PushSubscribeOptions.BindTo(STREAM, Durable(101));
-                js.PushSubscribeSync(null, psoBind).Unsubscribe();
-                js.PushSubscribeSync("", psoBind).Unsubscribe();
-                js.PushSubscribeAsync(null, (o, a) => { }, false, psoBind).Unsubscribe();
+                UnsubscribeEnsureNotBound(js.PushSubscribeSync(null, psoBind));
+                UnsubscribeEnsureNotBound(js.PushSubscribeSync("", psoBind));
+                UnsubscribeEnsureNotBound(js.PushSubscribeAsync(null, (o, a) => { }, false, psoBind));
                 js.PushSubscribeAsync("", (o, a) => { }, false, psoBind);
 
                 jsm.AddOrUpdateConsumer(STREAM,
@@ -207,6 +207,13 @@ namespace IntegrationTests
             });
         }
 
+        private void UnsubscribeEnsureNotBound(ISubscription sub)
+        {
+            sub.Unsubscribe();
+            sub.Connection.Flush();
+            Thread.Sleep(50);
+        }
+        
         [Fact]
         public void TestJetStreamSubscribeErrors() {
             Context.RunInJsServer(c =>
