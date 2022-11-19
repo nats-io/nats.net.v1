@@ -139,10 +139,10 @@ namespace NATS.Client.JetStream
 
         // PushMessageManagerFactory/Impl is internal and used for testing / providing a PushMessageManager mock
         internal delegate PushMessageManager PushMessageManagerFactory(
-            Connection conn, SubscribeOptions so, ConsumerConfiguration cc, bool queueMode, bool syncMode);
+            Connection conn, JetStream js, string stream, 
+            SubscribeOptions so, ConsumerConfiguration cc, bool queueMode, bool syncMode);
 
-        internal static PushMessageManagerFactory PushMessageManagerFactoryImpl =
-            (conn, so, cc, queueMode, syncMode) => new PushMessageManager(conn, so, cc, queueMode, syncMode);
+        internal static PushMessageManagerFactory PushMessageManagerFactoryImpl;
         
         Subscription CreateSubscription(string subject, string queueName,
             EventHandler<MsgHandlerEventArgs> userHandler, bool autoAck,
@@ -309,10 +309,9 @@ namespace NATS.Client.JetStream
             Subscription sub;
             if (isPullMode)
             {
-                MessageManager[] managers = { new PullMessageManager() };
-                SyncSubscription CreateSubDelegate(Connection lConn, string lSubject, string lQueueNa)
+                SyncSubscription CreateSubDelegate(Connection lConn, string lSubject, string queueNaForPull)
                 {
-                    return new JetStreamPullSubscription(lConn, lSubject, this, stream, consumerName, inboxDeliver, managers);
+                    return new JetStreamPullSubscription(lConn, lSubject, this, stream, consumerName, inboxDeliver, new PullMessageManager());
                 }
 
                 sub = ((Connection)Conn).subscribeSync(inboxDeliver, queueName, CreateSubDelegate);
@@ -320,27 +319,24 @@ namespace NATS.Client.JetStream
             else
             {
                 bool syncMode = userHandler == null;
-                PushMessageManager pushMessageManager = 
-                    PushMessageManagerFactoryImpl((Connection)Conn, so, serverCC, qgroup != null, syncMode);
-                MessageManager[] managers;
-                if (so.Ordered)
+                MessageManager manager;
+                if (PushMessageManagerFactoryImpl != null)
                 {
-                    managers = new MessageManager[]
-                    {
-                        new SidCheckManager(),
-                        pushMessageManager,
-                        new OrderedMessageManager(this, stream, serverCC, syncMode)
-                    };
+                    manager = PushMessageManagerFactoryImpl((Connection)Conn, this, stream, so, serverCC, qgroup != null, syncMode);
+                }
+                else if (so.Ordered)
+                {
+                    manager = new OrderedMessageManager((Connection)Conn, this, stream, so, serverCC, qgroup != null, syncMode);
                 }
                 else
                 {
-                    managers = new MessageManager[] { pushMessageManager };
+                    manager = new PushMessageManager((Connection)Conn, this, stream, so, serverCC, qgroup != null, syncMode);
                 }
                 
                 if (syncMode) {
                     SyncSubscription CreateSubDelegate(Connection lConn, string lSubject, string lQueue)
                     {
-                        return new JetStreamPushSyncSubscription(lConn, lSubject, lQueue, this, stream, consumerName, inboxDeliver, managers);
+                        return new JetStreamPushSyncSubscription(lConn, lSubject, lQueue, this, stream, consumerName, inboxDeliver, manager);
                     }
                     sub = ((Connection)Conn).subscribeSync(inboxDeliver, queueName, CreateSubDelegate); 
                 }
@@ -358,12 +354,9 @@ namespace NATS.Client.JetStream
                     
                     EventHandler<MsgHandlerEventArgs> handler = (sender, args) => 
                     {
-                        foreach (MessageManager mm in managers)
+                        if (manager.Manage(args.Message))
                         {
-                            if (mm.Manage(args.Message))
-                            {
-                                return; // manager handled the message
-                            }
+                            return; // manager handled the message
                         }
                             
                         userHandler.Invoke(sender, args);
@@ -372,7 +365,7 @@ namespace NATS.Client.JetStream
 
                     AsyncSubscription CreateAsyncSubDelegate(Connection lConn, string lSubject, string lQueue)
                     {
-                        return new JetStreamPushAsyncSubscription(lConn, lSubject, lQueue, this, stream, consumerName, inboxDeliver, managers);
+                        return new JetStreamPushAsyncSubscription(lConn, lSubject, lQueue, this, stream, consumerName, inboxDeliver, manager);
                     }
                
                     sub = ((Connection)Conn).subscribeAsync(inboxDeliver, queueName, handler, CreateAsyncSubDelegate);

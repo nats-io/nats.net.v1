@@ -27,17 +27,23 @@ namespace IntegrationTestsInternal
 {
     public class TestOrderedConsumer : TestSuite<JetStreamSuiteContext>
     {
-        public TestOrderedConsumer(JetStreamSuiteContext context) : base(context) { }
+        private readonly ITestOutputHelper output;
+
+        public TestOrderedConsumer(ITestOutputHelper output, JetStreamSuiteContext context) : base(context) {
+            this.output = output;
+            Console.SetOut(new ConsoleWriter(output));
+        }
 
         // ------------------------------------------------------------------------------------------
         // this allows me to intercept messages before it gets to the connection queue
         // which is before the messages is available for nextMessage or before
         // it gets dispatched to a handler.
-        class OrderedTestDropSimulator : PushMessageManager
+        class OrderedTestDropSimulator : OrderedMessageManager
         {
             public OrderedTestDropSimulator(
-                Connection conn, SubscribeOptions so, ConsumerConfiguration cc, bool queueMode, bool syncMode)
-                : base(conn, so, cc, queueMode, syncMode) { }
+                Connection conn, JetStream js, string stream, SubscribeOptions so, ConsumerConfiguration cc,
+                bool queueMode, bool syncMode)
+                : base(conn, js, stream, so, cc, queueMode, syncMode) {}
 
             protected override Msg BeforeChannelAddCheck(Msg msg)
             {
@@ -71,8 +77,8 @@ namespace IntegrationTestsInternal
 
                 // Get this in place before any subscriptions are made
                 JetStream.PushMessageManagerFactoryImpl = 
-                    (conn, so, cc, queueMode, syncMode) => 
-                        new OrderedTestDropSimulator(conn, so, cc, queueMode, syncMode);
+                    (conn, lJs, lStream, so, cc, queueMode, syncMode) => 
+                        new OrderedTestDropSimulator(conn, lJs, lStream, so, cc, queueMode, syncMode);
 
                 // The options will be used in various ways
                 PushSubscribeOptions pso = PushSubscribeOptions.Builder().WithOrdered(true).Build();
@@ -88,13 +94,13 @@ namespace IntegrationTestsInternal
                 // Published messages will be intercepted by the OrderedTestDropSimulator
                 JsPublish(js, subject, 101, 6);
 
-                ulong streamSeq = 1;
-                while (streamSeq < 7) {
+                ulong expectedStreamSeq = 1;
+                while (expectedStreamSeq <= 6) {
                     Msg m = sub.NextMessage(1000);
                     if (m != null) {
-                        Assert.Equal(streamSeq, m.MetaData.StreamSequence);
-                        Assert.Equal(ExpectedConSeqNums[streamSeq-1], m.MetaData.ConsumerSequence);
-                        ++streamSeq;
+                        Assert.Equal(expectedStreamSeq, m.MetaData.StreamSequence);
+                        Assert.Equal(ExpectedConSeqNums[expectedStreamSeq-1], m.MetaData.ConsumerSequence);
+                        ++expectedStreamSeq;
                     }
                 }
 
@@ -115,8 +121,8 @@ namespace IntegrationTestsInternal
 
                 // Get this in place before any subscriptions are made
                 JetStream.PushMessageManagerFactoryImpl = 
-                    (conn, so, cc, queueMode, syncMode) => 
-                        new OrderedTestDropSimulator(conn, so, cc, queueMode, syncMode);
+                    (conn, lJs, lStream, so, cc, queueMode, syncMode) => 
+                        new OrderedTestDropSimulator(conn, lJs, lStream, so, cc, queueMode, syncMode);
 
                 // The options will be used in various ways
                 PushSubscribeOptions pso = PushSubscribeOptions.Builder().WithOrdered(true).Build();
@@ -158,5 +164,114 @@ namespace IntegrationTestsInternal
             });
         }
         
+        class OrderedMissHeartbeatSimulator : OrderedMessageManager
+        {
+            public InterlockedInt skip = new InterlockedInt(5);
+            public InterlockedInt startups = new InterlockedInt(0);
+            public InterlockedInt handles = new InterlockedInt(0);
+            public CountdownEvent latch = new CountdownEvent(1);
+
+            public OrderedMissHeartbeatSimulator(
+                Connection conn, JetStream js, string stream, SubscribeOptions so, ConsumerConfiguration cc,
+                bool queueMode, bool syncMode)
+                : base(conn, js, stream, so, cc, queueMode, syncMode) {}
+
+            internal override void Startup(Subscription sub)
+            {
+                base.Startup(sub);
+                startups.Increment();
+            }
+
+            internal override void HandleHeartbeatError()
+            {
+                handles.Increment();
+                skip.Set(9999);
+                base.HandleHeartbeatError();
+                latch.Signal(1);
+            }
+
+            protected override Msg BeforeChannelAddCheck(Msg msg)
+            {
+                if (skip.Decrement() < 0)
+                {
+                    return null;
+                }
+                return base.BeforeChannelAddCheck(msg);
+            }
+
+            public long Sid => Sub.sid;
+        }
+
+        [Fact]
+        public void TestOrderedConsumerHbSync()
+        {
+            Context.RunInJsServer(c =>
+            {
+                // Setup
+                IJetStream js = c.CreateJetStreamContext();
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                
+                string subject = Subject(333);
+                CreateMemoryStream(c, Stream(333), subject);
+
+                OrderedMissHeartbeatSimulator sim = null;
+                // Get this in place before any subscriptions are made
+                JetStream.PushMessageManagerFactoryImpl =
+                    (conn, lJs, lStream, so, cc, queueMode, syncMode) =>
+                    {
+                        sim = new OrderedMissHeartbeatSimulator(conn, lJs, lStream, so, cc, queueMode, syncMode);
+                        return sim;
+                    };
+
+                JsPublish(js, subject, 1, 10);
+                
+                // Setup subscription
+                PushSubscribeOptions pso = PushSubscribeOptions.Builder().WithOrdered(true)
+                    .WithConfiguration(ConsumerConfiguration.Builder().WithFlowControl(500).Build())
+                    .Build();
+
+                IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(subject, pso);
+
+
+                long firstSid = -1;
+                ulong expectedStreamSeq = 1;
+                while (expectedStreamSeq <= 5)
+                {
+                    try
+                    {
+                        Msg m = sub.NextMessage(1000);
+                        if (firstSid == -1)
+                        {
+                            firstSid = sim.Sid;
+                        }
+                        else
+                        {
+                            Assert.Equal(firstSid, sim.Sid);
+                        }
+                        Assert.Equal(expectedStreamSeq++, m.MetaData.StreamSequence);
+                    }
+                    catch (NATSTimeoutException)
+                    {
+                        // ignored
+                    }
+                }
+
+                sim.latch.Wait(10000);
+
+                while (expectedStreamSeq <= 10)
+                {
+                    try
+                    {
+                        Msg m = sub.NextMessage(1000);
+                        Assert.NotEqual(firstSid, sim.Sid);
+                        Assert.Equal(expectedStreamSeq++, m.MetaData.StreamSequence);
+                    }
+                    catch (NATSTimeoutException)
+                    {
+                        // ignored
+                    }
+                }
+            });
+        }
     }
 }
