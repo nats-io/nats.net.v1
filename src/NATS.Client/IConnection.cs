@@ -539,10 +539,11 @@ namespace NATS.Client
         /// </remarks>
         /// <param name="subject">The subject on which to listen for messages. 
         /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).</param>
+        /// <param name="channel">Whether to force a channel</param>
         /// <returns>An <see cref="IAsyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
         /// <seealso cref="ISubscription.Subject"/>
-        IAsyncSubscription SubscribeAsync(string subject);
+        IAsyncSubscription SubscribeAsync(string subject, Channel<Msg> channel = null);
 
         /// <summary>
         /// Expresses interest in the given <paramref name="subject"/> to the NATS Server, and begins delivering
@@ -554,11 +555,12 @@ namespace NATS.Client
         /// <param name="subject">The subject on which to listen for messages.
         /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).</param>
         /// <param name="handler">The <see cref="EventHandler{TEventArgs}"/> invoked when messages are received 
+        /// <param name="channel">Whether to force a channel</param>
         /// on the returned <see cref="IAsyncSubscription"/>.</param>
         /// <returns>An <see cref="IAsyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
         /// <seealso cref="ISubscription.Subject"/>
-        IAsyncSubscription SubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler);
+        IAsyncSubscription SubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler, Channel<Msg> channel = null);
 
         /// <summary>
         /// Creates a synchronous queue subscriber on the given <paramref name="subject"/>.
@@ -587,11 +589,12 @@ namespace NATS.Client
         /// <param name="subject">The subject on which to listen for messages.
         /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).</param>
         /// <param name="queue">The name of the queue group in which to participate.</param>
+        /// <param name="channel">Whether to force a channel</param>
         /// <returns>An <see cref="IAsyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
         /// <seealso cref="ISubscription.Subject"/>
         /// <seealso cref="ISubscription.Queue"/>
-        IAsyncSubscription SubscribeAsync(string subject, string queue);
+        IAsyncSubscription SubscribeAsync(string subject, string queue, Channel<Msg> channel = null);
 
         /// <summary>
         /// Creates an asynchronous queue subscriber on the given <paramref name="subject"/>, and begins delivering
@@ -609,11 +612,12 @@ namespace NATS.Client
         /// <param name="queue">The name of the queue group in which to participate.</param>
         /// <param name="handler">The <see cref="EventHandler{MsgHandlerEventArgs}"/> invoked when messages are received 
         /// on the returned <see cref="IAsyncSubscription"/>.</param>
+        /// <param name="channel">Whether to force a channel</param>
         /// <returns>An <see cref="IAsyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
         /// <seealso cref="ISubscription.Subject"/>
         /// <seealso cref="ISubscription.Queue"/>
-        IAsyncSubscription SubscribeAsync(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler);
+        IAsyncSubscription SubscribeAsync(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler, Channel<Msg> channel = null);
 
         /// <summary>
         /// Performs a round trip to the server and returns when it receives the internal reply, or throws

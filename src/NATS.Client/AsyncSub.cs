@@ -40,14 +40,17 @@ namespace NATS.Client
 
         private bool started = false;
 
-        internal AsyncSubscription(Connection conn, string subject, string queue, bool forceOwnChannel = false)
+        internal AsyncSubscription(Connection conn, string subject, string queue, Channel<Msg> userChannel)
             : base(conn, subject, queue)
         {
-            mch = forceOwnChannel ? null : conn.getMessageChannel();
-            ownsChannel = mch == null;
-            if (ownsChannel)
+            if (userChannel == null)
             {
-                mch = new Channel<Msg>(SubName());
+                mch = conn.getMessageChannel();
+            }
+            else
+            {
+                mch = userChannel;
+                ownsChannel = true;
             }
         }
 

@@ -25,7 +25,7 @@ namespace NATS.Client
     /// Represents the method that will handle serialization of <paramref name="obj"/>
     /// to a byte array.
     /// </summary>
-    /// <param name="obj">The <see cref="Object"/> to serialize.</param>
+    /// <param name="obj">The <see cref="object"/> to serialize.</param>
     public delegate byte[] Serializer(Object obj);
 
     /// <summary>
@@ -263,7 +263,7 @@ namespace NATS.Client
             new Dictionary<ISubscription, EncodedHandlerWrapper>();
 
         private IAsyncSubscription subscribeAsync(string subject, string reply,
-            EventHandler<EncodedMessageEventArgs> handler)
+            EventHandler<EncodedMessageEventArgs> handler, Channel<Msg> channel)
         {
             if (handler == null)
                 throw new ArgumentNullException("Handler cannot be null.");
@@ -273,8 +273,7 @@ namespace NATS.Client
 
             EncodedHandlerWrapper echWrapper = new EncodedHandlerWrapper(this, handler);
 
-            IAsyncSubscription s = base.subscribeAsync(subject, reply,
-                echWrapper.msgHandlerToEncoderHandler);
+            IAsyncSubscription s = base.subscribeAsync(subject, reply, channel, echWrapper.msgHandlerToEncoderHandler);
 
             wrappers.Add(s, echWrapper);
 
@@ -292,6 +291,7 @@ namespace NATS.Client
         /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).</param>
         /// <param name="handler">The <see cref="EventHandler{TEventArgs}"/> invoked when messages are received 
         /// on the returned <see cref="IAsyncSubscription"/>.</param>
+        /// <param name="channel">Whether to force a channel</param>
         /// <returns>An <see cref="IAsyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="handler"/> is <c>null</c>.</exception>
@@ -300,9 +300,9 @@ namespace NATS.Client
         /// <c>null</c> or entirely whitespace.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
-        public IAsyncSubscription SubscribeAsync(string subject, EventHandler<EncodedMessageEventArgs> handler)
+        public IAsyncSubscription SubscribeAsync(string subject, EventHandler<EncodedMessageEventArgs> handler, Channel<Msg> channel = null)
         {
-            return subscribeAsync(subject, null, handler);
+            return subscribeAsync(subject, null, handler, channel);
         }
 
         /// <summary>
@@ -317,6 +317,7 @@ namespace NATS.Client
         /// <param name="queue">The name of the queue group in which to participate.</param>
         /// <param name="handler">The <see cref="EventHandler{TEventArgs}"/> invoked when messages are received 
         /// on the returned <see cref="IAsyncSubscription"/>.</param>
+        /// <param name="channel">Whether to force a channel</param>
         /// <returns>An <see cref="IAsyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="handler"/> is <c>null</c>.</exception>
@@ -325,9 +326,9 @@ namespace NATS.Client
         /// <c>null</c> or entirely whitespace.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
-        public IAsyncSubscription SubscribeAsync(string subject, string queue, EventHandler<EncodedMessageEventArgs> handler)
+        public IAsyncSubscription SubscribeAsync(string subject, string queue, EventHandler<EncodedMessageEventArgs> handler, Channel<Msg> channel = null)
         {
-            return subscribeAsync(subject, queue, handler);
+            return subscribeAsync(subject, queue, handler, channel);
         }
 
         // lower level method to serialize an object, send a request,

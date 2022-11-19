@@ -15,6 +15,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Net;
@@ -32,11 +33,14 @@ using NATS.Client.ObjectStore;
 using static NATS.Client.Defaults;
 using Timeout = System.Threading.Timeout;
 
+// ReSharper disable InconsistentNaming
+
 namespace NATS.Client
 {
     /// <summary>
     /// State of the <see cref="IConnection"/>.
     /// </summary>
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
     public enum ConnState
     {
         /// <summary>
@@ -161,20 +165,20 @@ namespace NATS.Client
             = new Dictionary<string, InFlightRequest>(StringComparer.OrdinalIgnoreCase);
 
         // Prepare protocol messages for efficiency
-        private byte[] PING_P_BYTES = null;
-        private int    PING_P_BYTES_LEN;
+        private readonly byte[] PING_P_BYTES = null;
+        private readonly int    PING_P_BYTES_LEN;
 
-        private byte[] PONG_P_BYTES = null;
-        private int    PONG_P_BYTES_LEN;
+        private readonly byte[] PONG_P_BYTES = null;
+        private readonly int    PONG_P_BYTES_LEN;
 
-        private byte[] PUB_P_BYTES = null;
-        private int    PUB_P_BYTES_LEN = 0;
+        private readonly byte[] PUB_P_BYTES = null;
+        private readonly int    PUB_P_BYTES_LEN = 0;
 
-        private byte[] HPUB_P_BYTES = null;
-        private int    HPUB_P_BYTES_LEN = 0;
+        private readonly byte[] HPUB_P_BYTES = null;
+        private readonly int    HPUB_P_BYTES_LEN = 0;
 
-        private byte[] CRLF_BYTES = null;
-        private int    CRLF_BYTES_LEN = 0;
+        private readonly byte[] CRLF_BYTES = null;
+        private readonly int    CRLF_BYTES_LEN = 0;
 
         byte[] pubProtoBuf = null;
 
@@ -2802,7 +2806,7 @@ namespace NATS.Client
                     }
                     else
                     {
-                        // if we get here, we have multiple outsanding jetstream
+                        // if we get here, we have multiple outstanding jetstream
                         // requests.  We can't tell which is which we'll punt.
                         return;
                     }
@@ -2848,8 +2852,7 @@ namespace NATS.Client
                     return request;
 
                 if (globalRequestSubscription == null)
-                    globalRequestSubscription = subscribeAsync(string.Concat(globalRequestInbox, ".*"), null,
-                        RequestResponseHandler);
+                    globalRequestSubscription = subscribeAsync(string.Concat(globalRequestInbox, ".*"), null, null, RequestResponseHandler);
             }
 
             return request;
@@ -3691,10 +3694,12 @@ namespace NATS.Client
         }
 
         internal delegate SyncSubscription CreateSyncSubscriptionDelegate(Connection conn, string subject, string queue);
-        internal delegate AsyncSubscription CreateAsyncSubscriptionDelegate(Connection conn, string subject, string queue);
+        internal delegate AsyncSubscription CreateAsyncSubscriptionDelegate(Connection conn, string subject, string queue, Channel<Msg> channel);
 
         internal AsyncSubscription subscribeAsync(string subject, string queue,
-            EventHandler<MsgHandlerEventArgs> handler, CreateAsyncSubscriptionDelegate createAsyncSubscriptionDelegate = null)
+            Channel<Msg> channel,
+            EventHandler<MsgHandlerEventArgs> handler,
+            CreateAsyncSubscriptionDelegate createAsyncSubscriptionDelegate = null)
         {
             if (!Subscription.IsValidSubject(subject))
             {
@@ -3717,8 +3722,8 @@ namespace NATS.Client
                 enableSubChannelPooling();
 
                 s = createAsyncSubscriptionDelegate == null 
-                    ? new AsyncSubscription(this, subject, queue)
-                    : createAsyncSubscriptionDelegate(this, subject, queue);
+                    ? new AsyncSubscription(this, subject, queue, channel)
+                    : createAsyncSubscriptionDelegate(this, subject, queue, channel);
 
                 AddSubscription(s);
 
@@ -3799,15 +3804,16 @@ namespace NATS.Client
         /// </remarks>
         /// <param name="subject">The subject on which to listen for messages. 
         /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).</param>
+        /// <param name="channel">Whether to force a channel</param>
         /// <returns>An <see cref="IAsyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is
         /// <c>null</c> or entirely whitespace.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
-        public IAsyncSubscription SubscribeAsync(string subject)
+        public IAsyncSubscription SubscribeAsync(string subject, Channel<Msg> channel = null)
         {
-            return subscribeAsync(subject, null, null);
+            return subscribeAsync(subject, null, channel, null, null);
         }
 
         /// <summary>
@@ -3821,15 +3827,16 @@ namespace NATS.Client
         /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).</param>
         /// <param name="handler">The <see cref="EventHandler{TEventArgs}"/> invoked when messages are received 
         /// on the returned <see cref="IAsyncSubscription"/>.</param>
+        /// <param name="channel">Whether to force a channel</param>
         /// <returns>An <see cref="IAsyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is 
         /// <c>null</c> or entirely whitespace.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
-        public IAsyncSubscription SubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler)
+        public IAsyncSubscription SubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler, Channel<Msg> channel = null)
         {
-            return subscribeAsync(subject, null, handler);
+            return subscribeAsync(subject, null, channel, handler, null);
         }
 
         /// <summary>
@@ -3858,15 +3865,16 @@ namespace NATS.Client
         /// <param name="subject">The subject on which to listen for messages.
         /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).</param>
         /// <param name="queue">The name of the queue group in which to participate.</param>
+        /// <param name="channel">Whether to force a channel</param>
         /// <returns>An <see cref="IAsyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is 
         /// <c>null</c> or entirely whitespace.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
-        public IAsyncSubscription SubscribeAsync(string subject, string queue)
+        public IAsyncSubscription SubscribeAsync(string subject, string queue, Channel<Msg> channel = null)
         {
-            return subscribeAsync(subject, queue, null);
+            return subscribeAsync(subject, queue, channel, null);
         }
 
         /// <summary>
@@ -3881,15 +3889,16 @@ namespace NATS.Client
         /// <param name="queue">The name of the queue group in which to participate.</param>
         /// <param name="handler">The <see cref="EventHandler{TEventArgs}"/> invoked when messages are received 
         /// on the returned <see cref="IAsyncSubscription"/>.</param>
+        /// <param name="channel">Whether to force a channel</param>
         /// <returns>An <see cref="IAsyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is 
         /// <c>null</c> or entirely whitespace.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
-        public IAsyncSubscription SubscribeAsync(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler)
+        public IAsyncSubscription SubscribeAsync(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler, Channel<Msg> channel = null)
         {
-            return subscribeAsync(subject, queue, handler);
+            return subscribeAsync(subject, queue, channel, handler);
         }
 
         // unsubscribe performs the low level unsubscribe to the server.

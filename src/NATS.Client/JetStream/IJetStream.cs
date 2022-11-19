@@ -168,11 +168,12 @@ namespace NATS.Client.JetStream
         /// <param name="handler">The <see cref="EventHandler{MsgHandlerEventArgs}"/> invoked when messages are received 
         /// on the returned <see cref="IAsyncSubscription"/>.</param>
         /// <param name="autoAck">Whether or not to auto ack the message</param>
+        /// <param name="channel">Whether to force a channel</param>
         /// <returns>An <see cref="IJetStreamPushAsyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
         /// <seealso cref="ISubscription.Subject"/>
         /// <returns>A JetStream push subscription</returns>
-        IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler, bool autoAck);
+        IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler, bool autoAck, Channel<Msg> channel = null);
 
         /// <summary>
         /// Creates a push subscriber on the given <paramref name="subject"/>, and begins delivering
@@ -190,10 +191,11 @@ namespace NATS.Client.JetStream
         /// on the returned <see cref="IJetStreamPushAsyncSubscription"/>.</param>
         /// <param name="autoAck">Whether or not to auto ack the message</param>
         /// <param name="options">Pull Subscribe options for this subscription.</param>
+        /// <param name="channel">Whether to force a channel</param>
         /// <returns>An <see cref="IJetStreamPushAsyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
         /// <seealso cref="ISubscription.Subject"/>
-        IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler, bool autoAck, PushSubscribeOptions options);
+        IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler, bool autoAck, PushSubscribeOptions options, Channel<Msg> channel = null);
 
         /// <summary>
         /// Creates an subscriber on the given <paramref name="subject"/>, and begins delivering
@@ -211,12 +213,13 @@ namespace NATS.Client.JetStream
         /// <param name="handler">The <see cref="EventHandler{MsgHandlerEventArgs}"/> invoked when messages are received 
         /// on the returned <see cref="IAsyncSubscription"/>.</param>
         /// <param name="autoAck">Whether or not to auto ack the message</param>
+        /// <param name="channel">Whether to force a channel</param>
         /// <returns>An <see cref="IAsyncSubscription"/> to use to read any messages received
         /// from the NATS Server on the given <paramref name="subject"/>.</returns>
         /// <seealso cref="ISubscription.Subject"/>
         /// <seealso cref="ISubscription.Queue"/>
         /// <returns>An IJetStreamPushAsyncSubscription</returns>
-        IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler, bool autoAck);
+        IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler, bool autoAck, Channel<Msg> channel = null);
 
         /// <summary>
         /// Creates an subscriber on the given <paramref name="subject"/>, and begins delivering
@@ -239,8 +242,9 @@ namespace NATS.Client.JetStream
         /// <seealso cref="ISubscription.Queue"/>
         /// <param name="autoAck">Whether or not to auto ack the message</param>
         /// <param name="options">JetStream push subscription options.</param>
+        /// <param name="channel">Whether to force a channel</param>
         /// <returns>An IJetStreamPushAsyncSubscription</returns>
-        IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler, bool autoAck, PushSubscribeOptions options);
+        IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler, bool autoAck, PushSubscribeOptions options, Channel<Msg> channel = null);
 
         /// <summary>
         /// Creates a synchronous JetStream subscriber on the given <paramref name="subject"/>.

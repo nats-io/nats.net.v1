@@ -22,8 +22,10 @@ namespace NATS.Client.JetStream
         public string DeliverSubject { get; }
 
         internal JetStreamPushAsyncSubscription(Connection conn, string subject, string queue,
-            JetStream js, string stream, string consumer, string deliver, MessageManager[] messageManagers)
-            : base(conn, subject, queue)
+            JetStream js, string stream, string consumer, string deliver, 
+            MessageManager[] messageManagers,
+            Channel<Msg> userChannel)
+            : base(conn, subject, queue, userChannel)
         {
             Context = js;
             Stream = stream;

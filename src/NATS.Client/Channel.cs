@@ -90,7 +90,7 @@ namespace NATS.Client
     // so the code more closely reads with GO.  We implement our own channels 
     // to be lightweight and performant - other concurrent classes do the
     // task but are more heavyweight that what we want.
-    internal sealed class Channel<T>
+    public sealed class Channel<T>
     {
         readonly Queue<T> q;
         readonly Object qLock = new Object();
