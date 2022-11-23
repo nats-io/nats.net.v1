@@ -127,12 +127,12 @@ namespace NATS.Client
         /// <summary>
         /// Default subscriber pending messages limit.
         /// </summary>
-        public const long SubPendingMsgsLimit = 65536;
+        public const long SubPendingMsgsLimit = 512 * 1024;
 
         /// <summary>
         /// Default subscriber pending bytes limit.
         /// </summary>
-        public const long SubPendingBytesLimit = 65536 * 1024;
+        public const long SubPendingBytesLimit = 64 * 1024 * 1024;
 
         /// <summary>
         /// Default Drain Timeout in milliseconds.

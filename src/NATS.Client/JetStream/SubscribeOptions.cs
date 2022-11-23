@@ -31,7 +31,9 @@ namespace NATS.Client.JetStream
         public bool Ordered { get; }
         internal int MessageAlarmTime { get; }
         public ConsumerConfiguration ConsumerConfiguration { get; }
-
+        public long PendingMessageLimit { get; }
+        public long PendingByteLimit { get; }
+        
         /// <summary>
         /// Gets the durable name
         /// </summary>
@@ -47,7 +49,9 @@ namespace NATS.Client.JetStream
         /// </summary>
         public string DeliverGroup => ConsumerConfiguration.DeliverGroup;
 
-        protected SubscribeOptions(ISubscribeOptionsBuilder builder, bool pull, bool ordered, string deliverSubject, string deliverGroup)
+        protected SubscribeOptions(ISubscribeOptionsBuilder builder, bool pull, bool ordered, 
+            string deliverSubject, string deliverGroup,
+            long pendingMessageLimit = Defaults.SubPendingMsgsLimit, long pendingByteLimit = Defaults.SubPendingBytesLimit)
         {
             Pull = pull;
             Bind = builder.Bind;
@@ -72,6 +76,9 @@ namespace NATS.Client.JetStream
 
             deliverSubject = ValidateMustMatchIfBothSupplied(deliverSubject, builder.Cc?.DeliverSubject, JsSoDeliverSubjectMismatch);
 
+            PendingMessageLimit = pendingMessageLimit;
+            PendingByteLimit = pendingByteLimit;
+            
             if (Ordered)
             {
                 ValidateNotSupplied(deliverGroup, JsSoOrderedNotAllowedWithDeliverGroup);

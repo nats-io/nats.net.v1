@@ -52,12 +52,12 @@ namespace NATS.Client
         internal bool ownsChannel = true;
 
         // Pending stats, async subscriptions, high-speed etc.
-        internal long pMsgs = 0;
-	    internal long pBytes = 0;
-	    internal long pMsgsMax = 0;
-	    internal long pBytesMax = 0;
-        internal long pMsgsLimit = Defaults.SubPendingMsgsLimit;
-	    internal long pBytesLimit = Defaults.SubPendingBytesLimit;
+        internal long pendingMessages = 0;
+	    internal long pendingBytes = 0;
+	    internal long pendingMessagesMax = 0;
+	    internal long pendingBytesMax = 0;
+        internal long pendingMessagesLimit = Defaults.SubPendingMsgsLimit;
+	    internal long pendingBytesLimit = Defaults.SubPendingBytesLimit;
         internal long dropped = 0;
 
         // Subject that represents this subscription. This can be different
@@ -169,8 +169,8 @@ namespace NATS.Client
         {
             dropped++;
             conn.processSlowConsumer(this);
-            pMsgs--;
-            pBytes -= msg.Data.Length;
+            pendingMessages--;
+            pendingBytes -= msg.Data.Length;
         }
 
         /// <summary>
@@ -184,8 +184,8 @@ namespace NATS.Client
         protected long tallyDeliveredMessage(Msg msg)
         {
             delivered++;
-            pBytes -= msg.Data.Length;
-            pMsgs--;
+            pendingBytes -= msg.Data.Length;
+            pendingMessages--;
 
             return delivered;
         }
@@ -193,19 +193,19 @@ namespace NATS.Client
         // returns false if the message could not be added because
         // the channel is full, true if the message was added
         // to the channel.
-        internal bool addMessage(Msg msg, int maxCount)
+        internal bool addMessage(Msg msg)
         {
             // Subscription internal stats
-	        pMsgs++;
-	        if (pMsgs > pMsgsMax)
+	        pendingMessages++;
+	        if (pendingMessages > pendingMessagesMax)
             {
-		        pMsgsMax = pMsgs;
+		        pendingMessagesMax = pendingMessages;
             }
 	
-	        pBytes += msg.Data.Length;
-	        if (pBytes > pBytesMax)
+	        pendingBytes += msg.Data.Length;
+	        if (pendingBytes > pendingBytesMax)
             {
-		        pBytesMax = pBytes;
+		        pendingBytesMax = pendingBytes;
             }
 	
             // BeforeChannelAddCheck returns null if the message
@@ -215,27 +215,15 @@ namespace NATS.Client
             if (msg != null)
             {
                 // Check for a Slow Consumer
-                if ((pMsgsLimit > 0 && pMsgs > pMsgsLimit)
-                    || (pBytesLimit > 0 && pBytes > pBytesLimit))
+                if ((pendingMessagesLimit > 0 && pendingMessages > pendingMessagesLimit)
+                    || (pendingBytesLimit > 0 && pendingBytes > pendingBytesLimit))
                 {
                     // slow consumer
                     handleSlowConsumer(msg);
                     return false;
                 }
-
-                if (mch != null)
-                {
-                    if (mch.Count >= maxCount)
-                    {
-                        handleSlowConsumer(msg);
-                        return false;
-                    }
-                    else
-                    {
-                        sc = false;
-                        mch.add(msg);
-                    }
-                }
+                sc = false;
+                mch?.add(msg);
             }
 
             return true;
@@ -427,35 +415,34 @@ namespace NATS.Client
 
         /// <summary>
         /// Sets the limits for pending messages and bytes for this instance.
+        /// Any value less than or equal to zero means unlimited and will be stored as 0.
         /// </summary>
-        /// <remarks>Zero (<c>0</c>) is not allowed. Negative values indicate that the
-        /// given metric is not limited.</remarks>
         /// <param name="messageLimit">The maximum number of pending messages.</param>
         /// <param name="bytesLimit">The maximum number of pending bytes of payload.</param>
         public void SetPendingLimits(long messageLimit, long bytesLimit)
         {
-            if (messageLimit == 0)
-            {
-                throw new ArgumentOutOfRangeException("messageLimit", "The pending message limit must not be zero");
-            }
-            else if (bytesLimit == 0)
-            {
-                throw new ArgumentOutOfRangeException("bytesLimit", "The pending bytes limit must not be zero");
-            }
-
             lock (mu)
             {
                 checkState();
-
-                pMsgsLimit = messageLimit;
-                pBytesLimit = bytesLimit;
+                SetPendingMessageLimitInternal(messageLimit);
+                SetPendingByteLimitInternal(bytesLimit);
             }
+        }
+
+        private void SetPendingByteLimitInternal(long bytesLimit)
+        {
+            pendingBytesLimit = bytesLimit <= 0 ? 0 : bytesLimit;
+        }
+
+        private void SetPendingMessageLimitInternal(long messageLimit)
+        {
+            pendingMessagesLimit = messageLimit <= 0 ? 0 : Math.Max(messageLimit, conn.Opts.subChanLen);
         }
 
         /// <summary>
         /// Gets or sets the maximum allowed count of pending bytes.
         /// </summary>
-        /// <value>The limit must not be zero (<c>0</c>). Negative values indicate there is no
+        /// <value>Value less than or equal to zero indicate there is no
         /// limit on the number of pending bytes.</value>
         public long PendingByteLimit 
         { 
@@ -464,20 +451,15 @@ namespace NATS.Client
                 lock (mu)
                 {
                     checkState();
-                    return pBytesLimit;
+                    return pendingBytesLimit;
                 }
             }
             set
             {
-                if (value == 0)
-                {
-                    throw new ArgumentOutOfRangeException("value", "The pending bytes limit must not be zero");
-                }
-
                 lock (mu)
                 {
                     checkState();
-                    pBytesLimit = value;
+                    SetPendingByteLimitInternal(value);
                 }
             }
         }
@@ -485,7 +467,7 @@ namespace NATS.Client
         /// <summary>
         /// Gets or sets the maximum allowed count of pending messages.
         /// </summary>
-        /// <value>The limit must not be zero (<c>0</c>). Negative values indicate there is no
+        /// <value>Value less than or equal to zero indicate there is no
         /// limit on the number of pending messages.</value>
         public long PendingMessageLimit
         {
@@ -494,20 +476,15 @@ namespace NATS.Client
                 lock (mu)
                 {
                     checkState();
-                    return pMsgsLimit;
+                    return pendingMessagesLimit;
                 }
             }
             set
             {
-                if (value == 0)
-                {
-                    throw new ArgumentOutOfRangeException("value", "The pending message limit must not be zero");
-                }
-
                 lock (mu)
                 {
                     checkState();
-                    pMsgsLimit = value;
+                    SetPendingMessageLimitInternal(value);
                 }
             }
         }
@@ -524,8 +501,8 @@ namespace NATS.Client
             lock (mu)
             {
                 checkState();
-                pendingBytes    = pBytes;
-                pendingMessages = pMsgs;
+                pendingBytes    = this.pendingBytes;
+                pendingMessages = this.pendingMessages;
             }
         }
 
@@ -539,7 +516,7 @@ namespace NATS.Client
                 lock (mu)
                 {
                     checkState();
-                    return pBytes;
+                    return pendingBytes;
                 }
             }
         }
@@ -554,7 +531,7 @@ namespace NATS.Client
                 lock (mu)
                 {
                     checkState();
-                    return pMsgs;
+                    return pendingMessages;
                 }
             }
         }
@@ -571,8 +548,8 @@ namespace NATS.Client
             lock (mu)
             {
                 checkState();
-                maxPendingBytes    = pBytesMax;
-                maxPendingMessages = pMsgsMax;
+                maxPendingBytes    = pendingBytesMax;
+                maxPendingMessages = pendingMessagesMax;
             }
         }
 
@@ -586,7 +563,7 @@ namespace NATS.Client
                 lock (mu)
                 {
                     checkState();
-                    return pBytesMax;
+                    return pendingBytesMax;
                 }
             }
         }
@@ -601,7 +578,7 @@ namespace NATS.Client
                 lock (mu)
                 {
                     checkState();
-                    return pMsgsMax;
+                    return pendingMessagesMax;
                 }
             }
         }
@@ -613,7 +590,7 @@ namespace NATS.Client
         {
             lock (mu)
             {
-                pMsgsMax = pBytesMax = 0;
+                pendingMessagesMax = pendingBytesMax = 0;
             }
         }
 

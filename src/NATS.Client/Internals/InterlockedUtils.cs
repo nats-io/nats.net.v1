@@ -54,6 +54,11 @@ namespace NATS.Client.Internals
         {
             return Interlocked.Read(ref count);
         }
+
+        public override string ToString()
+        {
+            return Read().ToString();
+        }
     }
 
     public class InterlockedInt
@@ -94,6 +99,11 @@ namespace NATS.Client.Internals
         {
             return (int)_il.Read();
         }
+
+        public override string ToString()
+        {
+            return Read().ToString();
+        }
     }
 
     public class InterlockedBoolean
@@ -120,6 +130,11 @@ namespace NATS.Client.Internals
         public bool IsFalse()
         {
             return Interlocked.Read(ref _flag) == 0;
+        }
+
+        public override string ToString()
+        {
+            return IsTrue().ToString();
         }
     }
 }

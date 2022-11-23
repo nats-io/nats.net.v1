@@ -336,7 +336,9 @@ namespace NATS.Client.JetStream
                 if (syncMode) {
                     SyncSubscription CreateSubDelegate(Connection lConn, string lSubject, string lQueue)
                     {
-                        return new JetStreamPushSyncSubscription(lConn, lSubject, lQueue, this, stream, consumerName, inboxDeliver, manager);
+                        JetStreamPushSyncSubscription ssub = new JetStreamPushSyncSubscription(lConn, lSubject, lQueue, this, stream, consumerName, inboxDeliver, manager);
+                        ssub.SetPendingLimits(so.PendingMessageLimit, so.PendingByteLimit);
+                        return ssub;
                     }
                     sub = ((Connection)Conn).subscribeSync(inboxDeliver, queueName, CreateSubDelegate); 
                 }
@@ -365,7 +367,9 @@ namespace NATS.Client.JetStream
 
                     AsyncSubscription CreateAsyncSubDelegate(Connection lConn, string lSubject, string lQueue)
                     {
-                        return new JetStreamPushAsyncSubscription(lConn, lSubject, lQueue, this, stream, consumerName, inboxDeliver, manager);
+                        JetStreamPushAsyncSubscription asub = new JetStreamPushAsyncSubscription(lConn, lSubject, lQueue, this, stream, consumerName, inboxDeliver, manager);
+                        asub.SetPendingLimits(so.PendingMessageLimit, so.PendingByteLimit);
+                        return asub;
                     }
                
                     sub = ((Connection)Conn).subscribeAsync(inboxDeliver, queueName, handler, CreateAsyncSubDelegate);
