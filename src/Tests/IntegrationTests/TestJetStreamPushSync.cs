@@ -620,9 +620,9 @@ namespace IntegrationTests
 
                 syncSub = js.PushSubscribeSync(SUBJECT, psoSmallerSync);
                 subAsync = js.PushSubscribeAsync(SUBJECT, (o, a) => {}, false, psoSmallerSync);
-                Assert.Equal(Defaults.SubPendingMsgsLimit, syncSub.PendingMessageLimit);
+                Assert.Equal(smallerCustomMessageLimit, syncSub.PendingMessageLimit);
                 Assert.Equal(smallerCustomByteLimit, syncSub.PendingByteLimit);
-                Assert.Equal(Defaults.SubPendingMsgsLimit, subAsync.PendingMessageLimit);
+                Assert.Equal(smallerCustomMessageLimit, subAsync.PendingMessageLimit);
                 Assert.Equal(smallerCustomByteLimit, subAsync.PendingByteLimit);
 
                 syncSub = js.PushSubscribeSync(SUBJECT, psoLargerSync);

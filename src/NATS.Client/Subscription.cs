@@ -56,7 +56,7 @@ namespace NATS.Client
 	    internal long pendingBytes = 0;
 	    internal long pendingMessagesMax = 0;
 	    internal long pendingBytesMax = 0;
-        internal long pendingMessagesLimit = Defaults.SubPendingMsgsLimit;
+        internal long pendingMessagesLimit;
 	    internal long pendingBytesLimit = Defaults.SubPendingBytesLimit;
         internal long dropped = 0;
 
@@ -72,6 +72,8 @@ namespace NATS.Client
             this.subject = subject;
             this.queue = queue;
 
+            pendingMessagesLimit = conn.Opts.subChanLen;
+            
             sid = SidGenerator.Next();
             
             BeforeChannelAddCheck = msg => msg;
@@ -436,7 +438,7 @@ namespace NATS.Client
 
         private void SetPendingMessageLimitInternal(long messageLimit)
         {
-            pendingMessagesLimit = messageLimit <= 0 ? 0 : Math.Max(messageLimit, conn.Opts.subChanLen);
+            pendingMessagesLimit = messageLimit <= 0 ? 0 : messageLimit;
         }
 
         /// <summary>

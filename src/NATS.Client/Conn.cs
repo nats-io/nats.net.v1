@@ -3716,15 +3716,18 @@ namespace NATS.Client
 
                 enableSubChannelPooling();
 
+                Console.WriteLine("[1] " + createAsyncSubscriptionDelegate);
                 if (createAsyncSubscriptionDelegate == null)
                 {
                     createAsyncSubscriptionDelegate = (lConn, lSubject, lQueue) =>
                     {
                         AsyncSubscription asub = new AsyncSubscription(lConn, lSubject, lQueue);
                         asub.SetPendingLimits(opts.subChanLen, SubPendingBytesLimit);
+                        Console.WriteLine("[!] " + opts.subChanLen + " " + asub.PendingMessageLimit);
                         return asub;
                     };
                 }
+                Console.WriteLine("[2] " + createAsyncSubscriptionDelegate);
                 s = createAsyncSubscriptionDelegate(this, subject, queue);
 
                 AddSubscription(s);
