@@ -444,7 +444,7 @@ namespace NATS.Client
         /// <summary>
         /// Gets or sets the maximum allowed count of pending bytes.
         /// </summary>
-        /// <value>Value less than or equal to zero indicate there is no
+        /// <value>A value less than or equal to zero indicates there is no
         /// limit on the number of pending bytes.</value>
         public long PendingByteLimit 
         { 
