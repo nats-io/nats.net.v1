@@ -53,7 +53,6 @@ namespace NATS.Client.Internals
                 byte[] hash = hasher.GetHashAndReset();
                 digest = Convert.ToBase64String(hash).Replace('+', '-').Replace('/', '_');
                 entry = "SHA-256=" + digest;
-                Console.WriteLine(digest);
             }
         }
 
