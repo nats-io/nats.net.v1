@@ -51,7 +51,8 @@ namespace NATS.Client.JetStream
 
         protected SubscribeOptions(ISubscribeOptionsBuilder builder, bool pull, bool ordered, 
             string deliverSubject, string deliverGroup,
-            long pendingMessageLimit = Defaults.SubPendingMsgsLimit, long pendingByteLimit = Defaults.SubPendingBytesLimit)
+            long pendingMessageLimit = Defaults.SubPendingMsgsLimit, 
+            long pendingByteLimit = Defaults.SubPendingBytesLimit)
         {
             Pull = pull;
             Bind = builder.Bind;

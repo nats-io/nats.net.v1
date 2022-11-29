@@ -101,7 +101,7 @@ namespace NATS.Client.JetStream
             }
 
             /// <summary>
-            /// Set the maximum number of messages that non-dispatched push subscriptions can hold
+            /// Set the maximum number of messages that push subscriptions can hold
             /// in the internal (pending) message queue. Defaults to 512 * 1024  (Nats.SubPendingMsgsLimit)
             /// </summary>
             /// <param name="pendingMessageLimit">the number of messages</param>
@@ -113,7 +113,7 @@ namespace NATS.Client.JetStream
             }
             
             /// <summary>
-            /// Set the maximum number of bytes that non-dispatched push subscriptions can hold
+            /// Set the maximum number of bytes that push subscriptions can hold
             /// in the internal (pending) message queue. Defaults to 64 * 1024 * 1024  (Nats.SubPendingBytesLimit)
             /// </summary>
             /// <param name="pendingByteLimit">the number of bytes</param>
@@ -130,7 +130,8 @@ namespace NATS.Client.JetStream
             /// <returns>The PushSubscribeOptions object.</returns>
             public override PushSubscribeOptions Build()
             {
-                return new PushSubscribeOptions(this, _ordered, _deliverSubject, _deliverGroup, _pendingMessageLimit, _pendingByteLimit);
+                return new PushSubscribeOptions(this, _ordered, _deliverSubject, _deliverGroup,
+                    _pendingMessageLimit, _pendingByteLimit);
             }
         }
     }

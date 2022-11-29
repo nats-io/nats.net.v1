@@ -53,11 +53,11 @@ namespace NATS.Client
 
         // Pending stats, async subscriptions, high-speed etc.
         internal long pendingMessages = 0;
-	    internal long pendingBytes = 0;
-	    internal long pendingMessagesMax = 0;
-	    internal long pendingBytesMax = 0;
-        internal long pendingMessagesLimit;
-	    internal long pendingBytesLimit = Defaults.SubPendingBytesLimit;
+        internal long pendingBytes = 0;
+        internal long pendingMessagesMax = 0;
+        internal long pendingBytesMax = 0;
+        internal long pendingMessagesLimit; // getting this from the options
+        internal long pendingBytesLimit = Defaults.SubPendingBytesLimit;
         internal long dropped = 0;
 
         // Subject that represents this subscription. This can be different
@@ -417,7 +417,7 @@ namespace NATS.Client
 
         /// <summary>
         /// Sets the limits for pending messages and bytes for this instance.
-        /// Any value less than or equal to zero means unlimited and will be stored as 0.
+        /// Any value less than or equal to zero means unlimited and will be stored as -1.
         /// </summary>
         /// <param name="messageLimit">The maximum number of pending messages.</param>
         /// <param name="bytesLimit">The maximum number of pending bytes of payload.</param>
@@ -433,19 +433,18 @@ namespace NATS.Client
 
         private void SetPendingByteLimitInternal(long bytesLimit)
         {
-            pendingBytesLimit = bytesLimit <= 0 ? 0 : bytesLimit;
+            pendingBytesLimit = bytesLimit <= 0 ? -1 : bytesLimit;
         }
 
         private void SetPendingMessageLimitInternal(long messageLimit)
         {
-            pendingMessagesLimit = messageLimit <= 0 ? 0 : messageLimit;
+            pendingMessagesLimit = messageLimit <= 0 ? -1 : messageLimit;
         }
 
         /// <summary>
         /// Gets or sets the maximum allowed count of pending bytes.
         /// </summary>
-        /// <value>A value less than or equal to zero indicates there is no
-        /// limit on the number of pending bytes.</value>
+        /// <value>The pending byte limit if greater than 0 or -1 for unlimited.</value>
         public long PendingByteLimit 
         { 
             get
@@ -469,8 +468,7 @@ namespace NATS.Client
         /// <summary>
         /// Gets or sets the maximum allowed count of pending messages.
         /// </summary>
-        /// <value>Value less than or equal to zero indicate there is no
-        /// limit on the number of pending messages.</value>
+        /// <value>The pending message limit if greater than 0 or -1 for unlimited.</value>
         public long PendingMessageLimit
         {
             get
@@ -492,7 +490,7 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Returns the pending byte and message counts.
+        /// Returns the yet processed pending byte and message counts.
         /// </summary>
         /// <param name="pendingBytes">When this method returns, <paramref name="pendingBytes"/> will
         /// contain the count of bytes not yet processed on the <see cref="ISubscription"/>.</param>
