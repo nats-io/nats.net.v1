@@ -12,13 +12,15 @@
 // limitations under the License.
 
 using System;
-using NATS.Client;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Diagnostics;
+using NATS.Client;
+using UnitTests;
 using Xunit;
-using System.Collections.Generic;
+using Xunit.Abstractions;
 
 namespace IntegrationTests
 {
@@ -27,7 +29,13 @@ namespace IntegrationTests
     /// </summary>
     public class TestSubscriptions : TestSuite<SubscriptionsSuiteContext>
     {
-        public TestSubscriptions(SubscriptionsSuiteContext context) : base(context) { }
+        private readonly ITestOutputHelper output;
+
+        public TestSubscriptions(ITestOutputHelper output, SubscriptionsSuiteContext context) : base(context)
+        {
+            this.output = output;
+            Console.SetOut(new TestBase.ConsoleWriter(output));
+        }
 
         [Fact]
         public void TestServerAutoUnsub()
@@ -198,7 +206,6 @@ namespace IntegrationTests
             AutoResetEvent ev = new AutoResetEvent(false);
 
             Options opts = Context.GetTestOptions(Context.Server1.Port);
-            opts.SubChannelLength = 100;
 
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
@@ -206,8 +213,6 @@ namespace IntegrationTests
                 {
                     using (IAsyncSubscription s = c.SubscribeAsync("foo"))
                     {
-                        Object mu = new Object();
-
                         s.MessageHandler += (sender, args) =>
                         {
                             // block to back us up.
@@ -216,16 +221,16 @@ namespace IntegrationTests
 
                         s.Start();
 
-                        Assert.True(s.PendingByteLimit == Defaults.SubPendingBytesLimit);
-                        Assert.True(s.PendingMessageLimit == Defaults.SubPendingMsgsLimit);
+                        Assert.Equal(Defaults.SubPendingBytesLimit, s.PendingByteLimit);
+                        Assert.Equal(Defaults.SubPendingMsgsLimit, s.PendingMessageLimit);
 
                         long pml = 100;
                         long pbl = 1024 * 1024;
 
                         s.SetPendingLimits(pml, pbl);
 
-                        Assert.True(s.PendingByteLimit == pbl);
-                        Assert.True(s.PendingMessageLimit == pml);
+                        Assert.Equal(pbl, s.PendingByteLimit);
+                        Assert.Equal(pml, s.PendingMessageLimit);
 
                         for (int i = 0; i < (pml + 100); i++)
                         {

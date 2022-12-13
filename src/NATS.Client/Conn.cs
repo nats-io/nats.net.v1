@@ -2219,7 +2219,7 @@ namespace NATS.Client
                             ? new JetStreamMsg(this, msgArgs, s, msgBytes, length)
                             : new Msg(msgArgs, s, msgBytes, length);
 
-                        s.addMessage(msg, opts.subChanLen);
+                        s.addMessage(msg);
                     } // maxreached == false
 
                 } // lock s.mu
@@ -3716,9 +3716,16 @@ namespace NATS.Client
 
                 enableSubChannelPooling();
 
-                s = createAsyncSubscriptionDelegate == null 
-                    ? new AsyncSubscription(this, subject, queue)
-                    : createAsyncSubscriptionDelegate(this, subject, queue);
+                if (createAsyncSubscriptionDelegate == null)
+                {
+                    createAsyncSubscriptionDelegate = (lConn, lSubject, lQueue) =>
+                    {
+                        AsyncSubscription asub = new AsyncSubscription(lConn, lSubject, lQueue);
+                        asub.SetPendingLimits(opts.subChanLen, SubPendingBytesLimit);
+                        return asub;
+                    };
+                }
+                s = createAsyncSubscriptionDelegate(this, subject, queue);
 
                 AddSubscription(s);
 
@@ -3755,9 +3762,16 @@ namespace NATS.Client
                 if (IsDraining())
                     throw new NATSConnectionDrainingException();
 
-                s = createSyncSubscriptionDelegate == null 
-                    ? new SyncSubscription(this, subject, queue) 
-                    : createSyncSubscriptionDelegate(this, subject, queue);
+                if (createSyncSubscriptionDelegate == null)
+                {
+                    createSyncSubscriptionDelegate = (lConn, lSubject, lQueue) =>
+                    {
+                        SyncSubscription ssub = new SyncSubscription(this, subject, queue);
+                        ssub.SetPendingLimits(opts.subChanLen, SubPendingBytesLimit);
+                        return ssub;
+                    };
+                }
+                s = createSyncSubscriptionDelegate(this, subject, queue);
 
                 AddSubscription(s);
 
@@ -4355,7 +4369,7 @@ namespace NATS.Client
                 {
                     c = s.conn;
                     closed = s.closed;
-                    pMsgs = s.pMsgs;
+                    pMsgs = s.pendingMessages;
                 }
 
                 if (c == null || closed || pMsgs == 0)

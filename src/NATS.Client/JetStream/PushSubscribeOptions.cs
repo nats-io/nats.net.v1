@@ -16,8 +16,10 @@ namespace NATS.Client.JetStream
     public sealed class PushSubscribeOptions : SubscribeOptions
     {
         // Validation is done by base class
-        private PushSubscribeOptions(ISubscribeOptionsBuilder builder, bool ordered, string deliverSubject, string deliverGroup) 
-            : base(builder, false, ordered, deliverSubject, deliverGroup) {}
+        private PushSubscribeOptions(ISubscribeOptionsBuilder builder, bool ordered, 
+            string deliverSubject, string deliverGroup,
+            long pendingMessageLimit, long pendingByteLimit) 
+            : base(builder, false, ordered, deliverSubject, deliverGroup, pendingMessageLimit, pendingByteLimit) {}
 
         /// <summary>
         /// Create PushSubscribeOptions where you are binding to
@@ -57,6 +59,8 @@ namespace NATS.Client.JetStream
             private bool _ordered;
             private string _deliverSubject;
             private string _deliverGroup;
+            private long _pendingMessageLimit = Defaults.SubPendingMsgsLimit;
+            private long _pendingByteLimit = Defaults.SubPendingBytesLimit;
 
             protected override PushSubscribeOptionsBuilder GetThis()
             {
@@ -97,12 +101,37 @@ namespace NATS.Client.JetStream
             }
 
             /// <summary>
+            /// Set the maximum number of messages that push subscriptions can hold
+            /// in the internal (pending) message queue. Defaults to 512 * 1024  (Nats.SubPendingMsgsLimit)
+            /// </summary>
+            /// <param name="pendingMessageLimit">the number of messages</param>
+            /// <returns>The PushSubscribeOptionsBuilder</returns>
+            public PushSubscribeOptionsBuilder WithPendingMessageLimit(long pendingMessageLimit)
+            {
+                _pendingMessageLimit = pendingMessageLimit;
+                return this;
+            }
+            
+            /// <summary>
+            /// Set the maximum number of bytes that push subscriptions can hold
+            /// in the internal (pending) message queue. Defaults to 64 * 1024 * 1024  (Nats.SubPendingBytesLimit)
+            /// </summary>
+            /// <param name="pendingByteLimit">the number of bytes</param>
+            /// <returns>The PushSubscribeOptionsBuilder</returns>
+            public PushSubscribeOptionsBuilder WithPendingByteLimit(long pendingByteLimit)
+            {
+                _pendingByteLimit = pendingByteLimit;
+                return this;
+            }
+
+            /// <summary>
             /// Builds the PushSubscribeOptions
             /// </summary>
             /// <returns>The PushSubscribeOptions object.</returns>
             public override PushSubscribeOptions Build()
             {
-                return new PushSubscribeOptions(this, _ordered, _deliverSubject, _deliverGroup);
+                return new PushSubscribeOptions(this, _ordered, _deliverSubject, _deliverGroup,
+                    _pendingMessageLimit, _pendingByteLimit);
             }
         }
     }

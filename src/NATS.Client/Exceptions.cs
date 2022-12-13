@@ -244,6 +244,7 @@ namespace NATS.Client
         public static readonly ClientExDetail JsSubOrderedNotAllowOnQueues = new ClientExDetail(Sub, 90018, "Ordered consumer not allowed on queues.");
         public static readonly ClientExDetail JsSubPushCantHaveMaxBatch = new ClientExDetail(Sub, 90019, "Push subscriptions cannot supply max batch.");
         public static readonly ClientExDetail JsSubPushCantHaveMaxBytes = new ClientExDetail(Sub, 90020, "Push subscriptions cannot supply max bytes.");
+        /* Not used in this client. */ // public static readonly ClientExDetail JsSubPushAsyncCantSetPending = new ClientExDetail(Sub, 90021, "Pending limits must be set directly on the dispatcher.");
 
         public static readonly ClientExDetail JsSoDurableMismatch = new ClientExDetail(So, 90101, "Builder durable must match the consumer configuration durable if both are provided.");
         public static readonly ClientExDetail JsSoDeliverGroupMismatch = new ClientExDetail(So, 90102, "Builder deliver group must match the consumer configuration deliver group if both are provided.");

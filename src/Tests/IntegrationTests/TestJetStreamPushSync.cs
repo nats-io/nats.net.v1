@@ -571,5 +571,81 @@ namespace IntegrationTests
                 Assert.True(fcps.Read() > 0);
             });
         }
+
+        [Fact]
+        public void TestPendingLimits()
+        {
+            Context.RunInJsServer(c =>
+            {
+                // Create our JetStream context.
+                IJetStream js = c.CreateJetStreamContext();
+
+                // create the stream.
+                CreateDefaultTestStream(c);
+
+                long smallerCustomMessageLimit = Defaults.SubPendingMsgsLimit - 1;
+                long smallerCustomByteLimit = Defaults.SubPendingBytesLimit - 1;
+                long largerCustomMessageLimit = Defaults.SubPendingMsgsLimit + 1;
+                long largerCustomByteLimit = Defaults.SubPendingBytesLimit + 1;
+
+                PushSubscribeOptions psoDefaultSync = PushSubscribeOptions.Builder()
+                    .Build();
+
+                PushSubscribeOptions psoSmallerSync = PushSubscribeOptions.Builder()
+                    .WithPendingMessageLimit(smallerCustomMessageLimit)
+                    .WithPendingByteLimit(smallerCustomByteLimit)
+                    .Build();
+
+                PushSubscribeOptions psoLargerSync = PushSubscribeOptions.Builder()
+                    .WithPendingMessageLimit(largerCustomMessageLimit)
+                    .WithPendingByteLimit(largerCustomByteLimit)
+                    .Build();
+
+                PushSubscribeOptions psoCustomSyncUnlimited0 = PushSubscribeOptions.Builder()
+                    .WithPendingMessageLimit(0)
+                    .WithPendingByteLimit(0)
+                    .Build();
+
+                PushSubscribeOptions psoCustomSyncUnlimitedUnlimitedNegative = PushSubscribeOptions.Builder()
+                    .WithPendingMessageLimit(-1)
+                    .WithPendingByteLimit(-1)
+                    .Build();
+
+                IJetStreamSubscription syncSub = js.PushSubscribeSync(SUBJECT, psoDefaultSync);
+                IJetStreamPushAsyncSubscription subAsync = js.PushSubscribeAsync(SUBJECT, (o, a) => {}, false, psoDefaultSync);
+                Assert.Equal(Defaults.SubPendingMsgsLimit, syncSub.PendingMessageLimit);
+                Assert.Equal(Defaults.SubPendingBytesLimit, syncSub.PendingByteLimit);
+                Assert.Equal(Defaults.SubPendingMsgsLimit, subAsync.PendingMessageLimit);
+                Assert.Equal(Defaults.SubPendingBytesLimit, subAsync.PendingByteLimit);
+
+                syncSub = js.PushSubscribeSync(SUBJECT, psoSmallerSync);
+                subAsync = js.PushSubscribeAsync(SUBJECT, (o, a) => {}, false, psoSmallerSync);
+                Assert.Equal(smallerCustomMessageLimit, syncSub.PendingMessageLimit);
+                Assert.Equal(smallerCustomByteLimit, syncSub.PendingByteLimit);
+                Assert.Equal(smallerCustomMessageLimit, subAsync.PendingMessageLimit);
+                Assert.Equal(smallerCustomByteLimit, subAsync.PendingByteLimit);
+
+                syncSub = js.PushSubscribeSync(SUBJECT, psoLargerSync);
+                subAsync = js.PushSubscribeAsync(SUBJECT, (o, a) => {}, false, psoLargerSync);
+                Assert.Equal(largerCustomMessageLimit, syncSub.PendingMessageLimit);
+                Assert.Equal(largerCustomByteLimit, syncSub.PendingByteLimit);
+                Assert.Equal(largerCustomMessageLimit, subAsync.PendingMessageLimit);
+                Assert.Equal(largerCustomByteLimit, subAsync.PendingByteLimit);
+
+                syncSub = js.PushSubscribeSync(SUBJECT, psoCustomSyncUnlimited0);
+                subAsync = js.PushSubscribeAsync(SUBJECT, (o, a) => {}, false, psoCustomSyncUnlimited0);
+                Assert.Equal(-1, syncSub.PendingMessageLimit);
+                Assert.Equal(-1, syncSub.PendingByteLimit);
+                Assert.Equal(-1, subAsync.PendingMessageLimit);
+                Assert.Equal(-1, subAsync.PendingByteLimit);
+
+                syncSub = js.PushSubscribeSync(SUBJECT, psoCustomSyncUnlimitedUnlimitedNegative);
+                subAsync = js.PushSubscribeAsync(SUBJECT, (o, a) => {}, false, psoCustomSyncUnlimitedUnlimitedNegative);
+                Assert.Equal(-1, syncSub.PendingMessageLimit);
+                Assert.Equal(-1, syncSub.PendingByteLimit);
+                Assert.Equal(-1, subAsync.PendingMessageLimit);
+                Assert.Equal(-1, subAsync.PendingByteLimit);
+            });
+        }
     }
 }

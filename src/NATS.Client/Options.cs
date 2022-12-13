@@ -232,7 +232,7 @@ namespace NATS.Client
 
         internal int maxPingsOut = MaxPingOut;
 
-        internal int subChanLen = 65536;
+        internal int subChanLen = (int)SubPendingMsgsLimit;
         internal int subscriberDeliveryTaskCount = 0;
 
         // Must be greater than 0.
