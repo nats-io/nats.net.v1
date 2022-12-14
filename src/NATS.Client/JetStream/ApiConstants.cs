@@ -23,7 +23,7 @@ namespace NATS.Client.JetStream
         internal const string AllowDirect = "allow_direct";
         internal const string Api = "api";
         internal const string AuthRequired = "auth_required";
-        internal const string Backoff = "backoff";
+        internal const string AverageProcessingTime = "average_processing_time";        internal const string Backoff = "backoff";
         internal const string Batch = "batch";
         internal const string Bucket = "bucket";
         internal const string Bytes = "bytes";
@@ -73,14 +73,17 @@ namespace NATS.Client.JetStream
         internal const string Headers = "headers";
         internal const string HeadersOnly = "headers_only";
         internal const string Host = "host";
+        internal const string Id = "id";
         internal const string IdleHeartbeat = "idle_heartbeat";
         internal const string InactiveThreshold = "inactive_threshold";
+        internal const string Internal = "internal";
         internal const string Jetstream = "jetstream";
         internal const string Keep = "keep";
         internal const string Lag = "lag";
         internal const string LameDuckMode = "ldm";
         internal const string LastActive = "last_active";
         internal const string LastBySubject = "last_by_subj";
+        internal const string LastError = "last_error";
         internal const string LastSeq = "last_seq";
         internal const string LastTs = "last_ts";
         internal const string Leader = "leader";
@@ -122,9 +125,11 @@ namespace NATS.Client.JetStream
         internal const string Nuid = "nuid";
         internal const string NumAckPending = "num_ack_pending";
         internal const string NumDeleted = "num_deleted";
+        internal const string NumErrors = "num_errors";
         internal const string NumPending = "num_pending";
         internal const string NumRedelivered = "num_redelivered";
         internal const string NumReplicas = "num_replicas";
+        internal const string NumRequests = "num_requests";
         internal const string NumSubjects = "num_subjects";
         internal const string NumWaiting = "num_waiting";
         internal const string Offline = "offline";
@@ -142,8 +147,11 @@ namespace NATS.Client.JetStream
         internal const string ReplayPolicy = "replay_policy";
         internal const string Replica = "replica";
         internal const string Replicas = "replicas";
+        internal const string Request = "request";
+        internal const string Response = "response";
         internal const string Retention = "retention";
         internal const string SampleFreq = "sample_freq";
+        internal const string Schema = "schema";
         internal const string Sealed = "sealed";
         internal const string Seq = "seq";
         internal const string ServerId = "server_id";
@@ -169,6 +177,7 @@ namespace NATS.Client.JetStream
         internal const string Time = "time";
         internal const string Tls = "tls_required";
         internal const string Total = "total";
+        internal const string TotalProcessingTime = "total_processing_time";
         internal const string Type = "type";
         internal const string Version = "version";
     }
