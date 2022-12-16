@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 using NATS.Client.JetStream;
 
@@ -19,32 +20,43 @@ namespace NATS.Client.Service
     /// <summary>
     /// SERVICE IS AN EXPERIMENTAL API SUBJECT TO CHANGE
     /// </summary>
-    public class PingResponse : JsonSerializable
+    public class Info : JsonSerializable
     {
         public string ServiceId { get; }
         public string Name { get; }
+        public string Description { get; }
+        public string Version { get; }
+        public string Subject { get; }
 
-        internal PingResponse(string serviceId, string name)
+        internal Info(string serviceId, string name, string description, string version, string subject)
         {
             ServiceId = serviceId;
             Name = name;
+            Description = description;
+            Version = version;
+            Subject = subject;
         }
 
-        internal PingResponse(string json)
+        internal Info(string json) : this(JSON.Parse(json)) {}
+
+        internal Info(JSONNode node)
         {
-            JSONNode node = JSON.Parse(json);
             ServiceId = node[ApiConstants.Id];
             Name = node[ApiConstants.Name];
+            Description = node[ApiConstants.Description];
+            Version = node[ApiConstants.Version];
+            Subject = node[ApiConstants.Subject];
         }
 
         internal override JSONNode ToJsonNode()
         {
-            return new JSONObject();
-        }
-
-        public override string ToString()
-        {
-            return $"ServiceId: {ServiceId}, Name: {Name}";
+            JSONObject jso = new JSONObject();
+            JsonUtils.AddField(jso, ApiConstants.Id, ServiceId);
+            JsonUtils.AddField(jso, ApiConstants.Name, Name);
+            JsonUtils.AddField(jso, ApiConstants.Description, Description);
+            JsonUtils.AddField(jso, ApiConstants.Version, Version);
+            JsonUtils.AddField(jso, ApiConstants.Subject, Subject);
+            return jso;
         }
     }
 }

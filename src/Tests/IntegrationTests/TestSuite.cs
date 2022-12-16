@@ -70,7 +70,7 @@ namespace IntegrationTests
         public const int ConnectionIpV6Suite = 11519; //1pc
         public const int KvSuite = 11520; //3pc
 
-        public static InterlockedInt AutoPort = new InterlockedInt(11520);
+        public static InterlockedInt AutoPort = new InterlockedInt(11523);
     }
 
     public abstract class SuiteContext
@@ -416,6 +416,7 @@ namespace IntegrationTests
     public class JetStreamPullSuiteContext : OneServerSuiteContext {}
     public class ObjectStoreSuiteContext : OneServerSuiteContext {}
     public class MirrorSourceSuiteContext : OneServerSuiteContext {}
+    public class ServiceSuiteContext : OneServerSuiteContext {}
 
     public class KeyValueSuiteContext : SuiteContext
     {

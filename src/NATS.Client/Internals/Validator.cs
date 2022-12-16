@@ -17,6 +17,12 @@ namespace NATS.Client.Internals
             return s;
         }
         
+        internal static void Required(object o, string label) {
+            if (o == null) {
+                throw new ArgumentException($"{label} cannot be null or empty.");
+            }
+        }
+        
         internal static string ValidateSubject(string s, bool required)
         {
             return ValidatePrintable(s, "Subject", required);

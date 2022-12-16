@@ -11,39 +11,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using NATS.Client.Internals;
-using NATS.Client.Internals.SimpleJSON;
-using NATS.Client.JetStream;
+using System;
 
 namespace NATS.Client.Service
 {
     /// <summary>
     /// SERVICE IS AN EXPERIMENTAL API SUBJECT TO CHANGE
     /// </summary>
-    public class StatsRequest : JsonSerializable
+    public class ServiceException : Exception
     {
-        public bool IncludeInternal { get; }
-
-        public StatsRequest(bool includeInternal)
-        {
-            IncludeInternal = includeInternal;
+        public int Code { get; }
+        
+        public ServiceException(string message, int code = -1) : base(message) {
+            Code = code;
         }
 
-        internal StatsRequest(JSONNode node)
+        public static ServiceException GetInstance(Exception e)
         {
-            IncludeInternal = node[ApiConstants.Internal];
-        }
+            if (e is ServiceException se)
+            {
+                return se;
+            }
 
-        internal override JSONNode ToJsonNode()
-        {
-            JSONObject jso = new JSONObject();
-            JsonUtils.AddField(jso, ApiConstants.Internal, IncludeInternal);
-            return jso;
-        }
-
-        public override string ToString()
-        {
-            return $"IncludeInternal: {IncludeInternal}";
+            return new ServiceException(e.Message, 400);
         }
     }
 }

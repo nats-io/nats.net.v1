@@ -183,6 +183,14 @@ namespace NATS.Client.Internals
             }
         }
 
+        internal static void AddField(JSONObject o, string field, JsonSerializable value)
+        {
+            if (value != null)
+            {
+                o[field] = value.ToJsonNode();
+            }
+        }
+
         internal static void AddField(JSONObject o, string field, DateTime? value)
         {
             if (value != null)

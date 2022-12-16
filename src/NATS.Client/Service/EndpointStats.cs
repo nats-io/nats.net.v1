@@ -11,6 +11,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using System.Collections.Generic;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 using NATS.Client.JetStream;
@@ -20,7 +22,7 @@ namespace NATS.Client.Service
     /// <summary>
     /// SERVICE IS AN EXPERIMENTAL API SUBJECT TO CHANGE
     /// </summary>
-    public class EndpointStats  : JsonSerializable
+    public class EndpointStats  : JsonSerializable, IComparable<EndpointStats>
     {   
         public string Name { get; }
         public long NumRequests => numRequests.Read(); 
@@ -42,6 +44,33 @@ namespace NATS.Client.Service
             EndpointStatsData = null;  // still have no info for data
         }
 
+        internal EndpointStats(JSONNode node)
+        {
+            Name = node[ApiConstants.Name];
+            Reset();
+            EndpointStatsData = null;  // still have no info for data
+
+            numRequests.Set(JsonUtils.AsLongOrZero(node, ApiConstants.NumRequests));
+            numErrors.Set(JsonUtils.AsLongOrZero(node, ApiConstants.NumErrors));
+            LastError = node[ApiConstants.LastError];
+            totalProcessingTime.Set(JsonUtils.AsLongOrZero(node, ApiConstants.TotalProcessingTime));
+            averageProcessingTime.Set(JsonUtils.AsLongOrZero(node, ApiConstants.AverageProcessingTime));
+        }
+
+        internal static IList<EndpointStats> ToList(JSONNode listNode)
+        {
+            IList<EndpointStats> list =  new List<EndpointStats>();
+            if (listNode != null)
+            {
+                foreach (var esNode in listNode.Children)
+                {
+                    list.Add(new EndpointStats(esNode));
+                }
+            }
+
+            return list;
+        }
+        
         public void Reset()
         {
             numRequests = new InterlockedLong();
@@ -61,6 +90,26 @@ namespace NATS.Client.Service
             JsonUtils.AddField(jso, ApiConstants.TotalProcessingTime, totalProcessingTime.Read());
             JsonUtils.AddField(jso, ApiConstants.AverageProcessingTime, averageProcessingTime.Read());
             return jso;
+        }
+
+        public override string ToString()
+        {
+            return $"Name: {Name}, NumRequests: {NumRequests}, NumErrors: {NumErrors}, LastError: {LastError}, TotalProcessingTime: {TotalProcessingTime}, AverageProcessingTime: {AverageProcessingTime}, EndpointStatsData: {EndpointStatsData}";
+        }
+
+        public int CompareTo(EndpointStats other)
+        {
+            return Order(this).CompareTo(Order(other));
+        }
+
+        private static int Order(EndpointStats es) {
+            switch (es.Name) {
+                case ServiceUtil.Ping: return 1;
+                case ServiceUtil.Info: return 2;
+                case ServiceUtil.Schema: return 3;
+                case ServiceUtil.Stats: return 4;
+            }
+            return 0;
         }
     }
 }

@@ -49,10 +49,5 @@ namespace NATS.Client.Service
             JsonUtils.AddField(jso, ApiConstants.Response, Response);
             return jso;
         }
-
-        public override string ToString()
-        {
-            return $"Request: {Request}, Response: {Response}";
-        }
     }
 }

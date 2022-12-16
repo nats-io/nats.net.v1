@@ -20,31 +20,36 @@ namespace NATS.Client.Service
     /// <summary>
     /// SERVICE IS AN EXPERIMENTAL API SUBJECT TO CHANGE
     /// </summary>
-    public class InfoResponse : JsonSerializable
+    public class SchemaInfo : JsonSerializable
     {
         public string ServiceId { get; }
         public string Name { get; }
-        public string Description { get; }
         public string Version { get; }
-        public string Subject { get; }
+        public Schema Schema { get; }
 
-        internal InfoResponse(string serviceId, ServiceDescriptor descriptor)
+        internal SchemaInfo(string serviceId, string name, string version, string schemaRequest, string schemaResponse)
         {
             ServiceId = serviceId;
-            Name = descriptor.Name;
-            Description = descriptor.Description;
-            Version = descriptor.Version;
-            Subject = descriptor.Subject;
+            Name = name;
+            Version = version;
+            if (string.IsNullOrEmpty(schemaRequest) && string.IsNullOrEmpty(schemaResponse))
+            {
+                Schema = null;
+            }
+            else
+            {
+                Schema = new Schema(schemaRequest, schemaResponse);
+            }
         }
 
-        internal InfoResponse(string json)
+        internal SchemaInfo(string json) : this(JSON.Parse(json)) {}
+
+        internal SchemaInfo(JSONNode node)
         {
-            JSONNode node = JSON.Parse(json);
             ServiceId = node[ApiConstants.Id];
             Name = node[ApiConstants.Name];
-            Description = node[ApiConstants.Description];
             Version = node[ApiConstants.Version];
-            Subject = node[ApiConstants.Subject];
+            Schema = Schema.OptionalInstance(node[ApiConstants.Schema]);
         }
 
         internal override JSONNode ToJsonNode()
@@ -52,15 +57,9 @@ namespace NATS.Client.Service
             JSONObject jso = new JSONObject();
             JsonUtils.AddField(jso, ApiConstants.Id, ServiceId);
             JsonUtils.AddField(jso, ApiConstants.Name, Name);
-            JsonUtils.AddField(jso, ApiConstants.Description, Description);
             JsonUtils.AddField(jso, ApiConstants.Version, Version);
-            JsonUtils.AddField(jso, ApiConstants.Subject, Subject);
+            jso[ApiConstants.Schema] = Schema?.ToJsonNode();
             return jso;
-        }
-
-        public override string ToString()
-        {
-            return $"ServiceId: {ServiceId}, Name: {Name}, Description: {Description}, Version: {Version}, Subject: {Subject}";
         }
     }
 }

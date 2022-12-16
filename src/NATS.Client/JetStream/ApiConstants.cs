@@ -161,6 +161,7 @@ namespace NATS.Client.JetStream
         internal const string Sources = "sources";
         internal const string Src = "src";
         internal const string State = "state";
+        internal const string Stats = "stats";
         internal const string Storage = "storage";
         internal const string StorageMaxStreamBytes = "storage_max_stream_bytes";
         internal const string StreamName = "stream_name";

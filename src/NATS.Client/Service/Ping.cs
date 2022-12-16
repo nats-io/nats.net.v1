@@ -20,50 +20,31 @@ namespace NATS.Client.Service
     /// <summary>
     /// SERVICE IS AN EXPERIMENTAL API SUBJECT TO CHANGE
     /// </summary>
-    public class SchemaResponse : JsonSerializable
+    public class Ping : JsonSerializable
     {
         public string ServiceId { get; }
         public string Name { get; }
-        public string Version { get; }
-        public Schema Schema { get; }
 
-        internal SchemaResponse(string serviceId, ServiceDescriptor descriptor)
+        internal Ping(string serviceId, string name)
         {
             ServiceId = serviceId;
-            Name = descriptor.Name;
-            Version = descriptor.Version;
-            if (string.IsNullOrEmpty(descriptor.SchemaRequest) && string.IsNullOrEmpty(descriptor.SchemaResponse))
-            {
-                Schema = null;
-            }
-            else
-            {
-                Schema = new Schema(descriptor.SchemaRequest, descriptor.SchemaResponse);
-            }
+            Name = name;
         }
 
-        internal SchemaResponse(string json)
+        internal Ping(string json) : this(JSON.Parse(json)) {}
+
+        internal Ping(JSONNode node)
         {
-            JSONNode node = JSON.Parse(json);
             ServiceId = node[ApiConstants.Id];
             Name = node[ApiConstants.Name];
-            Version = node[ApiConstants.Version];
-            Schema = Schema.OptionalInstance(node[ApiConstants.Schema]);
         }
-
+        
         internal override JSONNode ToJsonNode()
         {
             JSONObject jso = new JSONObject();
             JsonUtils.AddField(jso, ApiConstants.Id, ServiceId);
             JsonUtils.AddField(jso, ApiConstants.Name, Name);
-            JsonUtils.AddField(jso, ApiConstants.Version, Version);
-            jso[ApiConstants.Schema] = Schema?.ToJsonNode();
             return jso;
-        }
-
-        public override string ToString()
-        {
-            return $"ServiceId: {ServiceId}, Name: {Name}, Version: {Version}, Schema: {Schema}";
         }
     }
 }
