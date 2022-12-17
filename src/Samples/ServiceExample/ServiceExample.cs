@@ -210,7 +210,6 @@ namespace NATSExamples
                 Console.WriteLine("  " + o);
             }
         }
-        
 
         private static readonly Random Random = new Random();
         private const string RandomChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz";
