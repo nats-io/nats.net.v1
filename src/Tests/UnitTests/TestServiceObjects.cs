@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 using NATS.Client.JetStream;
@@ -108,7 +109,7 @@ namespace UnitTests
         }
     }
     
-    class TestStatsData : JsonSerializable {
+    class TestStatsData : IStatsData {
         public string Id { get; }
         public string LastError { get; }
 
@@ -126,12 +127,12 @@ namespace UnitTests
             LastError = node[ApiConstants.LastError];
         }
 
-        internal override JSONNode ToJsonNode()
+        public string ToJson()
         {
             JSONObject jso = new JSONObject();
             JsonUtils.AddField(jso, ApiConstants.Id, Id);
             JsonUtils.AddField(jso, ApiConstants.LastError, LastError);
-            return jso;
+            return jso.ToString();
         }
     }
 

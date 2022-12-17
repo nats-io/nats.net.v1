@@ -26,30 +26,30 @@ using static UnitTests.TestBase;
 
 namespace IntegrationTestsInternal
 {
-    class TestStatsData : JsonSerializable
+    class TestStatsData : IStatsData
     {
         public readonly string Id;
-        public readonly string LastError;
+        public readonly string Text;
 
-        public TestStatsData(string id, string lastError)
+        public TestStatsData(string id, string text)
         {
             Id = id;
-            LastError = lastError;
+            Text = text;
         }
 
         public TestStatsData(string json)
         {
             JSONNode node = JSON.Parse(json);
             Id = node[ApiConstants.Id];
-            LastError = node[ApiConstants.LastError];
+            Text = node[ApiConstants.LastError];
         }
 
-        internal override JSONNode ToJsonNode()
+        public string ToJson()
         {
             JSONObject jso = new JSONObject();
             JsonUtils.AddField(jso, ApiConstants.Id, Id);
-            JsonUtils.AddField(jso, ApiConstants.LastError, LastError);
-            return jso;
+            JsonUtils.AddField(jso, "text", Text);
+            return jso.ToString();
         }
     }
     
@@ -76,7 +76,7 @@ namespace IntegrationTestsInternal
                     StatsDataDecoder sdd = json =>
                     {
                         TestStatsData esd = new TestStatsData(json);
-                        return string.IsNullOrEmpty(esd.LastError) ? null : esd;
+                        return string.IsNullOrEmpty(esd.Text) ? null : esd;
                     };
 
                     Service echoService1 = EchoServiceCreator(serviceNc1, "echoService1")
@@ -246,8 +246,8 @@ namespace IntegrationTestsInternal
             }
         }
 
-        private static ServiceCreator EchoServiceCreator(IConnection nc, EventHandler<MsgHandlerEventArgs> handler) {
-            return ServiceCreator.Instance()
+        private static ServiceBuilder EchoServiceCreator(IConnection nc, EventHandler<MsgHandlerEventArgs> handler) {
+            return new ServiceBuilder()
                 .WithConnection(nc)
                 .WithName(EchoService)
                 .WithSubject(EchoService)
@@ -258,7 +258,7 @@ namespace IntegrationTestsInternal
                 .WithServiceMessageHandler(handler);
         }
 
-        private static ServiceCreator EchoServiceCreator(IConnection nc, string id)
+        private static ServiceBuilder EchoServiceCreator(IConnection nc, string id)
         {
             return EchoServiceCreator(nc,
                 (sender, args) =>
@@ -266,8 +266,8 @@ namespace IntegrationTestsInternal
                         new MsgHeader { ["handlerId"] = id }));
         }
 
-        private static ServiceCreator SortServiceCreator(IConnection nc, string id) {
-            return ServiceCreator.Instance()
+        private static ServiceBuilder SortServiceCreator(IConnection nc, string id) {
+            return new ServiceBuilder()
                 .WithConnection(nc)
                 .WithName(SortService)
                 .WithSubject(SortService)
@@ -310,7 +310,7 @@ namespace IntegrationTestsInternal
         {
             Context.RunInServer(nc =>
             {
-                Service devexService = ServiceCreator.Instance()
+                Service devexService = new ServiceBuilder()
                     .WithConnection(nc)
                     .WithName("HandlerExceptionService")
                     .WithSubject("HandlerExceptionService")

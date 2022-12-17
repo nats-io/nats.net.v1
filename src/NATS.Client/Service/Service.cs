@@ -38,25 +38,25 @@ namespace NATS.Client.Service
         private readonly Object stopLock;
         private TaskCompletionSource<bool> doneTcs;
 
-        internal Service(ServiceCreator creator)
+        internal Service(ServiceBuilder builder)
         {
-            id = Nuid.NextGlobal();
-            conn = creator.Conn;
-            statsDataDecoder = creator.StatsDataDecoder;
-            drainTimeoutMillis = creator.DrainTimeoutMillis;
+            id = new Nuid().GetNext();
+            conn = builder.Conn;
+            statsDataDecoder = builder.StatsDataDecoder;
+            drainTimeoutMillis = builder.DrainTimeoutMillis;
 
-            Info = new Info(id, creator.Name, creator.Description, creator.Version, creator.Subject);
-            SchemaInfo = new SchemaInfo(id, creator.Name, creator.Version, creator.SchemaRequest, creator.SchemaResponse);
+            Info = new Info(id, builder.Name, builder.Description, builder.Version, builder.Subject);
+            SchemaInfo = new SchemaInfo(id, builder.Name, builder.Version, builder.SchemaRequest, builder.SchemaResponse);
 
             // do the service first in case the server feels like rejecting the subject
-            Stats stats = new Stats(id, creator.Name, creator.Version);
-            serviceContext = new ServiceContext(conn, Info.Subject, stats, creator.ServiceMessageHandler); 
+            Stats stats = new Stats(id, builder.Name, builder.Version);
+            serviceContext = new ServiceContext(conn, Info.Subject, stats, builder.ServiceMessageHandler); 
 
             discoveryContexts = new List<Context>();
             AddDiscoveryContexts(ServiceUtil.Ping, new Ping(id, Info.Name).Serialize());
             AddDiscoveryContexts(ServiceUtil.Info, Info.Serialize());
             AddDiscoveryContexts(ServiceUtil.Schema, SchemaInfo.Serialize());
-            AddStatsContexts(stats, creator.StatsDataSupplier);
+            AddStatsContexts(stats, builder.StatsDataSupplier);
 
             stopLock = new object();
         }
@@ -126,5 +126,10 @@ namespace NATS.Client.Service
         public string Id => Info.ServiceId;
 
         public Stats Stats => serviceContext.Stats.Copy(statsDataDecoder);
+  
+        public override string ToString()
+        {
+            return $"Service: {Info}";
+        }
     }
  }

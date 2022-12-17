@@ -17,9 +17,6 @@ using NATS.Client.JetStream;
 
 namespace NATS.Client.Service
 {
-    public delegate JsonSerializable StatsDataSupplier();
-    public delegate JsonSerializable StatsDataDecoder (string json);
-
     /// <summary>
     /// SERVICE IS AN EXPERIMENTAL API SUBJECT TO CHANGE
     /// </summary>
@@ -33,7 +30,7 @@ namespace NATS.Client.Service
         public string LastError { get; set; }
         public long TotalProcessingTime => totalProcessingTime.Read(); 
         public long AverageProcessingTime => averageProcessingTime.Read();
-        public JsonSerializable Data { get; set; }
+        public IStatsData Data { get; set; }
 
         private readonly InterlockedLong numRequests;
         private readonly InterlockedLong numErrors;
@@ -63,7 +60,7 @@ namespace NATS.Client.Service
             copy.averageProcessingTime.Set(averageProcessingTime.Read());
             if (Data != null && decoder != null)
             {
-                copy.Data = decoder.Invoke(Data.ToJsonNode().ToString());
+                copy.Data = decoder.Invoke(Data.ToJson());
             }
 
             return copy;
@@ -85,10 +82,14 @@ namespace NATS.Client.Service
 
             if (decoder != null)
             {
-                string dataJson = node[ApiConstants.Data].ToString(); // generically decode it
-                if (!string.IsNullOrEmpty(dataJson))
+                JSONNode dataNode = node[ApiConstants.Data];
+                if (dataNode != null)
                 {
-                    Data = decoder.Invoke(dataJson);
+                    string dataJson = dataNode.ToString(); // generically decode it
+                    if (!string.IsNullOrEmpty(dataJson))
+                    {
+                        Data = decoder.Invoke(dataJson);
+                    }
                 }
             }
         }
@@ -114,7 +115,11 @@ namespace NATS.Client.Service
             JsonUtils.AddField(jso, ApiConstants.LastError, LastError);
             JsonUtils.AddField(jso, ApiConstants.TotalProcessingTime, totalProcessingTime.Read());
             JsonUtils.AddField(jso, ApiConstants.AverageProcessingTime, averageProcessingTime.Read());
-            JsonUtils.AddField(jso, ApiConstants.Data, Data);
+            if (Data != null)
+            {
+                jso[ApiConstants.Data] = JSON.Parse(Data.ToJson());
+            }
+
             return jso;
         }
 

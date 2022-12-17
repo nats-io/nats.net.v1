@@ -19,7 +19,7 @@ namespace NATS.Client.Service
     /// <summary>
     /// SERVICE IS AN EXPERIMENTAL API SUBJECT TO CHANGE
     /// </summary>
-    public class ServiceCreator
+    public class ServiceBuilder
     {
         internal IConnection Conn;
         internal string Name;
@@ -33,57 +33,53 @@ namespace NATS.Client.Service
         internal StatsDataDecoder StatsDataDecoder;
         internal int DrainTimeoutMillis = ServiceUtil.DefaultDrainTimeoutMillis;
 
-        public static ServiceCreator Instance() {
-            return new ServiceCreator();
-        }
-
-        public ServiceCreator WithConnection(IConnection conn) {
+        public ServiceBuilder WithConnection(IConnection conn) {
             Conn = conn;
             return this;
         }
 
-        public ServiceCreator WithName(string name) {
+        public ServiceBuilder WithName(string name) {
             Name = name;
             return this;
         }
 
-        public ServiceCreator WithDescription(string description) {
+        public ServiceBuilder WithDescription(string description) {
             Description = description;
             return this;
         }
 
-        public ServiceCreator WithVersion(string version) {
+        public ServiceBuilder WithVersion(string version) {
             Version = version;
             return this;
         }
 
-        public ServiceCreator WithSubject(string subject) {
+        public ServiceBuilder WithSubject(string subject) {
             Subject = subject;
             return this;
         }
 
-        public ServiceCreator WithSchemaRequest(string schemaRequest) {
+        public ServiceBuilder WithSchemaRequest(string schemaRequest) {
             SchemaRequest = schemaRequest;
             return this;
         }
 
-        public ServiceCreator WithSchemaResponse(string schemaResponse) {
+        public ServiceBuilder WithSchemaResponse(string schemaResponse) {
             SchemaResponse = schemaResponse;
             return this;
         }
 
-        public ServiceCreator WithServiceMessageHandler(EventHandler<MsgHandlerEventArgs> userMessageHandler) {
+        public ServiceBuilder WithServiceMessageHandler(EventHandler<MsgHandlerEventArgs> userMessageHandler) {
             ServiceMessageHandler = userMessageHandler;
             return this;
         }
 
-        public ServiceCreator WithStatsDataHandlers(StatsDataSupplier statsDataSupplier, StatsDataDecoder statsDataDecoder) {
+        public ServiceBuilder WithStatsDataHandlers(StatsDataSupplier statsDataSupplier, StatsDataDecoder statsDataDecoder) {
             StatsDataSupplier = statsDataSupplier;
             StatsDataDecoder = statsDataDecoder;
             return this;
         }
 
-        public ServiceCreator WithDrainTimeoutMillis(int drainTimeoutMillis)
+        public ServiceBuilder WithDrainTimeoutMillis(int drainTimeoutMillis)
         {
             DrainTimeoutMillis = drainTimeoutMillis;
             return this;

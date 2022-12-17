@@ -97,6 +97,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntegrationTestsInternal", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TlsVariationsExample", "Samples\TlsVariationsExample\TlsVariationsExample.csproj", "{5EB47989-2656-4684-84A9-8935D7B99A8D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceExample", "Samples\ServiceExample\ServiceExample.csproj", "{7E2D701E-D823-42D2-9CC3-26E0914D22B5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -263,6 +265,10 @@ Global
 		{5EB47989-2656-4684-84A9-8935D7B99A8D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5EB47989-2656-4684-84A9-8935D7B99A8D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5EB47989-2656-4684-84A9-8935D7B99A8D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E2D701E-D823-42D2-9CC3-26E0914D22B5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E2D701E-D823-42D2-9CC3-26E0914D22B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E2D701E-D823-42D2-9CC3-26E0914D22B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E2D701E-D823-42D2-9CC3-26E0914D22B5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -307,6 +313,7 @@ Global
 		{69B1924A-F759-49AD-95B2-688CF026094C} = {C8504091-0607-4391-87D7-A46837EB04A5}
 		{316A3E54-365C-4BD1-B9AB-01DB7158C01A} = {C8504091-0607-4391-87D7-A46837EB04A5}
 		{5EB47989-2656-4684-84A9-8935D7B99A8D} = {776C2E80-958B-4C0D-BCC4-67D39DB4570B}
+		{7E2D701E-D823-42D2-9CC3-26E0914D22B5} = {776C2E80-958B-4C0D-BCC4-67D39DB4570B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0972F03C-E4DF-483A-B767-9216F4434F11}
