@@ -41,7 +41,7 @@ namespace IntegrationTestsInternal
         {
             JSONNode node = JSON.Parse(json);
             Id = node[ApiConstants.Id];
-            Text = node[ApiConstants.LastError];
+            Text = node["text"];
         }
 
         public string ToJson()
@@ -51,8 +51,13 @@ namespace IntegrationTestsInternal
             JsonUtils.AddField(jso, "text", Text);
             return jso.ToString();
         }
+
+        public override string ToString()
+        {
+            return ToJson();
+        }
     }
-    
+
     public class TestService : TestSuite<ServiceSuiteContext>
     {
         public TestService(ServiceSuiteContext context) : base(context) { }
@@ -186,17 +191,17 @@ namespace IntegrationTestsInternal
                     int responseSort = 0;
                     long requestsEcho = 0;
                     long requestsSort = 0;
-                    foreach (Stats stats1 in statsList) {
-                        Assert.Equal(stats1.Name, stats1.Name);
-                        if (stats1.Name.Equals(EchoService)) {
+                    foreach (Stats st in statsList) {
+                        Assert.Equal(st.Name, st.Name);
+                        if (st.Name.Equals(EchoService)) {
                             responseEcho++;
-                            requestsEcho += stats1.NumRequests;
-                            Assert.NotNull(stats1.Data);
-                            Assert.True(stats1.Data is TestStatsData);
+                            requestsEcho += st.NumRequests;
+                            Assert.NotNull(st.Data);
+                            Assert.True(st.Data is TestStatsData);
                         }
                         else {
                             responseSort++;
-                            requestsSort += stats1.NumRequests;
+                            requestsSort += st.NumRequests;
                         }
                     }
                     Assert.Equal(2, responseEcho);
@@ -205,24 +210,24 @@ namespace IntegrationTestsInternal
                     Assert.Equal(requestCount, requestsSort);
 
                     // stats one specific instance so I can also test reset
-                    Stats stats2 = discovery.StatsForNameAndId(EchoService, echoServiceId1);
-                    Assert.Equal(echoServiceId1, stats2.ServiceId);
-                    Assert.Equal(echoInfo.Version, stats2.Version);
+                    Stats stats = discovery.StatsForNameAndId(EchoService, echoServiceId1);
+                    Assert.Equal(echoServiceId1, stats.ServiceId);
+                    Assert.Equal(echoInfo.Version, stats.Version);
 
                     // reset stats
                     echoService1.Reset();
-                    stats2 = echoService1.Stats;
-                    Assert.Equal(0, stats2.NumRequests);
-                    Assert.Equal(0, stats2.NumErrors);
-                    Assert.Equal(0, stats2.TotalProcessingTime);
-                    Assert.Equal(0, stats2.AverageProcessingTime);
-                    Assert.Null(stats2.Data);
+                    stats = echoService1.Stats;
+                    Assert.Equal(0, stats.NumRequests);
+                    Assert.Equal(0, stats.NumErrors);
+                    Assert.Equal(0, stats.TotalProcessingTime);
+                    Assert.Equal(0, stats.AverageProcessingTime);
+                    Assert.Null(stats.Data);
 
-                    stats2 = discovery.StatsForNameAndId(EchoService, echoServiceId1);
-                    Assert.Equal(0, stats2.NumRequests);
-                    Assert.Equal(0, stats2.NumErrors);
-                    Assert.Equal(0, stats2.TotalProcessingTime);
-                    Assert.Equal(0, stats2.AverageProcessingTime);
+                    stats = discovery.StatsForNameAndId(EchoService, echoServiceId1);
+                    Assert.Equal(0, stats.NumRequests);
+                    Assert.Equal(0, stats.NumErrors);
+                    Assert.Equal(0, stats.TotalProcessingTime);
+                    Assert.Equal(0, stats.AverageProcessingTime);
                     
                     // shutdown
                     echoService1.Stop(); // drain = true, exception = null
