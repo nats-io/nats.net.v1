@@ -1,4 +1,4 @@
-﻿// Copyright 2021 The NATS Authors
+﻿// Copyright 2022 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -62,8 +62,10 @@ namespace IntegrationTestsInternal
     {
         public TestService(ServiceSuiteContext context) : base(context) { }
 
-        private const string EchoService = "EchoService";
-        private const string SortService = "SortService";
+        private const string EchoServiceName = "ECHO_SERVICE";
+        private const string SortServiceName = "SORT_SERVICE";
+        private const string EchoServiceSubject = "echo";
+        private const string SortServiceSubject = "sort";
 
         delegate string InfoVerifier(Info expectedInfo, object o);
         delegate string SchemaInfoVerifier(Info expectedInfo, SchemaInfo expectedSchemaInfo, object o);
@@ -110,8 +112,8 @@ namespace IntegrationTestsInternal
                     // service request execution
                     int requestCount = 10;
                     for (int x = 0; x < requestCount; x++) {
-                        VerifyServiceExecution(clientNc, EchoService);
-                        VerifyServiceExecution(clientNc, SortService);
+                        VerifyServiceExecution(clientNc, EchoServiceName, EchoServiceSubject);
+                        VerifyServiceExecution(clientNc, SortServiceName, SortServiceSubject);
                     }
 
                     Info echoInfo = echoService1.Info;
@@ -133,12 +135,12 @@ namespace IntegrationTestsInternal
                         }
                     }
                     VerifyPingDiscovery(null, discovery.Ping(), echoServiceId1, sortServiceId1, echoServiceId2, sortServiceId2);
-                    VerifyPingDiscovery(echoInfo, discovery.Ping(EchoService), echoServiceId1, echoServiceId2);
-                    VerifyPingDiscovery(sortInfo, discovery.Ping(SortService), sortServiceId1, sortServiceId2);
-                    VerifyPingDiscovery(echoInfo, new List<Ping>{discovery.PingForNameAndId(EchoService, echoServiceId1)}, echoServiceId1);
-                    VerifyPingDiscovery(sortInfo, new List<Ping>{discovery.PingForNameAndId(SortService, sortServiceId1)}, sortServiceId1);
-                    VerifyPingDiscovery(echoInfo, new List<Ping>{discovery.PingForNameAndId(EchoService, echoServiceId2)}, echoServiceId2);
-                    VerifyPingDiscovery(sortInfo, new List<Ping>{discovery.PingForNameAndId(SortService, sortServiceId2)}, sortServiceId2);
+                    VerifyPingDiscovery(echoInfo, discovery.Ping(EchoServiceName), echoServiceId1, echoServiceId2);
+                    VerifyPingDiscovery(sortInfo, discovery.Ping(SortServiceName), sortServiceId1, sortServiceId2);
+                    VerifyPingDiscovery(echoInfo, new List<Ping>{discovery.PingForNameAndId(EchoServiceName, echoServiceId1)}, echoServiceId1);
+                    VerifyPingDiscovery(sortInfo, new List<Ping>{discovery.PingForNameAndId(SortServiceName, sortServiceId1)}, sortServiceId1);
+                    VerifyPingDiscovery(echoInfo, new List<Ping>{discovery.PingForNameAndId(EchoServiceName, echoServiceId2)}, echoServiceId2);
+                    VerifyPingDiscovery(sortInfo, new List<Ping>{discovery.PingForNameAndId(SortServiceName, sortServiceId2)}, sortServiceId2);
 
                     // info discovery
                     void VerifyInfoDiscovery(Info expectedInfo, IList<Info> infos, params string[] expectedIds) {
@@ -154,12 +156,12 @@ namespace IntegrationTestsInternal
                         }
                     }
                     VerifyInfoDiscovery(null, discovery.Info(), echoServiceId1, sortServiceId1, echoServiceId2, sortServiceId2);
-                    VerifyInfoDiscovery(echoInfo, discovery.Info(EchoService), echoServiceId1, echoServiceId2);
-                    VerifyInfoDiscovery(sortInfo, discovery.Info(SortService), sortServiceId1, sortServiceId2);
-                    VerifyInfoDiscovery(echoInfo, new List<Info>{discovery.InfoForNameAndId(EchoService, echoServiceId1)}, echoServiceId1);
-                    VerifyInfoDiscovery(sortInfo, new List<Info>{discovery.InfoForNameAndId(SortService, sortServiceId1)}, sortServiceId1);
-                    VerifyInfoDiscovery(echoInfo, new List<Info>{discovery.InfoForNameAndId(EchoService, echoServiceId2)}, echoServiceId2);
-                    VerifyInfoDiscovery(sortInfo, new List<Info>{discovery.InfoForNameAndId(SortService, sortServiceId2)}, sortServiceId2);
+                    VerifyInfoDiscovery(echoInfo, discovery.Info(EchoServiceName), echoServiceId1, echoServiceId2);
+                    VerifyInfoDiscovery(sortInfo, discovery.Info(SortServiceName), sortServiceId1, sortServiceId2);
+                    VerifyInfoDiscovery(echoInfo, new List<Info>{discovery.InfoForNameAndId(EchoServiceName, echoServiceId1)}, echoServiceId1);
+                    VerifyInfoDiscovery(sortInfo, new List<Info>{discovery.InfoForNameAndId(SortServiceName, sortServiceId1)}, sortServiceId1);
+                    VerifyInfoDiscovery(echoInfo, new List<Info>{discovery.InfoForNameAndId(EchoServiceName, echoServiceId2)}, echoServiceId2);
+                    VerifyInfoDiscovery(sortInfo, new List<Info>{discovery.InfoForNameAndId(SortServiceName, sortServiceId2)}, sortServiceId2);
 
                     // schema discovery
                     void VerifySchemaDiscovery(SchemaInfo expectedSchemaInfo, IList<SchemaInfo> schemas, params string[] expectedIds) {
@@ -176,12 +178,12 @@ namespace IntegrationTestsInternal
                         }
                     }
                     VerifySchemaDiscovery(null, discovery.Schema(), echoServiceId1, sortServiceId1, echoServiceId2, sortServiceId2);
-                    VerifySchemaDiscovery(echoSchemaInfo, discovery.Schema(EchoService), echoServiceId1, echoServiceId2);
-                    VerifySchemaDiscovery(sortSchemaInfo, discovery.Schema(SortService), sortServiceId1, sortServiceId2);
-                    VerifySchemaDiscovery(echoSchemaInfo, new List<SchemaInfo>{discovery.SchemaForNameAndId(EchoService, echoServiceId1)}, echoServiceId1);
-                    VerifySchemaDiscovery(sortSchemaInfo, new List<SchemaInfo>{discovery.SchemaForNameAndId(SortService, sortServiceId1)}, sortServiceId1);
-                    VerifySchemaDiscovery(echoSchemaInfo, new List<SchemaInfo>{discovery.SchemaForNameAndId(EchoService, echoServiceId2)}, echoServiceId2);
-                    VerifySchemaDiscovery(sortSchemaInfo, new List<SchemaInfo>{discovery.SchemaForNameAndId(SortService, sortServiceId2)}, sortServiceId2);
+                    VerifySchemaDiscovery(echoSchemaInfo, discovery.Schema(EchoServiceName), echoServiceId1, echoServiceId2);
+                    VerifySchemaDiscovery(sortSchemaInfo, discovery.Schema(SortServiceName), sortServiceId1, sortServiceId2);
+                    VerifySchemaDiscovery(echoSchemaInfo, new List<SchemaInfo>{discovery.SchemaForNameAndId(EchoServiceName, echoServiceId1)}, echoServiceId1);
+                    VerifySchemaDiscovery(sortSchemaInfo, new List<SchemaInfo>{discovery.SchemaForNameAndId(SortServiceName, sortServiceId1)}, sortServiceId1);
+                    VerifySchemaDiscovery(echoSchemaInfo, new List<SchemaInfo>{discovery.SchemaForNameAndId(EchoServiceName, echoServiceId2)}, echoServiceId2);
+                    VerifySchemaDiscovery(sortSchemaInfo, new List<SchemaInfo>{discovery.SchemaForNameAndId(SortServiceName, sortServiceId2)}, sortServiceId2);
                     
                     // stats discovery
                     discovery = new Discovery(clientNc); // coverage for the simple constructor
@@ -192,8 +194,7 @@ namespace IntegrationTestsInternal
                     long requestsEcho = 0;
                     long requestsSort = 0;
                     foreach (Stats st in statsList) {
-                        Assert.Equal(st.Name, st.Name);
-                        if (st.Name.Equals(EchoService)) {
+                        if (st.Name.Equals(EchoServiceName)) {
                             responseEcho++;
                             requestsEcho += st.NumRequests;
                             Assert.NotNull(st.Data);
@@ -210,7 +211,7 @@ namespace IntegrationTestsInternal
                     Assert.Equal(requestCount, requestsSort);
 
                     // stats one specific instance so I can also test reset
-                    Stats stats = discovery.StatsForNameAndId(EchoService, echoServiceId1);
+                    Stats stats = discovery.StatsForNameAndId(EchoServiceName, echoServiceId1);
                     Assert.Equal(echoServiceId1, stats.ServiceId);
                     Assert.Equal(echoInfo.Version, stats.Version);
 
@@ -219,14 +220,14 @@ namespace IntegrationTestsInternal
                     stats = echoService1.Stats;
                     Assert.Equal(0, stats.NumRequests);
                     Assert.Equal(0, stats.NumErrors);
-                    Assert.Equal(0, stats.TotalProcessingTime);
+                    Assert.Equal(0, stats.ProcessingTime);
                     Assert.Equal(0, stats.AverageProcessingTime);
                     Assert.Null(stats.Data);
 
-                    stats = discovery.StatsForNameAndId(EchoService, echoServiceId1);
+                    stats = discovery.StatsForNameAndId(EchoServiceName, echoServiceId1);
                     Assert.Equal(0, stats.NumRequests);
                     Assert.Equal(0, stats.NumErrors);
-                    Assert.Equal(0, stats.TotalProcessingTime);
+                    Assert.Equal(0, stats.ProcessingTime);
                     Assert.Equal(0, stats.AverageProcessingTime);
                     
                     // shutdown
@@ -254,8 +255,8 @@ namespace IntegrationTestsInternal
         private static ServiceBuilder EchoServiceCreator(IConnection nc, EventHandler<MsgHandlerEventArgs> handler) {
             return new ServiceBuilder()
                 .WithConnection(nc)
-                .WithName(EchoService)
-                .WithSubject(EchoService)
+                .WithName(EchoServiceName)
+                .WithSubject(EchoServiceSubject)
                 .WithDescription("An Echo Service")
                 .WithVersion("0.0.1")
                 .WithSchemaRequest("echo schema request string/url")
@@ -274,8 +275,8 @@ namespace IntegrationTestsInternal
         private static ServiceBuilder SortServiceCreator(IConnection nc, string id) {
             return new ServiceBuilder()
                 .WithConnection(nc)
-                .WithName(SortService)
-                .WithSubject(SortService)
+                .WithName(SortServiceName)
+                .WithSubject(SortServiceSubject)
                 .WithDescription("A Sort Service")
                 .WithVersion("0.0.2")
                 .WithSchemaRequest("sort schema request string/url")
@@ -284,12 +285,12 @@ namespace IntegrationTestsInternal
                     ServiceMessage.Reply(nc, args.Message, Sort(args.Message.Data), new MsgHeader { ["handlerId"] = id }));
         }
         
-        private static void VerifyServiceExecution(IConnection nc, String serviceName)
+        private static void VerifyServiceExecution(IConnection nc, String serviceName, String serviceSubject)
         {
             String request = DateTime.Now.ToLongDateString();
-            Msg m = nc.Request(serviceName, Encoding.UTF8.GetBytes(request));
+            Msg m = nc.Request(serviceSubject, Encoding.UTF8.GetBytes(request));
             String response = Encoding.UTF8.GetString(m.Data);
-            String expected = serviceName.Equals(EchoService) ? Echo(request) : Sort(request);
+            String expected = serviceName.Equals(EchoServiceName) ? Echo(request) : Sort(request);
             Assert.Equal(expected, response);
         }
 
@@ -317,7 +318,7 @@ namespace IntegrationTestsInternal
             {
                 Service devexService = new ServiceBuilder()
                     .WithConnection(nc)
-                    .WithName("HandlerExceptionService")
+                    .WithName("HANDLER_EXCEPTION_SERVICE")
                     .WithSubject("HandlerExceptionService")
                     .WithVersion("0.0.1")
                     .WithServiceMessageHandler((s, a) => throw new Exception("handler-problem"))

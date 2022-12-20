@@ -53,7 +53,7 @@ namespace NATS.Client.Service
             numRequests.Set(JsonUtils.AsLongOrZero(node, ApiConstants.NumRequests));
             numErrors.Set(JsonUtils.AsLongOrZero(node, ApiConstants.NumErrors));
             LastError = node[ApiConstants.LastError];
-            totalProcessingTime.Set(JsonUtils.AsLongOrZero(node, ApiConstants.TotalProcessingTime));
+            totalProcessingTime.Set(JsonUtils.AsLongOrZero(node, ApiConstants.ProcessingTime));
             averageProcessingTime.Set(JsonUtils.AsLongOrZero(node, ApiConstants.AverageProcessingTime));
         }
 
@@ -87,7 +87,7 @@ namespace NATS.Client.Service
             JsonUtils.AddField(jso, ApiConstants.NumRequests, numRequests.Read());
             JsonUtils.AddField(jso, ApiConstants.NumErrors, numErrors.Read());
             JsonUtils.AddField(jso, ApiConstants.LastError, LastError);
-            JsonUtils.AddField(jso, ApiConstants.TotalProcessingTime, totalProcessingTime.Read());
+            JsonUtils.AddField(jso, ApiConstants.ProcessingTime, totalProcessingTime.Read());
             JsonUtils.AddField(jso, ApiConstants.AverageProcessingTime, averageProcessingTime.Read());
             return jso;
         }

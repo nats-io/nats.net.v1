@@ -26,19 +26,19 @@ namespace NATS.Client.Service
         public const int DefaultDiscoveryMaxTimeMillis = 5000;
         public const int DefaultDiscoveryMaxResults = 10;
 
-        internal static string ToDiscoverySubject(string name, string serviceName, string serviceId)
+        internal static string ToDiscoverySubject(string discoverySubject, string serviceName, string serviceId)
         {
             if (string.IsNullOrEmpty(serviceId))
             {
                 if (string.IsNullOrEmpty(serviceName))
                 {
-                    return ServiceUtil.DefaultServicePrefix + name;
+                    return ServiceUtil.DefaultServicePrefix + discoverySubject;
                 }
 
-                return ServiceUtil.DefaultServicePrefix + name + "." + serviceName;
+                return ServiceUtil.DefaultServicePrefix + discoverySubject + "." + serviceName;
             }
 
-            return ServiceUtil.DefaultServicePrefix + name + "." + serviceName + "." + serviceId;
+            return ServiceUtil.DefaultServicePrefix + discoverySubject + "." + serviceName + "." + serviceId;
         }
     }
 }

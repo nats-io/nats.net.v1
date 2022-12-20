@@ -138,6 +138,7 @@ namespace NATS.Client.JetStream
         internal const string OptStartSeq = "opt_start_seq";
         internal const string OptStartTime = "opt_start_time";
         internal const string Placement = "placement";
+        internal const string ProcessingTime = "processing_time";
         internal const string Republish = "republish";
         internal const string Port = "port";
         internal const string Proto = "proto";
@@ -160,6 +161,7 @@ namespace NATS.Client.JetStream
         internal const string Source = "source";
         internal const string Sources = "sources";
         internal const string Src = "src";
+        internal const string Started = "started";
         internal const string State = "state";
         internal const string Stats = "stats";
         internal const string Storage = "storage";
@@ -178,7 +180,6 @@ namespace NATS.Client.JetStream
         internal const string Time = "time";
         internal const string Tls = "tls_required";
         internal const string Total = "total";
-        internal const string TotalProcessingTime = "total_processing_time";
         internal const string Type = "type";
         internal const string Version = "version";
     }

@@ -45,7 +45,7 @@ namespace NATS.Client.Service
             statsDataDecoder = builder.StatsDataDecoder;
             drainTimeoutMillis = builder.DrainTimeoutMillis;
 
-            Info = new Info(id, builder.Name, builder.Description, builder.Version, builder.Subject);
+            Info = new Info(id, builder.Name, builder.Version, builder.Description, builder.Subject);
             SchemaInfo = new SchemaInfo(id, builder.Name, builder.Version, builder.SchemaRequest, builder.SchemaResponse);
 
             // do the service first in case the server feels like rejecting the subject
@@ -53,7 +53,7 @@ namespace NATS.Client.Service
             serviceContext = new ServiceContext(conn, Info.Subject, stats, builder.ServiceMessageHandler); 
 
             discoveryContexts = new List<Context>();
-            AddDiscoveryContexts(ServiceUtil.Ping, new Ping(id, Info.Name).Serialize());
+            AddDiscoveryContexts(ServiceUtil.Ping, new Ping(id, Info.Name, Info.Version).Serialize());
             AddDiscoveryContexts(ServiceUtil.Info, Info.Serialize());
             AddDiscoveryContexts(ServiceUtil.Schema, SchemaInfo.Serialize());
             AddStatsContexts(stats, builder.StatsDataSupplier);

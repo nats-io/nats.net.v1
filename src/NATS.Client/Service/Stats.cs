@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 using NATS.Client.JetStream;
@@ -28,13 +29,14 @@ namespace NATS.Client.Service
         public long NumRequests => numRequests.Read(); 
         public long NumErrors => numErrors.Read(); 
         public string LastError { get; set; }
-        public long TotalProcessingTime => totalProcessingTime.Read(); 
+        public long ProcessingTime => processingTime.Read(); 
         public long AverageProcessingTime => averageProcessingTime.Read();
         public IStatsData Data { get; set; }
+        public DateTime Started { get; private set; }
 
         private readonly InterlockedLong numRequests;
         private readonly InterlockedLong numErrors;
-        private readonly InterlockedLong totalProcessingTime;
+        private readonly InterlockedLong processingTime;
         private readonly InterlockedLong averageProcessingTime;
 
         internal Stats(string serviceId, string name, string version)
@@ -45,9 +47,10 @@ namespace NATS.Client.Service
             numRequests = new InterlockedLong();
             numErrors = new InterlockedLong();
             LastError = null;
-            totalProcessingTime = new InterlockedLong();
+            processingTime = new InterlockedLong();
             averageProcessingTime = new InterlockedLong();
             Data = null;
+            Started = DateTime.UtcNow;
         }
 
         internal Stats Copy(StatsDataDecoder decoder)
@@ -56,13 +59,13 @@ namespace NATS.Client.Service
             copy.numRequests.Set(numRequests.Read());
             copy.numErrors.Set(numErrors.Read());
             copy.LastError = LastError;
-            copy.totalProcessingTime.Set(totalProcessingTime.Read());
+            copy.processingTime.Set(processingTime.Read());
             copy.averageProcessingTime.Set(averageProcessingTime.Read());
             if (Data != null && decoder != null)
             {
                 copy.Data = decoder.Invoke(Data.ToJson());
             }
-
+            copy.Started = Started;
             return copy;
         }
 
@@ -77,7 +80,7 @@ namespace NATS.Client.Service
             numRequests = new InterlockedLong(JsonUtils.AsLongOrZero(node, ApiConstants.NumRequests));
             numErrors = new InterlockedLong(JsonUtils.AsLongOrZero(node, ApiConstants.NumErrors));
             LastError = node[ApiConstants.LastError];
-            totalProcessingTime = new InterlockedLong(JsonUtils.AsLongOrZero(node, ApiConstants.TotalProcessingTime));
+            processingTime = new InterlockedLong(JsonUtils.AsLongOrZero(node, ApiConstants.ProcessingTime));
             averageProcessingTime = new InterlockedLong(JsonUtils.AsLongOrZero(node, ApiConstants.AverageProcessingTime));
 
             if (decoder != null)
@@ -92,6 +95,8 @@ namespace NATS.Client.Service
                     }
                 }
             }
+            
+            Started = JsonUtils.AsDate(node[ApiConstants.Started]);
         }
         
         public void Reset()
@@ -99,9 +104,10 @@ namespace NATS.Client.Service
             numRequests.Set(0);
             numErrors.Set(0);
             LastError = null;
-            totalProcessingTime.Set(0);
+            processingTime.Set(0);
             averageProcessingTime.Set(0);
             Data = null;
+            Started = DateTime.UtcNow;
         }
         
         internal override JSONNode ToJsonNode()
@@ -113,13 +119,13 @@ namespace NATS.Client.Service
             JsonUtils.AddField(jso, ApiConstants.NumRequests, numRequests.Read());
             JsonUtils.AddField(jso, ApiConstants.NumErrors, numErrors.Read());
             JsonUtils.AddField(jso, ApiConstants.LastError, LastError);
-            JsonUtils.AddField(jso, ApiConstants.TotalProcessingTime, totalProcessingTime.Read());
+            JsonUtils.AddField(jso, ApiConstants.ProcessingTime, processingTime.Read());
             JsonUtils.AddField(jso, ApiConstants.AverageProcessingTime, averageProcessingTime.Read());
             if (Data != null)
             {
                 jso[ApiConstants.Data] = JSON.Parse(Data.ToJson());
             }
-
+            JsonUtils.AddField(jso, ApiConstants.Started, Started);
             return jso;
         }
 
@@ -135,7 +141,7 @@ namespace NATS.Client.Service
 
         public long AddTotalProcessingTime(long elapsed)
         {
-            return totalProcessingTime.Add(elapsed);
+            return processingTime.Add(elapsed);
         }
 
         public void SetAverageProcessingTime(long average) {

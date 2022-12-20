@@ -24,11 +24,13 @@ namespace NATS.Client.Service
     {
         public string ServiceId { get; }
         public string Name { get; }
+        public string Version { get; }
 
-        internal Ping(string serviceId, string name)
+        internal Ping(string serviceId, string name, string version)
         {
             ServiceId = serviceId;
             Name = name;
+            Version = version;
         }
 
         internal Ping(string json) : this(JSON.Parse(json)) {}
@@ -37,6 +39,7 @@ namespace NATS.Client.Service
         {
             ServiceId = node[ApiConstants.Id];
             Name = node[ApiConstants.Name];
+            Version = node[ApiConstants.Version];
         }
         
         internal override JSONNode ToJsonNode()
@@ -44,6 +47,7 @@ namespace NATS.Client.Service
             JSONObject jso = new JSONObject();
             JsonUtils.AddField(jso, ApiConstants.Id, ServiceId);
             JsonUtils.AddField(jso, ApiConstants.Name, Name);
+            JsonUtils.AddField(jso, ApiConstants.Version, Version);
             return jso;
         }
     }

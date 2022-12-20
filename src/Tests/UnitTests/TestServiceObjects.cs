@@ -79,7 +79,7 @@ namespace UnitTests
 
             StatsDataDecoder sdd = json => new TestStatsData(json);
             
-            string statsJson = "{\"name\":\"ServiceName\",\"id\":\"serviceId\",\"version\":\"0.0.1\",\"num_requests\":1,\"num_errors\":2,\"last_error\":\"npe\",\"total_processing_time\":3,\"average_processing_time\":4,\"data\":{\"id\":\"user id\",\"last_error\":\"user last error\"}}";
+            string statsJson = "{\"name\":\"ServiceName\",\"id\":\"serviceId\",\"version\":\"0.0.1\",\"num_requests\":1,\"num_errors\":2,\"last_error\":\"npe\",\"processing_time\":3,\"average_processing_time\":4,\"data\":{\"id\":\"user id\",\"last_error\":\"user last error\"},\"started\":\"2022-12-20T13:37:18.568000000Z\"}";
             Stats stats1 = new Stats(statsJson, sdd);
             Stats stats2 = new Stats(stats1.ToJsonNode().ToString(), sdd);
             Assert.Equal("ServiceName", stats1.Name);
@@ -94,8 +94,8 @@ namespace UnitTests
             Assert.Equal(2, stats2.NumErrors);
             Assert.Equal("npe", stats1.LastError);
             Assert.Equal("npe", stats2.LastError);
-            Assert.Equal(3, stats1.TotalProcessingTime);
-            Assert.Equal(3, stats2.TotalProcessingTime);
+            Assert.Equal(3, stats1.ProcessingTime);
+            Assert.Equal(3, stats2.ProcessingTime);
             Assert.Equal(4, stats1.AverageProcessingTime);
             Assert.Equal(4, stats2.AverageProcessingTime);
             Assert.True(stats1.Data is TestStatsData);
@@ -106,6 +106,8 @@ namespace UnitTests
             Assert.Equal("user id", data2.Id);
             Assert.Equal("user last error", data1.LastError);
             Assert.Equal("user last error", data2.LastError);
+            Assert.Equal(TestBase.AsDateTime("2022-12-20T13:37:18.568000000Z"), stats1.Started);
+            Assert.Equal(TestBase.AsDateTime("2022-12-20T13:37:18.568000000Z"), stats2.Started);
         }
     }
     

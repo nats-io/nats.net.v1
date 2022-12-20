@@ -24,16 +24,16 @@ namespace NATS.Client.Service
     {
         public string ServiceId { get; }
         public string Name { get; }
-        public string Description { get; }
         public string Version { get; }
+        public string Description { get; }
         public string Subject { get; }
 
-        internal Info(string serviceId, string name, string description, string version, string subject)
+        internal Info(string serviceId, string name, string version, string description, string subject)
         {
             ServiceId = serviceId;
             Name = name;
-            Description = description;
             Version = version;
+            Description = description;
             Subject = subject;
         }
 
