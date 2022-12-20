@@ -20,8 +20,10 @@ namespace NATSExamples
     {
         public static void Main(string[] args)
         {
-            // FullExample.FullExampleMain();
-            CrossClientValidation.CrossClientValidationMain();
+            FullExample.FullExampleMain();
+            
+            // Comment out Full Example and uncomment this to run
+            // CrossClientValidation.CrossClientValidationMain();
         }
     }
 }
