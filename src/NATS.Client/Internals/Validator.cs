@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Text;
-using NATS.Client.JetStream;
 
 namespace NATS.Client.Internals
 {
@@ -17,8 +16,13 @@ namespace NATS.Client.Internals
             }
             return s;
         }
-
-
+        
+        internal static void Required(object o, string label) {
+            if (o == null) {
+                throw new ArgumentException($"{label} cannot be null or empty.");
+            }
+        }
+        
         internal static string ValidateSubject(string s, bool required)
         {
             return ValidatePrintable(s, "Subject", required);
@@ -172,14 +176,19 @@ namespace NATS.Client.Internals
             });
         }
 
-        public static string ValidateBucketName(string s, bool required)
+        public static string ValidateIsRestrictedTerm(string s, string label, bool required)
         {
-            return Validate(s, required, "Bucket Name", () => {
+            return Validate(s, required, label, () => {
                 if (NotRestrictedTerm(s)) {
-                    throw new ArgumentException($"Bucket Name must only contain A-Z, a-z, 0-9, `-` or `_` [{s}]");
+                    throw new ArgumentException($"{label} must only contain A-Z, a-z, 0-9, `-` or `_` [{s}]");
                 }
                 return s;
             });
+        }
+
+        public static string ValidateBucketName(string s, bool required)
+        {
+            return ValidateIsRestrictedTerm(s, "Bucket Name", required);
         }
         
         public static string ValidateWildcardKvKey(string s, string label, bool required)

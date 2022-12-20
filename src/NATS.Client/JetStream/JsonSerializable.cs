@@ -11,5 +11,10 @@ namespace NATS.Client.JetStream
         {
             return JsonUtils.Serialize(ToJsonNode());
         }
+
+        public override string ToString()
+        {
+            return ToJsonNode().ToString();
+        }
     }
 }
