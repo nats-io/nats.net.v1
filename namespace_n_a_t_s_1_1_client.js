@@ -13,6 +13,7 @@ var namespace_n_a_t_s_1_1_client =
     [ "NaCl", "namespace_n_a_t_s_1_1_client_1_1_na_cl.html", "namespace_n_a_t_s_1_1_client_1_1_na_cl" ],
     [ "ObjectStore", "namespace_n_a_t_s_1_1_client_1_1_object_store.html", "namespace_n_a_t_s_1_1_client_1_1_object_store" ],
     [ "Rx", "namespace_n_a_t_s_1_1_client_1_1_rx.html", "namespace_n_a_t_s_1_1_client_1_1_rx" ],
+    [ "Service", "namespace_n_a_t_s_1_1_client_1_1_service.html", "namespace_n_a_t_s_1_1_client_1_1_service" ],
     [ "AsyncSubscription", "class_n_a_t_s_1_1_client_1_1_async_subscription.html", "class_n_a_t_s_1_1_client_1_1_async_subscription" ],
     [ "Connection", "class_n_a_t_s_1_1_client_1_1_connection.html", "class_n_a_t_s_1_1_client_1_1_connection" ],
     [ "ConnectionFactory", "class_n_a_t_s_1_1_client_1_1_connection_factory.html", "class_n_a_t_s_1_1_client_1_1_connection_factory" ],
