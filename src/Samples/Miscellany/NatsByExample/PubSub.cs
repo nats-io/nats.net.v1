@@ -15,7 +15,7 @@ using System;
 using System.Text;
 using NATS.Client;
 
-namespace NATSExamples
+namespace NATSExamples.NatsByExample
 {
     abstract class PubSub
     {

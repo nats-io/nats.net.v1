@@ -3,13 +3,14 @@
 namespace NATSExamples
 {
     /// <summary>
-    /// This is just scaffolding to be able to run any of the miscellaneous examples 
+    /// This is just scaffolding to be able to run any of the miscellaneous examples
     /// </summary>
     class Miscellany
     {
         public static void Main(string[] args)
         {
-            args = new[] { "PubSub" };
+            // Set the args manually to run the code you want.
+            // args = new[] { "KvIntro" };
             
             if (args.Length == 1)
             {
@@ -20,7 +21,11 @@ namespace NATSExamples
                         return;
                     
                     case "PubSub":
-                        PubSub.PubSubMain();
+                        NatsByExample.PubSub.PubSubMain();
+                        return;
+                    
+                    case "KvIntro":
+                        NatsByExample.KvIntro.KvIntroMain();
                         return;
                 }
             }
@@ -30,6 +35,7 @@ namespace NATSExamples
                 + "\nAvailable programs:"
                 + "\n   CrossClientValidation" 
                 + "\n   PubSub"
+                + "\n   KvIntro"
             );
         }
     }
