@@ -89,7 +89,7 @@ namespace NATS.Client.Service
             Required(Conn, "Connection");
             Required(ServiceMessageHandler, "Service Message Handler");
             ValidateIsRestrictedTerm(Name, "Name", true);
-            Required(Version, "Version");
+            ValidateSemVer(Version, "Version", true);
             if ((StatsDataSupplier != null && StatsDataDecoder == null)
                 || (StatsDataSupplier == null && StatsDataDecoder != null)) {
                 throw new ArgumentException("You must provide neither or both the stats data supplier and decoder");

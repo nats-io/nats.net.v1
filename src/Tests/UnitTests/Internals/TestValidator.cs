@@ -14,8 +14,8 @@
 using System;
 using NATS.Client;
 using NATS.Client.Internals;
-using NATS.Client.JetStream;
 using Xunit;
+using static NATS.Client.Internals.Validator;
 
 namespace UnitTests.Internals
 {
@@ -31,165 +31,165 @@ namespace UnitTests.Internals
         [Fact]
         public void TestValidateMessageSubjectRequired()
         {
-            AllowedRequired(Validator.ValidateSubject, Plain, HasPrintable, HasDot, HasStar, HasGt, HasDollar);
-            NotAllowedRequired(Validator.ValidateSubject, null, String.Empty, HasSpace, HasLow, Has127);
-            NotAllowedRequired(Validator.ValidateSubject, _utfOnlyStrings);
-            AllowedNotRequiredEmptyAsNull(Validator.ValidateSubject, null, String.Empty);
+            AllowedRequired(ValidateSubject, Plain, HasPrintable, HasDot, HasStar, HasGt, HasDollar);
+            NotAllowedRequired(ValidateSubject, null, String.Empty, HasSpace, HasLow, Has127);
+            NotAllowedRequired(ValidateSubject, _utfOnlyStrings);
+            AllowedNotRequiredEmptyAsNull(ValidateSubject, null, String.Empty);
 
-            NotAllowedRequired(Validator.ValidateSubject, null, String.Empty, HasSpace, HasLow, Has127);
-            AllowedNotRequiredEmptyAsNull(Validator.ValidateSubject, null, String.Empty);
+            NotAllowedRequired(ValidateSubject, null, String.Empty, HasSpace, HasLow, Has127);
+            AllowedNotRequiredEmptyAsNull(ValidateSubject, null, String.Empty);
         }
 
         [Fact]
         public void TestValidateReplyTo()
         {
-            AllowedRequired(Validator.ValidateReplyTo, Plain, HasPrintable, HasDot, HasDollar);
-            NotAllowedRequired(Validator.ValidateReplyTo, null, String.Empty, HasSpace, HasStar, HasGt, HasLow, Has127);
-            NotAllowedRequired(Validator.ValidateReplyTo, _utfOnlyStrings);
-            AllowedNotRequiredEmptyAsNull(Validator.ValidateReplyTo, null, String.Empty);
+            AllowedRequired(ValidateReplyTo, Plain, HasPrintable, HasDot, HasDollar);
+            NotAllowedRequired(ValidateReplyTo, null, String.Empty, HasSpace, HasStar, HasGt, HasLow, Has127);
+            NotAllowedRequired(ValidateReplyTo, _utfOnlyStrings);
+            AllowedNotRequiredEmptyAsNull(ValidateReplyTo, null, String.Empty);
         }
 
         [Fact]
         public void TestValidateQueueNameRequired()
         {
-            AllowedRequired(Validator.ValidateQueueName, Plain, HasPrintable, HasDollar);
-            NotAllowedRequired(Validator.ValidateQueueName, null, String.Empty, HasSpace, HasDot, HasStar, HasGt, HasLow, Has127);
-            NotAllowedRequired(Validator.ValidateQueueName, _utfOnlyStrings);
-            AllowedNotRequiredEmptyAsNull(Validator.ValidateQueueName, null, String.Empty);
+            AllowedRequired(ValidateQueueName, Plain, HasPrintable, HasDollar);
+            NotAllowedRequired(ValidateQueueName, null, String.Empty, HasSpace, HasDot, HasStar, HasGt, HasLow, Has127);
+            NotAllowedRequired(ValidateQueueName, _utfOnlyStrings);
+            AllowedNotRequiredEmptyAsNull(ValidateQueueName, null, String.Empty);
         }
 
         [Fact]
         public void TestValidateStreamName()
         {
-            AllowedRequired(Validator.ValidateStreamName, Plain, HasPrintable, HasDollar);
-            NotAllowedRequired(Validator.ValidateStreamName, null, String.Empty, HasSpace, HasDot, HasStar, HasGt, HasLow, Has127);
-            NotAllowedRequired(Validator.ValidateStreamName, _utfOnlyStrings);
-            AllowedNotRequiredEmptyAsNull(Validator.ValidateStreamName, null, String.Empty);
+            AllowedRequired(ValidateStreamName, Plain, HasPrintable, HasDollar);
+            NotAllowedRequired(ValidateStreamName, null, String.Empty, HasSpace, HasDot, HasStar, HasGt, HasLow, Has127);
+            NotAllowedRequired(ValidateStreamName, _utfOnlyStrings);
+            AllowedNotRequiredEmptyAsNull(ValidateStreamName, null, String.Empty);
         }
 
         [Fact]
         public void TestValidateDurable()
         {
-            AllowedRequired(Validator.ValidateDurable, Plain, HasPrintable, HasDollar);
-            NotAllowedRequired(Validator.ValidateDurable, null, String.Empty, HasSpace, HasDot, HasStar, HasGt, HasLow, Has127);
-            NotAllowedRequired(Validator.ValidateDurable, _utfOnlyStrings);
-            AllowedNotRequiredEmptyAsNull(Validator.ValidateDurable, null, String.Empty);
+            AllowedRequired(ValidateDurable, Plain, HasPrintable, HasDollar);
+            NotAllowedRequired(ValidateDurable, null, String.Empty, HasSpace, HasDot, HasStar, HasGt, HasLow, Has127);
+            NotAllowedRequired(ValidateDurable, _utfOnlyStrings);
+            AllowedNotRequiredEmptyAsNull(ValidateDurable, null, String.Empty);
         }
 
         [Fact]
         public void TestValidateValidateGtZero()
         {
-            Assert.Equal(1, Validator.ValidateGtZero(1, "test"));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateGtZero(0, "test"));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateGtZero(-1, "test"));
+            Assert.Equal(1, ValidateGtZero(1, "test"));
+            Assert.Throws<ArgumentException>(() => ValidateGtZero(0, "test"));
+            Assert.Throws<ArgumentException>(() => ValidateGtZero(-1, "test"));
         }
 
         [Fact]
         public void TestValidateMaxConsumers()
         {
-            Assert.Equal(1, Validator.ValidateMaxConsumers(1));
-            Assert.Equal(-1, Validator.ValidateMaxConsumers(-1));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxConsumers(0));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxConsumers(-2));
+            Assert.Equal(1, ValidateMaxConsumers(1));
+            Assert.Equal(-1, ValidateMaxConsumers(-1));
+            Assert.Throws<ArgumentException>(() => ValidateMaxConsumers(0));
+            Assert.Throws<ArgumentException>(() => ValidateMaxConsumers(-2));
         }
 
         [Fact]
         public void TestValidateMaxMessages()
         {
-            Assert.Equal(1, Validator.ValidateMaxMessages(1));
-            Assert.Equal(-1, Validator.ValidateMaxMessages(-1));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxMessages(0));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxMessages(-2));
+            Assert.Equal(1, ValidateMaxMessages(1));
+            Assert.Equal(-1, ValidateMaxMessages(-1));
+            Assert.Throws<ArgumentException>(() => ValidateMaxMessages(0));
+            Assert.Throws<ArgumentException>(() => ValidateMaxMessages(-2));
         }
 
         [Fact]
         public void TestValidateMaxBucketValues()
         {
-            Assert.Equal(1, Validator.ValidateMaxBucketValues(1));
-            Assert.Equal(-1, Validator.ValidateMaxBucketValues(-1));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxBucketValues(0));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxBucketValues(-2));
+            Assert.Equal(1, ValidateMaxBucketValues(1));
+            Assert.Equal(-1, ValidateMaxBucketValues(-1));
+            Assert.Throws<ArgumentException>(() => ValidateMaxBucketValues(0));
+            Assert.Throws<ArgumentException>(() => ValidateMaxBucketValues(-2));
         }
 
         [Fact]
         public void TestValidateMaxMessagesPerSubject()
         {
-            Assert.Equal(1, Validator.ValidateMaxMessagesPerSubject(1));
-            Assert.Equal(-1, Validator.ValidateMaxMessagesPerSubject(-1));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxMessagesPerSubject(0));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxMessagesPerSubject(-2));
+            Assert.Equal(1, ValidateMaxMessagesPerSubject(1));
+            Assert.Equal(-1, ValidateMaxMessagesPerSubject(-1));
+            Assert.Throws<ArgumentException>(() => ValidateMaxMessagesPerSubject(0));
+            Assert.Throws<ArgumentException>(() => ValidateMaxMessagesPerSubject(-2));
         }
 
         [Fact]
         public void TestValidateMaxHistoryPerKey()
         {
-            Assert.Equal(1, Validator.ValidateMaxHistoryPerKey(1));
-            Assert.Equal(-1, Validator.ValidateMaxHistoryPerKey(-1));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxHistoryPerKey(0));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxHistoryPerKey(-2));
+            Assert.Equal(1, ValidateMaxHistoryPerKey(1));
+            Assert.Equal(-1, ValidateMaxHistoryPerKey(-1));
+            Assert.Throws<ArgumentException>(() => ValidateMaxHistoryPerKey(0));
+            Assert.Throws<ArgumentException>(() => ValidateMaxHistoryPerKey(-2));
         }
 
         [Fact]
         public void TestValidateMaxBytes()
         {
-            Assert.Equal(1, Validator.ValidateMaxBytes(1));
-            Assert.Equal(-1, Validator.ValidateMaxBytes(-1));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxBytes(0));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxBytes(-2));
+            Assert.Equal(1, ValidateMaxBytes(1));
+            Assert.Equal(-1, ValidateMaxBytes(-1));
+            Assert.Throws<ArgumentException>(() => ValidateMaxBytes(0));
+            Assert.Throws<ArgumentException>(() => ValidateMaxBytes(-2));
         }
 
         [Fact]
         public void TestValidateMaxBucketBytes()
         {
-            Assert.Equal(1, Validator.ValidateMaxBucketBytes(1));
-            Assert.Equal(-1, Validator.ValidateMaxBucketBytes(-1));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxBucketBytes(0));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxBucketBytes(-2));
+            Assert.Equal(1, ValidateMaxBucketBytes(1));
+            Assert.Equal(-1, ValidateMaxBucketBytes(-1));
+            Assert.Throws<ArgumentException>(() => ValidateMaxBucketBytes(0));
+            Assert.Throws<ArgumentException>(() => ValidateMaxBucketBytes(-2));
         }
 
         [Fact]
         public void TestValidateMaxMessageSize()
         {
-            Assert.Equal(1, Validator.ValidateMaxMessageSize(1));
-            Assert.Equal(-1, Validator.ValidateMaxMessageSize(-1));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxMessageSize(0));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateMaxMessageSize(-2));
+            Assert.Equal(1, ValidateMaxMessageSize(1));
+            Assert.Equal(-1, ValidateMaxMessageSize(-1));
+            Assert.Throws<ArgumentException>(() => ValidateMaxMessageSize(0));
+            Assert.Throws<ArgumentException>(() => ValidateMaxMessageSize(-2));
         }
 
         [Fact]
         public void TestValidateNumberOfReplicas()
         {
-            Assert.Equal(1, Validator.ValidateNumberOfReplicas(1));
-            Assert.Equal(5, Validator.ValidateNumberOfReplicas(5));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateNumberOfReplicas(-1));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateNumberOfReplicas(0));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateNumberOfReplicas(7));
+            Assert.Equal(1, ValidateNumberOfReplicas(1));
+            Assert.Equal(5, ValidateNumberOfReplicas(5));
+            Assert.Throws<ArgumentException>(() => ValidateNumberOfReplicas(-1));
+            Assert.Throws<ArgumentException>(() => ValidateNumberOfReplicas(0));
+            Assert.Throws<ArgumentException>(() => ValidateNumberOfReplicas(7));
         }
 
         [Fact]
         public void TestValidateDurationRequired()
         {
-            Assert.Equal(Duration.OfNanos(1), Validator.ValidateDurationRequired(Duration.OfNanos(1)));
-            Assert.Equal(Duration.OfSeconds(1), Validator.ValidateDurationRequired(Duration.OfSeconds(1)));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateDurationRequired(null));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateDurationRequired(Duration.OfNanos(0)));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateDurationRequired(Duration.OfSeconds(0)));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateDurationRequired(Duration.OfNanos(-1)));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateDurationRequired(Duration.OfSeconds(-1)));
+            Assert.Equal(Duration.OfNanos(1), ValidateDurationRequired(Duration.OfNanos(1)));
+            Assert.Equal(Duration.OfSeconds(1), ValidateDurationRequired(Duration.OfSeconds(1)));
+            Assert.Throws<ArgumentException>(() => ValidateDurationRequired(null));
+            Assert.Throws<ArgumentException>(() => ValidateDurationRequired(Duration.OfNanos(0)));
+            Assert.Throws<ArgumentException>(() => ValidateDurationRequired(Duration.OfSeconds(0)));
+            Assert.Throws<ArgumentException>(() => ValidateDurationRequired(Duration.OfNanos(-1)));
+            Assert.Throws<ArgumentException>(() => ValidateDurationRequired(Duration.OfSeconds(-1)));
         }
 
         [Fact]
         public void TestValidateDurationNotRequiredGtOrEqZero()
         {
-            Assert.Equal(Duration.Zero, Validator.ValidateDurationNotRequiredGtOrEqZero(null));
-            Assert.Equal(Duration.Zero, Validator.ValidateDurationNotRequiredGtOrEqZero(null));
-            Assert.Equal(Duration.Zero, Validator.ValidateDurationNotRequiredGtOrEqZero(Duration.Zero));
-            Assert.Equal(Duration.Zero, Validator.ValidateDurationNotRequiredGtOrEqZero(Duration.Zero));
-            Assert.Equal(Duration.OfNanos(1), Validator.ValidateDurationNotRequiredGtOrEqZero(Duration.OfNanos(1)));
-            Assert.Equal(Duration.OfSeconds(1), Validator.ValidateDurationNotRequiredGtOrEqZero(Duration.OfSeconds(1)));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateDurationNotRequiredGtOrEqZero(
+            Assert.Equal(Duration.Zero, ValidateDurationNotRequiredGtOrEqZero(null));
+            Assert.Equal(Duration.Zero, ValidateDurationNotRequiredGtOrEqZero(null));
+            Assert.Equal(Duration.Zero, ValidateDurationNotRequiredGtOrEqZero(Duration.Zero));
+            Assert.Equal(Duration.Zero, ValidateDurationNotRequiredGtOrEqZero(Duration.Zero));
+            Assert.Equal(Duration.OfNanos(1), ValidateDurationNotRequiredGtOrEqZero(Duration.OfNanos(1)));
+            Assert.Equal(Duration.OfSeconds(1), ValidateDurationNotRequiredGtOrEqZero(Duration.OfSeconds(1)));
+            Assert.Throws<ArgumentException>(() => ValidateDurationNotRequiredGtOrEqZero(
                 Duration.OfNanos(-1)));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateDurationNotRequiredGtOrEqZero(
+            Assert.Throws<ArgumentException>(() => ValidateDurationNotRequiredGtOrEqZero(
                 Duration.OfSeconds(-1)));
         }
 
@@ -199,33 +199,33 @@ namespace UnitTests.Internals
             Duration less = Duration.OfMillis(9);
             Duration more = Duration.OfMillis(9999);
 
-            Assert.Null(Validator.ValidateDurationNotRequiredNotLessThanMin(null, min));
-            Assert.Equal(more, Validator.ValidateDurationNotRequiredNotLessThanMin(more, min));
+            Assert.Null(ValidateDurationNotRequiredNotLessThanMin(null, min));
+            Assert.Equal(more, ValidateDurationNotRequiredNotLessThanMin(more, min));
 
-            Assert.Throws<ArgumentException>(() => Validator.ValidateDurationNotRequiredNotLessThanMin(less, min));
+            Assert.Throws<ArgumentException>(() => ValidateDurationNotRequiredNotLessThanMin(less, min));
         }
 
         [Fact]
         public void TestValidateJetStreamPrefix()
         {
-            Assert.Throws<ArgumentException>(() => Validator.ValidateJetStreamPrefix(HasStar));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateJetStreamPrefix(HasGt));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateJetStreamPrefix(HasDollar));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateJetStreamPrefix(HasSpace));
-            Assert.Throws<ArgumentException>(() => Validator.ValidateJetStreamPrefix(HasLow));
+            Assert.Throws<ArgumentException>(() => ValidateJetStreamPrefix(HasStar));
+            Assert.Throws<ArgumentException>(() => ValidateJetStreamPrefix(HasGt));
+            Assert.Throws<ArgumentException>(() => ValidateJetStreamPrefix(HasDollar));
+            Assert.Throws<ArgumentException>(() => ValidateJetStreamPrefix(HasSpace));
+            Assert.Throws<ArgumentException>(() => ValidateJetStreamPrefix(HasLow));
         }
         
         [Fact]
         public void TestValidateMustMatchIfBothSupplied()
         {
             ClientExDetail detail = new ClientExDetail("TEST", 999999, "desc");
-            Assert.Null(Validator.ValidateMustMatchIfBothSupplied(null, null, detail));
-            Assert.Equal("y", Validator.ValidateMustMatchIfBothSupplied(null, "y", detail));
-            Assert.Equal("y", Validator.ValidateMustMatchIfBothSupplied("", "y", detail));
-            Assert.Equal("x", Validator.ValidateMustMatchIfBothSupplied("x", null, detail));
-            Assert.Equal("x", Validator.ValidateMustMatchIfBothSupplied("x", " ", detail));
-            Assert.Equal("x", Validator.ValidateMustMatchIfBothSupplied("x", "x", detail));
-            Assert.Throws<NATSJetStreamClientException>(() => Validator.ValidateMustMatchIfBothSupplied("x", "y", detail));
+            Assert.Null(ValidateMustMatchIfBothSupplied(null, null, detail));
+            Assert.Equal("y", ValidateMustMatchIfBothSupplied(null, "y", detail));
+            Assert.Equal("y", ValidateMustMatchIfBothSupplied("", "y", detail));
+            Assert.Equal("x", ValidateMustMatchIfBothSupplied("x", null, detail));
+            Assert.Equal("x", ValidateMustMatchIfBothSupplied("x", " ", detail));
+            Assert.Equal("x", ValidateMustMatchIfBothSupplied("x", "x", detail));
+            Assert.Throws<NATSJetStreamClientException>(() => ValidateMustMatchIfBothSupplied("x", "y", detail));
         }
 
         [Fact]
@@ -233,21 +233,21 @@ namespace UnitTests.Internals
         {
             object o1 = null;
             string s1 = null;
-            Assert.Throws<ArgumentNullException>(() => Validator.ValidateNotNull(o1, "fieldName"));
-            Assert.Throws<ArgumentNullException>(() => Validator.ValidateNotNull(s1, "fieldName"));
+            Assert.Throws<ArgumentNullException>(() => ValidateNotNull(o1, "fieldName"));
+            Assert.Throws<ArgumentNullException>(() => ValidateNotNull(s1, "fieldName"));
             object o2 = new object();
             string s2 = "";
-            Assert.Equal(o2, Validator.ValidateNotNull(o2, "fieldName"));
-            Assert.Equal(s2, Validator.ValidateNotNull(s2, "fieldName"));
+            Assert.Equal(o2, ValidateNotNull(o2, "fieldName"));
+            Assert.Equal(s2, ValidateNotNull(s2, "fieldName"));
         }
 
         [Fact]
         public void TestZeroOrLtMinus1()
         {
-            Assert.True(Validator.ZeroOrLtMinus1(0));
-            Assert.True(Validator.ZeroOrLtMinus1(-2));
-            Assert.False(Validator.ZeroOrLtMinus1(1));
-            Assert.False(Validator.ZeroOrLtMinus1(-1));
+            Assert.True(ZeroOrLtMinus1(0));
+            Assert.True(ZeroOrLtMinus1(-2));
+            Assert.False(ZeroOrLtMinus1(1));
+            Assert.False(ZeroOrLtMinus1(-1));
         }
 
         private void AllowedRequired(Func<string, bool, string> test, params String[] strings)
@@ -278,7 +278,93 @@ namespace UnitTests.Internals
             ClientExDetail err = new ClientExDetail("TEST", 999999, "desc");
             Assert.Equal("[TEST-999999] desc", err.Message);
         }
+
+        [Fact]
+        public void TestSemVer()
+        {
+            String label = "Version";
+            ValidateSemVer("0.0.4", label, true);
+            ValidateSemVer("1.2.3", label, true);
+            ValidateSemVer("10.20.30", label, true);
+            ValidateSemVer("1.1.2-prerelease+meta", label, true);
+            ValidateSemVer("1.1.2+meta", label, true);
+            ValidateSemVer("1.1.2+meta-valid", label, true);
+            ValidateSemVer("1.0.0-alpha", label, true);
+            ValidateSemVer("1.0.0-beta", label, true);
+            ValidateSemVer("1.0.0-alpha.beta", label, true);
+            ValidateSemVer("1.0.0-alpha.beta.1", label, true);
+            ValidateSemVer("1.0.0-alpha.1", label, true);
+            ValidateSemVer("1.0.0-alpha0.valid", label, true);
+            ValidateSemVer("1.0.0-alpha.0valid", label, true);
+            ValidateSemVer("1.0.0-alpha-a.b-c-somethinglong+build.1-aef.1-its-okay", label, true);
+            ValidateSemVer("1.0.0-rc.1+build.1", label, true);
+            ValidateSemVer("2.0.0-rc.1+build.123", label, true);
+            ValidateSemVer("1.2.3-beta", label, true);
+            ValidateSemVer("10.2.3-DEV-SNAPSHOT", label, true);
+            ValidateSemVer("1.2.3-SNAPSHOT-123", label, true);
+            ValidateSemVer("1.0.0", label, true);
+            ValidateSemVer("2.0.0", label, true);
+            ValidateSemVer("1.1.7", label, true);
+            ValidateSemVer("2.0.0+build.1848", label, true);
+            ValidateSemVer("2.0.1-alpha.1227", label, true);
+            ValidateSemVer("1.0.0-alpha+beta", label, true);
+            ValidateSemVer("1.2.3----RC-SNAPSHOT.12.9.1--.12+788", label, true);
+            ValidateSemVer("1.2.3----R-S.12.9.1--.12+meta", label, true);
+            ValidateSemVer("1.2.3----RC-SNAPSHOT.12.9.1--.12", label, true);
+            ValidateSemVer("1.0.0+0.build.1-rc.10000aaa-kk-0.1", label, true);
+            ValidateSemVer("99999999999999999999999.999999999999999999.99999999999999999", label, true);
+            ValidateSemVer("1.0.0-0A.is.legal", label, true);
+
+            Assert.Null(ValidateSemVer(null, label, false));
+            Assert.Null(ValidateSemVer("", label, false));
+
+            Assert.Throws<ArgumentException>(() => ValidateSemVer(null, label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("", label, true));
+
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("1", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("1.2", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("1.2.3-0123", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("1.2.3-0123.0123", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("1.1.2+.123", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("+invalid", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("-invalid", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("-invalid+invalid", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("-invalid.01", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("alpha", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("alpha.beta", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("alpha.beta.1", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("alpha.1", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("alpha+beta", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("alpha_beta", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("alpha.", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("alpha..", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("beta", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("1.0.0-alpha_beta", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("-alpha.", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("1.0.0-alpha..", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("1.0.0-alpha..1", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("1.0.0-alpha...1", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("1.0.0-alpha....1", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("1.0.0-alpha.....1", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("1.0.0-alpha......1", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("1.0.0-alpha.......1", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("01.1.1", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("1.01.1", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("1.1.01", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("1.2", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("1.2.3.DEV", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("1.2-SNAPSHOT", label, true));
+            Assert.Throws<ArgumentException>(() =>
+                ValidateSemVer("1.2.31.2.3----RC-SNAPSHOT.12.09.1--..12+788", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("1.2-RC-SNAPSHOT", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("-1.0.3-gamma+b7718", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("+justmeta", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("9.8.7+meta+meta", label, true));
+            Assert.Throws<ArgumentException>(() => ValidateSemVer("9.8.7-whatever+meta+meta", label, true));
+            Assert.Throws<ArgumentException>(() =>
+                ValidateSemVer(
+                    "99999999999999999999999.999999999999999999.99999999999999999----RC-SNAPSHOT.12.09.1--------------------------------..12",
+                    label, true));
+        }
     }
 }
-
-

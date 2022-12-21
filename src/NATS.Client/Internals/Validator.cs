@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace NATS.Client.Internals
 {
@@ -578,6 +579,23 @@ namespace NATS.Client.Internals
  
         public static string EnsureEndsWithDot(string s) {
             return s == null || s.EndsWith(".") ? s : s + ".";
+        }
+        
+        const string SemVerPattern = "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$";
+        
+        public static string ValidateSemVer(string s, string label, bool required)
+        {
+            return Validate(s, required, label, () => {
+                if (!IsSemVer(s)) {
+                    throw new ArgumentException($"{label} must be a valid SemVer [{s}]");
+                }
+                return s;
+            });
+        }
+
+        public static bool IsSemVer(String s)
+        {
+            return Regex.IsMatch(s, SemVerPattern);
         }
     }
 }
