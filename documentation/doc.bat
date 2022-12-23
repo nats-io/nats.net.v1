@@ -2,7 +2,8 @@
 : A. Make sure you have doxygen installed and in your path. https://doxygen.nl/index.html
 : B. Edit DoxyFile.NATS.Client, line 41 to have the version you want. 
 : C. Use the version for the commit message in step 7.
-: D. Start in directory to that is parent directory to nats.net
+: D. Start in directory to that is parent directory to nats.net In my case its \nats
+cd \nats
 
 : Step 1. From the doc directory, build the docs, then go back to parent
 pushd nats.net\documentation
@@ -31,3 +32,5 @@ rd ..\nats.net\documentation\NATS.Client /S /Q
 git add -A
 git commit -m "Docs for 1.0.3"
 git push origin gh-pages
+
+pause
