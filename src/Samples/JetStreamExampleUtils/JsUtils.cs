@@ -13,6 +13,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using NATS.Client;
@@ -248,6 +249,22 @@ namespace NATSExamples
                 Console.Write(" " + Encoding.UTF8.GetString(m.Data));
             }
             Console.Write(" <- \n");
+        }
+    
+        private static readonly Random Random = new Random();
+        private const string RandomChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz";
+        private const string RandomIdChars = "0123456789abcdef";
+        
+        public static string RandomText()
+        {
+            return new string(Enumerable.Repeat(RandomChars, 20)
+                .Select(s => s[Random.Next(s.Length)]).ToArray());
+        }
+        
+        public static string RandomId()
+        {
+            return new string(Enumerable.Repeat(RandomIdChars, 6)
+                .Select(s => s[Random.Next(s.Length)]).ToArray());
         }
     }
 }

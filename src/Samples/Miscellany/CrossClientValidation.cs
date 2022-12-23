@@ -19,18 +19,17 @@ using NATS.Client.Service;
 
 namespace NATSExamples
 {
-
     // TO TEST, RUN THIS CLASS THEN THIS COMMAND:
     // deno run -A https://raw.githubusercontent.com/nats-io/nats.deno/main/tests/helpers/service-check.ts --server localhost:4222 --name JavaCrossClientValidator
 
     // TO RESET TEST CODE IF THERE ARE UPDATES:
     // deno cache --reload "https://raw.githubusercontent.com/nats-io/nats.deno/main/tests/helpers/service-check.ts"
 
-    public class CrossClientValidation
+    abstract class CrossClientValidation
     {
         public static void CrossClientValidationMain()
         {
-            StatsDataSupplier sds = () => new CcvData(FullExample.RandomText());
+            StatsDataSupplier sds = () => new CcvData(JsUtils.RandomText());
             StatsDataDecoder sdd = json =>
             {
                 if (json.StartsWith("\"") && json.EndsWith("\"")) {
