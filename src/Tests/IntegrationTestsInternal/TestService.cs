@@ -22,6 +22,7 @@ using NATS.Client.Internals.SimpleJSON;
 using NATS.Client.JetStream;
 using NATS.Client.Service;
 using Xunit;
+using Xunit.Abstractions;
 using static UnitTests.TestBase;
 
 namespace IntegrationTestsInternal
@@ -60,15 +61,21 @@ namespace IntegrationTestsInternal
 
     public class TestService : TestSuite<ServiceSuiteContext>
     {
-        public TestService(ServiceSuiteContext context) : base(context) { }
+        private readonly ITestOutputHelper output;
+
+        public TestService(ITestOutputHelper output, ServiceSuiteContext context) : base(context)
+        {
+            this.output = output;
+            Console.SetOut(new ConsoleWriter(output));
+        }
 
         private const string EchoServiceName = "ECHO_SERVICE";
         private const string SortServiceName = "SORT_SERVICE";
         private const string EchoServiceSubject = "echo";
         private const string SortServiceSubject = "sort";
 
-        delegate string InfoVerifier(Info expectedInfo, object o);
-        delegate string SchemaInfoVerifier(Info expectedInfo, SchemaInfo expectedSchemaInfo, object o);
+        delegate string InfoResponseVerifier(InfoResponse expectedInfoResponse, object o);
+        delegate string SchemaResponseVerifier(InfoResponse expectedInfoResponse, SchemaResponse expectedSchemaResponse, object o);
 
         [Fact]
         public void TestServiceWorkflow()
@@ -116,16 +123,16 @@ namespace IntegrationTestsInternal
                         VerifyServiceExecution(clientNc, SortServiceName, SortServiceSubject);
                     }
 
-                    Info echoInfo = echoService1.Info;
-                    Info sortInfo = sortService1.Info;
-                    SchemaInfo echoSchemaInfo = echoService1.SchemaInfo;
-                    SchemaInfo sortSchemaInfo = sortService1.SchemaInfo;
+                    InfoResponse echoInfoResponse = echoService1.InfoResponse;
+                    InfoResponse sortInfoResponse = sortService1.InfoResponse;
+                    SchemaResponse echoSchemaResponse = echoService1.SchemaResponse;
+                    SchemaResponse sortSchemaResponse = sortService1.SchemaResponse;
 
                     // discovery - wait at most 500 millis for responses, 5 total responses max
                     Discovery discovery = new Discovery(clientNc, 500, 5);
 
                     // ping discovery
-                    void VerifyPingDiscovery(Info expectedInfo, IList<Ping> pings, params string[] expectedIds) {
+                    void VerifyPingDiscovery(InfoResponse expectedInfo, IList<PingResponse> pings, params string[] expectedIds) {
                         Assert.Equal(expectedIds.Length, pings.Count);
                         foreach (var p in pings) {
                             if (expectedInfo != null) {
@@ -135,15 +142,15 @@ namespace IntegrationTestsInternal
                         }
                     }
                     VerifyPingDiscovery(null, discovery.Ping(), echoServiceId1, sortServiceId1, echoServiceId2, sortServiceId2);
-                    VerifyPingDiscovery(echoInfo, discovery.Ping(EchoServiceName), echoServiceId1, echoServiceId2);
-                    VerifyPingDiscovery(sortInfo, discovery.Ping(SortServiceName), sortServiceId1, sortServiceId2);
-                    VerifyPingDiscovery(echoInfo, new List<Ping>{discovery.PingForNameAndId(EchoServiceName, echoServiceId1)}, echoServiceId1);
-                    VerifyPingDiscovery(sortInfo, new List<Ping>{discovery.PingForNameAndId(SortServiceName, sortServiceId1)}, sortServiceId1);
-                    VerifyPingDiscovery(echoInfo, new List<Ping>{discovery.PingForNameAndId(EchoServiceName, echoServiceId2)}, echoServiceId2);
-                    VerifyPingDiscovery(sortInfo, new List<Ping>{discovery.PingForNameAndId(SortServiceName, sortServiceId2)}, sortServiceId2);
+                    VerifyPingDiscovery(echoInfoResponse, discovery.Ping(EchoServiceName), echoServiceId1, echoServiceId2);
+                    VerifyPingDiscovery(sortInfoResponse, discovery.Ping(SortServiceName), sortServiceId1, sortServiceId2);
+                    VerifyPingDiscovery(echoInfoResponse, new List<PingResponse>{discovery.PingForNameAndId(EchoServiceName, echoServiceId1)}, echoServiceId1);
+                    VerifyPingDiscovery(sortInfoResponse, new List<PingResponse>{discovery.PingForNameAndId(SortServiceName, sortServiceId1)}, sortServiceId1);
+                    VerifyPingDiscovery(echoInfoResponse, new List<PingResponse>{discovery.PingForNameAndId(EchoServiceName, echoServiceId2)}, echoServiceId2);
+                    VerifyPingDiscovery(sortInfoResponse, new List<PingResponse>{discovery.PingForNameAndId(SortServiceName, sortServiceId2)}, sortServiceId2);
 
                     // info discovery
-                    void VerifyInfoDiscovery(Info expectedInfo, IList<Info> infos, params string[] expectedIds) {
+                    void VerifyInfoDiscovery(InfoResponse expectedInfo, IList<InfoResponse> infos, params string[] expectedIds) {
                         Assert.Equal(expectedIds.Length, infos.Count);
                         foreach (var i in infos) {
                             if (expectedInfo != null) {
@@ -156,44 +163,44 @@ namespace IntegrationTestsInternal
                         }
                     }
                     VerifyInfoDiscovery(null, discovery.Info(), echoServiceId1, sortServiceId1, echoServiceId2, sortServiceId2);
-                    VerifyInfoDiscovery(echoInfo, discovery.Info(EchoServiceName), echoServiceId1, echoServiceId2);
-                    VerifyInfoDiscovery(sortInfo, discovery.Info(SortServiceName), sortServiceId1, sortServiceId2);
-                    VerifyInfoDiscovery(echoInfo, new List<Info>{discovery.InfoForNameAndId(EchoServiceName, echoServiceId1)}, echoServiceId1);
-                    VerifyInfoDiscovery(sortInfo, new List<Info>{discovery.InfoForNameAndId(SortServiceName, sortServiceId1)}, sortServiceId1);
-                    VerifyInfoDiscovery(echoInfo, new List<Info>{discovery.InfoForNameAndId(EchoServiceName, echoServiceId2)}, echoServiceId2);
-                    VerifyInfoDiscovery(sortInfo, new List<Info>{discovery.InfoForNameAndId(SortServiceName, sortServiceId2)}, sortServiceId2);
+                    VerifyInfoDiscovery(echoInfoResponse, discovery.Info(EchoServiceName), echoServiceId1, echoServiceId2);
+                    VerifyInfoDiscovery(sortInfoResponse, discovery.Info(SortServiceName), sortServiceId1, sortServiceId2);
+                    VerifyInfoDiscovery(echoInfoResponse, new List<InfoResponse>{discovery.InfoForNameAndId(EchoServiceName, echoServiceId1)}, echoServiceId1);
+                    VerifyInfoDiscovery(sortInfoResponse, new List<InfoResponse>{discovery.InfoForNameAndId(SortServiceName, sortServiceId1)}, sortServiceId1);
+                    VerifyInfoDiscovery(echoInfoResponse, new List<InfoResponse>{discovery.InfoForNameAndId(EchoServiceName, echoServiceId2)}, echoServiceId2);
+                    VerifyInfoDiscovery(sortInfoResponse, new List<InfoResponse>{discovery.InfoForNameAndId(SortServiceName, sortServiceId2)}, sortServiceId2);
 
                     // schema discovery
-                    void VerifySchemaDiscovery(SchemaInfo expectedSchemaInfo, IList<SchemaInfo> schemas, params string[] expectedIds) {
+                    void VerifySchemaDiscovery(SchemaResponse expectedSchemaResponse, IList<SchemaResponse> schemas, params string[] expectedIds) {
                         Assert.Equal(expectedIds.Length, schemas.Count);
                         foreach (var sch in schemas) {
-                            if (expectedSchemaInfo != null) {
-                                Assert.Equal(expectedSchemaInfo.Name, sch.Name);
-                                Assert.Equal(expectedSchemaInfo.Version, sch.Version);
-                                Assert.Equal(expectedSchemaInfo.Version, sch.Version);
-                                Assert.Equal(expectedSchemaInfo.Schema.Request, sch.Schema.Request);
-                                Assert.Equal(expectedSchemaInfo.Schema.Response, sch.Schema.Response);
+                            if (expectedSchemaResponse != null) {
+                                Assert.Equal(expectedSchemaResponse.Name, sch.Name);
+                                Assert.Equal(expectedSchemaResponse.Version, sch.Version);
+                                Assert.Equal(expectedSchemaResponse.Version, sch.Version);
+                                Assert.Equal(expectedSchemaResponse.Schema.Request, sch.Schema.Request);
+                                Assert.Equal(expectedSchemaResponse.Schema.Response, sch.Schema.Response);
                             }
                             Assert.Contains(sch.ServiceId, expectedIds);
                         }
                     }
                     VerifySchemaDiscovery(null, discovery.Schema(), echoServiceId1, sortServiceId1, echoServiceId2, sortServiceId2);
-                    VerifySchemaDiscovery(echoSchemaInfo, discovery.Schema(EchoServiceName), echoServiceId1, echoServiceId2);
-                    VerifySchemaDiscovery(sortSchemaInfo, discovery.Schema(SortServiceName), sortServiceId1, sortServiceId2);
-                    VerifySchemaDiscovery(echoSchemaInfo, new List<SchemaInfo>{discovery.SchemaForNameAndId(EchoServiceName, echoServiceId1)}, echoServiceId1);
-                    VerifySchemaDiscovery(sortSchemaInfo, new List<SchemaInfo>{discovery.SchemaForNameAndId(SortServiceName, sortServiceId1)}, sortServiceId1);
-                    VerifySchemaDiscovery(echoSchemaInfo, new List<SchemaInfo>{discovery.SchemaForNameAndId(EchoServiceName, echoServiceId2)}, echoServiceId2);
-                    VerifySchemaDiscovery(sortSchemaInfo, new List<SchemaInfo>{discovery.SchemaForNameAndId(SortServiceName, sortServiceId2)}, sortServiceId2);
+                    VerifySchemaDiscovery(echoSchemaResponse, discovery.Schema(EchoServiceName), echoServiceId1, echoServiceId2);
+                    VerifySchemaDiscovery(sortSchemaResponse, discovery.Schema(SortServiceName), sortServiceId1, sortServiceId2);
+                    VerifySchemaDiscovery(echoSchemaResponse, new List<SchemaResponse>{discovery.SchemaForNameAndId(EchoServiceName, echoServiceId1)}, echoServiceId1);
+                    VerifySchemaDiscovery(sortSchemaResponse, new List<SchemaResponse>{discovery.SchemaForNameAndId(SortServiceName, sortServiceId1)}, sortServiceId1);
+                    VerifySchemaDiscovery(echoSchemaResponse, new List<SchemaResponse>{discovery.SchemaForNameAndId(EchoServiceName, echoServiceId2)}, echoServiceId2);
+                    VerifySchemaDiscovery(sortSchemaResponse, new List<SchemaResponse>{discovery.SchemaForNameAndId(SortServiceName, sortServiceId2)}, sortServiceId2);
                     
                     // stats discovery
                     discovery = new Discovery(clientNc); // coverage for the simple constructor
-                    IList<Stats> statsList = discovery.Stats(null, sdd);
+                    IList<StatsResponse> statsList = discovery.Stats(null, sdd);
                     Assert.Equal(4, statsList.Count);
                     int responseEcho = 0;
                     int responseSort = 0;
                     long requestsEcho = 0;
                     long requestsSort = 0;
-                    foreach (Stats st in statsList) {
+                    foreach (StatsResponse st in statsList) {
                         if (st.Name.Equals(EchoServiceName)) {
                             responseEcho++;
                             requestsEcho += st.NumRequests;
@@ -211,24 +218,24 @@ namespace IntegrationTestsInternal
                     Assert.Equal(requestCount, requestsSort);
 
                     // stats one specific instance so I can also test reset
-                    Stats stats = discovery.StatsForNameAndId(EchoServiceName, echoServiceId1);
-                    Assert.Equal(echoServiceId1, stats.ServiceId);
-                    Assert.Equal(echoInfo.Version, stats.Version);
+                    StatsResponse statsResponse = discovery.StatsForNameAndId(EchoServiceName, echoServiceId1);
+                    Assert.Equal(echoServiceId1, statsResponse.ServiceId);
+                    Assert.Equal(echoInfoResponse.Version, statsResponse.Version);
 
                     // reset stats
                     echoService1.Reset();
-                    stats = echoService1.Stats;
-                    Assert.Equal(0, stats.NumRequests);
-                    Assert.Equal(0, stats.NumErrors);
-                    Assert.Equal(0, stats.ProcessingTime);
-                    Assert.Equal(0, stats.AverageProcessingTime);
-                    Assert.Null(stats.Data);
+                    statsResponse = echoService1.StatsResponse;
+                    Assert.Equal(0, statsResponse.NumRequests);
+                    Assert.Equal(0, statsResponse.NumErrors);
+                    Assert.Equal(0, statsResponse.ProcessingTime);
+                    Assert.Equal(0, statsResponse.AverageProcessingTime);
+                    Assert.Null(statsResponse.Data);
 
-                    stats = discovery.StatsForNameAndId(EchoServiceName, echoServiceId1);
-                    Assert.Equal(0, stats.NumRequests);
-                    Assert.Equal(0, stats.NumErrors);
-                    Assert.Equal(0, stats.ProcessingTime);
-                    Assert.Equal(0, stats.AverageProcessingTime);
+                    statsResponse = discovery.StatsForNameAndId(EchoServiceName, echoServiceId1);
+                    Assert.Equal(0, statsResponse.NumRequests);
+                    Assert.Equal(0, statsResponse.NumErrors);
+                    Assert.Equal(0, statsResponse.ProcessingTime);
+                    Assert.Equal(0, statsResponse.AverageProcessingTime);
                     
                     // shutdown
                     echoService1.Stop(); // drain = true, exception = null
@@ -244,10 +251,10 @@ namespace IntegrationTestsInternal
             }
         }
 
-        private static void VerifyDiscovery(Info expectedInfo, SchemaInfo expectedSchemaInfo, IList<object> objects, SchemaInfoVerifier siv, List<String>  expectedIds) {
+        private static void VerifyDiscovery(InfoResponse expectedInfoResponse, SchemaResponse expectedSchemaResponse, IList<object> objects, SchemaResponseVerifier siv, List<String>  expectedIds) {
             Assert.Equal(expectedIds.Count, objects.Count);
             foreach (var o in objects) {
-                String id = siv.Invoke(expectedInfo, expectedSchemaInfo, o);
+                String id = siv.Invoke(expectedInfoResponse, expectedSchemaResponse, o);
                 Assert.Contains(id, expectedIds);
             }
         }
@@ -328,9 +335,9 @@ namespace IntegrationTestsInternal
                 Msg m = nc.Request("HandlerExceptionService", null);
                 Assert.Equal("handler-problem", m.Header[ServiceMessage.NatsServiceError]);
                 Assert.Equal("500", m.Header[ServiceMessage.NatsServiceErrorCode]);
-                Assert.Equal(1, devexService.Stats.NumRequests);
-                Assert.Equal(1, devexService.Stats.NumErrors);
-                Assert.Contains("System.Exception: handler-problem", devexService.Stats.LastError);
+                Assert.Equal(1, devexService.StatsResponse.NumRequests);
+                Assert.Equal(1, devexService.StatsResponse.NumErrors);
+                Assert.Contains("System.Exception: handler-problem", devexService.StatsResponse.LastError);
             });
         }
 

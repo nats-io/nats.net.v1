@@ -20,36 +20,33 @@ namespace NATS.Client.Service
     /// <summary>
     /// SERVICE IS AN EXPERIMENTAL API SUBJECT TO CHANGE
     /// </summary>
-    public class SchemaInfo : JsonSerializable
+    public class InfoResponse : JsonSerializable
     {
         public string ServiceId { get; }
         public string Name { get; }
         public string Version { get; }
-        public Schema Schema { get; }
+        public string Description { get; }
+        public string Subject { get; }
+        public string Type => "io.nats.micro.v1.info_response";
 
-        internal SchemaInfo(string serviceId, string name, string version, string schemaRequest, string schemaResponse)
+        internal InfoResponse(string serviceId, string name, string version, string description, string subject)
         {
             ServiceId = serviceId;
             Name = name;
             Version = version;
-            if (string.IsNullOrEmpty(schemaRequest) && string.IsNullOrEmpty(schemaResponse))
-            {
-                Schema = null;
-            }
-            else
-            {
-                Schema = new Schema(schemaRequest, schemaResponse);
-            }
+            Description = description;
+            Subject = subject;
         }
 
-        internal SchemaInfo(string json) : this(JSON.Parse(json)) {}
+        internal InfoResponse(string json) : this(JSON.Parse(json)) {}
 
-        internal SchemaInfo(JSONNode node)
+        internal InfoResponse(JSONNode node)
         {
             ServiceId = node[ApiConstants.Id];
             Name = node[ApiConstants.Name];
+            Description = node[ApiConstants.Description];
             Version = node[ApiConstants.Version];
-            Schema = Schema.OptionalInstance(node[ApiConstants.Schema]);
+            Subject = node[ApiConstants.Subject];
         }
 
         internal override JSONNode ToJsonNode()
@@ -57,8 +54,10 @@ namespace NATS.Client.Service
             JSONObject jso = new JSONObject();
             JsonUtils.AddField(jso, ApiConstants.Id, ServiceId);
             JsonUtils.AddField(jso, ApiConstants.Name, Name);
+            JsonUtils.AddField(jso, ApiConstants.Type, Type);
+            JsonUtils.AddField(jso, ApiConstants.Description, Description);
             JsonUtils.AddField(jso, ApiConstants.Version, Version);
-            jso[ApiConstants.Schema] = Schema?.ToJsonNode();
+            JsonUtils.AddField(jso, ApiConstants.Subject, Subject);
             return jso;
         }
     }

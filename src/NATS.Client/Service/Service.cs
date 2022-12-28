@@ -29,8 +29,8 @@ namespace NATS.Client.Service
         private readonly StatsDataDecoder statsDataDecoder;
         private readonly int drainTimeoutMillis;
 
-        public Info Info { get; }
-        public SchemaInfo SchemaInfo { get; }
+        public InfoResponse InfoResponse { get; }
+        public SchemaResponse SchemaResponse { get; }
 
         private readonly Context serviceContext;
         private readonly IList<Context> discoveryContexts;
@@ -45,18 +45,18 @@ namespace NATS.Client.Service
             statsDataDecoder = builder.StatsDataDecoder;
             drainTimeoutMillis = builder.DrainTimeoutMillis;
 
-            Info = new Info(id, builder.Name, builder.Version, builder.Description, builder.Subject);
-            SchemaInfo = new SchemaInfo(id, builder.Name, builder.Version, builder.SchemaRequest, builder.SchemaResponse);
+            InfoResponse = new InfoResponse(id, builder.Name, builder.Version, builder.Description, builder.Subject);
+            SchemaResponse = new SchemaResponse(id, builder.Name, builder.Version, builder.SchemaRequest, builder.SchemaResponse);
 
             // do the service first in case the server feels like rejecting the subject
-            Stats stats = new Stats(id, builder.Name, builder.Version);
-            serviceContext = new ServiceContext(conn, Info.Subject, stats, builder.ServiceMessageHandler); 
+            StatsResponse statsResponse = new StatsResponse(id, builder.Name, builder.Version);
+            serviceContext = new ServiceContext(conn, InfoResponse.Subject, statsResponse, builder.ServiceMessageHandler); 
 
             discoveryContexts = new List<Context>();
-            AddDiscoveryContexts(ServiceUtil.Ping, new Ping(id, Info.Name, Info.Version).Serialize());
-            AddDiscoveryContexts(ServiceUtil.Info, Info.Serialize());
-            AddDiscoveryContexts(ServiceUtil.Schema, SchemaInfo.Serialize());
-            AddStatsContexts(stats, builder.StatsDataSupplier);
+            AddDiscoveryContexts(ServiceUtil.Ping, new PingResponse(id, InfoResponse.Name, InfoResponse.Version).Serialize());
+            AddDiscoveryContexts(ServiceUtil.Info, InfoResponse.Serialize());
+            AddDiscoveryContexts(ServiceUtil.Schema, SchemaResponse.Serialize());
+            AddStatsContexts(statsResponse, builder.StatsDataSupplier);
 
             stopLock = new object();
         }
@@ -75,14 +75,14 @@ namespace NATS.Client.Service
         
         private void AddDiscoveryContexts(string action, byte[] response) {
             discoveryContexts.Add(new DiscoveryContext(conn, action, null, null, response));
-            discoveryContexts.Add(new DiscoveryContext(conn, action, Info.Name, null, response));
-            discoveryContexts.Add(new DiscoveryContext(conn, action, Info.Name, id, response));
+            discoveryContexts.Add(new DiscoveryContext(conn, action, InfoResponse.Name, null, response));
+            discoveryContexts.Add(new DiscoveryContext(conn, action, InfoResponse.Name, id, response));
         }
 
-        private void AddStatsContexts(Stats stats, StatsDataSupplier sds) {
-            discoveryContexts.Add(new StatsContext(conn, null, null, stats, sds));
-            discoveryContexts.Add(new StatsContext(conn, Info.Name, null, stats, sds));
-            discoveryContexts.Add(new StatsContext(conn, Info.Name, id, stats, sds));
+        private void AddStatsContexts(StatsResponse statsResponse, StatsDataSupplier sds) {
+            discoveryContexts.Add(new StatsContext(conn, null, null, statsResponse, sds));
+            discoveryContexts.Add(new StatsContext(conn, InfoResponse.Name, null, statsResponse, sds));
+            discoveryContexts.Add(new StatsContext(conn, InfoResponse.Name, id, statsResponse, sds));
         }
 
         public void Stop(bool drain = true, Exception e = null) {
@@ -120,16 +120,16 @@ namespace NATS.Client.Service
         }
 
         public void Reset() {
-            serviceContext.Stats.Reset();
+            serviceContext.StatsResponse.Reset();
         }
 
-        public string Id => Info.ServiceId;
+        public string Id => InfoResponse.ServiceId;
 
-        public Stats Stats => serviceContext.Stats.Copy(statsDataDecoder);
+        public StatsResponse StatsResponse => serviceContext.StatsResponse.Copy(statsDataDecoder);
   
         public override string ToString()
         {
-            return $"Service: {Info}";
+            return $"Service: {InfoResponse}";
         }
     }
  }

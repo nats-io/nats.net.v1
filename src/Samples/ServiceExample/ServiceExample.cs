@@ -105,63 +105,63 @@ namespace NATSExamples
                 // ----------------------------------------------------------------------------------------------------
                 // ping discover variations
                 // ----------------------------------------------------------------------------------------------------
-                IList<Ping> pings = discovery.Ping();
+                IList<PingResponse> pings = discovery.Ping();
                 PrintDiscovery("Ping", "[All]", pings);
 
                 pings = discovery.Ping(EchoServiceName);
                 PrintDiscovery("Ping", EchoServiceName, pings);
 
                 string echoId = pings[0].ServiceId;
-                Ping ping = discovery.PingForNameAndId(EchoServiceName, echoId);
-                PrintDiscovery("Ping", EchoServiceName, echoId, ping);
+                PingResponse pingResponse = discovery.PingForNameAndId(EchoServiceName, echoId);
+                PrintDiscovery("Ping", EchoServiceName, echoId, pingResponse);
 
                 pings = discovery.Ping(SortServiceName);
                 PrintDiscovery("Ping", SortServiceName, pings);
 
                 string sortId = pings[0].ServiceId;
-                ping = discovery.PingForNameAndId(SortServiceName, sortId);
-                PrintDiscovery("Ping", SortServiceName, sortId, ping);
+                pingResponse = discovery.PingForNameAndId(SortServiceName, sortId);
+                PrintDiscovery("Ping", SortServiceName, sortId, pingResponse);
 
                 // ----------------------------------------------------------------------------------------------------
                 // info discover variations
                 // ----------------------------------------------------------------------------------------------------
-                IList<Info> infos = discovery.Info();
+                IList<InfoResponse> infos = discovery.Info();
                 PrintDiscovery("Info", "[All]", infos);
 
                 infos = discovery.Info(EchoServiceName);
                 PrintDiscovery("Info", EchoServiceName, infos);
 
-                Info info = discovery.InfoForNameAndId(EchoServiceName, echoId);
-                PrintDiscovery("Info", EchoServiceName, echoId, info);
+                InfoResponse infoResponse = discovery.InfoForNameAndId(EchoServiceName, echoId);
+                PrintDiscovery("Info", EchoServiceName, echoId, infoResponse);
 
                 infos = discovery.Info(SortServiceName);
                 PrintDiscovery("Info", SortServiceName, infos);
 
-                info = discovery.InfoForNameAndId(SortServiceName, sortId);
-                PrintDiscovery("Info", SortServiceName, sortId, info);
+                infoResponse = discovery.InfoForNameAndId(SortServiceName, sortId);
+                PrintDiscovery("Info", SortServiceName, sortId, infoResponse);
 
                 // ----------------------------------------------------------------------------------------------------
                 // schema discover variations
                 // ----------------------------------------------------------------------------------------------------
-                IList<SchemaInfo> schemaInfos = discovery.Schema();
-                PrintDiscovery("Schema", "[All]", schemaInfos);
+                IList<SchemaResponse> schemaResponses = discovery.Schema();
+                PrintDiscovery("Schema", "[All]", schemaResponses);
 
-                schemaInfos = discovery.Schema(EchoServiceName);
-                PrintDiscovery("Schema", EchoServiceName, schemaInfos);
+                schemaResponses = discovery.Schema(EchoServiceName);
+                PrintDiscovery("Schema", EchoServiceName, schemaResponses);
 
-                SchemaInfo schemaInfo = discovery.SchemaForNameAndId(EchoServiceName, echoId);
-                PrintDiscovery("Schema", EchoServiceName, echoId, schemaInfo);
+                SchemaResponse schemaResponse = discovery.SchemaForNameAndId(EchoServiceName, echoId);
+                PrintDiscovery("Schema", EchoServiceName, echoId, schemaResponse);
 
-                schemaInfos = discovery.Schema(SortServiceName);
-                PrintDiscovery("Schema", SortServiceName, schemaInfos);
+                schemaResponses = discovery.Schema(SortServiceName);
+                PrintDiscovery("Schema", SortServiceName, schemaResponses);
 
-                schemaInfo = discovery.SchemaForNameAndId(SortServiceName, sortId);
-                PrintDiscovery("Schema", SortServiceName, sortId, schemaInfo);
+                schemaResponse = discovery.SchemaForNameAndId(SortServiceName, sortId);
+                PrintDiscovery("Schema", SortServiceName, sortId, schemaResponse);
 
                 // ----------------------------------------------------------------------------------------------------
                 // stats discover variations
                 // ----------------------------------------------------------------------------------------------------
-                IList<Stats> statsList = discovery.Stats(null, sdd);
+                IList<StatsResponse> statsList = discovery.Stats(null, sdd);
                 PrintDiscovery("Stats", "[All]", statsList);
 
                 statsList = discovery.Stats(EchoServiceName);

@@ -20,22 +20,23 @@ namespace NATS.Client.Service
     /// <summary>
     /// SERVICE IS AN EXPERIMENTAL API SUBJECT TO CHANGE
     /// </summary>
-    public class Ping : JsonSerializable
+    public class PingResponse : JsonSerializable
     {
         public string ServiceId { get; }
         public string Name { get; }
         public string Version { get; }
+        public string Type => "io.nats.micro.v1.ping_response";
 
-        internal Ping(string serviceId, string name, string version)
+        internal PingResponse(string serviceId, string name, string version)
         {
             ServiceId = serviceId;
             Name = name;
             Version = version;
         }
 
-        internal Ping(string json) : this(JSON.Parse(json)) {}
+        internal PingResponse(string json) : this(JSON.Parse(json)) {}
 
-        internal Ping(JSONNode node)
+        internal PingResponse(JSONNode node)
         {
             ServiceId = node[ApiConstants.Id];
             Name = node[ApiConstants.Name];
@@ -47,6 +48,7 @@ namespace NATS.Client.Service
             JSONObject jso = new JSONObject();
             JsonUtils.AddField(jso, ApiConstants.Id, ServiceId);
             JsonUtils.AddField(jso, ApiConstants.Name, Name);
+            JsonUtils.AddField(jso, ApiConstants.Type, Type);
             JsonUtils.AddField(jso, ApiConstants.Version, Version);
             return jso;
         }

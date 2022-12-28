@@ -20,8 +20,8 @@ namespace NATS.Client.Service.Contexts
         private readonly StatsDataSupplier _sds;
             
         internal StatsContext(IConnection conn, 
-            String serviceName, String serviceId, Stats stats, StatsDataSupplier sds) 
-            : base(conn, ServiceUtil.ToDiscoverySubject(ServiceUtil.Stats, serviceName, serviceId), stats)
+            String serviceName, String serviceId, StatsResponse statsResponse, StatsDataSupplier sds) 
+            : base(conn, ServiceUtil.ToDiscoverySubject(ServiceUtil.Stats, serviceName, serviceId), statsResponse)
         {
             _sds = sds;
         }
@@ -29,9 +29,9 @@ namespace NATS.Client.Service.Contexts
         protected override void SubOnMessage(object sender, MsgHandlerEventArgs args)
         {
             if (_sds != null) {
-                Stats.Data = _sds.Invoke();
+                StatsResponse.Data = _sds.Invoke();
             }
-            Conn.Publish(args.Message.Reply, Stats.Serialize());
+            Conn.Publish(args.Message.Reply, StatsResponse.Serialize());
         }
     }
 }

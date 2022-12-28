@@ -25,71 +25,71 @@ namespace NATS.Client.Service
         // ----------------------------------------------------------------------------------------------------
         // ping
         // ----------------------------------------------------------------------------------------------------
-        public IList<Ping> Ping(string serviceName = null)
+        public IList<PingResponse> Ping(string serviceName = null)
         {
-            IList<Ping> list = new List<Ping>();
+            IList<PingResponse> list = new List<PingResponse>();
             DiscoverMany(ServiceUtil.Ping, serviceName, json => {
-                list.Add(new Ping(json));
+                list.Add(new PingResponse(json));
             });
             return list;
         }
 
-        public Ping PingForNameAndId(string serviceName, string serviceId) 
+        public PingResponse PingForNameAndId(string serviceName, string serviceId) 
         {
             string json = DiscoverOne(ServiceUtil.Ping, serviceName, serviceId);
-            return json == null ? null : new Ping(json);
+            return json == null ? null : new PingResponse(json);
         }
 
         // ----------------------------------------------------------------------------------------------------
         // info
         // ----------------------------------------------------------------------------------------------------
-        public IList<Info> Info(string serviceName = null)
+        public IList<InfoResponse> Info(string serviceName = null)
         {
-            IList<Info> list = new List<Info>();
+            IList<InfoResponse> list = new List<InfoResponse>();
             DiscoverMany(ServiceUtil.Info, serviceName, json => {
-                list.Add(new Info(json));
+                list.Add(new InfoResponse(json));
             });
             return list;
         }
 
-        public Info InfoForNameAndId(string serviceName, string serviceId) {
+        public InfoResponse InfoForNameAndId(string serviceName, string serviceId) {
             string json = DiscoverOne(ServiceUtil.Info, serviceName, serviceId);
-            return json == null ? null : new Info(json);
+            return json == null ? null : new InfoResponse(json);
         }
 
         // ----------------------------------------------------------------------------------------------------
         // schema
         // ----------------------------------------------------------------------------------------------------
-        public IList<SchemaInfo> Schema(string serviceName = null)
+        public IList<SchemaResponse> Schema(string serviceName = null)
         {
-            IList<SchemaInfo> list = new List<SchemaInfo>();
+            IList<SchemaResponse> list = new List<SchemaResponse>();
             DiscoverMany(ServiceUtil.Schema, serviceName, json => {
-                list.Add(new SchemaInfo(json));
+                list.Add(new SchemaResponse(json));
             });
             return list;
         }
 
-        public SchemaInfo SchemaForNameAndId(string serviceName, string serviceId) 
+        public SchemaResponse SchemaForNameAndId(string serviceName, string serviceId) 
         {
             string json = DiscoverOne(ServiceUtil.Schema, serviceName, serviceId);
-            return json == null ? null : new SchemaInfo(json);
+            return json == null ? null : new SchemaResponse(json);
         }
 
         // ----------------------------------------------------------------------------------------------------
         // stats
         // ----------------------------------------------------------------------------------------------------
-        public IList<Stats> Stats(string serviceName = null, StatsDataDecoder statsDataDecoder = null)
+        public IList<StatsResponse> Stats(string serviceName = null, StatsDataDecoder statsDataDecoder = null)
         {
-            IList<Stats> list = new List<Stats>();
+            IList<StatsResponse> list = new List<StatsResponse>();
             DiscoverMany(ServiceUtil.Stats, serviceName, json => {
-                list.Add(new Stats(json, statsDataDecoder));
+                list.Add(new StatsResponse(json, statsDataDecoder));
             });
             return list;
         }
 
-        public Stats StatsForNameAndId(string serviceName, string serviceId, StatsDataDecoder statsDataDecoder = null) {
+        public StatsResponse StatsForNameAndId(string serviceName, string serviceId, StatsDataDecoder statsDataDecoder = null) {
             string json = DiscoverOne(ServiceUtil.Stats, serviceName, serviceId);
-            return json == null ? null : new Stats(json, statsDataDecoder);
+            return json == null ? null : new StatsResponse(json, statsDataDecoder);
         }
 
         // ----------------------------------------------------------------------------------------------------

@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System;
+using System.Text;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 using NATS.Client.JetStream;
@@ -21,7 +22,7 @@ namespace NATS.Client.Service
     /// <summary>
     /// SERVICE IS AN EXPERIMENTAL API SUBJECT TO CHANGE
     /// </summary>
-    public class Stats : JsonSerializable
+    public class StatsResponse : JsonSerializable
     {
         public string ServiceId { get; }
         public string Name { get; }
@@ -33,13 +34,14 @@ namespace NATS.Client.Service
         public long AverageProcessingTime => averageProcessingTime.Read();
         public IStatsData Data { get; set; }
         public DateTime Started { get; private set; }
+        public string Type => "io.nats.micro.v1.stats_response";
 
         private readonly InterlockedLong numRequests;
         private readonly InterlockedLong numErrors;
         private readonly InterlockedLong processingTime;
         private readonly InterlockedLong averageProcessingTime;
 
-        internal Stats(string serviceId, string name, string version)
+        internal StatsResponse(string serviceId, string name, string version)
         {
             ServiceId = serviceId;
             Name = name;
@@ -53,9 +55,9 @@ namespace NATS.Client.Service
             Started = DateTime.UtcNow;
         }
 
-        internal Stats Copy(StatsDataDecoder decoder)
+        internal StatsResponse Copy(StatsDataDecoder decoder)
         {
-            Stats copy = new Stats(ServiceId, Name, Version);
+            StatsResponse copy = new StatsResponse(ServiceId, Name, Version);
             copy.numRequests.Set(numRequests.Read());
             copy.numErrors.Set(numErrors.Read());
             copy.LastError = LastError;
@@ -69,9 +71,9 @@ namespace NATS.Client.Service
             return copy;
         }
 
-        internal Stats(string json, StatsDataDecoder decoder) : this(JSON.Parse(json), decoder) {}
+        internal StatsResponse(string json, StatsDataDecoder decoder) : this(JSON.Parse(json), decoder) {}
 
-        internal Stats(JSONNode node, StatsDataDecoder decoder)
+        internal StatsResponse(JSONNode node, StatsDataDecoder decoder)
         {
             ServiceId = node[ApiConstants.Id];
             Name = node[ApiConstants.Name];
@@ -112,21 +114,40 @@ namespace NATS.Client.Service
         
         internal override JSONNode ToJsonNode()
         {
+            JSONNode jso = ToJsonNodeNoData();
+            if (Data != null)
+            {
+                jso[ApiConstants.Data] = JSON.Parse(Data.ToJson());
+            }
+            return jso;
+        }
+        
+        private JSONNode ToJsonNodeNoData()
+        {
             JSONObject jso = new JSONObject();
             JsonUtils.AddField(jso, ApiConstants.Id, ServiceId);
             JsonUtils.AddField(jso, ApiConstants.Name, Name);
+            JsonUtils.AddField(jso, ApiConstants.Type, Type);
             JsonUtils.AddField(jso, ApiConstants.Version, Version);
             JsonUtils.AddField(jso, ApiConstants.NumRequests, numRequests.Read());
             JsonUtils.AddField(jso, ApiConstants.NumErrors, numErrors.Read());
             JsonUtils.AddField(jso, ApiConstants.LastError, LastError);
             JsonUtils.AddField(jso, ApiConstants.ProcessingTime, processingTime.Read());
             JsonUtils.AddField(jso, ApiConstants.AverageProcessingTime, averageProcessingTime.Read());
-            if (Data != null)
-            {
-                jso[ApiConstants.Data] = JSON.Parse(Data.ToJson());
-            }
             JsonUtils.AddField(jso, ApiConstants.Started, Started);
             return jso;
+        }
+
+        public override byte[] Serialize()
+        {
+            JSONNode jso = ToJsonNodeNoData();
+            if (Data == null)
+            {
+                return JsonUtils.Serialize(jso); 
+            }
+
+            jso[ApiConstants.Data] = "SR_DATA_REPL";
+            return Encoding.ASCII.GetBytes(jso.ToString().Replace("\"SR_DATA_REPL\"", Data.ToJson()));
         }
 
         public long IncrementNumRequests()
