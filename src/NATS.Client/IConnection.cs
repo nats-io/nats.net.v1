@@ -792,6 +792,13 @@ namespace NATS.Client
         IJetStreamManagement CreateJetStreamManagementContext(JetStreamOptions options = null);
 
         /// <summary>
+        /// Gets a context for administrating JetStream with async operations.
+        /// </summary>
+        /// <param name="options">Optional JetStream options.</param>
+        /// <returns></returns>
+        IJetStreamManagementAsync CreateJetStreamManagementAsyncContext(JetStreamOptions options = null);
+
+        /// <summary>
         /// Gets a context for a Key Value bucket 
         /// </summary>
         /// <param name="bucketName">The name of the bucket</param>

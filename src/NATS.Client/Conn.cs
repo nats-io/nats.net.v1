@@ -4768,6 +4768,11 @@ namespace NATS.Client
             return new JetStreamManagement(this, options);
         }
 
+        public IJetStreamManagementAsync CreateJetStreamManagementAsyncContext(JetStreamOptions options = null)
+        {
+            return new JetStreamManagementAsync(this, options);
+        }
+
         #endregion
 
         #region KeyValue

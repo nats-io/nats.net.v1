@@ -12,41 +12,42 @@
 // limitations under the License.
 
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace NATS.Client.JetStream
 {
     /// <summary>
-    /// This is the JetStream management API to programmatically create, delete,
+    /// This is the JetStream management async API to programmatically create, delete,
     /// and update various JetStream objects.
     /// </summary>
-    public interface IJetStreamManagement
+    public interface IJetStreamManagementAsync
     {
         /// <summary>
         /// Gets the account statistics for the logged in account.
         /// <returns>account statistics</returns>
         /// </summary>
-        AccountStatistics GetAccountStatistics();
+        Task<AccountStatistics> GetAccountStatisticsAsync();
 
         /// <summary>
         /// Loads or creates a stream.
         /// </summary>
         /// <param name="config">The stream configuration to use.</param>
         /// <returns>Stream information</returns>
-        StreamInfo AddStream(StreamConfiguration config);
+        Task<StreamInfo> AddStreamAsync(StreamConfiguration config);
 
         /// <summary>
         /// Updates an existing stream.
         /// </summary>
         /// <param name="config">The stream configuration to use.</param>
         /// <returns>Stream information</returns>
-        StreamInfo UpdateStream(StreamConfiguration config);
+        Task<StreamInfo> UpdateStreamAsync(StreamConfiguration config);
 
         /// <summary>
         /// Deletes an existing stream.
         /// </summary>
         /// <param name="streamName">The name of the stream.</param>
         /// <returns>true if the delete succeeded. Usually throws a NATSJetStreamException otherwise</returns>
-        bool DeleteStream(string streamName);
+        Task<bool> DeleteStreamAsync(string streamName);
 
         /// <summary>
         /// Get information about a stream.
@@ -55,7 +56,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="streamName">The name of the stream.</param>
         /// <returns>Stream information</returns>
-        StreamInfo GetStreamInfo(string streamName);
+        Task<StreamInfo> GetStreamInfoAsync(string streamName);
 
         /// <summary>
         /// Get information about a stream, and include optional information
@@ -64,14 +65,14 @@ namespace NATS.Client.JetStream
         /// <param name="streamName">The name of the stream.</param>
         /// <param name="options">the stream info options. If null, request will not return any optional data.</param>
         /// <returns>Stream information</returns>
-        StreamInfo GetStreamInfo(string streamName, StreamInfoOptions options);
+        Task<StreamInfo> GetStreamInfoAsync(string streamName, StreamInfoOptions options);
 
         /// <summary>
         /// Purges all messages in a stream.
         /// </summary>
         /// <param name="streamName">The name of the stream.</param>
         /// <returns>The result of the purge.</returns>
-        PurgeResponse PurgeStream(string streamName);
+        Task<PurgeResponse> PurgeStreamAsync(string streamName);
 
         /// <summary>
         /// Purges all messages in a stream.
@@ -79,7 +80,7 @@ namespace NATS.Client.JetStream
         /// <param name="streamName">The name of the stream.</param>
         /// <param name="options">The purge options.</param>
         /// <returns>The result of the purge.</returns>
-        PurgeResponse PurgeStream(string streamName, PurgeOptions options);
+        Task<PurgeResponse> PurgeStreamAsync(string streamName, PurgeOptions options);
 
         /// <summary>
         /// Adds or updates a consumer.
@@ -87,7 +88,7 @@ namespace NATS.Client.JetStream
         /// <param name="streamName">The name of the stream the consumer is attached to.</param>
         /// <param name="config">The consumer configuration to use.</param>
         /// <returns></returns>
-        ConsumerInfo AddOrUpdateConsumer(string streamName, ConsumerConfiguration config);
+        Task<ConsumerInfo> AddOrUpdateConsumerAsync(string streamName, ConsumerConfiguration config);
 
         /// <summary>
         /// Deletes a consumer.
@@ -95,7 +96,7 @@ namespace NATS.Client.JetStream
         /// <param name="streamName">The name of the stream the consumer is attached to.</param>
         /// <param name="consumer">The name of the consumer.</param>
         /// <returns>True if the consumer was deleted.</returns>
-        bool DeleteConsumer(string streamName, string consumer);
+        Task<bool> DeleteConsumerAsync(string streamName, string consumer);
 
         /// <summary>
         /// Gets information for an existing consumer.
@@ -103,46 +104,46 @@ namespace NATS.Client.JetStream
         /// <param name="streamName">The name of the stream the consumer is attached to.</param>
         /// <param name="consumer">The name of the consumer.</param>
         /// <returns>Consumer information</returns>
-        ConsumerInfo GetConsumerInfo(string streamName, string consumer);
-        
+        Task<ConsumerInfo> GetConsumerInfoAsync(string streamName, string consumer);
+
         /// <summary>
         /// Gets all consumers attached to a stream.
         /// </summary>
         /// <param name="streamName">The name of the stream.</param>
         /// <returns>An array of consumer names.</returns>
-        IList<string> GetConsumerNames(string streamName);
+        Task<IList<string>> GetConsumerNamesAsync(string streamName);
 
         /// <summary>
         /// Get consumer information for all consumers on a stream.
         /// </summary>
         /// <param name="streamName">The name of the stream.</param>
         /// <returns>An array of consumer information objects.</returns>
-        IList<ConsumerInfo> GetConsumers(string streamName);
+        Task<IList<ConsumerInfo>> GetConsumersAsync(string streamName);
 
         /// <summary>
         /// Gets the names of all streams.
         /// </summary>
         /// <returns>An array of stream names.</returns>
-        IList<string> GetStreamNames();
+        Task<IList<string>> GetStreamNamesAsync();
 
         /// <summary>
         /// Get a list of stream names that have subjects matching the subject filter.
         /// </summary>
         /// <param name="subjectFilter">The subject. Wildcards are allowed.</param>
         /// <returns></returns>
-        IList<string> GetStreamNames(string subjectFilter);
-        
+        Task<IList<string>> GetStreamNamesAsync(string subjectFilter);
+
         /// <summary>
         /// Gets stream information about all streams.
         /// </summary>
         /// <returns>An array of stream information objects.</returns>
-        IList<StreamInfo> GetStreams();
-        
+        Task<IList<StreamInfo>> GetStreamsAsync();
+
         /// <summary>
         /// Gets stream information about all streams that have subjects matching the filter.
         /// </summary>
         /// <returns>An array of stream information objects.</returns>
-        IList<StreamInfo> GetStreams(string subjectFilter);
+        Task<IList<StreamInfo>> GetStreamsAsync(string subjectFilter);
 
         /// <summary>
         /// Get MessageInfo for the message with the exact sequence in the stream.
@@ -150,7 +151,7 @@ namespace NATS.Client.JetStream
         /// <param name="streamName">The name of the stream.</param>
         /// <param name="sequence">The stream sequence number of the message.</param>
         /// <returns>Message information.</returns>
-        MessageInfo GetMessage(string streamName, ulong sequence);
+        Task<MessageInfo> GetMessageAsync(string streamName, ulong sequence);
 
         /// <summary>
         /// Get MessageInfo for the last message of the subject.
@@ -158,7 +159,7 @@ namespace NATS.Client.JetStream
         /// <param name="streamName">The name of the stream.</param>
         /// <param name="subject">The subject to get the last message for.</param>
         /// <returns>Message information.</returns>
-        MessageInfo GetLastMessage(string streamName, string subject);
+        Task<MessageInfo> GetLastMessageAsync(string streamName, string subject);
 
         /// <summary>
         /// Get MessageInfo for the first message of the subject.
@@ -166,7 +167,7 @@ namespace NATS.Client.JetStream
         /// <param name="streamName">The name of the stream.</param>
         /// <param name="subject">The subject to get the first message for.</param>
         /// <returns>Message information.</returns>
-        MessageInfo GetFirstMessage(string streamName, string subject);
+        Task<MessageInfo> GetFirstMessageAsync(string streamName, string subject);
 
         /// <summary>
         /// Get MessageInfo for the message of the message sequence
@@ -176,7 +177,7 @@ namespace NATS.Client.JetStream
         /// <param name="sequence">The first possible sequence number of the message.</param>
         /// <param name="subject">The subject to get the next message for.</param>
         /// <returns>Message information.</returns>
-        MessageInfo GetNextMessage(string streamName, ulong sequence, string subject);
+        Task<MessageInfo> GetNextMessageAsync(string streamName, ulong sequence, string subject);
 
         /// <summary>
         /// Deletes a message, overwriting the message data with garbage
@@ -185,7 +186,7 @@ namespace NATS.Client.JetStream
         /// <param name="streamName">The name of the stream.</param>
         /// <param name="sequence">The stream sequence number of the message.</param>
         /// <returns>True if the message was deleted.</returns>
-        bool DeleteMessage(string streamName, ulong sequence);
+        Task<bool> DeleteMessageAsync(string streamName, ulong sequence);
 
         /// <summary>
         /// Deletes a message, optionally erasing the content of the message.
@@ -194,6 +195,6 @@ namespace NATS.Client.JetStream
         /// <param name="sequence">The stream sequence number of the message.</param>
         /// <param name="erase">Whether to erase the message (overwriting with garbage) or only mark it as erased.</param>
         /// <returns>True if the message was deleted.</returns>
-        bool DeleteMessage(string streamName, ulong sequence, bool erase);
+        Task<bool> DeleteMessageAsync(string streamName, ulong sequence, bool erase);
     }
 }
