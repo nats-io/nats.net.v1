@@ -14,6 +14,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using NATS.Client.Internals;
 
 namespace NATS.Client.JetStream
@@ -26,7 +27,7 @@ namespace NATS.Client.JetStream
         internal CachedStreamInfo(StreamInfo si)
         {
             AllowDirect = si.Config.AllowDirect;
-        }        
+        }
     }
 
     public class JetStreamBase
@@ -57,26 +58,40 @@ namespace NATS.Client.JetStream
 
             return si;
         }
-            
+
+        private string FormatConsumerInfoSubject(string streamName, string consumer)
+        {
+            return string.Format(JetStreamConstants.JsapiConsumerInfo, streamName, consumer);
+        }
+
         // ----------------------------------------------------------------------------------------------------
         // Management that is also needed by regular context
         // ----------------------------------------------------------------------------------------------------
         internal ConsumerInfo GetConsumerInfoInternal(string streamName, string consumer) {
-            string subj = string.Format(JetStreamConstants.JsapiConsumerInfo, streamName, consumer);
+            string subj = FormatConsumerInfoSubject(streamName, consumer);
             var m = RequestResponseRequired(subj, null, Timeout);
             return new ConsumerInfo(m, true);
         }
 
-        internal ConsumerInfo AddOrUpdateConsumerInternal(string streamName, ConsumerConfiguration config)
+        // ----------------------------------------------------------------------------------------------------
+        // Management that is also needed by regular context
+        // ----------------------------------------------------------------------------------------------------
+        internal async Task<ConsumerInfo> GetConsumerInfoInternalAsync(string streamName, string consumer) {
+            string subj = FormatConsumerInfoSubject(streamName, consumer);
+            var m = await RequestResponseRequiredAsync(subj, null, Timeout);
+            return new ConsumerInfo(m, true);
+        }
+
+        private string ValidateAndFormatConsumerSubject(string streamName, ConsumerConfiguration config)
         {
             bool consumerCreate290Available = ServerInfoOrException(Conn).IsSameOrNewerThanVersion("2.9.0") && !JetStreamOptions.IsOptOut290ConsumerCreate;
-            
+
             string name = Validator.EmptyAsNull(config.Name);
             if (!string.IsNullOrWhiteSpace(name) && !consumerCreate290Available)
             {
                 throw ClientExDetail.JsConsumerCreate290NotAvailable.Instance();
             }
-            
+
             string durable = Validator.EmptyAsNull(config.Durable);
 
             string consumerName = name ?? durable;
@@ -104,18 +119,50 @@ namespace NATS.Client.JetStream
                 subj = string.Format(JetStreamConstants.JsapiDurableCreate, streamName, durable);
             }
 
+            return subj;
+        }
+
+        internal ConsumerInfo AddOrUpdateConsumerInternal(string streamName, ConsumerConfiguration config)
+        {
+            string subj = ValidateAndFormatConsumerSubject(streamName, config);
             var ccr = new ConsumerCreateRequest(streamName, config);
             var m = RequestResponseRequired(subj, ccr.Serialize(), Timeout);
             return new ConsumerInfo(m, true);
         }
 
+
+        internal async Task<ConsumerInfo> AddOrUpdateConsumerInternalAsync(string streamName, ConsumerConfiguration config)
+        {
+            string subj = ValidateAndFormatConsumerSubject(streamName, config);
+            var ccr = new ConsumerCreateRequest(streamName, config);
+            var m = await RequestResponseRequiredAsync(subj, ccr.Serialize(), Timeout);
+            return new ConsumerInfo(m, true);
+        }
+
+        private static string FormatStreamInfoSubject(string streamName)
+        {
+            return string.Format(JetStreamConstants.JsapiStreamInfo, streamName);
+        }
+
         internal StreamInfo GetStreamInfoInternal(string streamName, StreamInfoOptions options)
         {
-            string subj = string.Format(JetStreamConstants.JsapiStreamInfo, streamName);
+            string subj = FormatStreamInfoSubject(streamName);
             StreamInfoReader sir = new StreamInfoReader();
             while (sir.HasMore())
             {
                 Msg resp = RequestResponseRequired(subj, sir.NextJson(options), Timeout);
+                sir.Process(resp);
+            }
+            return CacheStreamInfo(streamName, sir.StreamInfo);
+        }
+
+        internal async Task<StreamInfo> GetStreamInfoInternalAsync(string streamName, StreamInfoOptions options)
+        {
+            string subj = FormatStreamInfoSubject(streamName);
+            StreamInfoReader sir = new StreamInfoReader();
+            while (sir.HasMore())
+            {
+                Msg resp = await RequestResponseRequiredAsync(subj, sir.NextJson(options), Timeout);
                 sir.Process(resp);
             }
             return CacheStreamInfo(streamName, sir.StreamInfo);
@@ -129,7 +176,7 @@ namespace NATS.Client.JetStream
             cachedStreamInfoDictionary[streamName] = new CachedStreamInfo(si);
             return si;
         }
-        
+
         internal IList<StreamInfo> CacheStreamInfo(IList<StreamInfo> list) {
             foreach (StreamInfo si in list)
             {
@@ -148,11 +195,21 @@ namespace NATS.Client.JetStream
             return snr.Strings;
         }
 
+        internal async Task<IList<string>> GetStreamNamesInternalAsync(string subjectFilter)
+        {
+            StreamNamesReader snr = new StreamNamesReader();
+            while (snr.HasMore()) {
+                Msg m = await RequestResponseRequiredAsync(JetStreamConstants.JsapiStreamNames, snr.NextJson(subjectFilter), Timeout);
+                snr.Process(m);
+            }
+            return snr.Strings;
+        }
+
         // ----------------------------------------------------------------------------------------------------
         // Request Utils
         // ----------------------------------------------------------------------------------------------------
         internal string PrependPrefix(string subject) => Prefix + subject;
-    
+
         public Msg RequestResponseRequired(string subject, byte[] bytes, int timeout)
         {
             Msg msg = Conn.Request(PrependPrefix(subject), bytes, timeout);
@@ -163,7 +220,19 @@ namespace NATS.Client.JetStream
 
             return msg;
         }
- 
+
+
+        public async Task<Msg> RequestResponseRequiredAsync(string subject, byte[] bytes, int timeout)
+        {
+            Msg msg = await Conn.RequestAsync(PrependPrefix(subject), bytes, timeout);
+            if (msg == null)
+            {
+                throw new NATSJetStreamException("Timeout or no response waiting for NATS JetStream server");
+            }
+
+            return msg;
+        }
+
         internal CachedStreamInfo GetCachedStreamInfo(string streamName) {
             CachedStreamInfo csi;
             cachedStreamInfoDictionary.TryGetValue(streamName, out csi);
