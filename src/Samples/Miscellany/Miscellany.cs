@@ -10,7 +10,7 @@ namespace NATSExamples
         public static void Main(string[] args)
         {
             // Set the args manually to run the code you want.
-            // args = new[] { "KvIntro" };
+            args = new[] { "RequestReply" };
             
             if (args.Length == 1)
             {
@@ -24,6 +24,10 @@ namespace NATSExamples
                         NatsByExample.PubSub.PubSubMain();
                         return;
                     
+                    case "RequestReply":
+                        NatsByExample.RequestReply.RequestReplyMain();
+                        return;
+                                            
                     case "KvIntro":
                         NatsByExample.KvIntro.KvIntroMain();
                         return;
@@ -35,6 +39,7 @@ namespace NATSExamples
                 + "\nAvailable programs:"
                 + "\n   CrossClientValidation" 
                 + "\n   PubSub"
+                + "\n   RequestReply"
                 + "\n   KvIntro"
             );
         }
