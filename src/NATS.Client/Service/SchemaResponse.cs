@@ -20,32 +20,39 @@ namespace NATS.Client.Service
     /// <summary>
     /// SERVICE IS AN EXPERIMENTAL API SUBJECT TO CHANGE
     /// </summary>
-    public class Info : JsonSerializable
+    public class SchemaResponse : JsonSerializable
     {
+        public const string ResponseType = "io.nats.micro.v1.schema_response";
+
         public string ServiceId { get; }
         public string Name { get; }
         public string Version { get; }
-        public string Description { get; }
-        public string Subject { get; }
+        public Schema Schema { get; }
+        public string Type => ResponseType;
 
-        internal Info(string serviceId, string name, string version, string description, string subject)
+        internal SchemaResponse(string serviceId, string name, string version, string schemaRequest, string schemaResponse)
         {
             ServiceId = serviceId;
             Name = name;
             Version = version;
-            Description = description;
-            Subject = subject;
+            if (string.IsNullOrEmpty(schemaRequest) && string.IsNullOrEmpty(schemaResponse))
+            {
+                Schema = null;
+            }
+            else
+            {
+                Schema = new Schema(schemaRequest, schemaResponse);
+            }
         }
 
-        internal Info(string json) : this(JSON.Parse(json)) {}
+        internal SchemaResponse(string json) : this(JSON.Parse(json)) {}
 
-        internal Info(JSONNode node)
+        internal SchemaResponse(JSONNode node)
         {
             ServiceId = node[ApiConstants.Id];
             Name = node[ApiConstants.Name];
-            Description = node[ApiConstants.Description];
             Version = node[ApiConstants.Version];
-            Subject = node[ApiConstants.Subject];
+            Schema = Schema.OptionalInstance(node[ApiConstants.Schema]);
         }
 
         internal override JSONNode ToJsonNode()
@@ -53,9 +60,9 @@ namespace NATS.Client.Service
             JSONObject jso = new JSONObject();
             JsonUtils.AddField(jso, ApiConstants.Id, ServiceId);
             JsonUtils.AddField(jso, ApiConstants.Name, Name);
-            JsonUtils.AddField(jso, ApiConstants.Description, Description);
+            JsonUtils.AddField(jso, ApiConstants.Type, Type);
             JsonUtils.AddField(jso, ApiConstants.Version, Version);
-            JsonUtils.AddField(jso, ApiConstants.Subject, Subject);
+            jso[ApiConstants.Schema] = Schema?.ToJsonNode();
             return jso;
         }
     }

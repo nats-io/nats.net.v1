@@ -20,8 +20,8 @@ namespace NATS.Client.Service.Contexts
         private readonly EventHandler<MsgHandlerEventArgs> _serviceMsgHandler;
             
         internal ServiceContext(IConnection conn, string subject, 
-            Stats stats, EventHandler<MsgHandlerEventArgs> serviceMsgHandler) 
-            : base(conn, subject, stats, true)
+            StatsResponse statsResponse, EventHandler<MsgHandlerEventArgs> serviceMsgHandler) 
+            : base(conn, subject, statsResponse, true)
         {
             _serviceMsgHandler = serviceMsgHandler;
         }

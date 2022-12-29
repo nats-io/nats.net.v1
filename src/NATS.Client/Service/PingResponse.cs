@@ -20,45 +20,38 @@ namespace NATS.Client.Service
     /// <summary>
     /// SERVICE IS AN EXPERIMENTAL API SUBJECT TO CHANGE
     /// </summary>
-    public class SchemaInfo : JsonSerializable
+    public class PingResponse : JsonSerializable
     {
+        public const string ResponseType = "io.nats.micro.v1.ping_response";
+
         public string ServiceId { get; }
         public string Name { get; }
         public string Version { get; }
-        public Schema Schema { get; }
+        public string Type => ResponseType;
 
-        internal SchemaInfo(string serviceId, string name, string version, string schemaRequest, string schemaResponse)
+        internal PingResponse(string serviceId, string name, string version)
         {
             ServiceId = serviceId;
             Name = name;
             Version = version;
-            if (string.IsNullOrEmpty(schemaRequest) && string.IsNullOrEmpty(schemaResponse))
-            {
-                Schema = null;
-            }
-            else
-            {
-                Schema = new Schema(schemaRequest, schemaResponse);
-            }
         }
 
-        internal SchemaInfo(string json) : this(JSON.Parse(json)) {}
+        internal PingResponse(string json) : this(JSON.Parse(json)) {}
 
-        internal SchemaInfo(JSONNode node)
+        internal PingResponse(JSONNode node)
         {
             ServiceId = node[ApiConstants.Id];
             Name = node[ApiConstants.Name];
             Version = node[ApiConstants.Version];
-            Schema = Schema.OptionalInstance(node[ApiConstants.Schema]);
         }
-
+        
         internal override JSONNode ToJsonNode()
         {
             JSONObject jso = new JSONObject();
             JsonUtils.AddField(jso, ApiConstants.Id, ServiceId);
             JsonUtils.AddField(jso, ApiConstants.Name, Name);
+            JsonUtils.AddField(jso, ApiConstants.Type, Type);
             JsonUtils.AddField(jso, ApiConstants.Version, Version);
-            jso[ApiConstants.Schema] = Schema?.ToJsonNode();
             return jso;
         }
     }

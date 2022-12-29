@@ -20,17 +20,17 @@ namespace NATS.Client.Service.Contexts
     internal abstract class Context
     {
         protected readonly IConnection Conn;
-        internal Stats Stats { get; }
+        internal StatsResponse StatsResponse { get; }
         internal IAsyncSubscription Sub { get; private set; }
         private readonly string subject;
         private readonly bool recordStats;
         private readonly String qGroup;
 
-        protected Context(IConnection conn, string subject, Stats stats = null, bool isServiceContext = false)
+        protected Context(IConnection conn, string subject, StatsResponse statsResponse = null, bool isServiceContext = false)
         {
             Conn = conn;
             this.subject = subject;
-            Stats = stats;
+            StatsResponse = statsResponse;
             if (isServiceContext)
             {
                 qGroup = ServiceUtil.QGroup;
@@ -48,7 +48,7 @@ namespace NATS.Client.Service.Contexts
         internal void OnMessage(object sender, MsgHandlerEventArgs args)
         {
             Msg msg = args.Message;
-            long requestNo = recordStats ? Stats.IncrementNumRequests() : -1;
+            long requestNo = recordStats ? StatsResponse.IncrementNumRequests() : -1;
             Stopwatch sw = new Stopwatch();
             try
             {
@@ -59,8 +59,8 @@ namespace NATS.Client.Service.Contexts
             {
                 if (recordStats)
                 {
-                    Stats.IncrementNumErrors();
-                    Stats.LastError = e.ToString();
+                    StatsResponse.IncrementNumErrors();
+                    StatsResponse.LastError = e.ToString();
                 }
                 try
                 {
@@ -73,8 +73,8 @@ namespace NATS.Client.Service.Contexts
                 sw.Stop();
                 if (recordStats)
                 {
-                    long total = Stats.AddTotalProcessingTime(sw.ElapsedMilliseconds * Duration.NanosPerMilli);
-                    Stats.SetAverageProcessingTime(total / requestNo);
+                    long total = StatsResponse.AddTotalProcessingTime(sw.ElapsedMilliseconds * Duration.NanosPerMilli);
+                    StatsResponse.SetAverageProcessingTime(total / requestNo);
                 }
             }
         }

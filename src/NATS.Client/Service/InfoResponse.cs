@@ -20,34 +20,46 @@ namespace NATS.Client.Service
     /// <summary>
     /// SERVICE IS AN EXPERIMENTAL API SUBJECT TO CHANGE
     /// </summary>
-    public class Ping : JsonSerializable
+    public class InfoResponse : JsonSerializable
     {
+        public const string ResponseType = "io.nats.micro.v1.info_response";
+
         public string ServiceId { get; }
         public string Name { get; }
         public string Version { get; }
+        public string Description { get; }
+        public string Subject { get; }
+        public string Type => ResponseType;
 
-        internal Ping(string serviceId, string name, string version)
+        internal InfoResponse(string serviceId, string name, string version, string description, string subject)
         {
             ServiceId = serviceId;
             Name = name;
             Version = version;
+            Description = description;
+            Subject = subject;
         }
 
-        internal Ping(string json) : this(JSON.Parse(json)) {}
+        internal InfoResponse(string json) : this(JSON.Parse(json)) {}
 
-        internal Ping(JSONNode node)
+        internal InfoResponse(JSONNode node)
         {
             ServiceId = node[ApiConstants.Id];
             Name = node[ApiConstants.Name];
+            Description = node[ApiConstants.Description];
             Version = node[ApiConstants.Version];
+            Subject = node[ApiConstants.Subject];
         }
-        
+
         internal override JSONNode ToJsonNode()
         {
             JSONObject jso = new JSONObject();
             JsonUtils.AddField(jso, ApiConstants.Id, ServiceId);
             JsonUtils.AddField(jso, ApiConstants.Name, Name);
+            JsonUtils.AddField(jso, ApiConstants.Type, Type);
+            JsonUtils.AddField(jso, ApiConstants.Description, Description);
             JsonUtils.AddField(jso, ApiConstants.Version, Version);
+            JsonUtils.AddField(jso, ApiConstants.Subject, Subject);
             return jso;
         }
     }

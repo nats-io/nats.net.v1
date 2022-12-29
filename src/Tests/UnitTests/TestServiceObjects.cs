@@ -11,7 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Collections.Generic;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 using NATS.Client.JetStream;
@@ -33,15 +32,15 @@ namespace UnitTests
         [Fact]
         public void TestApiJsonInOut()
         {
-            Ping pr1 = new Ping("{\"name\":\"ServiceName\",\"id\":\"serviceId\"}");
-            Ping pr2 = new Ping(pr1.ToJsonNode().ToString());
+            PingResponse pr1 = new PingResponse("{\"name\":\"ServiceName\",\"id\":\"serviceId\"}");
+            PingResponse pr2 = new PingResponse(pr1.ToJsonNode().ToString());
             Assert.Equal("ServiceName", pr1.Name);
             Assert.Equal("serviceId", pr1.ServiceId);
             Assert.Equal(pr1.Name, pr2.Name);
             Assert.Equal(pr1.ServiceId, pr2.ServiceId);
 
-            Info ir1 = new Info("{\"name\":\"ServiceName\",\"id\":\"serviceId\",\"description\":\"desc\",\"version\":\"0.0.1\",\"subject\":\"ServiceSubject\"}");
-            Info ir2 = new Info(ir1.ToJsonNode().ToString());
+            InfoResponse ir1 = new InfoResponse("{\"name\":\"ServiceName\",\"id\":\"serviceId\",\"description\":\"desc\",\"version\":\"0.0.1\",\"subject\":\"ServiceSubject\"}");
+            InfoResponse ir2 = new InfoResponse(ir1.ToJsonNode().ToString());
             Assert.Equal("ServiceName", ir1.Name);
             Assert.Equal("serviceId", ir1.ServiceId);
             Assert.Equal("desc", ir1.Description);
@@ -53,8 +52,8 @@ namespace UnitTests
             Assert.Equal(ir1.Version, ir2.Version);
             Assert.Equal(ir1.Subject, ir2.Subject);
 
-            SchemaInfo sr1 = new SchemaInfo("{\"name\":\"ServiceName\",\"id\":\"serviceId\",\"version\":\"0.0.1\",\"schema\":{\"request\":\"rqst\",\"response\":\"rspns\"}}");
-            SchemaInfo sr2 = new SchemaInfo(sr1.ToJsonNode().ToString());
+            SchemaResponse sr1 = new SchemaResponse("{\"name\":\"ServiceName\",\"id\":\"serviceId\",\"version\":\"0.0.1\",\"schema\":{\"request\":\"rqst\",\"response\":\"rspns\"}}");
+            SchemaResponse sr2 = new SchemaResponse(sr1.ToJsonNode().ToString());
             Assert.Equal("ServiceName", sr1.Name);
             Assert.Equal("serviceId", sr1.ServiceId);
             Assert.Equal("0.0.1", sr1.Version);
@@ -66,8 +65,8 @@ namespace UnitTests
             Assert.Equal(sr1.Schema.Request, sr2.Schema.Request);
             Assert.Equal(sr1.Schema.Response, sr2.Schema.Response);
 
-            sr1 = new SchemaInfo("{\"name\":\"ServiceName\",\"id\":\"serviceId\",\"version\":\"0.0.1\"}");
-            sr2 = new SchemaInfo(sr1.ToJsonNode().ToString());
+            sr1 = new SchemaResponse("{\"name\":\"ServiceName\",\"id\":\"serviceId\",\"version\":\"0.0.1\"}");
+            sr2 = new SchemaResponse(sr1.ToJsonNode().ToString());
             Assert.Equal("ServiceName", sr1.Name);
             Assert.Equal("serviceId", sr1.ServiceId);
             Assert.Equal("0.0.1", sr1.Version);
@@ -80,8 +79,8 @@ namespace UnitTests
             StatsDataDecoder sdd = json => new TestStatsData(json);
             
             string statsJson = "{\"name\":\"ServiceName\",\"id\":\"serviceId\",\"version\":\"0.0.1\",\"num_requests\":1,\"num_errors\":2,\"last_error\":\"npe\",\"processing_time\":3,\"average_processing_time\":4,\"data\":{\"id\":\"user id\",\"last_error\":\"user last error\"},\"started\":\"2022-12-20T13:37:18.568000000Z\"}";
-            Stats stats1 = new Stats(statsJson, sdd);
-            Stats stats2 = new Stats(stats1.ToJsonNode().ToString(), sdd);
+            StatsResponse stats1 = new StatsResponse(statsJson, sdd);
+            StatsResponse stats2 = new StatsResponse(stats1.ToJsonNode().ToString(), sdd);
             Assert.Equal("ServiceName", stats1.Name);
             Assert.Equal("serviceId", stats1.ServiceId);
             Assert.Equal("0.0.1", stats1.Version);
