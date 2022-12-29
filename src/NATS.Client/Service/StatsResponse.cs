@@ -24,6 +24,8 @@ namespace NATS.Client.Service
     /// </summary>
     public class StatsResponse : JsonSerializable
     {
+        public const string ResponseType = "io.nats.micro.v1.stats_response";
+
         public string ServiceId { get; }
         public string Name { get; }
         public string Version { get; }
@@ -34,7 +36,7 @@ namespace NATS.Client.Service
         public long AverageProcessingTime => averageProcessingTime.Read();
         public IStatsData Data { get; set; }
         public DateTime Started { get; private set; }
-        public string Type => "io.nats.micro.v1.stats_response";
+        public string Type => ResponseType;
 
         private readonly InterlockedLong numRequests;
         private readonly InterlockedLong numErrors;

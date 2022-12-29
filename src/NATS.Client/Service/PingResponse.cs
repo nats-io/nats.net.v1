@@ -22,10 +22,12 @@ namespace NATS.Client.Service
     /// </summary>
     public class PingResponse : JsonSerializable
     {
+        public const string ResponseType = "io.nats.micro.v1.ping_response";
+
         public string ServiceId { get; }
         public string Name { get; }
         public string Version { get; }
-        public string Type => "io.nats.micro.v1.ping_response";
+        public string Type => ResponseType;
 
         internal PingResponse(string serviceId, string name, string version)
         {

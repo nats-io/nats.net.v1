@@ -61,13 +61,7 @@ namespace IntegrationTestsInternal
 
     public class TestService : TestSuite<ServiceSuiteContext>
     {
-        private readonly ITestOutputHelper output;
-
-        public TestService(ITestOutputHelper output, ServiceSuiteContext context) : base(context)
-        {
-            this.output = output;
-            Console.SetOut(new ConsoleWriter(output));
-        }
+        public TestService(ServiceSuiteContext context) : base(context) {}
 
         private const string EchoServiceName = "ECHO_SERVICE";
         private const string SortServiceName = "SORT_SERVICE";
@@ -137,6 +131,7 @@ namespace IntegrationTestsInternal
                         foreach (var p in pings) {
                             if (expectedInfo != null) {
                                 Assert.Equal(expectedInfo.Name, p.Name);
+                                Assert.Equal(PingResponse.ResponseType, p.Type);
                             }
                             Assert.Contains(p.ServiceId, expectedIds);
                         }
@@ -155,6 +150,7 @@ namespace IntegrationTestsInternal
                         foreach (var i in infos) {
                             if (expectedInfo != null) {
                                 Assert.Equal(expectedInfo.Name, i.Name);
+                                Assert.Equal(InfoResponse.ResponseType, i.Type);
                                 Assert.Equal(expectedInfo.Description, i.Description);
                                 Assert.Equal(expectedInfo.Version, i.Version);
                                 Assert.Equal(expectedInfo.Subject, i.Subject);
@@ -176,6 +172,7 @@ namespace IntegrationTestsInternal
                         foreach (var sch in schemas) {
                             if (expectedSchemaResponse != null) {
                                 Assert.Equal(expectedSchemaResponse.Name, sch.Name);
+                                Assert.Equal(SchemaResponse.ResponseType, sch.Type);
                                 Assert.Equal(expectedSchemaResponse.Version, sch.Version);
                                 Assert.Equal(expectedSchemaResponse.Version, sch.Version);
                                 Assert.Equal(expectedSchemaResponse.Schema.Request, sch.Schema.Request);
@@ -211,6 +208,7 @@ namespace IntegrationTestsInternal
                             responseSort++;
                             requestsSort += st.NumRequests;
                         }
+                        Assert.Equal(StatsResponse.ResponseType, st.Type);
                     }
                     Assert.Equal(2, responseEcho);
                     Assert.Equal(2, responseSort);

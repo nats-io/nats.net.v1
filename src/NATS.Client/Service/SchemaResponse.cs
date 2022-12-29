@@ -22,11 +22,13 @@ namespace NATS.Client.Service
     /// </summary>
     public class SchemaResponse : JsonSerializable
     {
+        public const string ResponseType = "io.nats.micro.v1.schema_response";
+
         public string ServiceId { get; }
         public string Name { get; }
         public string Version { get; }
         public Schema Schema { get; }
-        public string Type => "io.nats.micro.v1.schema_response";
+        public string Type => ResponseType;
 
         internal SchemaResponse(string serviceId, string name, string version, string schemaRequest, string schemaResponse)
         {

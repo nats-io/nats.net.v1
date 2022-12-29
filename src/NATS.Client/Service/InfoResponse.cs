@@ -22,12 +22,14 @@ namespace NATS.Client.Service
     /// </summary>
     public class InfoResponse : JsonSerializable
     {
+        public const string ResponseType = "io.nats.micro.v1.info_response";
+
         public string ServiceId { get; }
         public string Name { get; }
         public string Version { get; }
         public string Description { get; }
         public string Subject { get; }
-        public string Type => "io.nats.micro.v1.info_response";
+        public string Type => ResponseType;
 
         internal InfoResponse(string serviceId, string name, string version, string description, string subject)
         {
