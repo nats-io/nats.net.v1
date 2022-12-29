@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using NATS.Client;
 using NATS.Client.JetStream;
 using Xunit;
@@ -26,6 +27,18 @@ namespace IntegrationTests
             CreateMemoryStream(jsm, streamName, subjects);
         }
 
+        public static async Task CreateDefaultTestStreamAsync(IConnection c)
+            => await CreateMemoryStreamAsync(c, STREAM, SUBJECT);
+
+        public static async Task CreateDefaultTestStreamAsync(IJetStreamManagementAsync jsm)
+            => await CreateMemoryStreamAsync(jsm, STREAM, SUBJECT);
+
+        public static async Task CreateMemoryStreamAsync(IConnection c, string streamName, params string[] subjects)
+        {
+            var jsm = c.CreateJetStreamManagementAsyncContext();
+            await CreateMemoryStreamAsync(jsm, streamName, subjects);
+        }
+
         public static void CreateMemoryStream(IJetStreamManagement jsm, string streamName, params string[] subjects)
         {
             try
@@ -38,6 +51,25 @@ namespace IntegrationTests
             }
 
             jsm.AddStream(StreamConfiguration.Builder()
+                .WithName(streamName)
+                .WithStorageType(StorageType.Memory)
+                .WithSubjects(subjects)
+                .Build()
+            );
+        }
+
+        public static async Task CreateMemoryStreamAsync(IJetStreamManagementAsync jsm, string streamName, params string[] subjects)
+        {
+            try
+            {
+                await jsm.DeleteStreamAsync(streamName); // since the server is re-used, we want a fresh stream
+            }
+            catch (NATSJetStreamException)
+            {
+                // it's might not have existed
+            }
+
+            await jsm.AddStreamAsync(StreamConfiguration.Builder()
                 .WithName(streamName)
                 .WithStorageType(StorageType.Memory)
                 .WithSubjects(subjects)

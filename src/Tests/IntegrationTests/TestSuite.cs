@@ -15,6 +15,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using NATS.Client;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
@@ -139,6 +140,24 @@ namespace IntegrationTests
             }
         }
 
+        public async Task RunInJsServerAsync(TestServerInfo testServerInfo, Func<IConnection, Task> test)
+        {
+            using (var s = NATSServer.CreateJetStreamFastAndVerify(testServerInfo.Port))
+            {
+                using (var c = OpenConnection(testServerInfo.Port))
+                {
+                    try
+                    {
+                        await test(c);
+                    }
+                    finally
+                    {
+                        CleanupJs(c);
+                    }
+                }
+            }
+        }
+
         public void RunInJsServer(TestServerInfo testServerInfo, string config, Action<IConnection> test)
         {
             using (var s = NATSServer.CreateJetStreamWithConfig(testServerInfo.Port, config))
@@ -157,6 +176,24 @@ namespace IntegrationTests
             }
         }
 
+        public async Task RunInJsServerAsync(TestServerInfo testServerInfo, string config, Func<IConnection, Task> test)
+        {
+            using (var s = NATSServer.CreateJetStreamWithConfig(testServerInfo.Port, config))
+            {
+                using (var c = OpenConnection(testServerInfo.Port))
+                {
+                    try
+                    {
+                        await test(c);
+                    }
+                    finally
+                    {
+                        CleanupJs(c);
+                    }
+                }
+            }
+        }
+
         public void RunInJsServer(TestServerInfo testServerInfo, Action<Options> optionsModifier, Action<IConnection> test)
         {
             using (var s = NATSServer.CreateJetStreamFastAndVerify(testServerInfo.Port, optionsModifier))
@@ -166,6 +203,24 @@ namespace IntegrationTests
                     try
                     {
                         test(c);
+                    }
+                    finally
+                    {
+                        CleanupJs(c);
+                    }
+                }
+            }
+        }
+
+        public async Task RunInJsServerAsync(TestServerInfo testServerInfo, Action<Options> optionsModifier, Func<IConnection, Task> test)
+        {
+            using (var s = NATSServer.CreateJetStreamFastAndVerify(testServerInfo.Port, optionsModifier))
+            {
+                using (var c = OpenConnection(testServerInfo.Port, optionsModifier))
+                {
+                    try
+                    {
+                        await test(c);
                     }
                     finally
                     {
@@ -442,6 +497,7 @@ namespace IntegrationTests
         }
         
         public void RunInJsServer(Action<IConnection> test) => base.RunInJsServer(Server1, test);
+        public Task RunInJsServerAsync(Func<IConnection, Task> test) => base.RunInJsServerAsync(Server1, test);
         public void RunInServer(Action<IConnection> test) => base.RunInServer(Server1, test);
     }
 
