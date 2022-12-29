@@ -10,7 +10,7 @@ namespace NATSExamples
         public static void Main(string[] args)
         {
             // Set the args manually to run the code you want.
-            args = new[] { "RequestReply" };
+            // args = new[] { "RequestReply" };
             
             if (args.Length == 1)
             {
