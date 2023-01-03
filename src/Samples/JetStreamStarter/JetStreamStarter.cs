@@ -1,26 +1,40 @@
-﻿using NATS.Client;
-using NATS.Client.JetStream;
+﻿using System;
+using NATS.Client;
 
 namespace NATSExamples
 {
     internal static class JetStreamStarter
     {
+
         static void Main(string[] args)
         {
             Options opts = ConnectionFactory.GetDefaultOptions();
-            if (args.Length == 1)
+            
+            opts.Name = "the-client";
+            opts.Url = "nats://localhost:4222";
+            
+            opts.AsyncErrorEventHandler = (obj, a) =>
             {
-                opts.Url = args[0];
-            }
-            else
+                Console.WriteLine($"Error: {a.Error}");
+            };
+            opts.ReconnectedEventHandler = (obj, a) =>
             {
-                opts.Url = "nats://localhost:4222";
-            }
+                Console.WriteLine($"Reconnected to {a.Conn.ConnectedUrl}");
+            };
+            opts.DisconnectedEventHandler = (obj, a) =>
+            {
+                Console.WriteLine("Disconnected.");
+            };
+            opts.ClosedEventHandler = (obj, a) =>
+            {
+                Console.WriteLine("Connection closed.");
+            };
+            
+            Console.WriteLine($"Connecting to '{opts.Url}'");
 
-            using (IConnection conn = new ConnectionFactory().CreateConnection(opts))
+            using (IConnection c = new ConnectionFactory().CreateConnection(opts))
             {
-                IJetStream js = conn.CreateJetStreamContext();
-                IJetStreamManagement jsm = conn.CreateJetStreamManagementContext();
+                Console.WriteLine("Connected.");
             }
         }
     }
