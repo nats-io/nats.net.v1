@@ -233,11 +233,8 @@ namespace NATS.Client.Internals
         }
 
         internal static int ValidateMaxHistory(int max) {
-            if (max < 2) {
-                return 1;
-            }
-            if (max > JetStreamConstants.MaxHistoryPerKey) {
-                throw new ArgumentException($"Max History Per Key cannot be more than {JetStreamConstants.MaxHistoryPerKey}.");
+            if (max < 1 || max > JetStreamConstants.MaxHistoryPerKey) {
+                throw new ArgumentException($"Max History Per Key cannot be from 1 to {JetStreamConstants.MaxHistoryPerKey} inclusive.");
             }
             return max;
         }

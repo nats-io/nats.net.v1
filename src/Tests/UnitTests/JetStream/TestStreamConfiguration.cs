@@ -86,6 +86,28 @@ namespace UnitTests.JetStream
         }
 
         [Fact]
+        public void TestConstructionInvalidsCoverage()
+        {
+            Assert.Throws<ArgumentException>(() => StreamConfiguration.Builder().WithName(HasSpace));
+            Assert.Throws<ArgumentException>(() => StreamConfiguration.Builder().WithMaxConsumers(0));
+            Assert.Throws<ArgumentException>(() => StreamConfiguration.Builder().WithMaxConsumers(-2));
+            Assert.Throws<ArgumentException>(() => StreamConfiguration.Builder().WithMaxMessages(0));
+            Assert.Throws<ArgumentException>(() => StreamConfiguration.Builder().WithMaxMessages(-2));
+            Assert.Throws<ArgumentException>(() => StreamConfiguration.Builder().WithMaxMessagesPerSubject(0));
+            Assert.Throws<ArgumentException>(() => StreamConfiguration.Builder().WithMaxMessagesPerSubject(-2));
+            Assert.Throws<ArgumentException>(() => StreamConfiguration.Builder().WithMaxBytes(0));
+            Assert.Throws<ArgumentException>(() => StreamConfiguration.Builder().WithMaxBytes(-2));
+            Assert.Throws<ArgumentException>(() => StreamConfiguration.Builder().WithMaxAge(Duration.OfNanos(-1)));
+            Assert.Throws<ArgumentException>(() => StreamConfiguration.Builder().WithMaxAge(-1));
+            Assert.Throws<ArgumentException>(() => StreamConfiguration.Builder().WithMaxMsgSize(0));
+            Assert.Throws<ArgumentException>(() => StreamConfiguration.Builder().WithMaxMsgSize(-2));
+            Assert.Throws<ArgumentException>(() => StreamConfiguration.Builder().WithReplicas(0));
+            Assert.Throws<ArgumentException>(() => StreamConfiguration.Builder().WithReplicas(6));
+            Assert.Throws<ArgumentException>(() => StreamConfiguration.Builder().WithDuplicateWindow(Duration.OfNanos(-1)));
+            Assert.Throws<ArgumentException>(() => StreamConfiguration.Builder().WithDuplicateWindow(-1));        
+        }
+
+        [Fact]
         public void TestExternalEquals()
         {
             string[] lines = ReadDataFileLines("ExternalJson.txt");

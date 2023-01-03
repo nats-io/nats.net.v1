@@ -92,7 +92,17 @@ namespace NATS.Client.KeyValue
         /// <returns>a KeyValueConfiguration builder</returns>
         public static KeyValueConfigurationBuilder Builder()
         {
-            return new KeyValueConfigurationBuilder();
+            return new KeyValueConfigurationBuilder((KeyValueConfiguration)null);
+        }
+            
+        /// <summary>
+        /// Creates a builder for the KeyValueConfiguration. 
+        /// </summary>
+        /// <param name="name">name of the key value bucket</param>
+        /// <returns>a KeyValueConfiguration builder</returns>
+        public static KeyValueConfigurationBuilder Builder(string name)
+        {
+            return new KeyValueConfigurationBuilder(name);
         }
         
         /// <summary>
@@ -113,13 +123,21 @@ namespace NATS.Client.KeyValue
         {
             string _name;
             Mirror _mirror;
-            List<Source> _sources = new List<Source>();
-            StreamConfigurationBuilder scBuilder;
+            readonly List<Source> _sources = new List<Source>();
+            readonly StreamConfigurationBuilder scBuilder;
 
             /// <summary>
             /// Default builder
             /// </summary>
-            public KeyValueConfigurationBuilder() : this(null) {}
+            public KeyValueConfigurationBuilder() : this((KeyValueConfiguration)null) {}
+
+            /// <summary>
+            /// Default builder
+            /// </summary>
+            public KeyValueConfigurationBuilder(string name) : this((KeyValueConfiguration)null)
+            {
+                WithName(name);
+            }
 
             /// <summary>
             /// Construct the builder by copying another configuration
@@ -140,10 +158,10 @@ namespace NATS.Client.KeyValue
             /// <summary>
             /// Sets the name of the store.
             /// </summary>
-            /// <param name="name">name of the store</param>
+            /// <param name="name">name of the key value bucket</param>
             /// <returns></returns>
             public KeyValueConfigurationBuilder WithName(string name) {
-                _name = name;
+                _name = Validator.ValidateBucketName(_name, true);
                 return this;
             }
 
@@ -213,7 +231,7 @@ namespace NATS.Client.KeyValue
             /// <param name="replicas">number of replicas</param>
             /// <returns>the number of replicas</returns>
             public KeyValueConfigurationBuilder WithReplicas(int replicas) {
-                scBuilder.WithReplicas(replicas <= 1 ? 1 : replicas);
+                scBuilder.WithReplicas(replicas);
                 return this;
             }
 
@@ -244,7 +262,7 @@ namespace NATS.Client.KeyValue
             /// <returns>The KeyValueConfigurationBuilder</returns>
             public KeyValueConfigurationBuilder WithMirror(Mirror mirror)
             {
-                this._mirror = mirror;
+                _mirror = mirror;
                 return this;
             }
 
@@ -254,7 +272,7 @@ namespace NATS.Client.KeyValue
             /// <param name="sources">the KeyValue's sources</param>
             /// <returns>The KeyValueConfigurationBuilder</returns>
             public KeyValueConfigurationBuilder WithSources(params Source[] sources) {
-                this._sources.Clear();
+                _sources.Clear();
                 return AddSources(sources);
             }
 
@@ -264,7 +282,7 @@ namespace NATS.Client.KeyValue
             /// <param name="sources">the KeyValue's sources</param>
             /// <returns>The KeyValueConfigurationBuilder</returns>
             public KeyValueConfigurationBuilder WithSources(List<Source> sources) {
-                this._sources.Clear();
+                _sources.Clear();
                 return AddSources(sources);
             }
 
@@ -276,8 +294,8 @@ namespace NATS.Client.KeyValue
             public KeyValueConfigurationBuilder AddSources(params Source[] sources) {
                 if (sources != null) {
                     foreach (Source source in sources) {
-                        if (source != null && !this._sources.Contains(source)) {
-                            this._sources.Add(source);
+                        if (source != null && !_sources.Contains(source)) {
+                            _sources.Add(source);
                         }
                     }
                 }
@@ -292,8 +310,8 @@ namespace NATS.Client.KeyValue
             public KeyValueConfigurationBuilder AddSources(List<Source> sources) {
                 if (sources != null) {
                     foreach (Source source in sources) {
-                        if (source != null && !this._sources.Contains(source)) {
-                            this._sources.Add(source);
+                        if (source != null && !_sources.Contains(source)) {
+                            _sources.Add(source);
                         }
                     }
                 }
@@ -329,7 +347,7 @@ namespace NATS.Client.KeyValue
             /// </summary>
             /// <returns>the KeyValueConfiguration</returns>
             public KeyValueConfiguration Build() {
-                _name = Validator.ValidateBucketName(_name, true);
+                _name = Validator.Required(_name, "name");
                 scBuilder.WithName(ToStreamName(_name))
                     .WithAllowRollup(true)
                     .WithDiscardPolicy(DiscardPolicy.New)

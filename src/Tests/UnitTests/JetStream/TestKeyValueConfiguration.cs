@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
@@ -145,6 +146,35 @@ namespace UnitTests.JetStream
             Assert.Contains("KV_s4", names);
             Assert.Contains("KV_s5", names);
             Assert.Contains("KV_s6", names);        
+        }
+        
+        [Fact]
+        public void TestConstructionInvalidsCoverage() {
+            Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().Build());
+            Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithName(null));
+            Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithName(string.Empty));
+            Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithName(HasSpace));
+            Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithName(HasPrintable));
+            Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithName(HasDot));
+            Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithName(HasStar));
+            Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithName(HasGt));
+            Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithName(HasDollar));
+            Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithName(HasLow));
+            Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder(Has127));
+            Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder(HasFwdSlash));
+            Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder(HasBackSlash));
+            Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder(HasEquals));
+            Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder(HasTic));
+            Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithMaxHistoryPerKey(0));
+            Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithMaxHistoryPerKey(-1));
+            Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithMaxHistoryPerKey(65));
+            Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithMaxBucketSize(0));
+            Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithMaxBucketSize(-2));
+            Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithMaxValueSize(0));
+            Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithMaxValueSize(-2));
+            Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithTtl(Duration.OfNanos(-1)));
+            Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithReplicas(0));
+            Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithReplicas(6));
         }
     }
 }
