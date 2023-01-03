@@ -70,14 +70,32 @@ namespace NATS.Client.JetStream
         private string GetComparableVersion(string vString) {
             try {
                 string[] v = vString.Replace("v", "").Replace("-", ".").Split('.');
-                int at = vString.IndexOf("-", StringComparison.Ordinal);
-                return "" + (Int32.Parse(v[0]) * 10000) + (Int32.Parse(v[1]) * 100) + Int32.Parse(v[2])
-                       + (at == -1 ? "~" : vString.Substring(at));
+                return Padded(v[0]) + Padded(v[1]) + Padded(v[2]) + NormalExtra(vString);
             }
             catch (Exception) {
                 return "";
             }
         }
+        
+        private static String Padded(String vcomp) {
+            int x = Int32.Parse(vcomp);
+            if (x < 10) {
+                return "000" + x;
+            }
+            if (x < 100) {
+                return "00" + x;
+            }
+            if (x < 1000) {
+                return "0" + x;
+            }
+            return "" + x;
+        }
+
+        private static String NormalExtra(String vString) {
+            int at = vString.IndexOf("-", StringComparison.Ordinal);
+            return at == -1 ? "~" : vString.Substring(at).ToLower();
+        }
+
 
         public bool IsNewerVersionThan(string vTarget) {
             return String.Compare(GetComparableVersion(Version), GetComparableVersion(vTarget), StringComparison.Ordinal) > 0;
