@@ -108,7 +108,7 @@ namespace NATS.Client.ObjectStore
             public ObjectStoreConfigurationBuilder() : this((ObjectStoreConfiguration)null) {}
 
             /// <summary>
-            /// Default builder with name
+            /// Builder accepting the object store bucket name.
             /// </summary>
             /// <param name="name">the name of the object store bucket</param>
             public ObjectStoreConfigurationBuilder(string name) : this((ObjectStoreConfiguration)null)
@@ -134,7 +134,7 @@ namespace NATS.Client.ObjectStore
             /// <summary>
             /// Sets the name of the store.
             /// </summary>
-            /// <param name="name">name of the store</param>
+            /// <param name="name">name of the store bucket</param>
             /// <returns></returns>
             public ObjectStoreConfigurationBuilder WithName(string name) {
                 _name = Validator.ValidateBucketName(name, true);

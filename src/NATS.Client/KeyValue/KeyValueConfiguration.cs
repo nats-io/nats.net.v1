@@ -132,8 +132,9 @@ namespace NATS.Client.KeyValue
             public KeyValueConfigurationBuilder() : this((KeyValueConfiguration)null) {}
 
             /// <summary>
-            /// Default builder
+            /// Builder accepting the object store bucket name.
             /// </summary>
+            /// <param name="name">name of the key value bucket</param>
             public KeyValueConfigurationBuilder(string name) : this((KeyValueConfiguration)null)
             {
                 WithName(name);
