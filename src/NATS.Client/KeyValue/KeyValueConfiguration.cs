@@ -161,7 +161,7 @@ namespace NATS.Client.KeyValue
             /// <param name="name">name of the key value bucket</param>
             /// <returns></returns>
             public KeyValueConfigurationBuilder WithName(string name) {
-                _name = Validator.ValidateBucketName(_name, true);
+                _name = Validator.ValidateBucketName(name, true);
                 return this;
             }
 
