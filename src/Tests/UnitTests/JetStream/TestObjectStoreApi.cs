@@ -289,5 +289,29 @@ namespace UnitTests.JetStream
             Assert.NotEqual(info8A, info8C);
             Assert.NotEqual(info8A, info1A);
         }
+        
+        [Fact]
+        public void TestConstructionInvalidsCoverage() {
+            Assert.Throws<ArgumentException>(() => ObjectStoreConfiguration.Builder().Build());
+            Assert.Throws<ArgumentException>(() => ObjectStoreConfiguration.Builder().WithName(null));
+            Assert.Throws<ArgumentException>(() => ObjectStoreConfiguration.Builder().WithName(string.Empty));
+            Assert.Throws<ArgumentException>(() => ObjectStoreConfiguration.Builder().WithName(HasSpace));
+            Assert.Throws<ArgumentException>(() => ObjectStoreConfiguration.Builder().WithName(HasPrintable));
+            Assert.Throws<ArgumentException>(() => ObjectStoreConfiguration.Builder().WithName(HasDot));
+            Assert.Throws<ArgumentException>(() => ObjectStoreConfiguration.Builder().WithName(HasStar));
+            Assert.Throws<ArgumentException>(() => ObjectStoreConfiguration.Builder().WithName(HasGt));
+            Assert.Throws<ArgumentException>(() => ObjectStoreConfiguration.Builder().WithName(HasDollar));
+            Assert.Throws<ArgumentException>(() => ObjectStoreConfiguration.Builder().WithName(HasLow));
+            Assert.Throws<ArgumentException>(() => ObjectStoreConfiguration.Builder(Has127));
+            Assert.Throws<ArgumentException>(() => ObjectStoreConfiguration.Builder(HasFwdSlash));
+            Assert.Throws<ArgumentException>(() => ObjectStoreConfiguration.Builder(HasBackSlash));
+            Assert.Throws<ArgumentException>(() => ObjectStoreConfiguration.Builder(HasEquals));
+            Assert.Throws<ArgumentException>(() => ObjectStoreConfiguration.Builder(HasTic));
+            Assert.Throws<ArgumentException>(() => ObjectStoreConfiguration.Builder().WithMaxBucketSize(0));
+            Assert.Throws<ArgumentException>(() => ObjectStoreConfiguration.Builder().WithMaxBucketSize(-2));
+            Assert.Throws<ArgumentException>(() => ObjectStoreConfiguration.Builder().WithTtl(Duration.OfNanos(-1)));
+            Assert.Throws<ArgumentException>(() => ObjectStoreConfiguration.Builder().WithReplicas(0));
+            Assert.Throws<ArgumentException>(() => ObjectStoreConfiguration.Builder().WithReplicas(6));
+        }
     }
 }

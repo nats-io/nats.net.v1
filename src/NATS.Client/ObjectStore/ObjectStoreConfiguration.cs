@@ -63,10 +63,20 @@ namespace NATS.Client.ObjectStore
         /// Placement directives to consider when placing replicas of this stream
         /// </summary>
         public Placement Placement => BackingConfig.Placement;
-            
+
         /// <summary>
         /// Creates a builder for the ObjectStoreConfiguration. 
         /// </summary>
+        /// <returns>an ObjectStoreConfiguration builder</returns>
+        public static ObjectStoreConfigurationBuilder Builder()
+        {
+            return new ObjectStoreConfigurationBuilder((ObjectStoreConfiguration)null);
+        }
+
+        /// <summary>
+        /// Creates a builder for the ObjectStoreConfiguration. 
+        /// </summary>
+        /// <param name="name">the name of the object store bucket</param>
         /// <returns>an ObjectStoreConfiguration builder</returns>
         public static ObjectStoreConfigurationBuilder Builder(string name)
         {
@@ -76,7 +86,7 @@ namespace NATS.Client.ObjectStore
         /// <summary>
         /// Creates a builder for the ObjectStoreConfiguration. 
         /// </summary>
-        /// <param name="osc"></param>
+        /// <param name="osc">An existing ObjectStoreConfiguration</param>
         /// <returns>an ObjectStoreConfiguration builder</returns>
         public static ObjectStoreConfigurationBuilder Builder(ObjectStoreConfiguration osc)
         {
@@ -90,14 +100,19 @@ namespace NATS.Client.ObjectStore
         public sealed class ObjectStoreConfigurationBuilder
         {
             string _name;
-            StreamConfigurationBuilder scBuilder;
+            readonly StreamConfigurationBuilder scBuilder;
 
             /// <summary>
             /// Default builder
             /// </summary>
-            public ObjectStoreConfigurationBuilder(string name)
+            public ObjectStoreConfigurationBuilder() : this((ObjectStoreConfiguration)null) {}
+
+            /// <summary>
+            /// Builder accepting the object store bucket name.
+            /// </summary>
+            /// <param name="name">the name of the object store bucket</param>
+            public ObjectStoreConfigurationBuilder(string name) : this((ObjectStoreConfiguration)null)
             {
-                scBuilder = new StreamConfigurationBuilder();
                 WithName(name);
             }
 
@@ -119,7 +134,7 @@ namespace NATS.Client.ObjectStore
             /// <summary>
             /// Sets the name of the store.
             /// </summary>
-            /// <param name="name">name of the store</param>
+            /// <param name="name">name of the store bucket</param>
             /// <returns></returns>
             public ObjectStoreConfigurationBuilder WithName(string name) {
                 _name = Validator.ValidateBucketName(name, true);
@@ -172,7 +187,7 @@ namespace NATS.Client.ObjectStore
             /// <param name="replicas">number of replicas</param>
             /// <returns>the number of replicas</returns>
             public ObjectStoreConfigurationBuilder WithReplicas(int replicas) {
-                scBuilder.WithReplicas(replicas <= 1 ? 1 : replicas);
+                scBuilder.WithReplicas(replicas);
                 return this;
             }
 
@@ -190,8 +205,9 @@ namespace NATS.Client.ObjectStore
             /// Builds the ObjectStoreConfiguration
             /// </summary>
             /// <returns>the ObjectStoreConfiguration</returns>
-            public ObjectStoreConfiguration Build() {
-                _name = Validator.ValidateBucketName(_name, true);
+            public ObjectStoreConfiguration Build()
+            {
+                _name = Validator.Required(_name, "name");
                 scBuilder.WithName(ObjectStoreUtil.ToStreamName(_name))
                     .WithSubjects(ObjectStoreUtil.ToMetaStreamSubject(_name),
                         ObjectStoreUtil.ToChunkStreamSubject(_name))
