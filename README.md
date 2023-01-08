@@ -668,7 +668,7 @@ EventHandler<UserSignatureEventArgs> sigEh = (sender, args) =>
     string seed = getMyUserSeed();
 
     // Generate a NkeyPair
-    NkeyPair kp = NKeys.FromSeed(seed);
+    NkeyPair kp = Nkeys.FromSeed(seed);
 
     // Sign the nonce and return the result in the SignedNonce
     // args property.  This must be set.
