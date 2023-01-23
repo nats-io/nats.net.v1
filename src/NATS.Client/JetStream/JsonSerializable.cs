@@ -12,7 +12,7 @@ namespace NATS.Client.JetStream
             return JsonUtils.Serialize(ToJsonNode());
         }
 
-        public override string ToString()
+        public virtual string ToJsonString()
         {
             return ToJsonNode().ToString();
         }

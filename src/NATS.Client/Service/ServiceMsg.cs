@@ -1,4 +1,4 @@
-﻿// Copyright 2022 The NATS Authors
+﻿// Copyright 2023 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at:
@@ -18,32 +18,34 @@ namespace NATS.Client.Service
     /// <summary>
     /// SERVICE IS AN EXPERIMENTAL API SUBJECT TO CHANGE
     /// </summary>
-    public class ServiceMessage
+    public class ServiceMsg : Msg
     {
         public const string NatsServiceError = "Nats-Service-Error";
         public const string NatsServiceErrorCode = "Nats-Service-Error-Code";
 
-        public static void Reply(IConnection conn, Msg request, byte[] data) {
-            conn.Publish(new Msg(request.Reply, null, null, data));
+        internal ServiceMsg(Msg msg) : base(msg) {}
+
+        public void Respond(IConnection conn, byte[] response) {
+            conn.Publish(new Msg(_reply, null, null, response));
         }
 
-        public static void Reply(IConnection conn, Msg request, string data) {
-            conn.Publish(new Msg(request.Reply, null, null, Encoding.UTF8.GetBytes(data)));
+        public void Respond(IConnection conn, string response) {
+            conn.Publish(new Msg(_reply, null, null, Encoding.UTF8.GetBytes(response)));
         }
 
-        public static void Reply(IConnection conn, Msg request, byte[] data, MsgHeader headers)
+        public void Respond(IConnection conn, byte[] response, MsgHeader headers)
         {
-            conn.Publish(new Msg(request.Reply, null, headers, data));
+            conn.Publish(new Msg(_reply, null, headers, response));
         }
 
-        public static void Reply(IConnection conn, Msg request, string data, MsgHeader headers)
+        public void Respond(IConnection conn, string response, MsgHeader headers)
         {
-            conn.Publish(new Msg(request.Reply, null, headers, Encoding.UTF8.GetBytes(data)));
+            conn.Publish(new Msg(_reply, null, headers, Encoding.UTF8.GetBytes(response)));
         }
 
-        public static void ReplyStandardError(IConnection conn, Msg request, string errorMessage, int errorCode)
+        public void RespondStandardError(IConnection conn, string errorMessage, int errorCode)
         {
-            conn.Publish(new Msg(request.Reply, null, 
+            conn.Publish(new Msg(_reply, null, 
                 new MsgHeader 
                 {
                     [NatsServiceError] = errorMessage,

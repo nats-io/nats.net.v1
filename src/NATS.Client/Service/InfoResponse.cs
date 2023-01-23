@@ -1,4 +1,4 @@
-﻿// Copyright 2022 The NATS Authors
+﻿// Copyright 2023 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at:
@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 using NATS.Client.JetStream;
@@ -20,47 +21,58 @@ namespace NATS.Client.Service
     /// <summary>
     /// SERVICE IS AN EXPERIMENTAL API SUBJECT TO CHANGE
     /// </summary>
-    public class InfoResponse : JsonSerializable
+    public class InfoResponse : ServiceResponse
     {
         public const string ResponseType = "io.nats.micro.v1.info_response";
 
-        public string ServiceId { get; }
-        public string Name { get; }
-        public string Version { get; }
         public string Description { get; }
-        public string Subject { get; }
-        public string Type => ResponseType;
+        public IList<string> Subjects { get; }
 
-        internal InfoResponse(string serviceId, string name, string version, string description, string subject)
+        public InfoResponse(string id, string name, string version, string description, IList<string> subjects)
+            : base(ResponseType, id, name, version)
         {
-            ServiceId = serviceId;
-            Name = name;
-            Version = version;
             Description = description;
-            Subject = subject;
+            Subjects = subjects;
         }
 
         internal InfoResponse(string json) : this(JSON.Parse(json)) {}
 
-        internal InfoResponse(JSONNode node)
+        internal InfoResponse(JSONNode node) : base(ResponseType, node)
         {
-            ServiceId = node[ApiConstants.Id];
-            Name = node[ApiConstants.Name];
             Description = node[ApiConstants.Description];
-            Version = node[ApiConstants.Version];
-            Subject = node[ApiConstants.Subject];
+            Subjects = JsonUtils.StringList(node, ApiConstants.Subjects);
         }
 
         internal override JSONNode ToJsonNode()
         {
-            JSONObject jso = new JSONObject();
-            JsonUtils.AddField(jso, ApiConstants.Id, ServiceId);
-            JsonUtils.AddField(jso, ApiConstants.Name, Name);
-            JsonUtils.AddField(jso, ApiConstants.Type, Type);
+            JSONObject jso = BaseJsonObject();
             JsonUtils.AddField(jso, ApiConstants.Description, Description);
-            JsonUtils.AddField(jso, ApiConstants.Version, Version);
-            JsonUtils.AddField(jso, ApiConstants.Subject, Subject);
+            JsonUtils.AddField(jso, ApiConstants.Subjects, Subjects);
             return jso;
+        }
+
+        protected bool Equals(InfoResponse other)
+        {
+            return base.Equals(other) && Description == other.Description && Equals(Subjects, other.Subjects);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((InfoResponse)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hashCode = base.GetHashCode();
+                hashCode = (hashCode * 397) ^ (Description != null ? Description.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Subjects != null ? Subjects.GetHashCode() : 0);
+                return hashCode;
+            }
         }
     }
 }

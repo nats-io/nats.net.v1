@@ -11,6 +11,9 @@ namespace NATS.Client.Service
     /// </summary>
     public class Discovery
     {
+        public const int DefaultDiscoveryMaxTimeMillis = 5000;
+        public const int DefaultDiscoveryMaxResults = 10;
+
         private readonly IConnection conn;
         private readonly int maxTimeMillis;
         private readonly int maxResults;
@@ -18,8 +21,8 @@ namespace NATS.Client.Service
         public Discovery(IConnection conn, int maxTimeMillis = -1, int maxResults = -1) 
         {
             this.conn = conn;
-            this.maxTimeMillis = maxTimeMillis < 1 ? ServiceUtil.DefaultDiscoveryMaxTimeMillis : maxTimeMillis;
-            this.maxResults = maxResults < 1 ? ServiceUtil.DefaultDiscoveryMaxResults : maxResults;
+            this.maxTimeMillis = maxTimeMillis < 1 ? DefaultDiscoveryMaxTimeMillis : maxTimeMillis;
+            this.maxResults = maxResults < 1 ? DefaultDiscoveryMaxResults : maxResults;
         }
 
         // ----------------------------------------------------------------------------------------------------
@@ -28,7 +31,7 @@ namespace NATS.Client.Service
         public IList<PingResponse> Ping(string serviceName = null)
         {
             IList<PingResponse> list = new List<PingResponse>();
-            DiscoverMany(ServiceUtil.Ping, serviceName, json => {
+            DiscoverMany(Service.SrvPing, serviceName, json => {
                 list.Add(new PingResponse(json));
             });
             return list;
@@ -36,7 +39,7 @@ namespace NATS.Client.Service
 
         public PingResponse PingForNameAndId(string serviceName, string serviceId) 
         {
-            string json = DiscoverOne(ServiceUtil.Ping, serviceName, serviceId);
+            string json = DiscoverOne(Service.SrvPing, serviceName, serviceId);
             return json == null ? null : new PingResponse(json);
         }
 
@@ -46,14 +49,14 @@ namespace NATS.Client.Service
         public IList<InfoResponse> Info(string serviceName = null)
         {
             IList<InfoResponse> list = new List<InfoResponse>();
-            DiscoverMany(ServiceUtil.Info, serviceName, json => {
+            DiscoverMany(Service.SrvInfo, serviceName, json => {
                 list.Add(new InfoResponse(json));
             });
             return list;
         }
 
         public InfoResponse InfoForNameAndId(string serviceName, string serviceId) {
-            string json = DiscoverOne(ServiceUtil.Info, serviceName, serviceId);
+            string json = DiscoverOne(Service.SrvInfo, serviceName, serviceId);
             return json == null ? null : new InfoResponse(json);
         }
 
@@ -63,7 +66,7 @@ namespace NATS.Client.Service
         public IList<SchemaResponse> Schema(string serviceName = null)
         {
             IList<SchemaResponse> list = new List<SchemaResponse>();
-            DiscoverMany(ServiceUtil.Schema, serviceName, json => {
+            DiscoverMany(Service.SrvSchema, serviceName, json => {
                 list.Add(new SchemaResponse(json));
             });
             return list;
@@ -71,25 +74,25 @@ namespace NATS.Client.Service
 
         public SchemaResponse SchemaForNameAndId(string serviceName, string serviceId) 
         {
-            string json = DiscoverOne(ServiceUtil.Schema, serviceName, serviceId);
+            string json = DiscoverOne(Service.SrvSchema, serviceName, serviceId);
             return json == null ? null : new SchemaResponse(json);
         }
 
         // ----------------------------------------------------------------------------------------------------
         // stats
         // ----------------------------------------------------------------------------------------------------
-        public IList<StatsResponse> Stats(string serviceName = null, StatsDataDecoder statsDataDecoder = null)
+        public IList<StatsResponse> Stats(string serviceName = null)
         {
             IList<StatsResponse> list = new List<StatsResponse>();
-            DiscoverMany(ServiceUtil.Stats, serviceName, json => {
-                list.Add(new StatsResponse(json, statsDataDecoder));
+            DiscoverMany(Service.SrvStats, serviceName, json => {
+                list.Add(new StatsResponse(json));
             });
             return list;
         }
 
-        public StatsResponse StatsForNameAndId(string serviceName, string serviceId, StatsDataDecoder statsDataDecoder = null) {
-            string json = DiscoverOne(ServiceUtil.Stats, serviceName, serviceId);
-            return json == null ? null : new StatsResponse(json, statsDataDecoder);
+        public StatsResponse StatsForNameAndId(string serviceName, string serviceId) {
+            string json = DiscoverOne(Service.SrvStats, serviceName, serviceId);
+            return json == null ? null : new StatsResponse(json);
         }
 
         // ----------------------------------------------------------------------------------------------------
@@ -97,7 +100,7 @@ namespace NATS.Client.Service
         // ----------------------------------------------------------------------------------------------------
         private string DiscoverOne(string action, string serviceName, string serviceId) {
             try {
-                string subject = ServiceUtil.ToDiscoverySubject(action, serviceName, serviceId);
+                string subject = Service.ToDiscoverySubject(action, serviceName, serviceId);
                 Msg m = conn.Request(subject, null, maxTimeMillis);
                 return Encoding.UTF8.GetString(m.Data);
             }
@@ -116,7 +119,7 @@ namespace NATS.Client.Service
 
                 sub = conn.SubscribeSync(replyTo);
 
-                string subject = ServiceUtil.ToDiscoverySubject(action, serviceName, null);
+                string subject = Service.ToDiscoverySubject(action, serviceName, null);
                 conn.Publish(subject, replyTo, null);
 
                 int resultsLeft = maxResults;

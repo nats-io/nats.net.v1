@@ -1,4 +1,4 @@
-﻿// Copyright 2022 The NATS Authors
+﻿// Copyright 2023 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at:
@@ -25,15 +25,21 @@ namespace NATS.Client.Service
         public string Request { get; }
         public string Response { get; }
 
-        internal Schema(string request, string response)
-        {
-            Request = request;
-            Response = response;
-        }
-
         internal static Schema OptionalInstance(JSONNode schemaNode)
         {
             return schemaNode == null ? null : new Schema(schemaNode);
+        }
+
+        internal static Schema OptionalInstance(string request, string response) {
+            request = Validator.EmptyAsNull(request);
+            response = Validator.EmptyAsNull(response);
+            return request == null && response == null ? null : new Schema(request, response);
+        }
+
+        public Schema(string request, string response)
+        {
+            Request = request;
+            Response = response;
         }
 
         internal Schema(JSONNode schemaNode)
@@ -48,6 +54,33 @@ namespace NATS.Client.Service
             JsonUtils.AddField(jso, ApiConstants.Request, Request);
             JsonUtils.AddField(jso, ApiConstants.Response, Response);
             return jso;
+        }
+
+        public override string ToString()
+        {
+            return JsonUtils.ToKey(GetType()) + ToJsonString();
+        }
+
+        protected bool Equals(Schema other)
+        {
+            return Request == other.Request && Response == other.Response;
+            
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((Schema)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return ((Request != null ? Request.GetHashCode() : 0) * 397) ^ (Response != null ? Response.GetHashCode() : 0);
+            }
         }
     }
 }

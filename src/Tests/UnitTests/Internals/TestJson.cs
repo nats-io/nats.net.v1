@@ -23,12 +23,10 @@ namespace UnitTests.Internals
 {
     public class TestJson : TestBase
     {
-        private readonly ITestOutputHelper output;
         private readonly JSONNode testJsonNode;
 
         public TestJson(ITestOutputHelper outputHelper)
         {
-            output = outputHelper;
             string json = ReadDataFile("TestJson.json");
             testJsonNode = JSON.Parse(json);
         }

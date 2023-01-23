@@ -29,26 +29,26 @@ namespace NATSExamples
     {
         public static void CrossClientValidationMain()
         {
-            StatsDataSupplier sds = () => new CcvData(JsUtils.RandomText());
-            StatsDataDecoder sdd = json =>
-            {
-                if (json.StartsWith("\"") && json.EndsWith("\"")) {
-                    return new CcvData(json.Substring(1, json.Length - 1));
-                }
-                return new CcvData(json);            
-            };
+            // StatsDataSupplier sds = () => new CcvData(JsUtils.RandomText());
+            // StatsDataDecoder sdd = json =>
+            // {
+                // if (json.StartsWith("\"") && json.EndsWith("\"")) {
+                    // return new CcvData(json.Substring(1, json.Length - 1));
+                // }
+                // return new CcvData(json);            
+            // };
 
             Options opts = ConnectionFactory.GetDefaultOptions();
             opts.Url = "nats://localhost:4222";
 
             using (IConnection nc = new ConnectionFactory().CreateConnection(opts))
             {
-                EventHandler<MsgHandlerEventArgs> handler = (sender, args) =>
+                EventHandler<ServiceMsgHandlerEventArgs> handler = (sender, args) =>
                 {
                     byte[] payload = args.Message.Data;
                     if (payload == null || payload.Length == 0)
                     {
-                        ServiceMessage.ReplyStandardError(nc, args.Message, "need a string", 400);
+                        args.Message.RespondStandardError(nc, "need a string", 400);
                     }
                     else
                     {
@@ -59,22 +59,23 @@ namespace NATSExamples
                         }
                         else
                         {
-                            ServiceMessage.Reply(nc, args.Message, payload);
+                            args.Message.Respond(nc, payload);
                         }
                     }
                 };
-                
+
+                // TODO Redo this base on multi endpoits
                 // create the services
                 Service service = new ServiceBuilder()
                     .WithConnection(nc)
                     .WithName("JavaCrossClientValidator")
-                    .WithSubject("jccv")
+                    // .WithSubject("jccv")
                     .WithDescription("Java Cross Client Validator")
                     .WithVersion("0.0.1")
-                    .WithSchemaRequest("schema request string/url")
-                    .WithSchemaResponse("schema response string/url")
-                    .WithStatsDataHandlers(sds, sdd)
-                    .WithServiceMessageHandler(handler)
+                    // .WithSchemaRequest("schema request string/url")
+                    // .WithSchemaResponse("schema response string/url")
+                    // .WithStatsDataHandlers(sds, sdd)
+                    // .WithServiceMessageHandler(handler)
                     .Build();
 
                 Console.WriteLine(service);
@@ -86,18 +87,18 @@ namespace NATSExamples
                 Console.WriteLine("Called jccv with 'hello'. Received [" + response + "]");
 
                 msg = nc.Request("jccv", null);
-                string se = msg.Header[ServiceMessage.NatsServiceError];
-                string sec = msg.Header[ServiceMessage.NatsServiceErrorCode];
+                string se = msg.Header[ServiceMsg.NatsServiceError];
+                string sec = msg.Header[ServiceMsg.NatsServiceErrorCode];
                 Console.WriteLine("Called jccv with null. Received [" + se + ", " + sec + "]");
 
                 msg = nc.Request("jccv", Encoding.UTF8.GetBytes(""));
-                se = msg.Header[ServiceMessage.NatsServiceError];
-                sec = msg.Header[ServiceMessage.NatsServiceErrorCode];
+                se = msg.Header[ServiceMsg.NatsServiceError];
+                sec = msg.Header[ServiceMsg.NatsServiceErrorCode];
                 Console.WriteLine("Called jccv with empty. Received [" + se + ", " + sec + "]");
 
                 msg = nc.Request("jccv", Encoding.UTF8.GetBytes("error"));
-                se = msg.Header[ServiceMessage.NatsServiceError];
-                sec = msg.Header[ServiceMessage.NatsServiceErrorCode];
+                se = msg.Header[ServiceMsg.NatsServiceError];
+                sec = msg.Header[ServiceMsg.NatsServiceErrorCode];
                 Console.WriteLine("Called jccv with 'error'. Received [" + se + ", " + sec + "]");
                 
                 try
@@ -112,16 +113,16 @@ namespace NATSExamples
         }
     }
     
-    class CcvData : IStatsData {
-        string Text;
+    // class CcvData : IStatsData {
+        // string Text;
 
-        public CcvData(string text) {
-            Text = text;
-        }
+        // public CcvData(string text) {
+            // Text = text;
+        // }
 
-        public string ToJson()
-        {
-            return "\"" + Text + "\"";
-        }
-    }
+        // public string ToJson()
+        // {
+            // return "\"" + Text + "\"";
+        // }
+    // }
 }
