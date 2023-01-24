@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using NATS.Client.Internals;
+﻿using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 using NATS.Client.JetStream;
 
@@ -13,16 +12,6 @@ namespace NATS.Client.Service
         public string Name { get; }
         public string Subject { get; }
         public Schema Schema { get; }
-
-        internal static IList<Endpoint> ListOf(JSONNode endpointsNode)
-        {
-            IList<Endpoint> list = new List<Endpoint>();
-            foreach (var child in endpointsNode.Children)
-            {
-                list.Add(new Endpoint(child));
-            }
-            return list;
-        }
 
         public Endpoint(string name, string subject, Schema schema) : this(name, subject, schema, true) {}
 
@@ -61,7 +50,7 @@ namespace NATS.Client.Service
         private Endpoint(EndpointBuilder b) 
             : this(b.Name, b.Subject, Schema.OptionalInstance(b.SchemaRequest, b.SchemaResponse)) {}
 
-        internal override JSONNode ToJsonNode()
+        public override JSONNode ToJsonNode()
         {
             JSONObject jso = new JSONObject();
             JsonUtils.AddField(jso, ApiConstants.Name, Name);

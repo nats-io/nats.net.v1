@@ -88,8 +88,8 @@ namespace NATS.Client.Service
             }
         }
         
-        internal EndpointStats GetEndpointStats() {
-            return new EndpointStats(
+        internal EndpointResponse GetEndpointStats() {
+            return new EndpointResponse(
                 se.Endpoint.Name,
                 se.Subject,
                 numRequests.Read(),

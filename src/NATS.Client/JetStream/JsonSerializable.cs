@@ -18,7 +18,7 @@ namespace NATS.Client.JetStream
 {
     public abstract class JsonSerializable
     {
-        internal abstract JSONNode ToJsonNode();
+        public abstract JSONNode ToJsonNode();
 
         public virtual byte[] Serialize()
         {

@@ -43,7 +43,7 @@ namespace NATS.Client.Service
             Subjects = JsonUtils.StringList(node, ApiConstants.Subjects);
         }
 
-        internal override JSONNode ToJsonNode()
+        public override JSONNode ToJsonNode()
         {
             JSONObject jso = BaseJsonObject();
             JsonUtils.AddField(jso, ApiConstants.Description, Description);

@@ -13,7 +13,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 using NATS.Client.JetStream;
@@ -28,9 +27,9 @@ namespace NATS.Client.Service
         public const string ResponseType = "io.nats.micro.v1.stats_response";
 
         public DateTime Started { get; }
-        public IList<EndpointStats> EndpointStatsList { get; }
+        public IList<EndpointResponse> EndpointStatsList { get; }
         
-        internal StatsResponse(ServiceResponse template, DateTime started, IList<EndpointStats> endpointStatsList) 
+        internal StatsResponse(ServiceResponse template, DateTime started, IList<EndpointResponse> endpointStatsList) 
             :base(ResponseType, template)
         {
             Started = started;
@@ -42,10 +41,10 @@ namespace NATS.Client.Service
         internal StatsResponse(JSONNode node) : base(ResponseType, node)
         {
             Started = JsonUtils.AsDate(node[ApiConstants.Started]);
-            EndpointStatsList = EndpointStats.ListOf(node[ApiConstants.Endpoints]);
+            EndpointStatsList = EndpointResponse.ListOf(node[ApiConstants.Endpoints]);
         }
         
-        internal override JSONNode ToJsonNode()
+        public override JSONNode ToJsonNode()
         {
             JSONObject jso = BaseJsonObject();
             jso[ApiConstants.Started] = JsonUtils.UnsafeToString(Started);

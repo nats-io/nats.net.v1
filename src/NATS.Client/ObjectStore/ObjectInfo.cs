@@ -67,7 +67,7 @@ namespace NATS.Client.ObjectStore
             ObjectMeta = new ObjectMeta(node);
         }
 
-        internal override JSONNode ToJsonNode()
+        public override JSONNode ToJsonNode()
         {
             // never write MTIME (Modified)
             JSONObject jso = new JSONObject();

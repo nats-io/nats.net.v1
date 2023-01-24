@@ -11,7 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Collections.Generic;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 using static NATS.Client.Internals.JsonUtils;
@@ -63,7 +62,7 @@ namespace NATS.Client.JetStream
             HeadersOnly = headersOnly;
         }
 
-        internal override JSONNode ToJsonNode()
+        public override JSONNode ToJsonNode()
         {
             JSONObject o = new JSONObject();
             o[ApiConstants.Src] = Source;

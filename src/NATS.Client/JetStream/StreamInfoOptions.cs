@@ -27,7 +27,7 @@ namespace NATS.Client.JetStream
             DeletedDetails = deletedDetails;
         }
 
-        internal override JSONNode ToJsonNode()
+        public override JSONNode ToJsonNode()
         {
             return new JSONObject
             {

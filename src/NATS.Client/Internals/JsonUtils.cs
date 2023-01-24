@@ -143,9 +143,9 @@ namespace NATS.Client.Internals
             return arr;
         }
 
-        public static string ToKey(System.Type type)
+        public static string ToKey(Type type)
         {
-            return "\"" + type.FullName + "\":";
+            return "\"" + type.Name + "\":";
         }
         
         public static byte[] SimpleMessageBody(string name, long value)
@@ -206,7 +206,7 @@ namespace NATS.Client.Internals
 
         public static void AddField(JSONObject o, string field, DateTime? value)
         {
-            if (value != null)
+            if (value != null && value != DateTime.MinValue)
             {
                 o[field] = UnsafeToString(value.Value);
             }
@@ -239,6 +239,38 @@ namespace NATS.Client.Internals
         public static void AddField(JSONObject o, string field, long? value)
         {
             if (value != null && value >= 0)
+            {
+                o[field] = value;
+            }
+        }
+
+        public static void AddFieldWhenGtZero(JSONObject o, string field, int value)
+        {
+            if (value > 0)
+            {
+                o[field] = value;
+            }
+        }
+
+        public static void AddFieldWhenGtZero(JSONObject o, string field, int? value)
+        {
+            if (value != null && value > 0)
+            {
+                o[field] = value;
+            }
+        }
+
+        public static void AddFieldWhenGtZero(JSONObject o, string field, long value)
+        {
+            if (value > 0)
+            {
+                o[field] = value;
+            }
+        }
+
+        public static void AddFieldWhenGtZero(JSONObject o, string field, long? value)
+        {
+            if (value != null && value > 0)
             {
                 o[field] = value;
             }

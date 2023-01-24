@@ -48,7 +48,7 @@ namespace NATS.Client.Service
             Response = schemaNode[ApiConstants.Response];
         }
 
-        internal override JSONNode ToJsonNode()
+        public override JSONNode ToJsonNode()
         {
             JSONObject jso = new JSONObject();
             JsonUtils.AddField(jso, ApiConstants.Request, Request);

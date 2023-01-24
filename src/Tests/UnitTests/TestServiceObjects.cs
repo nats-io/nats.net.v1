@@ -158,13 +158,14 @@ namespace UnitTests
         }
 
         [Fact]
-        public void TestEndpointStatsConstruction()
+        public void TestEndpointResponseConstruction()
         {
             JSONNode data = new JSONString("data");
             DateTime dt = DateTime.UtcNow;
-            EndpointStats es = new EndpointStats("name", "subject", 0, 0, 0, null, null, dt);
+            EndpointResponse es = new EndpointResponse("name", "subject", 0, 0, 0, null, null, dt);
             Assert.Equal("name", es.Name);
             Assert.Equal("subject", es.Subject);
+            Assert.Null(es.Schema);
             Assert.Null(es.LastError);
             Assert.Null(es.Data);
             Assert.Equal(0, es.NumRequests);
@@ -173,9 +174,10 @@ namespace UnitTests
             Assert.Equal(0, es.AverageProcessingTime);
             Assert.Equal(dt, es.Started);
 
-            es = new EndpointStats("name", "subject", 2, 4, 10, "lastError", data, dt);
+            es = new EndpointResponse("name", "subject", 2, 4, 10, "lastError", data, dt);
             Assert.Equal("name", es.Name);
             Assert.Equal("subject", es.Subject);
+            Assert.Null(es.Schema);
             Assert.Equal("lastError", es.LastError);
             Assert.Equal("\"data\"", es.Data.ToString());
             Assert.Equal(2, es.NumRequests);
@@ -188,13 +190,39 @@ namespace UnitTests
             Assert.StartsWith("{", j);
             Assert.Contains("\"name\":\"name\"", j);
             Assert.Contains("\"subject\":\"subject\"", j);
+            Assert.DoesNotContain("\"schema\":", j);
             Assert.Contains("\"last_error\":\"lastError\"", j);
             Assert.Contains("\"data\":\"data\"", j);
             Assert.Contains("\"num_requests\":2", j);
             Assert.Contains("\"num_errors\":4", j);
             Assert.Contains("\"processing_time\":10", j);
             Assert.Contains("\"average_processing_time\":5", j);
-            Assert.Equal(JsonUtils.ToKey(typeof(EndpointStats)) + j, es.ToString());
+            Assert.Equal(JsonUtils.ToKey(typeof(EndpointResponse)) + j, es.ToString());
+
+            Schema schema = new Schema("req", "res");
+            es = new EndpointResponse("name", "subject", schema);
+            Assert.Equal("name", es.Name);
+            Assert.Equal("subject", es.Subject);
+            Assert.Null(es.LastError);
+            Assert.Null(es.Data);
+            Assert.Equal(0, es.NumRequests);
+            Assert.Equal(0, es.NumErrors);
+            Assert.Equal(0, es.ProcessingTime);
+            Assert.Equal(0, es.AverageProcessingTime);
+            Assert.Equal(DateTime.MinValue, es.Started);
+
+            j = es.ToJsonString();
+            Assert.StartsWith("{", j);
+            Assert.Contains("\"name\":\"name\"", j);
+            Assert.Contains("\"subject\":\"subject\"", j);
+            Assert.Contains("\"schema\":{\"request\":\"req\",\"response\":\"res\"}", j);
+            Assert.DoesNotContain("\"last_error\":", j);
+            Assert.DoesNotContain("\"data\":", j);
+            Assert.DoesNotContain("\"num_requests\":", j);
+            Assert.DoesNotContain("\"num_errors\":", j);
+            Assert.DoesNotContain("\"processing_time\":", j);
+            Assert.DoesNotContain("\"average_processing_time\":", j);
+            Assert.Equal(JsonUtils.ToKey(typeof(EndpointResponse)) + j, es.ToString());
         }
 
         [Fact]
@@ -360,9 +388,9 @@ namespace UnitTests
             ValidateApiInOutInfoResponse(ir1);
             ValidateApiInOutInfoResponse(ir2);
 
-            IList<Endpoint> endpoints = new List<Endpoint>();
-            endpoints.Add(new Endpoint("endName0", "endSubject0", "endSchemaRequest0", "endSchemaResponse0"));
-            endpoints.Add(new Endpoint("endName1", "endSubject1", "endSchemaRequest1", "endSchemaResponse1"));
+            IList<EndpointResponse> endpoints = new List<EndpointResponse>();
+            endpoints.Add(new EndpointResponse("endName0", "endSubject0", new Schema("endSchemaRequest0", "endSchemaResponse0")));
+            endpoints.Add(new EndpointResponse("endName1", "endSubject1", new Schema("endSchemaRequest1", "endSchemaResponse1")));
             SchemaResponse sch1 = new SchemaResponse("id", "name", "0.0.0", "apiUrl", endpoints);
             SchemaResponse sch2 = new SchemaResponse(sch1.ToJsonString());
             ValidateApiInOutSchemaResponse(sch1);
@@ -375,11 +403,11 @@ namespace UnitTests
             Thread.Sleep(100);
             endStarteds[1] = DateTime.UtcNow;
 
-            IList<EndpointStats> statsList = new List<EndpointStats>();
-            JSONNode[] data = new JSONNode[] { SupplyData(), SupplyData() };
-            statsList.Add(new EndpointStats("endName0", "endSubject0", 1000, 0, 10000, "lastError0", data[0],
+            IList<EndpointResponse> statsList = new List<EndpointResponse>();
+            JSONNode[] data = { SupplyData(), SupplyData() };
+            statsList.Add(new EndpointResponse("endName0", "endSubject0", 1000, 0, 10000, "lastError0", data[0],
                 endStarteds[0]));
-            statsList.Add(new EndpointStats("endName1", "endSubject1", 2000, 10, 10000, "lastError1", data[1],
+            statsList.Add(new EndpointResponse("endName1", "endSubject1", 2000, 10, 10000, "lastError1", data[1],
                 endStarteds[1]));
 
             StatsResponse stat1 = new StatsResponse(pr1, serviceStarted, statsList);
@@ -394,7 +422,7 @@ namespace UnitTests
             Assert.Equal(serviceStarted, stat.Started);
             Assert.Equal(2, stat.EndpointStatsList.Count);
             for (int x = 0; x < 2; x++) {
-                EndpointStats e = stat.EndpointStatsList[x];
+                EndpointResponse e = stat.EndpointStatsList[x];
                 Assert.Equal("endName" + x, e.Name);
                 Assert.Equal("endSubject" + x, e.Subject);
                 long nr = x * 1000 + 1000;
@@ -416,7 +444,7 @@ namespace UnitTests
             Assert.Equal("apiUrl", r.ApiUrl);
             Assert.Equal(2, r.Endpoints.Count);
             for (int x = 0; x < 2; x++) {
-                Endpoint e = r.Endpoints[x];
+                EndpointResponse e = r.Endpoints[x];
                 Assert.Equal("endName" + x, e.Name);
                 Assert.Equal("endSubject" + x, e.Subject);
                 Assert.Equal("endSchemaRequest" + x, e.Schema.Request);
@@ -472,7 +500,7 @@ namespace UnitTests
                 Idata = node["idata"].AsInt;
             }
 
-            internal override JSONNode ToJsonNode()
+            public override JSONNode ToJsonNode()
             {
                 JSONObject jso = new JSONObject();
                 JsonUtils.AddField(jso, "sdata", Sdata);
@@ -522,7 +550,7 @@ namespace UnitTests
 
         public TestServiceResponses(JSONNode node) : base(ResponseType, node) {}
 
-        internal override JSONNode ToJsonNode()
+        public override JSONNode ToJsonNode()
         {
             return BaseJsonObject();
         }

@@ -26,9 +26,9 @@ namespace NATS.Client.Service
         public const string ResponseType = "io.nats.micro.v1.schema_response";
 
         public string ApiUrl { get; }
-        public IList<Endpoint> Endpoints { get; }
+        public IList<EndpointResponse> Endpoints { get; }
 
-        public SchemaResponse(string id, string name, string version, string apiUrl, IList<Endpoint> endpoints)
+        public SchemaResponse(string id, string name, string version, string apiUrl, IList<EndpointResponse> endpoints)
         : base(ResponseType, id, name, version)
         {
             ApiUrl = apiUrl;
@@ -40,10 +40,10 @@ namespace NATS.Client.Service
         internal SchemaResponse(JSONNode node) : base(ResponseType, node)
         {
             ApiUrl = node[ApiConstants.ApiUrl];
-            Endpoints = Endpoint.ListOf(node[ApiConstants.Endpoints]);
+            Endpoints = EndpointResponse.ListOf(node[ApiConstants.Endpoints]);
         }
 
-        internal override JSONNode ToJsonNode()
+        public override JSONNode ToJsonNode()
         {
             JSONObject jso = BaseJsonObject();
             JsonUtils.AddField(jso, ApiConstants.ApiUrl, ApiUrl);

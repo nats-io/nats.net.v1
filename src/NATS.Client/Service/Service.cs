@@ -54,13 +54,13 @@ namespace NATS.Client.Service
             // set up the service contexts
             // ! also while we are here, we need to collect the endpoints for the SchemaResponse
             IList<string> infoSubjects = new List<string>();
-            IList<Endpoint> schemaEndpoints = new List<Endpoint>();
+            IList<EndpointResponse> schemaEndpoints = new List<EndpointResponse>();
             serviceContexts = new Dictionary<string, EndpointContext>();
             foreach (ServiceEndpoint se in b.ServiceEndpoints.Values)
             {
                 serviceContexts[se.Name] = new EndpointContext(conn, true, se);
                 infoSubjects.Add(se.Subject);
-                schemaEndpoints.Add(se.Endpoint);
+                schemaEndpoints.Add(new EndpointResponse(se.Name, se.Subject, se.Endpoint.Schema));
             }
 
             // build static responses
@@ -140,6 +140,11 @@ namespace NATS.Client.Service
             return new ServiceBuilder();
         }
 
+        public void Stop(Exception e)
+        {
+            Stop(true, e);
+        }
+
         public void Stop(bool drain = true, Exception e = null) {
             lock (stopLock) {
                 if (!doneTcs.Task.IsCompleted) {
@@ -197,7 +202,7 @@ namespace NATS.Client.Service
 
         public StatsResponse GetStatsResponse()
         {
-            IList<EndpointStats> endpointStatsList = new List<EndpointStats>();
+            IList<EndpointResponse> endpointStatsList = new List<EndpointResponse>();
             foreach (EndpointContext c in serviceContexts.Values)
             {
                 endpointStatsList.Add(c.GetEndpointStats());
@@ -205,7 +210,7 @@ namespace NATS.Client.Service
             return new StatsResponse(PingResponse, started, endpointStatsList);
         }
         
-        public EndpointStats GetEndpointStats(string endpointName)
+        public EndpointResponse GetEndpointStats(string endpointName)
         {
             EndpointContext c;
             if (serviceContexts.TryGetValue(endpointName, out c))
@@ -224,12 +229,12 @@ namespace NATS.Client.Service
             JsonUtils.AddField(o, ApiConstants.Description, InfoResponse.Description);
             JsonUtils.AddField(o, ApiConstants.ApiUrl, SchemaResponse.ApiUrl);
             JSONArray ja = new JSONArray();
-            foreach (Endpoint e in SchemaResponse.Endpoints)
+            foreach (EndpointResponse e in SchemaResponse.Endpoints)
             {
                 ja.Add(e.ToJsonNode());
             }
             o[ApiConstants.Endpoints] = ja;
-            return o.ToString();
+            return "\"Service\":" + o.ToString();
         }
     }
  }

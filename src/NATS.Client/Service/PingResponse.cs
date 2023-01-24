@@ -29,7 +29,7 @@ namespace NATS.Client.Service
 
         internal PingResponse(JSONNode node) : base(ResponseType, node) {}
         
-        internal override JSONNode ToJsonNode()
+        public override JSONNode ToJsonNode()
         {
             return BaseJsonObject();
         }

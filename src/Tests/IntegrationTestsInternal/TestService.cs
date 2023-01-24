@@ -23,7 +23,6 @@ using NATS.Client.Internals.SimpleJSON;
 using NATS.Client.Service;
 using UnitTests;
 using Xunit;
-using Xunit.Abstractions;
 using static UnitTests.TestBase;
 
 namespace IntegrationTestsInternal
@@ -31,12 +30,7 @@ namespace IntegrationTestsInternal
     [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
     public class TestService : TestSuite<ServiceSuiteContext>
     {
-        private readonly ITestOutputHelper output;
-        public TestService(ITestOutputHelper output, ServiceSuiteContext context) : base(context)
-        {
-            this.output = output;
-            Console.SetOut(new ConsoleWriter(output));
-        }
+        public TestService(ServiceSuiteContext context) : base(context) {}
         
         const string ServiceName1 = "Service1";
         const string ServiceName2 = "Service2";
@@ -159,13 +153,13 @@ namespace IntegrationTestsInternal
                     SchemaResponse schemaResponse2 = service2.SchemaResponse;
                     StatsResponse statsResponse1 = service1.GetStatsResponse();
                     StatsResponse statsResponse2 = service2.GetStatsResponse();
-                    EndpointStats[] endpointStatsArray1 = new EndpointStats[]
+                    EndpointResponse[] endpointResponseArray1 = new EndpointResponse[]
                     {
                         service1.GetEndpointStats(EchoEndpointName),
                         service1.GetEndpointStats(SortEndpointAscendingName),
                         service1.GetEndpointStats(SortEndpointDescendingName)
                     };
-                    EndpointStats[] endpointStatsArray2 = new EndpointStats[]
+                    EndpointResponse[] endpointResponseArray2 = new EndpointResponse[]
                     {
                         service2.GetEndpointStats(EchoEndpointName),
                         service2.GetEndpointStats(SortEndpointAscendingName),
@@ -188,8 +182,8 @@ namespace IntegrationTestsInternal
                     for (int x = 0; x < 3; x++)
                     {
                         Assert.Equal(requestCount,
-                            endpointStatsArray1[x].NumRequests
-                            + endpointStatsArray2[x].NumRequests);
+                            endpointResponseArray1[x].NumRequests
+                            + endpointResponseArray2[x].NumRequests);
                         Assert.Equal(requestCount,
                             statsResponse1.EndpointStatsList[x].NumRequests
                             + statsResponse2.EndpointStatsList[x].NumRequests);
@@ -269,7 +263,7 @@ namespace IntegrationTestsInternal
                         VerifyServiceResponseFields(r, exp);
                         Assert.Equal(exp.Started, r.Started);
                         for (int x = 0; x < 3; x++) {
-                            EndpointStats es = exp.EndpointStatsList[x];
+                            EndpointResponse es = exp.EndpointStatsList[x];
                             if (!es.Name.Equals(EchoEndpointName)) {
                                 // echo endpoint has data that will vary
                                 Assert.Equal(es, r.EndpointStatsList[x]);
@@ -294,6 +288,12 @@ namespace IntegrationTestsInternal
                     Assert.Null(discovery.StatsForNameAndId(ServiceName1, "badId"));
                     Assert.Null(discovery.StatsForNameAndId("bad", "badId"));
 
+                    // shutdown
+                    service1.Stop();
+                    Assert.True(serviceDone1.Result);
+                    service2.Stop(new Exception("Testing stop(Exception e)"));
+                    AggregateException ae = Assert.Throws<AggregateException>(() => serviceDone2.Result);
+                    Assert.Contains("Testing stop(Exception e)", ae.GetBaseException().Message);
                 }
             }
         }
@@ -331,24 +331,24 @@ namespace IntegrationTestsInternal
             }
         }
 
-        private static string Echo(string data) {
+        private string Echo(string data) {
             return "Echo " + data;
         }
 
-        private static string Echo(byte[] data) {
+        private string Echo(byte[] data) {
             return "Echo " + Encoding.UTF8.GetString(data);
         }
 
-        private static string SortA(byte[] data) {
+        private string SortA(byte[] data) {
             Array.Sort(data);
             return "Sort Ascending " + Encoding.UTF8.GetString(data);
         }
 
-        private static string SortA(string data) {
+        private string SortA(string data) {
             return SortA(Encoding.UTF8.GetBytes(data));
         }
 
-        private static string SortD(byte[] data) {
+        private string SortD(byte[] data) {
             Array.Sort(data);
             int len = data.Length;
             byte[] descending = new byte[len];
@@ -358,7 +358,7 @@ namespace IntegrationTestsInternal
             return "Sort Descending " + Encoding.UTF8.GetString(descending);
         }
 
-        private static string SortD(string data) {
+        private string SortD(string data) {
             return SortD(Encoding.UTF8.GetBytes(data));
         }
 
@@ -449,7 +449,7 @@ namespace IntegrationTestsInternal
                 Assert.Equal("System.Exception: handler-problem", m.Header[ServiceMsg.NatsServiceError]);
                 Assert.Equal("500", m.Header[ServiceMsg.NatsServiceErrorCode]);
                 StatsResponse sr = exService.GetStatsResponse();
-                EndpointStats es = sr.EndpointStatsList[0];
+                EndpointResponse es = sr.EndpointStatsList[0];
                 Assert.Equal(1, es.NumRequests);
                 Assert.Equal(1, es.NumErrors);
                 Assert.Equal("System.Exception: handler-problem", es.LastError);
