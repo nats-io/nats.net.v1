@@ -61,17 +61,20 @@ namespace NATS.Client.Service
                 {
                     numRequests.Increment();
                 }
+                se.Handler.Invoke(this, new ServiceMsgHandlerEventArgs(smsg));
             }
             catch (Exception e)
             {
+                Exception b = e.GetBaseException();
+                string message = b.GetType() + ": " + b.Message; 
                 if (recordStats)
                 {
                     numErrors.Increment();
-                    lastError = e.ToString();
+                    lastError = message;
                 }
                 try
                 {
-                    smsg.RespondStandardError(conn, e.Message, 500);
+                    smsg.RespondStandardError(conn, message, 500);
                 }
                 catch (Exception) { /* ignored */ }
             }

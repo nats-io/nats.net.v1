@@ -12,6 +12,8 @@
 // limitations under the License.
 
 using System.Text;
+using NATS.Client.Internals.SimpleJSON;
+using NATS.Client.JetStream;
 
 namespace NATS.Client.Service
 {
@@ -33,6 +35,14 @@ namespace NATS.Client.Service
             conn.Publish(new Msg(_reply, null, null, Encoding.UTF8.GetBytes(response)));
         }
 
+        public void Respond(IConnection conn, JsonSerializable response) {
+            conn.Publish(new Msg(_reply, null, null, response.Serialize()));
+        }
+
+        public void Respond(IConnection conn, JSONNode response) {
+            conn.Publish(new Msg(_reply, null, null, Encoding.UTF8.GetBytes(response.ToString())));
+        }
+
         public void Respond(IConnection conn, byte[] response, MsgHeader headers)
         {
             conn.Publish(new Msg(_reply, null, headers, response));
@@ -41,6 +51,14 @@ namespace NATS.Client.Service
         public void Respond(IConnection conn, string response, MsgHeader headers)
         {
             conn.Publish(new Msg(_reply, null, headers, Encoding.UTF8.GetBytes(response)));
+        }
+
+        public void Respond(IConnection conn, JsonSerializable response, MsgHeader headers) {
+            conn.Publish(new Msg(_reply, null, headers, response.Serialize()));
+        }
+
+        public void Respond(IConnection conn, JSONNode response, MsgHeader headers) {
+            conn.Publish(new Msg(_reply, null, headers, Encoding.UTF8.GetBytes(response.ToString())));
         }
 
         public void RespondStandardError(IConnection conn, string errorMessage, int errorCode)
