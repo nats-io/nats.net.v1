@@ -101,7 +101,7 @@ namespace NATS.Client.Service
                    && ProcessingTime == other.ProcessingTime 
                    && AverageProcessingTime == other.AverageProcessingTime 
                    && LastError == other.LastError 
-                   && Equals(Data, other.Data) 
+                   && Data == other.Data 
                    && Started.Equals(other.Started);
         }
 

@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Threading.Tasks;
@@ -37,15 +38,15 @@ namespace IntegrationTestsInternal
             Console.SetOut(new ConsoleWriter(output));
         }
         
-        const string SERVICE_NAME_1 = "Service1";
-        const string SERVICE_NAME_2 = "Service2";
-        const string ECHO_ENDPOINT_NAME = "EchoEndpoint";
-        const string ECHO_ENDPOINT_SUBJECT = "echo";
-        const string SORT_GROUP = "sort";
-        const string SORT_ENDPOINT_ASCENDING_NAME = "SortEndpointAscending";
-        const string SORT_ENDPOINT_DESCENDING_NAME = "SortEndpointDescending";
-        const string SORT_ENDPOINT_ASCENDING_SUBJECT = "ascending";
-        const string SORT_ENDPOINT_DESCENDING_SUBJECT = "descending";
+        const string ServiceName1 = "Service1";
+        const string ServiceName2 = "Service2";
+        const string EchoEndpointName = "EchoEndpoint";
+        const string EchoEndpointSubject = "echo";
+        const string SortGroup = "sort";
+        const string SortEndpointAscendingName = "SortEndpointAscending";
+        const string SortEndpointDescendingName = "SortEndpointDescending";
+        const string SortEndpointAscendingSubject = "ascending";
+        const string SortEndpointDescendingSubject = "descending";
 
         [Fact]
         public void TestServiceWorkflow()
@@ -57,24 +58,24 @@ namespace IntegrationTestsInternal
                 using (IConnection clientNc = Context.OpenConnection(Context.Server1.Port))
                 {
                     Endpoint endEcho = Endpoint.Builder()
-                        .WithName(ECHO_ENDPOINT_NAME)
-                        .WithSubject(ECHO_ENDPOINT_SUBJECT)
+                        .WithName(EchoEndpointName)
+                        .WithSubject(EchoEndpointSubject)
                         .WithSchemaRequest("echo schema request info") // optional
                         .WithSchemaResponse("echo schema response info") // optional
                         .Build();
 
                     Endpoint endSortA = Endpoint.Builder()
-                        .WithName(SORT_ENDPOINT_ASCENDING_NAME)
-                        .WithSubject(SORT_ENDPOINT_ASCENDING_SUBJECT)
+                        .WithName(SortEndpointAscendingName)
+                        .WithSubject(SortEndpointAscendingSubject)
                         .WithSchemaRequest("sort ascending schema request info") // optional
                         .WithSchemaResponse("sort ascending schema response info") // optional
                         .Build();
 
                     // constructor coverage
-                    Endpoint endSortD = new Endpoint(SORT_ENDPOINT_DESCENDING_NAME, SORT_ENDPOINT_DESCENDING_SUBJECT);
+                    Endpoint endSortD = new Endpoint(SortEndpointDescendingName, SortEndpointDescendingSubject);
 
                     // sort is going to be grouped
-                    Group sortGroup = new Group(SORT_GROUP);
+                    Group sortGroup = new Group(SortGroup);
 
                     ServiceEndpoint seEcho1 = ServiceEndpoint.Builder()
                         .WithEndpoint(endEcho)
@@ -118,7 +119,7 @@ namespace IntegrationTestsInternal
                         .Build();
 
                     Service service1 = new ServiceBuilder()
-                        .WithName(SERVICE_NAME_1)
+                        .WithName(ServiceName1)
                         .WithVersion("1.0.0")
                         .WithConnection(serviceNc1)
                         .AddServiceEndpoint(seEcho1)
@@ -129,7 +130,7 @@ namespace IntegrationTestsInternal
                     Task<bool> serviceDone1 = service1.StartService();
 
                     Service service2 = new ServiceBuilder()
-                        .WithName(SERVICE_NAME_2)
+                        .WithName(ServiceName2)
                         .WithVersion("1.0.0")
                         .WithConnection(serviceNc2)
                         .AddServiceEndpoint(seEcho2)
@@ -145,9 +146,9 @@ namespace IntegrationTestsInternal
                     int requestCount = 10;
                     for (int x = 0; x < requestCount; x++)
                     {
-                        VerifyServiceExecution(clientNc, ECHO_ENDPOINT_NAME, ECHO_ENDPOINT_SUBJECT, null);
-                        VerifyServiceExecution(clientNc, SORT_ENDPOINT_ASCENDING_NAME, SORT_ENDPOINT_ASCENDING_SUBJECT, sortGroup);
-                        VerifyServiceExecution(clientNc, SORT_ENDPOINT_DESCENDING_NAME, SORT_ENDPOINT_DESCENDING_SUBJECT, sortGroup);
+                        VerifyServiceExecution(clientNc, EchoEndpointName, EchoEndpointSubject, null);
+                        VerifyServiceExecution(clientNc, SortEndpointAscendingName, SortEndpointAscendingSubject, sortGroup);
+                        VerifyServiceExecution(clientNc, SortEndpointDescendingName, SortEndpointDescendingSubject, sortGroup);
                     }
 
                     PingResponse pingResponse1 = service1.PingResponse;
@@ -160,15 +161,15 @@ namespace IntegrationTestsInternal
                     StatsResponse statsResponse2 = service2.GetStatsResponse();
                     EndpointStats[] endpointStatsArray1 = new EndpointStats[]
                     {
-                        service1.GetEndpointStats(ECHO_ENDPOINT_NAME),
-                        service1.GetEndpointStats(SORT_ENDPOINT_ASCENDING_NAME),
-                        service1.GetEndpointStats(SORT_ENDPOINT_DESCENDING_NAME)
+                        service1.GetEndpointStats(EchoEndpointName),
+                        service1.GetEndpointStats(SortEndpointAscendingName),
+                        service1.GetEndpointStats(SortEndpointDescendingName)
                     };
                     EndpointStats[] endpointStatsArray2 = new EndpointStats[]
                     {
-                        service2.GetEndpointStats(ECHO_ENDPOINT_NAME),
-                        service2.GetEndpointStats(SORT_ENDPOINT_ASCENDING_NAME),
-                        service2.GetEndpointStats(SORT_ENDPOINT_DESCENDING_NAME)
+                        service2.GetEndpointStats(EchoEndpointName),
+                        service2.GetEndpointStats(SortEndpointAscendingName),
+                        service2.GetEndpointStats(SortEndpointDescendingName)
                     };
                     Assert.Null(service1.GetEndpointStats("notAnEndpoint"));
 
@@ -193,8 +194,123 @@ namespace IntegrationTestsInternal
                             statsResponse1.EndpointStatsList[x].NumRequests
                             + statsResponse2.EndpointStatsList[x].NumRequests);
                     }
+
+                    // discovery - wait at most 500 millis for responses, 5 total responses max
+                    Discovery discovery = new Discovery(clientNc, 500, 5);
+
+                    // ping discovery
+                    void VerifyPingDiscoveries(IList<PingResponse> responses, params PingResponse[] expectedResponses) {
+                        Assert.Equal(expectedResponses.Length, responses.Count);
+                        foreach (PingResponse r in responses)
+                        {
+                            // ReSharper disable once CoVariantArrayConversion
+                            PingResponse exp = (PingResponse)Find(expectedResponses, r);
+                            Assert.NotNull(exp);
+                            VerifyServiceResponseFields(r, exp);
+                        }
+                    }
+                    VerifyPingDiscoveries(discovery.Ping(), pingResponse1, pingResponse2);
+                    VerifyPingDiscoveries(discovery.Ping(ServiceName1), pingResponse1);
+                    VerifyPingDiscoveries(discovery.Ping(ServiceName2), pingResponse2);
+                    VerifyServiceResponseFields(discovery.PingForNameAndId(ServiceName1, serviceId1), pingResponse1);
+                    Assert.Null(discovery.PingForNameAndId(ServiceName1, "badId"));
+                    Assert.Null(discovery.PingForNameAndId("bad", "badId"));
+
+                    // info discovery
+                    void VerifyInfoDiscovery(InfoResponse r, InfoResponse exp) {
+                        VerifyServiceResponseFields(r, exp);
+                        Assert.Equal(exp.Description, r.Description);
+                        Assert.Equal(exp.Subjects, r.Subjects);
+                    }
+                    void VerifyInfoDiscoveries(IList<InfoResponse> responses, params InfoResponse[] expectedResponses)
+                    {
+                        Assert.Equal(expectedResponses.Length, responses.Count);
+                        foreach (InfoResponse r in responses)
+                        {
+                            // ReSharper disable once CoVariantArrayConversion
+                            InfoResponse exp = (InfoResponse)Find(expectedResponses, r);
+                            Assert.NotNull(exp);
+                            VerifyInfoDiscovery(r, exp);
+                        }
+                    }
+                    VerifyInfoDiscoveries(discovery.Info(), infoResponse1, infoResponse2);
+                    VerifyInfoDiscoveries(discovery.Info(ServiceName1), infoResponse1);
+                    VerifyInfoDiscoveries(discovery.Info(ServiceName2), infoResponse2);
+                    VerifyInfoDiscovery(discovery.InfoForNameAndId(ServiceName1, serviceId1), infoResponse1);
+                    Assert.Null(discovery.InfoForNameAndId(ServiceName1, "badId"));
+                    Assert.Null(discovery.InfoForNameAndId("bad", "badId"));
+
+                    // schema discovery
+                    void VerifySchemaDiscovery(SchemaResponse r, SchemaResponse exp) {
+                        VerifyServiceResponseFields(r, exp);
+                        Assert.Equal(exp.ApiUrl, r.ApiUrl);
+                        Assert.Equal(exp.Endpoints, r.Endpoints);
+                    }
+                    void VerifySchemaDiscoveries(IList<SchemaResponse> responses, params SchemaResponse[] expectedResponses)
+                    {
+                        Assert.Equal(expectedResponses.Length, responses.Count);
+                        foreach (SchemaResponse r in responses)
+                        {
+                            // ReSharper disable once CoVariantArrayConversion
+                            SchemaResponse exp = (SchemaResponse)Find(expectedResponses, r);
+                            Assert.NotNull(exp);
+                            VerifySchemaDiscovery(r, exp);
+                        }
+                    }
+                    VerifySchemaDiscoveries(discovery.Schema(), schemaResponse1, schemaResponse2);
+                    VerifySchemaDiscoveries(discovery.Schema(ServiceName1), schemaResponse1);
+                    VerifySchemaDiscoveries(discovery.Schema(ServiceName2), schemaResponse2);
+                    VerifySchemaDiscovery(discovery.SchemaForNameAndId(ServiceName1, serviceId1), schemaResponse1);
+                    Assert.Null(discovery.SchemaForNameAndId(ServiceName1, "badId"));
+                    Assert.Null(discovery.SchemaForNameAndId("bad", "badId"));
+                    
+                    // stats discovery
+                    void VerifyStatsDiscovery(StatsResponse r, StatsResponse exp) {
+                        VerifyServiceResponseFields(r, exp);
+                        Assert.Equal(exp.Started, r.Started);
+                        for (int x = 0; x < 3; x++) {
+                            EndpointStats es = exp.EndpointStatsList[x];
+                            if (!es.Name.Equals(EchoEndpointName)) {
+                                // echo endpoint has data that will vary
+                                Assert.Equal(es, r.EndpointStatsList[x]);
+                            }
+                        }
+                    }
+                    void VerifyStatsDiscoveries(IList<StatsResponse> responses, params StatsResponse[] expectedResponses)
+                    {
+                        Assert.Equal(expectedResponses.Length, responses.Count);
+                        foreach (StatsResponse r in responses)
+                        {
+                            // ReSharper disable once CoVariantArrayConversion
+                            StatsResponse exp = (StatsResponse)Find(expectedResponses, r);
+                            Assert.NotNull(exp);
+                            VerifyStatsDiscovery(r, exp);
+                        }
+                    }
+                    VerifyStatsDiscoveries(discovery.Stats(), statsResponse1, statsResponse2);
+                    VerifyStatsDiscoveries(discovery.Stats(ServiceName1), statsResponse1);
+                    VerifyStatsDiscoveries(discovery.Stats(ServiceName2), statsResponse2);
+                    VerifyStatsDiscovery(discovery.StatsForNameAndId(ServiceName1, serviceId1), statsResponse1);
+                    Assert.Null(discovery.StatsForNameAndId(ServiceName1, "badId"));
+                    Assert.Null(discovery.StatsForNameAndId("bad", "badId"));
+
                 }
             }
+        }
+        
+        private void VerifyServiceResponseFields(ServiceResponse r, ServiceResponse exp) {
+            Assert.Equal(exp.Type, r.Type);
+            Assert.Equal(exp.Name, r.Name);
+            Assert.Equal(exp.Version, r.Version);
+        }
+        
+        private ServiceResponse Find(ServiceResponse[] expectedResponses, ServiceResponse response) {
+            foreach (ServiceResponse sr in expectedResponses) {
+                if (response.Id.Equals(sr.Id)) {
+                    return sr;
+                }
+            }
+            return null;
         }
 
         private void VerifyServiceExecution(IConnection nc, string endpointName, string serviceSubject, Group group) {
@@ -203,13 +319,13 @@ namespace IntegrationTestsInternal
             Msg m = nc.Request(subject, Encoding.UTF8.GetBytes(request));
             String response = Encoding.UTF8.GetString(m.Data);
             switch (endpointName) {
-                case ECHO_ENDPOINT_NAME:
+                case EchoEndpointName:
                     Assert.Equal(Echo(request), response);
                     break;
-                case SORT_ENDPOINT_ASCENDING_NAME:
+                case SortEndpointAscendingName:
                     Assert.Equal(SortA(request), response);
                     break;
-                case SORT_ENDPOINT_DESCENDING_NAME:
+                case SortEndpointDescendingName:
                     Assert.Equal(SortD(request), response);
                     break;
             }
