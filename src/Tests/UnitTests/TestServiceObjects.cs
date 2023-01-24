@@ -503,7 +503,7 @@ namespace UnitTests
         }
 
         private static int _dataX = -1;
-        private static JSONNode SupplyData()
+        public static JSONNode SupplyData()
         {
             _dataX++;
             return new TestStatsData("s-" + _dataX, _dataX).ToJsonNode();
