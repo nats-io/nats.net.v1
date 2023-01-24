@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using NATS.Client;
-using NATS.Client.Internals.SimpleJSON;
-using NATS.Client.Service;
 
 namespace NATSExamples
 {
@@ -10,16 +7,6 @@ namespace NATSExamples
     {
         static void Main(string[] args)
         {
-            List<Endpoint> list = new List<Endpoint>();
-            list.Add(new Endpoint("name1", "sub1", "q1", "e1"));
-            list.Add(new Endpoint("name2", "sub2", "q2", "e2"));
-            SchemaResponse r = 
-                new SchemaResponse("id", "name", "version", "desc", list);
-            
-            Console.WriteLine(r.ToString());
-            Console.WriteLine(list[0].ToString());
-            if (true) return;
-
             Options opts = ConnectionFactory.GetDefaultOptions();
             
             opts.Name = "the-client";
