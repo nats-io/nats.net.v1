@@ -50,7 +50,7 @@ namespace NATSExamples
                 ServiceEndpoint seEcho1 = ServiceEndpoint.Builder()
                     .WithEndpoint(epEcho)
                     .WithHandler((s, a) => HandleEchoMessage(c, a.Message, "S1E")) // see below: handleEchoMessage below
-                    .WithStatsDataSupplier(ServiceExample.SupplyData)
+                    .WithStatsDataSupplier(SupplyData)
                     .Build();
 
                 ServiceEndpoint seEcho2 = ServiceEndpoint.Builder()

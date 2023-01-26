@@ -15,6 +15,7 @@ using System;
 using System.Text;
 using System.Threading.Tasks;
 using NATS.Client;
+using NATS.Client.Internals.SimpleJSON;
 using NATS.Client.Service;
 
 namespace NATSExamples
@@ -29,15 +30,6 @@ namespace NATSExamples
     {
         public static void CrossClientValidationMain()
         {
-            // StatsDataSupplier sds = () => new CcvData(JsUtils.RandomText());
-            // StatsDataDecoder sdd = json =>
-            // {
-                // if (json.StartsWith("\"") && json.EndsWith("\"")) {
-                    // return new CcvData(json.Substring(1, json.Length - 1));
-                // }
-                // return new CcvData(json);            
-            // };
-
             Options opts = ConnectionFactory.GetDefaultOptions();
             opts.Url = "nats://localhost:4222";
 
@@ -57,25 +49,23 @@ namespace NATSExamples
                         {
                             throw new Exception("service asked to throw an error");
                         }
-                        else
-                        {
-                            args.Message.Respond(nc, payload);
-                        }
+                        args.Message.Respond(nc, payload);
                     }
                 };
-
-                // TODO Redo this base on multi endpoits
+                
                 // create the services
                 Service service = new ServiceBuilder()
                     .WithConnection(nc)
                     .WithName("JavaCrossClientValidator")
-                    // .WithSubject("jccv")
                     .WithDescription("Java Cross Client Validator")
                     .WithVersion("0.0.1")
-                    // .WithSchemaRequest("schema request string/url")
-                    // .WithSchemaResponse("schema response string/url")
-                    // .WithStatsDataHandlers(sds, sdd)
-                    // .WithServiceMessageHandler(handler)
+                        .AddServiceEndpoint(ServiceEndpoint.Builder()
+                            .WithEndpointName("jccv")
+                            .WithEndpointSchemaRequest("schema request string/url")
+                            .WithEndpointSchemaResponse("schema response string/url")
+                            .WithStatsDataSupplier(SupplyData)
+                        .WithHandler(handler)
+                        .Build())
                     .Build();
 
                 Console.WriteLine(service);
@@ -111,18 +101,10 @@ namespace NATSExamples
                 }
             }
         }
+
+        static JSONNode SupplyData()
+        {
+            return new JSONString(DateTime.UtcNow.ToLongDateString());
+        }
     }
-    
-    // class CcvData : IStatsData {
-        // string Text;
-
-        // public CcvData(string text) {
-            // Text = text;
-        // }
-
-        // public string ToJson()
-        // {
-            // return "\"" + Text + "\"";
-        // }
-    // }
 }
