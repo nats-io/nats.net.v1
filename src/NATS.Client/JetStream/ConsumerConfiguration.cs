@@ -159,7 +159,7 @@ namespace NATS.Client.JetStream
             Backoff = builder._backoff;
         }
 
-        internal override JSONNode ToJsonNode()
+        public override JSONNode ToJsonNode()
         {
             JSONObject o = new JSONObject();
 

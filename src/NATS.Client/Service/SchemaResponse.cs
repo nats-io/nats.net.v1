@@ -1,4 +1,4 @@
-﻿// Copyright 2022 The NATS Authors
+﻿// Copyright 2023 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at:
@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 using NATS.Client.JetStream;
@@ -20,50 +21,63 @@ namespace NATS.Client.Service
     /// <summary>
     /// SERVICE IS AN EXPERIMENTAL API SUBJECT TO CHANGE
     /// </summary>
-    public class SchemaResponse : JsonSerializable
+    public class SchemaResponse : ServiceResponse
     {
         public const string ResponseType = "io.nats.micro.v1.schema_response";
 
-        public string ServiceId { get; }
-        public string Name { get; }
-        public string Version { get; }
-        public Schema Schema { get; }
-        public string Type => ResponseType;
+        public string ApiUrl { get; }
+        public IList<EndpointResponse> Endpoints { get; }
 
-        internal SchemaResponse(string serviceId, string name, string version, string schemaRequest, string schemaResponse)
+        public SchemaResponse(string id, string name, string version, string apiUrl, IList<EndpointResponse> endpoints)
+        : base(ResponseType, id, name, version)
         {
-            ServiceId = serviceId;
-            Name = name;
-            Version = version;
-            if (string.IsNullOrEmpty(schemaRequest) && string.IsNullOrEmpty(schemaResponse))
-            {
-                Schema = null;
-            }
-            else
-            {
-                Schema = new Schema(schemaRequest, schemaResponse);
-            }
+            ApiUrl = apiUrl;
+            Endpoints = endpoints;
         }
 
         internal SchemaResponse(string json) : this(JSON.Parse(json)) {}
 
-        internal SchemaResponse(JSONNode node)
+        internal SchemaResponse(JSONNode node) : base(ResponseType, node)
         {
-            ServiceId = node[ApiConstants.Id];
-            Name = node[ApiConstants.Name];
-            Version = node[ApiConstants.Version];
-            Schema = Schema.OptionalInstance(node[ApiConstants.Schema]);
+            ApiUrl = node[ApiConstants.ApiUrl];
+            Endpoints = EndpointResponse.ListOf(node[ApiConstants.Endpoints]);
         }
 
-        internal override JSONNode ToJsonNode()
+        public override JSONNode ToJsonNode()
         {
-            JSONObject jso = new JSONObject();
-            JsonUtils.AddField(jso, ApiConstants.Id, ServiceId);
-            JsonUtils.AddField(jso, ApiConstants.Name, Name);
-            JsonUtils.AddField(jso, ApiConstants.Type, Type);
-            JsonUtils.AddField(jso, ApiConstants.Version, Version);
-            jso[ApiConstants.Schema] = Schema?.ToJsonNode();
+            JSONObject jso = BaseJsonObject();
+            JsonUtils.AddField(jso, ApiConstants.ApiUrl, ApiUrl);
+            JSONArray arr = new JSONArray();
+            foreach (var endpoint in Endpoints)
+            {
+                arr.Add(null, endpoint.ToJsonNode());
+            }
+            jso[ApiConstants.Endpoints] = arr;
             return jso;
+        }
+
+        protected bool Equals(SchemaResponse other)
+        {
+            return base.Equals(other) && ApiUrl == other.ApiUrl && Equals(Endpoints, other.Endpoints);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((SchemaResponse)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hashCode = base.GetHashCode();
+                hashCode = (hashCode * 397) ^ (ApiUrl != null ? ApiUrl.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Endpoints != null ? Endpoints.GetHashCode() : 0);
+                return hashCode;
+            }
         }
     }
 }

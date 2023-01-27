@@ -41,7 +41,7 @@ namespace NATS.Client.JetStream
             Deliver = externalNode[ApiConstants.Deliver].Value;
         }
 
-        internal override JSONNode ToJsonNode()
+        public override JSONNode ToJsonNode()
         {
             return new JSONObject
             {

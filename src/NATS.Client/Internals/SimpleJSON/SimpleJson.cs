@@ -136,7 +136,7 @@ using System.Text;
 
 namespace NATS.Client.Internals.SimpleJSON
 {
-    internal enum JSONNodeType
+    public enum JSONNodeType
     {
         Array = 1,
         Object = 2,
@@ -148,13 +148,13 @@ namespace NATS.Client.Internals.SimpleJSON
         Custom = 0xFF,
     }
 
-    internal enum JSONTextMode
+    public enum JSONTextMode
     {
         Compact,
         Indent
     }
 
-    internal abstract partial class JSONNode
+    public abstract partial class JSONNode
     {
         #region Enumerators
         public struct Enumerator
@@ -163,7 +163,8 @@ namespace NATS.Client.Internals.SimpleJSON
             private Type type;
             private Dictionary<string, JSONNode>.Enumerator m_Object;
             private List<JSONNode>.Enumerator m_Array;
-            public bool IsValid { get { return type != Type.None; } }
+            public bool IsValid => type != Type.None;
+
             public Enumerator(List<JSONNode>.Enumerator aArrayEnum)
             {
                 type = Type.Array;
@@ -765,7 +766,7 @@ namespace NATS.Client.Internals.SimpleJSON
     }
     // End of JSONNode
 
-    internal partial class JSONArray : JSONNode
+    public partial class JSONArray : JSONNode
     {
         private List<JSONNode> m_List = new List<JSONNode>();
         private bool inline = false;
@@ -845,7 +846,6 @@ namespace NATS.Client.Internals.SimpleJSON
             }
         }
 
-
         internal override void WriteToStringBuilder(StringBuilder aSB, int aIndent, int aIndentInc, JSONTextMode aMode)
         {
             aSB.Append('[');
@@ -870,7 +870,7 @@ namespace NATS.Client.Internals.SimpleJSON
     }
     // End of JSONArray
 
-    internal partial class JSONObject : JSONNode
+    public partial class JSONObject : JSONNode
     {
         private Dictionary<string, JSONNode> m_Dict = new Dictionary<string, JSONNode>();
 
@@ -1036,7 +1036,7 @@ namespace NATS.Client.Internals.SimpleJSON
     }
     // End of JSONObject
 
-    internal partial class JSONString : JSONNode
+    public partial class JSONString : JSONNode
     {
         private string m_Data;
 
@@ -1086,7 +1086,7 @@ namespace NATS.Client.Internals.SimpleJSON
     // End of JSONString
 
     internal enum JSONNumberType {I, L, U, D, X}
-    internal partial class JSONNumber : JSONNode
+    public partial class JSONNumber : JSONNode
     {
         private JSONNumberType numberType = JSONNumberType.X;
         private int intData;
@@ -1278,7 +1278,7 @@ namespace NATS.Client.Internals.SimpleJSON
     }
     // End of JSONNumber
 
-    internal partial class JSONBool : JSONNode
+    public partial class JSONBool : JSONNode
     {
         private bool m_Data;
 
@@ -1331,7 +1331,7 @@ namespace NATS.Client.Internals.SimpleJSON
     }
     // End of JSONBool
 
-    internal partial class JSONNull : JSONNode
+    public partial class JSONNull : JSONNode
     {
         static JSONNull m_StaticInstance = new JSONNull();
         public static bool reuseSameInstance = true;
@@ -1376,7 +1376,7 @@ namespace NATS.Client.Internals.SimpleJSON
     }
     // End of JSONNull
 
-    internal partial class JSONLazyCreator : JSONNode
+    public partial class JSONLazyCreator : JSONNode
     {
         private JSONNode m_Node = null;
         private string m_Key = null;
@@ -1510,9 +1510,9 @@ namespace NATS.Client.Internals.SimpleJSON
     }
     // End of JSONLazyCreator
 
-    internal static class JSON
+    public static class JSON
     {
-        internal static JSONNode Parse(string aJSON)
+        public static JSONNode Parse(string aJSON)
         {
             return JSONNode.Parse(aJSON);
         }

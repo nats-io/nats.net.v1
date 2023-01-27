@@ -54,7 +54,7 @@ namespace NATS.Client.ObjectStore
             return new ObjectLink(bucket, objectName);
         }
 
-        internal override JSONNode ToJsonNode()
+        public override JSONNode ToJsonNode()
         {
             JSONObject jso = new JSONObject();
             if (Bucket != null)

@@ -5,7 +5,6 @@ namespace NATSExamples
 {
     internal static class JetStreamStarter
     {
-
         static void Main(string[] args)
         {
             Options opts = ConnectionFactory.GetDefaultOptions();

@@ -13,63 +13,34 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Threading.Tasks;
 using IntegrationTests;
 using NATS.Client;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
-using NATS.Client.JetStream;
 using NATS.Client.Service;
+using UnitTests;
 using Xunit;
-using Xunit.Abstractions;
 using static UnitTests.TestBase;
 
 namespace IntegrationTestsInternal
 {
-    class TestStatsData : IStatsData
-    {
-        public readonly string Id;
-        public readonly string Text;
-
-        public TestStatsData(string id, string text)
-        {
-            Id = id;
-            Text = text;
-        }
-
-        public TestStatsData(string json)
-        {
-            JSONNode node = JSON.Parse(json);
-            Id = node[ApiConstants.Id];
-            Text = node["text"];
-        }
-
-        public string ToJson()
-        {
-            JSONObject jso = new JSONObject();
-            JsonUtils.AddField(jso, ApiConstants.Id, Id);
-            JsonUtils.AddField(jso, "text", Text);
-            return jso.ToString();
-        }
-
-        public override string ToString()
-        {
-            return ToJson();
-        }
-    }
-
+    [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
     public class TestService : TestSuite<ServiceSuiteContext>
     {
         public TestService(ServiceSuiteContext context) : base(context) {}
-
-        private const string EchoServiceName = "ECHO_SERVICE";
-        private const string SortServiceName = "SORT_SERVICE";
-        private const string EchoServiceSubject = "echo";
-        private const string SortServiceSubject = "sort";
-
-        delegate string InfoResponseVerifier(InfoResponse expectedInfoResponse, object o);
-        delegate string SchemaResponseVerifier(InfoResponse expectedInfoResponse, SchemaResponse expectedSchemaResponse, object o);
+        
+        const string ServiceName1 = "Service1";
+        const string ServiceName2 = "Service2";
+        const string EchoEndpointName = "EchoEndpoint";
+        const string EchoEndpointSubject = "echo";
+        const string SortGroup = "sort";
+        const string SortEndpointAscendingName = "SortEndpointAscending";
+        const string SortEndpointDescendingName = "SortEndpointDescending";
+        const string SortEndpointAscendingSubject = "ascending";
+        const string SortEndpointDescendingSubject = "descending";
 
         [Fact]
         public void TestServiceWorkflow()
@@ -80,290 +51,493 @@ namespace IntegrationTestsInternal
                 using (IConnection serviceNc2 = Context.OpenConnection(Context.Server1.Port))
                 using (IConnection clientNc = Context.OpenConnection(Context.Server1.Port))
                 {
-                    StatsDataSupplier sds = () => new TestStatsData($"{GetHashCode()}", "blah error [" + DateTime.Now + "]");
-                    StatsDataDecoder sdd = json =>
-                    {
-                        TestStatsData esd = new TestStatsData(json);
-                        return string.IsNullOrEmpty(esd.Text) ? null : esd;
-                    };
-
-                    Service echoService1 = EchoServiceCreator(serviceNc1, "echoService1")
-                        .WithStatsDataHandlers(sds, sdd)
+                    Endpoint endEcho = Endpoint.Builder()
+                        .WithName(EchoEndpointName)
+                        .WithSubject(EchoEndpointSubject)
+                        .WithSchemaRequest("echo schema request info") // optional
+                        .WithSchemaResponse("echo schema response info") // optional
                         .Build();
-                    String echoServiceId1 = echoService1.Id;
-                    Task<bool> echoDone1 = echoService1.StartService();
 
-                    Service sortService1 = SortServiceCreator(serviceNc1, "sortService1").Build();
-                    String sortServiceId1 = sortService1.Id;
-                    Task<bool> sortDone1 = sortService1.StartService();
-
-                    Service echoService2 = EchoServiceCreator(serviceNc2, "echoService2")
-                        .WithStatsDataHandlers(sds, sdd)
+                    Endpoint endSortA = Endpoint.Builder()
+                        .WithName(SortEndpointAscendingName)
+                        .WithSubject(SortEndpointAscendingSubject)
+                        .WithSchemaRequest("sort ascending schema request info") // optional
+                        .WithSchemaResponse("sort ascending schema response info") // optional
                         .Build();
-                    String echoServiceId2 = echoService2.Id;
-                    Task<bool> echoDone2 = echoService2.StartService();
 
-                    Service sortService2 = SortServiceCreator(serviceNc2, "sortService2").Build();
-                    String sortServiceId2 = sortService2.Id;
-                    Task<bool> sortDone2 = sortService2.StartService();
-                    
-                    Assert.NotEqual(echoServiceId1, echoServiceId2);
-                    Assert.NotEqual(sortServiceId1, sortServiceId2);
+                    // constructor coverage
+                    Endpoint endSortD = new Endpoint(SortEndpointDescendingName, SortEndpointDescendingSubject);
+
+                    // sort is going to be grouped
+                    Group sortGroup = new Group(SortGroup);
+
+                    ServiceEndpoint seEcho1 = ServiceEndpoint.Builder()
+                        .WithEndpoint(endEcho)
+                        .WithHandler((source, args) => { args.Message.Respond(serviceNc1, Echo(args.Message.Data)); })
+                        .WithStatsDataSupplier(TestServiceObjects.SupplyData)
+                        .Build();
+
+                    ServiceEndpoint seSortA1 = ServiceEndpoint.Builder()
+                        .WithGroup(sortGroup)
+                        .WithEndpoint(endSortA)
+                        .WithHandler((source, args) => { args.Message.Respond(serviceNc1, SortA(args.Message.Data)); })
+                        .Build();
+
+                    ServiceEndpoint seSortD1 = ServiceEndpoint.Builder()
+                        .WithGroup(sortGroup)
+                        .WithEndpoint(endSortD)
+                        .WithHandler((source, args) => { args.Message.Respond(serviceNc1, SortD(args.Message.Data)); })
+                        .Build();
+
+                    ServiceEndpoint seEcho2 = ServiceEndpoint.Builder()
+                        .WithEndpoint(endEcho)
+                        .WithHandler((source, args) => { args.Message.Respond(serviceNc2, Echo(args.Message.Data)); })
+                        .WithStatsDataSupplier(TestServiceObjects.SupplyData)
+                        .Build();
+
+                    // build variations
+                    ServiceEndpoint seSortA2 = ServiceEndpoint.Builder()
+                        .WithGroup(sortGroup)
+                        .WithEndpointName(endSortA.Name)
+                        .WithEndpointSubject(endSortA.Subject)
+                        .WithEndpointSchemaRequest(endSortA.Schema.Request)
+                        .WithEndpointSchemaResponse(endSortA.Schema.Response)
+                        .WithHandler((source, args) => { args.Message.Respond(serviceNc2, SortA(args.Message.Data)); })
+                        .Build();
+
+                    ServiceEndpoint seSortD2 = ServiceEndpoint.Builder()
+                        .WithGroup(sortGroup)
+                        .WithEndpointName(endSortD.Name)
+                        .WithEndpointSubject(endSortD.Subject)
+                        .WithHandler((source, args) => { args.Message.Respond(serviceNc2, SortD(args.Message.Data)); })
+                        .Build();
+
+                    Service service1 = new ServiceBuilder()
+                        .WithName(ServiceName1)
+                        .WithVersion("1.0.0")
+                        .WithConnection(serviceNc1)
+                        .AddServiceEndpoint(seEcho1)
+                        .AddServiceEndpoint(seSortA1)
+                        .AddServiceEndpoint(seSortD1)
+                        .Build();
+                    String serviceId1 = service1.Id;
+                    Task<bool> serviceDone1 = service1.StartService();
+
+                    Service service2 = new ServiceBuilder()
+                        .WithName(ServiceName2)
+                        .WithVersion("1.0.0")
+                        .WithConnection(serviceNc2)
+                        .AddServiceEndpoint(seEcho2)
+                        .AddServiceEndpoint(seSortA2)
+                        .AddServiceEndpoint(seSortD2)
+                        .Build();
+                    String serviceId2 = service2.Id;
+                    Task<bool> serviceDone2 = service2.StartService();
+
+                    Assert.NotEqual(serviceId1, serviceId2);
 
                     // service request execution
                     int requestCount = 10;
-                    for (int x = 0; x < requestCount; x++) {
-                        VerifyServiceExecution(clientNc, EchoServiceName, EchoServiceSubject);
-                        VerifyServiceExecution(clientNc, SortServiceName, SortServiceSubject);
+                    for (int x = 0; x < requestCount; x++)
+                    {
+                        VerifyServiceExecution(clientNc, EchoEndpointName, EchoEndpointSubject, null);
+                        VerifyServiceExecution(clientNc, SortEndpointAscendingName, SortEndpointAscendingSubject, sortGroup);
+                        VerifyServiceExecution(clientNc, SortEndpointDescendingName, SortEndpointDescendingSubject, sortGroup);
                     }
 
-                    InfoResponse echoInfoResponse = echoService1.InfoResponse;
-                    InfoResponse sortInfoResponse = sortService1.InfoResponse;
-                    SchemaResponse echoSchemaResponse = echoService1.SchemaResponse;
-                    SchemaResponse sortSchemaResponse = sortService1.SchemaResponse;
+                    PingResponse pingResponse1 = service1.PingResponse;
+                    PingResponse pingResponse2 = service2.PingResponse;
+                    InfoResponse infoResponse1 = service1.InfoResponse;
+                    InfoResponse infoResponse2 = service2.InfoResponse;
+                    SchemaResponse schemaResponse1 = service1.SchemaResponse;
+                    SchemaResponse schemaResponse2 = service2.SchemaResponse;
+                    StatsResponse statsResponse1 = service1.GetStatsResponse();
+                    StatsResponse statsResponse2 = service2.GetStatsResponse();
+                    EndpointResponse[] endpointResponseArray1 = new EndpointResponse[]
+                    {
+                        service1.GetEndpointStats(EchoEndpointName),
+                        service1.GetEndpointStats(SortEndpointAscendingName),
+                        service1.GetEndpointStats(SortEndpointDescendingName)
+                    };
+                    EndpointResponse[] endpointResponseArray2 = new EndpointResponse[]
+                    {
+                        service2.GetEndpointStats(EchoEndpointName),
+                        service2.GetEndpointStats(SortEndpointAscendingName),
+                        service2.GetEndpointStats(SortEndpointDescendingName)
+                    };
+                    Assert.Null(service1.GetEndpointStats("notAnEndpoint"));
+
+                    Assert.Equal(serviceId1, pingResponse1.Id);
+                    Assert.Equal(serviceId2, pingResponse2.Id);
+                    Assert.Equal(serviceId1, infoResponse1.Id);
+                    Assert.Equal(serviceId2, infoResponse2.Id);
+                    Assert.Equal(serviceId1, schemaResponse1.Id);
+                    Assert.Equal(serviceId2, schemaResponse2.Id);
+                    Assert.Equal(serviceId1, statsResponse1.Id);
+                    Assert.Equal(serviceId2, statsResponse2.Id);
+
+                    // this relies on the fact that I load the endpoints up in the service
+                    // in the same order and the json list comes back ordered
+                    // expecting 10 responses across each endpoint between 2 services
+                    for (int x = 0; x < 3; x++)
+                    {
+                        Assert.Equal(requestCount,
+                            endpointResponseArray1[x].NumRequests
+                            + endpointResponseArray2[x].NumRequests);
+                        Assert.Equal(requestCount,
+                            statsResponse1.EndpointStatsList[x].NumRequests
+                            + statsResponse2.EndpointStatsList[x].NumRequests);
+                    }
 
                     // discovery - wait at most 500 millis for responses, 5 total responses max
                     Discovery discovery = new Discovery(clientNc, 500, 5);
 
                     // ping discovery
-                    void VerifyPingDiscovery(InfoResponse expectedInfo, IList<PingResponse> pings, params string[] expectedIds) {
-                        Assert.Equal(expectedIds.Length, pings.Count);
-                        foreach (var p in pings) {
-                            if (expectedInfo != null) {
-                                Assert.Equal(expectedInfo.Name, p.Name);
-                                Assert.Equal(PingResponse.ResponseType, p.Type);
-                            }
-                            Assert.Contains(p.ServiceId, expectedIds);
+                    void VerifyPingDiscoveries(IList<PingResponse> responses, params PingResponse[] expectedResponses) {
+                        Assert.Equal(expectedResponses.Length, responses.Count);
+                        foreach (PingResponse r in responses)
+                        {
+                            // ReSharper disable once CoVariantArrayConversion
+                            PingResponse exp = (PingResponse)Find(expectedResponses, r);
+                            Assert.NotNull(exp);
+                            VerifyServiceResponseFields(r, exp);
                         }
                     }
-                    VerifyPingDiscovery(null, discovery.Ping(), echoServiceId1, sortServiceId1, echoServiceId2, sortServiceId2);
-                    VerifyPingDiscovery(echoInfoResponse, discovery.Ping(EchoServiceName), echoServiceId1, echoServiceId2);
-                    VerifyPingDiscovery(sortInfoResponse, discovery.Ping(SortServiceName), sortServiceId1, sortServiceId2);
-                    VerifyPingDiscovery(echoInfoResponse, new List<PingResponse>{discovery.PingForNameAndId(EchoServiceName, echoServiceId1)}, echoServiceId1);
-                    VerifyPingDiscovery(sortInfoResponse, new List<PingResponse>{discovery.PingForNameAndId(SortServiceName, sortServiceId1)}, sortServiceId1);
-                    VerifyPingDiscovery(echoInfoResponse, new List<PingResponse>{discovery.PingForNameAndId(EchoServiceName, echoServiceId2)}, echoServiceId2);
-                    VerifyPingDiscovery(sortInfoResponse, new List<PingResponse>{discovery.PingForNameAndId(SortServiceName, sortServiceId2)}, sortServiceId2);
+                    VerifyPingDiscoveries(discovery.Ping(), pingResponse1, pingResponse2);
+                    VerifyPingDiscoveries(discovery.Ping(ServiceName1), pingResponse1);
+                    VerifyPingDiscoveries(discovery.Ping(ServiceName2), pingResponse2);
+                    VerifyServiceResponseFields(discovery.PingForNameAndId(ServiceName1, serviceId1), pingResponse1);
+                    Assert.Null(discovery.PingForNameAndId(ServiceName1, "badId"));
+                    Assert.Null(discovery.PingForNameAndId("bad", "badId"));
 
                     // info discovery
-                    void VerifyInfoDiscovery(InfoResponse expectedInfo, IList<InfoResponse> infos, params string[] expectedIds) {
-                        Assert.Equal(expectedIds.Length, infos.Count);
-                        foreach (var i in infos) {
-                            if (expectedInfo != null) {
-                                Assert.Equal(expectedInfo.Name, i.Name);
-                                Assert.Equal(InfoResponse.ResponseType, i.Type);
-                                Assert.Equal(expectedInfo.Description, i.Description);
-                                Assert.Equal(expectedInfo.Version, i.Version);
-                                Assert.Equal(expectedInfo.Subject, i.Subject);
-                            }
-                            Assert.Contains(i.ServiceId, expectedIds);
+                    void VerifyInfoDiscovery(InfoResponse r, InfoResponse exp) {
+                        VerifyServiceResponseFields(r, exp);
+                        Assert.Equal(exp.Description, r.Description);
+                        Assert.Equal(exp.Subjects, r.Subjects);
+                    }
+                    void VerifyInfoDiscoveries(IList<InfoResponse> responses, params InfoResponse[] expectedResponses)
+                    {
+                        Assert.Equal(expectedResponses.Length, responses.Count);
+                        foreach (InfoResponse r in responses)
+                        {
+                            // ReSharper disable once CoVariantArrayConversion
+                            InfoResponse exp = (InfoResponse)Find(expectedResponses, r);
+                            Assert.NotNull(exp);
+                            VerifyInfoDiscovery(r, exp);
                         }
                     }
-                    VerifyInfoDiscovery(null, discovery.Info(), echoServiceId1, sortServiceId1, echoServiceId2, sortServiceId2);
-                    VerifyInfoDiscovery(echoInfoResponse, discovery.Info(EchoServiceName), echoServiceId1, echoServiceId2);
-                    VerifyInfoDiscovery(sortInfoResponse, discovery.Info(SortServiceName), sortServiceId1, sortServiceId2);
-                    VerifyInfoDiscovery(echoInfoResponse, new List<InfoResponse>{discovery.InfoForNameAndId(EchoServiceName, echoServiceId1)}, echoServiceId1);
-                    VerifyInfoDiscovery(sortInfoResponse, new List<InfoResponse>{discovery.InfoForNameAndId(SortServiceName, sortServiceId1)}, sortServiceId1);
-                    VerifyInfoDiscovery(echoInfoResponse, new List<InfoResponse>{discovery.InfoForNameAndId(EchoServiceName, echoServiceId2)}, echoServiceId2);
-                    VerifyInfoDiscovery(sortInfoResponse, new List<InfoResponse>{discovery.InfoForNameAndId(SortServiceName, sortServiceId2)}, sortServiceId2);
+                    VerifyInfoDiscoveries(discovery.Info(), infoResponse1, infoResponse2);
+                    VerifyInfoDiscoveries(discovery.Info(ServiceName1), infoResponse1);
+                    VerifyInfoDiscoveries(discovery.Info(ServiceName2), infoResponse2);
+                    VerifyInfoDiscovery(discovery.InfoForNameAndId(ServiceName1, serviceId1), infoResponse1);
+                    Assert.Null(discovery.InfoForNameAndId(ServiceName1, "badId"));
+                    Assert.Null(discovery.InfoForNameAndId("bad", "badId"));
 
                     // schema discovery
-                    void VerifySchemaDiscovery(SchemaResponse expectedSchemaResponse, IList<SchemaResponse> schemas, params string[] expectedIds) {
-                        Assert.Equal(expectedIds.Length, schemas.Count);
-                        foreach (var sch in schemas) {
-                            if (expectedSchemaResponse != null) {
-                                Assert.Equal(expectedSchemaResponse.Name, sch.Name);
-                                Assert.Equal(SchemaResponse.ResponseType, sch.Type);
-                                Assert.Equal(expectedSchemaResponse.Version, sch.Version);
-                                Assert.Equal(expectedSchemaResponse.Version, sch.Version);
-                                Assert.Equal(expectedSchemaResponse.Schema.Request, sch.Schema.Request);
-                                Assert.Equal(expectedSchemaResponse.Schema.Response, sch.Schema.Response);
-                            }
-                            Assert.Contains(sch.ServiceId, expectedIds);
+                    void VerifySchemaDiscovery(SchemaResponse r, SchemaResponse exp) {
+                        VerifyServiceResponseFields(r, exp);
+                        Assert.Equal(exp.ApiUrl, r.ApiUrl);
+                        Assert.Equal(exp.Endpoints, r.Endpoints);
+                    }
+                    void VerifySchemaDiscoveries(IList<SchemaResponse> responses, params SchemaResponse[] expectedResponses)
+                    {
+                        Assert.Equal(expectedResponses.Length, responses.Count);
+                        foreach (SchemaResponse r in responses)
+                        {
+                            // ReSharper disable once CoVariantArrayConversion
+                            SchemaResponse exp = (SchemaResponse)Find(expectedResponses, r);
+                            Assert.NotNull(exp);
+                            VerifySchemaDiscovery(r, exp);
                         }
                     }
-                    VerifySchemaDiscovery(null, discovery.Schema(), echoServiceId1, sortServiceId1, echoServiceId2, sortServiceId2);
-                    VerifySchemaDiscovery(echoSchemaResponse, discovery.Schema(EchoServiceName), echoServiceId1, echoServiceId2);
-                    VerifySchemaDiscovery(sortSchemaResponse, discovery.Schema(SortServiceName), sortServiceId1, sortServiceId2);
-                    VerifySchemaDiscovery(echoSchemaResponse, new List<SchemaResponse>{discovery.SchemaForNameAndId(EchoServiceName, echoServiceId1)}, echoServiceId1);
-                    VerifySchemaDiscovery(sortSchemaResponse, new List<SchemaResponse>{discovery.SchemaForNameAndId(SortServiceName, sortServiceId1)}, sortServiceId1);
-                    VerifySchemaDiscovery(echoSchemaResponse, new List<SchemaResponse>{discovery.SchemaForNameAndId(EchoServiceName, echoServiceId2)}, echoServiceId2);
-                    VerifySchemaDiscovery(sortSchemaResponse, new List<SchemaResponse>{discovery.SchemaForNameAndId(SortServiceName, sortServiceId2)}, sortServiceId2);
+                    VerifySchemaDiscoveries(discovery.Schema(), schemaResponse1, schemaResponse2);
+                    VerifySchemaDiscoveries(discovery.Schema(ServiceName1), schemaResponse1);
+                    VerifySchemaDiscoveries(discovery.Schema(ServiceName2), schemaResponse2);
+                    VerifySchemaDiscovery(discovery.SchemaForNameAndId(ServiceName1, serviceId1), schemaResponse1);
+                    Assert.Null(discovery.SchemaForNameAndId(ServiceName1, "badId"));
+                    Assert.Null(discovery.SchemaForNameAndId("bad", "badId"));
                     
                     // stats discovery
-                    discovery = new Discovery(clientNc); // coverage for the simple constructor
-                    IList<StatsResponse> statsList = discovery.Stats(null, sdd);
-                    Assert.Equal(4, statsList.Count);
-                    int responseEcho = 0;
-                    int responseSort = 0;
-                    long requestsEcho = 0;
-                    long requestsSort = 0;
-                    foreach (StatsResponse st in statsList) {
-                        if (st.Name.Equals(EchoServiceName)) {
-                            responseEcho++;
-                            requestsEcho += st.NumRequests;
-                            Assert.NotNull(st.Data);
-                            Assert.True(st.Data is TestStatsData);
+                    void VerifyStatsDiscovery(StatsResponse r, StatsResponse exp) {
+                        VerifyServiceResponseFields(r, exp);
+                        Assert.Equal(exp.Started, r.Started);
+                        for (int x = 0; x < 3; x++) {
+                            EndpointResponse es = exp.EndpointStatsList[x];
+                            if (!es.Name.Equals(EchoEndpointName)) {
+                                // echo endpoint has data that will vary
+                                Assert.Equal(es, r.EndpointStatsList[x]);
+                            }
                         }
-                        else {
-                            responseSort++;
-                            requestsSort += st.NumRequests;
-                        }
-                        Assert.Equal(StatsResponse.ResponseType, st.Type);
                     }
-                    Assert.Equal(2, responseEcho);
-                    Assert.Equal(2, responseSort);
-                    Assert.Equal(requestCount, requestsEcho);
-                    Assert.Equal(requestCount, requestsSort);
+                    void VerifyStatsDiscoveries(IList<StatsResponse> responses, params StatsResponse[] expectedResponses)
+                    {
+                        Assert.Equal(expectedResponses.Length, responses.Count);
+                        foreach (StatsResponse r in responses)
+                        {
+                            // ReSharper disable once CoVariantArrayConversion
+                            StatsResponse exp = (StatsResponse)Find(expectedResponses, r);
+                            Assert.NotNull(exp);
+                            VerifyStatsDiscovery(r, exp);
+                        }
+                    }
+                    VerifyStatsDiscoveries(discovery.Stats(), statsResponse1, statsResponse2);
+                    VerifyStatsDiscoveries(discovery.Stats(ServiceName1), statsResponse1);
+                    VerifyStatsDiscoveries(discovery.Stats(ServiceName2), statsResponse2);
+                    VerifyStatsDiscovery(discovery.StatsForNameAndId(ServiceName1, serviceId1), statsResponse1);
+                    Assert.Null(discovery.StatsForNameAndId(ServiceName1, "badId"));
+                    Assert.Null(discovery.StatsForNameAndId("bad", "badId"));
 
-                    // stats one specific instance so I can also test reset
-                    StatsResponse statsResponse = discovery.StatsForNameAndId(EchoServiceName, echoServiceId1);
-                    Assert.Equal(echoServiceId1, statsResponse.ServiceId);
-                    Assert.Equal(echoInfoResponse.Version, statsResponse.Version);
-
-                    // reset stats
-                    echoService1.Reset();
-                    statsResponse = echoService1.StatsResponse;
-                    Assert.Equal(0, statsResponse.NumRequests);
-                    Assert.Equal(0, statsResponse.NumErrors);
-                    Assert.Equal(0, statsResponse.ProcessingTime);
-                    Assert.Equal(0, statsResponse.AverageProcessingTime);
-                    Assert.Null(statsResponse.Data);
-
-                    statsResponse = discovery.StatsForNameAndId(EchoServiceName, echoServiceId1);
-                    Assert.Equal(0, statsResponse.NumRequests);
-                    Assert.Equal(0, statsResponse.NumErrors);
-                    Assert.Equal(0, statsResponse.ProcessingTime);
-                    Assert.Equal(0, statsResponse.AverageProcessingTime);
-                    
                     // shutdown
-                    echoService1.Stop(); // drain = true, exception = null
-                    sortService1.Stop(true); // drain = true, exception = null
-                    echoService2.Stop(false); // drain = false, exception = null
-                    sortService2.Stop(false, new Exception()); // drain = true, exception not null
-
-                    echoDone1.Wait();
-                    sortDone1.Wait();
-                    echoDone2.Wait();
-                    Assert.Throws<AggregateException>(() => sortDone2.Wait());
+                    service1.Stop();
+                    Assert.True(serviceDone1.Result);
+                    service2.Stop(new Exception("Testing stop(Exception e)"));
+                    AggregateException ae = Assert.Throws<AggregateException>(() => serviceDone2.Result);
+                    Assert.Contains("Testing stop(Exception e)", ae.GetBaseException().Message);
                 }
             }
         }
+        
+        private void VerifyServiceResponseFields(ServiceResponse r, ServiceResponse exp) {
+            Assert.Equal(exp.Type, r.Type);
+            Assert.Equal(exp.Name, r.Name);
+            Assert.Equal(exp.Version, r.Version);
+        }
+        
+        private ServiceResponse Find(ServiceResponse[] expectedResponses, ServiceResponse response) {
+            foreach (ServiceResponse sr in expectedResponses) {
+                if (response.Id.Equals(sr.Id)) {
+                    return sr;
+                }
+            }
+            return null;
+        }
 
-        private static void VerifyDiscovery(InfoResponse expectedInfoResponse, SchemaResponse expectedSchemaResponse, IList<object> objects, SchemaResponseVerifier siv, List<String>  expectedIds) {
-            Assert.Equal(expectedIds.Count, objects.Count);
-            foreach (var o in objects) {
-                String id = siv.Invoke(expectedInfoResponse, expectedSchemaResponse, o);
-                Assert.Contains(id, expectedIds);
+        private void VerifyServiceExecution(IConnection nc, string endpointName, string serviceSubject, Group group) {
+            string request = DateTime.UtcNow.ToLongDateString(); // just some random text
+            string subject = group == null ? serviceSubject : group.Subject + "." + serviceSubject;
+            Msg m = nc.Request(subject, Encoding.UTF8.GetBytes(request));
+            String response = Encoding.UTF8.GetString(m.Data);
+            switch (endpointName) {
+                case EchoEndpointName:
+                    Assert.Equal(Echo(request), response);
+                    break;
+                case SortEndpointAscendingName:
+                    Assert.Equal(SortA(request), response);
+                    break;
+                case SortEndpointDescendingName:
+                    Assert.Equal(SortD(request), response);
+                    break;
             }
         }
 
-        private static ServiceBuilder EchoServiceCreator(IConnection nc, EventHandler<MsgHandlerEventArgs> handler) {
-            return new ServiceBuilder()
-                .WithConnection(nc)
-                .WithName(EchoServiceName)
-                .WithSubject(EchoServiceSubject)
-                .WithDescription("An Echo Service")
-                .WithVersion("0.0.1")
-                .WithSchemaRequest("echo schema request string/url")
-                .WithSchemaResponse("echo schema response string/url")
-                .WithServiceMessageHandler(handler);
-        }
-
-        private static ServiceBuilder EchoServiceCreator(IConnection nc, string id)
-        {
-            return EchoServiceCreator(nc,
-                (sender, args) =>
-                    ServiceMessage.Reply(nc, args.Message, Echo(args.Message.Data),
-                        new MsgHeader { ["handlerId"] = id }));
-        }
-
-        private static ServiceBuilder SortServiceCreator(IConnection nc, string id) {
-            return new ServiceBuilder()
-                .WithConnection(nc)
-                .WithName(SortServiceName)
-                .WithSubject(SortServiceSubject)
-                .WithDescription("A Sort Service")
-                .WithVersion("0.0.2")
-                .WithSchemaRequest("sort schema request string/url")
-                .WithSchemaResponse("sort schema response string/url")
-                .WithServiceMessageHandler((sender, args) => 
-                    ServiceMessage.Reply(nc, args.Message, Sort(args.Message.Data), new MsgHeader { ["handlerId"] = id }));
-        }
-        
-        private static void VerifyServiceExecution(IConnection nc, String serviceName, String serviceSubject)
-        {
-            String request = DateTime.Now.ToLongDateString();
-            Msg m = nc.Request(serviceSubject, Encoding.UTF8.GetBytes(request));
-            String response = Encoding.UTF8.GetString(m.Data);
-            String expected = serviceName.Equals(EchoServiceName) ? Echo(request) : Sort(request);
-            Assert.Equal(expected, response);
-        }
-
-        private static string Echo(String data) {
+        private string Echo(string data) {
             return "Echo " + data;
         }
 
-        private static string Echo(byte[] data) {
+        private string Echo(byte[] data) {
             return "Echo " + Encoding.UTF8.GetString(data);
         }
 
-        private static string Sort(byte[] data) {
+        private string SortA(byte[] data) {
             Array.Sort(data);
-            return "Sort " + Encoding.UTF8.GetString(data);
+            return "Sort Ascending " + Encoding.UTF8.GetString(data);
         }
 
-        private static string Sort(String data) {
-            return Sort(Encoding.UTF8.GetBytes(data));
+        private string SortA(string data) {
+            return SortA(Encoding.UTF8.GetBytes(data));
         }
-        
+
+        private string SortD(byte[] data) {
+            Array.Sort(data);
+            int len = data.Length;
+            byte[] descending = new byte[len];
+            for (int x = 0; x < len; x++) {
+                descending[x] = data[len - x - 1];
+            }
+            return "Sort Descending " + Encoding.UTF8.GetString(descending);
+        }
+
+        private string SortD(string data) {
+            return SortD(Encoding.UTF8.GetBytes(data));
+        }
+
+        [Fact]
+        public void TestServiceBuilderConstruction()
+        {
+            Connection conn = new Connection(ConnectionFactory.GetDefaultOptions());
+            ServiceEndpoint se = ServiceEndpoint.Builder()
+                .WithEndpoint(new Endpoint(Name(0)))
+                .WithHandler((s, a) => { })
+                .Build();
+
+            // minimum valid service
+            Service service = Service.Builder().WithConnection(conn).WithName(NAME).WithVersion("1.0.0").AddServiceEndpoint(se).Build();
+            Assert.NotNull(service.ToString()); // coverage
+            Assert.NotNull(service.Id);
+            Assert.Equal(NAME, service.Name);
+            Assert.Equal(ServiceBuilder.DefaultDrainTimeoutMillis, service.DrainTimeoutMillis);
+            Assert.Equal("1.0.0", service.Version);
+            Assert.Null(service.Description);
+            Assert.Null(service.ApiUrl);
+
+            service = Service.Builder().WithConnection(conn).WithName(NAME).WithVersion("1.0.0").AddServiceEndpoint(se)
+                .WithApiUrl("apiUrl")
+                .WithDescription("desc")
+                .WithDrainTimeoutMillis(1000)
+                .Build();
+            Assert.Equal("desc", service.Description);
+            Assert.Equal("apiUrl", service.ApiUrl);
+            Assert.Equal(1000, service.DrainTimeoutMillis);
+
+            Assert.Throws<ArgumentException>(() => Service.Builder().WithName(null));
+            Assert.Throws<ArgumentException>(() => Service.Builder().WithName(string.Empty));
+            Assert.Throws<ArgumentException>(() => Service.Builder().WithName(HasSpace));
+            Assert.Throws<ArgumentException>(() => Service.Builder().WithName(HasPrintable));
+            Assert.Throws<ArgumentException>(() => Service.Builder().WithName(HasDot));
+            Assert.Throws<ArgumentException>(() => Service.Builder().WithName(HasStar)); // invalid in the middle
+            Assert.Throws<ArgumentException>(() => Service.Builder().WithName(HasGt)); // invalid in the middle
+            Assert.Throws<ArgumentException>(() => Service.Builder().WithName(HasDollar));
+            Assert.Throws<ArgumentException>(() => Service.Builder().WithName(HasLow));
+            Assert.Throws<ArgumentException>(() => Service.Builder().WithName(Has127));
+            Assert.Throws<ArgumentException>(() => Service.Builder().WithName(HasFwdSlash));
+            Assert.Throws<ArgumentException>(() => Service.Builder().WithName(HasBackSlash));
+            Assert.Throws<ArgumentException>(() => Service.Builder().WithName(HasEquals));
+            Assert.Throws<ArgumentException>(() => Service.Builder().WithName(HasTic));
+
+            Assert.Throws<ArgumentException>(() => Service.Builder().WithVersion(null));
+            Assert.Throws<ArgumentException>(() => Service.Builder().WithVersion(string.Empty));
+            Assert.Throws<ArgumentException>(() => Service.Builder().WithVersion("not-semver"));
+
+            ArgumentException ae = Assert.Throws<ArgumentException>(
+                () => Service.Builder().WithName(NAME).WithVersion("1.0.0").AddServiceEndpoint(se).Build());
+            Assert.Contains("Connection cannot be null or empty", ae.Message);
+
+            ae = Assert.Throws<ArgumentException>(
+                () => Service.Builder().WithConnection(conn).WithVersion("1.0.0").AddServiceEndpoint(se).Build());
+            Assert.Contains("Name cannot be null or empty", ae.Message);
+
+            ae = Assert.Throws<ArgumentException>(() =>
+                Service.Builder().WithConnection(conn).WithName(NAME).AddServiceEndpoint(se).Build());
+            Assert.Contains("Version cannot be null or empty", ae.Message);
+
+            ae = Assert.Throws<ArgumentException>(() =>
+                Service.Builder().WithConnection(conn).WithName(NAME).WithVersion("1.0.0").Build());
+            Assert.Contains("Endpoints cannot be null or empty", ae.Message);
+        }
+
         [Fact]
         public void TestHandlerException()
         {
-            Context.RunInServer(nc =>
+            Context.RunInJsServer(c =>
             {
-                Service devexService = new ServiceBuilder()
-                    .WithConnection(nc)
-                    .WithName("HANDLER_EXCEPTION_SERVICE")
-                    .WithSubject("HandlerExceptionService")
-                    .WithVersion("0.0.1")
-                    .WithServiceMessageHandler((s, a) => throw new Exception("handler-problem"))
+                ServiceEndpoint exServiceEndpoint = ServiceEndpoint.Builder()
+                    .WithEndpointName("exEndpoint")
+                    .WithEndpointSubject("exSubject")
+                    .WithHandler((s, a) => throw new Exception("handler-problem"))
                     .Build();
-                devexService.StartService();
 
-                Msg m = nc.Request("HandlerExceptionService", null);
-                Assert.Equal("handler-problem", m.Header[ServiceMessage.NatsServiceError]);
-                Assert.Equal("500", m.Header[ServiceMessage.NatsServiceErrorCode]);
-                Assert.Equal(1, devexService.StatsResponse.NumRequests);
-                Assert.Equal(1, devexService.StatsResponse.NumErrors);
-                Assert.Contains("System.Exception: handler-problem", devexService.StatsResponse.LastError);
+                Service exService = new ServiceBuilder()
+                    .WithConnection(c)
+                    .WithName("ExceptionService")
+                    .WithVersion("0.0.1")
+                    .AddServiceEndpoint(exServiceEndpoint)
+                    .Build();
+                exService.StartService();
+
+                Msg m = c.Request("exSubject", null, 1000);
+                Assert.Equal("System.Exception: handler-problem", m.Header[ServiceMsg.NatsServiceError]);
+                Assert.Equal("500", m.Header[ServiceMsg.NatsServiceErrorCode]);
+                StatsResponse sr = exService.GetStatsResponse();
+                EndpointResponse es = sr.EndpointStatsList[0];
+                Assert.Equal(1, es.NumRequests);
+                Assert.Equal(1, es.NumErrors);
+                Assert.Equal("System.Exception: handler-problem", es.LastError);
             });
         }
 
         [Fact]
-        public void TestServiceCreatorValidation()
+        public void TestServiceMessage()
         {
-            Context.RunInServer(nc =>
+            Context.RunInJsServer(nc =>
             {
-                Assert.Throws<ArgumentException>(() => EchoServiceCreator(null, (sender, args) => {}).Build());
-                Assert.Throws<ArgumentException>(() => EchoServiceCreator(nc, (EventHandler<MsgHandlerEventArgs>)null).WithVersion("").Build());
+                InterlockedInt which = new InterlockedInt();
+                ServiceEndpoint se = ServiceEndpoint.Builder()
+                    .WithEndpointName("testServiceMessage")
+                    .WithHandler((s, a) =>
+                    {
+                        ServiceMsg sm = a.Message;
+                        // Coverage // just hitting all the reply variations
+                        switch (which.Increment())
+                        {
+                            case 1:
+                                sm.Respond(nc, Encoding.UTF8.GetBytes("1"));
+                                break;
+                            case 2:
+                                sm.Respond(nc, "2");
+                                break;
+                            case 3:
+                                sm.Respond(nc, (JSONNode)new JSONString("3"));
+                                break;
+                            case 4:
+                                sm.Respond(nc, Encoding.UTF8.GetBytes("4"), sm.Header);
+                                break;
+                            case 5:
+                                sm.Respond(nc, "5", sm.Header);
+                                break;
+                            case 6:
+                                sm.Respond(nc, (JSONNode)new JSONString("6"), sm.Header);
+                                break;
+                            case 7:
+                                sm.RespondStandardError(nc, "error", 500);
+                                break;
+                        }
+                    })
+                    .Build();
                 
-                Assert.Throws<ArgumentException>(() => EchoServiceCreator(nc, (sender, args) => {}).WithVersion(null).Build());
-                Assert.Throws<ArgumentException>(() => EchoServiceCreator(nc, (sender, args) => {}).WithVersion(string.Empty).Build());
+                Service service = new ServiceBuilder()
+                    .WithConnection(nc)
+                    .WithName("testService")
+                    .WithVersion("0.0.1")
+                    .AddServiceEndpoint(se)
+                    .Build();
+                service.StartService();
                 
-                Assert.Throws<ArgumentException>(() => EchoServiceCreator(nc, (sender, args) => {}).WithName(null).Build());
-                Assert.Throws<ArgumentException>(() => EchoServiceCreator(nc, (sender, args) => {}).WithName(string.Empty).Build());
-                Assert.Throws<ArgumentException>(() => EchoServiceCreator(nc, (sender, args) => {}).WithName(HasSpace).Build());
-                Assert.Throws<ArgumentException>(() => EchoServiceCreator(nc, (sender, args) => {}).WithName(HasPrintable).Build());
-                Assert.Throws<ArgumentException>(() => EchoServiceCreator(nc, (sender, args) => {}).WithName(HasDot).Build());
-                Assert.Throws<ArgumentException>(() => EchoServiceCreator(nc, (sender, args) => {}).WithName(HasStar).Build());
-                Assert.Throws<ArgumentException>(() => EchoServiceCreator(nc, (sender, args) => {}).WithName(HasGt).Build());
-                Assert.Throws<ArgumentException>(() => EchoServiceCreator(nc, (sender, args) => {}).WithName(HasDollar).Build());
-                Assert.Throws<ArgumentException>(() => EchoServiceCreator(nc, (sender, args) => {}).WithName(HasLow).Build());
-                Assert.Throws<ArgumentException>(() => EchoServiceCreator(nc, (sender, args) => {}).WithName(Has127).Build());
-                Assert.Throws<ArgumentException>(() => EchoServiceCreator(nc, (sender, args) => {}).WithName(HasFwdSlash).Build());
-                Assert.Throws<ArgumentException>(() => EchoServiceCreator(nc, (sender, args) => {}).WithName(HasBackSlash).Build());
-                Assert.Throws<ArgumentException>(() => EchoServiceCreator(nc, (sender, args) => {}).WithName(HasEquals).Build());
-                Assert.Throws<ArgumentException>(() => EchoServiceCreator(nc, (sender, args) => {}).WithName(HasTic).Build());
+                Msg m = nc.Request("testServiceMessage", null, 1000);
+                Assert.Equal("1", Encoding.UTF8.GetString(m.Data));
+                Assert.False(m.HasHeaders);
+                
+                m = nc.Request("testServiceMessage", null);
+                Assert.Equal("2", Encoding.UTF8.GetString(m.Data));
+                Assert.False(m.HasHeaders);
+
+                m = nc.Request("testServiceMessage", null);
+                Assert.Equal("\"3\"", Encoding.UTF8.GetString(m.Data));
+                Assert.False(m.HasHeaders);
+
+                MsgHeader h = new MsgHeader { { "h", "4" } };
+                m = nc.Request(new Msg("testServiceMessage", h, null));
+                Assert.Equal("4", Encoding.UTF8.GetString(m.Data));
+                Assert.True(m.HasHeaders);
+                Assert.Equal("4", m.Header["h"]);
+
+                h = new MsgHeader { { "h", "5" } };
+                m = nc.Request(new Msg("testServiceMessage", h, null));
+                Assert.Equal("5", Encoding.UTF8.GetString(m.Data));
+                Assert.True(m.HasHeaders);
+                Assert.Equal("5", m.Header["h"]);
+
+                h = new MsgHeader { { "h", "6" } };
+                m = nc.Request(new Msg("testServiceMessage", h, null));
+                Assert.Equal("\"6\"", Encoding.UTF8.GetString(m.Data));
+                Assert.True(m.HasHeaders);
+                Assert.Equal("6", m.Header["h"]);
+
+                m = nc.Request("testServiceMessage", null);
+                Assert.Empty(m.Data);
+                Assert.True(m.HasHeaders);
+                Assert.Equal("error", m.Header[ServiceMsg.NatsServiceError]);
+                Assert.Equal("500", m.Header[ServiceMsg.NatsServiceErrorCode]);
             });
         }
     }

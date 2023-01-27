@@ -108,6 +108,18 @@ namespace NATS.Client
         {
         }
 
+        protected internal Msg(Msg msg)
+        {
+            subject = msg.subject;
+            sid = msg.sid;
+            _reply = msg._reply;
+            data = msg.data;
+            sub = msg.sub;
+            header = msg.header;
+            status = msg.status;
+            _lastAck = msg._lastAck;
+        }
+        
         internal Msg(MsgArg arg, Subscription s, byte[] payload, long totalLen)
         {
             subject = arg.subject;

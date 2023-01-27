@@ -51,7 +51,7 @@ namespace NATS.Client.ObjectStore
             ObjectMetaOptions = b._metaOptionsBuilder.Build();
         }
 
-        internal override JSONNode ToJsonNode()
+        public override JSONNode ToJsonNode()
         {
             JSONObject jso = new JSONObject();
             EmbedJson(jso);

@@ -16,86 +16,120 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using NATS.Client;
+using NATS.Client.Internals;
+using NATS.Client.Internals.SimpleJSON;
+using NATS.Client.JetStream;
 using NATS.Client.Service;
-using static NATSExamples.JsUtils;
 
 namespace NATSExamples
 {
     abstract class ServiceExample
     {
-        private const string EchoServiceName = "ECHO_SERVICE";
-        private const string SortServiceName = "SORT_SERVICE";
-        private const string EchoServiceSubject = "echo";
-        private const string SortServiceSubject = "sort";
-
         public static void Main(string[] args)
         {
             Options opts = ConnectionFactory.GetDefaultOptions();
             opts.Url = "nats://localhost:4222";
-            
+
             using (IConnection c = new ConnectionFactory().CreateConnection(opts))
             {
-                StatsDataSupplier sds = () => new ExampleStatsData(RandomId(), RandomText());
-                StatsDataDecoder sdd = json =>
-                {
-                    ExampleStatsData esd = new ExampleStatsData(json);
-                    return string.IsNullOrEmpty(esd.Text) ? null : esd;
-                };
-                
-                // create the services
-                Service serviceEcho = new ServiceBuilder()
-                    .WithConnection(c)
-                    .WithName(EchoServiceName)
-                    .WithSubject(EchoServiceSubject)
-                    .WithDescription("An Echo Service")
-                    .WithVersion("0.0.1")
-                    .WithSchemaRequest("echo schema request string/url")
-                    .WithSchemaResponse("echo schema response string/url")
-                    .WithStatsDataHandlers(sds, sdd)
-                    .WithServiceMessageHandler((sender, eArgs) => 
-                        ServiceMessage.Reply(c, eArgs.Message, "Echo '" + Encoding.UTF8.GetString(eArgs.Message.Data) + "'"))
+                // endpoints can be created ahead of time
+                // or created directly by the ServiceEndpoint builder.
+                Endpoint epEcho = Endpoint.Builder()
+                    .WithName("EchoEndpoint")
+                    .WithSubject("echo")
+                    .WithSchemaRequest("echo schema request info") // optional
+                    .WithSchemaResponse("echo schema response info") // optional
                     .Build();
-                Console.WriteLine(serviceEcho);
 
-                ServiceBuilder serviceBuilderSort = new ServiceBuilder()
+                // Sort is going to be grouped. This will affect the actual subject
+                Group sortGroup = new Group("sort");
+
+                // 4 service endpoints. 3 in service 1, 1 in service 2
+                // - We will reuse an endpoint definition, so we make it ahead of time
+                // - For echo, we could have reused a handler as well, if we wanted to.
+                ServiceEndpoint seEcho1 = ServiceEndpoint.Builder()
+                    .WithEndpoint(epEcho)
+                    .WithHandler((s, a) => HandleEchoMessage(c, a.Message, "S1E")) // see below: handleEchoMessage below
+                    .WithStatsDataSupplier(SupplyData)
+                    .Build();
+
+                ServiceEndpoint seEcho2 = ServiceEndpoint.Builder()
+                    .WithEndpoint(epEcho)
+                    .WithHandler((s, a) => HandleEchoMessage(c,  a.Message, "S2E"))
+                    .Build();
+
+                // you can make the Endpoint directly on the Service Endpoint Builder
+                ServiceEndpoint seSort1A = ServiceEndpoint.Builder()
+                    .WithGroup(sortGroup)
+                    .WithEndpointName("SortEndpointAscending")
+                    .WithEndpointSubject("ascending")
+                    .WithEndpointSchemaRequest("sort ascending schema request info") // optional
+                    .WithEndpointSchemaResponse("sort ascending schema response info") // optional
+                    .WithHandler((s, a) => HandleSortAscending(c,  a.Message, "S1A"))
+                    .Build();
+
+                // you can also make an endpoint with a constructor instead of a builder.
+                Endpoint endSortD = new Endpoint("SortEndpointDescending", "descending");
+                ServiceEndpoint seSort1D = ServiceEndpoint.Builder()
+                    .WithGroup(sortGroup)
+                    .WithEndpoint(endSortD)
+                    .WithHandler((s, a) => HandlerSortDescending(c,  a.Message, "S1D"))
+                    .Build();
+
+                // Create the service from service endpoints.
+                Service service1 = new ServiceBuilder()
                     .WithConnection(c)
-                    .WithName(SortServiceName)
-                    .WithSubject(SortServiceSubject)
-                    .WithDescription("A Sort Service")
-                    .WithVersion("0.0.2")
-                    .WithSchemaRequest("sort schema request string/url")
-                    .WithSchemaResponse("sort schema response string/url")
-                    .WithServiceMessageHandler((sender, eArgs) =>
-                    {
-                        byte[] data = eArgs.Message.Data;
-                        Array.Sort(data);
-                        ServiceMessage.Reply(c, eArgs.Message, "Sort '" + Encoding.UTF8.GetString(data) + "'");
-                    });
-                
-                Service serviceSort = serviceBuilderSort.Build();
-                Service serviceAnotherSort = serviceBuilderSort.Build();
-                Console.WriteLine(serviceSort);
-                Console.WriteLine(serviceAnotherSort);
-                
+                    .WithName("Service1")
+                    .WithApiUrl("Service1 Api Url") // optional
+                    .WithDescription("Service1 Description") // optional
+                    .WithVersion("0.0.1")
+                    .AddServiceEndpoint(seEcho1)
+                    .AddServiceEndpoint(seSort1A)
+                    .AddServiceEndpoint(seSort1D)
+                    .Build();
+
+                Service service2 = new ServiceBuilder()
+                    .WithConnection(c)
+                    .WithName("Service2")
+                    .WithVersion("0.0.1")
+                    .AddServiceEndpoint(seEcho2) // another of the echo type
+                    .Build();
+
+                Console.WriteLine("\n" + service1);
+                Console.WriteLine("\n" + service2);
+
                 // ----------------------------------------------------------------------------------------------------
                 // Start the services
                 // ----------------------------------------------------------------------------------------------------
-                Task<bool> taskEcho = serviceEcho.StartService();
-                Task<bool> taskSort = serviceSort.StartService();
-                Task<bool> taskAnotherSort = serviceAnotherSort.StartService();
-                
+                Task<bool> done1 = service1.StartService();
+                Task<bool> done2 = service2.StartService();
+
                 // ----------------------------------------------------------------------------------------------------
                 // Call the services
                 // ----------------------------------------------------------------------------------------------------
-                string request = RandomText();
-                Msg reply = c.Request(EchoServiceSubject, Encoding.UTF8.GetBytes(request), 200);
-                string response = Encoding.UTF8.GetString(reply.Data);
-                Console.WriteLine("\nCalled " + EchoServiceSubject + " with [" + request + "] Received [" + response + "]");
+                Console.WriteLine();
+                string request = null;
+                for (int x = 1; x <= 9; x++)
+                {
+                    // run ping a few times to see it hit different services
+                    request = JsUtils.RandomText();
+                    string echoSubject = "echo";
+                    Msg echoReply = c.Request(echoSubject, Encoding.UTF8.GetBytes(request));
+                    string echoResponse = Encoding.UTF8.GetString(echoReply.Data);
+                    Console.WriteLine("" + x + ". Called " + echoSubject + " with [" + request + "] Received " + echoResponse);
+                }
 
-                request = RandomText();
-                reply = c.Request(SortServiceSubject, Encoding.UTF8.GetBytes(request), 200);
+                // sort subjects are formed this way because the endpoints have groups
+                request = JsUtils.RandomText();
+                string subject = "sort.ascending";
+                Msg reply = c.Request(subject, Encoding.UTF8.GetBytes(request));
+                string response = Encoding.UTF8.GetString(reply.Data);
+                Console.WriteLine("1. Called " + subject + " with [" + request + "] Received " + response);
+
+                subject = "sort.descending";
+                reply = c.Request(subject, Encoding.UTF8.GetBytes(request));
                 response = Encoding.UTF8.GetString(reply.Data);
-                Console.WriteLine("Called " + SortServiceSubject + " with [" + request + "] Received [" + response + "]");
+                Console.WriteLine("1. Called " + subject + " with [" + request + "] Received " + response);
 
                 // ----------------------------------------------------------------------------------------------------
                 // discovery
@@ -105,125 +139,168 @@ namespace NATSExamples
                 // ----------------------------------------------------------------------------------------------------
                 // ping discover variations
                 // ----------------------------------------------------------------------------------------------------
-                IList<PingResponse> pings = discovery.Ping();
-                PrintDiscovery("Ping", "[All]", pings);
+                IList<PingResponse> pingResponses = discovery.Ping();
+                PrintDiscovery("Ping", "[All]", pingResponses);
 
-                pings = discovery.Ping(EchoServiceName);
-                PrintDiscovery("Ping", EchoServiceName, pings);
+                pingResponses = discovery.Ping("Service1");
+                PrintDiscovery("Ping", "Service1", pingResponses);
 
-                string echoId = pings[0].ServiceId;
-                PingResponse pingResponse = discovery.PingForNameAndId(EchoServiceName, echoId);
-                PrintDiscovery("Ping", EchoServiceName, echoId, pingResponse);
-
-                pings = discovery.Ping(SortServiceName);
-                PrintDiscovery("Ping", SortServiceName, pings);
-
-                string sortId = pings[0].ServiceId;
-                pingResponse = discovery.PingForNameAndId(SortServiceName, sortId);
-                PrintDiscovery("Ping", SortServiceName, sortId, pingResponse);
+                pingResponses = discovery.Ping("Service2");
+                PrintDiscovery("Ping", "Service2", pingResponses);
 
                 // ----------------------------------------------------------------------------------------------------
                 // info discover variations
                 // ----------------------------------------------------------------------------------------------------
-                IList<InfoResponse> infos = discovery.Info();
-                PrintDiscovery("Info", "[All]", infos);
+                IList<InfoResponse> infoResponses = discovery.Info();
+                PrintDiscovery("Info", "[All]", infoResponses);
 
-                infos = discovery.Info(EchoServiceName);
-                PrintDiscovery("Info", EchoServiceName, infos);
+                infoResponses = discovery.Info("Service1");
+                PrintDiscovery("Info", "Service1", infoResponses);
 
-                InfoResponse infoResponse = discovery.InfoForNameAndId(EchoServiceName, echoId);
-                PrintDiscovery("Info", EchoServiceName, echoId, infoResponse);
-
-                infos = discovery.Info(SortServiceName);
-                PrintDiscovery("Info", SortServiceName, infos);
-
-                infoResponse = discovery.InfoForNameAndId(SortServiceName, sortId);
-                PrintDiscovery("Info", SortServiceName, sortId, infoResponse);
+                infoResponses = discovery.Info("Service2");
+                PrintDiscovery("Info", "Service2", infoResponses);
 
                 // ----------------------------------------------------------------------------------------------------
                 // schema discover variations
                 // ----------------------------------------------------------------------------------------------------
-                IList<SchemaResponse> schemaResponses = discovery.Schema();
-                PrintDiscovery("Schema", "[All]", schemaResponses);
+                IList<SchemaResponse> schemaResponsList = discovery.Schema();
+                PrintDiscovery("Schema", "[All]", schemaResponsList);
 
-                schemaResponses = discovery.Schema(EchoServiceName);
-                PrintDiscovery("Schema", EchoServiceName, schemaResponses);
+                schemaResponsList = discovery.Schema("Service1");
+                PrintDiscovery("Schema", "Service1", schemaResponsList);
 
-                SchemaResponse schemaResponse = discovery.SchemaForNameAndId(EchoServiceName, echoId);
-                PrintDiscovery("Schema", EchoServiceName, echoId, schemaResponse);
-
-                schemaResponses = discovery.Schema(SortServiceName);
-                PrintDiscovery("Schema", SortServiceName, schemaResponses);
-
-                schemaResponse = discovery.SchemaForNameAndId(SortServiceName, sortId);
-                PrintDiscovery("Schema", SortServiceName, sortId, schemaResponse);
+                schemaResponsList = discovery.Schema("Service2");
+                PrintDiscovery("Schema", "Service2", schemaResponsList);
 
                 // ----------------------------------------------------------------------------------------------------
                 // stats discover variations
                 // ----------------------------------------------------------------------------------------------------
-                IList<StatsResponse> statsList = discovery.Stats(null, sdd);
-                PrintDiscovery("Stats", "[All]", statsList);
+                IList<StatsResponse> statsResponseList = discovery.Stats();
+                PrintDiscovery("Stats", "[All]", statsResponseList);
 
-                statsList = discovery.Stats(EchoServiceName);
-                PrintDiscovery("Stats", EchoServiceName, statsList); // will show echo without data decoder
+                statsResponseList = discovery.Stats("Service1");
+                PrintDiscovery("Stats", "Service1", statsResponseList); // will show echo without data decoder
 
-                statsList = discovery.Stats(SortServiceName);
-                PrintDiscovery("Stats", SortServiceName, statsList);
-                
+                statsResponseList = discovery.Stats("Service2");
+                PrintDiscovery("Stats", "Service2", statsResponseList);
+
                 // ----------------------------------------------------------------------------------------------------
                 // stop the service
                 // ----------------------------------------------------------------------------------------------------
-                serviceEcho.Stop();
-                serviceSort.Stop();
-                serviceAnotherSort.Stop();
-                Console.WriteLine("\nEcho service done ? " + taskEcho.Wait(1000));
-                Console.WriteLine("Sort service done ? " + taskSort.Wait(1000));
-                Console.WriteLine("Another Sort service done ? " + taskAnotherSort.Wait(1000));
+                service1.Stop();
+                service2.Stop();
+                Console.WriteLine("\nService 1 done ? " + done1.Result);
+                Console.WriteLine("Service 2 done ? " + done2.Result);
             }
         }
- 
-        private static void PrintDiscovery(string action, string serviceName, string serviceId, object o) {
-            Console.WriteLine("\n" + action  + " " + serviceName + " " + serviceId + "\n  " + o);
+
+        private static string ReplyBody(String label, byte[] data, String handlerId)
+        {
+            JSONObject o = new JSONObject();
+            o[label] = Encoding.UTF8.GetString(data);
+            o["hid"] = handlerId;
+            return o.ToString();
         }
-        
-        private static void PrintDiscovery<T>(string action, string label, IList<T> objects) {
-            Console.WriteLine("\n" + action + " " + label);
-            foreach (object o in objects) {
-                Console.WriteLine("  " + o);
+
+        private static void HandlerSortDescending(IConnection nc, ServiceMsg smsg, String handlerId) {
+            Array.Sort(smsg.Data);
+            int len = smsg.Data.Length;
+            byte[] descending = new byte[len];
+            for (int x = 0; x < len; x++) {
+                descending[x] = smsg.Data[len - x - 1];
             }
+            smsg.Respond(nc, ReplyBody("sort_descending", descending, handlerId));
+        }
+
+        private static void HandleSortAscending(IConnection nc, ServiceMsg smsg, String handlerId) {
+            Array.Sort(smsg.Data);
+            smsg.Respond(nc, ReplyBody("sort_ascending", smsg.Data, handlerId));
+        }
+
+        private static void HandleEchoMessage(IConnection nc, ServiceMsg smsg, String handlerId) {
+            smsg.Respond(nc, ReplyBody("echo", smsg.Data, handlerId));
+        }
+
+        static string Echo(string data) {
+            return "Echo " + data;
+        }
+
+        private static string Echo(byte[] data) {
+            return "Echo " + Encoding.UTF8.GetString(data);
+        }
+
+        private static string SortA(byte[] data) {
+            Array.Sort(data);
+            return "Sort Ascending " + Encoding.UTF8.GetString(data);
+        }
+
+        private static string SortA(string data) {
+            return SortA(Encoding.UTF8.GetBytes(data));
+        }
+
+        private static string SortD(byte[] data) {
+            Array.Sort(data);
+            int len = data.Length;
+            byte[] descending = new byte[len];
+            for (int x = 0; x < len; x++) {
+                descending[x] = data[len - x - 1];
+            }
+            return "Sort Descending " + Encoding.UTF8.GetString(descending);
+        }
+
+        private static string SortD(string data) {
+            return SortD(Encoding.UTF8.GetBytes(data));
+        }
+
+        private static void PrintDiscovery(string action, string label, IList<PingResponse> responses)
+        {
+            Console.WriteLine("\n" + action + " " + label); 
+            foreach (PingResponse r in responses) { Console.WriteLine("  " + r); }
+        }
+
+        private static void PrintDiscovery(string action, string label, IList<InfoResponse> responses)
+        {
+            Console.WriteLine("\n" + action + " " + label); 
+            foreach (InfoResponse r in responses) { Console.WriteLine("  " + r); }
+        }
+
+        private static void PrintDiscovery(string action, string label, IList<SchemaResponse> responses)
+        {
+            Console.WriteLine("\n" + action + " " + label); 
+            foreach (SchemaResponse r in responses) { Console.WriteLine("  " + r); }
+        }
+
+        private static void PrintDiscovery(string action, string label, IList<StatsResponse> responses)
+        {
+            Console.WriteLine("\n" + action + " " + label); 
+            foreach (StatsResponse r in responses) { Console.WriteLine("  " + r); }
+        }
+
+        private static int _dataX = -1;
+        private static JSONNode SupplyData()
+        {
+            _dataX++;
+            return new ExampleStatsData("s-" + _dataX, _dataX).ToJsonNode();
         }
     }
-    
-    public class ExampleStatsData : IStatsData
+
+    class ExampleStatsData : JsonSerializable
     {
-        public readonly string Id;
-        public readonly string Text;
+        public readonly string SData;
+        public readonly int IData;
 
-        public ExampleStatsData(string id, string text)
+        public ExampleStatsData(String sData, int iData)
         {
-            Id = id;
-            Text = text;
+            SData = sData;
+            IData = iData;
         }
-
-        public ExampleStatsData(string json)
+        
+        public override JSONNode ToJsonNode()
         {
-            if (!string.IsNullOrEmpty(json))
-            {
-                int at = json.IndexOf("\"id\"", StringComparison.Ordinal);
-                int vats = json.IndexOf("\"", at + 5, StringComparison.Ordinal);
-                int vate = json.IndexOf("\"", vats + 1, StringComparison.Ordinal);
-                Id = json.Substring(vats + 1, vate - vats - 1);
-
-                at = json.IndexOf("\"text\"", StringComparison.Ordinal);
-                vats = json.IndexOf("\"", at + 6, StringComparison.Ordinal);
-                vate = json.IndexOf("\"", vats + 1, StringComparison.Ordinal);
-                Text = json.Substring(vats + 1, vate - vats - 1);
-            }
-        }
-
-        public string ToJson()
-        {
-            return "{\"id\":\"" + Id + "\",\"text\":\"" + Text + "\"}";
+            JSONObject o = new JSONObject();
+            JsonUtils.AddField(o, "sdata", SData);
+            JsonUtils.AddField(o, "idata", IData);
+            return o;
         }
     }
 }

@@ -26,7 +26,7 @@ namespace NATS.Client.JetStream
             Config = config;
         }
         
-        internal override JSONNode ToJsonNode()
+        public override JSONNode ToJsonNode()
         {
             return new JSONObject
             {

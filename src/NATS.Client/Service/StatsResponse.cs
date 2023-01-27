@@ -1,4 +1,4 @@
-﻿// Copyright 2022 The NATS Authors
+﻿// Copyright 2023 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at:
@@ -12,7 +12,7 @@
 // limitations under the License.
 
 using System;
-using System.Text;
+using System.Collections.Generic;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 using NATS.Client.JetStream;
@@ -22,153 +22,64 @@ namespace NATS.Client.Service
     /// <summary>
     /// SERVICE IS AN EXPERIMENTAL API SUBJECT TO CHANGE
     /// </summary>
-    public class StatsResponse : JsonSerializable
+    public class StatsResponse : ServiceResponse
     {
         public const string ResponseType = "io.nats.micro.v1.stats_response";
 
-        public string ServiceId { get; }
-        public string Name { get; }
-        public string Version { get; }
-        public long NumRequests => numRequests.Read(); 
-        public long NumErrors => numErrors.Read(); 
-        public string LastError { get; set; }
-        public long ProcessingTime => processingTime.Read(); 
-        public long AverageProcessingTime => averageProcessingTime.Read();
-        public IStatsData Data { get; set; }
-        public DateTime Started { get; private set; }
-        public string Type => ResponseType;
-
-        private readonly InterlockedLong numRequests;
-        private readonly InterlockedLong numErrors;
-        private readonly InterlockedLong processingTime;
-        private readonly InterlockedLong averageProcessingTime;
-
-        internal StatsResponse(string serviceId, string name, string version)
+        public DateTime Started { get; }
+        public IList<EndpointResponse> EndpointStatsList { get; }
+        
+        internal StatsResponse(ServiceResponse template, DateTime started, IList<EndpointResponse> endpointStatsList) 
+            :base(ResponseType, template)
         {
-            ServiceId = serviceId;
-            Name = name;
-            Version = version;
-            numRequests = new InterlockedLong();
-            numErrors = new InterlockedLong();
-            LastError = null;
-            processingTime = new InterlockedLong();
-            averageProcessingTime = new InterlockedLong();
-            Data = null;
-            Started = DateTime.UtcNow;
+            Started = started;
+            EndpointStatsList = endpointStatsList;
         }
 
-        internal StatsResponse Copy(StatsDataDecoder decoder)
+        internal StatsResponse(string json) : this(JSON.Parse(json)) {}
+
+        internal StatsResponse(JSONNode node) : base(ResponseType, node)
         {
-            StatsResponse copy = new StatsResponse(ServiceId, Name, Version);
-            copy.numRequests.Set(numRequests.Read());
-            copy.numErrors.Set(numErrors.Read());
-            copy.LastError = LastError;
-            copy.processingTime.Set(processingTime.Read());
-            copy.averageProcessingTime.Set(averageProcessingTime.Read());
-            if (Data != null && decoder != null)
-            {
-                copy.Data = decoder.Invoke(Data.ToJson());
-            }
-            copy.Started = Started;
-            return copy;
-        }
-
-        internal StatsResponse(string json, StatsDataDecoder decoder) : this(JSON.Parse(json), decoder) {}
-
-        internal StatsResponse(JSONNode node, StatsDataDecoder decoder)
-        {
-            ServiceId = node[ApiConstants.Id];
-            Name = node[ApiConstants.Name];
-            Version = node[ApiConstants.Version];
-
-            numRequests = new InterlockedLong(JsonUtils.AsLongOrZero(node, ApiConstants.NumRequests));
-            numErrors = new InterlockedLong(JsonUtils.AsLongOrZero(node, ApiConstants.NumErrors));
-            LastError = node[ApiConstants.LastError];
-            processingTime = new InterlockedLong(JsonUtils.AsLongOrZero(node, ApiConstants.ProcessingTime));
-            averageProcessingTime = new InterlockedLong(JsonUtils.AsLongOrZero(node, ApiConstants.AverageProcessingTime));
-
-            if (decoder != null)
-            {
-                JSONNode dataNode = node[ApiConstants.Data];
-                if (dataNode != null)
-                {
-                    string dataJson = dataNode.ToString(); // generically decode it
-                    if (!string.IsNullOrEmpty(dataJson))
-                    {
-                        Data = decoder.Invoke(dataJson);
-                    }
-                }
-            }
-            
             Started = JsonUtils.AsDate(node[ApiConstants.Started]);
+            EndpointStatsList = EndpointResponse.ListOf(node[ApiConstants.Endpoints]);
         }
         
-        public void Reset()
+        public override JSONNode ToJsonNode()
         {
-            numRequests.Set(0);
-            numErrors.Set(0);
-            LastError = null;
-            processingTime.Set(0);
-            averageProcessingTime.Set(0);
-            Data = null;
-            Started = DateTime.UtcNow;
-        }
-        
-        internal override JSONNode ToJsonNode()
-        {
-            JSONNode jso = ToJsonNodeNoData();
-            if (Data != null)
+            JSONObject jso = BaseJsonObject();
+            jso[ApiConstants.Started] = JsonUtils.UnsafeToString(Started);
+            JSONArray arr = new JSONArray();
+            foreach (var ess in EndpointStatsList)
             {
-                jso[ApiConstants.Data] = JSON.Parse(Data.ToJson());
+                arr.Add(null, ess.ToJsonNode());
             }
-            return jso;
-        }
-        
-        private JSONNode ToJsonNodeNoData()
-        {
-            JSONObject jso = new JSONObject();
-            JsonUtils.AddField(jso, ApiConstants.Id, ServiceId);
-            JsonUtils.AddField(jso, ApiConstants.Name, Name);
-            JsonUtils.AddField(jso, ApiConstants.Type, Type);
-            JsonUtils.AddField(jso, ApiConstants.Version, Version);
-            JsonUtils.AddField(jso, ApiConstants.NumRequests, numRequests.Read());
-            JsonUtils.AddField(jso, ApiConstants.NumErrors, numErrors.Read());
-            JsonUtils.AddField(jso, ApiConstants.LastError, LastError);
-            JsonUtils.AddField(jso, ApiConstants.ProcessingTime, processingTime.Read());
-            JsonUtils.AddField(jso, ApiConstants.AverageProcessingTime, averageProcessingTime.Read());
-            JsonUtils.AddField(jso, ApiConstants.Started, Started);
+
+            jso[ApiConstants.Endpoints] = arr;
             return jso;
         }
 
-        public override byte[] Serialize()
+        protected bool Equals(StatsResponse other)
         {
-            JSONNode jso = ToJsonNodeNoData();
-            if (Data == null)
+            return base.Equals(other) && Started.Equals(other.Started) && Equals(EndpointStatsList, other.EndpointStatsList);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((StatsResponse)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
             {
-                return JsonUtils.Serialize(jso); 
+                int hashCode = base.GetHashCode();
+                hashCode = (hashCode * 397) ^ Started.GetHashCode();
+                hashCode = (hashCode * 397) ^ (EndpointStatsList != null ? EndpointStatsList.GetHashCode() : 0);
+                return hashCode;
             }
-
-            jso[ApiConstants.Data] = "SR_DATA_REPL";
-            return Encoding.ASCII.GetBytes(jso.ToString().Replace("\"SR_DATA_REPL\"", Data.ToJson()));
-        }
-
-        public long IncrementNumRequests()
-        {
-            return numRequests.Increment();
-        }
-
-        public void IncrementNumErrors()
-        {
-            numErrors.Increment();
-        }
-
-        public long AddTotalProcessingTime(long elapsed)
-        {
-            return processingTime.Add(elapsed);
-        }
-
-        public void SetAverageProcessingTime(long average) {
-            averageProcessingTime.Set(average);
         }
     }
 }

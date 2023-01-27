@@ -27,7 +27,7 @@ namespace NATS.Client.JetStream
             Erase = erase;
         }
 
-        internal override JSONNode ToJsonNode()
+        public override JSONNode ToJsonNode()
         {
             JSONObject jso = new JSONObject();
             if (Sequence > 0)

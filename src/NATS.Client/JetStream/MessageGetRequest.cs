@@ -48,7 +48,7 @@ namespace NATS.Client.JetStream
             NextBySubject = nextBySubject;
         }
 
-        internal override JSONNode ToJsonNode()
+        public override JSONNode ToJsonNode()
         {
             JSONObject jso = new JSONObject();
             if (Sequence > 0)
