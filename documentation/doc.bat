@@ -1,4 +1,4 @@
-﻿: IMPORTANT! 
+: IMPORTANT! 
 : A. Make sure you have doxygen installed and in your path. https://doxygen.nl/index.html
 : B. Edit DoxyFile.NATS.Client, line 41 to have the version you want. 
 : C. Use the version for the commit message in step 7.
@@ -30,7 +30,5 @@ rd ..\nats.net\documentation\NATS.Client /S /Q
 
 : Step 7. git add, commit and push
 git add -A
-git commit -m "Docs for 1.0.3"
+git commit -m "Docs for 1.0.4"
 git push origin gh-pages
-
-pause
