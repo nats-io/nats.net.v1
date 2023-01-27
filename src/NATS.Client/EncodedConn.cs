@@ -25,7 +25,7 @@ namespace NATS.Client
     /// Represents the method that will handle serialization of <paramref name="obj"/>
     /// to a byte array.
     /// </summary>
-    /// <param name="obj">The <see cref="Object"/> to serialize.</param>
+    /// <param name="obj">The <see cref="object"/> to serialize.</param>
     public delegate byte[] Serializer(Object obj);
 
     /// <summary>
@@ -171,7 +171,7 @@ namespace NATS.Client
 
             byte[] data = onSerialize(o);
             int count = data != null ? data.Length : 0;
-            publish(subject, reply, null, data, 0, count, false);
+            PublishImpl(subject, reply, null, data, 0, count, false);
         }
 
         /// <summary>
@@ -336,7 +336,7 @@ namespace NATS.Client
         {
             byte[] data = onSerialize(obj);
             int count = data != null ? data.Length : 0;
-            Msg m = base.request(subject, null, data, 0, count, timeout);
+            Msg m = base.RequestSyncImpl(subject, null, data, 0, count, timeout);
             return onDeserialize(m.Data);
         }
 

@@ -114,6 +114,8 @@ namespace NATS.Client
         /// <seealso cref="Options.ReconnectBufferSize"></seealso>
         void Publish(string subject, byte[] data);
 
+        void Publish(string subject, MsgHeader headers, byte[] data);
+
         /// <summary>
         /// Publishes a sequence of bytes from <paramref name="data"/> to the given <paramref name="subject"/>.
         /// </summary>
@@ -127,14 +129,7 @@ namespace NATS.Client
         /// <seealso cref="IConnection.Publish(string, byte[])"/>
         void Publish(string subject, byte[] data, int offset, int count);
 
-        /// <summary>
-        /// Publishes a <see cref="Msg"/> instance, which includes the subject, an optional reply, and an
-        /// optional data field.
-        /// </summary>
-        /// <param name="msg">A <see cref="Msg"/> instance containing the subject, optional reply, and data to publish
-        /// to the NATS server.</param>
-        /// <seealso cref="IConnection.Publish(string, byte[])"/>
-        void Publish(Msg msg);
+        void Publish(string subject, MsgHeader headers, byte[] data, int offset, int count);
 
         /// <summary>
         /// Publishes <paramref name="data"/> to the given <paramref name="subject"/>.
@@ -146,6 +141,8 @@ namespace NATS.Client
         /// to the connected NATS server.</param>
         /// <seealso cref="IConnection.Publish(string, byte[])"/>
         void Publish(string subject, string reply, byte[] data);
+        
+        void Publish(string subject, string reply, MsgHeader headers, byte[] data);
 
         /// <summary>
         /// Publishes a sequence of bytes from <paramref name="data"/> to the given <paramref name="subject"/>.
@@ -160,6 +157,17 @@ namespace NATS.Client
         /// <param name="count">The number of bytes to be published to the subject.</param>
         /// <seealso cref="IConnection.Publish(string, byte[])"/>
         void Publish(string subject, string reply, byte[] data, int offset, int count);
+
+        void Publish(string subject, string reply, MsgHeader headers, byte[] data, int offset, int count);
+
+        /// <summary>
+        /// Publishes a <see cref="Msg"/> instance, which includes the subject, an optional reply, and an
+        /// optional data field.
+        /// </summary>
+        /// <param name="msg">A <see cref="Msg"/> instance containing the subject, optional reply, and data to publish
+        /// to the NATS server.</param>
+        /// <seealso cref="IConnection.Publish(string, byte[])"/>
+        void Publish(Msg msg);
 
         /// <summary>
         /// Sends a request payload and returns the response <see cref="Msg"/>, or throws
@@ -179,6 +187,8 @@ namespace NATS.Client
         /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
         /// <seealso cref="IConnection.Request(string, byte[])"/>
         Msg Request(string subject, byte[] data, int timeout);
+
+        Msg Request(string subject, MsgHeader headers, byte[] data, int timeout);
 
         /// <summary>
         /// Sends a sequence of bytes as the request payload and returns the response <see cref="Msg"/>, or throws
@@ -202,6 +212,8 @@ namespace NATS.Client
         /// <seealso cref="IConnection.Request(string, byte[])"/>
         Msg Request(string subject, byte[] data, int offset, int count, int timeout);
 
+        Msg Request(string subject, MsgHeader headers, byte[] data, int offset, int count, int timeout);
+
         /// <summary>
         /// Sends a request payload and returns the response <see cref="Msg"/>.
         /// </summary>
@@ -222,6 +234,8 @@ namespace NATS.Client
         /// to the connected NATS server.</param>
         /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
         Msg Request(string subject, byte[] data);
+
+        Msg Request(string subject, MsgHeader headers, byte[] data);
 
         /// <summary>
         /// Sends a sequence of bytes as the request payload and returns the response <see cref="Msg"/>.
@@ -247,157 +261,7 @@ namespace NATS.Client
         /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
         Msg Request(string subject, byte[] data, int offset, int count);
 
-        /// <summary>
-        /// Asynchronously sends a request payload and returns the response <see cref="Msg"/>, or throws 
-        /// <see cref="NATSTimeoutException"/> if the <paramref name="timeout"/> expires.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="RequestAsync(string, byte[], int)"/> will create an unique inbox for this request, sharing a
-        /// single subscription for all replies to this <see cref="Connection"/> instance. However, if
-        /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription.
-        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
-        /// </remarks>
-        /// <param name="subject">The subject to publish <paramref name="data"/> to over
-        /// the current connection.</param>
-        /// <param name="data">An array of type <see cref="Byte"/> that contains the request data to publish
-        /// to the connected NATS server.</param>
-        /// <param name="timeout">The number of milliseconds to wait.</param>
-        /// <returns>A task that represents the asynchronous read operation. The value of the <see cref="Task{TResult}.Result"/>
-        /// parameter contains a <see cref="Msg"/> with the response from the NATS server.</returns>
-        /// <seealso cref="IConnection.Request(string, byte[])"/>
-        Task<Msg> RequestAsync(string subject, byte[] data, int timeout);
-
-        /// <summary>
-        /// Asynchronously sends a sequence of bytes as the request payload and returns the response <see cref="Msg"/>, or throws 
-        /// <see cref="NATSTimeoutException"/> if the <paramref name="timeout"/> expires.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="RequestAsync(string, byte[], int, int, int)"/> will create an unique inbox for this request, sharing a
-        /// single subscription for all replies to this <see cref="Connection"/> instance. However, if
-        /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription.
-        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
-        /// </remarks>
-        /// <param name="subject">The subject to publish <paramref name="data"/> to over
-        /// the current connection.</param>
-        /// <param name="data">An array of type <see cref="Byte"/> that contains the request data to publish
-        /// to the connected NATS server.</param>
-        /// <param name="offset">The zero-based byte offset in <paramref name="data"/> at which to begin publishing
-        /// bytes to the subject.</param>
-        /// <param name="count">The number of bytes to be published to the subject.</param>
-        /// <param name="timeout">The number of milliseconds to wait.</param>
-        /// <returns>A task that represents the asynchronous read operation. The value of the <see cref="Task{TResult}.Result"/>
-        /// parameter contains a <see cref="Msg"/> with the response from the NATS server.</returns>
-        /// <seealso cref="IConnection.Request(string, byte[])"/>
-        Task<Msg> RequestAsync(string subject, byte[] data, int offset, int count, int timeout);
-
-        /// <summary>
-        /// Asynchronously sends a request payload and returns the response <see cref="Msg"/>.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="RequestAsync(string, byte[])"/> will create an unique inbox for this request, sharing a single
-        /// subscription for all replies to this <see cref="Connection"/> instance. However, if
-        /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription. 
-        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
-        /// </remarks>
-        /// <param name="subject">The subject to publish <paramref name="data"/> to over
-        /// the current connection.</param>
-        /// <param name="data">An array of type <see cref="Byte"/> that contains the request data to publish
-        /// to the connected NATS server.</param>
-        /// <returns>A task that represents the asynchronous read operation. The value of the 
-        /// <see cref="Task{TResult}.Result"/> parameter contains a <see cref="Msg"/> with the response from the NATS
-        /// server.</returns>
-        /// <seealso cref="IConnection.Request(string, byte[])"/>
-        Task<Msg> RequestAsync(string subject, byte[] data);
-
-        /// <summary>
-        /// Asynchronously sends a sequence of bytes as the request payload and returns the response <see cref="Msg"/>.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="RequestAsync(string, byte[], int, int)"/> will create an unique inbox for this request, sharing a single
-        /// subscription for all replies to this <see cref="Connection"/> instance. However, if
-        /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription. 
-        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
-        /// </remarks>
-        /// <param name="subject">The subject to publish <paramref name="data"/> to over
-        /// the current connection.</param>
-        /// <param name="data">An array of type <see cref="Byte"/> that contains the request data to publish
-        /// to the connected NATS server.</param>
-        /// <param name="offset">The zero-based byte offset in <paramref name="data"/> at which to begin publishing
-        /// bytes to the subject.</param>
-        /// <param name="count">The number of bytes to be published to the subject.</param>
-        /// <returns>A task that represents the asynchronous read operation. The value of the 
-        /// <see cref="Task{TResult}.Result"/> parameter contains a <see cref="Msg"/> with the response from the NATS
-        /// server.</returns>
-        /// <seealso cref="IConnection.Request(string, byte[])"/>
-        Task<Msg> RequestAsync(string subject, byte[] data, int offset, int count);
-
-        /// <summary>
-        /// Asynchronously sends a request payload and returns the response <see cref="Msg"/>, or throws
-        /// <see cref="NATSTimeoutException"/> if the <paramref name="timeout"/> expires, while monitoring for 
-        /// cancellation requests.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="RequestAsync(string, byte[], int, CancellationToken)"/> will create an unique inbox for this
-        /// request, sharing a single subscription for all replies to this <see cref="Connection"/> instance. However,
-        /// if <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription.
-        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
-        /// </remarks>
-        /// <param name="subject">The subject to publish <paramref name="data"/> to over
-        /// the current connection.</param>
-        /// <param name="data">An array of type <see cref="Byte"/> that contains the request data to publish
-        /// to the connected NATS server.</param>
-        /// <param name="timeout">The number of milliseconds to wait.</param>
-        /// <param name="token">The token to monitor for cancellation requests.</param>
-        /// <returns>A task that represents the asynchronous read operation. The value of the
-        /// <see cref="Task{TResult}.Result"/> parameter contains  a <see cref="Msg"/> with the response from the NATS
-        /// server.</returns>
-        /// <seealso cref="IConnection.Request(string, byte[])"/>
-        Task<Msg> RequestAsync(string subject, byte[] data, int timeout, CancellationToken token);
-
-        /// <summary>
-        /// Asynchronously sends a request payload and returns the response <see cref="Msg"/>, while monitoring for
-        /// cancellation requests.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="RequestAsync(string, byte[], CancellationToken)"/> will create an unique inbox for this request,
-        /// sharing a single subscription for all replies to this <see cref="Connection"/> instance. However, if 
-        /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription.
-        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
-        /// </remarks>
-        /// <param name="subject">The subject to publish <paramref name="data"/> to over
-        /// the current connection.</param>
-        /// <param name="data">An array of type <see cref="Byte"/> that contains the request data to publish
-        /// to the connected NATS server.</param>
-        /// <param name="token">The token to monitor for cancellation requests.</param>
-        /// <returns>A task that represents the asynchronous read operation. The value of the
-        /// <see cref="Task{TResult}.Result"/> parameter contains a <see cref="Msg"/> with the response from the NATS 
-        /// server.</returns>
-        /// <seealso cref="IConnection.Request(string, byte[])"/>
-        Task<Msg> RequestAsync(string subject, byte[] data, CancellationToken token);
-
-        /// <summary>
-        /// Asynchronously sends a sequence of bytes as the request payload and returns the response <see cref="Msg"/>,
-        /// while monitoring for cancellation requests.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="RequestAsync(string, byte[], int, int, CancellationToken)"/> will create an unique inbox for this request,
-        /// sharing a single subscription for all replies to this <see cref="Connection"/> instance. However, if 
-        /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription.
-        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
-        /// </remarks>
-        /// <param name="subject">The subject to publish <paramref name="data"/> to over
-        /// the current connection.</param>
-        /// <param name="data">An array of type <see cref="Byte"/> that contains the request data to publish
-        /// to the connected NATS server.</param>
-        /// <param name="offset">The zero-based byte offset in <paramref name="data"/> at which to begin publishing
-        /// bytes to the subject.</param>
-        /// <param name="count">The number of bytes to be published to the subject.</param>
-        /// <param name="token">The token to monitor for cancellation requests.</param>
-        /// <returns>A task that represents the asynchronous read operation. The value of the
-        /// <see cref="Task{TResult}.Result"/> parameter contains a <see cref="Msg"/> with the response from the NATS 
-        /// server.</returns>
-        /// <seealso cref="IConnection.Request(string, byte[])"/>
-        Task<Msg> RequestAsync(string subject, byte[] data, int offset, int count, CancellationToken token);
+        Msg Request(string subject, MsgHeader headers, byte[] data, int offset, int count);
 
         /// <summary>
         /// Sends a request message and returns the response <see cref="Msg"/>.
@@ -434,6 +298,172 @@ namespace NATS.Client
         /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
         /// <seealso cref="IConnection.Request(Msg)"/>
         Msg Request(Msg message, int timeout);
+        
+        /// <summary>
+        /// Asynchronously sends a request payload and returns the response <see cref="Msg"/>, or throws 
+        /// <see cref="NATSTimeoutException"/> if the <paramref name="timeout"/> expires.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="RequestAsync(string, byte[], int)"/> will create an unique inbox for this request, sharing a
+        /// single subscription for all replies to this <see cref="Connection"/> instance. However, if
+        /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription.
+        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
+        /// </remarks>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="data">An array of type <see cref="Byte"/> that contains the request data to publish
+        /// to the connected NATS server.</param>
+        /// <param name="timeout">The number of milliseconds to wait.</param>
+        /// <returns>A task that represents the asynchronous read operation. The value of the <see cref="Task{TResult}.Result"/>
+        /// parameter contains a <see cref="Msg"/> with the response from the NATS server.</returns>
+        /// <seealso cref="IConnection.Request(string, byte[])"/>
+        Task<Msg> RequestAsync(string subject, byte[] data, int timeout);
+
+        Task<Msg> RequestAsync(string subject, MsgHeader headers, byte[] data, int timeout);
+
+        /// <summary>
+        /// Asynchronously sends a sequence of bytes as the request payload and returns the response <see cref="Msg"/>, or throws 
+        /// <see cref="NATSTimeoutException"/> if the <paramref name="timeout"/> expires.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="RequestAsync(string, byte[], int, int, int)"/> will create an unique inbox for this request, sharing a
+        /// single subscription for all replies to this <see cref="Connection"/> instance. However, if
+        /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription.
+        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
+        /// </remarks>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="data">An array of type <see cref="Byte"/> that contains the request data to publish
+        /// to the connected NATS server.</param>
+        /// <param name="offset">The zero-based byte offset in <paramref name="data"/> at which to begin publishing
+        /// bytes to the subject.</param>
+        /// <param name="count">The number of bytes to be published to the subject.</param>
+        /// <param name="timeout">The number of milliseconds to wait.</param>
+        /// <returns>A task that represents the asynchronous read operation. The value of the <see cref="Task{TResult}.Result"/>
+        /// parameter contains a <see cref="Msg"/> with the response from the NATS server.</returns>
+        /// <seealso cref="IConnection.Request(string, byte[])"/>
+        Task<Msg> RequestAsync(string subject, byte[] data, int offset, int count, int timeout);
+
+        Task<Msg> RequestAsync(string subject, MsgHeader headers, byte[] data, int offset, int count, int timeout);
+
+        /// <summary>
+        /// Asynchronously sends a request payload and returns the response <see cref="Msg"/>.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="RequestAsync(string, byte[])"/> will create an unique inbox for this request, sharing a single
+        /// subscription for all replies to this <see cref="Connection"/> instance. However, if
+        /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription. 
+        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
+        /// </remarks>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="data">An array of type <see cref="Byte"/> that contains the request data to publish
+        /// to the connected NATS server.</param>
+        /// <returns>A task that represents the asynchronous read operation. The value of the 
+        /// <see cref="Task{TResult}.Result"/> parameter contains a <see cref="Msg"/> with the response from the NATS
+        /// server.</returns>
+        /// <seealso cref="IConnection.Request(string, byte[])"/>
+        Task<Msg> RequestAsync(string subject, byte[] data);
+
+        Task<Msg> RequestAsync(string subject, MsgHeader headers, byte[] data);
+
+        /// <summary>
+        /// Asynchronously sends a sequence of bytes as the request payload and returns the response <see cref="Msg"/>.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="RequestAsync(string, byte[], int, int)"/> will create an unique inbox for this request, sharing a single
+        /// subscription for all replies to this <see cref="Connection"/> instance. However, if
+        /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription. 
+        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
+        /// </remarks>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="data">An array of type <see cref="Byte"/> that contains the request data to publish
+        /// to the connected NATS server.</param>
+        /// <param name="offset">The zero-based byte offset in <paramref name="data"/> at which to begin publishing
+        /// bytes to the subject.</param>
+        /// <param name="count">The number of bytes to be published to the subject.</param>
+        /// <returns>A task that represents the asynchronous read operation. The value of the 
+        /// <see cref="Task{TResult}.Result"/> parameter contains a <see cref="Msg"/> with the response from the NATS
+        /// server.</returns>
+        /// <seealso cref="IConnection.Request(string, byte[])"/>
+        Task<Msg> RequestAsync(string subject, byte[] data, int offset, int count);
+
+        Task<Msg> RequestAsync(string subject, MsgHeader headers, byte[] data, int offset, int count);
+
+        /// <summary>
+        /// Asynchronously sends a request payload and returns the response <see cref="Msg"/>, or throws
+        /// <see cref="NATSTimeoutException"/> if the <paramref name="timeout"/> expires, while monitoring for 
+        /// cancellation requests.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="RequestAsync(string, byte[], int, CancellationToken)"/> will create an unique inbox for this
+        /// request, sharing a single subscription for all replies to this <see cref="Connection"/> instance. However,
+        /// if <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription.
+        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
+        /// </remarks>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="data">An array of type <see cref="Byte"/> that contains the request data to publish
+        /// to the connected NATS server.</param>
+        /// <param name="timeout">The number of milliseconds to wait.</param>
+        /// <param name="token">The token to monitor for cancellation requests.</param>
+        /// <returns>A task that represents the asynchronous read operation. The value of the
+        /// <see cref="Task{TResult}.Result"/> parameter contains  a <see cref="Msg"/> with the response from the NATS
+        /// server.</returns>
+        /// <seealso cref="IConnection.Request(string, byte[])"/>
+        Task<Msg> RequestAsync(string subject, byte[] data, int timeout, CancellationToken token);
+
+        Task<Msg> RequestAsync(string subject, MsgHeader headers, byte[] data, int timeout, CancellationToken token);
+
+        /// <summary>
+        /// Asynchronously sends a request payload and returns the response <see cref="Msg"/>, while monitoring for
+        /// cancellation requests.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="RequestAsync(string, byte[], CancellationToken)"/> will create an unique inbox for this request,
+        /// sharing a single subscription for all replies to this <see cref="Connection"/> instance. However, if 
+        /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription.
+        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
+        /// </remarks>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="data">An array of type <see cref="Byte"/> that contains the request data to publish
+        /// to the connected NATS server.</param>
+        /// <param name="token">The token to monitor for cancellation requests.</param>
+        /// <returns>A task that represents the asynchronous read operation. The value of the
+        /// <see cref="Task{TResult}.Result"/> parameter contains a <see cref="Msg"/> with the response from the NATS 
+        /// server.</returns>
+        /// <seealso cref="IConnection.Request(string, byte[])"/>
+        Task<Msg> RequestAsync(string subject, byte[] data, CancellationToken token);
+
+        Task<Msg> RequestAsync(string subject, MsgHeader headers, byte[] data, CancellationToken token);
+
+        /// <summary>
+        /// Asynchronously sends a sequence of bytes as the request payload and returns the response <see cref="Msg"/>,
+        /// while monitoring for cancellation requests.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="RequestAsync(string, byte[], int, int, CancellationToken)"/> will create an unique inbox for this request,
+        /// sharing a single subscription for all replies to this <see cref="Connection"/> instance. However, if 
+        /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription.
+        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
+        /// </remarks>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="data">An array of type <see cref="Byte"/> that contains the request data to publish
+        /// to the connected NATS server.</param>
+        /// <param name="offset">The zero-based byte offset in <paramref name="data"/> at which to begin publishing
+        /// bytes to the subject.</param>
+        /// <param name="count">The number of bytes to be published to the subject.</param>
+        /// <param name="token">The token to monitor for cancellation requests.</param>
+        /// <returns>A task that represents the asynchronous read operation. The value of the
+        /// <see cref="Task{TResult}.Result"/> parameter contains a <see cref="Msg"/> with the response from the NATS 
+        /// server.</returns>
+        /// <seealso cref="IConnection.Request(string, byte[])"/>
+        Task<Msg> RequestAsync(string subject, byte[] data, int offset, int count, CancellationToken token);
+
+        Task<Msg> RequestAsync(string subject, MsgHeader headers, byte[] data, int offset, int count, CancellationToken token);
 
         /// <summary>
         /// Asynchronously sends a request message and returns the response <see cref="Msg"/>.
