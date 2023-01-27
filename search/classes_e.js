@@ -1,6 +1,19 @@
 var searchData=
 [
-  ['unhandledstatuseventargs_0',['UnhandledStatusEventArgs',['../class_n_a_t_s_1_1_client_1_1_unhandled_status_event_args.html',1,'NATS::Client']]],
-  ['userjwteventargs_1',['UserJWTEventArgs',['../class_n_a_t_s_1_1_client_1_1_user_j_w_t_event_args.html',1,'NATS::Client']]],
-  ['usersignatureeventargs_2',['UserSignatureEventArgs',['../class_n_a_t_s_1_1_client_1_1_user_signature_event_args.html',1,'NATS::Client']]]
+  ['schema_0',['Schema',['../class_n_a_t_s_1_1_client_1_1_service_1_1_schema.html',1,'NATS::Client::Service']]],
+  ['schemaresponse_1',['SchemaResponse',['../class_n_a_t_s_1_1_client_1_1_service_1_1_schema_response.html',1,'NATS::Client::Service']]],
+  ['service_2',['Service',['../class_n_a_t_s_1_1_client_1_1_service_1_1_service.html',1,'NATS::Client::Service']]],
+  ['servicebuilder_3',['ServiceBuilder',['../class_n_a_t_s_1_1_client_1_1_service_1_1_service_builder.html',1,'NATS::Client::Service']]],
+  ['serviceendpoint_4',['ServiceEndpoint',['../class_n_a_t_s_1_1_client_1_1_service_1_1_service_endpoint.html',1,'NATS::Client::Service']]],
+  ['serviceexception_5',['ServiceException',['../class_n_a_t_s_1_1_client_1_1_service_1_1_service_exception.html',1,'NATS::Client::Service']]],
+  ['servicemsg_6',['ServiceMsg',['../class_n_a_t_s_1_1_client_1_1_service_1_1_service_msg.html',1,'NATS::Client::Service']]],
+  ['servicemsghandlereventargs_7',['ServiceMsgHandlerEventArgs',['../class_n_a_t_s_1_1_client_1_1_service_1_1_service_msg_handler_event_args.html',1,'NATS::Client::Service']]],
+  ['serviceresponse_8',['ServiceResponse',['../class_n_a_t_s_1_1_client_1_1_service_1_1_service_response.html',1,'NATS::Client::Service']]],
+  ['source_9',['Source',['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_source.html',1,'NATS::Client::JetStream']]],
+  ['sourcebuilder_10',['SourceBuilder',['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_source_1_1_source_builder.html',1,'NATS::Client::JetStream::Source']]],
+  ['statistics_11',['Statistics',['../class_n_a_t_s_1_1_client_1_1_statistics.html',1,'NATS::Client']]],
+  ['statsresponse_12',['StatsResponse',['../class_n_a_t_s_1_1_client_1_1_service_1_1_stats_response.html',1,'NATS::Client::Service']]],
+  ['subscribeoptions_13',['SubscribeOptions',['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_subscribe_options.html',1,'NATS::Client::JetStream']]],
+  ['subscription_14',['Subscription',['../class_n_a_t_s_1_1_client_1_1_subscription.html',1,'NATS::Client']]],
+  ['syncsubscription_15',['SyncSubscription',['../class_n_a_t_s_1_1_client_1_1_sync_subscription.html',1,'NATS::Client']]]
 ];

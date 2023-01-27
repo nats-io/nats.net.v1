@@ -96,6 +96,8 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a4913a03b4e00cefcb94d2670e0a8959f"><td class="memItemLeft" align="right" valign="top"><a id="a4913a03b4e00cefcb94d2670e0a8959f" name="a4913a03b4e00cefcb94d2670e0a8959f"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>KeyValueConfigurationBuilder</b> ()</td></tr>
 <tr class="separator:a4913a03b4e00cefcb94d2670e0a8959f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a60f453ffda82b5ee745a73b9a7a49b5a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_key_value_1_1_key_value_configuration_1_1_key_value_configuration_builder.html#a60f453ffda82b5ee745a73b9a7a49b5a">KeyValueConfigurationBuilder</a> (string name)</td></tr>
+<tr class="separator:a60f453ffda82b5ee745a73b9a7a49b5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a34f86530e034798c48cb3b25ebee5d69"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_key_value_1_1_key_value_configuration_1_1_key_value_configuration_builder.html#a34f86530e034798c48cb3b25ebee5d69">KeyValueConfigurationBuilder</a> (KeyValueConfiguration kvc)</td></tr>
 <tr class="separator:a34f86530e034798c48cb3b25ebee5d69"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab052fef5f8fdb674fd1c9311ca7fbdf2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_n_a_t_s_1_1_client_1_1_key_value_1_1_key_value_configuration_1_1_key_value_configuration_builder.html">KeyValueConfigurationBuilder</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_key_value_1_1_key_value_configuration_1_1_key_value_configuration_builder.html#ab052fef5f8fdb674fd1c9311ca7fbdf2">WithName</a> (string name)</td></tr>
@@ -138,8 +140,34 @@ Public Member Functions</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p >KeyValueConfiguration is created using a Builder. The builder supports chaining and will create a default set of options if no methods are calls. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a id="a60f453ffda82b5ee745a73b9a7a49b5a" name="a60f453ffda82b5ee745a73b9a7a49b5a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a60f453ffda82b5ee745a73b9a7a49b5a">&#9670;&nbsp;</a></span>KeyValueConfigurationBuilder() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">NATS.Client.KeyValue.KeyValueConfiguration.KeyValueConfigurationBuilder.KeyValueConfigurationBuilder </td>
+          <td>(</td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>name</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Builder accepting the object store bucket name. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">name</td><td>name of the key value bucket</td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="a34f86530e034798c48cb3b25ebee5d69" name="a34f86530e034798c48cb3b25ebee5d69"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a34f86530e034798c48cb3b25ebee5d69">&#9670;&nbsp;</a></span>KeyValueConfigurationBuilder()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a34f86530e034798c48cb3b25ebee5d69">&#9670;&nbsp;</a></span>KeyValueConfigurationBuilder() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -447,7 +475,7 @@ Public Member Functions</h2></td></tr>
 <p>Sets the name of the store. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">name</td><td>name of the store</td></tr>
+    <tr><td class="paramname">name</td><td>name of the key value bucket</td></tr>
   </table>
   </dd>
 </dl>

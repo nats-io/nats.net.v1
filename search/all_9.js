@@ -15,7 +15,7 @@ var searchData=
   ['inatsobservable_3c_20tsrc_20_3e_12',['INATSObservable&lt; TSrc &gt;',['../interface_n_a_t_s_1_1_client_1_1_rx_1_1_i_n_a_t_s_observable.html',1,'NATS::Client::Rx']]],
   ['inbytes_13',['InBytes',['../interface_n_a_t_s_1_1_client_1_1_i_statistics.html#ad9fbd5ee688b23449991d2a3abc0c7ea',1,'NATS.Client.IStatistics.InBytes()'],['../class_n_a_t_s_1_1_client_1_1_statistics.html#a05c477b2f999fe862739c7c608e83c69',1,'NATS.Client.Statistics.InBytes()']]],
   ['includehistory_14',['IncludeHistory',['../namespace_n_a_t_s_1_1_client_1_1_object_store.html#a7253e8e1d9c8f6cd4b78045516e2d169afd8b3201c11e46aa0461aab5e63a81ce',1,'NATS.Client.ObjectStore.IncludeHistory()'],['../namespace_n_a_t_s_1_1_client_1_1_key_value.html#aff02c6f7c04a14949cfd1401baf3e247afd8b3201c11e46aa0461aab5e63a81ce',1,'NATS.Client.KeyValue.IncludeHistory()']]],
-  ['info_15',['Info',['../class_n_a_t_s_1_1_client_1_1_service_1_1_info.html',1,'NATS::Client::Service']]],
+  ['inforesponse_15',['InfoResponse',['../class_n_a_t_s_1_1_client_1_1_service_1_1_info_response.html',1,'NATS::Client::Service']]],
   ['inmsgs_16',['InMsgs',['../class_n_a_t_s_1_1_client_1_1_statistics.html#a3ba3c1577ac461228e35c7dab8334a6c',1,'NATS.Client.Statistics.InMsgs()'],['../interface_n_a_t_s_1_1_client_1_1_i_statistics.html#a57a64591aa59219d379a8074479d0dbb',1,'NATS.Client.IStatistics.InMsgs()']]],
   ['inprogress_17',['InProgress',['../class_n_a_t_s_1_1_client_1_1_msg.html#a7e4bc473073e847c7359d480b1e54e3f',1,'NATS::Client::Msg']]],
   ['instance_18',['Instance',['../class_n_a_t_s_1_1_client_1_1_n_u_i_d.html#a1a90d871c96ce5d107eb7184485a5dc8',1,'NATS::Client::NUID']]],

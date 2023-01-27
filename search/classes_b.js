@@ -1,11 +1,9 @@
 var searchData=
 [
-  ['ping_0',['Ping',['../class_n_a_t_s_1_1_client_1_1_service_1_1_ping.html',1,'NATS::Client::Service']]],
-  ['placement_1',['Placement',['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_placement.html',1,'NATS::Client::JetStream']]],
-  ['placementbuilder_2',['PlacementBuilder',['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_placement_1_1_placement_builder.html',1,'NATS::Client::JetStream::Placement']]],
-  ['publishoptionsbuilder_3',['PublishOptionsBuilder',['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_publish_options_1_1_publish_options_builder.html',1,'NATS::Client::JetStream::PublishOptions']]],
-  ['pullrequestoptions_4',['PullRequestOptions',['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_pull_request_options.html',1,'NATS::Client::JetStream']]],
-  ['pullrequestoptionsbuilder_5',['PullRequestOptionsBuilder',['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_pull_request_options_1_1_pull_request_options_builder.html',1,'NATS::Client::JetStream::PullRequestOptions']]],
-  ['pullsubscribeoptionssubscribeoptionsbuilder_6',['PullSubscribeOptionsSubscribeOptionsBuilder',['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_pull_subscribe_options_1_1_pull_subscribe_options_subscribe_options_builder.html',1,'NATS::Client::JetStream::PullSubscribeOptions']]],
-  ['purgeoptionsbuilder_7',['PurgeOptionsBuilder',['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_purge_options_1_1_purge_options_builder.html',1,'NATS::Client::JetStream::PurgeOptions']]]
+  ['objectinfo_0',['ObjectInfo',['../class_n_a_t_s_1_1_client_1_1_object_store_1_1_object_info.html',1,'NATS::Client::ObjectStore']]],
+  ['objectlink_1',['ObjectLink',['../class_n_a_t_s_1_1_client_1_1_object_store_1_1_object_link.html',1,'NATS::Client::ObjectStore']]],
+  ['objectmeta_2',['ObjectMeta',['../class_n_a_t_s_1_1_client_1_1_object_store_1_1_object_meta.html',1,'NATS::Client::ObjectStore']]],
+  ['objectmetaoptions_3',['ObjectMetaOptions',['../class_n_a_t_s_1_1_client_1_1_object_store_1_1_object_meta_options.html',1,'NATS::Client::ObjectStore']]],
+  ['objectstoreconfigurationbuilder_4',['ObjectStoreConfigurationBuilder',['../class_n_a_t_s_1_1_client_1_1_object_store_1_1_object_store_configuration_1_1_object_store_configuration_builder.html',1,'NATS::Client::ObjectStore::ObjectStoreConfiguration']]],
+  ['options_5',['Options',['../class_n_a_t_s_1_1_client_1_1_options.html',1,'NATS::Client']]]
 ];
