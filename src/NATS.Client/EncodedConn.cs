@@ -164,14 +164,12 @@ namespace NATS.Client
         Deserializer defaultDeserializer = null;
 #endif
 
-        private void publishObject(string subject, string reply, object o)
+        private void PublishObjectImpl(string subject, string reply, MsgHeader headers, object o)
         {
             if (onSerialize == null)
                 throw new NATSException("IEncodedConnection.OnSerialize must be set (.NET core only).");
 
-            byte[] data = onSerialize(o);
-            int count = data != null ? data.Length : 0;
-            PublishImpl(subject, reply, null, data, 0, count, false);
+            PublishImpl(subject, reply, headers, onSerialize(o), 0, null, false);
         }
 
         /// <summary>
@@ -192,7 +190,12 @@ namespace NATS.Client
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public void Publish(string subject, Object obj)
         {
-            publishObject(subject, null, obj);
+            PublishObjectImpl(subject, null, null, obj);
+        }
+
+        public void Publish(string subject, MsgHeader headers, Object obj)
+        {
+            PublishObjectImpl(subject, null, headers, obj);
         }
 
         /// <summary>
@@ -214,7 +217,12 @@ namespace NATS.Client
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public void Publish(string subject, string reply, object obj)
         {
-            publishObject(subject, reply, obj);
+            PublishObjectImpl(subject, reply, null, obj);
+        }
+
+        public void Publish(string subject, string reply, MsgHeader headers, object obj)
+        {
+            PublishObjectImpl(subject, reply, headers, obj);
         }
 
         // Wrapper the handler for keeping a local copy of the event arguments around.
@@ -332,11 +340,9 @@ namespace NATS.Client
 
         // lower level method to serialize an object, send a request,
         // and deserialize the returning object.
-        private object requestObject(string subject, object obj, int timeout)
+        private object RequestObjectImpl(string subject, MsgHeader headers, object obj, int timeout)
         {
-            byte[] data = onSerialize(obj);
-            int count = data != null ? data.Length : 0;
-            Msg m = base.RequestSyncImpl(subject, null, data, 0, count, timeout);
+            Msg m = RequestSyncImpl(subject, headers, onSerialize(obj), 0, null, timeout);
             return onDeserialize(m.Data);
         }
 
@@ -369,7 +375,12 @@ namespace NATS.Client
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public object Request(string subject, object obj, int timeout)
         {
-            return requestObject(subject, obj, timeout);
+            return RequestObjectImpl(subject, null, obj, timeout);
+        }
+
+        public object Request(string subject, MsgHeader headers, object obj, int timeout)
+        {
+            return RequestObjectImpl(subject, headers, obj, timeout);
         }
 
         /// <summary>
@@ -397,7 +408,12 @@ namespace NATS.Client
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public object Request(string subject, object obj)
         {
-            return requestObject(subject, obj, -1);
+            return RequestObjectImpl(subject, null, obj, -1);
+        }
+
+        public object Request(string subject, MsgHeader headers, object obj)
+        {
+            return RequestObjectImpl(subject, headers, obj, -1);
         }
 
         // when our base (Connection) removes a subscriber, clean up
