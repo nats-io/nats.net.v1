@@ -2682,6 +2682,22 @@ namespace NATS.Client
             PublishImpl(subject, null, null, data, 0, null, false);
         }
 
+        /// <summary>
+        /// Publishes <paramref name="data"/> to the given <paramref name="subject"/>.
+        /// </summary>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="headers">Optional headers to publish with the message.</param>
+        /// <param name="data">An array of type <see cref="Byte"/> that contains the data to publish
+        /// to the connected NATS server.</param>
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is 
+        /// <c>null</c> or entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
+        /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
+        /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call
+        /// while publishing. See <see cref="Exception.InnerException"/> for more details.</exception>
+        /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public void Publish(string subject, MsgHeader headers, byte[] data)
         {
             PublishImpl(subject, null, headers, data, 0, null, false);
@@ -2703,6 +2719,18 @@ namespace NATS.Client
             PublishImpl(subject, null, null, data, offset, count, false);
         }
 
+        /// <summary>
+        /// Publishes a sequence of bytes from <paramref name="data"/> to the given <paramref name="subject"/>.
+        /// </summary>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="headers">Optional headers to publish with the message.</param>
+        /// <param name="data">An array of type <see cref="Byte"/> that contains the data to publish
+        /// to the connected NATS server.</param>
+        /// <param name="offset">The zero-based byte offset in <paramref name="data"/> at which to begin publishing
+        /// bytes to the subject.</param>
+        /// <param name="count">The number of bytes to be published to the subject.</param>
+        /// <seealso cref="IConnection.Publish(string, byte[])"/>
         public void Publish(string subject, MsgHeader headers, byte[] data, int offset, int count)
         {
             PublishImpl(subject, null, headers, data, offset, count, false);
@@ -2729,6 +2757,23 @@ namespace NATS.Client
             PublishImpl(subject, reply, null, data, 0, null, false);
         }
 
+        /// <summary>
+        /// Publishes <paramref name="data"/> to the given <paramref name="subject"/>.
+        /// </summary>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="reply">An optional reply subject.</param>
+        /// <param name="headers">Optional headers to publish with the message.</param>
+        /// <param name="data">An array of type <see cref="Byte"/> that contains the data to publish
+        /// to the connected NATS server.</param>
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or
+        /// entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size 
+        /// supported by the NATS server.</exception>
+        /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
+        /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call
+        /// while publishing. See <see cref="Exception.InnerException"/> for more details.</exception>
+        /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public void Publish(string subject, string reply, MsgHeader headers, byte[] data)
         {
             PublishImpl(subject, reply, headers, data, 0, null, false);
@@ -2751,6 +2796,19 @@ namespace NATS.Client
             PublishImpl(subject, reply, null, data, offset, count, false);
         }
 
+        /// <summary>
+        /// Publishes a sequence of bytes from <paramref name="data"/> to the given <paramref name="subject"/>.
+        /// </summary>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="reply">An optional reply subject.</param>
+        /// <param name="headers">Optional headers to publish with the message.</param>
+        /// <param name="data">An array of type <see cref="Byte"/> that contains the data to publish
+        /// to the connected NATS server.</param>
+        /// <param name="offset">The zero-based byte offset in <paramref name="data"/> at which to begin publishing
+        /// bytes to the subject.</param>
+        /// <param name="count">The number of bytes to be published to the subject.</param>
+        /// <seealso cref="IConnection.Publish(string, byte[])"/>
         public void Publish(string subject, string reply, MsgHeader headers, byte[] data, int offset, int count)
         {
             PublishImpl(subject, reply, headers, data, offset, count, false);
@@ -2997,6 +3055,36 @@ namespace NATS.Client
             return RequestSyncImpl(subject, null, data, 0, null, timeout);
         }
 
+        /// <summary>
+        /// Sends a request payload and returns the response <see cref="Msg"/>, or throws
+        /// <see cref="NATSTimeoutException"/> if the <paramref name="timeout"/> expires.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Request(string, byte[])"/> will create an unique inbox for this request, sharing a single
+        /// subscription for all replies to this <see cref="Connection"/> instance. However, if 
+        /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription. 
+        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
+        /// </remarks>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="headers">Optional headers to publish with the message.</param>
+        /// <param name="data">An array of type <see cref="Byte"/> that contains the request data to publish
+        /// to the connected NATS server.</param>
+        /// <param name="timeout">The number of milliseconds to wait.</param>
+        /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="timeout"/> is less than or equal to zero 
+        /// (<c>0</c>).</exception>
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or
+        /// entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size 
+        /// supported by the NATS server.</exception>
+        /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
+        /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the 
+        /// response.</exception>
+        /// <exception cref="NATSNoRespondersException">No responders are available for this request.</exception>
+        /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call
+        /// while executing the request. See <see cref="Exception.InnerException"/> for more details.</exception>
+        /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public Msg Request(string subject, MsgHeader headers, byte[] data, int timeout)
         {
             return RequestSyncImpl(subject, headers, data, 0, null, timeout);
@@ -3027,6 +3115,27 @@ namespace NATS.Client
             return RequestSyncImpl(subject, null, data, offset, count, timeout);
         }
 
+        /// <summary>
+        /// Sends a sequence of bytes as the request payload and returns the response <see cref="Msg"/>, or throws
+        /// <see cref="NATSTimeoutException"/> if the <paramref name="timeout"/> expires.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Request(string, byte[], int, int, int)"/> will create an unique inbox for this request, sharing a single
+        /// subscription for all replies to this <see cref="Connection"/> instance. However, if 
+        /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription. 
+        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
+        /// </remarks>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="headers">Optional headers to publish with the message.</param>
+        /// <param name="data">An array of type <see cref="Byte"/> that contains the request data to publish
+        /// to the connected NATS server.</param>
+        /// <param name="offset">The zero-based byte offset in <paramref name="data"/> at which to begin publishing
+        /// bytes to the subject.</param>
+        /// <param name="count">The number of bytes to be published to the subject.</param>
+        /// <param name="timeout">The number of milliseconds to wait.</param>
+        /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
+        /// <seealso cref="IConnection.Request(string, byte[])"/>
         public Msg Request(string subject, MsgHeader headers, byte[] data, int offset, int count, int timeout)
         {
             return RequestSyncImpl(subject, headers, data, offset, count, timeout);
@@ -3062,6 +3171,32 @@ namespace NATS.Client
             return RequestSyncImpl(subject, null, data, 0, null, Timeout.Infinite);
         }
 
+        /// <summary>
+        /// Sends a request payload and returns the response <see cref="Msg"/>.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Request(string, byte[])"/> will create an unique inbox for this request, sharing a single
+        /// subscription for all replies to this <see cref="Connection"/> instance. However, if 
+        /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription. 
+        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
+        /// </remarks>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="headers">Optional headers to publish with the message.</param>
+        /// <param name="data">An array of type <see cref="Byte"/> that contains the request data to publish
+        /// to the connected NATS server.</param>
+        /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or 
+        /// entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size 
+        /// supported by the NATS server.</exception>
+        /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
+        /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
+        /// response.</exception>
+        /// <exception cref="NATSNoRespondersException">No responders are available for this request.</exception>
+        /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call while
+        /// executing the request. See <see cref="Exception.InnerException"/> for more details.</exception>
+        /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public Msg Request(string subject, MsgHeader headers, byte[] data)
         {
             return RequestSyncImpl(subject, headers, data, 0, null, Timeout.Infinite);
@@ -3107,6 +3242,42 @@ namespace NATS.Client
             return RequestSyncImpl(subject, null, data, offset, count, Timeout.Infinite);
         }
 
+        /// <summary>
+        /// Sends a sequence of bytes as the request payload and returns the response <see cref="Msg"/>.
+        /// </summary>
+        /// <remarks>
+        /// <para>NATS supports two flavors of request-reply messaging: point-to-point or one-to-many. Point-to-point
+        /// involves the fastest or first to respond. In a one-to-many exchange, you set a limit on the number of 
+        /// responses the requestor may receive and instead must use a subscription (<see cref="ISubscription.AutoUnsubscribe(int)"/>).
+        /// In a request-response exchange, publish request operation publishes a message with a reply subject expecting
+        /// a response on that reply subject.</para>
+        /// <para><see cref="Request(string, byte[], int, int)"/> will create an unique inbox for this request, sharing a single
+        /// subscription for all replies to this <see cref="Connection"/> instance. However, if 
+        /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription. 
+        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.</para>
+        /// </remarks>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="headers">Optional headers to publish with the message.</param>
+        /// <param name="data">An array of type <see cref="Byte"/> that contains the request data to publish
+        /// to the connected NATS server.</param>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size 
+        /// supported by the NATS server.</exception>
+        /// <param name="offset">The zero-based byte offset in <paramref name="data"/> at which to begin publishing
+        /// bytes to the subject.</param>
+        /// <param name="count">The number of bytes to be published to the subject.</param>
+        /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or 
+        /// entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size 
+        /// supported by the NATS server.</exception>
+        /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
+        /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
+        /// response.</exception>
+        /// <exception cref="NATSNoRespondersException">No responders are available for this request.</exception>
+        /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call while
+        /// executing the request. See <see cref="Exception.InnerException"/> for more details.</exception>
+        /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public Msg Request(string subject, MsgHeader headers, byte[] data, int offset, int count)
         {
             return RequestSyncImpl(subject, headers, data, offset, count, Timeout.Infinite);
@@ -3181,7 +3352,6 @@ namespace NATS.Client
             }
             return RequestSyncImpl(message.Subject, message.header, message.Data, 0, null, Timeout.Infinite);
         }
-
 
         private Task<Msg> OldRequestAsyncImpl(string subject, MsgHeader headers, byte[] data, int offset, int? count, int timeout, CancellationToken ct)
         {
@@ -3299,6 +3469,39 @@ namespace NATS.Client
             return RequestAsyncImpl(subject, null, data, 0, null, timeout, CancellationToken.None);
         }
 
+        /// <summary>
+        /// Asynchronously sends a request payload and returns the response <see cref="Msg"/>, or throws 
+        /// <see cref="NATSTimeoutException"/> if the <paramref name="timeout"/> expires.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="RequestAsync(string, byte[], int)"/> will create an unique inbox for this request, sharing a
+        /// single subscription for all replies to this <see cref="Connection"/> instance. However, if
+        /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription.
+        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
+        /// </remarks>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="headers">Optional headers to publish with the message.</param>
+        /// <param name="data">An array of type <see cref="Byte"/> that contains the request data to publish
+        /// to the connected NATS server.</param>
+        /// <param name="timeout">The number of milliseconds to wait.</param>
+        /// <returns>A task that represents the asynchronous read operation. The value of the <see cref="Task{TResult}.Result"/>
+        /// parameter contains a <see cref="Msg"/> with the response from the NATS server.</returns>
+        /// <exception cref="ArgumentException"><paramref name="timeout"/> is less than or equal to zero 
+        /// (<c>0</c>).</exception>
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c>
+        /// or entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
+        /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
+        /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
+        /// response.</exception>
+        /// <exception cref="NATSNoRespondersException">No responders are available for this request.</exception>
+        /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call
+        /// while executing the request. See <see cref="Exception.InnerException"/> for more details.</exception>
+        /// <exception cref="OperationCanceledException">The asynchronous operation was cancelled or timed out before
+        /// it could be completed.</exception>
+        /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public Task<Msg> RequestAsync(string subject, MsgHeader headers, byte[] data, int timeout)
         {
             return RequestAsyncImpl(subject, headers, data, 0, null, timeout, CancellationToken.None);
@@ -3330,6 +3533,28 @@ namespace NATS.Client
             return RequestAsyncImpl(subject, null, data, offset, count, timeout, CancellationToken.None);
         }
 
+        /// <summary>
+        /// Asynchronously sends a sequence of bytes as the request payload and returns the response <see cref="Msg"/>, or throws 
+        /// <see cref="NATSTimeoutException"/> if the <paramref name="timeout"/> expires.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="RequestAsync(string, byte[], int, int, int)"/> will create an unique inbox for this request, sharing a
+        /// single subscription for all replies to this <see cref="Connection"/> instance. However, if
+        /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription.
+        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
+        /// </remarks>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="headers">Optional headers to publish with the message.</param>
+        /// <param name="data">An array of type <see cref="Byte"/> that contains the request data to publish
+        /// to the connected NATS server.</param>
+        /// <param name="offset">The zero-based byte offset in <paramref name="data"/> at which to begin publishing
+        /// bytes to the subject.</param>
+        /// <param name="count">The number of bytes to be published to the subject.</param>
+        /// <param name="timeout">The number of milliseconds to wait.</param>
+        /// <returns>A task that represents the asynchronous read operation. The value of the <see cref="Task{TResult}.Result"/>
+        /// parameter contains a <see cref="Msg"/> with the response from the NATS server.</returns>
+        /// <seealso cref="IConnection.Request(string, byte[])"/>
         public Task<Msg> RequestAsync(string subject, MsgHeader headers, byte[] data, int offset, int count, int timeout)
         {
             return RequestAsyncImpl(subject, headers, data, offset, count, timeout, CancellationToken.None);
@@ -3369,6 +3594,36 @@ namespace NATS.Client
             return RequestAsyncImpl(subject, null, data, 0, null, Timeout.Infinite, CancellationToken.None);
         }
 
+        /// <summary>
+        /// Asynchronously sends a request payload and returns the response <see cref="Msg"/>.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="RequestAsync(string, byte[])"/> will create an unique inbox for this request, sharing a single
+        /// subscription for all replies to this <see cref="Connection"/> instance. However, if
+        /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription. 
+        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
+        /// </remarks>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="headers">Optional headers to publish with the message.</param>
+        /// <param name="data">An array of type <see cref="Byte"/> that contains the request data to publish
+        /// to the connected NATS server.</param>
+        /// <returns>A task that represents the asynchronous read operation. The value of the 
+        /// <see cref="Task{TResult}.Result"/> parameter contains a <see cref="Msg"/> with the response from the NATS
+        /// server.</returns>
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or
+        /// entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size 
+        /// supported by the NATS server.</exception>
+        /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
+        /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
+        /// response.</exception>
+        /// <exception cref="NATSNoRespondersException">No responders are available for this request.</exception>
+        /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call while
+        /// executing the request. See <see cref="Exception.InnerException"/> for more details.</exception>
+        /// <exception cref="OperationCanceledException">The asynchronous operation was cancelled or timed out before
+        /// it could be completed.</exception>
+        /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public Task<Msg> RequestAsync(string subject, MsgHeader headers, byte[] data)
         {
             return RequestAsyncImpl(subject, headers, data, 0, null, Timeout.Infinite, CancellationToken.None);
@@ -3399,6 +3654,27 @@ namespace NATS.Client
             return RequestAsyncImpl(subject, null, data, offset, count, Timeout.Infinite, CancellationToken.None);
         }
 
+        /// <summary>
+        /// Asynchronously sends a sequence of bytes as the request payload and returns the response <see cref="Msg"/>.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="RequestAsync(string, byte[], int, int)"/> will create an unique inbox for this request, sharing a single
+        /// subscription for all replies to this <see cref="Connection"/> instance. However, if
+        /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription. 
+        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
+        /// </remarks>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="headers">Optional headers to publish with the message.</param>
+        /// <param name="data">An array of type <see cref="Byte"/> that contains the request data to publish
+        /// to the connected NATS server.</param>
+        /// <param name="offset">The zero-based byte offset in <paramref name="data"/> at which to begin publishing
+        /// bytes to the subject.</param>
+        /// <param name="count">The number of bytes to be published to the subject.</param>
+        /// <returns>A task that represents the asynchronous read operation. The value of the 
+        /// <see cref="Task{TResult}.Result"/> parameter contains a <see cref="Msg"/> with the response from the NATS
+        /// server.</returns>
+        /// <seealso cref="IConnection.Request(string, byte[])"/>
         public Task<Msg> RequestAsync(string subject, MsgHeader headers, byte[] data, int offset, int count)
         {
             return RequestAsyncImpl(subject, headers, data, offset, count, Timeout.Infinite, CancellationToken.None);
@@ -3444,6 +3720,42 @@ namespace NATS.Client
             return RequestAsyncImpl(subject, null, data, 0, null, timeout, token);
         }
 
+        /// <summary>
+        /// Asynchronously sends a request payload and returns the response <see cref="Msg"/>, or throws
+        /// <see cref="NATSTimeoutException"/> if the <paramref name="timeout"/> expires, while monitoring for 
+        /// cancellation requests.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="RequestAsync(string, byte[], int, CancellationToken)"/> will create an unique inbox for this
+        /// request, sharing a single subscription for all replies to this <see cref="Connection"/> instance. However,
+        /// if <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription.
+        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
+        /// </remarks>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="headers">Optional headers to publish with the message.</param>
+        /// <param name="data">An array of type <see cref="Byte"/> that contains the request data to publish
+        /// to the connected NATS server.</param>
+        /// <param name="timeout">The number of milliseconds to wait.</param>
+        /// <param name="token">The token to monitor for cancellation requests.</param>
+        /// <returns>A task that represents the asynchronous read operation. The value of the
+        /// <see cref="Task{TResult}.Result"/> parameter contains  a <see cref="Msg"/> with the response from the NATS
+        /// server.</returns>
+        /// <exception cref="ArgumentException"><paramref name="timeout"/> is less than or equal to zero
+        /// (<c>0</c>).</exception>
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or
+        /// entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
+        /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
+        /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
+        /// response.</exception>
+        /// <exception cref="NATSNoRespondersException">No responders are available for this request.</exception>
+        /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call while
+        /// executing the request. See <see cref="Exception.InnerException"/> for more details.</exception>
+        /// <exception cref="OperationCanceledException">The asynchronous operation was cancelled or timed out before
+        /// it could be completed.</exception>
+        /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public Task<Msg> RequestAsync(string subject, MsgHeader headers, byte[] data, int timeout, CancellationToken token)
         {
             return RequestAsyncImpl(subject, headers, data, 0, null, timeout, token);
@@ -3485,6 +3797,38 @@ namespace NATS.Client
             return RequestAsyncImpl(subject, null, data, 0, null, Timeout.Infinite, token);
         }
 
+        /// <summary>
+        /// Asynchronously sends a request payload and returns the response <see cref="Msg"/>, while monitoring for
+        /// cancellation requests.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="RequestAsync(string, byte[], CancellationToken)"/> will create an unique inbox for this request,
+        /// sharing a single subscription for all replies to this <see cref="Connection"/> instance. However, if 
+        /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription.
+        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
+        /// </remarks>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="headers">Optional headers to publish with the message.</param>
+        /// <param name="data">An array of type <see cref="Byte"/> that contains the request data to publish
+        /// to the connected NATS server.</param>
+        /// <param name="token">The token to monitor for cancellation requests.</param>
+        /// <returns>A task that represents the asynchronous read operation. The value of the
+        /// <see cref="Task{TResult}.Result"/> parameter contains a <see cref="Msg"/> with the response from the NATS 
+        /// server.</returns>
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c>
+        /// or entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size supported
+        /// by the NATS server.</exception>
+        /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
+        /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the 
+        /// response.</exception>
+        /// <exception cref="NATSNoRespondersException">No responders are available for this request.</exception>
+        /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call while 
+        /// executing the request. See <see cref="Exception.InnerException"/> for more details.</exception>
+        /// <exception cref="OperationCanceledException">The asynchronous operation was cancelled or timed out before it
+        /// could be completed.</exception>
+        /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public Task<Msg> RequestAsync(string subject, MsgHeader headers, byte[] data, CancellationToken token)
         {
             return RequestAsyncImpl(subject, headers, data, 0, null, Timeout.Infinite, token);
@@ -3517,6 +3861,29 @@ namespace NATS.Client
             return RequestAsyncImpl(subject, null, data, offset, count, Timeout.Infinite, token);
         }
 
+        /// <summary>
+        /// Asynchronously sends a sequence of bytes as the request payload and returns the response <see cref="Msg"/>,
+        /// while monitoring for cancellation requests.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="RequestAsync(string, byte[], int, int, CancellationToken)"/> will create an unique inbox for this request,
+        /// sharing a single subscription for all replies to this <see cref="Connection"/> instance. However, if 
+        /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription.
+        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
+        /// </remarks>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="headers">Optional headers to publish with the message.</param>
+        /// <param name="data">An array of type <see cref="Byte"/> that contains the request data to publish
+        /// to the connected NATS server.</param>
+        /// <param name="offset">The zero-based byte offset in <paramref name="data"/> at which to begin publishing
+        /// bytes to the subject.</param>
+        /// <param name="count">The number of bytes to be published to the subject.</param>
+        /// <param name="token">The token to monitor for cancellation requests.</param>
+        /// <returns>A task that represents the asynchronous read operation. The value of the
+        /// <see cref="Task{TResult}.Result"/> parameter contains a <see cref="Msg"/> with the response from the NATS 
+        /// server.</returns>
+        /// <seealso cref="IConnection.Request(string, byte[])"/>
         public Task<Msg> RequestAsync(string subject, MsgHeader headers, byte[] data, int offset, int count, CancellationToken token)
         {
             return RequestAsyncImpl(subject, headers, data, offset, count, Timeout.Infinite, token);

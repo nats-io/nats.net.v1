@@ -193,6 +193,23 @@ namespace NATS.Client
             PublishObjectImpl(subject, null, null, obj);
         }
 
+        /// <summary>
+        /// Publishes the serialized value of <paramref name="obj"/> to the given <paramref name="subject"/>.
+        /// </summary>
+        /// <param name="subject">The subject to publish <paramref name="obj"/> to over
+        /// the current connection.</param>
+        /// <param name="headers">Optional headers to publish with the message.</param>
+        /// <param name="obj">The <see cref="Object"/> to serialize and publish to the connected NATS server.</param>
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is 
+        /// <c>null</c> or entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException">The serialized form of <paramref name="obj"/> exceeds the maximum payload size 
+        /// supported by the NATS server.</exception>
+        /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
+        /// <exception cref="NATSException"><para><see cref="OnSerialize"/> is <c>null</c>.</para>
+        /// <para>-or-</para>
+        /// <para>There was an unexpected exception performing an internal NATS call
+        /// while publishing. See <see cref="System.Exception.InnerException"/> for more details.</para></exception>
+        /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public void Publish(string subject, MsgHeader headers, Object obj)
         {
             PublishObjectImpl(subject, null, headers, obj);
@@ -220,6 +237,24 @@ namespace NATS.Client
             PublishObjectImpl(subject, reply, null, obj);
         }
 
+        /// <summary>
+        /// Publishes the serialized value of <paramref name="obj"/> to the given <paramref name="subject"/>.
+        /// </summary>
+        /// <param name="subject">The subject to publish <paramref name="obj"/> to over
+        /// the current connection.</param>
+        /// <param name="reply">An optional reply subject.</param>
+        /// <param name="headers">Optional headers to publish with the message.</param>
+        /// <param name="obj">The <see cref="Object"/> to serialize and publish to the connected NATS server.</param>
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or
+        /// entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException">The serialized form of <paramref name="obj"/> exceeds the maximum payload size 
+        /// supported by the NATS server.</exception>
+        /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
+        /// <exception cref="NATSException"><para><see cref="OnSerialize"/> is <c>null</c>.</para>
+        /// <para>-or-</para>
+        /// <para>There was an unexpected exception performing an internal NATS call
+        /// while publishing. See <see cref="System.Exception.InnerException"/> for more details.</para></exception>
+        /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public void Publish(string subject, string reply, MsgHeader headers, object obj)
         {
             PublishObjectImpl(subject, reply, headers, obj);
@@ -378,6 +413,34 @@ namespace NATS.Client
             return RequestObjectImpl(subject, null, obj, timeout);
         }
 
+        /// <summary>
+        /// Sends a request payload and returns the deserialized response, or throws
+        /// <see cref="NATSTimeoutException"/> if the <paramref name="timeout"/> expires.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Request(string, object, int)"/> will create an unique inbox for this request, sharing a single
+        /// subscription for all replies to this <see cref="IEncodedConnection"/> instance. However, if 
+        /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription. 
+        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
+        /// </remarks>
+        /// <param name="subject">The subject to publish <paramref name="obj"/> to over
+        /// the current connection.</param>
+        /// <param name="headers">Optional headers to publish with the message.</param>
+        /// <param name="obj">The <see cref="Object"/> to serialize and publish to the connected NATS server.</param>
+        /// <param name="timeout">The number of milliseconds to wait.</param>
+        /// <returns>A <see cref="Object"/> with the deserialized response from the NATS server.</returns>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="timeout"/> is less than or equal to zero 
+        /// (<c>0</c>).</exception>
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or
+        /// entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException">The serialized form of <paramref name="obj"/> exceeds the maximum payload size 
+        /// supported by the NATS server.</exception>
+        /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
+        /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the 
+        /// response.</exception>
+        /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call
+        /// while executing the request. See <see cref="System.Exception.InnerException"/> for more details.</exception>
+        /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public object Request(string subject, MsgHeader headers, object obj, int timeout)
         {
             return RequestObjectImpl(subject, headers, obj, timeout);
@@ -411,6 +474,30 @@ namespace NATS.Client
             return RequestObjectImpl(subject, null, obj, -1);
         }
 
+        /// <summary>
+        /// Sends a request payload and returns the deserialized response.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Request(string, object)"/> will create an unique inbox for this request, sharing a single
+        /// subscription for all replies to this <see cref="IEncodedConnection"/> instance. However, if 
+        /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription. 
+        /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
+        /// </remarks>
+        /// <param name="subject">The subject to publish <paramref name="obj"/> to over
+        /// the current connection.</param>
+        /// <param name="headers">Optional headers to publish with the message.</param>
+        /// <param name="obj">The <see cref="Object"/> to serialize and publish to the connected NATS server.</param>
+        /// <returns>A <see cref="Object"/> with the deserialized response from the NATS server.</returns>
+        /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or 
+        /// entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException">The serialized form of <paramref name="obj"/> exceeds the maximum payload size 
+        /// supported by the NATS server.</exception>
+        /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
+        /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
+        /// response.</exception>
+        /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call while
+        /// executing the request. See <see cref="System.Exception.InnerException"/> for more details.</exception>
+        /// <exception cref="IOException">There was a failure while writing to the network.</exception>
         public object Request(string subject, MsgHeader headers, object obj)
         {
             return RequestObjectImpl(subject, headers, obj, -1);
