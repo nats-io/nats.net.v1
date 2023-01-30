@@ -26,7 +26,7 @@ namespace NATSExamples
     // TO RESET TEST CODE IF THERE ARE UPDATES:
     // deno cache --reload "https://raw.githubusercontent.com/nats-io/nats.deno/main/tests/helpers/service-check.ts"
 
-    abstract class CrossClientValidation
+    abstract class ServiceCrossClientValidator
     {
         public static void CrossClientValidationMain()
         {
