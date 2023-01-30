@@ -45,7 +45,7 @@ namespace NATSExamples
 
                 requesterConn.SubscribeAsync("gather", (sender, args) =>
                 {
-                    String mId = Encoding.UTF8.GetString(args.Message.Data);
+                    string mId = Encoding.UTF8.GetString(args.Message.Data);
                     Console.WriteLine($"Response gathered for message {mId} received from responderId {args.Message.Header["responderId"]}.");
                 });
 
