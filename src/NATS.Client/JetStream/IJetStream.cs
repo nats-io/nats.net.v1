@@ -53,6 +53,28 @@ namespace NATS.Client.JetStream
         /// The expected usage with string content is something like:
         /// <code>
         /// nc = Nats.connect()
+        /// IJetStream js = nc.JetStream()
+        /// MsgHeader h = new MsgHeader { { "foo", "bar" } };
+        /// js.Publish("destination", h, "message".getBytes("UTF-8"), publishOptions)
+        /// </code>
+        /// where the sender creates a byte array immediately before calling publish.
+        /// </remarks>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="headers">Optional headers to publish with the message.</param>
+        /// <param name="data">An array of type <see cref="byte"/> that contains the data to publish
+        /// to the connected NATS server.</param>
+        /// <returns>PublishAck</returns>
+        PublishAck Publish(string subject, MsgHeader headers, byte[] data);
+
+        /// <summary>
+        /// Send a message to the specified subject and waits for a response
+        /// from Jetstream. The message body will not be copied.
+        /// </summary>
+        /// <remarks>
+        /// The expected usage with string content is something like:
+        /// <code>
+        /// nc = Nats.connect()
         /// IJetStream js = nc.JetStream
         /// js.Publish("destination", "message".getBytes("UTF-8"), publishOptions)
         /// </code>
@@ -65,6 +87,29 @@ namespace NATS.Client.JetStream
         /// <param name="publishOptions">Options for publishing.</param>
         /// <returns>PublishAck</returns>
         PublishAck Publish(string subject, byte[] data, PublishOptions publishOptions);
+
+        /// <summary>
+        /// Send a message to the specified subject and waits for a response
+        /// from Jetstream. The message body will not be copied.
+        /// </summary>
+        /// <remarks>
+        /// The expected usage with string content is something like:
+        /// <code>
+        /// nc = Nats.connect()
+        /// IJetStream js = nc.JetStream
+        /// MsgHeader h = new MsgHeader { { "foo", "bar" } };
+        /// js.Publish("destination", h, "message".getBytes("UTF-8"), publishOptions)
+        /// </code>
+        /// where the sender creates a byte array immediately before calling publish.
+        /// </remarks>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="headers">Optional headers to publish with the message.</param>
+        /// <param name="data">An array of type <see cref="byte"/> that contains the data to publish
+        /// to the connected NATS server.</param>
+        /// <param name="publishOptions">Options for publishing.</param>
+        /// <returns>PublishAck</returns>
+        PublishAck Publish(string subject, MsgHeader headers, byte[] data, PublishOptions publishOptions);
 
         /// <summary>
         /// Send a message and waits for a response from JetStream.
@@ -104,6 +149,28 @@ namespace NATS.Client.JetStream
         Task<PublishAck> PublishAsync(string subject, byte[] data);
 
         /// <summary>
+        /// Asynchronously sends a message to the specified subject and waits for a response
+        /// from Jetstream. The message body will not be copied.
+        /// </summary>
+        /// <remarks>
+        /// The expected usage with string content is something like:
+        /// <code>
+        /// nc = Nats.connect()
+        /// IJetStream js = nc.JetStream()
+        /// MsgHeader h = new MsgHeader { { "foo", "bar" } };
+        /// js.Publish("destination", h, "message".getBytes("UTF-8"), publishOptions)
+        /// </code>
+        /// where the sender creates a byte array immediately before calling publish.
+        /// </remarks>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="headers">Optional headers to publish with the message.</param>
+        /// <param name="data">An array of type <see cref="byte"/> that contains the data to publish
+        /// to the connected NATS server.</param>
+        /// <returns>PublishAck</returns>
+        Task<PublishAck> PublishAsync(string subject, MsgHeader headers, byte[] data);
+
+        /// <summary>
         /// Asynchronously sends data to the specified subject. The message
         /// body will not be copied.
         /// </summary>
@@ -123,6 +190,29 @@ namespace NATS.Client.JetStream
         /// <param name="publishOptions">Options for publishing.</param>
         /// <returns>PublishAck</returns>
         Task<PublishAck> PublishAsync(string subject, byte[] data, PublishOptions publishOptions);
+
+        /// <summary>
+        /// Asynchronously sends data to the specified subject. The message
+        /// body will not be copied.
+        /// </summary>
+        /// <remarks>
+        /// The expected usage with string content is something like:
+        /// <code>
+        /// nc = Nats.connect()
+        /// IJetStream js = nc.JetStream
+        /// MsgHeader h = new MsgHeader { { "foo", "bar" } };
+        /// js.Publish("destination", h, "message".getBytes("UTF-8"), publishOptions)
+        /// </code>
+        /// where the sender creates a byte array immediately before calling publish.
+        /// </remarks>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="headers">Optional headers to publish with the message.</param>
+        /// <param name="data">An array of type <see cref="byte"/> that contains the data to publish
+        /// to the connected NATS server.</param>
+        /// <param name="publishOptions">Options for publishing.</param>
+        /// <returns>PublishAck</returns>
+        Task<PublishAck> PublishAsync(string subject, MsgHeader headers, byte[] data, PublishOptions publishOptions);
 
         /// FIX Comments for rest of async
 
