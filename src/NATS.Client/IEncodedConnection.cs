@@ -73,6 +73,8 @@ namespace NATS.Client
         /// <seealso cref="IConnection.Publish(string, byte[])"/>
         void Publish(string subject, object obj);
 
+        void Publish(string subject, MsgHeader headers, object obj);
+
         /// <summary>
         /// Publishes the serialized value of <paramref name="obj"/> to the given <paramref name="subject"/>.
         /// </summary>
@@ -82,6 +84,8 @@ namespace NATS.Client
         /// <param name="obj">The <see cref="Object"/> to serialize and publish to the connected NATS server.</param>
         /// <seealso cref="IConnection.Publish(string, byte[])"/>
         void Publish(string subject, string reply, object obj);
+
+        void Publish(string subject, string reply, MsgHeader headers, object obj);
 
         /// <summary>
         /// Sends a request payload and returns the deserialized response, or throws
@@ -101,6 +105,8 @@ namespace NATS.Client
         /// <seealso cref="IConnection.Request(string, byte[])"/>
         object Request(string subject, object obj, int timeout);
 
+        object Request(string subject, MsgHeader headers, object obj, int timeout);
+
         /// <summary>
         /// Sends a request payload and returns the deserialized response.
         /// </summary>
@@ -116,6 +122,8 @@ namespace NATS.Client
         /// <returns>A <see cref="Object"/> with the deserialized response from the NATS server.</returns>
         /// <seealso cref="IConnection.Request(string, byte[])"/>
         object Request(string subject, object obj);
+
+        object Request(string subject, MsgHeader headers, object obj);
 
         /// <summary>
         /// Creates an inbox string which can be used for directed replies from subscribers.
