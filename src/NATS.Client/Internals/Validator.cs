@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -24,9 +25,37 @@ namespace NATS.Client.Internals
             }
         }
         
+        internal static void Required<TKey, TValue>(Dictionary<TKey, TValue> d, string label) {
+            if (d == null || d.Count == 0) {
+                throw new ArgumentException($"{label} cannot be null or empty.");
+            }
+        }
+        
         internal static string ValidateSubject(string s, bool required)
         {
-            return ValidatePrintable(s, "Subject", required);
+            return ValidateSubject(s, "Subject", required, false);
+        }
+        
+        public static String ValidateSubject(String subject, String label, bool required, bool cantEndWithGt) {
+            if (EmptyAsNull(subject) == null) {
+                if (required) {
+                    throw new ArgumentException($"{label} cannot be null or empty.");
+                }
+                return null;
+            }
+            String[] segments = subject.Split('.');
+            for (int x = 0; x < segments.Length; x++) {
+                String segment = segments[x];
+                if (segment.Equals(">")) {
+                    if (cantEndWithGt || x != segments.Length - 1) { // if it can end with gt, gt must be last segment
+                        throw new ArgumentException(label + " cannot contain '>'");
+                    }
+                }
+                else if (!segment.Equals("*") && NotPrintable(segment)) {
+                    throw new ArgumentException(label + " must be printable characters only.");
+                }
+            }
+            return subject;
         }
 
         public static string ValidateReplyTo(string s, bool required) {
@@ -233,11 +262,8 @@ namespace NATS.Client.Internals
         }
 
         internal static int ValidateMaxHistory(int max) {
-            if (max < 2) {
-                return 1;
-            }
-            if (max > JetStreamConstants.MaxHistoryPerKey) {
-                throw new ArgumentException($"Max History Per Key cannot be more than {JetStreamConstants.MaxHistoryPerKey}.");
+            if (max < 1 || max > JetStreamConstants.MaxHistoryPerKey) {
+                throw new ArgumentException($"Max History Per Key cannot be from 1 to {JetStreamConstants.MaxHistoryPerKey} inclusive.");
             }
             return max;
         }

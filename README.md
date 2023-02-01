@@ -668,7 +668,7 @@ EventHandler<UserSignatureEventArgs> sigEh = (sender, args) =>
     string seed = getMyUserSeed();
 
     // Generate a NkeyPair
-    NkeyPair kp = NKeys.FromSeed(seed);
+    NkeyPair kp = Nkeys.FromSeed(seed);
 
     // Sign the nonce and return the result in the SignedNonce
     // args property.  This must be set.
@@ -951,7 +951,7 @@ See the `JetStreamPullSubNoWaitUseCases` in the JetStream samples for a detailed
 ```
 
 Another advanced version of pull specifies a maximum time to wait for the batch to fill.
-The server returns messages when either the batch is filled or the time expires. It's important to
+The server returns messages until either the batch is filled or the time expires. It's important to
 set your client's timeout to be longer than the time you've asked the server to expire in.
 You must make a pull request every time. In subsequent pulls, you will receive multiple 408 status
 messages, one for each message the previous batch was short. You can just ignore these.

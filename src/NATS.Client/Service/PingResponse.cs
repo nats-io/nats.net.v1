@@ -1,4 +1,4 @@
-﻿// Copyright 2022 The NATS Authors
+﻿// Copyright 2023 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at:
@@ -12,18 +12,26 @@
 // limitations under the License.
 
 using NATS.Client.Internals.SimpleJSON;
-using NATS.Client.JetStream;
 
 namespace NATS.Client.Service
 {
     /// <summary>
     /// SERVICE IS AN EXPERIMENTAL API SUBJECT TO CHANGE
     /// </summary>
-    public class EndpointStatsData  : JsonSerializable
+    public class PingResponse : ServiceResponse
     {
-        internal override JSONNode ToJsonNode()
+        public const string ResponseType = "io.nats.micro.v1.ping_response";
+
+        internal PingResponse(string id, string name, string version) 
+            : base(ResponseType, id, name, version) {}
+
+        internal PingResponse(string json) : this(JSON.Parse(json)) {}
+
+        internal PingResponse(JSONNode node) : base(ResponseType, node) {}
+        
+        public override JSONNode ToJsonNode()
         {
-            return new JSONObject();
+            return BaseJsonObject();
         }
     }
 }

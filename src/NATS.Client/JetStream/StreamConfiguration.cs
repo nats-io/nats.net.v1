@@ -116,7 +116,7 @@ namespace NATS.Client.JetStream
             DiscardNewPerSubject = builder._discardNewPerSubject;
         }
 
-        internal override JSONNode ToJsonNode()
+        public override JSONNode ToJsonNode()
         {
             JSONArray sources = new JSONArray();
             if (Sources != null)

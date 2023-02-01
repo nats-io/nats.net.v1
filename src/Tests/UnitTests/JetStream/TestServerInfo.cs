@@ -81,6 +81,29 @@ namespace UnitTests.JetStream
             Assert.True(info234.IsSameOrNewerThanVersion("2.3.4"));
             Assert.False(info.IsSameOrNewerThanVersion("2.3.4"));
             Assert.False(info234.IsSameOrNewerThanVersion("2.3.5-beta.2"));
+            
+            ServerInfo info2310 = new ServerInfo(_json.Replace("1.2.3", "2.3.10"));
+            ServerInfo info2103 = new ServerInfo(_json.Replace("1.2.3", "2.10.3"));
+            Assert.True(info235.IsOlderThanVersion("2.3.10"));
+            Assert.True(info235.IsOlderThanVersion("2.10.3"));
+            Assert.True(info2310.IsSameVersion("2.3.10"));
+            Assert.True(info2310.IsNewerVersionThan("2.3.5"));
+            Assert.True(info2310.IsOlderThanVersion("2.10.3"));
+            Assert.True(info2103.IsSameVersion("2.10.3"));
+            Assert.True(info2103.IsNewerVersionThan("2.3.5"));
+            Assert.True(info2103.IsNewerVersionThan("2.3.10"));
+
+            ServerInfo infoAlpha1 = new ServerInfo(_json.Replace("1.2.3", "1.0.0-alpha1"));
+            ServerInfo infoAlpha2 = new ServerInfo(_json.Replace("1.2.3", "1.0.0-alpha2"));
+            ServerInfo infoBeta1 = new ServerInfo(_json.Replace("1.2.3", "1.0.0-beta1"));
+
+            Assert.True(infoAlpha1.IsSameVersion("1.0.0-alpha1"));
+            Assert.True(infoAlpha1.IsOlderThanVersion("1.0.0-alpha2"));
+            Assert.True(infoAlpha1.IsOlderThanVersion("1.0.0-beta1"));
+            Assert.True(infoAlpha2.IsNewerVersionThan("1.0.0-alpha1"));
+            Assert.True(infoAlpha2.IsOlderThanVersion("1.0.0-beta1"));
+            Assert.True(infoBeta1.IsNewerVersionThan("1.0.0-alpha1"));
+            Assert.True(infoBeta1.IsNewerVersionThan("1.0.0-alpha2"));
         }
 
         [Fact]

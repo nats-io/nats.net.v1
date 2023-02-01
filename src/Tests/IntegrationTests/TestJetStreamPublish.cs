@@ -14,6 +14,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using NATS.Client;
 using NATS.Client.JetStream;
@@ -69,22 +70,32 @@ namespace IntegrationTests
                 pa = js.Publish(msg, po);
                 AssertPublishAck(pa, 8);
 
+                MsgHeader h = new MsgHeader { { "foo", "bar9" } };
+                pa = js.Publish(SUBJECT, h, DataBytes(9));
+                AssertPublishAck(pa, 9);
+
+                h = new MsgHeader { { "foo", "bar10" } };
+                pa = js.Publish(SUBJECT, h, DataBytes(10));
+                AssertPublishAck(pa, 10);
+
                 IJetStreamPushSyncSubscription s = js.PushSubscribeSync(SUBJECT);
-                AssertNextMessage(s, Data(1));
-                AssertNextMessage(s, Data(2));
-                AssertNextMessage(s, Data(3));
-                AssertNextMessage(s, Data(4));
-                AssertNextMessage(s, null); // 5
-                AssertNextMessage(s, null); // 6
-                AssertNextMessage(s, null); // 7
-                AssertNextMessage(s, null); // 8
+                AssertNextMessage(s, Data(1), null);
+                AssertNextMessage(s, Data(2), null);
+                AssertNextMessage(s, Data(3), null);
+                AssertNextMessage(s, Data(4), null);
+                AssertNextMessage(s, null, null); // 5
+                AssertNextMessage(s, null, null); // 6
+                AssertNextMessage(s, null, null); // 7
+                AssertNextMessage(s, null, null); // 8
+                AssertNextMessage(s, Data(9), "bar9");
+                AssertNextMessage(s, Data(10), "bar10");
 
                 // bad subject
                 Assert.Throws<NATSNoRespondersException>(() => js.Publish(Subject(999), null));
             });
         }
 
-        private void AssertNextMessage(IJetStreamPushSyncSubscription s, string data) {
+        private void AssertNextMessage(IJetStreamPushSyncSubscription s, string data, string header) {
             Msg m = s.NextMessage(DefaultTimeout);
             Assert.NotNull(m);
             if (data == null) {
@@ -93,6 +104,10 @@ namespace IntegrationTests
             }
             else {
                 Assert.Equal(data, Encoding.ASCII.GetString(m.Data));
+            }
+            if (header != null) {
+                Assert.True(m.HasHeaders);
+                Assert.Equal(header, m.Header["foo"]);
             }
         }
 
@@ -117,14 +132,34 @@ namespace IntegrationTests
                 msg = new Msg(SUBJECT, DataBytes(4));
                 tasks.Add(js.PublishAsync(msg, po));
 
-                IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(SUBJECT);
-                IList<Msg> list = ReadMessagesAck(sub);
-                AssertContainsMessagesExact(list, 4);
+                MsgHeader h = new MsgHeader { { "foo", "bar5" } };
+                tasks.Add(js.PublishAsync(SUBJECT, h, DataBytes(5)));
 
-                IList<ulong> seqnos = new List<ulong> {1, 2, 3, 4};
+                h = new MsgHeader { { "foo", "bar6" } };
+                tasks.Add(js.PublishAsync(SUBJECT, h, DataBytes(6), po));
+
+                Thread.Sleep(100); // just make sure all the publish complete
+
+                IList<ulong> seqnos = new List<ulong> {1, 2, 3, 4, 5, 6};
                 foreach (var task in tasks)
                 {
-                    AssertContainsPublishAck(task.Result, seqnos);
+                    PublishAck pa = task.Result;
+                    Assert.Equal(STREAM, pa.Stream);
+                    Assert.False(pa.Duplicate);
+                    Assert.True(seqnos.Contains(pa.Seq));
+                    seqnos.Remove(pa.Seq);
+                }
+
+                IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(SUBJECT);
+                for (int x = 1; x <= 6; x++)
+                {
+                    Msg m = ReadMessageAck(sub);
+                    Assert.NotNull(m);
+                    Assert.Equal(Data(x), Encoding.UTF8.GetString(m.Data));
+                    if (x > 4) {
+                        Assert.True(m.HasHeaders);
+                        Assert.Equal("bar" + x, m.Header["foo"]);
+                    }
                 }
 
                 AssertTaskException(js.PublishAsync(Subject(999), null));
@@ -146,32 +181,6 @@ namespace IntegrationTests
             catch (Exception e)
             {
                 Assert.NotNull(e.InnerException as NATSNoRespondersException);
-            }
-        }
-        
-        private void AssertContainsPublishAck(PublishAck pa, IList<ulong> seqnos) {
-            Assert.Equal(STREAM, pa.Stream);
-            Assert.False(pa.Duplicate);
-            Assert.True(seqnos.Contains(pa.Seq));
-            seqnos.Remove(pa.Seq);
-        }
-
-        private void AssertContainsMessagesExact(IList<Msg> list, int count)
-        {
-            Assert.Equal(4, list.Count);
-            for (int x = 1; x <= count; x++)
-            {
-                bool found = false;
-                string data = Data(x);
-                foreach (var msg in list)
-                {
-                    if (data.Equals(Encoding.ASCII.GetString(msg.Data)))
-                    {
-                        found = true;
-                        break;
-                    }
-                }
-                Assert.True(found);
             }
         }
 

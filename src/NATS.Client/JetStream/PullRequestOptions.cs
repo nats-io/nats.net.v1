@@ -44,7 +44,7 @@ namespace NATS.Client.JetStream
             IdleHeartbeat = pro._idleHeartbeat;
         }
 
-        internal override JSONNode ToJsonNode()
+        public override JSONNode ToJsonNode()
         {
             JSONObject jso = new JSONObject {[ApiConstants.Batch] = BatchSize};
             if (MaxBytes > 0)

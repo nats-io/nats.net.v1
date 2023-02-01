@@ -22,8 +22,10 @@ namespace NATS.Client.JetStream
         internal const string AllowRollupHdrs = "allow_rollup_hdrs";
         internal const string AllowDirect = "allow_direct";
         internal const string Api = "api";
+        internal const string ApiUrl = "api_url";
         internal const string AuthRequired = "auth_required";
-        internal const string AverageProcessingTime = "average_processing_time";        internal const string Backoff = "backoff";
+        internal const string AverageProcessingTime = "average_processing_time";        
+        internal const string Backoff = "backoff";
         internal const string Batch = "batch";
         internal const string Bucket = "bucket";
         internal const string Bytes = "bytes";
@@ -58,6 +60,7 @@ namespace NATS.Client.JetStream
         internal const string Duplicate = "duplicate";
         internal const string DuplicateWindow = "duplicate_window";
         internal const string DurableName = "durable_name";
+        internal const string Endpoints = "endpoints";
         internal const string ErrCode = "err_code";
         internal const string Error = "error";
         internal const string Errors = "errors";

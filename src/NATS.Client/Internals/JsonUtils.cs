@@ -19,35 +19,35 @@ using NATS.Client.JetStream;
 
 namespace NATS.Client.Internals
 {
-    internal static class JsonUtils
+    public static class JsonUtils
     {
-        internal static readonly JSONNode MinusOne = new JSONNumber(-1);
+        public static readonly JSONNode MinusOne = new JSONNumber(-1);
 
-        internal static int AsIntOrMinus1(JSONNode node, string field)
+        public static int AsIntOrMinus1(JSONNode node, string field)
         {
             JSONNode possible = node[field];
             return possible.IsNumber ? possible.AsInt : -1;
         }
 
-        internal static long AsLongOrZero(JSONNode node, string field)
+        public static long AsLongOrZero(JSONNode node, string field)
         {
             JSONNode possible = node[field];
             return possible.IsNumber ? possible.AsLong : 0;
         }
 
-        internal static long AsLongOrMinus1(JSONNode node, string field)
+        public static long AsLongOrMinus1(JSONNode node, string field)
         {
             JSONNode possible = node[field];
             return possible.IsNumber ? possible.AsLong : -1;
         }
 
-        internal static ulong AsUlongOrZero(JSONNode node, string field)
+        public static ulong AsUlongOrZero(JSONNode node, string field)
         {
             JSONNode possible = node[field];
             return possible.IsNumber ? possible.AsUlong : 0;
         }
 
-        internal static Duration AsDuration(JSONNode node, string field, Duration dflt)
+        public static Duration AsDuration(JSONNode node, string field, Duration dflt)
         {
             if (dflt == null)
             {
@@ -57,7 +57,7 @@ namespace NATS.Client.Internals
             return Duration.OfNanos(node.GetValueOrDefault(field, dflt.Nanos).AsLong);
         }
 
-        internal static List<string> StringList(JSONNode node, string field)
+        public static List<string> StringList(JSONNode node, string field)
         {
             List<string> list = new List<string>();
             foreach (var child in node[field].Children)
@@ -68,7 +68,7 @@ namespace NATS.Client.Internals
             return list;
         }
 
-        internal static List<Duration> DurationList(JSONNode node, string field)
+        public static List<Duration> DurationList(JSONNode node, string field)
         {
             List<Duration> list = new List<Duration>();
             foreach (var child in node[field].Children)
@@ -79,13 +79,13 @@ namespace NATS.Client.Internals
             return list;
         }
 
-        internal static List<string> OptionalStringList(JSONNode node, string field)
+        public static List<string> OptionalStringList(JSONNode node, string field)
         {
             List<string> list = StringList(node, field);
             return list.Count == 0 ? null : list;
         }
         
-        internal static MsgHeader AsHeaders(JSONNode node, string field)
+        public static MsgHeader AsHeaders(JSONNode node, string field)
         {
             MsgHeader h = new MsgHeader();
             JSONNode hNode = node[field];
@@ -102,11 +102,11 @@ namespace NATS.Client.Internals
             return h;
         }
         
-        internal static byte[] AsByteArrayFromBase64(JSONNode node) {
+        public static byte[] AsByteArrayFromBase64(JSONNode node) {
             return string.IsNullOrWhiteSpace(node.Value) ? null : Convert.FromBase64String(node.Value);
         }
         
-        internal static DateTime AsDate(JSONNode node)
+        public static DateTime AsDate(JSONNode node)
         {
             try
             {
@@ -117,19 +117,19 @@ namespace NATS.Client.Internals
                 return DateTime.MinValue;
             }
         }
-        
-        internal static string ToString(DateTime dt)
+
+        public static string ToString(DateTime dt)
         {
             // Assume MinValue is Unset
             return dt.Equals(DateTime.MinValue) ? null : UnsafeToString(dt);
         }
         
-        internal static string UnsafeToString(DateTime dt)
+        public static string UnsafeToString(DateTime dt)
         {
             return dt.ToUniversalTime().ToString("O");
         }
 
-        internal static JSONArray ToArray(List<string> list)
+        public static JSONArray ToArray(List<string> list)
         {
             JSONArray arr = new JSONArray();
             if (list == null)
@@ -142,13 +142,18 @@ namespace NATS.Client.Internals
             }
             return arr;
         }
- 
-        internal static byte[] SimpleMessageBody(string name, long value)
+
+        public static string ToKey(Type type)
+        {
+            return "\"" + type.Name + "\":";
+        }
+        
+        public static byte[] SimpleMessageBody(string name, long value)
         {
             return Encoding.ASCII.GetBytes("{\"" + name + "\":" + value + "}");
         }
 
-        internal static byte[] SimpleMessageBody(string name, ulong value)
+        public static byte[] SimpleMessageBody(string name, ulong value)
         {
             return Encoding.ASCII.GetBytes("{\"" + name + "\":" + value + "}");
         }
@@ -175,7 +180,7 @@ namespace NATS.Client.Internals
             }
         }
 
-        internal static void AddField(JSONObject o, string field, string value)
+        public static void AddField(JSONObject o, string field, string value)
         {
             if (!string.IsNullOrWhiteSpace(value))
             {
@@ -183,7 +188,7 @@ namespace NATS.Client.Internals
             }
         }
 
-        internal static void AddField(JSONObject o, string field, JsonSerializable value)
+        public static void AddField(JSONObject o, string field, JsonSerializable value)
         {
             if (value != null)
             {
@@ -191,15 +196,31 @@ namespace NATS.Client.Internals
             }
         }
 
-        internal static void AddField(JSONObject o, string field, DateTime? value)
+        public static void AddField(JSONObject o, string field, JSONNode value)
         {
             if (value != null)
+            {
+                o[field] = value;
+            }
+        }
+
+        public static void AddField(JSONObject o, string field, DateTime? value)
+        {
+            if (value != null && value != DateTime.MinValue)
             {
                 o[field] = UnsafeToString(value.Value);
             }
         }
 
-        internal static void AddField(JSONObject o, string field, long? value)
+        public static void AddField(JSONObject o, string field, int value)
+        {
+            if (value >= 0)
+            {
+                o[field] = value;
+            }
+        }
+
+        public static void AddField(JSONObject o, string field, int? value)
         {
             if (value != null && value >= 0)
             {
@@ -207,7 +228,55 @@ namespace NATS.Client.Internals
             }
         }
 
-        internal static void AddField(JSONObject o, string field, Duration value)
+        public static void AddField(JSONObject o, string field, long value)
+        {
+            if (value >= 0)
+            {
+                o[field] = value;
+            }
+        }
+
+        public static void AddField(JSONObject o, string field, long? value)
+        {
+            if (value != null && value >= 0)
+            {
+                o[field] = value;
+            }
+        }
+
+        public static void AddFieldWhenGtZero(JSONObject o, string field, int value)
+        {
+            if (value > 0)
+            {
+                o[field] = value;
+            }
+        }
+
+        public static void AddFieldWhenGtZero(JSONObject o, string field, int? value)
+        {
+            if (value != null && value > 0)
+            {
+                o[field] = value;
+            }
+        }
+
+        public static void AddFieldWhenGtZero(JSONObject o, string field, long value)
+        {
+            if (value > 0)
+            {
+                o[field] = value;
+            }
+        }
+
+        public static void AddFieldWhenGtZero(JSONObject o, string field, long? value)
+        {
+            if (value != null && value > 0)
+            {
+                o[field] = value;
+            }
+        }
+
+        public static void AddField(JSONObject o, string field, Duration value)
         {
             if (value != null)
             {
@@ -215,7 +284,12 @@ namespace NATS.Client.Internals
             }
         }
 
-        internal static void AddField(JSONObject o, string field, ulong? value)
+        public static void AddField(JSONObject o, string field, ulong value)
+        {
+            o[field] = value;
+        }
+
+        public static void AddField(JSONObject o, string field, ulong? value)
         {
             if (value != null)
             {
@@ -223,7 +297,15 @@ namespace NATS.Client.Internals
             }
         }
  
-        internal static void AddField(JSONObject o, string field, bool? value)
+        public static void AddField(JSONObject o, string field, bool value)
+        {
+            if (value)
+            {
+                o[field] = true;
+            }
+        }
+ 
+        public static void AddField(JSONObject o, string field, bool? value)
         {
             if (value != null && value == true)
             {
@@ -231,7 +313,7 @@ namespace NATS.Client.Internals
             }
         }
 
-        internal static void AddField(JSONObject o, string field, IList<Duration> values)
+        public static void AddField(JSONObject o, string field, IList<Duration> values)
         {
             if (values != null && values.Count > 0)
             {
@@ -244,7 +326,7 @@ namespace NATS.Client.Internals
             }
         }
 
-        internal static void AddField(JSONObject o, string field, string[] values)
+        public static void AddField(JSONObject o, string field, string[] values)
         {
             if (values != null && values.Length > 0)
             {
@@ -257,7 +339,20 @@ namespace NATS.Client.Internals
             }
         }
 
-        internal static void AddField(JSONObject o, string field, MsgHeader headers)
+        public static void AddField(JSONObject o, string field, IList<string> values)
+        {
+            if (values != null && values.Count > 0)
+            {
+                JSONArray ja = new JSONArray();
+                foreach (string v in values)
+                {
+                    ja.Add(v);
+                }
+                o[field] = ja;
+            }
+        }
+
+        public static void AddField(JSONObject o, string field, MsgHeader headers)
         {
             if (headers != null && headers.Count > 0)
             {

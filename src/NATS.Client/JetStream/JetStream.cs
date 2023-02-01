@@ -111,8 +111,14 @@ namespace NATS.Client.JetStream
         public PublishAck Publish(string subject, byte[] data) 
             => PublishSyncInternal(subject, data, null, null);
 
+        public PublishAck Publish(string subject, MsgHeader headers, byte[] data) 
+            => PublishSyncInternal(subject, data, headers, null);
+
         public PublishAck Publish(string subject, byte[] data, PublishOptions options) 
             => PublishSyncInternal(subject, data, null, options);
+
+        public PublishAck Publish(string subject, MsgHeader headers, byte[] data, PublishOptions options) 
+            => PublishSyncInternal(subject, data, headers, options);
 
         public PublishAck Publish(Msg msg)
             => PublishSyncInternal(msg.Subject, msg.Data, msg.Header, null);
@@ -123,8 +129,14 @@ namespace NATS.Client.JetStream
         public Task<PublishAck> PublishAsync(string subject, byte[] data)
             => PublishAsyncInternal(subject, data, null, null);
 
+        public Task<PublishAck> PublishAsync(string subject, MsgHeader headers, byte[] data)
+            => PublishAsyncInternal(subject, data, headers, null);
+
         public Task<PublishAck> PublishAsync(string subject, byte[] data, PublishOptions publishOptions)
             => PublishAsyncInternal(subject, data, null, publishOptions);
+
+        public Task<PublishAck> PublishAsync(string subject, MsgHeader headers, byte[] data, PublishOptions publishOptions)
+            => PublishAsyncInternal(subject, data, headers, publishOptions);
 
         public Task<PublishAck> PublishAsync(Msg msg)
             => PublishAsyncInternal(msg.Subject, msg.Data, msg.Header, null);

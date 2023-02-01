@@ -473,7 +473,7 @@ namespace IntegrationTests
                         max = 20;
                         for (int i = 0; i < max; i++)
                         {
-                            c.Publish("foo", null, null);
+                            c.Publish("foo", null, null, null);
                         }
                         Thread.Sleep(100);
                         c.Flush();

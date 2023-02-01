@@ -62,7 +62,7 @@ namespace NATS.Client.JetStream
             Tags = tags == null || tags.Count == 0 ? null : tags;
         }
 
-        internal override JSONNode ToJsonNode()
+        public override JSONNode ToJsonNode()
         {
             return new JSONObject
             {

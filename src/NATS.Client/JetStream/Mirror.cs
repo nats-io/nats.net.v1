@@ -56,7 +56,7 @@ namespace NATS.Client.JetStream
             External = External.OptionalInstance(mirrorBaseNode[ApiConstants.External]);
         }
 
-        internal override JSONNode ToJsonNode()
+        public override JSONNode ToJsonNode()
         {
             JSONObject o = new JSONObject();
             JsonUtils.AddField(o, ApiConstants.Name, Name);

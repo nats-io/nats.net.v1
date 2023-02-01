@@ -41,7 +41,7 @@ namespace NATS.Client.ObjectStore
             ChunkSize = b._chunkSize;
         }
 
-        internal override JSONNode ToJsonNode()
+        public override JSONNode ToJsonNode()
         {
             JSONObject jso = new JSONObject();
             if (Link != null)

@@ -124,21 +124,28 @@ namespace IntegrationTests
         public static IList<Msg> ReadMessagesAck(ISyncSubscription sub)
         {
             IList<Msg> messages = new List<Msg>();
-            try
+            Msg msg = ReadMessageAck(sub);
+            while (msg != null)
             {
-                Msg msg = sub.NextMessage(DefaultTimeout);
-                while (msg != null) {
-                    messages.Add(msg);
-                    msg.Ack();
-                    msg = sub.NextMessage(DefaultTimeout);
-                }
-            }
-            catch (NATSTimeoutException)
-            {
-                // it's fine, just end
+                messages.Add(msg);
+                msg = ReadMessageAck(sub);
             }
 
             return messages;
+        }
+
+        public static Msg ReadMessageAck(ISyncSubscription sub)
+        {
+            try
+            {
+                Msg m = sub.NextMessage(DefaultTimeout);
+                m.Ack();
+                return m;
+            }
+            catch (NATSTimeoutException)
+            {
+                return null;
+            }
         }
 
         public static void AssertNoMoreMessages(ISyncSubscription sub)
