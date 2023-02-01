@@ -13,6 +13,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using NATS.Client.Internals;
 using static NATS.Client.ClientExDetail;
@@ -91,7 +92,7 @@ namespace NATS.Client.JetStream
             return ProcessPublishResponse(Conn.Request(msg, timeout.Millis), options);
         }
 
-        private async Task<PublishAck> PublishAsyncInternal(string subject, byte[] data, MsgHeader hdr, PublishOptions options)
+        private async Task<PublishAck> PublishAsyncInternal(string subject, byte[] data, MsgHeader hdr, PublishOptions options, CancellationToken cancellationToken)
         {
             MsgHeader merged = MergePublishOptions(hdr, options);
             Msg msg = new Msg(subject, null, merged, data);
@@ -104,7 +105,7 @@ namespace NATS.Client.JetStream
 
             Duration timeout = options == null ? JetStreamOptions.RequestTimeout : options.StreamTimeout;
 
-            var result = await Conn.RequestAsync(msg, timeout.Millis).ConfigureAwait(false);
+            var result = await Conn.RequestAsync(msg, timeout.Millis, cancellationToken).ConfigureAwait(false);
             return ProcessPublishResponse(result, options);
         }
 
@@ -126,24 +127,24 @@ namespace NATS.Client.JetStream
         public PublishAck Publish(Msg msg, PublishOptions publishOptions)
             => PublishSyncInternal(msg.Subject, msg.Data, msg.Header, publishOptions);
 
-        public Task<PublishAck> PublishAsync(string subject, byte[] data)
-            => PublishAsyncInternal(subject, data, null, null);
+        public Task<PublishAck> PublishAsync(string subject, byte[] data, CancellationToken cancellationToken = default)
+            => PublishAsyncInternal(subject, data, null, null, cancellationToken);
 
-        public Task<PublishAck> PublishAsync(string subject, MsgHeader headers, byte[] data)
-            => PublishAsyncInternal(subject, data, headers, null);
+        public Task<PublishAck> PublishAsync(string subject, MsgHeader headers, byte[] data, CancellationToken cancellationToken = default)
+            => PublishAsyncInternal(subject, data, headers, null, cancellationToken);
 
-        public Task<PublishAck> PublishAsync(string subject, byte[] data, PublishOptions publishOptions)
-            => PublishAsyncInternal(subject, data, null, publishOptions);
+        public Task<PublishAck> PublishAsync(string subject, byte[] data, PublishOptions publishOptions, CancellationToken cancellationToken = default)
+            => PublishAsyncInternal(subject, data, null, publishOptions, cancellationToken);
 
-        public Task<PublishAck> PublishAsync(string subject, MsgHeader headers, byte[] data, PublishOptions publishOptions)
-            => PublishAsyncInternal(subject, data, headers, publishOptions);
+        public Task<PublishAck> PublishAsync(string subject, MsgHeader headers, byte[] data, PublishOptions publishOptions, CancellationToken cancellationToken = default)
+            => PublishAsyncInternal(subject, data, headers, publishOptions, cancellationToken);
 
-        public Task<PublishAck> PublishAsync(Msg msg)
-            => PublishAsyncInternal(msg.Subject, msg.Data, msg.Header, null);
+        public Task<PublishAck> PublishAsync(Msg msg, CancellationToken cancellationToken = default)
+            => PublishAsyncInternal(msg.Subject, msg.Data, msg.Header, null, cancellationToken);
 
-        public Task<PublishAck> PublishAsync(Msg msg, PublishOptions publishOptions)
-            => PublishAsyncInternal(msg.Subject, msg.Data, msg.Header, publishOptions);
-        
+        public Task<PublishAck> PublishAsync(Msg msg, PublishOptions publishOptions, CancellationToken cancellationToken = default)
+            => PublishAsyncInternal(msg.Subject, msg.Data, msg.Header, publishOptions, cancellationToken);
+
         // ----------------------------------------------------------------------------------------------------
         // Subscribe
         // ----------------------------------------------------------------------------------------------------

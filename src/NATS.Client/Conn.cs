@@ -5208,6 +5208,11 @@ namespace NATS.Client
             return new KeyValueManagement(this, options);
         }
 
+        public IKeyValueManagementAsync CreateKeyValueManagementAsyncContext(KeyValueOptions options = null)
+        {
+            return new KeyValueManagementAsync(this, options);
+        }
+
         #endregion
 
         #region ObjectStore

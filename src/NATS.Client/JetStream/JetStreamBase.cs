@@ -14,6 +14,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using NATS.Client.Internals;
 
@@ -76,9 +77,9 @@ namespace NATS.Client.JetStream
         // ----------------------------------------------------------------------------------------------------
         // Management that is also needed by regular context
         // ----------------------------------------------------------------------------------------------------
-        internal async Task<ConsumerInfo> GetConsumerInfoInternalAsync(string streamName, string consumer) {
+        internal async Task<ConsumerInfo> GetConsumerInfoInternalAsync(string streamName, string consumer, CancellationToken cancellationToken = default) {
             string subj = FormatConsumerInfoSubject(streamName, consumer);
-            var m = await RequestResponseRequiredAsync(subj, null, Timeout);
+            var m = await RequestResponseRequiredAsync(subj, null, Timeout, cancellationToken).ConfigureAwait(false);
             return new ConsumerInfo(m, true);
         }
 
@@ -131,11 +132,11 @@ namespace NATS.Client.JetStream
         }
 
 
-        internal async Task<ConsumerInfo> AddOrUpdateConsumerInternalAsync(string streamName, ConsumerConfiguration config)
+        internal async Task<ConsumerInfo> AddOrUpdateConsumerInternalAsync(string streamName, ConsumerConfiguration config, CancellationToken cancellationToken = default)
         {
             string subj = ValidateAndFormatConsumerSubject(streamName, config);
             var ccr = new ConsumerCreateRequest(streamName, config);
-            var m = await RequestResponseRequiredAsync(subj, ccr.Serialize(), Timeout);
+            var m = await RequestResponseRequiredAsync(subj, ccr.Serialize(), Timeout, cancellationToken).ConfigureAwait(false);
             return new ConsumerInfo(m, true);
         }
 
@@ -156,13 +157,13 @@ namespace NATS.Client.JetStream
             return CacheStreamInfo(streamName, sir.StreamInfo);
         }
 
-        internal async Task<StreamInfo> GetStreamInfoInternalAsync(string streamName, StreamInfoOptions options)
+        internal async Task<StreamInfo> GetStreamInfoInternalAsync(string streamName, StreamInfoOptions options, CancellationToken cancellationToken)
         {
             string subj = FormatStreamInfoSubject(streamName);
             StreamInfoReader sir = new StreamInfoReader();
             while (sir.HasMore())
             {
-                Msg resp = await RequestResponseRequiredAsync(subj, sir.NextJson(options), Timeout);
+                Msg resp = await RequestResponseRequiredAsync(subj, sir.NextJson(options), Timeout, cancellationToken).ConfigureAwait(false);
                 sir.Process(resp);
             }
             return CacheStreamInfo(streamName, sir.StreamInfo);
@@ -195,11 +196,11 @@ namespace NATS.Client.JetStream
             return snr.Strings;
         }
 
-        internal async Task<IList<string>> GetStreamNamesInternalAsync(string subjectFilter)
+        internal async Task<IList<string>> GetStreamNamesInternalAsync(string subjectFilter, CancellationToken cancellationToken = default)
         {
             StreamNamesReader snr = new StreamNamesReader();
             while (snr.HasMore()) {
-                Msg m = await RequestResponseRequiredAsync(JetStreamConstants.JsapiStreamNames, snr.NextJson(subjectFilter), Timeout);
+                Msg m = await RequestResponseRequiredAsync(JetStreamConstants.JsapiStreamNames, snr.NextJson(subjectFilter), Timeout, cancellationToken).ConfigureAwait(false);
                 snr.Process(m);
             }
             return snr.Strings;
@@ -222,9 +223,9 @@ namespace NATS.Client.JetStream
         }
 
 
-        public async Task<Msg> RequestResponseRequiredAsync(string subject, byte[] bytes, int timeout)
+        public async Task<Msg> RequestResponseRequiredAsync(string subject, byte[] bytes, int timeout, CancellationToken cancellationToken = default)
         {
-            Msg msg = await Conn.RequestAsync(PrependPrefix(subject), bytes, timeout);
+            Msg msg = await Conn.RequestAsync(PrependPrefix(subject), bytes, timeout, cancellationToken).ConfigureAwait(false);
             if (msg == null)
             {
                 throw new NATSJetStreamException("Timeout or no response waiting for NATS JetStream server");

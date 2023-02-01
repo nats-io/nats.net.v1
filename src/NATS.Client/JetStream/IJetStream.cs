@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace NATS.Client.JetStream
@@ -146,7 +147,7 @@ namespace NATS.Client.JetStream
         /// <param name="data">An array of type <see cref="byte"/> that contains the data to publish
         /// to the connected NATS server.</param>
         /// <returns>PublishAck</returns>
-        Task<PublishAck> PublishAsync(string subject, byte[] data);
+        Task<PublishAck> PublishAsync(string subject, byte[] data, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Asynchronously sends a message to the specified subject and waits for a response
@@ -168,7 +169,7 @@ namespace NATS.Client.JetStream
         /// <param name="data">An array of type <see cref="byte"/> that contains the data to publish
         /// to the connected NATS server.</param>
         /// <returns>PublishAck</returns>
-        Task<PublishAck> PublishAsync(string subject, MsgHeader headers, byte[] data);
+        Task<PublishAck> PublishAsync(string subject, MsgHeader headers, byte[] data, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Asynchronously sends data to the specified subject. The message
@@ -189,7 +190,7 @@ namespace NATS.Client.JetStream
         /// to the connected NATS server.</param>
         /// <param name="publishOptions">Options for publishing.</param>
         /// <returns>PublishAck</returns>
-        Task<PublishAck> PublishAsync(string subject, byte[] data, PublishOptions publishOptions);
+        Task<PublishAck> PublishAsync(string subject, byte[] data, PublishOptions publishOptions, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Asynchronously sends data to the specified subject. The message
@@ -212,7 +213,7 @@ namespace NATS.Client.JetStream
         /// to the connected NATS server.</param>
         /// <param name="publishOptions">Options for publishing.</param>
         /// <returns>PublishAck</returns>
-        Task<PublishAck> PublishAsync(string subject, MsgHeader headers, byte[] data, PublishOptions publishOptions);
+        Task<PublishAck> PublishAsync(string subject, MsgHeader headers, byte[] data, PublishOptions publishOptions, CancellationToken cancellationToken = default);
 
         /// FIX Comments for rest of async
 
@@ -222,7 +223,7 @@ namespace NATS.Client.JetStream
         /// <param name="message">A <see cref="Msg"/> that contains the request data to publish
         /// to the connected NATS server.  Any reply subject will be ignored.</param>
         /// <returns>A publish acknowledgement</returns>
-        Task<PublishAck> PublishAsync(Msg message);
+        Task<PublishAck> PublishAsync(Msg message, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Asynchronously sends a message to JetStream with options.
@@ -231,7 +232,7 @@ namespace NATS.Client.JetStream
         /// to the connected NATS server.  Any reply subject will be ignored.</param>
         /// <param name="publishOptions">Options for publishing.</param>
         /// <returns>A publish acknowledgement.</returns>
-        Task<PublishAck> PublishAsync(Msg message, PublishOptions publishOptions);
+        Task<PublishAck> PublishAsync(Msg message, PublishOptions publishOptions, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Creates a JetStream pull subscription.  Pull subscriptions fetch messages

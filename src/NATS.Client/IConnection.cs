@@ -1127,6 +1127,13 @@ namespace NATS.Client
         IKeyValueManagement CreateKeyValueManagementContext(KeyValueOptions options = null);
 
         /// <summary>
+        /// Gets a context for administrating Key Value buckets with async operations.
+        /// </summary>
+        /// <param name="options">Optional KeyValueOptions.</param>
+        /// <returns></returns>
+        IKeyValueManagementAsync CreateKeyValueManagementAsyncContext(KeyValueOptions options = null);
+
+        /// <summary>
         /// Gets a context for a Object Store 
         /// OBJECT STORE IMPLEMENTATION IS EXPERIMENTAL AND SUBJECT TO CHANGE.
         /// </summary>

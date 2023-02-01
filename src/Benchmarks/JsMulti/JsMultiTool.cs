@@ -179,7 +179,7 @@ namespace JsMulti
             }
             else
             {
-                publisher = js.PublishAsync;
+                publisher = (s, p) => js.PublishAsync(s, p);
             }
 
             string label = ctx.GetLabel(id);
