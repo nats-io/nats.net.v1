@@ -141,7 +141,7 @@ namespace UnitTests
             Assert.Equal(NatsConstants.NoRespondersCode, hsr.Status.Code);
             Assert.Equal("hello", hsr.Status.Message);
                 
-            // Test inline status with kv pair.
+            // Test empty header
             hb = Encoding.ASCII.GetBytes("NATS/1.0\r\n\r\n");
             hsr = new HeaderStatusReader(hb, hb.Length);
             Assert.True(hsr.Header.Count == 0);
