@@ -140,6 +140,12 @@ namespace UnitTests
             Assert.Equal("bar", hsr.Header["foo"]);
             Assert.Equal(NatsConstants.NoRespondersCode, hsr.Status.Code);
             Assert.Equal("hello", hsr.Status.Message);
+                
+            // Test empty header
+            hb = Encoding.ASCII.GetBytes("NATS/1.0\r\n\r\n");
+            hsr = new HeaderStatusReader(hb, hb.Length);
+            Assert.True(hsr.Header.Count == 0);
+            Assert.Null(hsr.Status);;
         }
 
         [Fact]
@@ -288,14 +294,11 @@ namespace UnitTests
             shouldNATSInvalidHeaderException("NATS/1.0 \r\n");
             shouldNATSInvalidHeaderException("NATS/1.0X\r\n");
             shouldNATSInvalidHeaderException("NATS/1.0 \r\n\r\n");
-            shouldNATSInvalidHeaderException("NATS/1.0\r\n\r\n");
             shouldNATSInvalidHeaderException("NATS/1.0\r\n");
             shouldNATSInvalidHeaderException("NATS/1.0 503\r");
             shouldNATSInvalidHeaderException("NATS/1.0 503\n");
             shouldNATSInvalidHeaderException("NATS/1.0 FiveOhThree\r\n");
             shouldNATSInvalidHeaderException("NATS/1.0\r\n");
-            shouldNATSInvalidHeaderException("NATS/1.0\r\n\r\n");
-            shouldNATSInvalidHeaderException("NATS/1.0\r\n\r\n\r\n");
             shouldNATSInvalidHeaderException("NATS/1.0\r\nk1:v1");
             shouldNATSInvalidHeaderException("NATS/1.0\r\nk1:v1\r\n");
             shouldNATSInvalidHeaderException("NATS/1.0\r\nk1:v1\r\r\n");

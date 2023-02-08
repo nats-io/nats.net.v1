@@ -85,10 +85,6 @@ namespace NATS.Client.Internals
                 peek = new Token(serialized, len, tCrlf, null);
             }
             peek.MustBe(TokenType.Crlf);
-
-            if (_header.Count == 0 && !hadStatus) {
-                throw new NATSInvalidHeaderException(InvalidHeaderComposition);
-            }
         }
 
         private Token InitStatus(byte[] serialized, int len, Token tSpace) {
