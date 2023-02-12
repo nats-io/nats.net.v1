@@ -12,14 +12,23 @@
 // limitations under the License.
 
 using System;
+using System.Text;
 using NATS.Client;
 using Xunit;
+using Xunit.Abstractions;
 using static NATS.Client.Defaults;
 
 namespace UnitTests
 {
     public class TestOptions
     {
+        private readonly ITestOutputHelper output;
+
+        public TestOptions(ITestOutputHelper output)
+        {
+            this.output = output;
+        }
+        
         private Options GetDefaultOptions() => ConnectionFactory.GetDefaultOptions();
 
         [Fact]
@@ -154,5 +163,80 @@ namespace UnitTests
             DefaultFlowControlProcessedEventHandler().Invoke(null, fcpea);
             DefaultFlowControlProcessedEventHandler().Invoke(null, null);
         }
+
+        [Fact]
+        public void TestNatsUri() {
+            string[] schemes = new string[] { "nats", "tls", null, "unk"};
+            bool[] secures = new bool[]     { false,  true,  false, false};
+            string[] hosts = new string[]{"host", "1.2.3.4", null};
+            bool[] ips = new bool[]      {false,  true,      false};
+            int?[] ports = new int?[]{1122, null};
+            string[] userInfos = new string[]{null, "u:p"};
+            for (int e = 0; e < schemes.Length; e++) {
+                string scheme = schemes[e];
+                for (int h = 0; h < hosts.Length; h++) {
+                    string host = hosts[h];
+                    foreach (int? port in ports) {
+                        foreach (string userInfo in userInfos) {
+                            StringBuilder sb = new StringBuilder();
+                            string expectedScheme;
+                            if (scheme == null) {
+                                expectedScheme = "nats";
+                            }
+                            else {
+                                expectedScheme = scheme;
+                                sb.Append(scheme).Append("://");
+                            }
+                            if (userInfo != null) {
+                                sb.Append(userInfo).Append("@");
+                            }
+                            if (host != null) {
+                                sb.Append(host);
+                            }
+                            int expectedPort;
+                            if (port == null) {
+                                expectedPort = NatsUri.DefaultPort;
+                            }
+                            else {
+                                expectedPort = port.Value;
+                                sb.Append(":").Append(expectedPort);
+                            }
+                            if (host == null || "unk".Equals(scheme)) {
+                                Assert.Throws<UriFormatException>(() => new NatsUri(sb.ToString()));
+                            }
+                            else {
+                                NatsUri uri1 = new NatsUri(sb.ToString());
+                                NatsUri uri2 = new NatsUri(uri1.Uri);
+                                Assert.Equal(uri1, uri2);
+                                checkCreate(uri1, secures[e], ips[h], expectedScheme, host, expectedPort, userInfo);
+                                checkCreate(uri2, secures[e], ips[h], expectedScheme, host, expectedPort, userInfo);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private static void checkCreate(NatsUri uri, bool secure, bool ip, string scheme, string host, int port, string userInfo) {
+            Assert.Equal(secure, uri.Secure);
+            Assert.Equal(scheme, uri.Scheme);
+            Assert.Equal(host, uri.Host);
+            Assert.Equal(port, uri.Port);
+            if (userInfo == null)
+            {
+             Assert.Empty(uri.UserInfo);   
+            }
+            else
+            {
+                Assert.Equal(userInfo, uri.UserInfo);
+            }
+            string expectedUri = userInfo == null
+                ? scheme + "://" + host + ":" + port
+                : scheme + "://" + userInfo + "@" + host + ":" + port;
+            Assert.Equal(expectedUri, uri.ToString());
+            Assert.Equal(expectedUri.Replace(host, "rehost"), uri.ReHost("rehost").ToString());
+            Assert.Equal(ip, uri.HostIsIpAddress);
+        }
+
     }
 }

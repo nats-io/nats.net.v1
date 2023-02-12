@@ -19,121 +19,89 @@ namespace UnitTests
 {
     public class TestServerPool
     {
-        static readonly string[] startUrls = {
+        static readonly string[] BootstrapUrls = {
+            "nats://a:4222", "nats://b:4222", "nats://c:4222", "nats://d:4222"
+        };
+        static readonly NatsUri[] BootstrapUrlWrappers = {
+            new NatsUri(BootstrapUrls[0]),  new NatsUri(BootstrapUrls[1]), new NatsUri(BootstrapUrls[2]), new NatsUri(BootstrapUrls[3])
+        };
+        
+        static readonly string[] DiscoveredUrls = {
             "nats://a:4222", "nats://b:4222", "nats://c:4222", "nats://d:4222",
-            "nats://e:4222", "nats://f:4222", "nats://g:4222", "nats://h:4222",
-            "nats://i:4222", "nats://j:4222", "nats://k:4222", "nats://l:4222"
+            "nats://z:4222", "nats://y:4222", "nats://x:4222", "nats://w:4222"
+        };
+        static readonly NatsUri[] DiscoveredUrlWrappers = {
+            new NatsUri(DiscoveredUrls[0]),  new NatsUri(DiscoveredUrls[1]), new NatsUri(DiscoveredUrls[2]), new NatsUri(DiscoveredUrls[3]),
+            new NatsUri(DiscoveredUrls[4]),  new NatsUri(DiscoveredUrls[5]), new NatsUri(DiscoveredUrls[6]), new NatsUri(DiscoveredUrls[7])
         };
 
         [Fact]
         public void TestDefault()
         {
-            var sp = new ServerPool();
-            sp.Setup(new Options());
-
-            var poolUrls = sp.GetServerList(false);
-            Assert.True(poolUrls.Length == 1);
-            Assert.Equal(poolUrls[0], Defaults.Url);
+            IServerListProvider slp = new NatsServerListProvider(Opts(true, true, true, false));
+            var poolUrls = slp.GetServersToTry(null);
+            Assert.True(poolUrls.Count == 1);
+            Assert.Equal(poolUrls[0].ToString(), Defaults.Url);
         }
 
         [Fact]
-        public void TestBasicRandomization()
+        public void TestRandomization()
         {
-            var opts = ConnectionFactory.GetDefaultOptions();
-            opts.Servers = startUrls;
-
-            for (int i = 0; i < 10; i++)
-            {
-                var sp = new ServerPool();
-                sp.Setup(opts);
-
-                var poolUrls = sp.GetServerList(false);
-                Assert.True(poolUrls.Length == startUrls.Length);
-                Assert.False(poolUrls.SequenceEqual(startUrls));
-            }
-        }
-
-        [Fact]
-        public void TestIdempotency()
-        {
-            var opts = ConnectionFactory.GetDefaultOptions();
-            opts.Servers = startUrls;
-
-            var sp = new ServerPool();
-            sp.Setup(opts);
-
-            var poolUrls = sp.GetServerList(false);
-            Assert.True(poolUrls.Length == startUrls.Length);
-
-            sp.Add(startUrls, true);
-            Assert.True(poolUrls.Length == startUrls.Length);
+            IServerListProvider slp = new NatsServerListProvider(Opts(true, true, true, false));
+            var poolUrls = slp.GetServersToTry(null);
+            Assert.True(poolUrls.Count == 4);
+            Assert.False(poolUrls.SequenceEqual(BootstrapUrlWrappers));
         }
 
         [Fact]
         public void TestNoRandomization()
         {
-            var opts = ConnectionFactory.GetDefaultOptions();
-            opts.Servers = startUrls;
-            opts.NoRandomize = true;
-
-            for (int i = 0; i < 10; i++)
-            {
-                var sp = new ServerPool();
-                sp.Setup(opts);
-
-                var poolUrls = sp.GetServerList(false);
-                Assert.True(poolUrls.Length == startUrls.Length);
-                Assert.True(poolUrls.SequenceEqual(startUrls));
-            }
-
-            for (int i = 0; i < 10; i++)
-            {
-                var sp = new ServerPool();
-                sp.Setup(opts);
-
-                var poolUrls = sp.GetServerList(false);
-                Assert.True(poolUrls.Length == startUrls.Length);
-                Assert.True(poolUrls.SequenceEqual(startUrls));
-
-                string[] impUrls = {
-                    "nats://impA:4222", "nats://impB:4222", "nats://impC:4222", "nats://impD:4222",
-                    "nats://impE:4222", "nats://impF:4222", "nats://impG:4222", "nats://impH:4222",
-                };
-                sp.Add(impUrls, true);
-                Assert.True(poolUrls.SequenceEqual(startUrls));
-            }
+            IServerListProvider slp = new NatsServerListProvider(Opts(true, false, true, false));
+            var poolUrls = slp.GetServersToTry(null);
+            Assert.True(poolUrls.Count == 4);
+            Assert.False(poolUrls.SequenceEqual(BootstrapUrlWrappers));
         }
 
         [Fact]
-        public void TestImplicitRandomization()
+        public void TestIncludeDiscovered()
         {
-            var opts = ConnectionFactory.GetDefaultOptions();
-            opts.Url = null;
-            opts.Servers = startUrls;
+            IServerListProvider slp = new NatsServerListProvider(Opts(true, true, true, false));
+            var poolUrls = slp.GetServersToTry(null);
+            Assert.True(poolUrls.Count == 8);
+        }
 
-            var sp = new ServerPool();
-            sp.Setup(opts);
+        [Fact]
+        public void TestIgnoreDiscovered()
+        {
+            IServerListProvider slp = new NatsServerListProvider(Opts(true, true, false, false));
+            var poolUrls = slp.GetServersToTry(null);
+            Assert.True(poolUrls.Count == 4);
+        }
 
-            string[] impUrls = {
-                "nats://impA:4222", "nats://impB:4222", "nats://impC:4222", "nats://impD:4222",
-                "nats://impE:4222", "nats://impF:4222", "nats://impG:4222", "nats://impH:4222",
-            };
-            sp.Add(impUrls, true);
+        [Fact]
+        public void TestCurrentServer()
+        {
+            IServerListProvider slp = new NatsServerListProvider(Opts(true, true, true, false));
+            var poolUrls = slp.GetServersToTry(BootstrapUrlWrappers[0]);
+            Assert.True(poolUrls.Count == 4);
+            Assert.Equal(BootstrapUrlWrappers[0], poolUrls[3]);
+            Assert.Equal(BootstrapUrlWrappers[1], poolUrls[0]);
+            Assert.Equal(BootstrapUrlWrappers[2], poolUrls[1]);
+            Assert.Equal(BootstrapUrlWrappers[3], poolUrls[2]);
+        }
 
-            var poolUrls = sp.GetServerList(false);
-
-            // Ensure length is OK and that we have randomized the list
-            Assert.True(poolUrls.Length == startUrls.Length + impUrls.Length);
-            Assert.False(poolUrls.SequenceEqual(startUrls));
-
-            // Ensure implicit urls aren't placed at the end of the list.
-            int i;
-            for (i = 0; i < startUrls.Length; i++)
+        private static Options Opts(bool bootstrap, bool randomize, bool includeDiscoveredServers,
+            bool resolveHostnames)
+        {
+            Options opt = new Options();
+            if (bootstrap)
             {
-                if (poolUrls[i].Contains("imp"))
-                    break;
+                opt.Servers = BootstrapUrls;
             }
-            Assert.True(i != startUrls.Length);
+            opt.NoRandomize = !randomize;
+            opt.IgnoreDiscoveredServers = !includeDiscoveredServers;
+            // opt.ResolveHostnames = resolveHostnames;
+            return opt;
         }
     }
 }

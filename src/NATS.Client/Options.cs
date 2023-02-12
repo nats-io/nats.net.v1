@@ -26,9 +26,9 @@ namespace NATS.Client
     /// </summary>
     public sealed class Options
     {
-        string url = null;
         string[] servers = null;
         bool noRandomize = false;
+        bool resolveHostnames = false;
         string name = null;
         bool verbose = false;
         bool pedantic = false;
@@ -37,7 +37,7 @@ namespace NATS.Client
         bool allowReconnect = true;
         bool noEcho = false;
         bool ignoreDiscoveredServers = false;
-        IServerProvider serverProvider = null;
+        IServerListProvider _serverListProvider = null;
         int maxReconnect  = Defaults.MaxReconnect;
         int reconnectWait = Defaults.ReconnectWait;
         int pingInterval  = Defaults.PingInterval;
@@ -269,9 +269,10 @@ namespace NATS.Client
             maxReconnect = o.maxReconnect;
             name = o.name;
             noRandomize = o.noRandomize;
+            resolveHostnames = o.resolveHostnames;
             noEcho = o.noEcho;
             ignoreDiscoveredServers = o.ignoreDiscoveredServers;
-            serverProvider = o.serverProvider;
+            _serverListProvider = o._serverListProvider;
             pedantic = o.pedantic;
             reconnectBufSize = o.reconnectBufSize;
             useOldRequestStyle = o.useOldRequestStyle;
@@ -289,11 +290,6 @@ namespace NATS.Client
             subscriberDeliveryTaskCount = o.subscriberDeliveryTaskCount;
             subscriptionBatchSize = o.subscriptionBatchSize;
             customInboxPrefix = o.customInboxPrefix;
-
-            if (o.url != null)
-            {
-                processUrlString(o.url);
-            }
             
             if (o.servers != null)
             {
@@ -313,9 +309,10 @@ namespace NATS.Client
             CheckCertificateRevocation = o.CheckCertificateRevocation;
         }
 
-        static readonly string[] protcolSep = new[] {"://"};
+        static readonly string[] ProtcolSep = new[] {"://"};
         
-        static string ensureProperUrl(string url)
+        // TODO SFF call NatsUri instead
+        static string EnsureProperUrl(string url)
         {
             if (string.IsNullOrWhiteSpace(url))
                 return url;
@@ -326,25 +323,23 @@ namespace NATS.Client
             if (url.StartsWith("tls://", StringComparison.OrdinalIgnoreCase))
                 return url;
 
-            var parts = url.Split(protcolSep, StringSplitOptions.RemoveEmptyEntries);
+            var parts = url.Split(ProtcolSep, StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length == 1)
                 return $"nats://{url}";
             
             throw new ArgumentException("Allowed protocols are: 'nats://, tls://'.");
         }
 
-        internal void processUrlString(string url)
+        internal void SetUrls(string url)
         {
             if (url == null)
-                return;
-
-            string[] urls = url.Split(',');
-            for (int i = 0; i < urls.Length; i++)
             {
-                urls[i] = urls[i].Trim();
+                servers = null;
             }
-
-            servers = urls;
+            else
+            {
+                Servers = url.Split(',');
+            }
         }
 
         /// <summary>
@@ -353,13 +348,11 @@ namespace NATS.Client
         /// <remarks>
         /// This may contain username/password information.
         /// </remarks>
+        [Obsolete("This property is obsolete, string[] Servers should be used instead.", false)]
         public string Url
         {
-            get { return url; }
-            set
-            {
-                url = ensureProperUrl(value);
-            }
+            get => servers == null || servers.Length == 0 ? null : servers[0];
+            set => SetUrls(value);
         }
 
         /// <summary>
@@ -370,10 +363,10 @@ namespace NATS.Client
         /// </remarks>
         public string[] Servers
         {
-            get { return servers; }
+            get => servers;
             set
             {
-                servers = value?.Select(ensureProperUrl).ToArray();
+                servers = value?.Select(EnsureProperUrl).ToArray();
             }
         }
 
@@ -383,10 +376,22 @@ namespace NATS.Client
         /// </summary>
         public bool NoRandomize
         {
-            get { return noRandomize;  }
-            set { noRandomize = value;  }
+            get => noRandomize;
+            set => noRandomize = value;
         }
 
+        // TODO ResolveHostnames System.Net.Dns not available, ask for help
+/*        
+        /// <summary>
+        /// Gets or sets a value indicating whether or not the hostnames should be resolved
+        /// when getting the servers for connecting. 
+        /// </summary>
+        public bool ResolveHostnames
+        {
+            get => resolveHostnames;
+            set => resolveHostnames = value;
+        }
+*/        
         /// <summary>
         /// Gets or sets the name of this client.
         /// </summary>
@@ -694,8 +699,7 @@ namespace NATS.Client
         /// </summary>
         public bool IgnoreDiscoveredServers { get => ignoreDiscoveredServers; set => ignoreDiscoveredServers = value; }
 
-        // TODO After connect adr is complete
-        internal IServerProvider ServerProvider { get => serverProvider; set => serverProvider = value; }
+        public IServerListProvider ServerListProvider { get => _serverListProvider; set => _serverListProvider = value; }
         
         private void appendEventHandler(StringBuilder sb, String name, Delegate eh)
         {
@@ -817,9 +821,11 @@ namespace NATS.Client
             sb.AppendFormat("MaxReconnect={0};", MaxReconnect);
             sb.AppendFormat("Name={0};", Name != null ? Name : "null");
             sb.AppendFormat("NoRandomize={0};", NoRandomize);
+            // TODO ResolveHostnames System.Net.Dns not available, ask for help
+            // sb.AppendFormat("ResolveHostnames={0};", ResolveHostnames);
             sb.AppendFormat("NoEcho={0};", NoEcho);
             sb.AppendFormat("IgnoreDiscoveredServers={0};", ignoreDiscoveredServers);
-            sb.AppendFormat("ServerProvider={0};", serverProvider == null ? "Default" : "Provided");
+            sb.AppendFormat("ServerProvider={0};", _serverListProvider == null ? "Default" : "Provided");
             sb.AppendFormat("Pedantic={0};", Pedantic);
             sb.AppendFormat("UseOldRequestStyle={0};", UseOldRequestStyle);
             sb.AppendFormat("PingInterval={0};", PingInterval);

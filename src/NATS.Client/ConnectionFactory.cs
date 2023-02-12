@@ -44,7 +44,7 @@ namespace NATS.Client
         public IConnection CreateConnection(string url)
         {
             Options opts = new Options();
-            opts.processUrlString(url);
+            opts.SetUrls(url);
             return CreateConnection(opts);
         }
 
@@ -71,7 +71,7 @@ namespace NATS.Client
                 throw new ArgumentException("Invalid credentials path", "credentials");
 
             Options opts = new Options();
-            opts.processUrlString(url);
+            opts.SetUrls(url);
             opts.SetUserCredentials(credentialsPath);
             return CreateConnection(opts);
         }
@@ -101,7 +101,7 @@ namespace NATS.Client
                 throw new ArgumentException("Invalid nkey path", "privateNkey");
 
             Options opts = new Options();
-            opts.processUrlString(url);
+            opts.SetUrls(url);
             opts.SetUserCredentials(jwt, privateNkey);
             return CreateConnection(opts);
         }
@@ -133,7 +133,7 @@ namespace NATS.Client
         public IConnection CreateSecureConnection(string url)
         {
             Options opts = new Options();
-            opts.processUrlString(url);
+            opts.SetUrls(url);
             opts.Secure = true;
             return CreateConnection(opts);
         }
@@ -168,7 +168,7 @@ namespace NATS.Client
             Connection nc = new Connection(opts);
             try
             {
-                nc.connect();
+                nc.Connect();
             }
             catch (Exception)
             {
@@ -211,7 +211,7 @@ namespace NATS.Client
         public IEncodedConnection CreateEncodedConnection(string url)
         {
             Options opts = new Options();
-            opts.processUrlString(url);
+            opts.SetUrls(url);
             return CreateEncodedConnection(opts);
         }
 
@@ -230,7 +230,7 @@ namespace NATS.Client
             EncodedConnection nc = new EncodedConnection(opts);
             try
             {
-                nc.connect();
+                nc.Connect();
             }
             catch (Exception)
             {

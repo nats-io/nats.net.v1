@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
@@ -118,8 +119,8 @@ namespace NATS.Client
 
         private readonly List<Thread> wg = new List<Thread>(2);
 
-        private Uri             url     = null;
-        private IServerProvider srvProvider;
+        private NatsUri _currentServerUri;
+        private readonly IServerListProvider _srvListProvider;
 
         // we have a buffered reader for writing, and reading.
         // This is for both performance, and having to work around
@@ -361,7 +362,7 @@ namespace NATS.Client
 
             string        hostName  = null;
 
-            internal void open(Srv s, int timeoutMillis)
+            internal void open(NatsUri s, int timeoutMillis)
             {
                 lock (mu)
                 {
@@ -382,7 +383,7 @@ namespace NATS.Client
                     if (Socket.OSSupportsIPv6)
                         client.Client.DualMode = true;
 
-                    var task = client.ConnectAsync(s.Url.Host, s.Url.Port);
+                    var task = client.ConnectAsync(s.Uri.Host, s.Uri.Port);
                     // avoid raising TaskScheduler.UnobservedTaskException if the timeout occurs first
                     task.ContinueWith(t => GC.KeepAlive(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
                     if (!task.Wait(TimeSpan.FromMilliseconds(timeoutMillis)))
@@ -400,7 +401,7 @@ namespace NATS.Client
                     stream = client.GetStream();
 
                     // save off the hostname
-                    hostName = s.Url.Host;
+                    hostName = s.Uri.Host;
                 }
             }
 
@@ -727,7 +728,7 @@ namespace NATS.Client
                 opts.ReconnectDelayHandler = DefaultReconnectDelayHandler;
             }
 
-            srvProvider = opts.ServerProvider ?? new ServerPool();
+            _srvListProvider = opts.ServerListProvider ?? new NatsServerListProvider(opts);
                 
             PING_P_BYTES = Encoding.UTF8.GetBytes(IC.pingProto);
             PING_P_BYTES_LEN = PING_P_BYTES.Length;
@@ -791,33 +792,10 @@ namespace NATS.Client
             }
         }
 
-        // Will assign the correct server to the Conn.Url
-        private void pickServer()
-        {
-            url = null;
-
-            Srv s = srvProvider.First();
-            if (s == null)
-                throw new NATSNoServersException("Unable to choose server; no servers available.");
-
-            url = s.Url;
-        }
-
-
-        // Create the server pool using the options given.
-        // We will place a Url option first, followed by any
-        // Server Options. We will randomize the server pool unless
-        // the NoRandomize flag is set.
-        private void setupServerPool()
-        {
-            srvProvider.Setup(Opts);
-            pickServer();
-        }
-
         // createConn will connect to the server and wrap the appropriate
         // bufio structures. It will do the right thing when an existing
         // connection is in place.
-        private bool createConn(Srv s, out Exception ex)
+        private bool createConn(NatsUri s, out Exception ex)
         {
             ex = null;
             try
@@ -993,7 +971,7 @@ namespace NATS.Client
                     if (status != ConnState.CONNECTED)
                         return null;
 
-                    return url.OriginalString;
+                    return _currentServerUri.ToString();
                 }
             }
         }
@@ -1059,6 +1037,13 @@ namespace NATS.Client
         /// Gets the server info for this connection to which this instance
         /// is connected, otherwise <c>null</c>.
         /// </summary>
+        [Obsolete("This property is obsolete. Use ServerInfo instead.", false)]
+        public ServerInfo currentServer => ServerInfo;
+        
+        /// <summary>
+        /// Gets the server info for this connection to which this instance
+        /// is connected, otherwise <c>null</c>.
+        /// </summary>
         public ServerInfo ServerInfo
         {
             get
@@ -1084,7 +1069,12 @@ namespace NATS.Client
             {
                 lock (mu)
                 {
-                    return srvProvider.GetServerList(false);
+                    IList<string> list = new List<string>(opts.Servers);
+                    foreach (string s in ServerInfo.ConnectURLs)
+                    {
+                        list.Add(s);
+                    }
+                    return list.ToArray();
                 }
             }
         }
@@ -1102,14 +1092,14 @@ namespace NATS.Client
             {
                 lock (mu)
                 {
-                    return srvProvider.GetServerList(true);
+                    return ServerInfo.ConnectURLs.ToArray();
                 }
             }
         }
 
         // Process a connected connection and initialize properly.
         // Caller must lock.
-        private void processConnectInit(Srv s)
+        private void processConnectInit(NatsUri s)
         {
             this.status = ConnState.CONNECTING;
 
@@ -1146,9 +1136,9 @@ namespace NATS.Client
                 TaskScheduler.Default);
         }
 
-        internal bool connect(Srv s, out Exception exToThrow)
+        internal bool _connect(NatsUri nuri, out Exception exToThrow)
         {
-            url = s.Url;
+            _currentServerUri = nuri;
             try
             {
                 exToThrow = null;
@@ -1161,10 +1151,12 @@ namespace NATS.Client
                     {
                         lock (mu)
                         {
-                            if (!createConn(s, out exToThrow))
+                            if (!createConn(nuri, out exToThrow))
+                            {
                                 return false;
+                            }
 
-                            processConnectInit(s);
+                            processConnectInit(nuri);
                             exToThrow = null;
 
                             return true;
@@ -1175,7 +1167,7 @@ namespace NATS.Client
                         if (!ex.IsAuthorizationViolationError() && !ex.IsAuthenticationExpiredError())
                             throw;
 
-                        ScheduleErrorEvent(s, ex);
+                        ScheduleErrorEvent(nuri, ex);
 
                         if (natsAuthEx == null || !natsAuthEx.Message.Equals(ex.Message, StringComparison.OrdinalIgnoreCase))
                         {
@@ -1193,7 +1185,7 @@ namespace NATS.Client
                 close(ConnState.DISCONNECTED, false, ex);
                 lock (mu)
                 {
-                    url = null;
+                    _currentServerUri = null;
                 }
             }
 
@@ -1206,22 +1198,29 @@ namespace NATS.Client
                 opts.AsyncErrorEventHandlerOrDefault(sender, new ErrEventArgs(this, subscription, ex.Message)));
         }
 
-        internal void connect()
+        internal void Connect()
         {
-            Exception exToThrow = null;
+            IList<NatsUri> nuris = _srvListProvider.GetServersToTry(null);
+            if (nuris.Count == 0)
+            {
+                throw new NATSNoServersException("Unable to choose server; no servers available.");
+            }
 
-            setupServerPool();
-
-            srvProvider.ConnectToAServer(srv => connect(srv, out exToThrow));
+            Exception exToThrow;
+            _connect(nuris[0], out exToThrow);
 
             lock (mu)
             {
                 if (status != ConnState.CONNECTED)
                 {
                     if (exToThrow is NATSException)
+                    {
                         throw exToThrow;
+                    }                    
                     if (exToThrow != null)
+                    {
                         throw new NATSConnectionException("Failed to connect", exToThrow);
+                    }                    
                     throw new NATSNoServersException("Unable to connect to a server.");
                 }
             }
@@ -1230,7 +1229,7 @@ namespace NATS.Client
         // This will check to see if the connection should be
         // secure. This can be dictated from either end and should
         // only be called after the INIT protocol has been received.
-        private void checkForSecure(Srv s)
+        private void CheckForSecure(NatsUri s)
         {
             // Check to see if we need to engage TLS
             // Check for mismatch in setups
@@ -1256,7 +1255,7 @@ namespace NATS.Client
         // processExpectedInfo will look for the expected first INFO message
         // sent when a connection is established. The lock should be held entering.
         // Caller must lock.
-        private void processExpectedInfo(Srv s)
+        private void processExpectedInfo(NatsUri s)
         {
             Control c;
 
@@ -1282,7 +1281,7 @@ namespace NATS.Client
 
             // do not notify listeners of server changes when we process the first INFO message
             processInfo(c.args, false);
-            checkForSecure(s);
+            CheckForSecure(s);
         }
 
         internal void SendUnsub(long sid, int max)
@@ -1323,7 +1322,7 @@ namespace NATS.Client
         // applicable. The lock is assumed to be held upon entering.
         private string connectProto()
         {
-            string u = url.UserInfo;
+            string u = _currentServerUri.UserInfo;
             string user = null;
             string pass = null;
             string token = null;
@@ -1558,7 +1557,7 @@ namespace NATS.Client
 
 
         // Sleep guarantees no exceptions will be thrown out of it.
-        private static void sleep(int millis)
+        private static void _sleep(int millis)
         {
             try
             {
@@ -1584,8 +1583,7 @@ namespace NATS.Client
 
         private void DefaultReconnectDelayHandler(object o, ReconnectDelayEventArgs args)
         {
-            int jitter = srvProvider.HasSecureServer() ? random.Next(opts.ReconnectJitterTLS) : random.Next(opts.ReconnectJitter);
-
+            int jitter = _currentServerUri != null && _currentServerUri.Secure ? random.Next(opts.ReconnectJitterTLS) : random.Next(opts.ReconnectJitter);
             Thread.Sleep(opts.ReconnectWait + jitter);
         }
 
@@ -1618,23 +1616,40 @@ namespace NATS.Client
 
                 scheduleConnEvent(Opts.DisconnectedEventHandlerOrDefault, errorForHandler);
 
-                Srv cur;
-                int wlf = 0;
-                bool doSleep = false;
-                while ((cur = srvProvider.SelectNextServer(Opts.MaxReconnect)) != null)
+                
+                int maxTries = Opts.MaxReconnect;
+                IList<NatsUri> nuris = _srvListProvider.GetServersToTry(_currentServerUri);
+
+                int tries = -1;
+                int nidx = nuris.Count;
+                NatsUri NextServerToTry()
                 {
-                    // check if we've been through the list
-                    if (cur == srvProvider.First())
+                    if (nidx >= nuris.Count)
                     {
-                        doSleep = (wlf != 0);
-                        wlf++;
+                        ++tries;
+                        nidx = 0;
                     }
                     else
                     {
-                        doSleep = false;
+                        nidx++;
+                    }
+                    return tries > maxTries ? null : nuris[nidx]; 
+                }
+                
+                NatsUri cur;
+                while ((cur = NextServerToTry()) != null)
+                {
+                    // first server after first tries loop
+                    if (tries > 1 && nidx == 0)
+                    {
+                        try
+                        {
+                            opts?.ReconnectDelayHandler(this, new ReconnectDelayEventArgs(tries));
+                        }
+                        catch { /* ignored */ } 
                     }
 
-                    url = cur.Url;
+                    _currentServerUri = cur;
                     lastEx = null;
 
                     if (lockWasTaken)
@@ -1643,27 +1658,20 @@ namespace NATS.Client
                         lockWasTaken = false;
                     }
 
-                    if (doSleep)
-                    {
-                        try
-                        {
-                            opts?.ReconnectDelayHandler(this, new ReconnectDelayEventArgs(wlf - 1));
-                        }
-                        catch { } // swallow user exceptions
-                    }
-
                     Monitor.Enter(mu, ref lockWasTaken);
 
                     if (isClosed())
+                    {
                         break;
-
-                    cur.Reconnects++;
+                    }
 
                     try
                     {
                         // try to create a new connection
                         if(!createConn(cur, out lastEx))
+                        {
                             continue;
+                        }
                     }
                     catch (Exception)
                     {
@@ -1701,9 +1709,6 @@ namespace NATS.Client
 
                     // We are reconnected.
                     stats.reconnects++;
-                    cur.DidConnect = true;
-                    cur.Reconnects = 0;
-                    srvProvider.SetCurrentServer(cur);
                     status = ConnState.CONNECTED;
 
                     scheduleConnEvent(Opts.ReconnectedEventHandlerOrDefault);
@@ -2369,7 +2374,7 @@ namespace NATS.Client
             }
 
             info = new ServerInfo(json);
-            var serverAdded = srvProvider.AcceptDiscoveredServers(info.ConnectURLs);
+            var serverAdded = _srvListProvider.AcceptDiscoveredServers(info.ConnectURLs);
             if (notify && serverAdded)
             {
                 scheduleConnEvent(opts.ServerDiscoveredEventHandlerOrDefault);
@@ -5100,7 +5105,7 @@ namespace NATS.Client
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("{");
-            sb.AppendFormat("url={0};", url);
+            sb.AppendFormat("url={0};", _currentServerUri);
             sb.AppendFormat("info={0};", info);
             sb.AppendFormat("status={0};", status);
             sb.Append("Subscriptions={");

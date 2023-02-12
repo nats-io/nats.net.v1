@@ -59,7 +59,7 @@ namespace JsMulti.Shared
             + "\n  action, connection strategy, ack policy, pull type"
             + "\nInput numbers can be formatted for easier viewing. For instance, ten thousand"
             + "\n  can be any of these: 10000 10,000 10.000 10_000"
-            + "\nUse tls:// or opentls:// in the server url to require tls, via the Default SSLContext"
+            + "\nUse tls:// in the server url to require tls"
             + "\n---------------------------------------------------------------------------------------"
         ;
     }
