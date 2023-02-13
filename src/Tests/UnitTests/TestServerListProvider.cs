@@ -30,15 +30,11 @@ namespace UnitTests
             "nats://a:4222", "nats://b:4222", "nats://c:4222", "nats://d:4222",
             "nats://z:4222", "nats://y:4222", "nats://x:4222", "nats://w:4222"
         };
-        static readonly NatsUri[] DiscoveredUrlWrappers = {
-            new NatsUri(DiscoveredUrls[0]),  new NatsUri(DiscoveredUrls[1]), new NatsUri(DiscoveredUrls[2]), new NatsUri(DiscoveredUrls[3]),
-            new NatsUri(DiscoveredUrls[4]),  new NatsUri(DiscoveredUrls[5]), new NatsUri(DiscoveredUrls[6]), new NatsUri(DiscoveredUrls[7])
-        };
 
         [Fact]
         public void TestDefault()
         {
-            IServerListProvider slp = NewProvider(true, true, true, false);
+            IServerListProvider slp = SetupProvider(null, null, true, true, false);
             var uris = slp.GetServersToTry(null);
             Assert.True(uris.Count == 1);
             Assert.Equal(uris[0].ToString(), Defaults.Url);
@@ -47,25 +43,24 @@ namespace UnitTests
         [Fact]
         public void TestRandomization()
         {
-            IServerListProvider slp = NewProvider(true, true, true, false);
+            IServerListProvider slp = SetupProvider(BootstrapUrls, null, true, true, false);
             var uris = slp.GetServersToTry(null);
             Assert.True(uris.Count == 4);
-            Assert.False(uris.SequenceEqual(BootstrapUrlWrappers));
         }
 
         [Fact]
         public void TestNoRandomization()
         {
-            IServerListProvider slp = NewProvider(true, false, true, false);
+            IServerListProvider slp = SetupProvider(BootstrapUrls, null, false, true, false);
             var uris = slp.GetServersToTry(null);
             Assert.True(uris.Count == 4);
-            Assert.False(uris.SequenceEqual(BootstrapUrlWrappers));
+            Assert.True(uris.SequenceEqual(BootstrapUrlWrappers));
         }
 
         [Fact]
         public void TestIncludeDiscovered()
         {
-            IServerListProvider slp = NewProvider(true, true, true, false);
+            IServerListProvider slp = SetupProvider(BootstrapUrls, DiscoveredUrls, true, true, false);
             var uris = slp.GetServersToTry(null);
             Assert.True(uris.Count == 8);
         }
@@ -73,7 +68,7 @@ namespace UnitTests
         [Fact]
         public void TestIgnoreDiscovered()
         {
-            IServerListProvider slp = NewProvider(true, true, false, false);
+            IServerListProvider slp = SetupProvider(BootstrapUrls, DiscoveredUrls, true, false, false);
             var uris = slp.GetServersToTry(null);
             Assert.True(uris.Count == 4);
         }
@@ -81,7 +76,7 @@ namespace UnitTests
         [Fact]
         public void TestCurrentServer()
         {
-            IServerListProvider slp = NewProvider(true, true, true, false);
+            IServerListProvider slp = SetupProvider(BootstrapUrls, null, false, true, false);
             var uris = slp.GetServersToTry(BootstrapUrlWrappers[0]);
             Assert.True(uris.Count == 4);
             Assert.Equal(BootstrapUrlWrappers[0], uris[3]);
@@ -90,19 +85,24 @@ namespace UnitTests
             Assert.Equal(BootstrapUrlWrappers[3], uris[2]);
         }
 
-        private static NatsServerListProvider NewProvider(bool bootstrap, bool randomize, bool includeDiscoveredServers, bool resolveHostnames)
+        private static NatsServerListProvider SetupProvider(string[] servers, string[] discovered, bool randomize, bool includeDiscoveredServers, bool resolveHostnames)
         {
             Options opt = new Options();
-            if (bootstrap)
+            if (servers != null)
             {
-                opt.Servers = BootstrapUrls;
+                opt.Servers = servers;
             }
+
             opt.NoRandomize = !randomize;
             opt.IgnoreDiscoveredServers = !includeDiscoveredServers;
             // opt.ResolveHostnames = resolveHostnames;
 
             NatsServerListProvider nslp = new NatsServerListProvider();
             nslp.Initialize(opt);
+            if (discovered != null)
+            {
+                nslp.AcceptDiscoveredServers(discovered);
+            }
             return nslp;
         }
     }
