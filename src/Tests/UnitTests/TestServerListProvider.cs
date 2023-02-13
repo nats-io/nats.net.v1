@@ -17,7 +17,7 @@ using Xunit;
 
 namespace UnitTests
 {
-    public class TestServerPool
+    public class TestServerListProvider
     {
         static readonly string[] BootstrapUrls = {
             "nats://a:4222", "nats://b:4222", "nats://c:4222", "nats://d:4222"
@@ -38,60 +38,59 @@ namespace UnitTests
         [Fact]
         public void TestDefault()
         {
-            IServerListProvider slp = new NatsServerListProvider(Opts(true, true, true, false));
-            var poolUrls = slp.GetServersToTry(null);
-            Assert.True(poolUrls.Count == 1);
-            Assert.Equal(poolUrls[0].ToString(), Defaults.Url);
+            IServerListProvider slp = NewProvider(true, true, true, false);
+            var uris = slp.GetServersToTry(null);
+            Assert.True(uris.Count == 1);
+            Assert.Equal(uris[0].ToString(), Defaults.Url);
         }
 
         [Fact]
         public void TestRandomization()
         {
-            IServerListProvider slp = new NatsServerListProvider(Opts(true, true, true, false));
-            var poolUrls = slp.GetServersToTry(null);
-            Assert.True(poolUrls.Count == 4);
-            Assert.False(poolUrls.SequenceEqual(BootstrapUrlWrappers));
+            IServerListProvider slp = NewProvider(true, true, true, false);
+            var uris = slp.GetServersToTry(null);
+            Assert.True(uris.Count == 4);
+            Assert.False(uris.SequenceEqual(BootstrapUrlWrappers));
         }
 
         [Fact]
         public void TestNoRandomization()
         {
-            IServerListProvider slp = new NatsServerListProvider(Opts(true, false, true, false));
-            var poolUrls = slp.GetServersToTry(null);
-            Assert.True(poolUrls.Count == 4);
-            Assert.False(poolUrls.SequenceEqual(BootstrapUrlWrappers));
+            IServerListProvider slp = NewProvider(true, false, true, false);
+            var uris = slp.GetServersToTry(null);
+            Assert.True(uris.Count == 4);
+            Assert.False(uris.SequenceEqual(BootstrapUrlWrappers));
         }
 
         [Fact]
         public void TestIncludeDiscovered()
         {
-            IServerListProvider slp = new NatsServerListProvider(Opts(true, true, true, false));
-            var poolUrls = slp.GetServersToTry(null);
-            Assert.True(poolUrls.Count == 8);
+            IServerListProvider slp = NewProvider(true, true, true, false);
+            var uris = slp.GetServersToTry(null);
+            Assert.True(uris.Count == 8);
         }
 
         [Fact]
         public void TestIgnoreDiscovered()
         {
-            IServerListProvider slp = new NatsServerListProvider(Opts(true, true, false, false));
-            var poolUrls = slp.GetServersToTry(null);
-            Assert.True(poolUrls.Count == 4);
+            IServerListProvider slp = NewProvider(true, true, false, false);
+            var uris = slp.GetServersToTry(null);
+            Assert.True(uris.Count == 4);
         }
 
         [Fact]
         public void TestCurrentServer()
         {
-            IServerListProvider slp = new NatsServerListProvider(Opts(true, true, true, false));
-            var poolUrls = slp.GetServersToTry(BootstrapUrlWrappers[0]);
-            Assert.True(poolUrls.Count == 4);
-            Assert.Equal(BootstrapUrlWrappers[0], poolUrls[3]);
-            Assert.Equal(BootstrapUrlWrappers[1], poolUrls[0]);
-            Assert.Equal(BootstrapUrlWrappers[2], poolUrls[1]);
-            Assert.Equal(BootstrapUrlWrappers[3], poolUrls[2]);
+            IServerListProvider slp = NewProvider(true, true, true, false);
+            var uris = slp.GetServersToTry(BootstrapUrlWrappers[0]);
+            Assert.True(uris.Count == 4);
+            Assert.Equal(BootstrapUrlWrappers[0], uris[3]);
+            Assert.Equal(BootstrapUrlWrappers[1], uris[0]);
+            Assert.Equal(BootstrapUrlWrappers[2], uris[1]);
+            Assert.Equal(BootstrapUrlWrappers[3], uris[2]);
         }
 
-        private static Options Opts(bool bootstrap, bool randomize, bool includeDiscoveredServers,
-            bool resolveHostnames)
+        private static NatsServerListProvider NewProvider(bool bootstrap, bool randomize, bool includeDiscoveredServers, bool resolveHostnames)
         {
             Options opt = new Options();
             if (bootstrap)
@@ -101,7 +100,10 @@ namespace UnitTests
             opt.NoRandomize = !randomize;
             opt.IgnoreDiscoveredServers = !includeDiscoveredServers;
             // opt.ResolveHostnames = resolveHostnames;
-            return opt;
+
+            NatsServerListProvider nslp = new NatsServerListProvider();
+            nslp.Initialize(opt);
+            return nslp;
         }
     }
 }

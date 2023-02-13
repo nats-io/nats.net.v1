@@ -31,11 +31,18 @@ namespace IntegrationTests
         /*
             private readonly ITestOutputHelper output;
 
-            public TestMyClass(ITestOutputHelper output, BlahSuiteContext context) : base(context)
+            public TestMySuite(ITestOutputHelper output, BlahSuiteContext context) : base(context)
             {
 	            this.output = output;
 	            Console.SetOut(new ConsoleWriter(output));
             }
+            
+            private readonly ITestOutputHelper output;
+            public TestMyClass(ITestOutputHelper output)
+            {
+                this.output = output;
+            }
+
         */
 
         protected TSuiteContext Context { get; }

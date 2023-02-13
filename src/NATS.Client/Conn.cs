@@ -728,7 +728,8 @@ namespace NATS.Client
                 opts.ReconnectDelayHandler = DefaultReconnectDelayHandler;
             }
 
-            _srvListProvider = opts.ServerListProvider ?? new NatsServerListProvider(opts);
+            _srvListProvider = opts.ServerListProvider ?? new NatsServerListProvider();
+            _srvListProvider.Initialize(opts);
                 
             PING_P_BYTES = Encoding.UTF8.GetBytes(IC.pingProto);
             PING_P_BYTES_LEN = PING_P_BYTES.Length;

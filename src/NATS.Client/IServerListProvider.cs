@@ -17,6 +17,7 @@ namespace NATS.Client
 {
     public interface IServerListProvider
     {
+        void Initialize(Options opts);
         bool AcceptDiscoveredServers(string[] discoveredServers);
         IList<NatsUri> GetServersToTry(NatsUri lastConnectedServer);
     }

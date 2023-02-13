@@ -44,7 +44,7 @@ namespace NATS.Client
         public IConnection CreateConnection(string url)
         {
             Options opts = new Options();
-            opts.SetUrls(url);
+            opts.SetServers(url);
             return CreateConnection(opts);
         }
 
@@ -71,7 +71,7 @@ namespace NATS.Client
                 throw new ArgumentException("Invalid credentials path", "credentials");
 
             Options opts = new Options();
-            opts.SetUrls(url);
+            opts.SetServers(url);
             opts.SetUserCredentials(credentialsPath);
             return CreateConnection(opts);
         }
@@ -101,7 +101,7 @@ namespace NATS.Client
                 throw new ArgumentException("Invalid nkey path", "privateNkey");
 
             Options opts = new Options();
-            opts.SetUrls(url);
+            opts.SetServers(url);
             opts.SetUserCredentials(jwt, privateNkey);
             return CreateConnection(opts);
         }
@@ -133,7 +133,7 @@ namespace NATS.Client
         public IConnection CreateSecureConnection(string url)
         {
             Options opts = new Options();
-            opts.SetUrls(url);
+            opts.SetServers(url);
             opts.Secure = true;
             return CreateConnection(opts);
         }
@@ -211,7 +211,7 @@ namespace NATS.Client
         public IEncodedConnection CreateEncodedConnection(string url)
         {
             Options opts = new Options();
-            opts.SetUrls(url);
+            opts.SetServers(url);
             return CreateEncodedConnection(opts);
         }
 

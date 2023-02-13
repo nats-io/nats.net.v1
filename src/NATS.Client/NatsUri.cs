@@ -163,8 +163,16 @@ namespace NATS.Client
             {
                 workUrl = NatsUri.NatsProtocolSlashSlash + workUrl;
             }
-            else if (!KnownProtocols.Contains(workUri.Scheme)) {
-                throw new UriFormatException(UnsupportedScheme);
+            else
+            {
+                string lower = workUri.Scheme.ToLower();
+                if (!KnownProtocols.Contains(lower)) {
+                    throw new UriFormatException(UnsupportedScheme);
+                }
+                if (!workUri.Scheme.Equals(lower))
+                {
+                    workUrl = workUrl.Replace($"{workUri.Scheme}://", $"{lower}://");
+                }
             }
 
             if (workUri.Port == NatsUri.NoPort) {

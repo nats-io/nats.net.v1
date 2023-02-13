@@ -19,13 +19,21 @@ namespace NATS.Client
 {
     internal sealed class NatsServerListProvider : IServerListProvider
     {
-        private readonly Options _options;
+        private Options _options;
         private readonly List<NatsUri> _list;
 
-        public NatsServerListProvider(Options options)
+        public NatsServerListProvider()
         {
-            this._options = options;
             _list = new List<NatsUri>();
+        }
+
+        public void Initialize(Options opts)
+        {
+            this._options = opts;
+            foreach (NatsUri nuri in opts.ServerUris)
+            {
+                _list.Add(nuri);
+            }
         }
 
         public bool AcceptDiscoveredServers(string[] discoveredServers)

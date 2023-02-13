@@ -15,20 +15,12 @@ using System;
 using System.Text;
 using NATS.Client;
 using Xunit;
-using Xunit.Abstractions;
 using static NATS.Client.Defaults;
 
 namespace UnitTests
 {
     public class TestOptions
     {
-        private readonly ITestOutputHelper output;
-
-        public TestOptions(ITestOutputHelper output)
-        {
-            this.output = output;
-        }
-        
         private Options GetDefaultOptions() => ConnectionFactory.GetDefaultOptions();
 
         [Fact]
@@ -166,8 +158,8 @@ namespace UnitTests
 
         [Fact]
         public void TestNatsUri() {
-            string[] schemes = new string[] { "nats", "tls", null, "unk"};
-            bool[] secures = new bool[]     { false,  true,  false, false};
+            string[] schemes = new string[] { "nats", "NATS", "tls", null, "unk"};
+            bool[] secures = new bool[]     { false,   false,  true,  false, false};
             string[] hosts = new string[]{"host", "1.2.3.4", null};
             bool[] ips = new bool[]      {false,  true,      false};
             int?[] ports = new int?[]{1122, null};
@@ -217,19 +209,22 @@ namespace UnitTests
             }
         }
 
-        private static void checkCreate(NatsUri uri, bool secure, bool ip, string scheme, string host, int port, string userInfo) {
+        private static void checkCreate(NatsUri uri, bool secure, bool ip, string scheme, string host, int port, string userInfo)
+        {
+            scheme = scheme.ToLower();
             Assert.Equal(secure, uri.Secure);
             Assert.Equal(scheme, uri.Scheme);
             Assert.Equal(host, uri.Host);
             Assert.Equal(port, uri.Port);
             if (userInfo == null)
             {
-             Assert.Empty(uri.UserInfo);   
+                Assert.Empty(uri.UserInfo);
             }
             else
             {
                 Assert.Equal(userInfo, uri.UserInfo);
             }
+
             string expectedUri = userInfo == null
                 ? scheme + "://" + host + ":" + port
                 : scheme + "://" + userInfo + "@" + host + ":" + port;
@@ -237,6 +232,5 @@ namespace UnitTests
             Assert.Equal(expectedUri.Replace(host, "rehost"), uri.ReHost("rehost").ToString());
             Assert.Equal(ip, uri.HostIsIpAddress);
         }
-
     }
 }
