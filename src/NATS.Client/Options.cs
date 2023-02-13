@@ -322,7 +322,7 @@ namespace NATS.Client
                 {
                     for (int i = 0; i < urls.Length; i++)
                     {
-                        _serverUris[i] = new NatsUri(urls[i]);
+                        _serverUris.Add(new NatsUri(urls[i]));
                     }
                 }
             }
@@ -348,10 +348,9 @@ namespace NATS.Client
         /// <remarks>
         /// This may contain username/password information.
         /// </remarks>
-        [ObsoleteAttribute("This property is obsolete, IList<NatsUri> ServerUris or string[] Servers should be used instead.", false)]
         public string Url
         {
-            get => _serverUris[0].ToString(); // serverNatsUris will never be null or empty
+            get => string.Join(",", _serverUris); // serverNatsUris will never be null or empty
             set => SetServers(value == null ? null : value.Split(','));
         }
 

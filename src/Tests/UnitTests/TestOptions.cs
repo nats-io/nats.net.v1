@@ -15,6 +15,7 @@ using System;
 using System.Text;
 using NATS.Client;
 using Xunit;
+using Xunit.Abstractions;
 using static NATS.Client.Defaults;
 
 namespace UnitTests
@@ -22,6 +23,11 @@ namespace UnitTests
     public class TestOptions
     {
         private Options GetDefaultOptions() => ConnectionFactory.GetDefaultOptions();
+        private readonly ITestOutputHelper output;
+        public TestOptions(ITestOutputHelper output)
+        {
+            this.output = output;
+        }
 
         [Fact]
         public void TestBadOptionTimeoutConnect()
@@ -93,7 +99,7 @@ namespace UnitTests
         }
         
         [Fact]
-        public void TestBadServers()
+        public void TestUnsupportedProtocols()
         {
             var invalidServers = new[]
             {
@@ -115,10 +121,21 @@ namespace UnitTests
                 "NATS://localhost:4222",
                 "tls://localhost:4222",
                 "TLS://localhost:4222",
-                "",
-                "null",
+                null,
+                ""
             };
             GetDefaultOptions().Servers = okServers;
+        }
+
+        [Fact]
+        public void TestUrlAndServersGetAndSet()
+        {
+            Options o = ConnectionFactory.GetDefaultOptions();
+            Assert.Equal(Defaults.Url, o.Url);
+            Assert.Equal(1, o.Servers.Length);
+            Assert.Equal(Defaults.Url, o.Servers[0]);
+            Assert.Equal(1, o.ServerUris.Count);
+            Assert.Equal(new NatsUri(Defaults.Url), o.ServerUris[0]);
         }
 
         [Fact]
@@ -158,7 +175,7 @@ namespace UnitTests
 
         [Fact]
         public void TestNatsUri() {
-            string[] schemes = new string[] { "nats", "NATS", "tls", null, "unk"};
+            string[] schemes = new string[] { "nats", "NATS", "tls",  null,  "unsupported"};
             bool[] secures = new bool[]     { false,   false,  true,  false, false};
             string[] hosts = new string[]{"host", "1.2.3.4", null};
             bool[] ips = new bool[]      {false,  true,      false};
@@ -182,9 +199,18 @@ namespace UnitTests
                             if (userInfo != null) {
                                 sb.Append(userInfo).Append("@");
                             }
-                            if (host != null) {
+
+                            string expectedHost;
+                            if (host == null)
+                            {
+                                expectedHost = "localhost";
+                            }
+                            else
+                            {
+                                expectedHost = host;
                                 sb.Append(host);
                             }
+
                             int expectedPort;
                             if (port == null) {
                                 expectedPort = NatsUri.DefaultPort;
@@ -193,15 +219,17 @@ namespace UnitTests
                                 expectedPort = port.Value;
                                 sb.Append(":").Append(expectedPort);
                             }
-                            if (host == null || "unk".Equals(scheme)) {
-                                Assert.Throws<UriFormatException>(() => new NatsUri(sb.ToString()));
+
+                            String url = sb.ToString();
+                            if ("unsupported".Equals(scheme) || (host == null && !string.IsNullOrEmpty(url))) {
+                                Assert.Throws<UriFormatException>(() => new NatsUri(url));
                             }
                             else {
                                 NatsUri uri1 = new NatsUri(sb.ToString());
                                 NatsUri uri2 = new NatsUri(uri1.Uri);
                                 Assert.Equal(uri1, uri2);
-                                checkCreate(uri1, secures[e], ips[h], expectedScheme, host, expectedPort, userInfo);
-                                checkCreate(uri2, secures[e], ips[h], expectedScheme, host, expectedPort, userInfo);
+                                checkCreate(uri1, secures[e], ips[h], expectedScheme, expectedHost, expectedPort, userInfo);
+                                checkCreate(uri2, secures[e], ips[h], expectedScheme, expectedHost, expectedPort, userInfo);
                             }
                         }
                     }

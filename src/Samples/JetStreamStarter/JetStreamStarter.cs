@@ -7,27 +7,34 @@ namespace NATSExamples
     {
         static void Main(string[] args)
         {
-            Test("1.2.3.4:4222");
-            Test("host:4222");
-            Test("nats://");
-            Test("host");
-            Test("1.2.3.4");
-            Test("x:p@host");
-            Test("x:p@1.2.3.4");
-            Test("x:4222");
-            Test("x:p@host:4222");
-            Test("x:p@1.2.3.4:4222");
-            Test("nats://u:p@");
-            Test("nats://:4222");
-            Test("nats://u:p@:4222");
-            Test("nats://host");
-            Test("nats://u:p@host");
-            Test("nats://1.2.3.4");
-            Test("nats://u:p@1.2.3.4");
-            Test("nats://host:4222");
-            Test("nats://u:p@host:4222");
-            Test("nats://1.2.3.4:4222");
-            Test("nats://u:p@1.2.3.4:4222");
+            Options o = ConnectionFactory.GetDefaultOptions();
+            Console.WriteLine(o.Url);
+            o.Servers = new[] { o.Url, "nats://localhost:3333" };
+            Console.WriteLine(o.Url);
+            o.Url = o.Url.ToString();
+            Console.WriteLine(o.Url);
+
+            // Test("1.2.3.4:4222");
+            // Test("host:4222");
+            // Test("nats://");
+            // Test("host");
+            // Test("1.2.3.4");
+            // Test("x:p@host");
+            // Test("x:p@1.2.3.4");
+            // Test("x:4222");
+            // Test("x:p@host:4222");
+            // Test("x:p@1.2.3.4:4222");
+            // Test("nats://u:p@");
+            // Test("nats://:4222");
+            // Test("nats://u:p@:4222");
+            // Test("nats://host");
+            // Test("nats://u:p@host");
+            // Test("nats://1.2.3.4");
+            // Test("nats://u:p@1.2.3.4");
+            // Test("nats://host:4222");
+            // Test("nats://u:p@host:4222");
+            // Test("nats://1.2.3.4:4222");
+            // Test("nats://u:p@1.2.3.4:4222");
         }
 
         static void Testx(string s)

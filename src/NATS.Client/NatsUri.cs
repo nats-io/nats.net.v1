@@ -81,7 +81,12 @@ namespace NATS.Client
             return Uri.GetHashCode();
         }
 
-        public NatsUri(Uri uri) : this(uri.ToString()) { }
+        public NatsUri()
+        {
+            Uri = new Uri(Defaults.Url);
+        }
+        
+        public NatsUri(Uri uri) : this(uri.ToString()) {}
 
         public NatsUri(string url)
         {
@@ -120,6 +125,12 @@ namespace NATS.Client
                 proto://u:p@1.2.3.4:4222 --> scheme:'proto', host:'1.2.3.4', up:'u:p', port:4222, path:'/'
              */
 
+            if (string.IsNullOrEmpty(url))
+            {
+                Uri = new Uri(Defaults.Url);
+                return;
+            }
+            
             string workUrl = url;
             Uri workUri = null;
             
