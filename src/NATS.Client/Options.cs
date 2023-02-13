@@ -332,6 +332,22 @@ namespace NATS.Client
             }
         }
 
+        internal void SetServerUris(IList<NatsUri> nuris)
+        {
+            _serverUris.Clear();
+            if (nuris == null || nuris.Count == 0)
+            {
+                _serverUris.Add(new NatsUri(Defaults.Url));
+            }
+            else
+            {
+                foreach (var val in nuris)
+                {
+                    _serverUris.Add(val == null ? new NatsUri() : val);
+                }
+            }
+        }
+
         internal string[] GetServerUrls()
         {
             string[] strings = new string[_serverUris.Count];
@@ -369,17 +385,7 @@ namespace NATS.Client
         public IList<NatsUri> ServerUris
         {
             get => _serverUris;
-            set
-            {
-                if (value == null || value.Count == 0)
-                {
-                    SetServers(null);
-                }
-                else
-                {
-                    _serverUris = value;
-                }
-            }
+            set => SetServerUris(value);
         }
 
         /// <summary>

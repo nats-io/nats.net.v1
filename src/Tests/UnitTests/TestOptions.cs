@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Text;
 using NATS.Client;
 using Xunit;
@@ -130,12 +131,82 @@ namespace UnitTests
         [Fact]
         public void TestUrlAndServersGetAndSet()
         {
+            string[] expected = new[] { Defaults.Url };
             Options o = ConnectionFactory.GetDefaultOptions();
-            Assert.Equal(Defaults.Url, o.Url);
-            Assert.Equal(1, o.Servers.Length);
-            Assert.Equal(Defaults.Url, o.Servers[0]);
-            Assert.Equal(1, o.ServerUris.Count);
-            Assert.Equal(new NatsUri(Defaults.Url), o.ServerUris[0]);
+            ValidateOptionUrlAndServersGet(expected, o);
+
+            o.Url = null;
+            ValidateOptionUrlAndServersGet(expected, o);
+
+            o.Url = "";
+            ValidateOptionUrlAndServersGet(expected, o);
+
+            o.Servers = expected;
+            ValidateOptionUrlAndServersGet(expected, o);
+
+            o.Servers = new string[0];
+            ValidateOptionUrlAndServersGet(expected, o);
+
+            o.Servers = new string[]{""};
+            ValidateOptionUrlAndServersGet(expected, o);
+
+            o.Servers = new string[]{null};
+            ValidateOptionUrlAndServersGet(expected, o);
+
+            List<NatsUri> toNuriList(string[] arr)
+            {
+                List<NatsUri> list = new List<NatsUri>();
+                foreach (string s in arr)
+                {
+                    if (s == null)
+                    {
+                        list.Add(null);   
+                    }
+                    else
+                    {
+                        list.Add(new NatsUri(s));
+                    }
+                }
+                return list;
+            }
+            
+            o.ServerUris = toNuriList(expected);
+            ValidateOptionUrlAndServersGet(expected, o);
+
+            o.ServerUris = null;
+            ValidateOptionUrlAndServersGet(expected, o);
+
+            o.ServerUris = toNuriList(new string[]{""});
+            ValidateOptionUrlAndServersGet(expected, o);
+
+            o.ServerUris = toNuriList(new string[]{null});
+            ValidateOptionUrlAndServersGet(expected, o);
+                
+            expected = new[] { "nats://localhost:1111" };
+            o.Url = expected[0];
+            ValidateOptionUrlAndServersGet(expected, o);
+
+            o.Servers = expected;
+            ValidateOptionUrlAndServersGet(expected, o);
+            
+            expected = new[] { "nats://localhost:1111", "nats://localhost:2222" };
+            o.Url = string.Join(",", expected);
+            ValidateOptionUrlAndServersGet(expected, o);
+            
+            o.Servers = expected;
+            ValidateOptionUrlAndServersGet(expected, o);
+        }
+
+        private static void ValidateOptionUrlAndServersGet(string[] split, Options o)
+        {
+            Assert.Equal(string.Join(",", split), o.Url);
+            Assert.Equal(split.Length, o.Servers.Length);
+            Assert.Equal(split.Length, o.ServerUris.Count);
+            for (int i = 0; i < split.Length; i++)
+            {
+                Assert.Equal(split[i], o.Servers[i]);
+                Assert.Equal(new NatsUri(split[i]), o.ServerUris[i]);
+            }
         }
 
         [Fact]
