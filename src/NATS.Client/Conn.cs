@@ -1619,15 +1619,20 @@ namespace NATS.Client
                 scheduleConnEvent(Opts.DisconnectedEventHandlerOrDefault, errorForHandler);
 
                 Srv cur;
-                int wlf = 0;
+                int timesAllServersSeen = 0;
                 bool doSleep = false;
+                Srv first = null;
                 while ((cur = srvProvider.SelectNextServer(Opts.MaxReconnect)) != null)
                 {
                     // check if we've been through the list
-                    if (cur == srvProvider.First())
+                    if (first == null)
                     {
-                        doSleep = (wlf != 0);
-                        wlf++;
+                        first = cur;
+                    }
+                    else if (cur == first)
+                    {
+                        timesAllServersSeen++;
+                        doSleep = true;
                     }
                     else
                     {
@@ -1647,7 +1652,7 @@ namespace NATS.Client
                     {
                         try
                         {
-                            opts?.ReconnectDelayHandler(this, new ReconnectDelayEventArgs(wlf - 1));
+                            opts?.ReconnectDelayHandler(this, new ReconnectDelayEventArgs(timesAllServersSeen - 1));
                         }
                         catch { } // swallow user exceptions
                     }
