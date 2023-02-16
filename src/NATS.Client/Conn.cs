@@ -1617,7 +1617,6 @@ namespace NATS.Client
 
                 scheduleConnEvent(Opts.DisconnectedEventHandlerOrDefault, errorForHandler);
 
-                
                 int maxTries = Opts.MaxReconnect;
                 IList<NatsUri> nuris = _srvListProvider.GetServersToTry(_currentServerUri);
 
