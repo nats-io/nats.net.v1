@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
 using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client.Service
@@ -22,8 +23,8 @@ namespace NATS.Client.Service
     {
         public const string ResponseType = "io.nats.micro.v1.ping_response";
 
-        internal PingResponse(string id, string name, string version) 
-            : base(ResponseType, id, name, version) {}
+        internal PingResponse(string id, string name, string version, Dictionary<string, string> metadata) 
+            : base(ResponseType, id, name, version, metadata) {}
 
         internal PingResponse(string json) : this(JSON.Parse(json)) {}
 

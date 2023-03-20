@@ -64,9 +64,9 @@ namespace NATS.Client.Service
             }
 
             // build static responses
-            PingResponse = new PingResponse(id, b.Name, b.Version);
-            InfoResponse = new InfoResponse(id, b.Name, b.Version, b.Description, infoSubjects);
-            SchemaResponse = new SchemaResponse(id, b.Name, b.Version, b.ApiUrl, schemaEndpoints);
+            PingResponse = new PingResponse(id, b.Name, b.Version, b.Metadata);
+            InfoResponse = new InfoResponse(id, b.Name, b.Version, b.Metadata, b.Description, infoSubjects);
+            SchemaResponse = new SchemaResponse(id, b.Name, b.Version, b.Metadata, b.ApiUrl, schemaEndpoints);
 
             discoveryContexts = new List<EndpointContext>();
             AddDiscoveryContexts(SrvPing, PingResponse);
@@ -103,7 +103,7 @@ namespace NATS.Client.Service
 
         private Endpoint InternalEndpoint(string discoveryName, string optionalServiceNameSegment, string optionalServiceIdSegment) {
             string subject = ToDiscoverySubject(discoveryName, optionalServiceNameSegment, optionalServiceIdSegment);
-            return new Endpoint(subject, subject, null, false);
+            return new Endpoint(subject, subject, null, null, false);
         }
  
         internal static string ToDiscoverySubject(string discoverySubject, string serviceName, string serviceId)

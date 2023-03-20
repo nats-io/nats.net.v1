@@ -85,6 +85,17 @@ namespace NATS.Client.Internals
             return list.Count == 0 ? null : list;
         }
         
+        public static Dictionary<string, string> StringStringDictionay(JSONNode node, string field)
+        {
+            Dictionary<string, string> temp = new Dictionary<string, string>();
+            JSONNode meta = node[field];
+            foreach (string key in meta.Keys)
+            {
+                temp[key] = meta[key];
+            }
+            return temp.Count == 0 ? null : temp;
+        }
+
         public static MsgHeader AsHeaders(JSONNode node, string field)
         {
             MsgHeader h = new MsgHeader();
@@ -201,6 +212,17 @@ namespace NATS.Client.Internals
             if (value != null)
             {
                 o[field] = value;
+            }
+        }
+
+        public static void AddField(JSONObject o, String fname, Dictionary<string, string> dictionary) {
+            if (dictionary != null && dictionary.Count > 0) {
+                JSONObject d = new JSONObject();
+                foreach (string key in dictionary.Keys)
+                {
+                    d[key] = dictionary[key];
+                }
+                o[fname] = d;
             }
         }
 
