@@ -1,4 +1,5 @@
-﻿using NATS.Client.Internals;
+﻿using System.Collections.Generic;
+using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 using NATS.Client.JetStream;
 
@@ -12,18 +13,19 @@ namespace NATS.Client.Service
         public string Name { get; }
         public string Subject { get; }
         public Schema Schema { get; }
+        public Dictionary<string, string> Metadata { get; }
 
-        public Endpoint(string name, string subject, Schema schema) : this(name, subject, schema, true) {}
+        public Endpoint(string name, string subject, Schema schema) : this(name, subject, schema, null, true) {}
 
-        public Endpoint(string name) : this(name, null, null, true) {}
+        public Endpoint(string name) : this(name, null, null, null, true) {}
 
-        public Endpoint(string name, string subject) : this(name, subject, null, true) {}
+        public Endpoint(string name, string subject) : this(name, subject, null, null, true) {}
 
         public Endpoint(string name, string subject, string schemaRequest, string schemaResponse)
-            : this(name, subject, Schema.OptionalInstance(schemaRequest, schemaResponse), true) {}
+            : this(name, subject, Schema.OptionalInstance(schemaRequest, schemaResponse), null, true) {}
 
         // internal use constructors
-        internal Endpoint(string name, string subject, Schema schema, bool validate) {
+        internal Endpoint(string name, string subject, Schema schema, Dictionary<string, string> metadata, bool validate) {
             if (validate) {
                 Name = Validator.ValidateIsRestrictedTerm(name, "Endpoint Name", true);
                 if (subject == null) {
@@ -38,6 +40,7 @@ namespace NATS.Client.Service
                 Subject = subject;
             }
             Schema = schema;
+            Metadata = metadata == null || metadata.Count == 0 ? null : metadata;
         }
 
         internal Endpoint(JSONNode node)
@@ -45,10 +48,11 @@ namespace NATS.Client.Service
             Name = node[ApiConstants.Name];
             Subject = node[ApiConstants.Subject];
             Schema = Schema.OptionalInstance(node[ApiConstants.Schema]);
+            Metadata = JsonUtils.StringStringDictionay(node, ApiConstants.Metadata);
         }
 
         private Endpoint(EndpointBuilder b) 
-            : this(b.Name, b.Subject, Schema.OptionalInstance(b.SchemaRequest, b.SchemaResponse)) {}
+            : this(b.Name, b.Subject, Schema.OptionalInstance(b.SchemaRequest, b.SchemaResponse), b.Metadata, true) {}
 
         public override JSONNode ToJsonNode()
         {
@@ -56,6 +60,7 @@ namespace NATS.Client.Service
             JsonUtils.AddField(jso, ApiConstants.Name, Name);
             JsonUtils.AddField(jso, ApiConstants.Subject, Subject);
             JsonUtils.AddField(jso, ApiConstants.Schema, Schema);
+            JsonUtils.AddField(jso, ApiConstants.Metadata, Metadata);
             return jso;
         }
 
@@ -67,6 +72,7 @@ namespace NATS.Client.Service
             internal string Subject;
             internal string SchemaRequest;
             internal string SchemaResponse;
+            internal Dictionary<string, string> Metadata;
 
             public EndpointBuilder WithEndpoint(Endpoint endpoint) {
                 Name = endpoint.Name;
@@ -111,6 +117,12 @@ namespace NATS.Client.Service
                     SchemaRequest = schema.Request;
                     SchemaResponse = schema.Response;
                 }
+                return this;
+            }
+
+            public EndpointBuilder WithMetadata(Dictionary<string, string> metadata)
+            {
+                Metadata = metadata;
                 return this;
             }
 

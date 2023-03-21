@@ -116,6 +116,7 @@ namespace NATS.Client.JetStream
         internal const string MemStorage = "mem_storage";
         internal const string Message = "message";
         internal const string Messages = "messages";
+        internal const string Metadata = "metadata";
         internal const string Mirror = "mirror";
         internal const string MirrorDirect = "mirror_direct";
         internal const string Msgs = "msgs";

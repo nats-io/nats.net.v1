@@ -30,6 +30,7 @@ namespace NATS.Client.Service
         internal string ApiUrl;
         internal readonly Dictionary<string, ServiceEndpoint> ServiceEndpoints = new Dictionary<string, ServiceEndpoint>();
         internal int DrainTimeoutMillis = DefaultDrainTimeoutMillis;
+        internal Dictionary<string, string> Metadata;
 
         public ServiceBuilder WithConnection(IConnection conn) 
         {
@@ -52,6 +53,12 @@ namespace NATS.Client.Service
         public ServiceBuilder WithVersion(string version) 
         {
             Version = ValidateSemVer(version, "Service Version", true);
+            return this;
+        }
+
+        public ServiceBuilder WithMetadata(Dictionary<string, string> metadata)
+        {
+            Metadata = metadata;
             return this;
         }
 

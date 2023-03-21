@@ -28,8 +28,8 @@ namespace NATS.Client.Service
         public string Description { get; }
         public IList<string> Subjects { get; }
 
-        public InfoResponse(string id, string name, string version, string description, IList<string> subjects)
-            : base(ResponseType, id, name, version)
+        public InfoResponse(string id, string name, string version, Dictionary<string, string> metadata, string description, IList<string> subjects)
+            : base(ResponseType, id, name, version, metadata)
         {
             Description = description;
             Subjects = subjects;

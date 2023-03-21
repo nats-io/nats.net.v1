@@ -32,6 +32,7 @@ namespace UnitTests
             Assert.Equal(NAME, e.Subject);
             Assert.Null(e.Schema);
             Assert.Equal(e, Endpoint.Builder().WithEndpoint(e).Build());
+            Assert.Null(e.Metadata);
 
             e = new Endpoint(NAME, SUBJECT);
             Assert.Equal(NAME, e.Name);
@@ -90,6 +91,26 @@ namespace UnitTests
             Assert.Equal(NAME, e.Name);
             Assert.Equal(SUBJECT, e.Subject);
             Assert.Null(e.Schema);
+
+            Dictionary<string, string> dictionary = new Dictionary<string, string>();
+            e = Endpoint.Builder()
+                .WithName(NAME).WithSubject(SUBJECT)
+                .WithMetadata(dictionary)
+                .Build();
+            Assert.Equal(NAME, e.Name);
+            Assert.Equal(SUBJECT, e.Subject);
+            Assert.Null(e.Metadata);
+            
+            dictionary["k"] = "v";
+            e = Endpoint.Builder()
+                .WithName(NAME).WithSubject(SUBJECT)
+                .WithMetadata(dictionary)
+                .Build();
+            Assert.Equal(NAME, e.Name);
+            Assert.Equal(SUBJECT, e.Subject);
+            Assert.True(e.Metadata.Count == 1);
+            Assert.Equal("v", e.Metadata["k"]);
+            Assert.False(e.Metadata.ContainsKey("x"));
 
             // some subject testing
             e = new Endpoint(NAME, "foo.>");
@@ -354,7 +375,9 @@ namespace UnitTests
         [Fact]
         public void TestServiceResponsesConstruction()
         {
-            PingResponse pr1 = new PingResponse("id", "name", "0.0.0");
+            Dictionary<string, string> dictionary = new Dictionary<string, string>();
+            dictionary["k"] = "v";
+            PingResponse pr1 = new PingResponse("id", "name", "0.0.0", dictionary);
             PingResponse pr2 = new PingResponse(pr1.ToJsonNode().ToString());
             ValidateApiInOutPingResponse(pr1);
             ValidateApiInOutPingResponse(pr2);
@@ -383,7 +406,7 @@ namespace UnitTests
             IList<String> slist = new List<string>();
             slist.Add("subject1");
             slist.Add("subject2");
-            InfoResponse ir1 = new InfoResponse("id", "name", "0.0.0", "desc", slist);
+            InfoResponse ir1 = new InfoResponse("id", "name", "0.0.0", dictionary, "desc", slist);
             InfoResponse ir2 = new InfoResponse(ir1.ToJsonString());
             ValidateApiInOutInfoResponse(ir1);
             ValidateApiInOutInfoResponse(ir2);
@@ -391,7 +414,7 @@ namespace UnitTests
             IList<EndpointResponse> endpoints = new List<EndpointResponse>();
             endpoints.Add(new EndpointResponse("endName0", "endSubject0", new Schema("endSchemaRequest0", "endSchemaResponse0")));
             endpoints.Add(new EndpointResponse("endName1", "endSubject1", new Schema("endSchemaRequest1", "endSchemaResponse1")));
-            SchemaResponse sch1 = new SchemaResponse("id", "name", "0.0.0", "apiUrl", endpoints);
+            SchemaResponse sch1 = new SchemaResponse("id", "name", "0.0.0", dictionary, "apiUrl", endpoints);
             SchemaResponse sch2 = new SchemaResponse(sch1.ToJsonString());
             ValidateApiInOutSchemaResponse(sch1);
             ValidateApiInOutSchemaResponse(sch2);
@@ -472,12 +495,16 @@ namespace UnitTests
             Assert.Equal("id", r.Id);
             Assert.Equal("name", r.Name);
             Assert.Equal("0.0.0", r.Version);
+            Assert.True(r.Metadata.Count == 1);
+            Assert.Equal("v", r.Metadata["k"]);
+            Assert.False(r.Metadata.ContainsKey("x"));
             string j = r.ToJsonString();
             Assert.StartsWith("{", j);
             Assert.Contains("\"type\":\"" + type + "\"", j);
             Assert.Contains("\"name\":\"name\"", j);
             Assert.Contains("\"id\":\"id\"", j);
             Assert.Contains("\"version\":\"0.0.0\"", j);
+            Assert.Contains("\"metadata\":{\"k\":\"v\"}", j);
             Assert.Equal(JsonUtils.ToKey(r.GetType()) + j, r.ToString());
         }
 
@@ -542,7 +569,7 @@ namespace UnitTests
     {
         const string ResponseType = "io.nats.micro.v1.test_response";
         
-        public TestServiceResponses(string id, string name, string version) : base(ResponseType, id, name, version) {}
+        public TestServiceResponses(string id, string name, string version) : base(ResponseType, id, name, version, null) {}
 
         public TestServiceResponses(ServiceResponse template) : base(ResponseType, template) {}
 

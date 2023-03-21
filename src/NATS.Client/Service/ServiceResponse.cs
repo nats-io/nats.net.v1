@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 using NATS.Client.JetStream;
@@ -14,13 +15,15 @@ namespace NATS.Client.Service
         public string Id { get; }
         public string Name { get; }
         public string Version { get; }
+        public Dictionary<string, string> Metadata { get; }
 
-        internal ServiceResponse(string type, string id, string name, string version)
+        internal ServiceResponse(string type, string id, string name, string version, Dictionary<string, string> metadata)
         {
             Type = type;
             Id = id;
             Name = name;
             Version = version;
+            Metadata = metadata == null || metadata.Count == 0 ? null : metadata;
         }
         
         internal ServiceResponse(string type, ServiceResponse template)
@@ -29,6 +32,7 @@ namespace NATS.Client.Service
             Id = template.Id;
             Name = template.Name;
             Version = template.Version;
+            Metadata = template.Metadata;
         }
         
         internal ServiceResponse(string type, JSONNode node)
@@ -44,6 +48,7 @@ namespace NATS.Client.Service
             Id = Validator.Required(node[ApiConstants.Id], "Id");
             Name = Validator.Required(node[ApiConstants.Name], "Name");
             Version = Validator.ValidateSemVer(node[ApiConstants.Version], "Version", true);
+            Metadata = JsonUtils.StringStringDictionay(node, ApiConstants.Metadata);
         }
         
         protected JSONObject BaseJsonObject()
@@ -53,6 +58,7 @@ namespace NATS.Client.Service
             JsonUtils.AddField(jso, ApiConstants.Name, Name);
             JsonUtils.AddField(jso, ApiConstants.Type, Type);
             JsonUtils.AddField(jso, ApiConstants.Version, Version);
+            JsonUtils.AddField(jso, ApiConstants.Metadata, Metadata);
             return jso;
         }
 

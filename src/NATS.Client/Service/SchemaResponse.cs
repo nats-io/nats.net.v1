@@ -28,8 +28,8 @@ namespace NATS.Client.Service
         public string ApiUrl { get; }
         public IList<EndpointResponse> Endpoints { get; }
 
-        public SchemaResponse(string id, string name, string version, string apiUrl, IList<EndpointResponse> endpoints)
-        : base(ResponseType, id, name, version)
+        public SchemaResponse(string id, string name, string version, Dictionary<string, string> metadata, string apiUrl, IList<EndpointResponse> endpoints)
+        : base(ResponseType, id, name, version, metadata)
         {
             ApiUrl = apiUrl;
             Endpoints = endpoints;
