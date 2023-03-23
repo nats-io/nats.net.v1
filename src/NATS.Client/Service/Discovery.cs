@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
-using NATS.Client.Internals;
 
 namespace NATS.Client.Service
 {
@@ -17,6 +16,16 @@ namespace NATS.Client.Service
         private readonly IConnection conn;
         private readonly int maxTimeMillis;
         private readonly int maxResults;
+
+        private Func<String> _inboxSupplier;
+        public Func<String> InboxSupplier
+        {
+            get => _inboxSupplier;
+            set
+            {
+                _inboxSupplier = value ?? conn.NewInbox;
+            }
+        }
 
         public Discovery(IConnection conn, int maxTimeMillis = -1, int maxResults = -1) 
         {
@@ -111,11 +120,7 @@ namespace NATS.Client.Service
         private void DiscoverMany(string action, string serviceName, Action<string> stringConsumer) {
             ISyncSubscription sub = null;
             try {
-                StringBuilder sb = new StringBuilder(Nuid.NextGlobal()).Append('-').Append(action);
-                if (serviceName != null) {
-                    sb.Append('-').Append(serviceName);
-                }
-                string replyTo = sb.ToString();
+                string replyTo = InboxSupplier.Invoke();
 
                 sub = conn.SubscribeSync(replyTo);
 
