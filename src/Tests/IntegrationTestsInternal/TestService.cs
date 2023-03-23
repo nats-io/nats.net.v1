@@ -555,7 +555,7 @@ namespace IntegrationTestsInternal
                 try {
                     discovery.Ping("servicename");
                 }
-                catch (Exception e) {
+                catch (Exception) {
                     // we know it will throw exception b/c there is no service
                     // running, we just care about it make the call
                 }
