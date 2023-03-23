@@ -32,6 +32,7 @@ namespace NATS.Client.Service
             this.conn = conn;
             this.maxTimeMillis = maxTimeMillis < 1 ? DefaultDiscoveryMaxTimeMillis : maxTimeMillis;
             this.maxResults = maxResults < 1 ? DefaultDiscoveryMaxResults : maxResults;
+            InboxSupplier = null;
         }
 
         // ----------------------------------------------------------------------------------------------------
