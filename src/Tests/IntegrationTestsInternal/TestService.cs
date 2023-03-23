@@ -540,5 +540,27 @@ namespace IntegrationTestsInternal
                 Assert.Equal("500", m.Header[ServiceMsg.NatsServiceErrorCode]);
             });
         }
+        
+        [Fact]
+        public void TestInboxSupplier() {
+            Context.RunInServer(c => {
+                Discovery discovery = new Discovery(c, 100, 1);
+                bool WasCalled = false;
+                discovery.InboxSupplier = () =>
+                {
+                    WasCalled = true;
+                    return "CUSTOM INBOX";
+                };
+            
+                try {
+                    discovery.Ping("servicename");
+                }
+                catch (Exception) {
+                    // we know it will throw exception b/c there is no service
+                    // running, we just care about it make the call
+                }
+                Assert.True(WasCalled);
+            });
+        }
     }
 }
