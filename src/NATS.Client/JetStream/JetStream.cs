@@ -147,14 +147,22 @@ namespace NATS.Client.JetStream
         // ----------------------------------------------------------------------------------------------------
         // Subscribe
         // ----------------------------------------------------------------------------------------------------
-        private static readonly PushSubscribeOptions DefaultPushOpts = PushSubscribeOptions.Builder().Build();
 
-        // PushMessageManagerFactory/Impl is internal and used for testing / providing a PushMessageManager mock
-        internal delegate PushMessageManager PushMessageManagerFactory(
+        internal delegate MessageManager MessageManagerFactory(
             Connection conn, JetStream js, string stream, 
             SubscribeOptions so, ConsumerConfiguration cc, bool queueMode, bool syncMode);
 
-        internal static PushMessageManagerFactory PushMessageManagerFactoryImpl;
+        internal MessageManagerFactory _pushMessageManagerFactory =
+            (conn, js, stream, so, cc, queueMode, syncMode) =>
+                new PushMessageManager(conn, js, stream, so, cc, queueMode, syncMode);
+
+        internal MessageManagerFactory _pushOrderedMessageManagerFactory =
+            (conn, js, stream, so, cc, queueMode, syncMode) =>
+                new OrderedMessageManager(conn, js, stream, so, cc, queueMode, syncMode);
+
+        internal MessageManagerFactory _pullMessageManagerFactory =
+            (conn, js, stream, so, cc, queueMode, syncMode) =>
+                new PullMessageManager(conn, syncMode);
         
         Subscription CreateSubscription(string subject, string queueName,
             EventHandler<MsgHandlerEventArgs> userHandler, bool autoAck,
@@ -170,7 +178,7 @@ namespace NATS.Client.JetStream
             ConsumerConfiguration userCC;
 
             if (isPullMode) {
-                so = pullSubscribeOptions; // options must have already been checked to be non null
+                so = pullSubscribeOptions; // options must have already been checked to be non-null
                 stream = pullSubscribeOptions.Stream;
 
                 userCC = so.ConsumerConfiguration;
@@ -180,7 +188,7 @@ namespace NATS.Client.JetStream
                 ValidateNotSupplied(userCC.DeliverSubject, JsSubPullCantHaveDeliverSubject);
             }
             else {
-                so = pushSubscribeOptions ?? DefaultPushOpts;
+                so = pushSubscribeOptions ?? PushSubscribeOptions.DefaultPushOpts;
                 stream = so.Stream; // might be null, that's ok (see directBind)
 
                 userCC = so.ConsumerConfiguration;
@@ -318,75 +326,67 @@ namespace NATS.Client.JetStream
             }
 
             // 6. create the subscription
-            Subscription sub;
+            bool syncMode = userHandler == null;
+            MessageManager mm;
+            Connection.CreateSyncSubscriptionDelegate syncSubDelegate = null;
+            Connection.CreateAsyncSubscriptionDelegate asyncSubDelegate = null;
             if (isPullMode)
             {
-                SyncSubscription CreateSubDelegate(Connection lConn, string lSubject, string queueNaForPull)
+                mm = _pullMessageManagerFactory.Invoke((Connection)Conn, this, stream, so, serverCC, qgroup != null, syncMode);
+                syncSubDelegate = (dConn, dSubject, dQueue) =>
                 {
-                    return new JetStreamPullSubscription(lConn, lSubject, this, stream, consumerName, inboxDeliver, new PullMessageManager());
-                }
-
-                sub = ((Connection)Conn).subscribeSync(inboxDeliver, queueName, CreateSubDelegate);
+                    return new JetStreamPullSubscription(dConn, dSubject, this, stream, consumerName, inboxDeliver, mm);
+                };
             }
             else
             {
-                bool syncMode = userHandler == null;
-                MessageManager manager;
-                if (PushMessageManagerFactoryImpl != null)
-                {
-                    manager = PushMessageManagerFactoryImpl((Connection)Conn, this, stream, so, serverCC, qgroup != null, syncMode);
-                }
-                else if (so.Ordered)
-                {
-                    manager = new OrderedMessageManager((Connection)Conn, this, stream, so, serverCC, qgroup != null, syncMode);
-                }
-                else
-                {
-                    manager = new PushMessageManager((Connection)Conn, this, stream, so, serverCC, qgroup != null, syncMode);
-                }
+                MessageManagerFactory mmFactory = so.Ordered ? _pushOrderedMessageManagerFactory : _pushMessageManagerFactory;
+                mm = mmFactory((Connection)Conn, this, stream, so, serverCC, qgroup != null, syncMode);
                 
-                if (syncMode) {
-                    SyncSubscription CreateSubDelegate(Connection lConn, string lSubject, string lQueue)
+                if (syncMode)
+                {
+                    syncSubDelegate = (dConn, dSubject, dQueue) =>
                     {
-                        JetStreamPushSyncSubscription ssub = new JetStreamPushSyncSubscription(lConn, lSubject, lQueue, this, stream, consumerName, inboxDeliver, manager);
+                        JetStreamPushSyncSubscription ssub = new JetStreamPushSyncSubscription(dConn, dSubject, dQueue,
+                            this, stream, consumerName, inboxDeliver, mm);
                         ssub.SetPendingLimits(so.PendingMessageLimit, so.PendingByteLimit);
                         return ssub;
-                    }
-                    sub = ((Connection)Conn).subscribeSync(inboxDeliver, queueName, CreateSubDelegate); 
+                    };
                 }
                 else
                 {
-                    EventHandler<MsgHandlerEventArgs> autoAckHandler;
-                    if (autoAck && serverCC.AckPolicy != AckPolicy.None)
+                    asyncSubDelegate = (dConn, dSubject, dQueue) =>
                     {
-                        autoAckHandler = (sender, args) => args.Message.Ack();
-                    }
-                    else
-                    {
-                        autoAckHandler = (sender, args) => {};
-                    }
-                    
-                    EventHandler<MsgHandlerEventArgs> handler = (sender, args) => 
-                    {
-                        if (manager.Manage(args.Message))
-                        {
-                            return; // manager handled the message
-                        }
-                            
-                        userHandler.Invoke(sender, args);
-                        autoAckHandler.Invoke(sender, args);
-                    };
-
-                    AsyncSubscription CreateAsyncSubDelegate(Connection lConn, string lSubject, string lQueue)
-                    {
-                        JetStreamPushAsyncSubscription asub = new JetStreamPushAsyncSubscription(lConn, lSubject, lQueue, this, stream, consumerName, inboxDeliver, manager);
+                        JetStreamPushAsyncSubscription asub = new JetStreamPushAsyncSubscription(dConn, dSubject,
+                            dQueue, this, stream, consumerName, inboxDeliver, mm);
                         asub.SetPendingLimits(so.PendingMessageLimit, so.PendingByteLimit);
                         return asub;
-                    }
-               
-                    sub = ((Connection)Conn).subscribeAsync(inboxDeliver, queueName, handler, CreateAsyncSubDelegate);
+                    };
                 }
-
+            }
+            
+            Subscription sub;
+            if (syncSubDelegate != null)
+            {
+                sub = ((Connection)Conn).subscribeSync(inboxDeliver, queueName, syncSubDelegate); 
+            }
+            else
+            {
+                bool handlerAutoAck = autoAck && serverCC.AckPolicy != AckPolicy.None;
+                EventHandler<MsgHandlerEventArgs> handler = (sender, args) => 
+                {
+                    if (mm.Manage(args.Message))
+                    {
+                        return; // manager handled the message
+                    }
+                            
+                    userHandler.Invoke(sender, args);
+                    if (handlerAutoAck)
+                    {
+                        args.Message.Ack();
+                    }
+                };
+                sub = ((Connection)Conn).subscribeAsync(inboxDeliver, queueName, handler, asyncSubDelegate);
             }
 
             // 7. The consumer might need to be created, do it here

@@ -176,7 +176,27 @@ namespace NATS.Client.Internals
         public const string NatsTimestamp    = "Nats-Time-Stamp";
         public const string NatsSubject      = "Nats-Subject";
         public const string NatsLastSequence = "Nats-Last-Sequence";
+        
+        public const string NatsPendingMessages = "Nats-Pending-Messages";
+        public const string NatsPendingBytes    = "Nats-Pending-Bytes";
 
+        public const int JsConsumerNotFoundErr = 10014;
+        public const int JsNoMessageFoundErr = 10037;
+        public const int JsWrongLastSequence = 10071;
+
+        public const string BadRequest                 = "Bad Request"; // 400
+        public const string NoMessages                 = "No Messages"; // 404
+        public const string ConsumerDeleted            = "Consumer Deleted"; // 409
+        public const string ConsumerIsPushBased        = "Consumer is push based"; // 409
+
+        public const string MessageSizeExceedsMaxBytes = "Message Size Exceeds MaxBytes"; // 409
+        public const string ExceededMaxWaiting         = "Exceeded MaxWaiting"; // 409
+        public const string ExceededMaxRequestBatch    = "Exceeded MaxRequestBatch"; // 409
+        public const string ExceededMaxRequestExpires  = "Exceeded MaxRequestExpires"; // 409
+        public const string ExceededMaxRequestMaxBytes = "Exceeded MaxRequestMaxBytes"; // 409
+
+        public const string BatchCompleted             = "Batch Completed"; // 409 informational
+ 
         [Obsolete("This property is obsolete. Use LastConsumerHeader instead.", false)]
         public const string LastConsumerHdr = "Nats-Last-Consumer";
 
@@ -191,9 +211,5 @@ namespace NATS.Client.Internals
         
         [Obsolete("This property is obsolete. Use MsgSizeHeader instead.", false)]
         public const string MsgSizeHdr = "Nats-Msg-Size";
-
-        public const int JsConsumerNotFoundErr = 10014;
-        public const int JsNoMessageFoundErr = 10037;
-        public const int JsWrongLastSequence = 10071;
     }
 }

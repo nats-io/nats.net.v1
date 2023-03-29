@@ -25,11 +25,11 @@ using static NATS.Client.ClientExDetail;
 
 namespace IntegrationTestsInternal
 {
-    public class TestOrderedConsumer : TestSuite<JetStreamSuiteContext>
+    public class TestJetStreamConsumer : TestSuite<JetStreamSuiteContext>
     {
         private readonly ITestOutputHelper output;
 
-        public TestOrderedConsumer(ITestOutputHelper output, JetStreamSuiteContext context) : base(context) {
+        public TestJetStreamConsumer(ITestOutputHelper output, JetStreamSuiteContext context) : base(context) {
             this.output = output;
             Console.SetOut(new ConsoleWriter(output));
         }
@@ -45,23 +45,102 @@ namespace IntegrationTestsInternal
                 bool queueMode, bool syncMode)
                 : base(conn, js, stream, so, cc, queueMode, syncMode) {}
 
-            protected override Msg BeforeChannelAddCheck(Msg msg)
+            protected override bool BeforeChannelAddCheck(Msg msg)
             {
-                msg = base.BeforeChannelAddCheck(msg);
                 if (msg != null && msg.IsJetStream)
                 {
                     ulong ss = msg.MetaData.StreamSequence;
                     ulong cs = msg.MetaData.ConsumerSequence;
                     if ((ss == 2 && cs == 2) || (ss == 5 && cs == 4))
                     {
-                        return null;
+                        return false;
                     }
                 }
 
-                return msg;
+                return base.BeforeChannelAddCheck(msg);
             }
         }
-                
+        
+        class HeartbeatErrorSimulator : PushMessageManager
+        {
+            public readonly CountdownEvent latch;
+
+            public HeartbeatErrorSimulator(
+                Connection conn, JetStream js, string stream, SubscribeOptions so, ConsumerConfiguration cc,
+                bool queueMode, bool syncMode, CountdownEvent latch)
+                : base(conn, js, stream, so, cc, queueMode, syncMode)
+            {
+                this.latch = latch;
+            }
+
+            internal override void HandleHeartbeatError()
+            {
+                base.HandleHeartbeatError();
+                if (latch.CurrentCount > 0)
+                {
+                    latch.Signal(1);
+                }
+            }
+
+            protected override bool BeforeChannelAddCheck(Msg msg)
+            {
+                return false;
+            }
+        }
+        
+        class OrderedHeartbeatErrorSimulator : OrderedMessageManager
+        {
+            public readonly CountdownEvent latch;
+
+            public OrderedHeartbeatErrorSimulator(
+                Connection conn, JetStream js, string stream, SubscribeOptions so, ConsumerConfiguration cc,
+                bool queueMode, bool syncMode, CountdownEvent latch)
+                : base(conn, js, stream, so, cc, queueMode, syncMode)
+            {
+                this.latch = latch;
+            }
+
+            internal override void HandleHeartbeatError()
+            {
+                base.HandleHeartbeatError();
+                if (latch.CurrentCount > 0)
+                {
+                    latch.Signal(1);
+                }
+            }
+
+            protected override bool BeforeChannelAddCheck(Msg msg)
+            {
+                return false;
+            }
+        }
+        
+        class PullHeartbeatErrorSimulator : PullMessageManager
+        {
+            public readonly CountdownEvent latch;
+
+            public PullHeartbeatErrorSimulator(
+                Connection conn, bool syncMode, CountdownEvent latch)
+                : base(conn, syncMode)
+            {
+                this.latch = latch;
+            }
+
+            internal override void HandleHeartbeatError()
+            {
+                base.HandleHeartbeatError();
+                if (latch.CurrentCount > 0)
+                {
+                    latch.Signal(1);
+                }
+            }
+
+            protected override bool BeforeChannelAddCheck(Msg msg)
+            {
+                return false;
+            }
+        }
+
         // Expected consumer sequence numbers
         static ulong[] ExpectedConSeqNums = {1, 1, 2, 3, 1, 2};
 
@@ -76,7 +155,7 @@ namespace IntegrationTestsInternal
                 CreateMemoryStream(c, Stream(111), subject);
 
                 // Get this in place before any subscriptions are made
-                JetStream.PushMessageManagerFactoryImpl = 
+                ((JetStream)js)._pushOrderedMessageManagerFactory = 
                     (conn, lJs, lStream, so, cc, queueMode, syncMode) => 
                         new OrderedTestDropSimulator(conn, lJs, lStream, so, cc, queueMode, syncMode);
 
@@ -120,7 +199,7 @@ namespace IntegrationTestsInternal
                 CreateMemoryStream(c, Stream(222), subject);
 
                 // Get this in place before any subscriptions are made
-                JetStream.PushMessageManagerFactoryImpl = 
+                ((JetStream)js)._pushOrderedMessageManagerFactory = 
                     (conn, lJs, lStream, so, cc, queueMode, syncMode) => 
                         new OrderedTestDropSimulator(conn, lJs, lStream, so, cc, queueMode, syncMode);
 
@@ -163,115 +242,78 @@ namespace IntegrationTestsInternal
                 }
             });
         }
-        
-        class OrderedMissHeartbeatSimulator : OrderedMessageManager
-        {
-            public InterlockedInt skip = new InterlockedInt(5);
-            public InterlockedInt startups = new InterlockedInt(0);
-            public InterlockedInt handles = new InterlockedInt(0);
-            public CountdownEvent latch = new CountdownEvent(1);
-
-            public OrderedMissHeartbeatSimulator(
-                Connection conn, JetStream js, string stream, SubscribeOptions so, ConsumerConfiguration cc,
-                bool queueMode, bool syncMode)
-                : base(conn, js, stream, so, cc, queueMode, syncMode) {}
-
-            internal override void Startup(Subscription sub)
-            {
-                base.Startup(sub);
-                startups.Increment();
-            }
-
-            internal override void HandleHeartbeatError()
-            {
-                handles.Increment();
-                skip.Set(9999);
-                base.HandleHeartbeatError();
-                latch.Signal(1);
-            }
-
-            protected override Msg BeforeChannelAddCheck(Msg msg)
-            {
-                if (skip.Decrement() < 0)
-                {
-                    return null;
-                }
-                return base.BeforeChannelAddCheck(msg);
-            }
-
-            public long Sid => Sub.sid;
-        }
 
         [Fact]
-        public void TestOrderedConsumerHbSync()
+        public void TestHeartbeatError()
         {
-            Context.RunInJsServer(c =>
+            TestEventCountHandler handler = new TestEventCountHandler();
+            Action<Options> modifier = options => options.HeartbeatAlarmEventHandler = handler.HeartbeatAlarmHandler;
+            Context.RunInJsServer(modifier, c =>
             {
-                // Setup
+                CreateDefaultTestStream(c);
                 IJetStream js = c.CreateJetStreamContext();
-                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
                 
-                string subject = Subject(333);
-                CreateMemoryStream(c, Stream(333), subject);
+                ConsumerConfiguration cc = ConsumerConfiguration.Builder()
+                    .WithFlowControl(2000).WithIdleHeartbeat(100).Build();
 
-                OrderedMissHeartbeatSimulator sim = null;
-                // Get this in place before any subscriptions are made
-                JetStream.PushMessageManagerFactoryImpl =
-                    (conn, lJs, lStream, so, cc, queueMode, syncMode) =>
-                    {
-                        sim = new OrderedMissHeartbeatSimulator(conn, lJs, lStream, so, cc, queueMode, syncMode);
-                        return sim;
-                    };
-
-                JsPublish(js, subject, 1, 10);
+                PushSubscribeOptions pso = PushSubscribeOptions.Builder().WithConfiguration(cc).Build();
+                CountdownEvent latch = setupFactory(js);
+                IJetStreamSubscription sub = js.PushSubscribeSync(SUBJECT, pso);
+                validate(sub, handler, latch);
                 
-                // Setup subscription
-                PushSubscribeOptions pso = PushSubscribeOptions.Builder().WithOrdered(true)
-                    .WithConfiguration(ConsumerConfiguration.Builder().WithFlowControl(500).Build())
-                    .Build();
+                latch = setupFactory(js);
+                sub = js.PushSubscribeAsync(SUBJECT, (sender, a) => {}, false, pso);
+                validate(sub, handler, latch);
+                
+                pso = PushSubscribeOptions.Builder().WithOrdered(true).WithConfiguration(cc).Build();
+                latch = setupOrderedFactory(js);
+                sub = js.PushSubscribeSync(SUBJECT, pso);
+                validate(sub, handler, latch);
+                
+                latch = setupOrderedFactory(js);
+                sub = js.PushSubscribeAsync(SUBJECT, (sender, a) => {}, false, pso);
+                validate(sub, handler, latch);
 
-                IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(subject, pso);
-
-
-                long firstSid = -1;
-                ulong expectedStreamSeq = 1;
-                while (expectedStreamSeq <= 5)
-                {
-                    try
-                    {
-                        Msg m = sub.NextMessage(1000);
-                        if (firstSid == -1)
-                        {
-                            firstSid = sim.Sid;
-                        }
-                        else
-                        {
-                            Assert.Equal(firstSid, sim.Sid);
-                        }
-                        Assert.Equal(expectedStreamSeq++, m.MetaData.StreamSequence);
-                    }
-                    catch (NATSTimeoutException)
-                    {
-                        // ignored
-                    }
-                }
-
-                sim.latch.Wait(10000);
-
-                while (expectedStreamSeq <= 10)
-                {
-                    try
-                    {
-                        Msg m = sub.NextMessage(1000);
-                        Assert.NotEqual(firstSid, sim.Sid);
-                        Assert.Equal(expectedStreamSeq++, m.MetaData.StreamSequence);
-                    }
-                    catch (NATSTimeoutException)
-                    {
-                        // ignored
-                    }
-                }
+                latch = setupPullFactory(js);
+                IJetStreamPullSubscription lsub = js.PullSubscribe(SUBJECT, PullSubscribeOptions.DefaultPullOpts);
+                lsub.Pull(PullRequestOptions.Builder(1).WithIdleHeartbeat(100).WithExpiresIn(2000).Build());
+                validate(sub, handler, latch);
             });
+        }
+        
+        private static void validate(IJetStreamSubscription sub, TestEventCountHandler handler, CountdownEvent latch)
+        {
+            latch.Wait(TimeSpan.FromSeconds(10));
+            Assert.Equal(0, latch.CurrentCount);
+            Assert.True(handler.HeartbeatAlarmEvents.Count > 0);
+            handler.Reset();
+        }
+        
+        private static CountdownEvent setupFactory(IJetStream js)
+        {
+            CountdownEvent latch = new CountdownEvent(2);
+            ((JetStream)js)._pushMessageManagerFactory = 
+                (conn, lJs, stream, so, serverCC, qmode, dispatcher) => 
+                    new HeartbeatErrorSimulator(conn, lJs, stream, so, serverCC, qmode, dispatcher, latch);
+            return latch;
+        }
+        
+        private static CountdownEvent setupOrderedFactory(IJetStream js)
+        {
+            CountdownEvent latch = new CountdownEvent(2);
+            ((JetStream)js)._pushOrderedMessageManagerFactory = 
+                (conn, lJs, stream, so, serverCC, qmode, dispatcher) => 
+                    new OrderedHeartbeatErrorSimulator(conn, lJs, stream, so, serverCC, qmode, dispatcher, latch);
+            return latch;
+        }
+        
+        private static CountdownEvent setupPullFactory(IJetStream js)
+        {
+            CountdownEvent latch = new CountdownEvent(2);
+            ((JetStream)js)._pullMessageManagerFactory = 
+                (conn, lJs, stream, so, serverCC, qmode, dispatcher) => 
+                    new PullHeartbeatErrorSimulator(conn, false, latch);
+            return latch;
         }
     }
 }

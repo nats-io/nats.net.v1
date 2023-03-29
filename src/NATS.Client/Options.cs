@@ -115,10 +115,22 @@ namespace NATS.Client
         public EventHandler<HeartbeatAlarmEventArgs> HeartbeatAlarmEventHandlerOrDefault => HeartbeatAlarmEventHandler ?? DefaultHeartbeatAlarmEventHandler();
 
         /// <summary>
-        /// Represents the method that will handle a unknown or unhandled status event
+        /// Represents the method that will handle an unhandled status received in a push subscription.
         /// </summary>
         public EventHandler<UnhandledStatusEventArgs> UnhandledStatusEventHandler;
         public EventHandler<UnhandledStatusEventArgs> UnhandledStatusEventHandlerOrDefault => UnhandledStatusEventHandler ?? DefaultUnhandledStatusEventHandler();
+
+        /// <summary>
+        /// Represents the method that will handle a status message that indicating either the subscription or pull might be problematic.
+        /// </summary>
+        public EventHandler<StatusEventArgs> PullStatusWarningEventHandler;
+        public EventHandler<StatusEventArgs> PullStatusWarningEventHandlerOrDefault => PullStatusWarningEventHandler ?? DefaultPullStatusWarningEventHandler();
+
+        /// <summary>
+        /// Represents the method that will handle a status message that indicating either the subscription cannot continue or the pull request cannot be processed.
+        /// </summary>
+        public EventHandler<StatusEventArgs> PullStatusErrorEventHandler;
+        public EventHandler<StatusEventArgs> PullStatusErrorEventHandlerOrDefault => PullStatusErrorEventHandler ?? DefaultPullStatusErrorEventHandler();
 
         /// <summary>
         /// Represents the method that will handle a flow control processed event
@@ -257,6 +269,8 @@ namespace NATS.Client
             AsyncErrorEventHandler = o.AsyncErrorEventHandler;
             HeartbeatAlarmEventHandler = o.HeartbeatAlarmEventHandler;
             UnhandledStatusEventHandler = o.UnhandledStatusEventHandler;
+            PullStatusWarningEventHandler = o.PullStatusWarningEventHandler;
+            PullStatusErrorEventHandler = o.PullStatusErrorEventHandler;
             FlowControlProcessedEventHandler = o.FlowControlProcessedEventHandler;
             ClosedEventHandler = o.ClosedEventHandler;
             ServerDiscoveredEventHandler = o.ServerDiscoveredEventHandler;
@@ -805,6 +819,8 @@ namespace NATS.Client
             appendEventHandler(sb, "AsyncErrorEventHandler", AsyncErrorEventHandler);
             appendEventHandler(sb, "HeartbeatAlarmEventHandler", HeartbeatAlarmEventHandler);
             appendEventHandler(sb, "UnhandledStatusEventHandler", UnhandledStatusEventHandler);
+            appendEventHandler(sb, "PullStatusWarningEventHandler", PullStatusWarningEventHandler);
+            appendEventHandler(sb, "PullStatusErrorEventHandler", PullStatusErrorEventHandler);
             appendEventHandler(sb, "FlowControlProcessedEventHandler", FlowControlProcessedEventHandler);
             appendEventHandler(sb, "ClosedEventHandler", ClosedEventHandler);
             appendEventHandler(sb, "DisconnectedEventHandler", DisconnectedEventHandler);

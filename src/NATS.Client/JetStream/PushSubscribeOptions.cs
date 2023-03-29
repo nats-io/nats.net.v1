@@ -15,6 +15,8 @@ namespace NATS.Client.JetStream
 {
     public sealed class PushSubscribeOptions : SubscribeOptions
     {
+        public static readonly PushSubscribeOptions DefaultPushOpts = PushSubscribeOptions.Builder().Build();
+
         // Validation is done by base class
         private PushSubscribeOptions(ISubscribeOptionsBuilder builder, bool ordered, 
             string deliverSubject, string deliverGroup,

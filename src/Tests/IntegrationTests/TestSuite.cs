@@ -1,4 +1,4 @@
-﻿// Copyright 2015-2018 The NATS Authors
+﻿// Copyright 2023 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -224,7 +224,7 @@ namespace IntegrationTests
             }
         }
 
-        private void CleanupJs(IConnection c)
+        public void CleanupJs(IConnection c)
         {
             try
             {
@@ -443,6 +443,7 @@ namespace IntegrationTests
         
         public void RunInJsServer(Action<IConnection> test) => base.RunInJsServer(Server1, test);
         public void RunInServer(Action<IConnection> test) => base.RunInServer(Server1, test);
+        public void RunInJsServer(Action<Options> optionsModifier, Action<IConnection> test) => base.RunInJsServer(Server1, optionsModifier, test);
     }
 
     public sealed class SkipPlatformsWithoutSignals : FactAttribute

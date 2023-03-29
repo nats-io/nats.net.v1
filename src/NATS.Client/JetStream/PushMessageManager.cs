@@ -13,207 +13,117 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using NATS.Client.Internals;
 
 namespace NATS.Client.JetStream
 {
-    internal class PushMessageManager : MessageManager
+    public class PushMessageManager : MessageManager
     {
         private static readonly IList<int> PushKnownStatusCodes = new List<int>(new []{409});
-        private const int Threshold = 3;
 
-        internal readonly Connection _conn;
-        internal readonly JetStream _js;
-        internal readonly String _stream;
-        internal readonly ConsumerConfiguration _serverCc;
+        protected readonly JetStream Js;
+        protected readonly String Stream;
+        protected readonly ConsumerConfiguration OriginalCc;
 
-        internal bool SyncMode { get; }
-        internal bool QueueMode { get; }
-        internal bool Hb { get; }
-        internal bool Fc { get; }
-
-        internal int IdleHeartbeatSetting { get; }
-        internal int AlarmPeriodSetting { get; }
-
-        internal ulong _lastStreamSeq;
-        internal ulong _lastConsumerSeq;
-        internal long _lastMsgReceived;
-        internal string _lastFcSubject;
-
-        private HeartbeatTimer heartbeatTimer;
+        protected readonly bool QueueMode;
+        protected readonly bool Fc;
+        protected string LastFcSubject;
         
-        internal PushMessageManager(Connection conn, 
+        public PushMessageManager(Connection conn, 
             JetStream js, 
             string stream,
             SubscribeOptions so,
-            ConsumerConfiguration serverCc, 
+            ConsumerConfiguration originalCc, 
             bool queueMode, 
-            bool syncMode)
+            bool syncMode) : base(conn, syncMode)
         {
-            _conn = conn;
-            _js = js;
-            _stream = stream;
-            _serverCc = serverCc;
+            this.Js = js;
+            Stream = stream;
+            OriginalCc = originalCc;
 
-            SyncMode = syncMode;
             QueueMode = queueMode;
-            _lastStreamSeq = 0;
-            _lastConsumerSeq = 0;
-            _lastMsgReceived = -1;
 
             if (queueMode) {
-                Hb = false;
                 Fc = false;
-                IdleHeartbeatSetting = 0;
-                AlarmPeriodSetting = 0;
             }
             else
             {
-                IdleHeartbeatSetting = serverCc.IdleHeartbeat?.Millis ?? 0;
-                if (IdleHeartbeatSetting <= 0) {
-                    AlarmPeriodSetting = 0;
-                    Hb = false;
-                }
-                else {
-                    int mat = so.MessageAlarmTime;
-                    if (mat < IdleHeartbeatSetting) {
-                        AlarmPeriodSetting = IdleHeartbeatSetting * Threshold;
-                    }
-                    else {
-                        AlarmPeriodSetting = mat;
-                    }
-                    Hb = true;
-                }
-                Fc = Hb && serverCc.FlowControl; // can't have fc w/o heartbeat
+                ConfigureIdleHeartbeat(OriginalCc.IdleHeartbeat, so.MessageAlarmTime);
+                Fc = Hb && originalCc.FlowControl; // can't have fc w/o heartbeat
             }
         }
 
-        // chicken or egg situation here. The handler needs the sub in case of error
-        // but the sub needs the handler in order to be created
-        internal override void Startup(Subscription sub)
+        public override void Startup(IJetStreamSubscription sub)
         {
             base.Startup(sub);
+            ((Subscription)Sub).BeforeChannelAddCheck = BeforeChannelAddCheck;
             if (Hb) {
-                Sub.BeforeChannelAddCheck = BeforeChannelAddCheck;
-                heartbeatTimer = new HeartbeatTimer(this);
+                InitOrResetHeartbeatTimer();
             }
         }
 
-        internal override void Shutdown() {
-            if (heartbeatTimer != null) {
-                heartbeatTimer.Shutdown();
-                heartbeatTimer = null;
-            }
-            base.Shutdown();
-        }
-
-        internal virtual void HandleHeartbeatError()
+        protected override bool BeforeChannelAddCheck(Msg msg)
         {
-            _conn.Opts.HeartbeatAlarmEventHandlerOrDefault.Invoke(this, 
-                new HeartbeatAlarmEventArgs(_conn, Sub, _lastStreamSeq, _lastConsumerSeq));
-            
-        }
-        
-        class HeartbeatTimer
-        {
-            private readonly object mu = new object();
-            private Timer timer;
-
-            public HeartbeatTimer(PushMessageManager pushMm)
+            if (Hb)
             {
-                timer = new Timer(s => {
-                        long sinceLast = DateTimeOffset.Now.ToUnixTimeMilliseconds() - pushMm._lastMsgReceived;
-                        if (sinceLast > pushMm.AlarmPeriodSetting)
-                        {
-                            pushMm.HandleHeartbeatError();
-                        }
-                    }, 
-                    null, pushMm.AlarmPeriodSetting, pushMm.AlarmPeriodSetting);
-            }
-
-            public void Shutdown() {
-                if (timer != null)
+                MessageReceived(); // only need to track when heartbeats are expected
+                if (msg.HasStatus)
                 {
-                    lock (mu)
+                    // only plain heartbeats do not get queued
+                    if (msg.Status.IsHeartbeat())
                     {
-                        timer.Dispose();
-                        timer = null;
+                        return hasFcSubject(msg); // true if not a plain hb
                     }
                 }
             }
+
+            return true;
         }
 
-        protected virtual bool SubManage(Msg msg)
-        {
-            return false;
+        protected bool hasFcSubject(Msg msg) {
+            return msg.Header != null && msg.Header[JetStreamConstants.ConsumerStalledHeader] != null;
         }
 
-        internal override bool Manage(Msg msg) {
-            if (Sub.Sid != msg.Sid) {
-                return true;
-            }
-
-            if (msg.HasStatus) {
-                // this checks fc, hb and unknown
-                // only process fc and hb if those flags are set
-                // otherwise they are simply known statuses
-                if (msg.Status.IsFlowControl()) 
-                {
-                    if (Fc) {
-                        _processFlowControl(msg.Reply, FlowControlSource.FlowControl);
-                    }
-                }
-                else if (msg.Status.IsHeartbeat()) 
-                {
-                    if (Fc) {
-                        _processFlowControl(msg.Header?[JetStreamConstants.ConsumerStalledHeader], FlowControlSource.Heartbeat);
-                    }
-                }
-                else if (!PushKnownStatusCodes.Contains(msg.Status.Code))
-                {
-                    // If this status is unknown to us, always use the error handler.
-                    // this status is unknown to us, always use the error handler.
-                    // If it's a sync call, also throw an exception
-                    _conn.Opts.UnhandledStatusEventHandlerOrDefault.Invoke(this,
-                        new UnhandledStatusEventArgs(_conn, Sub, msg.Status));
-                    if (SyncMode)
-                    {
-                        throw new NATSJetStreamStatusException(Sub, msg.Status);
-                    }
-                }
-                return true;
-            }
-            
-            if (SubManage(msg)) {
-                return true;
-            }
-
-            // JS Message
-            _lastStreamSeq = msg.MetaData.StreamSequence;
-            _lastConsumerSeq = msg.MetaData.ConsumerSequence;;
-            return false;
+        protected String extractFcSubject(Msg msg) {
+            return msg.Header == null ? null : msg.Header[JetStreamConstants.ConsumerStalledHeader];
         }
 
-        protected virtual Msg BeforeChannelAddCheck(Msg msg)
-        {
-            _lastMsgReceived = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-            if (msg.HasStatus 
-                && msg.Status.IsHeartbeat()
-                && msg.Header?[JetStreamConstants.ConsumerStalledHeader] == null) 
+        public override bool Manage(Msg msg) {
+            if (!msg.HasStatus)
             {
-                return null; // plain heartbeat, no need to queue
+                TrackJsMessage(msg);
+                return false;
             }
-            return msg;
+            ManageStatus(msg);
+            return true; // all status are managed
+        }
+
+        protected void ManageStatus(Msg msg) {
+            // this checks fc, hb and unknown
+            // only process fc and hb if those flags are set
+            // otherwise they are simply known statuses
+            if (Fc) {
+                bool isFlowControl = msg.Status.IsFlowControl();
+                String fcSubject = isFlowControl ? msg.Reply : extractFcSubject(msg);
+                if (fcSubject != null) {
+                    _processFlowControl(fcSubject, isFlowControl ? FlowControlSource.FlowControl : FlowControlSource.Heartbeat);
+                    return;
+                }
+            }
+            Conn.Opts.UnhandledStatusEventHandlerOrDefault.Invoke(this, new UnhandledStatusEventArgs(Conn, (Subscription)Sub, msg.Status));
+            if (SyncMode)
+            {
+                throw new NATSJetStreamStatusException((Subscription)Sub, msg.Status);
+            }
         }
 
         private void _processFlowControl(string fcSubject, FlowControlSource source) {
             // we may get multiple fc/hb messages with the same reply
             // only need to post to that subject once
-            if (fcSubject != null && !fcSubject.Equals(_lastFcSubject)) {
-                _conn.Publish(fcSubject, null);
-                _lastFcSubject = fcSubject; // set after publish in case the pub fails
-                _conn.Opts.FlowControlProcessedEventHandlerOrDefault.Invoke(this, new FlowControlProcessedEventArgs(_conn, Sub, fcSubject, source));
+            if (fcSubject != null && !fcSubject.Equals(LastFcSubject)) {
+                Conn.Publish(fcSubject, null);
+                LastFcSubject = fcSubject; // set after publish in case the pub fails
+                Conn.Opts.FlowControlProcessedEventHandlerOrDefault.Invoke(this, new FlowControlProcessedEventArgs(Conn, (Subscription)Sub, fcSubject, source));
             }
         }
     }

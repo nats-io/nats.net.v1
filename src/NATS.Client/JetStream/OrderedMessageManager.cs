@@ -15,83 +15,86 @@ using System;
 
 namespace NATS.Client.JetStream
 {
-    internal class OrderedMessageManager : PushMessageManager
+    public class OrderedMessageManager : PushMessageManager
     {
-        private ulong expectedConsumerSeq;
+        protected ulong ExpectedExternalConsumerSeq;
+        protected long? TargetSid;
 
         public OrderedMessageManager(Connection conn, 
             JetStream js, 
             string stream,
             SubscribeOptions so,
-            ConsumerConfiguration serverCc, 
+            ConsumerConfiguration originalCc, 
             bool queueMode, 
-            bool syncMode) : base(conn, js, stream, so, serverCc, queueMode, syncMode)
+            bool syncMode) : base(conn, js, stream, so, originalCc, queueMode, syncMode)
         {
-            expectedConsumerSeq = 1; // always starts at 1
+            ExpectedExternalConsumerSeq = 1; // always starts at 1
         }
 
-        protected override bool SubManage(Msg msg)
+        public override void Startup(IJetStreamSubscription sub)
         {
-            ulong receivedConsumerSeq = msg.MetaData.ConsumerSequence;
-            if (expectedConsumerSeq != receivedConsumerSeq)
+            base.Startup(sub);
+            TargetSid = Sub.Sid;
+        }
+
+        public override bool Manage(Msg msg)
+        {
+            if (msg.Sid != TargetSid)
             {
-                HandleErrorCondition();
-                return true;
+                return true; // wrong sid is throwaway from previous consumer that errored
             }
-
-            expectedConsumerSeq++;
-            return false;
+            
+            if (msg.IsJetStream)
+            {
+                ulong receivedConsumerSeq = msg.MetaData.ConsumerSequence;
+                if (ExpectedExternalConsumerSeq != receivedConsumerSeq) {
+                    HandleErrorCondition();
+                    return true;
+                }
+                TrackJsMessage(msg);
+                ExpectedExternalConsumerSeq++;
+                return false;
+            }
+            
+            ManageStatus(msg);
+            return true; // all statuses are managed
         }
-
-        internal override void HandleHeartbeatError()
-        {
-            HandleErrorCondition();
-        }
-
-
+        
         private void HandleErrorCondition()
         {
             try
             {
-                expectedConsumerSeq = 1; // consumer always starts with consumer sequence 1
+                TargetSid = null;
+                ExpectedExternalConsumerSeq = 1; // consumer always starts with consumer sequence 1
 
                 // 1. shutdown the managers, for instance stops heartbeat timers
-                MessageManager manager;
-                if (Sub is JetStreamAbstractSyncSubscription syncSub)
-                {
-                    manager = syncSub.messageManager;
-                }
-                else
-                {
-                    manager = ((JetStreamPushAsyncSubscription)Sub).messageManager;
-                }
-
-                manager.Shutdown();
+                Shutdown();
 
                 // 2. re-subscribe. This means kill the sub then make a new one
                 //    New sub needs a new deliver subject
                 string newDeliverSubject = Sub.Connection.NewInbox();
-                Sub.reSubscribe(newDeliverSubject);
+                ((Subscription)Sub).reSubscribe(newDeliverSubject);
+                TargetSid = ((Subscription)Sub).Sid; 
 
                 // 3. make a new consumer using the same deliver subject but
                 //    with a new starting point
-                ConsumerConfiguration userCc = ConsumerConfiguration.Builder(_serverCc)
+                ConsumerConfiguration userCc = ConsumerConfiguration.Builder(OriginalCc)
                     .WithDeliverPolicy(DeliverPolicy.ByStartSequence)
                     .WithDeliverSubject(newDeliverSubject)
-                    .WithStartSequence(_lastStreamSeq + 1)
+                    .WithStartSequence(LastStreamSeq + 1)
                     .WithStartTime(DateTime.MinValue) // clear start time in case it was originally set
                     .Build();
 
-                _js.AddOrUpdateConsumerInternal(_stream, userCc);
+                Js.AddOrUpdateConsumerInternal(Stream, userCc);
 
-                // 4. re start the managers.
-                manager.Startup(Sub);
+                // 4. restart the manager.
+                Startup(Sub);
             }
             catch (Exception e)
             {
                 NATSBadSubscriptionException bad =
                     new NATSBadSubscriptionException("Ordered subscription fatal error: " + e.Message);
-                ((Connection)_js.Conn).ScheduleErrorEvent(this, bad, Sub);
+                ((Connection)Js.Conn).ScheduleErrorEvent(this, bad, (Subscription)Sub);
                 if (SyncMode)
                 {
                     throw bad;

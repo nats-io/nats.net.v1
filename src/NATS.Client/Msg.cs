@@ -31,6 +31,7 @@ namespace NATS.Client
         protected byte[] data;
         internal Subscription sub;
         internal MsgHeader header;
+        internal int headerLen;
         internal MsgStatus status;
         protected AckType _lastAck;
 
@@ -129,9 +130,14 @@ namespace NATS.Client
 
             if (arg.hdr > 0)
             {
+                headerLen = arg.hdr;
                 HeaderStatusReader hsr = new HeaderStatusReader(payload, arg.hdr);
                 header = hsr.Header;
                 status = hsr.Status;
+            }
+            else
+            {
+                headerLen = 0;
             }
 
             // make a deep copy of the bytes for this message.

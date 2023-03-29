@@ -150,6 +150,12 @@ namespace UnitTests
             DefaultUnhandledStatusEventHandler().Invoke(null, usea);
             DefaultUnhandledStatusEventHandler().Invoke(null, null);
 
+            StatusEventArgs sea = new StatusEventArgs(null, null, null);
+            DefaultPullStatusWarningEventHandler().Invoke(null, sea);
+            DefaultPullStatusWarningEventHandler().Invoke(null, null);
+            DefaultPullStatusErrorEventHandler().Invoke(null, sea);
+            DefaultPullStatusErrorEventHandler().Invoke(null, null);
+
             FlowControlProcessedEventArgs fcpea = new FlowControlProcessedEventArgs(null, null, null, FlowControlSource.Heartbeat);
             DefaultFlowControlProcessedEventHandler().Invoke(null, fcpea);
             DefaultFlowControlProcessedEventHandler().Invoke(null, null);

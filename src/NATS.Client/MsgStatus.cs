@@ -21,7 +21,6 @@ namespace NATS.Client
         private const string FlowControlText = "FlowControl Request";
         private const string HeartbeatText = "Idle Heartbeat";
         private const string NoRespondersText = "No Responders Available For Request";
-        private const int FlowOrHeartbeatStatusCode = 100;
         
         private readonly int _code;
         private readonly string _message;
@@ -65,15 +64,15 @@ namespace NATS.Client
         }
 
         public bool IsFlowControl() {
-            return IsStatus(FlowOrHeartbeatStatusCode, FlowControlText);
+            return _code == NatsConstants.FlowOrHeartbeatStatusCode && _message.Equals(FlowControlText);
         }
 
         public bool IsHeartbeat() {
-            return IsStatus(FlowOrHeartbeatStatusCode, HeartbeatText);
+            return _code == NatsConstants.FlowOrHeartbeatStatusCode && _message.Equals(HeartbeatText);
         }
 
         public bool IsNoResponders() {
-            return IsStatus(NatsConstants.NoRespondersCode, NoRespondersText);
+            return _code == NatsConstants.NoRespondersCode && _message.Equals(NoRespondersText);
         }
     }
 }
