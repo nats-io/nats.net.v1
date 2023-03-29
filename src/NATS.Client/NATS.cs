@@ -351,7 +351,7 @@ namespace NATS.Client
         public Subscription Sub { get; }
 
         /// <summary>
-        /// The <see cref="NATS.Client.IJetStreamSubscription"/> when the associated Subscription is of this type.
+        /// The <see cref="NATS.Client.JetStream.IJetStreamSubscription"/> when the associated Subscription is of this type.
         /// </summary>
         public IJetStreamSubscription JetStreamSub { get; } 
 
