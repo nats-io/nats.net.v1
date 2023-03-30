@@ -21,23 +21,24 @@ namespace NATS.Client.JetStream
     {
         public const int Threshold = 3;
 
+        protected readonly object StateChangeLock;
         protected readonly Connection Conn;
         protected readonly bool SyncMode;
 
-        protected IJetStreamSubscription Sub;
+        protected IJetStreamSubscription Sub; // not readonly it is not set until after construction
 
         protected ulong LastStreamSeq;
         protected ulong LastConsumerSeq;
         protected long LastMsgReceived;
+
         protected bool Hb;
         protected int IdleHeartbeatSetting;
         protected int AlarmPeriodSetting;
-
-        protected readonly object timerLock;
         protected Timer heartbeatTimer;
 
         protected MessageManager(Connection conn, bool syncMode)
         {
+            StateChangeLock = new object();
             Conn = conn;
             SyncMode = syncMode;
             LastStreamSeq = 0;
@@ -47,9 +48,7 @@ namespace NATS.Client.JetStream
             IdleHeartbeatSetting = 0;
             AlarmPeriodSetting = 0;
 
-            MessageReceived(); // initializes lastMsgReceived;
-
-            timerLock = new object();
+            LastMsgReceived = DateTimeOffset.Now.ToUnixTimeMilliseconds();
         }
 
         public virtual void Startup(IJetStreamSubscription sub)
@@ -68,7 +67,10 @@ namespace NATS.Client.JetStream
 
         protected void MessageReceived()
         {
-            LastMsgReceived = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            lock (StateChangeLock)
+            {
+                LastMsgReceived = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            }
         }
 
         protected virtual bool BeforeChannelAddCheck(Msg msg)
@@ -79,8 +81,11 @@ namespace NATS.Client.JetStream
         public abstract bool Manage(Msg msg);
         
         protected void TrackJsMessage(Msg msg) {
-            LastStreamSeq = msg.MetaData.StreamSequence;
-            LastConsumerSeq++;
+            lock (StateChangeLock)
+            {
+                LastStreamSeq = msg.MetaData.StreamSequence;
+                LastConsumerSeq++;
+            }
         }
         
         internal virtual void HandleHeartbeatError()
@@ -92,41 +97,56 @@ namespace NATS.Client.JetStream
 
         protected void ConfigureIdleHeartbeat(Duration configIdleHeartbeat, int configMessageAlarmTime)
         {
-            IdleHeartbeatSetting = configIdleHeartbeat == null ? 0 : configIdleHeartbeat.Millis;
-            if (IdleHeartbeatSetting <= 0) {
-                AlarmPeriodSetting = 0;
-                Hb = false;
-            }
-            else {
-                if (configMessageAlarmTime < IdleHeartbeatSetting) {
-                    AlarmPeriodSetting = IdleHeartbeatSetting * Threshold;
+            lock (StateChangeLock)
+            {
+                IdleHeartbeatSetting = configIdleHeartbeat == null ? 0 : configIdleHeartbeat.Millis;
+                if (IdleHeartbeatSetting <= 0)
+                {
+                    AlarmPeriodSetting = 0;
+                    Hb = false;
                 }
-                else {
-                    AlarmPeriodSetting = configMessageAlarmTime;
+                else
+                {
+                    if (configMessageAlarmTime < IdleHeartbeatSetting)
+                    {
+                        AlarmPeriodSetting = IdleHeartbeatSetting * Threshold;
+                    }
+                    else
+                    {
+                        AlarmPeriodSetting = configMessageAlarmTime;
+                    }
+
+                    Hb = true;
                 }
-                Hb = true;
             }
         }
 
         protected void InitOrResetHeartbeatTimer()
         {
-            ShutdownHeartbeatTimer();
-            heartbeatTimer = new Timer(state =>
-                {
-                    long sinceLast = DateTimeOffset.Now.ToUnixTimeMilliseconds() - LastMsgReceived;
-                    if (sinceLast > AlarmPeriodSetting)
+            lock (StateChangeLock)
+            {
+                ShutdownHeartbeatTimer();
+                heartbeatTimer = new Timer(state =>
                     {
-                        HandleHeartbeatError();
-                    }
-                },
-                null, AlarmPeriodSetting, AlarmPeriodSetting);
+                        long sinceLast = DateTimeOffset.Now.ToUnixTimeMilliseconds() - LastMsgReceived;
+                        if (sinceLast > AlarmPeriodSetting)
+                        {
+                            HandleHeartbeatError();
+                        }
+                    },
+                    null, AlarmPeriodSetting, AlarmPeriodSetting);
+            }
         }
-        
+
         protected void ShutdownHeartbeatTimer()
         {
-            if (heartbeatTimer != null) {
-                heartbeatTimer.Dispose();
-                heartbeatTimer = null;
+            lock (StateChangeLock)
+            {
+                if (heartbeatTimer != null)
+                {
+                    heartbeatTimer.Dispose();
+                    heartbeatTimer = null;
+                }
             }
         }
     }

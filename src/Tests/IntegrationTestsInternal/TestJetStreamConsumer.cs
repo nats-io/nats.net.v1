@@ -246,7 +246,7 @@ namespace IntegrationTestsInternal
         [Fact]
         public void TestHeartbeatError()
         {
-            TestEventCountHandler handler = new TestEventCountHandler();
+            TestEventHandler handler = new TestEventHandler();
             Action<Options> modifier = options => options.HeartbeatAlarmEventHandler = handler.HeartbeatAlarmHandler;
             Context.RunInJsServer(modifier, c =>
             {
@@ -281,7 +281,7 @@ namespace IntegrationTestsInternal
             });
         }
         
-        private static void validate(IJetStreamSubscription sub, TestEventCountHandler handler, CountdownEvent latch)
+        private static void validate(IJetStreamSubscription sub, TestEventHandler handler, CountdownEvent latch)
         {
             latch.Wait(TimeSpan.FromSeconds(10));
             Assert.Equal(0, latch.CurrentCount);

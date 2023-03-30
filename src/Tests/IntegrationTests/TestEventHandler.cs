@@ -4,11 +4,11 @@ using NATS.Client;
 
 namespace IntegrationTests
 {
-    public class TestEventCountHandler
+    public class TestEventHandler
     {
-        public IList<HeartbeatAlarmEventArgs> HeartbeatAlarmEvents = new List<HeartbeatAlarmEventArgs>();
-        public IList<StatusEventArgs> PullStatusWarningEvents = new List<StatusEventArgs>();
-        public IList<StatusEventArgs> PullStatusErrorEvents = new List<StatusEventArgs>();
+        public readonly IList<HeartbeatAlarmEventArgs> HeartbeatAlarmEvents = new List<HeartbeatAlarmEventArgs>();
+        public readonly IList<StatusEventArgs> PullStatusWarningEvents = new List<StatusEventArgs>();
+        public readonly IList<StatusEventArgs> PullStatusErrorEvents = new List<StatusEventArgs>();
 
         public void Reset()
         {

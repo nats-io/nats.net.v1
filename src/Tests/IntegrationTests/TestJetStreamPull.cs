@@ -563,7 +563,7 @@ namespace IntegrationTests
         private void TestConflictStatus(string statusText, int type, bool syncMode, string targetVersion, ConflictSetup setup)
         {
             bool skip = false;
-            TestEventCountHandler handler = new TestEventCountHandler();
+            TestEventHandler handler = new TestEventHandler();
             Context.RunInJsServer(handler.Modifier, c =>
             {
                 skip = VersionIsBefore(c, targetVersion);
@@ -598,7 +598,7 @@ namespace IntegrationTests
             }
         }
         
-        private void CheckHandler(String statusText, int type, TestEventCountHandler handler) {
+        private void CheckHandler(String statusText, int type, TestEventHandler handler) {
             if (type == TypeError) {
                 Assert.Equal(0, handler.PullStatusWarningEvents.Count);
                 StatusEventArgs se = handler.PullStatusErrorEvents[0];
@@ -726,7 +726,7 @@ namespace IntegrationTests
         public void testExceedsMaxRequestBytesNthMessage()
         {
             bool skip = false;
-            TestEventCountHandler handler = new TestEventCountHandler();
+            TestEventHandler handler = new TestEventHandler();
             Context.RunInJsServer(handler.Modifier, c =>
             {
                 skip = VersionIsBefore(c, "2.9.1");
@@ -767,7 +767,7 @@ namespace IntegrationTests
         public void testExceedsMaxRequestBytesExactBytes()
         {
             bool skip = false;
-            TestEventCountHandler handler = new TestEventCountHandler();
+            TestEventHandler handler = new TestEventHandler();
             Context.RunInJsServer(handler.Modifier, c =>
             {
                 skip = VersionIsBefore(c, "2.9.1");

@@ -12,15 +12,12 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using NATS.Client.Internals;
 
 namespace NATS.Client.JetStream
 {
     public class PushMessageManager : MessageManager
     {
-        private static readonly IList<int> PushKnownStatusCodes = new List<int>(new []{409});
-
         protected readonly JetStream Js;
         protected readonly String Stream;
         protected readonly ConsumerConfiguration OriginalCc;

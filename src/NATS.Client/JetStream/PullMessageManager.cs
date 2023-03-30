@@ -4,14 +4,12 @@ namespace NATS.Client.JetStream
 {
     internal class PullMessageManager : MessageManager
     {
-        protected readonly object pendingLock;
         protected long pendingMessages;
         protected long pendingBytes;
         protected bool trackingBytes;
 
         public PullMessageManager(Connection conn, bool syncMode) : base(conn, syncMode)
         {
-            pendingLock = new object();
             trackingBytes = false;
             pendingMessages = 0;
             pendingBytes = 0;
@@ -25,27 +23,27 @@ namespace NATS.Client.JetStream
 
         public override void StartPullRequest(PullRequestOptions pro)
         {
-            lock (pendingLock)
+            lock (StateChangeLock)
             {
                 pendingMessages += pro.BatchSize;
                 pendingBytes += pro.MaxBytes;
                 trackingBytes = (pendingBytes > 0);
-            }
 
-            ConfigureIdleHeartbeat(pro.IdleHeartbeat, -1);
-            if (Hb)
-            {
-                InitOrResetHeartbeatTimer();
-            }
-            else
-            {
-                ShutdownHeartbeatTimer();
+                ConfigureIdleHeartbeat(pro.IdleHeartbeat, -1);
+                if (Hb)
+                {
+                    InitOrResetHeartbeatTimer();
+                }
+                else
+                {
+                    ShutdownHeartbeatTimer();
+                }
             }
         }
 
         private void TrackPending(long m, long b)
         {
-            lock (pendingLock)
+            lock (StateChangeLock)
             {
                 pendingMessages -= m;
                 pendingBytes -= b;

@@ -19,6 +19,8 @@ namespace NATS.Client.JetStream
     public class JetStreamAbstractSyncSubscription : SyncSubscription
     {
         internal readonly MessageManager MessageManager;
+        
+        // properties of IJetStreamSubscription
         public JetStream Context { get; }
         public string Stream { get; }
         public string Consumer { get; internal set; }
