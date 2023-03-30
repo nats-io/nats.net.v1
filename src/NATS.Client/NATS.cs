@@ -14,6 +14,7 @@
 using System;
 using System.Reflection;
 using System.Text;
+using NATS.Client.JetStream;
 
 /*! \mainpage %NATS .NET client.
  *
@@ -193,18 +194,29 @@ namespace NATS.Client
 
         public static EventHandler<HeartbeatAlarmEventArgs> DefaultHeartbeatAlarmEventHandler() =>
             (sender, e) =>
-                WriteEvent("HeartbeatAlarm", e,
+                WriteJsEvent("HeartbeatAlarm", e,
                     "lastStreamSequence: ", e?.LastStreamSequence ?? 0U,
                     "lastConsumerSequence: ", e?.LastConsumerSequence ?? 0U);
 
         public static EventHandler<UnhandledStatusEventArgs> DefaultUnhandledStatusEventHandler() => 
-            (sender, e) => WriteEvent("UnhandledStatus", e, "Status: ", e?.Status);
+            (sender, e) => WriteJsEvent("UnhandledStatus", e, "Status: ", e?.Status);
+
+        public static EventHandler<StatusEventArgs> DefaultPullStatusWarningEventHandler() => 
+            (sender, e) => WriteJsEvent("PullStatusWarning", e, "Status: ", e?.Status);
+
+        public static EventHandler<StatusEventArgs> DefaultPullStatusErrorEventHandler() => 
+            (sender, e) => WriteJsEvent("PullStatusError", e, "Status: ", e?.Status);
 
         public static EventHandler<FlowControlProcessedEventArgs> DefaultFlowControlProcessedEventHandler() =>
-            (sender, e) => WriteEvent("FlowControlProcessed", e, "FcSubject: ", e?.FcSubject, "Source: ", e?.Source);
+            (sender, e) => WriteJsEvent("FlowControlProcessed", e, "FcSubject: ", e?.FcSubject, "Source: ", e?.Source);
 
-        private static void WriteEvent(String label, ConnJsSubEventArgs e, params object[] pairs) {
+        private static void WriteJsEvent(String label, ConnJsSubEventArgs e, params object[] pairs) {
             var sb = BeginFormatMessage(label, e?.Conn, e?.Sub, null);
+            if (e?.JetStreamSub != null && e?.JetStreamSub.Consumer != null)
+            {
+                sb.Append(", ConsumerName:").Append(e.JetStreamSub.Consumer);
+            }
+
             for (int x = 0; x < pairs.Length; x++) {
                 sb.Append(", ").Append(pairs[x]).Append(pairs[++x]);
             }
@@ -329,19 +341,28 @@ namespace NATS.Client
     public class ConnJsSubEventArgs : EventArgs
     {
         /// <summary>
-        /// Gets the <see cref="Connection"/> associated with the event.
+        /// The <see cref="Connection"/> associated with the event.
         /// </summary>
         public Connection Conn { get; }
         
         /// <summary>
-        /// Gets the <see cref="NATS.Client.Subscription"/> associated with the event.
+        /// The <see cref="NATS.Client.Subscription"/> associated with the event.
         /// </summary>
         public Subscription Sub { get; }
 
+        /// <summary>
+        /// The <see cref="NATS.Client.JetStream.IJetStreamSubscription"/> when the associated Subscription is of this type.
+        /// </summary>
+        public IJetStreamSubscription JetStreamSub { get; } 
+
         protected ConnJsSubEventArgs(Connection conn, Subscription sub)
         {
-            Conn =  conn;
+            Conn = conn;
             Sub = sub;
+            if (sub is IJetStreamSubscription)
+            {
+                JetStreamSub = (IJetStreamSubscription)sub;
+            }
         }
     }
     
@@ -364,14 +385,22 @@ namespace NATS.Client
     /// <summary>
     /// Provides details for an status message when it is unknown or unhandled
     /// </summary>
-    public class UnhandledStatusEventArgs : ConnJsSubEventArgs
+    public class StatusEventArgs : ConnJsSubEventArgs
     {
         public MsgStatus Status { get; }
 
-        public UnhandledStatusEventArgs(Connection c, Subscription s, MsgStatus status) : base(c, s)
+        public StatusEventArgs(Connection c, Subscription s, MsgStatus status) : base(c, s)
         {
             Status = status;
         }
+    }
+
+    /// <summary>
+    /// Provides details for an status message when it is unknown or unhandled
+    /// </summary>
+    public class UnhandledStatusEventArgs : StatusEventArgs
+    {
+        public UnhandledStatusEventArgs(Connection c, Subscription s, MsgStatus status) : base(c, s, status) {}
     }
     
     /// <summary>
@@ -399,7 +428,7 @@ namespace NATS.Client
         private string jwt = null;
 
         /// <Summary>
-        /// Sets the JWT read by the event handler.   This MUST be set in the event handler.
+        /// Sets the JWT read by the event handler. This MUST be set in the event handler.
         /// </Summary>
         public string JWT 
         {

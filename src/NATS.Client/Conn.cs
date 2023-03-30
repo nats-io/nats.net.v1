@@ -4168,7 +4168,7 @@ namespace NATS.Client
         // subscribe is the internal subscribe 
         // function that indicates interest in a subject.
         internal SyncSubscription subscribeSync(string subject, string queue, 
-            CreateSyncSubscriptionDelegate createSyncSubscriptionDelegate = null)
+            CreateSyncSubscriptionDelegate syncSubDelegate = null)
         {
             if (!Subscription.IsValidSubject(subject))
             {
@@ -4188,16 +4188,16 @@ namespace NATS.Client
                 if (IsDraining())
                     throw new NATSConnectionDrainingException();
 
-                if (createSyncSubscriptionDelegate == null)
+                if (syncSubDelegate == null)
                 {
-                    createSyncSubscriptionDelegate = (lConn, lSubject, lQueue) =>
+                    syncSubDelegate = (lConn, lSubject, lQueue) =>
                     {
                         SyncSubscription ssub = new SyncSubscription(this, subject, queue);
                         ssub.SetPendingLimits(opts.subChanLen, SubPendingBytesLimit);
                         return ssub;
                     };
                 }
-                s = createSyncSubscriptionDelegate(this, subject, queue);
+                s = syncSubDelegate(this, subject, queue);
 
                 AddSubscription(s);
 

@@ -62,8 +62,7 @@ namespace NATS.Client.JetStream
         /// Initiate pull with the specified batch size.
         /// </summary>
         /// <remarks>
-        ///
-        /// Primitive API for Advanced use only. Prefer Fetch 
+        /// Primitive API for ADVANCED use only, officially not supported. Prefer Fetch 
         /// </remarks>
         /// <param name="batchSize">the size of the batch</param>
         void Pull(int batchSize);
@@ -72,10 +71,7 @@ namespace NATS.Client.JetStream
         /// Initiate pull with the specified request options.
         /// </summary>
         /// <remarks>
-        ///
-        /// Primitive API for Advanced use only. Prefer Fetch 
-        ///
-        /// IMPORTANT! PullRequestOptions ARE CURRENTLY EXPERIMENTAL AND SUBJECT TO CHANGE.  
+        /// Primitive API for ADVANCED use only, officially not supported. Prefer Fetch 
         /// </remarks>
         /// <param name="pullRequestOptions">the options object</param>
         void Pull(PullRequestOptions pullRequestOptions);
@@ -84,8 +80,7 @@ namespace NATS.Client.JetStream
         /// Do a pull in noWait mode with the specified batch size.
         /// </summary>
         /// <remarks>
-        ///
-        /// Primitive API for Advanced use only. Prefer Fetch 
+        /// Primitive API for ADVANCED use only, officially not supported. Prefer Fetch 
         /// </remarks>
         /// <param name="batchSize">the size of the batch</param>
         void PullNoWait(int batchSize);
@@ -94,8 +89,7 @@ namespace NATS.Client.JetStream
         /// Do a pull in noWait + expire mode with the specified batch size.
         /// </summary>
         /// <remarks>
-        ///
-        /// Primitive API for Advanced use only. Prefer Fetch 
+        /// Primitive API for ADVANCED use only, officially not supported. Prefer Fetch 
         /// </remarks>
         /// <param name="batchSize">the size of the batch</param>
         /// <param name="expiresInMillis">how long from now the server should expire this request</param>
@@ -105,8 +99,7 @@ namespace NATS.Client.JetStream
         /// Initiate pull for all messages available before expiration.
         /// </summary>
         /// <remarks>
-        ///
-        /// Primitive API for Advanced use only. Prefer Fetch 
+        /// Primitive API for ADVANCED use only, officially not supported. Prefer Fetch 
         /// </remarks>
         /// <param name="batchSize">the size of the batch</param>
         /// <param name="expiresInMillis">how long from now the server should expire this request</param>
@@ -121,7 +114,7 @@ namespace NATS.Client.JetStream
         /// </remarks>
         /// <param name="batchSize">the size of the batch</param>
         /// <param name="maxWaitMillis">The maximum time to wait for the first message.</param>
-        /// <returns></returns>
+        /// <returns>A list of messages</returns>
         IList<Msg> Fetch(int batchSize, int maxWaitMillis);
     }
 }

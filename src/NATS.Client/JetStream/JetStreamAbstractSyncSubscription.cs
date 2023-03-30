@@ -18,7 +18,9 @@ namespace NATS.Client.JetStream
 {
     public class JetStreamAbstractSyncSubscription : SyncSubscription
     {
-        internal readonly MessageManager messageManager;
+        internal readonly MessageManager MessageManager;
+        
+        // properties of IJetStreamSubscription
         public JetStream Context { get; }
         public string Stream { get; }
         public string Consumer { get; internal set; }
@@ -32,22 +34,21 @@ namespace NATS.Client.JetStream
             Stream = stream;
             Consumer = consumer; // might be null, someone will call set on ConsumerName
             DeliverSubject = deliver;
-
-            this.messageManager = messageManager;
-            messageManager.Startup(this);
+            MessageManager = messageManager;
+            MessageManager.Startup((IJetStreamSubscription)this);
         }
 
         public ConsumerInfo GetConsumerInformation() => Context.LookupConsumerInfo(Stream, Consumer);
         
         public override void Unsubscribe()
         {
-            messageManager.Shutdown();
+            MessageManager.Shutdown();
             base.Unsubscribe();
         }
 
         internal override void close()
         {
-            messageManager.Shutdown();
+            MessageManager.Shutdown();
             base.close();
         }
 
@@ -56,7 +57,7 @@ namespace NATS.Client.JetStream
             // this calls is intended to block indefinitely so if there is a managed
             // message it's like not getting a message at all and we keep waiting
             Msg msg = NextMessageImpl(-1);
-            while (msg != null && messageManager.Manage(msg)) {
+            while (msg != null && MessageManager.Manage(msg)) {
                 msg = NextMessageImpl(-1);
             }
             return msg;
@@ -75,7 +76,7 @@ namespace NATS.Client.JetStream
             while (timeLeft > 0)
             {
                 Msg msg = NextMessageImpl(timeLeft);
-                if (!messageManager.Manage(msg)) { // not managed means JS Message
+                if (!MessageManager.Manage(msg)) { // not managed means JS Message
                     return msg;
                 }
                 timeLeft = timeout - (int)sw.ElapsedMilliseconds;

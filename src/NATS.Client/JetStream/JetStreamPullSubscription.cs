@@ -35,6 +35,7 @@ namespace NATS.Client.JetStream
         public void Pull(PullRequestOptions pullRequestOptions) {
             string subj = string.Format(JetStreamConstants.JsapiConsumerMsgNext, Stream, Consumer);
             string publishSubject = Context.PrependPrefix(subj);
+            MessageManager.StartPullRequest(pullRequestOptions);
             Connection.Publish(publishSubject, Subject, pullRequestOptions.Serialize());
             Connection.FlushBuffer();
         }
@@ -87,7 +88,7 @@ namespace NATS.Client.JetStream
                 int timeLeft = maxWaitMillis;
                 while (batchLeft > 0 && timeLeft > 0) {
                     Msg msg = NextMessageImpl(timeLeft);
-                    if (!messageManager.Manage(msg)) { // not managed means JS Message
+                    if (!MessageManager.Manage(msg)) { // not managed means JS Message
                         messages.Add(msg);
                         batchLeft--;
                     }

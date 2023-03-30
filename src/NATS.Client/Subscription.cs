@@ -62,9 +62,14 @@ namespace NATS.Client
 
         // Subject that represents this subscription. This can be different
         // than the received subject inside a Msg if this is a wildcard.
-        private string      subject = null;
+        private string subject = null;
 
-        internal Func<Msg, Msg> BeforeChannelAddCheck;
+        internal Func<Msg, bool> _beforeChannelAddCheck;
+        internal Func<Msg, bool> BeforeChannelAddCheck
+        {
+            get => _beforeChannelAddCheck;
+            set { _beforeChannelAddCheck = value == null ? m => true : value; }
+        }
 
         internal Subscription(Connection conn, string subject, string queue)
         {
@@ -75,8 +80,8 @@ namespace NATS.Client
             pendingMessagesLimit = conn.Opts.subChanLen;
             
             sid = SidGenerator.Next();
-            
-            BeforeChannelAddCheck = msg => msg;
+
+            BeforeChannelAddCheck = null;
         }
                 
         internal void reSubscribe(string deliverSubject)
@@ -210,11 +215,8 @@ namespace NATS.Client
 		        pendingBytesMax = pendingBytes;
             }
 	
-            // BeforeChannelAddCheck returns null if the message
-            // does not need to be queued, for instance plain heartbeats
-            msg = BeforeChannelAddCheck.Invoke(msg);
-            
-            if (msg != null)
+            // BeforeChannelAddCheck returns true if the message is allowed to be queued
+            if (BeforeChannelAddCheck.Invoke(msg))
             {
                 // Check for a Slow Consumer
                 if ((pendingMessagesLimit > 0 && pendingMessages > pendingMessagesLimit)

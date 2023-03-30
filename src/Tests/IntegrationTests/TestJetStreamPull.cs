@@ -16,11 +16,13 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using NATS.Client;
+using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using Xunit;
 using Xunit.Abstractions;
 using static UnitTests.TestBase;
 using static IntegrationTests.JetStreamTestBase;
+using static NATS.Client.Internals.JetStreamConstants;
 
 namespace IntegrationTests
 {
@@ -31,13 +33,13 @@ namespace IntegrationTests
         public TestJetStreamPull(ITestOutputHelper output, JetStreamPullSuiteContext context) : base(context)
         {
             this.output = output;
+            Console.SetOut(new ConsoleWriter(output));
+            
         }
 
         [Fact]
         public void TestFetch()
         {
-            Console.SetOut(new ConsoleWriter(output));
-
             Context.RunInJsServer(c =>
             {
                 // create the stream.
@@ -106,8 +108,7 @@ namespace IntegrationTests
                 AckAll(messages);
             });
         }
-
-
+        
         [Fact]
         public void TestBasic()
         {
@@ -510,5 +511,298 @@ namespace IntegrationTests
         }
 
         delegate IJetStreamPullSubscription PullSubSupplier();
+
+        [Fact]
+        public void TestPullRequestsOptionsBuilder()
+        {
+            Assert.Throws<ArgumentException>(() => PullRequestOptions.Builder(0).Build());
+            Assert.Throws<ArgumentException>(() => PullRequestOptions.Builder(-1).Build());
+
+            PullRequestOptions pro = PullRequestOptions.Builder(11).Build();
+            Assert.Equal(11, pro.BatchSize);
+            Assert.Equal(0, pro.MaxBytes);
+            Assert.Null(pro.ExpiresIn);
+            Assert.Null(pro.IdleHeartbeat);
+            Assert.False(pro.NoWait);
+
+            pro = PullRequestOptions.Builder(31)
+                .WithMaxBytes(32)
+                .WithExpiresIn(33)
+                .WithIdleHeartbeat(34)
+                .WithNoWait()
+                .Build();
+            Assert.Equal(31, pro.BatchSize);
+            Assert.Equal(32, pro.MaxBytes);
+            Assert.Equal(33, pro.ExpiresIn.Millis);
+            Assert.Equal(34, pro.IdleHeartbeat.Millis);
+            Assert.True(pro.NoWait);
+
+            pro = PullRequestOptions.Builder(41)
+                .WithExpiresIn(Duration.OfMillis(43))
+                .WithIdleHeartbeat(Duration.OfMillis(44))
+                .WithNoWait(false) // just coverage of this method
+                .Build();
+            Assert.Equal(41, pro.BatchSize);
+            Assert.Equal(0, pro.MaxBytes);
+            Assert.Equal(43, pro.ExpiresIn.Millis);
+            Assert.Equal(44, pro.IdleHeartbeat.Millis);
+            Assert.False(pro.NoWait);
+        }
+
+        delegate IJetStreamPullSubscription ConflictSetup(IJetStreamManagement jsm, IJetStream js);
+
+        private bool VersionIsBefore(IConnection conn, string version)
+        {
+            return version != null && conn.ServerInfo.IsOlderThanVersion(version);
+        }
+
+        private const int TypeError = 1;
+        private const int TypeWarning = 2;
+        private const int TypeNone = 0;
+
+        private void TestConflictStatus(string statusText, int type, bool syncMode, string targetVersion, ConflictSetup setup)
+        {
+            bool skip = false;
+            TestEventHandler handler = new TestEventHandler();
+            Context.RunInJsServer(handler.Modifier, c =>
+            {
+                skip = VersionIsBefore(c, targetVersion);
+                if (skip)
+                {
+                    return;
+                }
+                CreateDefaultTestStream(c);
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                IJetStream js = c.CreateJetStreamContext();
+                IJetStreamPullSubscription sub = setup.Invoke(jsm, js);
+                if (type == TypeError && syncMode)
+                {
+                    Assert.Throws<NATSJetStreamStatusException>(() => sub.NextMessage(500));
+                }
+                else
+                {
+                    try
+                    {
+                        sub.NextMessage((500));
+                    }
+                    catch (NATSTimeoutException)
+                    {
+                    }
+                }
+                Thread.Sleep(500);
+            });
+            
+            if (!skip)
+            {
+                CheckHandler(statusText, type, handler);
+            }
+        }
+        
+        private void CheckHandler(String statusText, int type, TestEventHandler handler) {
+            if (type == TypeError) {
+                Assert.Equal(0, handler.PullStatusWarningEvents.Count);
+                StatusEventArgs se = handler.PullStatusErrorEvents[0];
+                Assert.StartsWith(statusText, se.Status.Message);
+            }
+            else if (type == TypeWarning) {
+                StatusEventArgs se = handler.PullStatusWarningEvents[0];
+                Assert.StartsWith(statusText, se.Status.Message);
+                Assert.Equal(0, handler.PullStatusErrorEvents.Count);
+            }
+            else {
+                Assert.Equal(0, handler.PullStatusWarningEvents.Count);
+                Assert.Equal(0, handler.PullStatusErrorEvents.Count);
+            }
+        }
+
+        [Fact]
+        public void TestExceedsMaxWaiting()
+        {
+            PullSubscribeOptions so = ConsumerConfiguration.Builder().WithMaxPullWaiting(1).BuildPullSubscribeOptions();
+            TestConflictStatus(ExceededMaxWaiting, TypeWarning, true, null, (jsm, js) => {
+                IJetStreamPullSubscription sub = js.PullSubscribe(SUBJECT, so);
+                sub.Pull(1);
+                sub.Pull(1);
+                return sub;
+            });
+        }
+
+        [Fact]
+        public void testExceedsMaxRequestBatch()
+        {
+            PullSubscribeOptions so = ConsumerConfiguration.Builder().WithMaxBatch(1).BuildPullSubscribeOptions();
+            TestConflictStatus(ExceededMaxRequestBatch, TypeWarning, true, null, (jsm, js) => {
+                IJetStreamPullSubscription sub = js.PullSubscribe(SUBJECT, so);
+                sub.Pull(2);
+                return sub;
+            });
+
+        }
+
+        [Fact]
+        public void testMessageSizeExceedsMaxBytes()
+        {
+            PullSubscribeOptions so = ConsumerConfiguration.Builder().BuildPullSubscribeOptions();
+            TestConflictStatus(MessageSizeExceedsMaxBytes, TypeWarning, true, "2.9.0", (jsm, js) => {
+                js.Publish(SUBJECT, new byte[1000]);
+                IJetStreamPullSubscription sub = js.PullSubscribe(SUBJECT, so);
+                sub.Pull(PullRequestOptions.Builder(1).WithMaxBytes(100).Build());
+                return sub;
+            });
+        }
+
+        [Fact]
+        public void testExceedsMaxRequestExpires()
+        {
+            PullSubscribeOptions so = ConsumerConfiguration.Builder().WithMaxExpires(1000).BuildPullSubscribeOptions();
+            TestConflictStatus(ExceededMaxRequestExpires, TypeWarning, true, null, (jsm, js) => {
+                IJetStreamPullSubscription sub = js.PullSubscribe(SUBJECT, so);
+                sub.PullExpiresIn(1, 2000);
+                return sub;
+            });
+        }
+
+        [Fact]
+        public void testConsumerIsPushBased()
+        {
+            PullSubscribeOptions so = PullSubscribeOptions.BindTo(STREAM, Durable(1));
+            TestConflictStatus(ConsumerIsPushBased, TypeError, true, null, (jsm, js) => {
+                jsm.AddOrUpdateConsumer(STREAM, ConsumerConfiguration.Builder().WithDurable(Durable(1)).Build());
+                IJetStreamPullSubscription sub = js.PullSubscribe(null, so);
+                jsm.DeleteConsumer(STREAM, Durable(1));
+                jsm.AddOrUpdateConsumer(STREAM, ConsumerConfiguration.Builder().WithDurable(Durable(1)).WithDeliverSubject(Deliver(1)).Build());
+                sub.Pull(1);
+                return sub;
+            });
+        }
+
+        [Fact]
+        public void testConsumerDeleted()
+        {
+            PullSubscribeOptions so = PullSubscribeOptions.BindTo(STREAM, Durable(1));
+            TestConflictStatus(ConsumerDeleted, TypeError, true, "2.9.6", (jsm, js) => {
+                jsm.AddOrUpdateConsumer(STREAM, ConsumerConfiguration.Builder().WithDurable(Durable(1)).Build());
+                IJetStreamPullSubscription sub = js.PullSubscribe(null, so);
+                sub.PullExpiresIn(1, 10000);
+                jsm.DeleteConsumer(STREAM, Durable(1));
+                return sub;
+            });
+        }
+
+        [Fact]
+        public void testBadRequest()
+        {
+            PullSubscribeOptions so = ConsumerConfiguration.Builder().BuildPullSubscribeOptions();
+            TestConflictStatus(BadRequest, TypeError, true, null, (jsm, js) => {
+                IJetStreamPullSubscription sub = js.PullSubscribe(SUBJECT, so);
+                sub.Pull(PullRequestOptions.Builder(1).WithNoWait().WithIdleHeartbeat(1).Build());
+                return sub;
+            });
+        }
+
+        [Fact]
+        public void testNotFound()
+        {
+            PullSubscribeOptions so = ConsumerConfiguration.Builder().BuildPullSubscribeOptions();
+            TestConflictStatus(NoMessages, TypeNone, true, null, (jsm, js) => {
+                IJetStreamPullSubscription sub = js.PullSubscribe(SUBJECT, so);
+                sub.PullNoWait(1);
+                return sub;
+            });
+        }
+
+        [Fact]
+        public void testExceedsMaxRequestBytes1stMessage()
+        {
+            PullSubscribeOptions so = ConsumerConfiguration.Builder().WithMaxBytes(1).BuildPullSubscribeOptions();
+            TestConflictStatus(ExceededMaxRequestMaxBytes, TypeWarning, true, null, (jsm, js) => {
+                IJetStreamPullSubscription sub = js.PullSubscribe(SUBJECT, so);
+                sub.Pull(PullRequestOptions.Builder(1).WithMaxBytes(2).Build());
+                return sub;
+            });
+        }
+
+        [Fact]
+        public void testExceedsMaxRequestBytesNthMessage()
+        {
+            bool skip = false;
+            TestEventHandler handler = new TestEventHandler();
+            Context.RunInJsServer(handler.Modifier, c =>
+            {
+                skip = VersionIsBefore(c, "2.9.1");
+                if (skip)
+                {
+                    return;
+                }
+                CreateDefaultTestStream(c);
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                IJetStream js = c.CreateJetStreamContext();
+                jsm.AddOrUpdateConsumer(STREAM, ConsumerConfiguration.Builder().WithDurable(Durable(1)).Build());
+                PullSubscribeOptions so = PullSubscribeOptions.BindTo(STREAM, Durable(1));
+                IJetStreamPullSubscription sub = js.PullSubscribe(SUBJECT, so);
+                
+                MsgHeader h = new MsgHeader();
+                h["foo"] = "bar";
+                // subject 7 + reply 52 + bytes 100 = 159
+                // subject 7 + reply 52 + bytes 100 + headers 21 = 180
+                js.Publish(SUBJECT, new byte[100]);
+                js.Publish(SUBJECT, h, new byte[100]);
+                // 1000 - 159 - 180 = 661
+                // subject 7 + reply 52 + bytes 610 = 669 > 661
+                js.Publish(SUBJECT, new byte[610]);
+
+                sub.Pull(PullRequestOptions.Builder(10).WithMaxBytes(1000).WithExpiresIn(1000).Build());
+                Assert.NotNull(sub.NextMessage(500));
+                Assert.NotNull(sub.NextMessage(500));
+                Assert.Throws<NATSTimeoutException>(() => sub.NextMessage(500));
+            });
+            
+            if (!skip)
+            {
+                CheckHandler(MessageSizeExceedsMaxBytes, TypeWarning, handler);
+            }
+        }
+
+        [Fact]
+        public void testExceedsMaxRequestBytesExactBytes()
+        {
+            bool skip = false;
+            TestEventHandler handler = new TestEventHandler();
+            Context.RunInJsServer(handler.Modifier, c =>
+            {
+                skip = VersionIsBefore(c, "2.9.1");
+                if (skip)
+                {
+                    return;
+                }
+                CreateDefaultTestStream(c);
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                IJetStream js = c.CreateJetStreamContext();
+                jsm.AddOrUpdateConsumer(STREAM, ConsumerConfiguration.Builder().WithDurable(Durable(1)).Build());
+                PullSubscribeOptions so = PullSubscribeOptions.BindTo(STREAM, Durable(1));
+                IJetStreamPullSubscription sub = js.PullSubscribe(SUBJECT, so);
+                
+                MsgHeader h = new MsgHeader();
+                h["foo"] = "bar";
+                // 159 + 180 + 661 = 1000
+                // subject 7 + reply 52 + bytes 100 = 159
+                // subject 7 + reply 52 + bytes 100 + headers 21 = 180
+                // subject 7 + reply 52 + bytes 602 = 661
+                js.Publish(SUBJECT, new byte[100]);
+                js.Publish(SUBJECT, h, new byte[100]);
+                js.Publish(SUBJECT, new byte[602]);
+
+                sub.Pull(PullRequestOptions.Builder(10).WithMaxBytes(1000).WithExpiresIn(1000).Build());
+                Assert.NotNull(sub.NextMessage(500));
+                Assert.NotNull(sub.NextMessage(500));
+                Assert.NotNull(sub.NextMessage(500));
+                Assert.Throws<NATSTimeoutException>(() => sub.NextMessage(500));
+            });
+            
+            if (!skip)
+            {
+                CheckHandler(MessageSizeExceedsMaxBytes, TypeNone, handler);
+            }
+        }
     }
 }

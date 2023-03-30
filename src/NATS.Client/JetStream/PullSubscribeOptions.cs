@@ -15,6 +15,8 @@ namespace NATS.Client.JetStream
 {
     public sealed class PullSubscribeOptions : SubscribeOptions
     {
+        public static readonly PullSubscribeOptions DefaultPullOpts = PullSubscribeOptions.Builder().Build();
+
         // Validation is done by base class
         private PullSubscribeOptions(ISubscribeOptionsBuilder builder) : base(builder, true, false, null, null) {}
 
