@@ -12,9 +12,11 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using NATS.Client;
 using NATS.Client.Internals;
 using Xunit;
+using Xunit.Abstractions;
 using static NATS.Client.Internals.Validator;
 
 namespace UnitTests.Internals
@@ -23,7 +25,7 @@ namespace UnitTests.Internals
     {
         private readonly string[] _utfOnlyStrings;
         
-        public TestValidator()
+        public TestValidator(ITestOutputHelper output)
         {
             _utfOnlyStrings = ReadDataFileLines("utf8-only-no-ws-test-strings.txt");
         }
@@ -365,6 +367,28 @@ namespace UnitTests.Internals
                 ValidateSemVer(
                     "99999999999999999999999.999999999999999999.99999999999999999----RC-SNAPSHOT.12.09.1--------------------------------..12",
                     label, true));
+        }
+
+        [Fact]
+        public void TestDictionariesEqual()
+        {
+            Dictionary<string, string> dN = null; 
+            Dictionary<string, string> d1 = new Dictionary<string, string>(); 
+            d1["a"] = "A";
+            Dictionary<string, string> d2 = new Dictionary<string, string>(); 
+            d2["b"] = "B";
+            Dictionary<string, string> dA = new Dictionary<string, string>(); 
+            dA["a"] = "A"; dA["b"] = "B";
+            Dictionary<string, string> dB = new Dictionary<string, string>(); 
+            dB["b"] = "B"; dB["a"] = "A";
+            
+            Assert.True(Validator.DictionariesEqual(dN, dN));
+            Assert.True(Validator.DictionariesEqual(d1, d1));
+            Assert.True(Validator.DictionariesEqual(dA, dB));
+            Assert.False(Validator.DictionariesEqual(d1, dN));
+            Assert.False(Validator.DictionariesEqual(dN, d1));
+            Assert.False(Validator.DictionariesEqual(d1, d2));
+            Assert.False(Validator.DictionariesEqual(d1, dA));
         }
     }
 }

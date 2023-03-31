@@ -12,19 +12,29 @@
 // limitations under the License.
 
 using System;
+using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace UnitTests.JetStream
 {
-    public class TestServerInfo : TestBase
+    public class TestServerInfoObject : TestBase
     {
-        readonly string _json = ReadDataFile("ServerInfoJson.txt");
+        private readonly ITestOutputHelper output;
+
+        public TestServerInfoObject(ITestOutputHelper output)
+        {
+            this.output = output;
+            Console.SetOut(new TestBase.ConsoleWriter(output));
+        }
+
+        readonly string json = ReadDataFile("ServerInfoJson.txt");
 
         [Fact]
         public void JsonIsReadProperly()
         {
-            ServerInfo info = new ServerInfo(_json);
+            ServerInfo info = new ServerInfo(json);
             Assert.Equal("serverId", info.ServerId);
             Assert.Equal("serverName", info.ServerName);
             Assert.Equal("1.2.3", info.Version);
@@ -46,64 +56,65 @@ namespace UnitTests.JetStream
             Assert.Equal("url1", info.ConnectURLs[1]);
             Assert.Equal("YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXo", info.Nonce);
         }
-        
+
         [Fact]
         public void ServerVersionComparisonsWork()
         {
-            ServerInfo info = new ServerInfo(_json);
-            ServerInfo info234 = new ServerInfo(_json.Replace("1.2.3", "2.3.4"));
-            ServerInfo info235 = new ServerInfo(_json.Replace("1.2.3", "2.3.5"));
-            ServerInfo info235Beta2 = new ServerInfo(_json.Replace("1.2.3", "2.3.5-beta.2"));
-            Assert.True(info.IsOlderThanVersion("2.3.4"));
-            Assert.True(info234.IsOlderThanVersion("2.3.5"));
-            Assert.True(info235.IsNewerVersionThan("2.3.5-beta.2"));
-            Assert.True(info.IsSameVersion("1.2.3"));
-            Assert.True(info234.IsSameVersion("2.3.4"));
-            Assert.True(info235.IsSameVersion("2.3.5"));
-            Assert.True(info235Beta2.IsSameVersion("2.3.5-beta.2"));
-            Assert.False(info235.IsSameVersion("2.3.4"));
-            Assert.False(info235Beta2.IsSameVersion("2.3.5"));
-            Assert.True(info234.IsNewerVersionThan("1.2.3"));
-            Assert.True(info235.IsNewerVersionThan("2.3.4"));
-            Assert.True(info235Beta2.IsOlderThanVersion("2.3.5"));
+            ServerInfo si234 = new ServerInfo(json.Replace("1.2.3", "2.3.4"));
+            ServerInfo si235A1 = new ServerInfo(json.Replace("1.2.3", "2.3.5-alpha.1"));
+            ServerInfo si235A2 = new ServerInfo(json.Replace("1.2.3", "2.3.5-alpha-2"));
+            ServerInfo si235B1 = new ServerInfo(json.Replace("1.2.3", "v2.3.5-beta.1"));
+            ServerInfo si235B2 = new ServerInfo(json.Replace("1.2.3", "v2.3.5-beta-2"));
+            ServerInfo si235 = new ServerInfo(json.Replace("1.2.3", "2.3.5"));
 
-            Assert.True(info234.IsNewerVersionThan("not-a-number"));
-            Assert.False(info234.IsNewerVersionThan("2.3.5"));
-            Assert.False(info235.IsOlderThanVersion("2.3.4"));
+            ServerInfo[] infos = new ServerInfo[]
+                { si234, si235A1, si235A2, si235B1, si235B2, si235 };
+            for (int i = 0; i < infos.Length; i++)
+            {
+                ServerInfo si = infos[i];
+                for (int j = 0; j < infos.Length; j++)
+                {
+                    String v2 = new ServerVersion(infos[j].Version).ToString();
+                    if (i == j)
+                    {
+                        Assert.True(si.IsSameVersion(v2));
+                        Assert.True(si.IsSameOrOlderThanVersion(v2));
+                        Assert.True(si.IsSameOrNewerThanVersion(v2));
+                        Assert.False(si.IsNewerVersionThan(v2));
+                        Assert.False(si.IsOlderThanVersion(v2));
+                    }
+                    else
+                    {
+                        Assert.False(si.IsSameVersion(v2));
+                        if (i < j)
+                        {
+                            Assert.True(si.IsOlderThanVersion(v2));
+                            Assert.True(si.IsSameOrOlderThanVersion(v2));
+                            Assert.False(si.IsNewerVersionThan(v2));
+                            Assert.False(si.IsSameOrNewerThanVersion(v2));
+                        }
+                        else
+                        {
+                            // i > j
+                            Assert.False(si.IsOlderThanVersion(v2));
+                            Assert.False(si.IsSameOrOlderThanVersion(v2));
+                            Assert.True(si.IsNewerVersionThan(v2));
+                            Assert.True(si.IsSameOrNewerThanVersion(v2));
+                        }
+                    }
+                }
+            }
 
-            Assert.False(info235.IsSameOrOlderThanVersion("2.3.4"));
-            Assert.False(info235Beta2.IsSameOrOlderThanVersion("2.3.4"));
-            Assert.True(info234.IsSameOrOlderThanVersion("2.3.4"));
-            Assert.True(info.IsSameOrOlderThanVersion("2.3.4"));
+            Assert.True(si234.IsNewerVersionThan("not-a-number.2.3"));
+            Assert.True(si234.IsNewerVersionThan("1.not-a-number.3"));
+            Assert.True(si234.IsNewerVersionThan("1.2.not-a-number"));
 
-            Assert.True(info235.IsSameOrNewerThanVersion("2.3.4"));
-            Assert.True(info235Beta2.IsSameOrNewerThanVersion("2.3.4"));
-            Assert.True(info234.IsSameOrNewerThanVersion("2.3.4"));
-            Assert.False(info.IsSameOrNewerThanVersion("2.3.4"));
-            Assert.False(info234.IsSameOrNewerThanVersion("2.3.5-beta.2"));
-            
-            ServerInfo info2310 = new ServerInfo(_json.Replace("1.2.3", "2.3.10"));
-            ServerInfo info2103 = new ServerInfo(_json.Replace("1.2.3", "2.10.3"));
-            Assert.True(info235.IsOlderThanVersion("2.3.10"));
-            Assert.True(info235.IsOlderThanVersion("2.10.3"));
-            Assert.True(info2310.IsSameVersion("2.3.10"));
-            Assert.True(info2310.IsNewerVersionThan("2.3.5"));
-            Assert.True(info2310.IsOlderThanVersion("2.10.3"));
-            Assert.True(info2103.IsSameVersion("2.10.3"));
-            Assert.True(info2103.IsNewerVersionThan("2.3.5"));
-            Assert.True(info2103.IsNewerVersionThan("2.3.10"));
-
-            ServerInfo infoAlpha1 = new ServerInfo(_json.Replace("1.2.3", "1.0.0-alpha1"));
-            ServerInfo infoAlpha2 = new ServerInfo(_json.Replace("1.2.3", "1.0.0-alpha2"));
-            ServerInfo infoBeta1 = new ServerInfo(_json.Replace("1.2.3", "1.0.0-beta1"));
-
-            Assert.True(infoAlpha1.IsSameVersion("1.0.0-alpha1"));
-            Assert.True(infoAlpha1.IsOlderThanVersion("1.0.0-alpha2"));
-            Assert.True(infoAlpha1.IsOlderThanVersion("1.0.0-beta1"));
-            Assert.True(infoAlpha2.IsNewerVersionThan("1.0.0-alpha1"));
-            Assert.True(infoAlpha2.IsOlderThanVersion("1.0.0-beta1"));
-            Assert.True(infoBeta1.IsNewerVersionThan("1.0.0-alpha1"));
-            Assert.True(infoBeta1.IsNewerVersionThan("1.0.0-alpha2"));
+            ServerInfo siPadded1 = new ServerInfo(json.Replace("1.2.3", "1.20.30"));
+            ServerInfo siPadded2 = new ServerInfo(json.Replace("1.2.3", "40.500.6000"));
+            Assert.True(siPadded1.IsSameVersion("1.20.30"));
+            Assert.True(siPadded2.IsSameVersion("40.500.6000"));
+            Assert.True(siPadded2.IsNewerVersionThan(siPadded1.Version));
+            Assert.True(siPadded1.IsOlderThanVersion(siPadded2.Version));
         }
 
         [Fact]

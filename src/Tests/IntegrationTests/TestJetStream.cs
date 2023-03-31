@@ -19,6 +19,7 @@ using NATS.Client;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using Xunit;
+using Xunit.Abstractions;
 using static UnitTests.TestBase;
 using static IntegrationTests.JetStreamTestBase;
 using static NATS.Client.ClientExDetail;
@@ -27,7 +28,12 @@ namespace IntegrationTests
 {
     public class TestJetStream : TestSuite<JetStreamSuiteContext>
     {
-        public TestJetStream(JetStreamSuiteContext context) : base(context) { }
+        private readonly ITestOutputHelper output;
+        public TestJetStream(JetStreamSuiteContext context) : base(context)
+        {
+            this.output = output;
+            Console.SetOut(new ConsoleWriter(output));
+        }
 
         [Fact]
         public void TestJetStreamContextCreate()
@@ -768,6 +774,29 @@ namespace IntegrationTests
 
                 // unset
                 ChangeOkPull(js, PullDurableBuilder().WithMaxBatch(-1));
+
+                if (c.ServerInfo.IsNewerVersionThan("2.9.99"))
+                {
+                    // metadata
+                    Dictionary<string, string> metadataA = new Dictionary<string, string>();
+                    metadataA["a"] = "A";
+                    Dictionary<string, string> metadataB = new Dictionary<string, string>();
+                    metadataA["b"] = "B";
+
+                    // metadata server null versus new not null
+                    jsm.AddOrUpdateConsumer(STREAM, PushDurableBuilder().Build());
+                    ChangeExPush(js, PushDurableBuilder().WithMetadata(metadataA), "Metadata");
+
+                    // metadata server not null versus new null
+                    jsm.AddOrUpdateConsumer(STREAM, PushDurableBuilder().WithMetadata(metadataA).Build());
+                    ChangeExPush(js, PushDurableBuilder(), "Metadata");
+
+                    // metadata server not null versus new not null but different
+                    ChangeExPush(js, PushDurableBuilder().WithMetadata(metadataB), "Metadata");
+
+                    // metadata server not null versus new not null and same
+                    ChangeOkPush(js, PushDurableBuilder().WithMetadata(metadataA));
+                }                
             });
         }
 

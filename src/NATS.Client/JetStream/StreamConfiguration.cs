@@ -1,4 +1,4 @@
-// Copyright 2021 The NATS Authors
+// Copyright 2021-2023 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at:
@@ -48,7 +48,8 @@ namespace NATS.Client.JetStream
         public bool DenyDelete { get; }
         public bool DenyPurge { get; }
         public bool DiscardNewPerSubject { get; }
-        
+        public Dictionary<string, string> Metadata { get; }
+
         [Obsolete("MaxMsgSize was mistakenly renamed in a previous change.", false)]
         public long MaxValueSize => MaxMsgSize;
 
@@ -83,6 +84,7 @@ namespace NATS.Client.JetStream
             DenyDelete = scNode[ApiConstants.DenyDelete].AsBool;
             DenyPurge = scNode[ApiConstants.DenyPurge].AsBool;
             DiscardNewPerSubject = scNode[ApiConstants.DiscardNewPerSubject].AsBool;
+            Metadata = JsonUtils.StringStringDictionay(scNode, ApiConstants.Metadata);
         }
         
         private StreamConfiguration(StreamConfigurationBuilder builder)
@@ -114,48 +116,41 @@ namespace NATS.Client.JetStream
             DenyDelete = builder._denyDelete;
             DenyPurge = builder._denyPurge;
             DiscardNewPerSubject = builder._discardNewPerSubject;
+            Metadata = builder._metadata;
         }
 
         public override JSONNode ToJsonNode()
         {
-            JSONArray sources = new JSONArray();
-            if (Sources != null)
-            {
-                foreach (Source s in Sources)
-                {
-                    sources.Add(null, s.ToJsonNode());
-                }
-            }
-            return new JSONObject
-            {
-                [ApiConstants.Retention] = RetentionPolicy.GetString(),
-                [ApiConstants.Storage] = StorageType.GetString(),
-                [ApiConstants.Discard] = DiscardPolicy.GetString(),
-                [ApiConstants.Name] = Name,
-                [ApiConstants.Description] = Description,
-                [ApiConstants.Subjects] = ToArray(Subjects),
-                [ApiConstants.MaxConsumers] = MaxConsumers,
-                [ApiConstants.MaxMsgs] = MaxMsgs,
-                [ApiConstants.MaxMsgsPerSubject] = MaxMsgsPerSubject,
-                [ApiConstants.MaxBytes] = MaxBytes,
-                [ApiConstants.MaxAge] = MaxAge.Nanos,
-                [ApiConstants.MaxMsgSize] = MaxMsgSize,
-                [ApiConstants.NumReplicas] = Replicas,
-                [ApiConstants.NoAck] = NoAck,
-                [ApiConstants.TemplateOwner] = TemplateOwner,
-                [ApiConstants.DuplicateWindow] = DuplicateWindow.Nanos,
-                [ApiConstants.Placement] = Placement?.ToJsonNode(),
-                [ApiConstants.Republish] = Republish?.ToJsonNode(),
-                [ApiConstants.Mirror] = Mirror?.ToJsonNode(),
-                [ApiConstants.Sources] = sources,
-                [ApiConstants.Sealed] = Sealed,
-                [ApiConstants.AllowRollupHdrs] = AllowRollup,
-                [ApiConstants.AllowDirect] = AllowDirect,
-                [ApiConstants.MirrorDirect] = MirrorDirect,
-                [ApiConstants.DenyDelete] = DenyDelete,
-                [ApiConstants.DenyPurge] = DenyPurge,
-                [ApiConstants.DiscardNewPerSubject] = DiscardNewPerSubject
-            };
+            JSONObject o = new JSONObject();
+            AddField(o, ApiConstants.Retention, RetentionPolicy.GetString());
+            AddField(o, ApiConstants.Storage, StorageType.GetString());
+            AddField(o, ApiConstants.Discard, DiscardPolicy.GetString());
+            AddField(o, ApiConstants.Name, Name);
+            AddField(o, ApiConstants.Description, Description);
+            AddField(o, ApiConstants.Subjects, Subjects);
+            AddField(o, ApiConstants.MaxConsumers, MaxConsumers);
+            AddField(o, ApiConstants.MaxMsgs, MaxMsgs);
+            AddField(o, ApiConstants.MaxMsgsPerSubject, MaxMsgsPerSubject);
+            AddField(o, ApiConstants.MaxBytes, MaxBytes);
+            AddField(o, ApiConstants.MaxAge, MaxAge.Nanos);
+            AddField(o, ApiConstants.MaxMsgSize, MaxMsgSize);
+            AddField(o, ApiConstants.NumReplicas, Replicas);
+            AddField(o, ApiConstants.NoAck, NoAck);
+            AddField(o, ApiConstants.TemplateOwner, TemplateOwner);
+            AddField(o, ApiConstants.DuplicateWindow, DuplicateWindow.Nanos);
+            AddField(o, ApiConstants.Placement, Placement?.ToJsonNode());
+            AddField(o, ApiConstants.Republish, Republish?.ToJsonNode());
+            AddField(o, ApiConstants.Mirror, Mirror?.ToJsonNode());
+            AddField(o, ApiConstants.Sources, Sources);
+            AddField(o, ApiConstants.Sealed, Sealed);
+            AddField(o, ApiConstants.AllowRollupHdrs, AllowRollup);
+            AddField(o, ApiConstants.AllowDirect, AllowDirect);
+            AddField(o, ApiConstants.MirrorDirect, MirrorDirect);
+            AddField(o, ApiConstants.DenyDelete, DenyDelete);
+            AddField(o, ApiConstants.DenyPurge, DenyPurge);
+            AddField(o, ApiConstants.DiscardNewPerSubject, DiscardNewPerSubject);
+            AddField(o, ApiConstants.Metadata, Metadata);
+            return o;
         }
 
         public static StreamConfigurationBuilder Builder()
@@ -197,6 +192,7 @@ namespace NATS.Client.JetStream
             internal bool _denyDelete;
             internal bool _denyPurge;
             internal bool _discardNewPerSubject;
+            internal Dictionary<string, string> _metadata = new Dictionary<string, string>();
 
             public StreamConfigurationBuilder() {}
             
@@ -230,6 +226,10 @@ namespace NATS.Client.JetStream
                 _denyDelete = sc.DenyDelete;
                 _denyPurge = sc.DenyPurge;
                 _discardNewPerSubject = sc.DiscardNewPerSubject;
+                foreach (string key in sc.Metadata.Keys)
+                {
+                    _metadata[key] = sc.Metadata[key];
+                }
             }
 
             /// <summary>
@@ -620,6 +620,23 @@ namespace NATS.Client.JetStream
             /// <returns>The StreamConfigurationBuilder</returns>
             public StreamConfigurationBuilder Seal() {
                 _sealed = true;
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the metadata for the configuration 
+            /// </summary>
+            /// <param name="metadata">the metadata dictionary</param>
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public StreamConfigurationBuilder WithMetadata(Dictionary<string, string> metadata) {
+                _metadata.Clear();
+                if (metadata != null)
+                {
+                    foreach (string key in metadata.Keys)
+                    {
+                        _metadata[key] = metadata[key];
+                    }
+                }
                 return this;
             }
 

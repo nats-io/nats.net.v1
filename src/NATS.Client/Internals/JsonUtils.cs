@@ -93,7 +93,7 @@ namespace NATS.Client.Internals
             {
                 temp[key] = meta[key];
             }
-            return temp.Count == 0 ? null : temp;
+            return temp;
         }
 
         public static MsgHeader AsHeaders(JSONNode node, string field)
@@ -369,6 +369,19 @@ namespace NATS.Client.Internals
                 foreach (string v in values)
                 {
                     ja.Add(v);
+                }
+                o[field] = ja;
+            }
+        }
+
+        public static void AddField<T>(JSONObject o, string field, IList<T> values) where T : JsonSerializable
+        {
+            if (values != null && values.Count > 0)
+            {
+                JSONArray ja = new JSONArray();
+                foreach (JsonSerializable v in values)
+                {
+                    ja.Add(v.ToJsonNode());
                 }
                 o[field] = ja;
             }

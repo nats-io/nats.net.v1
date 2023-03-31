@@ -40,6 +40,8 @@ namespace UnitTests.JetStream
             StreamConfiguration.StreamConfigurationBuilder builder = StreamConfiguration.Builder(testSc);
             Validate(builder.Build(), false);
             
+            Dictionary<string, string> metadata = new Dictionary<string, string>(); metadata["meta-foo"] = "meta-bar";
+
             builder.WithName(testSc.Name)
                     .WithSubjects(testSc.Subjects)
                     .WithRetentionPolicy(testSc.RetentionPolicy)
@@ -63,7 +65,8 @@ namespace UnitTests.JetStream
                     .WithMirrorDirect(testSc.MirrorDirect)
                     .WithDenyDelete(testSc.DenyDelete)
                     .WithDenyPurge(testSc.DenyPurge)
-                    .WithDiscardNewPerSubject(testSc.DiscardNewPerSubject);
+                    .WithDiscardNewPerSubject(testSc.DiscardNewPerSubject)
+                    .WithMetadata(metadata)
                 ;
             Validate(builder.Build(), false);
             Validate(builder.AddSources((Source)null).Build(), false);
@@ -263,6 +266,9 @@ namespace UnitTests.JetStream
                 Assert.Equal("repub.>", sc.Republish.Source);
                 Assert.Equal("dest.>", sc.Republish.Destination);
                 Assert.True(sc.Republish.HeadersOnly);
+
+                Assert.Equal(1, sc.Metadata.Count);
+                Assert.Equal("meta-bar", sc.Metadata["meta-foo"]);
 
                 DateTime zdt = AsDateTime("2020-11-05T19:33:21.163377Z");
 

@@ -26,9 +26,8 @@ namespace UnitTests.JetStream
         [Fact]
         public void BuilderWorks()
         {
-            AssertDefaultCc(ConsumerConfiguration.Builder().Build());
-
             DateTime dt = DateTime.UtcNow;
+            Dictionary<string, string> metadata = new Dictionary<string, string>(); metadata["meta-foo"] = "meta-bar";
 
             ConsumerConfiguration c = ConsumerConfiguration.Builder()
                 .WithAckPolicy(AckPolicy.Explicit)
@@ -51,11 +50,12 @@ namespace UnitTests.JetStream
                 .WithMaxBatch(55)
                 .WithMaxBytes(56)
                 .WithMaxExpires(177)
+                .WithNumReplicas(5)
                 .WithInactiveThreshold(188)
                 .WithHeadersOnly(true)
-                .WithBackoff(1000, 2000, 3000)
-                .WithNumReplicas(5)
                 .WithMemStorage(true)
+                .WithBackoff(1000, 2000, 3000)
+                .WithMetadata(metadata)
                 .Build();
 
             AssertAsBuilt(c, dt);
@@ -94,6 +94,8 @@ namespace UnitTests.JetStream
             Assert.Equal(ReplayPolicy.Instant, c.ReplayPolicy);
             Assert.Equal(Duration.OfSeconds(9), c.AckWait);
             Assert.Equal(Duration.OfSeconds(6), c.IdleHeartbeat);
+            
+            AssertDefaultCc(ConsumerConfiguration.Builder().Build());
         }
 
         private static void AssertAsBuilt(ConsumerConfiguration c, DateTime dt)
@@ -127,6 +129,8 @@ namespace UnitTests.JetStream
             Assert.Equal(Duration.OfSeconds(1), c.Backoff[0]);
             Assert.Equal(Duration.OfSeconds(2), c.Backoff[1]);
             Assert.Equal(Duration.OfSeconds(3), c.Backoff[2]);
+            Assert.Equal(1, c.Metadata.Count);
+            Assert.Equal("meta-bar", c.Metadata["meta-foo"]);
         }
 
         [Fact]

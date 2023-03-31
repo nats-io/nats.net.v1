@@ -34,7 +34,6 @@ namespace IntegrationTests
         {
             this.output = output;
             Console.SetOut(new ConsoleWriter(output));
-            
         }
 
         [Fact]

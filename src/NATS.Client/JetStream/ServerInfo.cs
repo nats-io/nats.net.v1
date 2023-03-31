@@ -11,9 +11,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Linq;
 using System.Text;
+using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client.JetStream
@@ -67,54 +67,24 @@ namespace NATS.Client.JetStream
                 .ToArray();
         }
 
-        private string GetComparableVersion(string vString) {
-            try {
-                string[] v = vString.Replace("v", "").Replace("-", ".").Split('.');
-                return Padded(v[0]) + Padded(v[1]) + Padded(v[2]) + NormalExtra(vString);
-            }
-            catch (Exception) {
-                return "";
-            }
-        }
-        
-        private static String Padded(String vcomp) {
-            int x = Int32.Parse(vcomp);
-            if (x < 10) {
-                return "000" + x;
-            }
-            if (x < 100) {
-                return "00" + x;
-            }
-            if (x < 1000) {
-                return "0" + x;
-            }
-            return "" + x;
-        }
-
-        private static String NormalExtra(String vString) {
-            int at = vString.IndexOf("-", StringComparison.Ordinal);
-            return at == -1 ? "~" : vString.Substring(at).ToLower();
-        }
-
-
         public bool IsNewerVersionThan(string vTarget) {
-            return String.Compare(GetComparableVersion(Version), GetComparableVersion(vTarget), StringComparison.Ordinal) > 0;
+            return ServerVersion.IsNewer(Version, vTarget);
         }
 
         public bool IsSameVersion(string vTarget) {
-            return String.Compare(GetComparableVersion(Version), GetComparableVersion(vTarget), StringComparison.Ordinal) == 0;
+            return ServerVersion.IsSame(Version, vTarget);
         }
 
         public bool IsOlderThanVersion(string vTarget) {
-            return String.Compare(GetComparableVersion(Version), GetComparableVersion(vTarget), StringComparison.Ordinal) < 0;
+            return ServerVersion.IsOlder(Version, vTarget);
         }
 
         public bool IsSameOrOlderThanVersion(string vTarget) {
-            return String.Compare(GetComparableVersion(Version), GetComparableVersion(vTarget), StringComparison.Ordinal) <= 0;
+            return ServerVersion.IsSameOrOlder(Version, vTarget);
         }
 
         public bool IsSameOrNewerThanVersion(string vTarget) {
-            return String.Compare(GetComparableVersion(Version), GetComparableVersion(vTarget), StringComparison.Ordinal) >= 0;
+            return ServerVersion.IsSameOrNewer(Version, vTarget);
         }
     }
 }
