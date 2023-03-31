@@ -63,7 +63,6 @@ namespace IntegrationTests
                 IJetStream js = c.CreateJetStreamContext();
                 PublishAck ack = JsPublish(js);
                 Assert.Equal(1U, ack.Seq);
-                
             });
         }
 
