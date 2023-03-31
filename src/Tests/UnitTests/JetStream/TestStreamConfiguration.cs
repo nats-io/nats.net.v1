@@ -267,9 +267,6 @@ namespace UnitTests.JetStream
                 Assert.Equal("dest.>", sc.Republish.Destination);
                 Assert.True(sc.Republish.HeadersOnly);
 
-                Assert.Equal(1, sc.Metadata.Count);
-                Assert.Equal("meta-bar", sc.Metadata["meta-foo"]);
-
                 DateTime zdt = AsDateTime("2020-11-05T19:33:21.163377Z");
 
                 if (serverTest)
@@ -299,6 +296,9 @@ namespace UnitTests.JetStream
                     Assert.Collection(sc.Sources,
                         item => ValidateSource(item, "s0", 737, "s0sub", "s0api", "s0dlvrsub", zdt),
                         item => ValidateSource(item, "s1", 738, "s1sub", "s1api", "s1dlvrsub", zdt));
+
+                    Assert.Single(sc.Metadata);
+                    Assert.Equal("meta-bar", sc.Metadata["meta-foo"]);
                 }
             }
         }

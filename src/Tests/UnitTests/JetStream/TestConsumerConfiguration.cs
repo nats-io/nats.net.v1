@@ -129,7 +129,7 @@ namespace UnitTests.JetStream
             Assert.Equal(Duration.OfSeconds(1), c.Backoff[0]);
             Assert.Equal(Duration.OfSeconds(2), c.Backoff[1]);
             Assert.Equal(Duration.OfSeconds(3), c.Backoff[2]);
-            Assert.Equal(1, c.Metadata.Count);
+            Assert.Single(c.Metadata);
             Assert.Equal("meta-bar", c.Metadata["meta-foo"]);
         }
 
