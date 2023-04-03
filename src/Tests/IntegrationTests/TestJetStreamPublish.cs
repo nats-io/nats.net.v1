@@ -19,7 +19,6 @@ using System.Threading.Tasks;
 using NATS.Client;
 using NATS.Client.JetStream;
 using Xunit;
-using Xunit.Abstractions;
 using static UnitTests.TestBase;
 using static IntegrationTests.JetStreamTestBase;
 
@@ -27,12 +26,7 @@ namespace IntegrationTests
 {
     public class TestJetStreamPublish : TestSuite<JetStreamPublishSuiteContext>
     {
-        private readonly ITestOutputHelper output;
-
-        public TestJetStreamPublish(ITestOutputHelper output, JetStreamPublishSuiteContext context) : base(context)
-        {
-            this.output = output;
-        }
+        public TestJetStreamPublish(JetStreamPublishSuiteContext context) : base(context) {}
 
         [Fact]
         public void TestPublishVarieties() {

@@ -17,7 +17,6 @@ using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 using NATS.Client.JetStream;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace UnitTests.Internals
 {
@@ -25,7 +24,7 @@ namespace UnitTests.Internals
     {
         private readonly JSONNode testJsonNode;
 
-        public TestJson(ITestOutputHelper outputHelper)
+        public TestJson()
         {
             string json = ReadDataFile("TestJson.json");
             testJsonNode = JSON.Parse(json);

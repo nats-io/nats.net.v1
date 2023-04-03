@@ -16,18 +16,12 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using NATS.Client.Internals;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace UnitTests.Internals
 {
     public class TestNuid
     {
-        private readonly ITestOutputHelper _outputHelper;
-
-        public TestNuid(ITestOutputHelper outputHelper)
-        {
-            _outputHelper = outputHelper;
-        }
+        public TestNuid() {}
         
         [Fact]
         public void GetNextNuid_ReturnsNuidOfLength22()
@@ -147,7 +141,6 @@ namespace UnitTests.Internals
                 if (nuids.Add(currentNuid))
                     continue;
                 
-                _outputHelper.WriteLine($"Duplicate Nuid {currentNuid}");
                 Assert.True(false, "Duplicate Nuid detected");
             }
         }

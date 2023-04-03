@@ -15,19 +15,12 @@ using System;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace UnitTests.JetStream
 {
     public class TestServerInfoObject : TestBase
     {
-        private readonly ITestOutputHelper output;
-
-        public TestServerInfoObject(ITestOutputHelper output)
-        {
-            this.output = output;
-            Console.SetOut(new TestBase.ConsoleWriter(output));
-        }
+        public TestServerInfoObject() {}
 
         readonly string json = ReadDataFile("ServerInfoJson.txt");
 

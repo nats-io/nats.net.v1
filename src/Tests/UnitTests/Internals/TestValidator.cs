@@ -16,7 +16,6 @@ using System.Collections.Generic;
 using NATS.Client;
 using NATS.Client.Internals;
 using Xunit;
-using Xunit.Abstractions;
 using static NATS.Client.Internals.Validator;
 
 namespace UnitTests.Internals
@@ -25,7 +24,7 @@ namespace UnitTests.Internals
     {
         private readonly string[] _utfOnlyStrings;
         
-        public TestValidator(ITestOutputHelper output)
+        public TestValidator()
         {
             _utfOnlyStrings = ReadDataFileLines("utf8-only-no-ws-test-strings.txt");
         }
