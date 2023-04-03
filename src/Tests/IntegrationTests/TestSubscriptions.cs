@@ -18,9 +18,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NATS.Client;
-using UnitTests;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace IntegrationTests
 {
@@ -29,13 +27,7 @@ namespace IntegrationTests
     /// </summary>
     public class TestSubscriptions : TestSuite<SubscriptionsSuiteContext>
     {
-        private readonly ITestOutputHelper output;
-
-        public TestSubscriptions(ITestOutputHelper output, SubscriptionsSuiteContext context) : base(context)
-        {
-            this.output = output;
-            Console.SetOut(new TestBase.ConsoleWriter(output));
-        }
+        public TestSubscriptions(SubscriptionsSuiteContext context) : base(context) {}
 
         [Fact]
         public void TestServerAutoUnsub()

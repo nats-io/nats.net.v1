@@ -18,7 +18,6 @@ using NATS.Client;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using Xunit;
-using Xunit.Abstractions;
 using static UnitTests.TestBase;
 using static IntegrationTests.JetStreamTestBase;
 
@@ -26,12 +25,7 @@ namespace IntegrationTests
 {
     public class TestJetStreamPushSyncQueue : TestSuite<JetStreamPushSyncQueueSuiteContext>
     {
-        private readonly ITestOutputHelper output;
-
-        public TestJetStreamPushSyncQueue(ITestOutputHelper output, JetStreamPushSyncQueueSuiteContext context) : base(context)
-        {
-            this.output = output;
-        }
+        public TestJetStreamPushSyncQueue(JetStreamPushSyncQueueSuiteContext context) : base(context) {}
 
        [Fact]
         public void TestQueueSubWorkflow()

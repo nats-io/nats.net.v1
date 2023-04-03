@@ -40,6 +40,8 @@ namespace UnitTests.JetStream
             StreamConfiguration.StreamConfigurationBuilder builder = StreamConfiguration.Builder(testSc);
             Validate(builder.Build(), false);
             
+            Dictionary<string, string> metadata = new Dictionary<string, string>(); metadata["meta-foo"] = "meta-bar";
+
             builder.WithName(testSc.Name)
                     .WithSubjects(testSc.Subjects)
                     .WithRetentionPolicy(testSc.RetentionPolicy)
@@ -63,7 +65,8 @@ namespace UnitTests.JetStream
                     .WithMirrorDirect(testSc.MirrorDirect)
                     .WithDenyDelete(testSc.DenyDelete)
                     .WithDenyPurge(testSc.DenyPurge)
-                    .WithDiscardNewPerSubject(testSc.DiscardNewPerSubject);
+                    .WithDiscardNewPerSubject(testSc.DiscardNewPerSubject)
+                    .WithMetadata(metadata)
                 ;
             Validate(builder.Build(), false);
             Validate(builder.AddSources((Source)null).Build(), false);
@@ -293,6 +296,9 @@ namespace UnitTests.JetStream
                     Assert.Collection(sc.Sources,
                         item => ValidateSource(item, "s0", 737, "s0sub", "s0api", "s0dlvrsub", zdt),
                         item => ValidateSource(item, "s1", 738, "s1sub", "s1api", "s1dlvrsub", zdt));
+
+                    Assert.Single(sc.Metadata);
+                    Assert.Equal("meta-bar", sc.Metadata["meta-foo"]);
                 }
             }
         }

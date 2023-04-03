@@ -236,7 +236,8 @@ namespace NATS.Client.JetStream
             string inboxDeliver = userCC.DeliverSubject;
             
             // 3. Does this consumer already exist?
-            if (consumerName != null) {
+            if (consumerName != null) 
+            {
                 ConsumerInfo serverInfo = LookupConsumerInfo(stream, consumerName);
 
                 if (serverInfo != null) { // the consumer for that durable already exists
@@ -245,36 +246,46 @@ namespace NATS.Client.JetStream
                     // check to see if the user sent a different version than the server has
                     // modifications are not allowed
                     IList<string> changes = userCC.GetChanges(serverCC);
-                    if (changes.Count > 0) {
+                    if (changes.Count > 0) 
+                    {
                         throw JsSubExistingConsumerCannotBeModified.Instance($"[{string.Join(",", changes)}]");
                     }
 
-                    if (isPullMode) {
-                        if (!string.IsNullOrWhiteSpace(serverCC.DeliverSubject)) {
+                    if (isPullMode) 
+                    {
+                        if (!string.IsNullOrWhiteSpace(serverCC.DeliverSubject)) 
+                        {
                             throw JsSubConsumerAlreadyConfiguredAsPush.Instance();
                         }
                     }
-                    else if (string.IsNullOrWhiteSpace(serverCC.DeliverSubject)) {
+                    else if (string.IsNullOrWhiteSpace(serverCC.DeliverSubject)) 
+                    {
                         throw JsSubConsumerAlreadyConfiguredAsPull.Instance();
                     }
 
-                    if (string.IsNullOrWhiteSpace(serverCC.DeliverGroup)) {
+                    if (string.IsNullOrWhiteSpace(serverCC.DeliverGroup)) 
+                    {
                         // lookedUp was null/empty, means existing consumer is not a queue consumer
-                        if (qgroup == null) {
+                        if (qgroup == null) 
+                        {
                             // ok fine, no queue requested and the existing consumer is also not a queue consumer
                             // we must check if the consumer is in use though
-                            if (serverInfo.PushBound) {
+                            if (serverInfo.PushBound) 
+                            {
                                 throw JsSubConsumerAlreadyBound.Instance();
                             }
                         }
-                        else { // else they requested a queue but this durable was not configured as queue
+                        else 
+                        { // else they requested a queue but this durable was not configured as queue
                             throw JsSubExistingConsumerNotQueue.Instance();
                         }
                     }
-                    else if (qgroup == null) {
+                    else if (qgroup == null) 
+                    {
                         throw JsSubExistingConsumerIsQueue.Instance();
                     }
-                    else if (!serverCC.DeliverGroup.Equals(qgroup)) {
+                    else if (!serverCC.DeliverGroup.Equals(qgroup)) 
+                    {
                         throw JsSubExistingQueueDoesNotMatchRequestedQueue.Instance();
                     }
 

@@ -1,4 +1,4 @@
-// Copyright 2021 The NATS Authors
+// Copyright 2021-2023 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at:
@@ -86,7 +86,8 @@ namespace NATS.Client.JetStream
         public bool HeadersOnly => _headersOnly ?? false;
         public bool MemStorage => _memStorage ?? false;
         public IList<Duration> Backoff { get; }
-       
+        public Dictionary<string, string> Metadata { get; }
+
         internal ConsumerConfiguration(string json) : this(JSON.Parse(json)) {}
 
         internal ConsumerConfiguration(JSONNode ccNode)
@@ -122,6 +123,7 @@ namespace NATS.Client.JetStream
             _memStorage = ccNode[ApiConstants.MemStorage].AsBool;
 
             Backoff = DurationList(ccNode, ApiConstants.Backoff);
+            Metadata = JsonUtils.StringStringDictionay(ccNode, ApiConstants.Metadata);
         }
 
         private ConsumerConfiguration(ConsumerConfigurationBuilder builder)
@@ -157,6 +159,7 @@ namespace NATS.Client.JetStream
             _numReplicas = builder._numReplicas;
 
             Backoff = builder._backoff;
+            Metadata = builder._metadata;
         }
 
         public override JSONNode ToJsonNode()
@@ -190,7 +193,7 @@ namespace NATS.Client.JetStream
             AddField(o, ApiConstants.Backoff, Backoff);
             AddField(o, ApiConstants.NumReplicas, NumReplicas);
             AddField(o, ApiConstants.MemStorage, MemStorage);
-
+            AddField(o, ApiConstants.Metadata, Metadata);
             return o;
         }
 
@@ -229,6 +232,12 @@ namespace NATS.Client.JetStream
             RecordWouldBeChange(DeliverGroup, server.DeliverGroup, "DeliverGroup", changes);
                    
             if (!Backoff.SequenceEqual(server.Backoff)) { changes.Add("Backoff"); }
+
+            if (!Validator.DictionariesEqual(Metadata, server.Metadata))
+            {
+                changes.Add("Metadata");
+            }
+
             return changes;
         }
 
@@ -326,6 +335,7 @@ namespace NATS.Client.JetStream
             internal bool? _headersOnly;
             internal bool? _memStorage;
             internal IList<Duration> _backoff = new List<Duration>();
+            internal Dictionary<string, string> _metadata = new Dictionary<string, string>();
 
             public ConsumerConfigurationBuilder() {}
 
@@ -363,6 +373,10 @@ namespace NATS.Client.JetStream
                 _headersOnly = cc._headersOnly;
                 _memStorage = cc._memStorage;
                 _backoff = new List<Duration>(cc.Backoff);
+                foreach (string key in cc.Metadata.Keys)
+                {
+                    _metadata[key] = cc.Metadata[key];
+                }
             }
 
             /// <summary>
@@ -792,6 +806,23 @@ namespace NATS.Client.JetStream
                             throw new ArgumentException($"Backoff cannot be less than {DurationMinLong}");
                         }
                         _backoff.Add(Duration.OfMillis(ms));
+                    }
+                }
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the metadata for the configuration 
+            /// </summary>
+            /// <param name="metadata">the metadata dictionary</param>
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder WithMetadata(Dictionary<string, string> metadata) {
+                _metadata.Clear();
+                if (metadata != null)
+                {
+                    foreach (string key in metadata.Keys)
+                    {
+                        _metadata[key] = metadata[key];
                     }
                 }
                 return this;
