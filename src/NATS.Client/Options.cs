@@ -644,7 +644,7 @@ namespace NATS.Client
 
         /// <summary>
         /// Gets or sets the number of long running tasks to deliver messages
-        /// to asynchronous subscribers. default is set to one (<c>0</c>).
+        /// to asynchronous subscribers. default is set to one (<c>1</c>).
         /// Setting it to zero (<c>0</c>) makes each
         /// asynchronous subscriber has its own channel and task created to 
         /// deliver messages.
