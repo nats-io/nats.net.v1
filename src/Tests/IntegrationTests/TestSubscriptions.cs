@@ -1012,6 +1012,61 @@ namespace IntegrationTests
             }
         }
 
+        [Fact]
+        public void TestSubDelTaskCountDefaultTime()
+        {
+            var SUBSCOUNT = 10000;
+            var MSGSCOUNT = 100;
+            var TIMETOGETMSGS = 1000;
+                
+            var opts = Context.GetTestOptions(Context.Server1.Port);
+            
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
+            {
+                using (IConnection c = Context.ConnectionFactory.CreateConnection(opts))
+                {
+                    long recvCount = 0;
+                    
+                    var subs = new List<IAsyncSubscription>();
+
+                    EventHandler<MsgHandlerEventArgs> eh = (obj, args) =>
+                    {
+                        Interlocked.Increment(ref recvCount);
+                    };
+
+                    for (int i = 0; i < SUBSCOUNT; i++)
+                    {
+                        subs.Add(c.SubscribeAsync("foo", eh));
+                    }
+                    
+                    var sw = new Stopwatch();
+                    sw.Start();
+
+                    for (int i = 0; i < MSGSCOUNT; i++)
+                    {
+                        c.Publish("foo", null);
+                    }
+
+                    while (Interlocked.Read(ref recvCount) != (SUBSCOUNT * MSGSCOUNT))
+                    {
+                        Thread.Sleep(10);
+                    }
+                    
+                    sw.Stop();
+                    c.Flush();
+
+                    Assert.True(sw.ElapsedMilliseconds <= TIMETOGETMSGS,
+                        $"elapsed ({sw.ElapsedMilliseconds}) > timeout ({TIMETOGETMSGS})");
+                    
+                    subs.ForEach(s =>
+                    {
+                        s.Unsubscribe();
+                        s.Dispose();
+                    });
+                }
+            }
+        }
+
         static readonly string[] invalidSubjects = { "foo bar", "foo..bar", ".foo", "bar.baz.", "baz\t.foo" };
         static readonly string[] invalidQNames = { "foo group", "group\t1", "g1\r\n2" };
 

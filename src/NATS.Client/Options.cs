@@ -245,7 +245,7 @@ namespace NATS.Client
         internal int maxPingsOut = MaxPingOut;
 
         internal int subChanLen = (int)SubPendingMsgsLimit;
-        internal int subscriberDeliveryTaskCount = 0;
+        internal int subscriberDeliveryTaskCount = 1;
 
         // Must be greater than 0.
         internal int subscriptionBatchSize = 64;
@@ -644,12 +644,13 @@ namespace NATS.Client
 
         /// <summary>
         /// Gets or sets the number of long running tasks to deliver messages
-        /// to asynchronous subscribers. The default is zero (<c>0</c>) indicating each
+        /// to asynchronous subscribers. default is set to one (<c>0</c>).
+        /// Setting it to zero (<c>0</c>) makes each
         /// asynchronous subscriber has its own channel and task created to 
         /// deliver messages.
         /// </summary>
         /// <remarks>
-        /// The default where each subscriber has a delivery task is very 
+        /// Setting it to zero where each subscriber has a delivery task is very 
         /// performant, but does not scale well when large numbers of
         /// subscribers are required in an application.  Setting this value
         /// will limit the number of subscriber channels to the specified number
