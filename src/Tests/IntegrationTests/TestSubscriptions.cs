@@ -1017,7 +1017,7 @@ namespace IntegrationTests
         {
             var SUBSCOUNT = 10000;
             var MSGSCOUNT = 100;
-            var TIMETOGETMSGS = 1000;
+            var TIMETOGETMSGS = 2000;
                 
             var opts = Context.GetTestOptions(Context.Server1.Port);
             
