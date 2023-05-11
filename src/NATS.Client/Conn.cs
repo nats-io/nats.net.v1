@@ -384,7 +384,11 @@ namespace NATS.Client
 
                     var task = client.ConnectAsync(s.Url.Host, s.Url.Port);
                     // avoid raising TaskScheduler.UnobservedTaskException if the timeout occurs first
-                    task.ContinueWith(t => GC.KeepAlive(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
+                    task.ContinueWith(t => 
+                    {
+                        GC.KeepAlive(t.Exception);
+                        close(client);
+                    }, TaskContinuationOptions.OnlyOnFaulted);
                     if (!task.Wait(TimeSpan.FromMilliseconds(timeoutMillis)))
                     {
                         close(client);
