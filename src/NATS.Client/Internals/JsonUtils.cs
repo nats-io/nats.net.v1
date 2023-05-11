@@ -68,7 +68,7 @@ namespace NATS.Client.Internals
             return list;
         }
 
-        public static List<Duration> DurationList(JSONNode node, string field)
+        public static List<Duration> DurationList(JSONNode node, string field, bool nullIfEmpty = false)
         {
             List<Duration> list = new List<Duration>();
             foreach (var child in node[field].Children)
@@ -76,7 +76,7 @@ namespace NATS.Client.Internals
                 list.Add(Duration.OfNanos(child.AsLong));
             }
            
-            return list;
+            return list.Count == 0 && nullIfEmpty ? null : list;
         }
 
         public static List<string> OptionalStringList(JSONNode node, string field)
@@ -84,8 +84,14 @@ namespace NATS.Client.Internals
             List<string> list = StringList(node, field);
             return list.Count == 0 ? null : list;
         }
-        
+
+        [Obsolete("Method name replaced with proper spelling, 'StringStringDictionary'")]
         public static Dictionary<string, string> StringStringDictionay(JSONNode node, string field)
+        {
+            return StringStringDictionary(node, field, false);
+        }
+
+        public static Dictionary<string, string> StringStringDictionary(JSONNode node, string field, bool nullIfEmpty = false)
         {
             Dictionary<string, string> temp = new Dictionary<string, string>();
             JSONNode meta = node[field];
@@ -93,7 +99,7 @@ namespace NATS.Client.Internals
             {
                 temp[key] = meta[key];
             }
-            return temp;
+            return temp.Count == 0 && nullIfEmpty ? null : temp;
         }
 
         public static MsgHeader AsHeaders(JSONNode node, string field)

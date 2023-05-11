@@ -13,6 +13,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -637,6 +638,21 @@ namespace NATS.Client.Internals
             return Regex.IsMatch(s, SemVerPattern);
         }
 
+        public static bool SequenceEqual<TSource>(IList<TSource> l1, IList<TSource> l2, bool nullSecondEqualsEmptyFirst)
+        {
+            if (l1 == null)
+            {
+                return l2 == null;
+            }
+
+            if (l2 == null)
+            {
+                return nullSecondEqualsEmptyFirst && l1.Count == 0;
+            }
+            
+            return l1.SequenceEqual(l2);
+        }
+
         public static bool DictionariesEqual(IDictionary<string, string> d1, IDictionary<string, string> d2)
         {
             if (d1 == d2)
@@ -651,9 +667,7 @@ namespace NATS.Client.Internals
 
             foreach (KeyValuePair<string, string> pair in d1)
             {
-                string value;
-                if (!d2.TryGetValue(pair.Key, out value) ||
-                    !pair.Value.Equals(value))
+                if (!d2.TryGetValue(pair.Key, out var value) || !pair.Value.Equals(value))
                 {
                     return false;
                 }
