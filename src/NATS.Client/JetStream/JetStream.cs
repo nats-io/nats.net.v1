@@ -243,12 +243,20 @@ namespace NATS.Client.JetStream
                 if (serverInfo != null) { // the consumer for that durable already exists
                     serverCC = serverInfo.ConsumerConfiguration;
 
+                    // in case of direct bindings, the client config should be taken
+                    // from the server, in other case, the client should
                     // check to see if the user sent a different version than the server has
                     // modifications are not allowed
-                    IList<string> changes = userCC.GetChanges(serverCC);
-                    if (changes.Count > 0) 
+                    if (so.Bind)
                     {
-                        throw JsSubExistingConsumerCannotBeModified.Instance($"[{string.Join(",", changes)}]");
+                        userCC = serverCC;
+                    }
+                    else
+                    {
+                        IList<string> changes = userCC.GetChanges(serverCC);
+                        if (changes.Count > 0) {
+                            throw JsSubExistingConsumerCannotBeModified.Instance($"[{string.Join(",", changes)}]");
+                        }
                     }
 
                     if (isPullMode) 
