@@ -245,7 +245,7 @@ namespace NATS.Client
         internal int maxPingsOut = MaxPingOut;
 
         internal int subChanLen = (int)SubPendingMsgsLimit;
-        internal int subscriberDeliveryTaskCount = 1;
+        internal int subscriberDeliveryTaskCount = 3;
 
         // Must be greater than 0.
         internal int subscriptionBatchSize = 64;

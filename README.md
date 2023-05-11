@@ -104,6 +104,20 @@ Please see unit test for examples of this behavior.
 `TestMaxPayload` in [TestBasic](src/Tests/IntegrationTests/TestBasic.cs)
 and
 `TestMaxPayloadJs` in [TestJetStream](src/Tests/IntegrationTests/TestJetStream.cs)
+### Version 1.0.? Subscriber Delivery Task Count
+
+The default value of this option was changed from 0 to 3. 
+Zero means each subscriber has it's own delivery task.
+Setting it to zero where each subscriber has a delivery task is very 
+performant, but does not scale well when large numbers of
+subscribers are required in an application. Setting this value
+will limit the number of subscriber channels to the specified number
+of long running tasks. These tasks will process messages for ALL
+asynchronous subscribers rather than one task for each subscriber.  
+Delivery order by subscriber is still guaranteed. The shared message
+processing channels are still each bounded by the SubChannelLength 
+option.  Note, slow subscriber errors will flag the last subscriber 
+processed in the tasks, which may not actually be the slowest subscriber.
 
 ### Version 1.0.1 Consumer Create
 
