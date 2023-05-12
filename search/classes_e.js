@@ -13,7 +13,8 @@ var searchData=
   ['sourcebuilder_10',['SourceBuilder',['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_source_1_1_source_builder.html',1,'NATS::Client::JetStream::Source']]],
   ['statistics_11',['Statistics',['../class_n_a_t_s_1_1_client_1_1_statistics.html',1,'NATS::Client']]],
   ['statsresponse_12',['StatsResponse',['../class_n_a_t_s_1_1_client_1_1_service_1_1_stats_response.html',1,'NATS::Client::Service']]],
-  ['subscribeoptions_13',['SubscribeOptions',['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_subscribe_options.html',1,'NATS::Client::JetStream']]],
-  ['subscription_14',['Subscription',['../class_n_a_t_s_1_1_client_1_1_subscription.html',1,'NATS::Client']]],
-  ['syncsubscription_15',['SyncSubscription',['../class_n_a_t_s_1_1_client_1_1_sync_subscription.html',1,'NATS::Client']]]
+  ['statuseventargs_13',['StatusEventArgs',['../class_n_a_t_s_1_1_client_1_1_status_event_args.html',1,'NATS::Client']]],
+  ['subscribeoptions_14',['SubscribeOptions',['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_subscribe_options.html',1,'NATS::Client::JetStream']]],
+  ['subscription_15',['Subscription',['../class_n_a_t_s_1_1_client_1_1_subscription.html',1,'NATS::Client']]],
+  ['syncsubscription_16',['SyncSubscription',['../class_n_a_t_s_1_1_client_1_1_sync_subscription.html',1,'NATS::Client']]]
 ];

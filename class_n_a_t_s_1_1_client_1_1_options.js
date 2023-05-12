@@ -16,6 +16,8 @@ var class_n_a_t_s_1_1_client_1_1_options =
     [ "FlowControlProcessedEventHandler", "class_n_a_t_s_1_1_client_1_1_options.html#a2c6f4bc65755ff61f81250a9386c0bbf", null ],
     [ "HeartbeatAlarmEventHandler", "class_n_a_t_s_1_1_client_1_1_options.html#aece501bf249fe525470dc4e0aa5a05d5", null ],
     [ "LameDuckModeEventHandler", "class_n_a_t_s_1_1_client_1_1_options.html#a61c548501826dd70834ad49511acf07f", null ],
+    [ "PullStatusErrorEventHandler", "class_n_a_t_s_1_1_client_1_1_options.html#accb0bec1dc317aff81ffcadddcdb1528", null ],
+    [ "PullStatusWarningEventHandler", "class_n_a_t_s_1_1_client_1_1_options.html#a658126b42601e3c5cf8c63312fdef9d4", null ],
     [ "ReconnectDelayHandler", "class_n_a_t_s_1_1_client_1_1_options.html#a7495773ca6b4f6445da4c01283770c95", null ],
     [ "ReconnectedEventHandler", "class_n_a_t_s_1_1_client_1_1_options.html#ad39b3eec90490ebaa53276fc01668d9a", null ],
     [ "ServerDiscoveredEventHandler", "class_n_a_t_s_1_1_client_1_1_options.html#a01dd0d8f7f5cabdc5d2d68c08dff3561", null ],

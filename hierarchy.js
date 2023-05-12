@@ -5,7 +5,9 @@ var hierarchy =
     [ "NATS.Client.ConnJsSubEventArgs", "class_n_a_t_s_1_1_client_1_1_conn_js_sub_event_args.html", [
       [ "NATS.Client.FlowControlProcessedEventArgs", "class_n_a_t_s_1_1_client_1_1_flow_control_processed_event_args.html", null ],
       [ "NATS.Client.HeartbeatAlarmEventArgs", "class_n_a_t_s_1_1_client_1_1_heartbeat_alarm_event_args.html", null ],
-      [ "NATS.Client.UnhandledStatusEventArgs", "class_n_a_t_s_1_1_client_1_1_unhandled_status_event_args.html", null ]
+      [ "NATS.Client.StatusEventArgs", "class_n_a_t_s_1_1_client_1_1_status_event_args.html", [
+        [ "NATS.Client.UnhandledStatusEventArgs", "class_n_a_t_s_1_1_client_1_1_unhandled_status_event_args.html", null ]
+      ] ]
     ] ],
     [ "NATS.Client.DefaultUserJWTHandler", "class_n_a_t_s_1_1_client_1_1_default_user_j_w_t_handler.html", null ],
     [ "NATS.Client.Service.Discovery", "class_n_a_t_s_1_1_client_1_1_service_1_1_discovery.html", null ],
