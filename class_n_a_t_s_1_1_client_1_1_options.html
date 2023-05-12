@@ -862,8 +862,8 @@ The certificate's password is incorrect.</li>
 </table>
 </div><div class="memdoc">
 
-<p>Gets or sets the number of long running tasks to deliver messages to asynchronous subscribers. default is set to one (<code>1</code>). Setting it to zero (<code>0</code>) makes each asynchronous subscriber have its own channel and task created to deliver messages. </p>
-<p >Setting it to zero where each subscriber has a delivery task is very performant, but does not scale well when large numbers of subscribers are required in an application. Setting this value will limit the number of subscriber channels to the specified number of long running tasks. These tasks will process messages for ALL asynchronous subscribers rather than one task for each subscriber. <br  />
+<p>Gets or sets the number of long running tasks to deliver messages to asynchronous subscribers. The default is zero (<code>0</code>) indicating each asynchronous subscriber has its own channel and task created to deliver messages. </p>
+<p >The default where each subscriber has a delivery task is very performant, but does not scale well when large numbers of subscribers are required in an application. Setting this value will limit the number of subscriber channels to the specified number of long running tasks. These tasks will process messages for ALL asynchronous subscribers rather than one task for each subscriber. <br  />
  Delivery order by subscriber is still guaranteed. The shared message processing channels are still each bounded by the SubChannelLength option. Note, slow subscriber errors will flag the last subscriber processed in the tasks, which may not actually be the slowest subscriber. </p>
 
 </div>
