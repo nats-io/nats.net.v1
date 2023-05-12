@@ -48,7 +48,7 @@ namespace NATS.Client.Service
             Name = node[ApiConstants.Name];
             Subject = node[ApiConstants.Subject];
             Schema = Schema.OptionalInstance(node[ApiConstants.Schema]);
-            Metadata = JsonUtils.StringStringDictionay(node, ApiConstants.Metadata);
+            Metadata = JsonUtils.StringStringDictionary(node, ApiConstants.Metadata);
         }
 
         private Endpoint(EndpointBuilder b) 

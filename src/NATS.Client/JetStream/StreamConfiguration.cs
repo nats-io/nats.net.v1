@@ -84,7 +84,7 @@ namespace NATS.Client.JetStream
             DenyDelete = scNode[ApiConstants.DenyDelete].AsBool;
             DenyPurge = scNode[ApiConstants.DenyPurge].AsBool;
             DiscardNewPerSubject = scNode[ApiConstants.DiscardNewPerSubject].AsBool;
-            Metadata = JsonUtils.StringStringDictionay(scNode, ApiConstants.Metadata);
+            Metadata = JsonUtils.StringStringDictionary(scNode, ApiConstants.Metadata);
         }
         
         private StreamConfiguration(StreamConfigurationBuilder builder)

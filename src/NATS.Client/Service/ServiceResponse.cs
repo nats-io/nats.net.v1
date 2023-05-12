@@ -48,7 +48,7 @@ namespace NATS.Client.Service
             Id = Validator.Required(node[ApiConstants.Id], "Id");
             Name = Validator.Required(node[ApiConstants.Name], "Name");
             Version = Validator.ValidateSemVer(node[ApiConstants.Version], "Version", true);
-            Metadata = JsonUtils.StringStringDictionay(node, ApiConstants.Metadata);
+            Metadata = JsonUtils.StringStringDictionary(node, ApiConstants.Metadata);
         }
         
         protected JSONObject BaseJsonObject()
