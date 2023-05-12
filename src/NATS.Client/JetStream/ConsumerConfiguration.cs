@@ -55,6 +55,8 @@ namespace NATS.Client.JetStream
         internal bool? _flowControl;
         internal bool? _headersOnly;
         internal bool? _memStorage;
+        internal IList<Duration> _backoff;
+        internal Dictionary<string, string> _metadata;
 
         public DeliverPolicy DeliverPolicy => _deliverPolicy ?? DeliverPolicy.All;
         public AckPolicy AckPolicy => _ackPolicy ?? AckPolicy.Explicit;
@@ -85,8 +87,8 @@ namespace NATS.Client.JetStream
         public bool FlowControl => _flowControl ?? false;
         public bool HeadersOnly => _headersOnly ?? false;
         public bool MemStorage => _memStorage ?? false;
-        public IList<Duration> Backoff { get; }
-        public Dictionary<string, string> Metadata { get; }
+        public IList<Duration> Backoff => _backoff ?? new List<Duration>();
+        public Dictionary<string, string> Metadata => _metadata ?? new Dictionary<string, string>();
 
         internal ConsumerConfiguration(string json) : this(JSON.Parse(json)) {}
 
@@ -122,8 +124,8 @@ namespace NATS.Client.JetStream
             _headersOnly = ccNode[ApiConstants.HeadersOnly].AsBool;
             _memStorage = ccNode[ApiConstants.MemStorage].AsBool;
 
-            Backoff = DurationList(ccNode, ApiConstants.Backoff);
-            Metadata = JsonUtils.StringStringDictionay(ccNode, ApiConstants.Metadata);
+            _backoff = DurationList(ccNode, ApiConstants.Backoff, true);
+            _metadata = StringStringDictionary(ccNode, ApiConstants.Metadata, true);
         }
 
         private ConsumerConfiguration(ConsumerConfigurationBuilder builder)
@@ -158,8 +160,8 @@ namespace NATS.Client.JetStream
             _maxBytes = builder._maxBytes;
             _numReplicas = builder._numReplicas;
 
-            Backoff = builder._backoff;
-            Metadata = builder._metadata;
+            _backoff = builder._backoff;
+            _metadata = builder._metadata;
         }
 
         public override JSONNode ToJsonNode()
@@ -230,13 +232,9 @@ namespace NATS.Client.JetStream
             RecordWouldBeChange(SampleFrequency, server.SampleFrequency, "SampleFrequency", changes);
             RecordWouldBeChange(DeliverSubject, server.DeliverSubject, "DeliverSubject", changes);
             RecordWouldBeChange(DeliverGroup, server.DeliverGroup, "DeliverGroup", changes);
-                   
-            if (!Backoff.SequenceEqual(server.Backoff)) { changes.Add("Backoff"); }
 
-            if (!Validator.DictionariesEqual(Metadata, server.Metadata))
-            {
-                changes.Add("Metadata");
-            }
+            if (_backoff != null && !SequenceEqual(_backoff, server._backoff, true)) { changes.Add("Backoff"); }
+            if (_metadata != null && !DictionariesEqual(_metadata, server._metadata)) { changes.Add("Metadata"); }
 
             return changes;
         }
@@ -334,8 +332,8 @@ namespace NATS.Client.JetStream
             internal bool? _flowControl;
             internal bool? _headersOnly;
             internal bool? _memStorage;
-            internal IList<Duration> _backoff = new List<Duration>();
-            internal Dictionary<string, string> _metadata = new Dictionary<string, string>();
+            internal IList<Duration> _backoff;
+            internal Dictionary<string, string> _metadata;
 
             public ConsumerConfigurationBuilder() {}
 
@@ -372,10 +370,18 @@ namespace NATS.Client.JetStream
                 _flowControl = cc._flowControl;
                 _headersOnly = cc._headersOnly;
                 _memStorage = cc._memStorage;
-                _backoff = new List<Duration>(cc.Backoff);
-                foreach (string key in cc.Metadata.Keys)
+
+                if (cc._backoff != null)
                 {
-                    _metadata[key] = cc.Metadata[key];
+                    _backoff = new List<Duration>(cc._backoff);
+                }
+
+                if (cc._metadata != null)
+                {
+                    foreach (string key in cc.Metadata.Keys)
+                    {
+                        _metadata[key] = cc.Metadata[key];
+                    }
                 }
             }
 
@@ -775,20 +781,29 @@ namespace NATS.Client.JetStream
             /// </summary>
             /// <param name="backoffs">zero or more backoff durations or an array of backoffs</param>
             /// <returns>The ConsumerConfigurationBuilder</returns>
-            public ConsumerConfigurationBuilder WithBackoff(params Duration[] backoffs) {
-                _backoff.Clear();
-                if (backoffs != null) {
+            public ConsumerConfigurationBuilder WithBackoff(params Duration[] backoffs)
+            {
+                if (backoffs == null || (backoffs.Length == 1 && backoffs[0] == null))
+                {
+                    _backoff = null;
+                }
+                else
+                {
+                    _backoff = new List<Duration>();
                     foreach (Duration d in backoffs)
                     {
-                        if (d != null) {
+                        if (d != null)
+                        {
                             if (d.Nanos < DurationMinLong)
                             {
                                 throw new ArgumentException($"Backoff cannot be less than {DurationMinLong}");
                             }
+
                             _backoff.Add(d);
                         }
                     }
                 }
+
                 return this;
             }
 
@@ -798,8 +813,13 @@ namespace NATS.Client.JetStream
             /// <param name="backoffsMillis">zero or more backoff in millis or an array of backoffsMillis</param>
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithBackoff(params long[] backoffsMillis) {
-                _backoff.Clear();
-                if (backoffsMillis != null) {
+                if (backoffsMillis == null)
+                {
+                    _backoff = null;
+                }
+                else
+                {
+                    _backoff = new List<Duration>();
                     foreach (long ms in backoffsMillis) {
                         if (ms < DurationMinLong)
                         {
@@ -808,6 +828,7 @@ namespace NATS.Client.JetStream
                         _backoff.Add(Duration.OfMillis(ms));
                     }
                 }
+
                 return this;
             }
 
@@ -817,9 +838,13 @@ namespace NATS.Client.JetStream
             /// <param name="metadata">the metadata dictionary</param>
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithMetadata(Dictionary<string, string> metadata) {
-                _metadata.Clear();
-                if (metadata != null)
+                if (metadata == null)
                 {
+                    _metadata = null;
+                }
+                else
+                {
+                    _metadata = new Dictionary<string, string>();
                     foreach (string key in metadata.Keys)
                     {
                         _metadata[key] = metadata[key];
