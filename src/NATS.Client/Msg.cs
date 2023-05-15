@@ -321,7 +321,7 @@ namespace NATS.Client
         public bool HasHeaders => header?.Count > 0;
 
         /// <summary>
-        /// Gets or sets the <see cref="MsgStatus"/> of the message.
+        /// Gets the <see cref="MsgStatus"/> of the message.
         /// </summary>
         public MsgStatus Status => status;
 
