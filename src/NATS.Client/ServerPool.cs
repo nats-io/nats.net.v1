@@ -85,11 +85,6 @@ namespace NATS.Client
                 }
             }
 
-            if (!string.IsNullOrWhiteSpace(opts.Url))
-            {
-                Add(opts.Url, false);
-            }
-
             // Place default URL if pool is empty.
             if (IsEmpty())
             {

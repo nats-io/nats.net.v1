@@ -18,6 +18,7 @@ namespace NATS.Client
     /// <summary>
     /// Provides factory methods to create connections to NATS Servers.
     /// </summary>
+    // ReSharper disable once ClassNeverInstantiated.Global
     public sealed class ConnectionFactory : IConnectionFactory
     {
         /// <summary>
@@ -43,12 +44,13 @@ namespace NATS.Client
         /// details.</para></exception>
         public IConnection CreateConnection(string url)
         {
-            Options opts = new Options();
-            opts.processUrlString(url);
+            Options opts = new Options
+            {
+                Url = url
+            };
             return CreateConnection(opts);
         }
-
-
+        
         /// <summary>
         /// Attempt to connect to the NATS server referenced by <paramref name="url"/> with NATS 2.0 credentials.
         /// </summary>
@@ -68,10 +70,12 @@ namespace NATS.Client
         public IConnection CreateConnection(string url, string credentialsPath)
         {
             if (string.IsNullOrWhiteSpace(credentialsPath))
-                throw new ArgumentException("Invalid credentials path", "credentials");
+                throw new ArgumentException("Invalid credentials path", nameof(credentialsPath));
 
-            Options opts = new Options();
-            opts.processUrlString(url);
+            Options opts = new Options
+            {
+                Url = url
+            };
             opts.SetUserCredentials(credentialsPath);
             return CreateConnection(opts);
         }
@@ -96,12 +100,14 @@ namespace NATS.Client
         public IConnection CreateConnection(string url, string jwt, string privateNkey)
         {
             if (string.IsNullOrWhiteSpace(jwt))
-                throw new ArgumentException("Invalid jwt path", "jwt");
+                throw new ArgumentException("Invalid jwt path", nameof(jwt));
             if (string.IsNullOrWhiteSpace(privateNkey))
-                throw new ArgumentException("Invalid nkey path", "privateNkey");
+                throw new ArgumentException("Invalid nkey path", nameof(privateNkey));
 
-            Options opts = new Options();
-            opts.processUrlString(url);
+            Options opts = new Options
+            {
+                Url = url
+            };
             opts.SetUserCredentials(jwt, privateNkey);
             return CreateConnection(opts);
         }
@@ -132,9 +138,11 @@ namespace NATS.Client
         /// details.</para></exception>
         public IConnection CreateSecureConnection(string url)
         {
-            Options opts = new Options();
-            opts.processUrlString(url);
-            opts.Secure = true;
+            Options opts = new Options
+            {
+                Url = url,
+                Secure = true
+            };
             return CreateConnection(opts);
         }
 
@@ -210,8 +218,10 @@ namespace NATS.Client
         /// details.</para></exception>
         public IEncodedConnection CreateEncodedConnection(string url)
         {
-            Options opts = new Options();
-            opts.processUrlString(url);
+            Options opts = new Options
+            {
+                Url = url
+            };
             return CreateEncodedConnection(opts);
         }
 

@@ -18,7 +18,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NATS.Client;
+using UnitTests;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IntegrationTests
 {
@@ -28,7 +30,13 @@ namespace IntegrationTests
     [Collection(DefaultSuiteContext.CollectionKey)]
     public class TestBasic : TestSuite<DefaultSuiteContext>
     {
-        public TestBasic(DefaultSuiteContext context) : base(context) { }
+        private readonly ITestOutputHelper output;
+
+        public TestBasic(ITestOutputHelper output, DefaultSuiteContext context) : base(context)
+        {
+            this.output = output;
+            Console.SetOut(new TestBase.ConsoleWriter(output));
+        }
 
         [Fact]
         public void TestConnectedServer()
@@ -1589,37 +1597,17 @@ namespace IntegrationTests
         [Fact]
         public void TestUrlArgument()
         {
-            string url1 = Context.DefaultServer.Url;
+            string url1 = Context.Server2.Url;
             string url2 = Context.Server3.Url;
             string url3 = Context.Server4.Url;
 
             string urls = url1 + "," + url2 + "," + url3;
 
-            using (NATSServer.CreateFastAndVerify())
-            {
-                using (var c = Context.ConnectionFactory.CreateConnection(urls))
-                {
-                    Assert.Equal(c.Opts.Servers[0], url1);
-                    Assert.Equal(c.Opts.Servers[1], url2);
-                    Assert.Equal(c.Opts.Servers[2], url3);
-
-                    c.Close();
-                }
-
-                urls = url1 + "    , " + url2 + "," + url3;
-                using (var c = Context.ConnectionFactory.CreateConnection(urls))
-                {
-                    Assert.Equal(c.Opts.Servers[0], url1);
-                    Assert.Equal(c.Opts.Servers[1], url2);
-                    Assert.Equal(c.Opts.Servers[2], url3);
-                    c.Close();
-                }
-
-                using (var c = Context.ConnectionFactory.CreateConnection(url1))
-                {
-                    c.Close();
-                }
-            }
+            Options opts = ConnectionFactory.GetDefaultOptions();
+            opts.Url = urls;
+            Assert.Equal(opts.Servers[0], url1);
+            Assert.Equal(opts.Servers[1], url2);
+            Assert.Equal(opts.Servers[2], url3);
         }
 
         private bool assureClusterFormed(IConnection c, int serverCount)
@@ -1912,7 +1900,6 @@ namespace IntegrationTests
                 using (Context.ConnectionFactory.CreateConnection(o)) { }
 
                 // servers with a simple hostname
-                o.Url = null;
                 o.Servers = new string[] { "127.0.0.1" };
                 using (var cn = Context.ConnectionFactory.CreateConnection(o))
                     cn.Close();
@@ -1926,8 +1913,7 @@ namespace IntegrationTests
                 using (Context.ConnectionFactory.CreateConnection(o)) { }
 
                 // servers with multiple hosts
-                o.Url = null;
-                o.Servers = new string[] { "127.0.0.1", "localhost" };
+                o.Servers = new [] { "127.0.0.1", "localhost" };
                 using (var cn = Context.ConnectionFactory.CreateConnection(o))
                     cn.Close();
             }

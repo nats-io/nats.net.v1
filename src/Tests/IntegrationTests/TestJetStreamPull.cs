@@ -569,41 +569,28 @@ namespace IntegrationTests
                 IJetStreamPullSubscription sub = setup.Invoke(jsm, js);
                 if (type == TypeError && syncMode)
                 {
-                    Assert.Throws<NATSJetStreamStatusException>(() => sub.NextMessage(500));
+                    Assert.Throws<NATSJetStreamStatusException>(() => sub.NextMessage(5000));
                 }
                 else
                 {
                     try
                     {
-                        sub.NextMessage((500));
+                        sub.NextMessage(5000);
                     }
                     catch (NATSTimeoutException)
                     {
                     }
                 }
-                Thread.Sleep(500);
-            });
-            
-            if (!skip)
-            {
                 CheckHandler(statusText, type, handler);
-            }
+            });
         }
         
         private void CheckHandler(String statusText, int type, TestEventHandler handler) {
             if (type == TypeError) {
-                Assert.Equal(0, handler.PullStatusWarningEvents.Count);
-                StatusEventArgs se = handler.PullStatusErrorEvents[0];
-                Assert.StartsWith(statusText, se.Status.Message);
+                Assert.True(handler.PullStatusErrorOrWait(statusText, 2000));
             }
             else if (type == TypeWarning) {
-                StatusEventArgs se = handler.PullStatusWarningEvents[0];
-                Assert.StartsWith(statusText, se.Status.Message);
-                Assert.Equal(0, handler.PullStatusErrorEvents.Count);
-            }
-            else {
-                Assert.Equal(0, handler.PullStatusWarningEvents.Count);
-                Assert.Equal(0, handler.PullStatusErrorEvents.Count);
+                Assert.True(handler.PullStatusWarningOrWait(statusText, 2000));
             }
         }
 

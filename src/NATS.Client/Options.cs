@@ -304,11 +304,7 @@ namespace NATS.Client
             subscriptionBatchSize = o.subscriptionBatchSize;
             customInboxPrefix = o.customInboxPrefix;
 
-            if (o.url != null)
-            {
-                processUrlString(o.url);
-            }
-            
+            url = o.url;
             if (o.servers != null)
             {
                 servers = new string[o.servers.Length];
@@ -342,37 +338,32 @@ namespace NATS.Client
 
             var parts = url.Split(protcolSep, StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length == 1)
-                return $"nats://{url}";
+                return $"nats://{url.Trim()}";
             
             throw new ArgumentException("Allowed protocols are: 'nats://, tls://'.");
         }
 
-        internal void processUrlString(string url)
-        {
-            if (url == null)
-                return;
-
-            string[] urls = url.Split(',');
-            for (int i = 0; i < urls.Length; i++)
-            {
-                urls[i] = urls[i].Trim();
-            }
-
-            servers = urls;
-        }
-
         /// <summary>
         /// Gets or sets the url used to connect to the NATs server.
+        /// Can be a comma delimited list, it will be turning into Servers
         /// </summary>
         /// <remarks>
         /// This may contain username/password information.
         /// </remarks>
         public string Url
         {
-            get { return url; }
+            get => url;
             set
             {
-                url = ensureProperUrl(value);
+                if (value == null)
+                {
+                    url = null;
+                    servers = null;
+                }
+                else 
+                {
+                    Servers = value.Split(',');
+                }
             }
         }
 
@@ -387,7 +378,20 @@ namespace NATS.Client
             get { return servers; }
             set
             {
-                servers = value?.Select(ensureProperUrl).ToArray();
+                if (value == null || value.Length == 0)
+                {
+                    servers = null;
+                    url = null;
+                }
+                else
+                {
+                    servers = new string[value.Length];
+                    for (int i = 0; i < value.Length; i++)
+                    {
+                        servers[i] = ensureProperUrl(value[i]);
+                    }
+                    url = string.Join(",", servers);
+                }
             }
         }
 

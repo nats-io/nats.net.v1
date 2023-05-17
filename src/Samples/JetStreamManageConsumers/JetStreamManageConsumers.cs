@@ -75,7 +75,7 @@ namespace NATSExamples
                     // 3. get a list of all consumers
                     Console.WriteLine("\n----------\n3. getConsumerNames");
                     IList<string> consumerNames = jsm.GetConsumerNames(helper.Stream);
-                    Console.WriteLine("Consumer Names: " + String.Join(",", consumerNames)); 
+                    Console.WriteLine("Consumer Names: " + string.Join(",", consumerNames)); 
 
                     // 4. Delete a consumer, then list them again
                     // Subsequent calls to deleteStream will throw a
@@ -83,7 +83,7 @@ namespace NATSExamples
                     Console.WriteLine("\n----------\n4. Delete a consumer");
                     jsm.DeleteConsumer(helper.Stream, durable1);
                     consumerNames = jsm.GetConsumerNames(helper.Stream);
-                    Console.WriteLine("Consumer Names: " + String.Join(",", consumerNames)); 
+                    Console.WriteLine("Consumer Names: " + string.Join(",", consumerNames)); 
 
                     // 5. Try to delete the consumer again and get the exception
                     Console.WriteLine("\n----------\n5. Delete consumer again");
