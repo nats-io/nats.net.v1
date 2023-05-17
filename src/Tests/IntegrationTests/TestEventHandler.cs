@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using NATS.Client;
 
 namespace IntegrationTests
@@ -32,5 +33,35 @@ namespace IntegrationTests
             options.PullStatusWarningEventHandler = PullStatusWarningEventHandler;
             options.PullStatusErrorEventHandler = PullStatusErrorEventHandler;
         };
+        
+        public bool PullStatusWarningOrWait(String contains, long timeout)
+        {
+            Stopwatch sw = Stopwatch.StartNew();
+            do {
+                int count = PullStatusWarningEvents.Count;
+                for (int i = 0; i < count; i++) {
+                    if (PullStatusWarningEvents[i].Status.Message.Contains(contains)) {
+                        return true;
+                    }
+                }
+            }
+            while (sw.ElapsedMilliseconds <= timeout);
+            return false;
+        }
+        
+        public bool PullStatusErrorOrWait(String contains, long timeout)
+        {
+            Stopwatch sw = Stopwatch.StartNew();
+            do {
+                int count = PullStatusErrorEvents.Count;
+                for (int i = 0; i < count; i++) {
+                    if (PullStatusErrorEvents[i].Status.Message.Contains(contains)) {
+                        return true;
+                    }
+                }
+            }
+            while (sw.ElapsedMilliseconds <= timeout);
+            return false;
+        }
     }
 }
