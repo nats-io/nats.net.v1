@@ -28,7 +28,7 @@ namespace NATSExamples
             {
                 Console.WriteLine("Connection closed.");
             };
-            
+           
             Console.WriteLine($"Connecting to '{opts.Url}'");
 
             using (IConnection c = new ConnectionFactory().CreateConnection(opts))

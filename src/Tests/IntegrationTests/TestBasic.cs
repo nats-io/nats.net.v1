@@ -1900,7 +1900,6 @@ namespace IntegrationTests
                 using (Context.ConnectionFactory.CreateConnection(o)) { }
 
                 // servers with a simple hostname
-                o.Url = null;
                 o.Servers = new string[] { "127.0.0.1" };
                 using (var cn = Context.ConnectionFactory.CreateConnection(o))
                     cn.Close();
@@ -1914,8 +1913,7 @@ namespace IntegrationTests
                 using (Context.ConnectionFactory.CreateConnection(o)) { }
 
                 // servers with multiple hosts
-                o.Url = null;
-                o.Servers = new string[] { "127.0.0.1", "localhost" };
+                o.Servers = new [] { "127.0.0.1", "localhost" };
                 using (var cn = Context.ConnectionFactory.CreateConnection(o))
                     cn.Close();
             }

@@ -338,13 +338,14 @@ namespace NATS.Client
 
             var parts = url.Split(protcolSep, StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length == 1)
-                return $"nats://{url}";
+                return $"nats://{url.Trim()}";
             
             throw new ArgumentException("Allowed protocols are: 'nats://, tls://'.");
         }
 
         /// <summary>
         /// Gets or sets the url used to connect to the NATs server.
+        /// Can be a comma delimited list, it will be turning into Servers
         /// </summary>
         /// <remarks>
         /// This may contain username/password information.
@@ -354,14 +355,14 @@ namespace NATS.Client
             get => url;
             set
             {
-                url = null;
-                if (value != null)
+                if (value == null)
+                {
+                    url = null;
+                    servers = null;
+                }
+                else 
                 {
                     Servers = value.Split(',');
-                    if (servers != null)
-                    {
-                        url = String.Join(",", servers);
-                    }
                 }
             }
         }
@@ -380,6 +381,7 @@ namespace NATS.Client
                 if (value == null || value.Length == 0)
                 {
                     servers = null;
+                    url = null;
                 }
                 else
                 {
@@ -388,6 +390,7 @@ namespace NATS.Client
                     {
                         servers[i] = ensureProperUrl(value[i]);
                     }
+                    url = string.Join(",", servers);
                 }
             }
         }

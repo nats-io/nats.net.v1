@@ -333,7 +333,7 @@ namespace JsMulti.Settings
                 }
             }
 
-            Error("Invalid choice for " + name + " [" + lower + "]. Must be one of [" + String.Join(", ", choices) + "]");
+            Error("Invalid choice for " + name + " [" + lower + "]. Must be one of [" + string.Join(", ", choices) + "]");
             return -1;
         }
     }
