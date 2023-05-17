@@ -304,11 +304,7 @@ namespace NATS.Client
             subscriptionBatchSize = o.subscriptionBatchSize;
             customInboxPrefix = o.customInboxPrefix;
 
-            if (o.url != null)
-            {
-                processUrlString(o.url);
-            }
-            
+            url = o.url;
             if (o.servers != null)
             {
                 servers = new string[o.servers.Length];
@@ -347,20 +343,6 @@ namespace NATS.Client
             throw new ArgumentException("Allowed protocols are: 'nats://, tls://'.");
         }
 
-        internal void processUrlString(string url)
-        {
-            if (url == null)
-                return;
-
-            string[] urls = url.Split(',');
-            for (int i = 0; i < urls.Length; i++)
-            {
-                urls[i] = urls[i].Trim();
-            }
-
-            servers = urls;
-        }
-
         /// <summary>
         /// Gets or sets the url used to connect to the NATs server.
         /// </summary>
@@ -369,10 +351,18 @@ namespace NATS.Client
         /// </remarks>
         public string Url
         {
-            get { return url; }
+            get => url;
             set
             {
-                url = ensureProperUrl(value);
+                url = null;
+                if (value != null)
+                {
+                    Servers = value.Split(',');
+                    if (servers != null)
+                    {
+                        url = String.Join(",", servers);
+                    }
+                }
             }
         }
 
@@ -387,7 +377,18 @@ namespace NATS.Client
             get { return servers; }
             set
             {
-                servers = value?.Select(ensureProperUrl).ToArray();
+                if (value == null || value.Length == 0)
+                {
+                    servers = null;
+                }
+                else
+                {
+                    servers = new string[value.Length];
+                    for (int i = 0; i < value.Length; i++)
+                    {
+                        servers[i] = ensureProperUrl(value[i]);
+                    }
+                }
             }
         }
 

@@ -37,9 +37,10 @@ namespace IntegrationTests
         public bool PullStatusWarningOrWait(String contains, long timeout)
         {
             Stopwatch sw = Stopwatch.StartNew();
+            int i = 0;
             do {
                 int count = PullStatusWarningEvents.Count;
-                for (int i = 0; i < count; i++) {
+                for (; i < count; i++) {
                     if (PullStatusWarningEvents[i].Status.Message.Contains(contains)) {
                         return true;
                     }
@@ -52,9 +53,10 @@ namespace IntegrationTests
         public bool PullStatusErrorOrWait(String contains, long timeout)
         {
             Stopwatch sw = Stopwatch.StartNew();
+            int i = 0;
             do {
                 int count = PullStatusErrorEvents.Count;
-                for (int i = 0; i < count; i++) {
+                for (; i < count; i++) {
                     if (PullStatusErrorEvents[i].Status.Message.Contains(contains)) {
                         return true;
                     }

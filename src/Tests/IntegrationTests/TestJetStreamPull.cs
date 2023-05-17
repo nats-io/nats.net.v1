@@ -581,12 +581,8 @@ namespace IntegrationTests
                     {
                     }
                 }
-            });
-            
-            if (!skip)
-            {
                 CheckHandler(statusText, type, handler);
-            }
+            });
         }
         
         private void CheckHandler(String statusText, int type, TestEventHandler handler) {
