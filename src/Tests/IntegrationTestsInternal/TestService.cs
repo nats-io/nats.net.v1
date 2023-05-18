@@ -54,15 +54,11 @@ namespace IntegrationTestsInternal
                     Endpoint endEcho = Endpoint.Builder()
                         .WithName(EchoEndpointName)
                         .WithSubject(EchoEndpointSubject)
-                        .WithSchemaRequest("echo schema request info") // optional
-                        .WithSchemaResponse("echo schema response info") // optional
                         .Build();
 
                     Endpoint endSortA = Endpoint.Builder()
                         .WithName(SortEndpointAscendingName)
                         .WithSubject(SortEndpointAscendingSubject)
-                        .WithSchemaRequest("sort ascending schema request info") // optional
-                        .WithSchemaResponse("sort ascending schema response info") // optional
                         .Build();
 
                     // constructor coverage
@@ -100,8 +96,6 @@ namespace IntegrationTestsInternal
                         .WithGroup(sortGroup)
                         .WithEndpointName(endSortA.Name)
                         .WithEndpointSubject(endSortA.Subject)
-                        .WithEndpointSchemaRequest(endSortA.Schema.Request)
-                        .WithEndpointSchemaResponse(endSortA.Schema.Response)
                         .WithHandler((source, args) => { args.Message.Respond(serviceNc2, SortA(args.Message.Data)); })
                         .Build();
 
@@ -149,8 +143,6 @@ namespace IntegrationTestsInternal
                     PingResponse pingResponse2 = service2.PingResponse;
                     InfoResponse infoResponse1 = service1.InfoResponse;
                     InfoResponse infoResponse2 = service2.InfoResponse;
-                    SchemaResponse schemaResponse1 = service1.SchemaResponse;
-                    SchemaResponse schemaResponse2 = service2.SchemaResponse;
                     StatsResponse statsResponse1 = service1.GetStatsResponse();
                     StatsResponse statsResponse2 = service2.GetStatsResponse();
                     EndpointResponse[] endpointResponseArray1 = new EndpointResponse[]
@@ -171,8 +163,6 @@ namespace IntegrationTestsInternal
                     Assert.Equal(serviceId2, pingResponse2.Id);
                     Assert.Equal(serviceId1, infoResponse1.Id);
                     Assert.Equal(serviceId2, infoResponse2.Id);
-                    Assert.Equal(serviceId1, schemaResponse1.Id);
-                    Assert.Equal(serviceId2, schemaResponse2.Id);
                     Assert.Equal(serviceId1, statsResponse1.Id);
                     Assert.Equal(serviceId2, statsResponse2.Id);
 
@@ -233,30 +223,6 @@ namespace IntegrationTestsInternal
                     VerifyInfoDiscovery(discovery.InfoForNameAndId(ServiceName1, serviceId1), infoResponse1);
                     Assert.Null(discovery.InfoForNameAndId(ServiceName1, "badId"));
                     Assert.Null(discovery.InfoForNameAndId("bad", "badId"));
-
-                    // schema discovery
-                    void VerifySchemaDiscovery(SchemaResponse r, SchemaResponse exp) {
-                        VerifyServiceResponseFields(r, exp);
-                        Assert.Equal(exp.ApiUrl, r.ApiUrl);
-                        Assert.Equal(exp.Endpoints, r.Endpoints);
-                    }
-                    void VerifySchemaDiscoveries(IList<SchemaResponse> responses, params SchemaResponse[] expectedResponses)
-                    {
-                        Assert.Equal(expectedResponses.Length, responses.Count);
-                        foreach (SchemaResponse r in responses)
-                        {
-                            // ReSharper disable once CoVariantArrayConversion
-                            SchemaResponse exp = (SchemaResponse)Find(expectedResponses, r);
-                            Assert.NotNull(exp);
-                            VerifySchemaDiscovery(r, exp);
-                        }
-                    }
-                    VerifySchemaDiscoveries(discovery.Schema(), schemaResponse1, schemaResponse2);
-                    VerifySchemaDiscoveries(discovery.Schema(ServiceName1), schemaResponse1);
-                    VerifySchemaDiscoveries(discovery.Schema(ServiceName2), schemaResponse2);
-                    VerifySchemaDiscovery(discovery.SchemaForNameAndId(ServiceName1, serviceId1), schemaResponse1);
-                    Assert.Null(discovery.SchemaForNameAndId(ServiceName1, "badId"));
-                    Assert.Null(discovery.SchemaForNameAndId("bad", "badId"));
                     
                     // stats discovery
                     void VerifyStatsDiscovery(StatsResponse r, StatsResponse exp) {
@@ -379,7 +345,6 @@ namespace IntegrationTestsInternal
             Assert.Equal(ServiceBuilder.DefaultDrainTimeoutMillis, service.DrainTimeoutMillis);
             Assert.Equal("1.0.0", service.Version);
             Assert.Null(service.Description);
-            Assert.Null(service.ApiUrl);
 
             service = Service.Builder().WithConnection(conn).WithName(NAME).WithVersion("1.0.0").AddServiceEndpoint(se)
                 .WithApiUrl("apiUrl")
@@ -387,7 +352,6 @@ namespace IntegrationTestsInternal
                 .WithDrainTimeoutMillis(1000)
                 .Build();
             Assert.Equal("desc", service.Description);
-            Assert.Equal("apiUrl", service.ApiUrl);
             Assert.Equal(1000, service.DrainTimeoutMillis);
 
             Assert.Throws<ArgumentException>(() => Service.Builder().WithName(null));

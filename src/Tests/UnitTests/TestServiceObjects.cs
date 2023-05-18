@@ -30,67 +30,25 @@ namespace UnitTests
             Endpoint e = new Endpoint(NAME);
             Assert.Equal(NAME, e.Name);
             Assert.Equal(NAME, e.Subject);
-            Assert.Null(e.Schema);
             Assert.Equal(e, Endpoint.Builder().WithEndpoint(e).Build());
             Assert.Null(e.Metadata);
 
             e = new Endpoint(NAME, SUBJECT);
             Assert.Equal(NAME, e.Name);
             Assert.Equal(SUBJECT, e.Subject);
-            Assert.Null(e.Schema);
-            Assert.Equal(e, Endpoint.Builder().WithEndpoint(e).Build());
-
-            e = new Endpoint(NAME, SUBJECT, "schema-request", null);
-            Assert.Equal(NAME, e.Name);
-            Assert.Equal(SUBJECT, e.Subject);
-            Assert.Equal("schema-request", e.Schema.Request);
-            Assert.Null(e.Schema.Response);
-            Assert.Equal(e, Endpoint.Builder().WithEndpoint(e).Build());
-
-            e = new Endpoint(NAME, SUBJECT, null, "schema-response");
-            Assert.Equal(NAME, e.Name);
-            Assert.Equal(SUBJECT, e.Subject);
-            Assert.Null(e.Schema.Request);
-            Assert.Equal("schema-response", e.Schema.Response);
-            Assert.Equal(e, Endpoint.Builder().WithEndpoint(e).Build());
-
-            e = Endpoint.Builder()
-                .WithName(NAME)
-                .WithSubject(SUBJECT)
-                .WithSchemaRequest("schema-request")
-                .WithSchemaResponse("schema-response")
-                .Build();
-            Assert.Equal(NAME, e.Name);
-            Assert.Equal(SUBJECT, e.Subject);
-            Assert.Equal("schema-request", e.Schema.Request);
-            Assert.Equal("schema-response", e.Schema.Response);
             Assert.Equal(e, Endpoint.Builder().WithEndpoint(e).Build());
 
             e = Endpoint.Builder()
                 .WithName(NAME).WithSubject(SUBJECT)
-                .WithSchema(e.Schema)
                 .Build();
             Assert.Equal(NAME, e.Name);
             Assert.Equal(SUBJECT, e.Subject);
-            Assert.Equal("schema-request", e.Schema.Request);
-            Assert.Equal("schema-response", e.Schema.Response);
 
             String j = e.ToJsonString();
             Assert.StartsWith("{", j);
             Assert.Contains("\"name\":\"name\"", j);
             Assert.Contains("\"subject\":\"subject\"", j);
-            Assert.Contains("\"schema\":{", j);
-            Assert.Contains("\"request\":\"schema-request\"", j);
-            Assert.Contains("\"response\":\"schema-response\"", j);
             Assert.Equal(JsonUtils.ToKey(typeof(Endpoint)) +j, e.ToString());
-
-            e = Endpoint.Builder()
-                .WithName(NAME).WithSubject(SUBJECT)
-                .WithSchema(null)
-                .Build();
-            Assert.Equal(NAME, e.Name);
-            Assert.Equal(SUBJECT, e.Subject);
-            Assert.Null(e.Schema);
 
             Dictionary<string, string> dictionary = new Dictionary<string, string>();
             e = Endpoint.Builder()
@@ -144,41 +102,6 @@ namespace UnitTests
         }
 
         [Fact]
-        public void TestSchemaConstruction()
-        {
-            Schema s1 = new Schema("request", "response");
-            Assert.Equal("request", s1.Request);
-            Assert.Equal("response", s1.Response);
-
-            Assert.Null(Schema.OptionalInstance(null, ""));
-            Assert.Null(Schema.OptionalInstance("", null));
-            Assert.Null(Schema.OptionalInstance(null));
-
-            Schema s2 = new Schema("request", null);
-            Assert.Equal("request", s2.Request);
-            Assert.Null(s2.Response);
-
-            s2 = new Schema(null, "response");
-            Assert.Null(s2.Request);
-            Assert.Equal("response", s2.Response);
-
-            s2 = new Schema(s1.ToJsonNode());
-            Assert.Equal(s1, s2);
-
-            s2 = Schema.OptionalInstance(s1.ToJsonNode());
-            Assert.Equal(s1, s2);
-
-            String j = s1.ToJsonString();
-            Assert.StartsWith("{", j);
-            Assert.Contains("\"request\":\"request\"", j);
-            Assert.Contains("\"response\":\"response\"", j);
-            String s = s1.ToString();
-            Assert.StartsWith(JsonUtils.ToKey(typeof(Schema)), s);
-            Assert.Contains("\"request\":\"request\"", s);
-            Assert.Contains("\"response\":\"response\"", s);
-        }
-
-        [Fact]
         public void TestEndpointResponseConstruction()
         {
             JSONNode data = new JSONString("data");
@@ -186,7 +109,6 @@ namespace UnitTests
             EndpointResponse es = new EndpointResponse("name", "subject", 0, 0, 0, null, null, dt);
             Assert.Equal("name", es.Name);
             Assert.Equal("subject", es.Subject);
-            Assert.Null(es.Schema);
             Assert.Null(es.LastError);
             Assert.Null(es.Data);
             Assert.Equal(0, es.NumRequests);
@@ -198,7 +120,6 @@ namespace UnitTests
             es = new EndpointResponse("name", "subject", 2, 4, 10, "lastError", data, dt);
             Assert.Equal("name", es.Name);
             Assert.Equal("subject", es.Subject);
-            Assert.Null(es.Schema);
             Assert.Equal("lastError", es.LastError);
             Assert.Equal("\"data\"", es.Data.ToString());
             Assert.Equal(2, es.NumRequests);
@@ -218,31 +139,6 @@ namespace UnitTests
             Assert.Contains("\"num_errors\":4", j);
             Assert.Contains("\"processing_time\":10", j);
             Assert.Contains("\"average_processing_time\":5", j);
-            Assert.Equal(JsonUtils.ToKey(typeof(EndpointResponse)) + j, es.ToString());
-
-            Schema schema = new Schema("req", "res");
-            es = new EndpointResponse("name", "subject", schema);
-            Assert.Equal("name", es.Name);
-            Assert.Equal("subject", es.Subject);
-            Assert.Null(es.LastError);
-            Assert.Null(es.Data);
-            Assert.Equal(0, es.NumRequests);
-            Assert.Equal(0, es.NumErrors);
-            Assert.Equal(0, es.ProcessingTime);
-            Assert.Equal(0, es.AverageProcessingTime);
-            Assert.Equal(DateTime.MinValue, es.Started);
-
-            j = es.ToJsonString();
-            Assert.StartsWith("{", j);
-            Assert.Contains("\"name\":\"name\"", j);
-            Assert.Contains("\"subject\":\"subject\"", j);
-            Assert.Contains("\"schema\":{\"request\":\"req\",\"response\":\"res\"}", j);
-            Assert.DoesNotContain("\"last_error\":", j);
-            Assert.DoesNotContain("\"data\":", j);
-            Assert.DoesNotContain("\"num_requests\":", j);
-            Assert.DoesNotContain("\"num_errors\":", j);
-            Assert.DoesNotContain("\"processing_time\":", j);
-            Assert.DoesNotContain("\"average_processing_time\":", j);
             Assert.Equal(JsonUtils.ToKey(typeof(EndpointResponse)) + j, es.ToString());
         }
 
@@ -412,12 +308,8 @@ namespace UnitTests
             ValidateApiInOutInfoResponse(ir2);
 
             IList<EndpointResponse> endpoints = new List<EndpointResponse>();
-            endpoints.Add(new EndpointResponse("endName0", "endSubject0", new Schema("endSchemaRequest0", "endSchemaResponse0")));
-            endpoints.Add(new EndpointResponse("endName1", "endSubject1", new Schema("endSchemaRequest1", "endSchemaResponse1")));
-            SchemaResponse sch1 = new SchemaResponse("id", "name", "0.0.0", dictionary, "apiUrl", endpoints);
-            SchemaResponse sch2 = new SchemaResponse(sch1.ToJsonString());
-            ValidateApiInOutSchemaResponse(sch1);
-            ValidateApiInOutSchemaResponse(sch2);
+            endpoints.Add(new EndpointResponse("endName0", "endSubject0"));
+            endpoints.Add(new EndpointResponse("endName1", "endSubject1"));
 
             DateTime serviceStarted = DateTime.UtcNow;
             DateTime[] endStarteds = new DateTime[2];
@@ -458,20 +350,6 @@ namespace UnitTests
                 Assert.Equal("lastError" + x, e.LastError);
                 Assert.Equal(new TestStatsData(data[x]), new TestStatsData(e.Data));
                 Assert.Equal(endStarteds[x], e.Started);
-            }
-        }
-
-        private static void ValidateApiInOutSchemaResponse(SchemaResponse r)
-        {
-            ValidateApiInOutServiceResponse(r, SchemaResponse.ResponseType);
-            Assert.Equal("apiUrl", r.ApiUrl);
-            Assert.Equal(2, r.Endpoints.Count);
-            for (int x = 0; x < 2; x++) {
-                EndpointResponse e = r.Endpoints[x];
-                Assert.Equal("endName" + x, e.Name);
-                Assert.Equal("endSubject" + x, e.Subject);
-                Assert.Equal("endSchemaRequest" + x, e.Schema.Request);
-                Assert.Equal("endSchemaResponse" + x, e.Schema.Response);
             }
         }
 

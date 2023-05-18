@@ -37,8 +37,6 @@ namespace NATSExamples
                 Endpoint epEcho = Endpoint.Builder()
                     .WithName("EchoEndpoint")
                     .WithSubject("echo")
-                    .WithSchemaRequest("echo schema request info") // optional
-                    .WithSchemaResponse("echo schema response info") // optional
                     .Build();
 
                 // Sort is going to be grouped. This will affect the actual subject
@@ -63,8 +61,6 @@ namespace NATSExamples
                     .WithGroup(sortGroup)
                     .WithEndpointName("SortEndpointAscending")
                     .WithEndpointSubject("ascending")
-                    .WithEndpointSchemaRequest("sort ascending schema request info") // optional
-                    .WithEndpointSchemaResponse("sort ascending schema response info") // optional
                     .WithHandler((s, a) => HandleSortAscending(c,  a.Message, "S1A"))
                     .Build();
 
@@ -161,18 +157,6 @@ namespace NATSExamples
                 PrintDiscovery("Info", "Service2", infoResponses);
 
                 // ----------------------------------------------------------------------------------------------------
-                // schema discover variations
-                // ----------------------------------------------------------------------------------------------------
-                IList<SchemaResponse> schemaResponsList = discovery.Schema();
-                PrintDiscovery("Schema", "[All]", schemaResponsList);
-
-                schemaResponsList = discovery.Schema("Service1");
-                PrintDiscovery("Schema", "Service1", schemaResponsList);
-
-                schemaResponsList = discovery.Schema("Service2");
-                PrintDiscovery("Schema", "Service2", schemaResponsList);
-
-                // ----------------------------------------------------------------------------------------------------
                 // stats discover variations
                 // ----------------------------------------------------------------------------------------------------
                 IList<StatsResponse> statsResponseList = discovery.Stats();
@@ -262,12 +246,6 @@ namespace NATSExamples
         {
             Console.WriteLine("\n" + action + " " + label); 
             foreach (InfoResponse r in responses) { Console.WriteLine("  " + r); }
-        }
-
-        private static void PrintDiscovery(string action, string label, IList<SchemaResponse> responses)
-        {
-            Console.WriteLine("\n" + action + " " + label); 
-            foreach (SchemaResponse r in responses) { Console.WriteLine("  " + r); }
         }
 
         private static void PrintDiscovery(string action, string label, IList<StatsResponse> responses)

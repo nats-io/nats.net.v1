@@ -12,20 +12,14 @@ namespace NATS.Client.Service
     {
         public string Name { get; }
         public string Subject { get; }
-        public Schema Schema { get; }
         public Dictionary<string, string> Metadata { get; }
 
-        public Endpoint(string name, string subject, Schema schema) : this(name, subject, schema, null, true) {}
+        public Endpoint(string name) : this(name, null, null, true) {}
 
-        public Endpoint(string name) : this(name, null, null, null, true) {}
-
-        public Endpoint(string name, string subject) : this(name, subject, null, null, true) {}
-
-        public Endpoint(string name, string subject, string schemaRequest, string schemaResponse)
-            : this(name, subject, Schema.OptionalInstance(schemaRequest, schemaResponse), null, true) {}
+        public Endpoint(string name, string subject) : this(name, subject, null, true) {}
 
         // internal use constructors
-        internal Endpoint(string name, string subject, Schema schema, Dictionary<string, string> metadata, bool validate) {
+        internal Endpoint(string name, string subject, Dictionary<string, string> metadata, bool validate) {
             if (validate) {
                 Name = Validator.ValidateIsRestrictedTerm(name, "Endpoint Name", true);
                 if (subject == null) {
@@ -39,7 +33,6 @@ namespace NATS.Client.Service
                 Name = name;
                 Subject = subject;
             }
-            Schema = schema;
             Metadata = metadata == null || metadata.Count == 0 ? null : metadata;
         }
 
@@ -47,19 +40,17 @@ namespace NATS.Client.Service
         {
             Name = node[ApiConstants.Name];
             Subject = node[ApiConstants.Subject];
-            Schema = Schema.OptionalInstance(node[ApiConstants.Schema]);
             Metadata = JsonUtils.StringStringDictionary(node, ApiConstants.Metadata);
         }
 
         private Endpoint(EndpointBuilder b) 
-            : this(b.Name, b.Subject, Schema.OptionalInstance(b.SchemaRequest, b.SchemaResponse), b.Metadata, true) {}
+            : this(b.Name, b.Subject, b.Metadata, true) {}
 
         public override JSONNode ToJsonNode()
         {
             JSONObject jso = new JSONObject();
             JsonUtils.AddField(jso, ApiConstants.Name, Name);
             JsonUtils.AddField(jso, ApiConstants.Subject, Subject);
-            JsonUtils.AddField(jso, ApiConstants.Schema, Schema);
             JsonUtils.AddField(jso, ApiConstants.Metadata, Metadata);
             return jso;
         }
@@ -70,21 +61,11 @@ namespace NATS.Client.Service
         {
             internal string Name;
             internal string Subject;
-            internal string SchemaRequest;
-            internal string SchemaResponse;
             internal Dictionary<string, string> Metadata;
 
             public EndpointBuilder WithEndpoint(Endpoint endpoint) {
                 Name = endpoint.Name;
                 Subject = endpoint.Subject;
-                if (endpoint.Schema == null) {
-                    SchemaRequest = null;
-                    SchemaResponse = null;
-                }
-                else {
-                    SchemaRequest = endpoint.Schema.Request;
-                    SchemaResponse = endpoint.Schema.Response;
-                }
                 return this;
             }
 
@@ -95,28 +76,6 @@ namespace NATS.Client.Service
 
             public EndpointBuilder WithSubject(string subject) {
                 Subject = subject;
-                return this;
-            }
-
-            public EndpointBuilder WithSchemaRequest(string schemaRequest) {
-                SchemaRequest = schemaRequest;
-                return this;
-            }
-
-            public EndpointBuilder WithSchemaResponse(string schemaResponse) {
-                SchemaResponse = schemaResponse;
-                return this;
-            }
-
-            public EndpointBuilder WithSchema(Schema schema) {
-                if (schema == null) {
-                    SchemaRequest = null;
-                    SchemaResponse = null;
-                }
-                else {
-                    SchemaRequest = schema.Request;
-                    SchemaResponse = schema.Response;
-                }
                 return this;
             }
 
@@ -138,7 +97,7 @@ namespace NATS.Client.Service
 
         protected bool Equals(Endpoint other)
         {
-            return Name == other.Name && Subject == other.Subject && Equals(Schema, other.Schema);
+            return Name == other.Name && Subject == other.Subject && Validator.DictionariesEqual(Metadata, other.Metadata);
         }
 
         public override bool Equals(object obj)
@@ -155,7 +114,7 @@ namespace NATS.Client.Service
             {
                 var hashCode = (Name != null ? Name.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (Subject != null ? Subject.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (Schema != null ? Schema.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Metadata != null ? Metadata.GetHashCode() : 0);
                 return hashCode;
             }
         }
