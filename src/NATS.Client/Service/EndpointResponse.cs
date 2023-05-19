@@ -26,7 +26,6 @@ namespace NATS.Client.Service
     {
         public string Name { get; }
         public string Subject { get; }
-        public Schema Schema { get; }
         public long NumRequests { get; } 
         public long NumErrors { get; } 
         public long ProcessingTime { get; } 
@@ -38,7 +37,6 @@ namespace NATS.Client.Service
         internal EndpointResponse(string name, string subject, long numRequests, long numErrors, long processingTime, string lastError, JSONNode data, DateTime started) {
             Name = name;
             Subject = subject;
-            Schema = null;
             NumRequests = numRequests;
             NumErrors = numErrors;
             ProcessingTime = processingTime;
@@ -48,10 +46,9 @@ namespace NATS.Client.Service
             Started = started;
         }
 
-        internal EndpointResponse(string name, string subject, Schema schema) {
+        internal EndpointResponse(string name, string subject) {
             Name = name;
             Subject = subject;
-            Schema = schema;
             NumRequests = 0;
             NumErrors = 0;
             ProcessingTime = 0;
@@ -65,7 +62,6 @@ namespace NATS.Client.Service
         {
             Name = node[ApiConstants.Name];
             Subject = node[ApiConstants.Subject];
-            Schema = Schema.OptionalInstance(node[ApiConstants.Schema]);
             NumRequests = JsonUtils.AsLongOrZero(node, ApiConstants.NumRequests);
             NumErrors = JsonUtils.AsLongOrZero(node, ApiConstants.NumErrors);
             ProcessingTime = JsonUtils.AsLongOrZero(node, ApiConstants.ProcessingTime);
@@ -93,7 +89,6 @@ namespace NATS.Client.Service
             JSONObject jso = new JSONObject();
             JsonUtils.AddField(jso, ApiConstants.Name, Name);
             JsonUtils.AddField(jso, ApiConstants.Subject, Subject);
-            JsonUtils.AddField(jso, ApiConstants.Schema, Schema);
             JsonUtils.AddFieldWhenGtZero(jso, ApiConstants.NumRequests, NumRequests);
             JsonUtils.AddFieldWhenGtZero(jso, ApiConstants.NumErrors, NumErrors);
             JsonUtils.AddFieldWhenGtZero(jso, ApiConstants.ProcessingTime, ProcessingTime);
@@ -113,7 +108,6 @@ namespace NATS.Client.Service
         {
             return Name == other.Name 
                    && Subject == other.Subject 
-                   && Equals(Schema, other.Schema) 
                    && NumRequests == other.NumRequests 
                    && NumErrors == other.NumErrors 
                    && ProcessingTime == other.ProcessingTime 
@@ -137,7 +131,6 @@ namespace NATS.Client.Service
             {
                 var hashCode = (Name != null ? Name.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (Subject != null ? Subject.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (Schema != null ? Schema.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ NumRequests.GetHashCode();
                 hashCode = (hashCode * 397) ^ NumErrors.GetHashCode();
                 hashCode = (hashCode * 397) ^ ProcessingTime.GetHashCode();

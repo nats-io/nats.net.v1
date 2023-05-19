@@ -74,16 +74,6 @@ namespace NATS.Client.Service
                 return this;
             }
 
-            public ServiceEndpointBuilder WithEndpointSchemaRequest(String schemaRequest) {
-                EndpointBuilder.WithSchemaRequest(schemaRequest);
-                return this;
-            }
-
-            public ServiceEndpointBuilder WithEndpointSchemaResponse(String schemaResponse) {
-                EndpointBuilder.WithSchemaResponse(schemaResponse);
-                return this;
-            }
-
             public ServiceEndpointBuilder WithHandler(EventHandler<ServiceMsgHandlerEventArgs> handler) {
                 Handler = handler;
                 return this;

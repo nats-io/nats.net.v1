@@ -38,7 +38,6 @@ namespace NATS.Client.Service
 
         public PingResponse PingResponse { get; }
         public InfoResponse InfoResponse { get; }
-        public SchemaResponse SchemaResponse { get; }
 
         private readonly Object stopLock;
         private TaskCompletionSource<bool> doneTcs;
@@ -54,24 +53,20 @@ namespace NATS.Client.Service
             // set up the service contexts
             // ! also while we are here, we need to collect the endpoints for the SchemaResponse
             IList<string> infoSubjects = new List<string>();
-            IList<EndpointResponse> schemaEndpoints = new List<EndpointResponse>();
             serviceContexts = new Dictionary<string, EndpointContext>();
             foreach (ServiceEndpoint se in b.ServiceEndpoints.Values)
             {
                 serviceContexts[se.Name] = new EndpointContext(conn, true, se);
                 infoSubjects.Add(se.Subject);
-                schemaEndpoints.Add(new EndpointResponse(se.Name, se.Subject, se.Endpoint.Schema));
             }
 
             // build static responses
             PingResponse = new PingResponse(id, b.Name, b.Version, b.Metadata);
             InfoResponse = new InfoResponse(id, b.Name, b.Version, b.Metadata, b.Description, infoSubjects);
-            SchemaResponse = new SchemaResponse(id, b.Name, b.Version, b.Metadata, b.ApiUrl, schemaEndpoints);
 
             discoveryContexts = new List<EndpointContext>();
             AddDiscoveryContexts(SrvPing, PingResponse);
             AddDiscoveryContexts(SrvInfo, InfoResponse);
-            AddDiscoveryContexts(SrvSchema, SchemaResponse);
             AddStatsContexts();
         }
 
@@ -103,7 +98,7 @@ namespace NATS.Client.Service
 
         private Endpoint InternalEndpoint(string discoveryName, string optionalServiceNameSegment, string optionalServiceIdSegment) {
             string subject = ToDiscoverySubject(discoveryName, optionalServiceNameSegment, optionalServiceIdSegment);
-            return new Endpoint(subject, subject, null, null, false);
+            return new Endpoint(subject, subject, null, false);
         }
  
         internal static string ToDiscoverySubject(string discoverySubject, string serviceName, string serviceId)
@@ -198,7 +193,6 @@ namespace NATS.Client.Service
         public string Name => InfoResponse.Name;
         public string Version => InfoResponse.Version;
         public string Description => InfoResponse.Description;
-        public string ApiUrl => SchemaResponse.ApiUrl;
 
         public StatsResponse GetStatsResponse()
         {
@@ -227,14 +221,9 @@ namespace NATS.Client.Service
             JsonUtils.AddField(o, ApiConstants.Name, InfoResponse.Name);
             JsonUtils.AddField(o, ApiConstants.Version, InfoResponse.Version);
             JsonUtils.AddField(o, ApiConstants.Description, InfoResponse.Description);
-            JsonUtils.AddField(o, ApiConstants.ApiUrl, SchemaResponse.ApiUrl);
             JSONArray ja = new JSONArray();
-            foreach (EndpointResponse e in SchemaResponse.Endpoints)
-            {
-                ja.Add(e.ToJsonNode());
-            }
             o[ApiConstants.Endpoints] = ja;
-            return "\"Service\":" + o.ToString();
+            return "\"Service\":" + o.ToString(); // ToString() is needed because of how the JSONObject was written
         }
     }
  }

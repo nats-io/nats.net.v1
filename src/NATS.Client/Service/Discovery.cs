@@ -71,24 +71,6 @@ namespace NATS.Client.Service
         }
 
         // ----------------------------------------------------------------------------------------------------
-        // schema
-        // ----------------------------------------------------------------------------------------------------
-        public IList<SchemaResponse> Schema(string serviceName = null)
-        {
-            IList<SchemaResponse> list = new List<SchemaResponse>();
-            DiscoverMany(Service.SrvSchema, serviceName, json => {
-                list.Add(new SchemaResponse(json));
-            });
-            return list;
-        }
-
-        public SchemaResponse SchemaForNameAndId(string serviceName, string serviceId) 
-        {
-            string json = DiscoverOne(Service.SrvSchema, serviceName, serviceId);
-            return json == null ? null : new SchemaResponse(json);
-        }
-
-        // ----------------------------------------------------------------------------------------------------
         // stats
         // ----------------------------------------------------------------------------------------------------
         public IList<StatsResponse> Stats(string serviceName = null)

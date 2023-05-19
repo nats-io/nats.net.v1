@@ -61,8 +61,6 @@ namespace NATSExamples
                     .WithVersion("0.0.1")
                         .AddServiceEndpoint(ServiceEndpoint.Builder()
                             .WithEndpointName("jccv")
-                            .WithEndpointSchemaRequest("schema request string/url")
-                            .WithEndpointSchemaResponse("schema response string/url")
                             .WithStatsDataSupplier(SupplyData)
                         .WithHandler(handler)
                         .Build())
