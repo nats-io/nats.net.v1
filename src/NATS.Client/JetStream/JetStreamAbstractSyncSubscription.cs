@@ -56,11 +56,23 @@ namespace NATS.Client.JetStream
         {
             // this calls is intended to block indefinitely so if there is a managed
             // message it's like not getting a message at all and we keep waiting
-            Msg msg = NextMessageImpl(-1);
-            while (msg != null && MessageManager.Manage(msg)) {
-                msg = NextMessageImpl(-1);
+            while (true) {
+                Msg msg = NextMessageImpl(-1);
+                if (msg == null)
+                {
+                    // I don't actually think this can happen, but NextMessageImpl can technically return null;
+                    throw new NATSTimeoutException(); 
+                }
+                switch (MessageManager.Manage(msg)) 
+                { 
+                    case ManageResult.MESSAGE:
+                        return msg;
+                    case ManageResult.TERMINUS:
+                    case ManageResult.ERROR:
+                        throw new NATSTimeoutException();
+                }
+                // case STATUS, we need to try again
             }
-            return msg;
         }
 
         public new Msg NextMessage(int timeout)
@@ -76,9 +88,15 @@ namespace NATS.Client.JetStream
             while (timeLeft > 0)
             {
                 Msg msg = NextMessageImpl(timeLeft);
-                if (!MessageManager.Manage(msg)) { // not managed means JS Message
-                    return msg;
+                switch (MessageManager.Manage(msg)) 
+                { 
+                    case ManageResult.MESSAGE:
+                        return msg;
+                    case ManageResult.TERMINUS:
+                    case ManageResult.ERROR:
+                        throw new NATSTimeoutException();
                 }
+                // case STATUS, try again while we have time
                 timeLeft = timeout - (int)sw.ElapsedMilliseconds;
             }
             

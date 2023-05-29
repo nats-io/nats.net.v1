@@ -383,5 +383,9 @@ namespace NATS.Client.JetStream
         /// <seealso cref="ISubscription.Subject"/>
         /// <seealso cref="ISubscription.Queue"/>
         IJetStreamPushSyncSubscription PushSubscribeSync(string subject, string queue, PushSubscribeOptions options);
+
+        IStreamContext CreateStreamContext(string streamName);
+        IConsumerContext CreateConsumerContext(string streamName, string consumerName);
+        // IConsumerContext CreateConsumerContext(string streamName, ConsumerConfiguration consumerConfiguration);
     }
 }

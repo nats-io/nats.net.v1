@@ -1,0 +1,118 @@
+﻿// Copyright 2023 The NATS Authors
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using NATS.Client.Internals;
+using static NATS.Client.JetStream.BaseConsumeOptions;
+using static NATS.Client.JetStream.ConsumeOptions;
+
+namespace NATS.Client.JetStream
+{
+    /// <summary>
+    /// SIMPLIFICATION IS EXPERIMENTAL AND SUBJECT TO CHANGE
+    /// </summary>
+    public class ConsumerContext : IConsumerContext
+    {
+        internal readonly StreamContext streamContext;
+        internal readonly JetStream js;
+
+        public string ConsumerName { get; }
+        
+        internal ConsumerContext(StreamContext streamContext, ConsumerInfo ci)
+        {
+            this.streamContext = streamContext;
+            js = new JetStream(streamContext.jsm.Conn, streamContext.jsm.JetStreamOptions);
+            ConsumerName = ci.Name;
+        }
+
+        public ConsumerInfo GetConsumerInfo()
+        {
+            return streamContext.jsm.GetConsumerInfo(streamContext.StreamName, ConsumerName);
+        }
+
+        public Msg Next() {
+            return Next(DefaultExpiresInMillis);
+        }
+
+        /// <summary>
+        public Msg Next(int maxWaitMillis) {
+            if (maxWaitMillis < MinExpiresMills) {
+                throw new ArgumentException($"Max wait must be at least {MinExpiresMills} milliseconds.");
+            }
+
+            long expires = maxWaitMillis - JetStreamPullSubscription.ExpireAdjustment;
+
+            JetStreamPullSubscription sub = new SubscriptionMaker(this).makeSubscription(null);
+            sub._pull(PullRequestOptions.Builder(1).WithExpiresIn(expires).Build(), false, null);
+            return sub.NextMessage(maxWaitMillis);
+        }
+
+        /// <summary>
+        public IFetchConsumer FetchMessages(int maxMessages) {
+            return Fetch(FetchConsumeOptions.Builder().WithMaxMessages(maxMessages).Build());
+        }
+
+        /// <summary>
+        public IFetchConsumer FetchBytes(int maxBytes) {
+            return Fetch(FetchConsumeOptions.Builder().WithMaxBytes(maxBytes).Build());
+        }
+
+        /// <summary>
+        public IFetchConsumer Fetch(FetchConsumeOptions fetchConsumeOptions) {
+            Validator.Required(fetchConsumeOptions, "Fetch Consume Options");
+            return new FetchConsumer(new SubscriptionMaker(this), fetchConsumeOptions);
+        }
+
+        /// <summary>
+        public IManualConsumer consume() {
+            return new ManualConsumer(new SubscriptionMaker(this), DefaultConsumeOptions);
+        }
+
+        /// <summary>
+        public IManualConsumer consume(ConsumeOptions consumeOptions) {
+            Validator.Required(consumeOptions, "Consume Options");
+            return new ManualConsumer(new SubscriptionMaker(this), consumeOptions);
+        }
+
+        /// <summary>
+        public ISimpleConsumer consume(EventHandler<MsgHandlerEventArgs> handler) {
+            Validator.Required(handler, "Msg Handler");
+            return new SimpleConsumer(new SubscriptionMaker(this), handler, DefaultConsumeOptions);
+        }
+
+        /// <summary>
+        public ISimpleConsumer consume(EventHandler<MsgHandlerEventArgs> handler, ConsumeOptions consumeOptions) {
+            Validator.Required(handler, "Msg Handler");
+            Validator.Required(consumeOptions, "Consume Options");
+            return new SimpleConsumer(new SubscriptionMaker(this), handler, consumeOptions);
+        }
+    }
+
+    public class SubscriptionMaker
+    {
+        private ConsumerContext ctx;
+
+        public SubscriptionMaker(ConsumerContext ctx)
+        {
+            this.ctx = ctx;
+        }
+
+        public JetStreamPullSubscription makeSubscription(EventHandler<MsgHandlerEventArgs> handler) {
+            PullSubscribeOptions pso = PullSubscribeOptions.BindTo(ctx.streamContext.StreamName, ctx.ConsumerName);
+            if (handler == null) {
+                return (JetStreamPullSubscription)ctx.js.PullSubscribe(null, pso);
+            }
+            return (JetStreamPullSubscription)ctx.js.PullSubscribeAsync(null, handler, pso);
+        }
+    }
+}

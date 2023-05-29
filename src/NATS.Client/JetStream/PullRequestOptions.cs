@@ -16,7 +16,7 @@ namespace NATS.Client.JetStream
         /// <summary>
         /// The maximum number of bytes in the batch
         /// </summary>
-        public int MaxBytes { get; }
+        public long MaxBytes { get; }
 
         /// <summary>
         /// The no wait flag
@@ -81,7 +81,7 @@ namespace NATS.Client.JetStream
         public sealed class PullRequestOptionsBuilder
         {
             internal int _batchSize;
-            internal int _maxBytes;
+            internal long _maxBytes;
             internal bool _noWait;
             internal Duration _expiresIn;
             internal Duration _idleHeartbeat;
@@ -102,7 +102,7 @@ namespace NATS.Client.JetStream
             /// </summary>
             /// <param name="maxBytes">The maximum bytes</param>
             /// <returns>The builder</returns>
-            public PullRequestOptionsBuilder WithMaxBytes(int maxBytes)
+            public PullRequestOptionsBuilder WithMaxBytes(long maxBytes)
             {
                 _maxBytes = maxBytes;
                 return this;

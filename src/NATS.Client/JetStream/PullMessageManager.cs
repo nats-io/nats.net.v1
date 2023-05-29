@@ -4,11 +4,13 @@ namespace NATS.Client.JetStream
 {
     internal class PullMessageManager : MessageManager
     {
-        protected long pendingMessages;
-        protected long pendingBytes;
-        protected bool trackingBytes;
+        internal int pendingMessages;
+        internal long pendingBytes;
+        internal bool trackingBytes;
+        protected bool raiseStatusWarnings;
+        protected ITrackPendingListener trackPendingListener;
 
-        public PullMessageManager(Connection conn, bool syncMode) : base(conn, syncMode)
+        public PullMessageManager(Connection conn, SubscribeOptions so, bool syncMode) : base(conn, so, syncMode)
         {
             trackingBytes = false;
             pendingMessages = 0;
@@ -21,10 +23,13 @@ namespace NATS.Client.JetStream
             ((Subscription)Sub).BeforeChannelAddCheck = BeforeChannelAddCheck;
         }
 
-        public override void StartPullRequest(PullRequestOptions pro)
+        public override void StartPullRequest(string pullId, PullRequestOptions pro, bool raiseStatusWarnings,
+            ITrackPendingListener trackPendingListener)
         {
             lock (StateChangeLock)
             {
+                this.raiseStatusWarnings = raiseStatusWarnings;
+                this.trackPendingListener = trackPendingListener;
                 pendingMessages += pro.BatchSize;
                 pendingBytes += pro.MaxBytes;
                 trackingBytes = (pendingBytes > 0);
@@ -41,21 +46,26 @@ namespace NATS.Client.JetStream
             }
         }
 
-        private void TrackPending(long m, long b)
+        private void TrackPending(int m, long b)
         {
             lock (StateChangeLock)
             {
                 pendingMessages -= m;
-                pendingBytes -= b;
-                if (pendingMessages < 1 || (trackingBytes && pendingBytes < 1))
-                {
-                    pendingMessages = 0L;
-                    pendingBytes = 0L;
+                bool zero = pendingMessages < 1;
+                if (trackingBytes) {
+                    pendingBytes -= b;
+                    zero |= pendingBytes < 1;
+                }
+                if (zero) {
+                    pendingMessages = 0;
+                    pendingBytes = 0;
                     trackingBytes = false;
-                    if (Hb)
-                    {
+                    if (Hb) {
                         ShutdownHeartbeatTimer();
                     }
+                }
+                if (trackPendingListener != null) {
+                    trackPendingListener.Track(pendingMessages, pendingBytes, trackingBytes);
                 }
             }
         }
@@ -69,7 +79,7 @@ namespace NATS.Client.JetStream
             // normal js message
             if (!msg.HasStatus) 
             {
-                TrackPending(1, BytesInMessage(msg));
+                TrackPending(1, msg.ConsumeByteCount);
                 return true;
             }
 
@@ -79,8 +89,8 @@ namespace NATS.Client.JetStream
             }
 
             string s = msg.Header[JetStreamConstants.NatsPendingMessages];
-            long m;
-            if (s != null && long.TryParse(s, out m))
+            int m;
+            if (s != null && int.TryParse(s, out m))
             {
                 long b;
                 s = msg.Header[JetStreamConstants.NatsPendingBytes];
@@ -90,44 +100,55 @@ namespace NATS.Client.JetStream
                 }
             }
 
-            // not found or timeout only have message/byte tracking, so no need for them to be queued (return false)
-            // all other statuses are either warnings or errors and handled in manage
-            return status.Code != NatsConstants.NotFoundCode && status.Code != NatsConstants.RequestTimeoutCode;
+            return true;
         }
 
-        public override bool Manage(Msg msg)
+        public override ManageResult Manage(Msg msg)
         {
             // normal js message
             if (!msg.HasStatus) 
             {
                 TrackJsMessage(msg);
-                return false;
+                return ManageResult.MESSAGE;
             }
 
-            if (msg.Status.Code == NatsConstants.ConflictCode) {
-                // sometimes just a warning
-                if (msg.Status.Message.Contains("Exceed")) {
-                    Conn.Opts.PullStatusWarningEventHandlerOrDefault.Invoke(this, new StatusEventArgs(Conn, (Subscription)Sub, msg.Status));
-                    return true;
-                }
-                // fall through
-            }
+            switch (msg.Status.Code)
+            {
+                case NatsConstants.NotFoundCode: 
+                case NatsConstants.RequestTimeoutCode:
+                    if (raiseStatusWarnings)
+                    {
+                        Conn.Opts.PullStatusWarningEventHandlerOrDefault.Invoke(this, new StatusEventArgs(Conn, (Subscription)Sub, msg.Status));
+                    }
+                    return ManageResult.TERMINUS;
+                
+                case NatsConstants.ConflictCode:
+                    string statMsg = msg.Status.Message;
+                    
+                    // sometimes just a warning
+                    if (statMsg.StartsWith("Exceeded Max")) {
+                        if (raiseStatusWarnings)
+                        {
+                            Conn.Opts.PullStatusWarningEventHandlerOrDefault.Invoke(this, new StatusEventArgs(Conn, (Subscription)Sub, msg.Status));
+                        }
+                        return ManageResult.STATUS;
+                    }
 
-            // all others are errors
+                    if (statMsg.Equals(JetStreamConstants.BatchCompleted) ||
+                        statMsg.Equals(JetStreamConstants.MessageSizeExceedsMaxBytes))
+                    {
+                        return ManageResult.TERMINUS;
+                    }
+                    break;
+            }
+            
+            // fall through, all others are errors
             Conn.Opts.PullStatusErrorEventHandlerOrDefault.Invoke(this, new StatusEventArgs(Conn, (Subscription)Sub, msg.Status));
             if (SyncMode)
             {
                 throw new NATSJetStreamStatusException((Subscription)Sub, msg.Status);
             }
-
-            return true; // all status are managed
-        }
-
-        private long BytesInMessage(Msg msg) {
-            return msg.Subject.Length
-                   + msg.headerLen
-                   + msg.Data.Length
-                   + (msg.Reply == null ? 0 : msg.Reply.Length);
+            return ManageResult.ERROR;
         }
     }
 }

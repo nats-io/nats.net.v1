@@ -25,12 +25,12 @@ namespace NATS.Client
     public class Msg
     {
         protected static readonly byte[] Empty = new byte[0];
-        protected string subject;
+        protected string _subject;
         protected long sid;
         protected string _reply;
-        protected byte[] data;
-        internal Subscription sub;
-        internal MsgHeader header;
+        protected byte[] _data;
+        internal Subscription _sub;
+        internal MsgHeader _header;
         internal int headerLen;
         internal MsgStatus status;
         protected AckType _lastAck;
@@ -41,11 +41,11 @@ namespace NATS.Client
         /// </summary>
         public Msg()
         {
-            subject = null;
+            _subject = null;
             _reply = null;
-            data = null;
-            sub = null;
-            header = null;
+            _data = null;
+            _sub = null;
+            _header = null;
         }
 
         /// <summary>
@@ -62,9 +62,9 @@ namespace NATS.Client
                 throw new ArgumentException("Subject cannot be null, empty, or whitespace.", nameof(subject));
             }
 
-            this.Subject = subject;
-            this.Reply = reply;
-            this.Header = header;
+            _subject = subject;
+            _reply = reply;
+            _header = header;
             this.Data = data;
         }
         
@@ -111,28 +111,29 @@ namespace NATS.Client
 
         protected internal Msg(Msg msg)
         {
-            subject = msg.subject;
+            _subject = msg._subject;
             sid = msg.sid;
             _reply = msg._reply;
-            data = msg.data;
-            sub = msg.sub;
-            header = msg.header;
+            _data = msg._data;
+            _sub = msg._sub;
+            _header = msg._header;
+            headerLen = msg.headerLen;
             status = msg.status;
             _lastAck = msg._lastAck;
         }
         
         internal Msg(MsgArg arg, Subscription s, byte[] payload, long totalLen)
         {
-            subject = arg.subject;
+            _subject = arg.subject;
             sid = arg.sid;
             _reply = arg.reply;
-            sub = s;
+            _sub = s;
 
             if (arg.hdr > 0)
             {
                 headerLen = arg.hdr;
                 HeaderStatusReader hsr = new HeaderStatusReader(payload, arg.hdr);
-                header = hsr.Header;
+                _header = hsr.Header;
                 status = hsr.Status;
             }
             else
@@ -144,12 +145,12 @@ namespace NATS.Client
             long payloadLen = totalLen - arg.hdr;
             if (payloadLen > 0)
             {
-                data = new byte[payloadLen];
-                Array.Copy(payload, arg.hdr, data, 0, (int)(totalLen - arg.hdr));
+                _data = new byte[payloadLen];
+                Array.Copy(payload, arg.hdr, _data, 0, (int)(totalLen - arg.hdr));
             }
             else
             {
-                data = Empty;
+                _data = Empty;
             }
         }
 
@@ -158,8 +159,8 @@ namespace NATS.Client
         /// </summary>
         public string Subject
         {
-            get { return subject; }
-            set { subject = value; }
+            get { return _subject; }
+            set { _subject = value; }
         }
 
         internal long Sid => sid;
@@ -182,23 +183,25 @@ namespace NATS.Client
         /// <seealso cref="AssignData"/>
         public byte[] Data
         {
-            get { return data; }
+            get { return _data; }
 
             set
             {
                 if (value == null)
                 {
-                    this.data = null;
+                    this._data = null;
                     return;
                 }
 
                 int len = value.Length;
                 if (len == 0)
-                    this.data = Empty;
+                {
+                    this._data = Empty;
+                }
                 else
                 {
-                    this.data = new byte[len];
-                    Array.Copy(value, 0, data, 0, len);
+                    this._data = new byte[len];
+                    Array.Copy(value, 0, _data, 0, len);
                 }
             }
         }
@@ -215,7 +218,7 @@ namespace NATS.Client
         /// <param name="data">a bytes buffer of data.</param>
         public void AssignData(byte[] data)
         {
-            this.data = data;
+            this._data = data;
         }
 
         /// <summary>
@@ -224,7 +227,7 @@ namespace NATS.Client
         [ObsoleteAttribute("This property will soon be deprecated. Use ArrivalSubscription instead.")]
         public ISubscription ArrivalSubcription
         {
-            get { return sub; }
+            get { return _sub; }
         }
 
         /// <summary>
@@ -232,7 +235,7 @@ namespace NATS.Client
         /// </summary>
         public ISubscription ArrivalSubscription
         {
-            get { return sub; }
+            get { return _sub; }
         }
 
         /// <summary>
@@ -268,19 +271,19 @@ namespace NATS.Client
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("{");
-            if (header != null)
+            if (_header != null)
             {
-                sb.AppendFormat("Header={0};", header.ToString());
+                sb.AppendFormat("Header={0};", _header.ToString());
             }
             sb.AppendFormat("Subject={0};Reply={1};Payload=<", Subject,
                 Reply != null ? _reply : "null");
 
-            int len = data.Length;
+            int len = _data.Length;
             int i;
 
             for (i = 0; i < 32 && i < len; i++)
             {
-                sb.Append((char)data[i]);
+                sb.Append((char)_data[i]);
             }
 
             if (i < len)
@@ -302,23 +305,23 @@ namespace NATS.Client
             {
                 // Auto generate the header when accessed from the
                 // caller.
-                if (header == null)
+                if (_header == null)
                 {
-                    header = new MsgHeader();
+                    _header = new MsgHeader();
                 }
-                return header;
+                return _header;
             }
 
             set
             {
-                header = value;
+                _header = value;
             }
         }
 
         /// <summary>
         /// Returns true if there is a <see cref="MsgHeader"/> with fields set.
         /// </summary>
-        public bool HasHeaders => header?.Count > 0;
+        public bool HasHeaders => _header?.Count > 0;
 
         /// <summary>
         /// Gets the <see cref="MsgStatus"/> of the message.
@@ -418,5 +421,13 @@ namespace NATS.Client
         public virtual bool IsJetStream { get { return false; } }
 
         #endregion
+
+        /// <summary>
+        /// The number of bytes the server counts for the message when calculating byte counts.
+        /// Only applies to JetStream messages received from the server.
+        /// </summary>
+        /// <returns>the consumption byte count or -1 if the message implementation does not support this method</returns>
+        public long ConsumeByteCount => 
+            _subject.Length + headerLen + (_data == null ? 0 : _data.Length) + (_reply == null ? 0 : _reply.Length);
     }
 }

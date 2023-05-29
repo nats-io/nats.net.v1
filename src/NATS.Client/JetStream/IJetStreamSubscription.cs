@@ -117,4 +117,57 @@ namespace NATS.Client.JetStream
         /// <returns>A list of messages</returns>
         IList<Msg> Fetch(int batchSize, int maxWaitMillis);
     }
+    
+    /// <summary>
+    /// Pull Subscription on a JetStream context.
+    /// </summary>
+    public interface IJetStreamPullAsyncSubscription : IJetStreamSubscription, IAsyncSubscription
+    {
+        /// <summary>
+        /// Initiate pull with the specified batch size.
+        /// </summary>
+        /// <remarks>
+        /// Primitive API for ADVANCED use only, officially not supported. Prefer Fetch 
+        /// </remarks>
+        /// <param name="batchSize">the size of the batch</param>
+        void Pull(int batchSize);
+
+        /// <summary>
+        /// Initiate pull with the specified request options.
+        /// </summary>
+        /// <remarks>
+        /// Primitive API for ADVANCED use only, officially not supported. Prefer Fetch 
+        /// </remarks>
+        /// <param name="pullRequestOptions">the options object</param>
+        void Pull(PullRequestOptions pullRequestOptions);
+
+        /// <summary>
+        /// Do a pull in noWait mode with the specified batch size.
+        /// </summary>
+        /// <remarks>
+        /// Primitive API for ADVANCED use only, officially not supported. Prefer Fetch 
+        /// </remarks>
+        /// <param name="batchSize">the size of the batch</param>
+        void PullNoWait(int batchSize);
+
+        /// <summary>
+        /// Do a pull in noWait + expire mode with the specified batch size.
+        /// </summary>
+        /// <remarks>
+        /// Primitive API for ADVANCED use only, officially not supported. Prefer Fetch 
+        /// </remarks>
+        /// <param name="batchSize">the size of the batch</param>
+        /// <param name="expiresInMillis">how long from now the server should expire this request</param>
+        void PullNoWait(int batchSize, int expiresInMillis);
+
+        /// <summary>
+        /// Initiate pull for all messages available before expiration.
+        /// </summary>
+        /// <remarks>
+        /// Primitive API for ADVANCED use only, officially not supported. Prefer Fetch 
+        /// </remarks>
+        /// <param name="batchSize">the size of the batch</param>
+        /// <param name="expiresInMillis">how long from now the server should expire this request</param>
+        void PullExpiresIn(int batchSize, int expiresInMillis);
+    }
 }

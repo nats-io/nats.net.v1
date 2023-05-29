@@ -13,7 +13,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 using static NATS.Client.Internals.JsonUtils;
@@ -879,6 +878,16 @@ namespace NATS.Client.JetStream
             public PullSubscribeOptions BuildPullSubscribeOptions()
             {
                 return PullSubscribeOptions.Builder().WithConfiguration(Build()).Build();
+            }
+
+            /// <summary>
+            /// Builds the PullSubscribeOptions with this configuration
+            /// </summary>
+            /// <param name="streamName">the stream for this consumer</param>
+            /// <returns>The PullSubscribeOptions</returns>
+            public PullSubscribeOptions BuildPullSubscribeOptions(string streamName)
+            {
+                return PullSubscribeOptions.Builder().WithConfiguration(Build()).WithStream(streamName).Build();
             }
         }
     }

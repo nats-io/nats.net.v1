@@ -115,7 +115,7 @@ namespace IntegrationTestsInternal
 
             public PullHeartbeatErrorSimulator(
                 Connection conn, bool syncMode, CountdownEvent latch)
-                : base(conn, syncMode)
+                : base(conn, null, syncMode)
             {
                 this.latch = latch;
             }

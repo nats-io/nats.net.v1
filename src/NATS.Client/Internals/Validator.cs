@@ -407,6 +407,16 @@ namespace NATS.Client.Internals
             return i;
         }
 
+        internal static int ValidateGtEqZero(int i, string label)
+        {
+            if (i < 0)
+            {
+                throw new ArgumentException($"{label} must be greater than or equal to zero");
+            }
+
+            return i;
+        }
+
         internal static long ValidateGtZeroOrMinus1(long l, string label)
         {
             if (ZeroOrLtMinus1(l))

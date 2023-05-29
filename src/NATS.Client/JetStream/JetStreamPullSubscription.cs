@@ -20,41 +20,51 @@ namespace NATS.Client.JetStream
 {
     public class JetStreamPullSubscription : JetStreamAbstractSyncSubscription, IJetStreamPullSubscription
     {
+        private readonly InterlockedLong pullIdIncrementer;
+
         internal JetStreamPullSubscription(Connection conn, string subject,
             JetStream js, string stream, string consumer, string deliver,
             MessageManager messageManager)
-            : base(conn, subject, null, js, stream, consumer, deliver, messageManager) {}
+            : base(conn, subject, null, js, stream, consumer, deliver, messageManager)
+        {
+            pullIdIncrementer = new InterlockedLong();
+        }
 
         public bool IsPullMode() => true;
         
         public void Pull(int batchSize)
         {
-            Pull(PullRequestOptions.Builder(batchSize).Build());
+            _pull(PullRequestOptions.Builder(batchSize).Build(), false, null);
         }
 
         public void Pull(PullRequestOptions pullRequestOptions) {
-            string subj = string.Format(JetStreamConstants.JsapiConsumerMsgNext, Stream, Consumer);
-            string publishSubject = Context.PrependPrefix(subj);
-            MessageManager.StartPullRequest(pullRequestOptions);
-            Connection.Publish(publishSubject, Subject, pullRequestOptions.Serialize());
+            _pull(pullRequestOptions, false, null);
+        }
+
+        public string _pull(PullRequestOptions pullRequestOptions, bool raiseStatusWarnings, ITrackPendingListener trackPendingListener) {
+            string publishSubject = Context.PrependPrefix(string.Format(JetStreamConstants.JsapiConsumerMsgNext, Stream, Consumer));
+            string pullId = Subject.Replace("*", pullIdIncrementer.Increment().ToString());
+            MessageManager.StartPullRequest(pullId, pullRequestOptions, raiseStatusWarnings, trackPendingListener);
+            Connection.Publish(publishSubject, pullId, pullRequestOptions.Serialize());
             Connection.FlushBuffer();
+            return pullId;
         }
 
         public void PullExpiresIn(int batchSize, int expiresInMillis)
         {
             DurationGtZeroRequired(expiresInMillis, "Expires In");
-            Pull(PullRequestOptions.Builder(batchSize).WithExpiresIn(expiresInMillis).Build());
+            _pull(PullRequestOptions.Builder(batchSize).WithExpiresIn(expiresInMillis).Build(), false, null);
         }
 
         public void PullNoWait(int batchSize)
         {
-            Pull(PullRequestOptions.Builder(batchSize).WithNoWait().Build());
+            _pull(PullRequestOptions.Builder(batchSize).WithNoWait().Build(), false, null);
         }
 
         public void PullNoWait(int batchSize, int expiresInMillis)
         {
             DurationGtZeroRequired(expiresInMillis, "NoWait Expires In");
-            Pull(PullRequestOptions.Builder(batchSize).WithNoWait().WithExpiresIn(expiresInMillis).Build());
+            _pull(PullRequestOptions.Builder(batchSize).WithNoWait().WithExpiresIn(expiresInMillis).Build(), false, null);
         }
 
         private void DurationGtZeroRequired(long millis, string label) {
@@ -63,7 +73,8 @@ namespace NATS.Client.JetStream
             }
         }
 
-        protected const int ExpireLessMillis = 10;
+        internal const int ExpireAdjustment = 10;
+        internal const int MinExpireMillis = 20;
 
         public IList<Msg> Fetch(int batchSize, int maxWaitMillis)
         {
@@ -75,10 +86,8 @@ namespace NATS.Client.JetStream
             Stopwatch sw = Stopwatch.StartNew();
 
             Duration expires = Duration.OfMillis(
-                maxWaitMillis > ExpireLessMillis
-                    ? maxWaitMillis - ExpireLessMillis
-                    : maxWaitMillis);
-            Pull(PullRequestOptions.Builder(batchLeft).WithExpiresIn(expires).Build());
+                maxWaitMillis > ExpireAdjustment ? maxWaitMillis - ExpireAdjustment : maxWaitMillis);
+            string pullId = _pull(PullRequestOptions.Builder(batchLeft).WithExpiresIn(expires).Build(), false, null);
 
             try
             {
@@ -88,11 +97,21 @@ namespace NATS.Client.JetStream
                 int timeLeft = maxWaitMillis;
                 while (batchLeft > 0 && timeLeft > 0) {
                     Msg msg = NextMessageImpl(timeLeft);
-                    if (!MessageManager.Manage(msg)) { // not managed means JS Message
-                        messages.Add(msg);
-                        batchLeft--;
+                    switch (MessageManager.Manage(msg)) {
+                        case ManageResult.MESSAGE:
+                            messages.Add(msg);
+                            batchLeft--;
+                            break;
+                        case ManageResult.TERMINUS:
+                        case ManageResult.ERROR:
+                            // if there is a match, the status applies
+                            if (pullId.Equals(msg.Subject))
+                            {
+                                return messages;
+                            }
+                            break;
                     }
-                    // try again while we have time
+                    // case STATUS, try again while we have time
                     timeLeft = maxWaitMillis - (int)sw.ElapsedMilliseconds;
                 }
             }
@@ -100,7 +119,6 @@ namespace NATS.Client.JetStream
             {
                 // regular timeout, just end
             }
-
             return messages;
         }
     }
