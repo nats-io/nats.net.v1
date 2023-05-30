@@ -21,7 +21,7 @@ namespace NATS.Client.JetStream
     /// <summary>
     /// SIMPLIFICATION IS EXPERIMENTAL AND SUBJECT TO CHANGE
     /// </summary>
-    public class ConsumerContext : IConsumerContext
+    internal class ConsumerContext : IConsumerContext
     {
         internal readonly StreamContext streamContext;
         internal readonly JetStream js;
@@ -98,7 +98,7 @@ namespace NATS.Client.JetStream
         }
     }
 
-    public class SubscriptionMaker
+    internal class SubscriptionMaker
     {
         private ConsumerContext ctx;
 

@@ -29,7 +29,7 @@ namespace NATS.Client.JetStream
             maxWaitMillis = opts.ExpiresIn;
         }
 
-        public Msg nextMessage()
+        public Msg NextMessage()
         {
             int timeLeftMillis;
             if (sw == null) {

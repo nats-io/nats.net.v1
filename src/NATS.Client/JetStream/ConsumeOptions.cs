@@ -75,7 +75,7 @@ namespace NATS.Client.JetStream
             /// </summary>
             /// <param name="batchBytes">the batch size in bytes</param>
             /// <returns>the builder</returns>
-            public ConsumeOptionsBuilder WithBytes(long batchBytes) {
+            public ConsumeOptionsBuilder WithBatchBytes(long batchBytes) {
                 base.WithMessages(-1);
                 return base.WithBytes(batchBytes);
             }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.Threading;
@@ -129,6 +130,38 @@ namespace IntegrationTests
             }
         }
 
+        public class Publisher
+        {
+            private IJetStream js;
+            private string subject;
+            private int jitter;
+            private bool keepGoing = true;
+            private int dataId;
+            private Random random;
+
+            public Publisher(IJetStream js, string subject, int jitter) 
+            {
+                this.js = js;
+                this.subject = subject;
+                this.jitter = jitter;
+                random = new Random();
+            }
+
+            public void Stop()
+            {
+                keepGoing = false;
+            }
+
+            public void Run() {
+                while (keepGoing) {
+                    if (jitter > 0) {
+                        Thread.Sleep(random.Next(0, jitter));
+                    }
+                    js.Publish(subject, DataBytes(++dataId));
+                }
+            }
+        }
+        
         // ----------------------------------------------------------------------------------------------------
         // Validate / Assert
         // ----------------------------------------------------------------------------------------------------

@@ -25,6 +25,6 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="timeoutMillis">the maximum time to wait</param>
         /// <returns>the next message for this subscriber.</returns>
-        Msg nextMessage(int timeoutMillis);
+        Msg NextMessage(int timeoutMillis);
     }
 }

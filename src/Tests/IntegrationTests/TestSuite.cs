@@ -404,6 +404,7 @@ namespace IntegrationTests
     public class ObjectStoreSuiteContext : OneServerSuiteContext {}
     public class MirrorSourceSuiteContext : OneServerSuiteContext {}
     public class ServiceSuiteContext : OneServerSuiteContext {}
+    public class SimplificationSuiteContext : OneServerSuiteContext {}
 
     public class KeyValueSuiteContext : SuiteContext
     {

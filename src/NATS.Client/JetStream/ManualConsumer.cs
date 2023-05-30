@@ -21,7 +21,7 @@ namespace NATS.Client.JetStream
         internal ManualConsumer(SubscriptionMaker subscriptionMaker, ConsumeOptions opts) 
             : base(subscriptionMaker, null, opts) {}
 
-        public Msg nextMessage(int timeoutMillis)
+        public Msg NextMessage(int timeoutMillis)
         {
             return sub.NextMessage(timeoutMillis);
         }

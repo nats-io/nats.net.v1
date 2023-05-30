@@ -24,10 +24,10 @@ namespace NATS.Client.JetStream
 
         public string StreamName { get; }
 
-        internal StreamContext(Connection connection, JetStreamOptions jsOptions, string StreamName)
+        internal StreamContext(IConnection connection, JetStreamOptions jsOptions, string streamName)
         {
             jsm = new JetStreamManagement(connection, jsOptions);
-            StreamName = StreamName;
+            StreamName = streamName;
             jsm.GetStreamInfo(StreamName); // this is just verifying that the stream exists
         }
 
@@ -57,7 +57,7 @@ namespace NATS.Client.JetStream
             return jsm.PurgeStream(StreamName, options);
         }
 
-        public IConsumerContext ConsumerContext(string consumerName)
+        public IConsumerContext CreateConsumerContext(string consumerName)
         {
             return new ConsumerContext(this, jsm.GetConsumerInfo(StreamName, consumerName));
         }

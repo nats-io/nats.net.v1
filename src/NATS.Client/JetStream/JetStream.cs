@@ -540,20 +540,24 @@ namespace NATS.Client.JetStream
             queue = EmptyAsNull(ValidateQueueName(queue, false));
             return (IJetStreamPushSyncSubscription) CreateSubscription(subject, queue, null, false, options, null);
         }
+
+        private bool IsSubjectRequired(SubscribeOptions options) => options == null || !options.Bind;
         
         public IStreamContext CreateStreamContext(string streamName)
         {
-            Validator.Required(streamName, "Stream Name");
-            throw new NotImplementedException();
+            Validator.ValidateStreamName(streamName, true);
+            return GetStreamContext(streamName);
         }
-
+        
         public IConsumerContext CreateConsumerContext(string streamName, string consumerName)
         {
-            Validator.Required(streamName, "Stream Name");
+            Validator.ValidateStreamName(streamName, true);
             Validator.Required(consumerName, "Consumer Name");
-            throw new NotImplementedException();
+            return GetStreamContext(streamName).CreateConsumerContext(consumerName);
         }
 
-        private bool IsSubjectRequired(SubscribeOptions options) => options == null || !options.Bind;
+        private StreamContext GetStreamContext(string streamName) {
+            return new StreamContext(Conn, JetStreamOptions, streamName);
+        }
     }
 }

@@ -18,6 +18,6 @@ namespace NATS.Client.JetStream
     /// </summary>
     public interface IFetchConsumer : ISimpleConsumer
     {
-        Msg nextMessage();
+        Msg NextMessage();
     }
 }

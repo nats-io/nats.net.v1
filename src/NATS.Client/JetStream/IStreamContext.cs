@@ -63,7 +63,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="consumerName>the name of the consumer</param>
         /// <returns>a ConsumerContext object</returns>
-        IConsumerContext ConsumerContext(string consumerName);
+        IConsumerContext CreateConsumerContext(string consumerName);
 
         /// <summary>
         /// Management function to creates a consumer on this stream.
