@@ -71,7 +71,7 @@ namespace NATS.Client.JetStream
             /// <para>Less than 1 removes any previously set max bytes constraint.</para>
             /// <para>It is important to set the byte size greater than your largest message payload, plus some amount
             /// to account for overhead, otherwise the consume process will stall if there are no messages that fit the criteria.</para>
-            /// See <see cref="Msg.ConsumeByteCount"/></para> 
+            /// See <see cref="Msg.ConsumeByteCount"/> 
             /// <param name="maxBytes">the maximum bytes</param>
             /// <param name="messages">the number of messages. Must be greater than 0.</param>
             /// <returns>the builder</returns>
@@ -88,7 +88,7 @@ namespace NATS.Client.JetStream
             /// <para>Less than 1 max messages removes any previously set max messages constraint.</para>
             /// <para>It is important to set the byte size greater than your largest message payload, plus some amount
             /// to account for overhead, otherwise the consume process will stall if there are no messages that fit the criteria.</para>
-            /// See <see cref="Msg.ConsumeByteCount"/></para> 
+            /// See <see cref="Msg.ConsumeByteCount"/> 
             /// </summary>
             /// <param name="maxBytes">the maximum bytes</param>
             /// <param name="maxMessages">the maximum number of messages</param>

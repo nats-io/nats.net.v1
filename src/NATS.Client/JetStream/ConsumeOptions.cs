@@ -70,8 +70,8 @@ namespace NATS.Client.JetStream
             /// Less than 1 removes any previously set batch byte constraint.
             /// <para>When setting bytes to non-zero, the batch messages size is set to prioritize the batch byte size.</para>
             /// <para>Also, it is important to set the byte size greater than your largest message payload, plus some amount
-            /// to account for overhead, otherwise the consume process will stall if there are no messages that fit the criteria.
-            /// See <see cref="Msg.ConsumeByteCount"/></para> 
+            /// to account for overhead, otherwise the consume process will stall if there are no messages that fit the criteria.</para>
+            /// See <see cref="Msg.ConsumeByteCount"/>
             /// </summary>
             /// <param name="batchBytes">the batch size in bytes</param>
             /// <returns>the builder</returns>
