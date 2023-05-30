@@ -36,9 +36,7 @@ namespace NATS.Client.JetStream
         /// <summary>
         /// Gets the FetchConsumeOptions builder.
         /// </summary>
-        /// <returns>
-        /// The builder
-        /// </returns>
+        /// <returns>The builder</returns>
         public static FetchConsumeOptionsBuilder Builder()
         {
             return new FetchConsumeOptionsBuilder();
@@ -72,8 +70,8 @@ namespace NATS.Client.JetStream
             /// <para>It is important to set the byte size greater than your largest message payload, plus some amount
             /// to account for overhead, otherwise the consume process will stall if there are no messages that fit the criteria.</para>
             /// See <see cref="Msg.ConsumeByteCount"/> 
+            /// </summary>
             /// <param name="maxBytes">the maximum bytes</param>
-            /// <param name="messages">the number of messages. Must be greater than 0.</param>
             /// <returns>the builder</returns>
             public FetchConsumeOptionsBuilder WithMaxBytes(int maxBytes) {
                 base.WithMessages(-1);

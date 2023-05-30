@@ -44,7 +44,6 @@ namespace NATS.Client.JetStream
             return Next(DefaultExpiresInMillis);
         }
 
-        /// <summary>
         public Msg Next(int maxWaitMillis) {
             if (maxWaitMillis < MinExpiresMills) {
                 throw new ArgumentException($"Max wait must be at least {MinExpiresMills} milliseconds.");
@@ -57,40 +56,33 @@ namespace NATS.Client.JetStream
             return sub.NextMessage(maxWaitMillis);
         }
 
-        /// <summary>
         public IFetchConsumer FetchMessages(int maxMessages) {
             return Fetch(FetchConsumeOptions.Builder().WithMaxMessages(maxMessages).Build());
         }
 
-        /// <summary>
         public IFetchConsumer FetchBytes(int maxBytes) {
             return Fetch(FetchConsumeOptions.Builder().WithMaxBytes(maxBytes).Build());
         }
 
-        /// <summary>
         public IFetchConsumer Fetch(FetchConsumeOptions fetchConsumeOptions) {
             Validator.Required(fetchConsumeOptions, "Fetch Consume Options");
             return new FetchConsumer(new SubscriptionMaker(this), fetchConsumeOptions);
         }
 
-        /// <summary>
         public IManualConsumer consume() {
             return new ManualConsumer(new SubscriptionMaker(this), DefaultConsumeOptions);
         }
 
-        /// <summary>
         public IManualConsumer consume(ConsumeOptions consumeOptions) {
             Validator.Required(consumeOptions, "Consume Options");
             return new ManualConsumer(new SubscriptionMaker(this), consumeOptions);
         }
 
-        /// <summary>
         public ISimpleConsumer consume(EventHandler<MsgHandlerEventArgs> handler) {
             Validator.Required(handler, "Msg Handler");
             return new SimpleConsumer(new SubscriptionMaker(this), handler, DefaultConsumeOptions);
         }
 
-        /// <summary>
         public ISimpleConsumer consume(EventHandler<MsgHandlerEventArgs> handler, ConsumeOptions consumeOptions) {
             Validator.Required(handler, "Msg Handler");
             Validator.Required(consumeOptions, "Consume Options");

@@ -33,48 +33,40 @@ namespace NATS.Client.JetStream
         /// Gets information about the consumer behind this subscription.
         /// </summary>
         /// <returns>consumer information</returns>
-        ///         server such as timeout or interruption
         ConsumerInfo GetConsumerInfo();
 
         /// <summary>
         /// Read the next message with max wait set to {@value BaseConsumeOptions#DEFAULT_EXPIRES_IN_MS} ms
         /// </summary>
         /// <returns>the next message or null if the max wait expires</returns>
-        ///         server such as timeout or interruption
-        ///         such as the consumer was deleted on the server in the middle of use.
         Msg Next();
 
         /// <summary>
         /// Read the next message with provide max wait
         /// </summary>
-        /// <param name="maxWaitMillis>the max wait value in milliseconds</param>
+        /// <param name="maxWaitMillis">the max wait value in milliseconds</param>
         /// <returns>the next message or null if the max wait expires</returns>
-        ///         server such as timeout or interruption
-        ///         such as the consumer was deleted on the server in the middle of use.
         Msg Next(int maxWaitMillis);
 
         /// <summary>
         /// Create a one use Fetch Consumer using all defaults other than the number of messages. See {@link IFetchConsumer}
         /// </summary>
-        /// <param name="maxMessages>the maximum number of message to consume</param>
+        /// <param name="maxMessages">the maximum number of message to consume</param>
         /// <returns>the IFetchConsumer instance</returns>
-        ///         server such as timeout or interruption
         IFetchConsumer FetchMessages(int maxMessages);
 
         /// <summary>
         /// Create a one use Fetch Consumer using all defaults other than the number of bytes. See {@link IFetchConsumer}
         /// </summary>
-        /// <param name="maxBytes>the maximum number of bytes to consume</param>
+        /// <param name="maxBytes">the maximum number of bytes to consume</param>
         /// <returns>the IFetchConsumer instance</returns>
-        ///         server such as timeout or interruption
         IFetchConsumer FetchBytes(int maxBytes);
 
         /// <summary>
         /// Create a one use Fetch Consumer with complete custom consume options. See {@link IFetchConsumer}
         /// </summary>
-        /// <param name="fetchConsumeOptions>the custom fetch consume options. See {@link FetchConsumeOptions}</param>
+        /// <param name="fetchConsumeOptions">the custom fetch consume options. See {@link FetchConsumeOptions}</param>
         /// <returns>the IFetchConsumer instance</returns>
-        ///         server such as timeout or interruption
         IFetchConsumer Fetch(FetchConsumeOptions fetchConsumeOptions);
 
         /// <summary>
@@ -82,33 +74,29 @@ namespace NATS.Client.JetStream
         /// Manual Consumers require the developer call nextMessage. See {@link IManualConsumer}
         /// </summary>
         /// <returns>the IManualConsumer instance</returns>
-        ///         server such as timeout or interruption
         IManualConsumer consume();
 
         /// <summary>
         /// Create a long-running Manual Consumer with custom ConsumeOptions. See {@link IManualConsumer} and {@link ConsumeOptions}
         /// Manual Consumers require the developer call nextMessage.
         /// </summary>
-        /// <param name="consumeOptions>the custom consume options</param>
+        /// <param name="consumeOptions">the custom consume options</param>
         /// <returns>the IManualConsumer instance</returns>
-        ///         server such as timeout or interruption
         IManualConsumer consume(ConsumeOptions consumeOptions);
 
         /// <summary>
         /// Create a long-running Simple Consumer with default ConsumeOptions. See {@link ISimpleConsumer} and  {@link ConsumeOptions}
         /// </summary>
-        /// <param name="handler>the MessageHandler used for receiving messages.</param>
+        /// <param name="handler">the MessageHandler used for receiving messages.</param>
         /// <returns>the ISimpleConsumer instance</returns>
-        ///         server such as timeout or interruption
         ISimpleConsumer consume(EventHandler<MsgHandlerEventArgs> handler);
 
         /// <summary>
         /// Create a long-running Simple Consumer with custom ConsumeOptions. See {@link ISimpleConsumer} and  {@link ConsumeOptions}
         /// </summary>
-        /// <param name="handler>the MessageHandler used for receiving messages.</param>
-        /// <param name="consumeOptions>the custom consume options</param>
+        /// <param name="handler">the MessageHandler used for receiving messages.</param>
+        /// <param name="consumeOptions">the custom consume options</param>
         /// <returns>the ISimpleConsumer instance</returns>
-        ///         server such as timeout or interruption
         ISimpleConsumer consume(EventHandler<MsgHandlerEventArgs> handler, ConsumeOptions consumeOptions);
     }
 }

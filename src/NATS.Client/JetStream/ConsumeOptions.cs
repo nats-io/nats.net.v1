@@ -36,9 +36,7 @@ namespace NATS.Client.JetStream
         /// <summary>
         /// Gets the ConsumeOptions builder.
         /// </summary>
-        /// <returns>
-        /// The builder
-        /// </returns>
+        /// <returns>The builder</returns>
         public static ConsumeOptionsBuilder Builder()
         {
             return new ConsumeOptionsBuilder();
@@ -54,7 +52,7 @@ namespace NATS.Client.JetStream
             
             /// <summary>
             /// Set the initial batch size in messages and remove any previously set batch byte constraint.
-            /// <para>Less than 1 will assume the default of <inheritdoc cref="DefaultMessageCount"/> when bytes are not specified.
+            /// <para>Less than 1 will assume the default of <inheritdoc cref="BaseConsumeOptions.DefaultMessageCount"/> when bytes are not specified.
             /// When bytes are specified, the batch messages size is set to prioritize the batch byte amount.</para>
             /// </summary>
             /// <param name="batchSize">the batch size in messages</param>
