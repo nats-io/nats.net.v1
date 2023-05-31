@@ -49,6 +49,11 @@ namespace NATS.Client.JetStream
         public int IdleHeartbeat { get; }
         public int ThresholdPercent { get; }
 
+        public override string ToString()
+        {
+            return $"Messages: {Messages}, Bytes: {Bytes}, ExpiresIn: {ExpiresIn}, IdleHeartbeat: {IdleHeartbeat}, ThresholdPercent: {ThresholdPercent}";
+        }
+
         protected BaseConsumeOptions(IBaseConsumeOptionsBuilder b)
         {
             Bytes = b.Bytes;
@@ -79,9 +84,9 @@ namespace NATS.Client.JetStream
         public abstract class BaseConsumeOptionsBuilder<TB, TCo> : IBaseConsumeOptionsBuilder
         {
             int _messages = -1;
-            long _bytes = -1;
+            long _bytes = 0;
             int _thresholdPercent = DefaultThresholdPercent;
-            int _expiresIn = MinExpiresMills;
+            int _expiresIn = DefaultExpiresInMillis;
 
             public int Messages => _messages;
             public long Bytes => _bytes;
@@ -112,7 +117,7 @@ namespace NATS.Client.JetStream
             public TB WithExpiresIn(int expiresInMillis) {
                 this._expiresIn = expiresInMillis;
                 if (expiresInMillis < 1) {
-                    _expiresIn = MinExpiresMills;
+                    _expiresIn = DefaultExpiresInMillis;
                 }
                 else if (expiresInMillis < MinExpiresMills) {
                     throw new ArgumentException($"Expires must be greater than or equal to {MinExpiresMills}");
@@ -140,7 +145,7 @@ namespace NATS.Client.JetStream
             /// <param name="thresholdPercent">the threshold percent</param>
             /// <returns>the builder</returns>
             public TB WithThresholdPercent(int thresholdPercent) {
-                this._thresholdPercent = thresholdPercent < 1 ? DefaultThresholdPercent : Math.Max(100, thresholdPercent);
+                this._thresholdPercent = thresholdPercent < 1 ? DefaultThresholdPercent : Math.Min(100, thresholdPercent);
 
                 return GetThis();
             }

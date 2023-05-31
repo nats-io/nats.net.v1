@@ -18,14 +18,14 @@ namespace NATS.Client.JetStream
     /// <summary>
     /// SIMPLIFICATION IS EXPERIMENTAL AND SUBJECT TO CHANGE
     /// </summary>
-    internal class SimpleConsumer : SimpleConsumerBase, ISimpleConsumer, ITrackPendingListener
+    internal class MessageConsumer : MessageConsumerBase, IMessageConsumer, ITrackPendingListener
     {
         protected readonly PullRequestOptions rePullPro;
         protected readonly int thresholdMessages;
         protected readonly long thresholdBytes;
         protected readonly SubscriptionMaker subscriptionMaker;
 
-        internal SimpleConsumer(SubscriptionMaker subscriptionMaker, EventHandler<MsgHandlerEventArgs> messageHandler, BaseConsumeOptions opts) {
+        internal MessageConsumer(SubscriptionMaker subscriptionMaker, EventHandler<MsgHandlerEventArgs> messageHandler, BaseConsumeOptions opts) {
             this.subscriptionMaker = subscriptionMaker;
 
             InitSub(subscriptionMaker.makeSubscription(messageHandler));
@@ -53,12 +53,12 @@ namespace NATS.Client.JetStream
         }
 
         public void Track(int pendingMessages, long pendingBytes, bool trackingBytes) {
-            if (drainTask == null &&
-                (pmm.pendingMessages <= thresholdMessages
-                 || (pmm.trackingBytes && pmm.pendingBytes <= thresholdBytes)))
-            {
-                sub._pull(rePullPro, false, this);
-            }
+            // if (drainTask == null &&
+                // (pmm.pendingMessages <= thresholdMessages
+                 // || (pmm.trackingBytes && pmm.pendingBytes <= thresholdBytes)))
+            // {
+                // sub._pull(rePullPro, false, this);
+            // }
         }
     }
 }

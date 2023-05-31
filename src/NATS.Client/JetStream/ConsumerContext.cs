@@ -25,19 +25,26 @@ namespace NATS.Client.JetStream
     {
         internal readonly StreamContext streamContext;
         internal readonly JetStream js;
+        internal ConsumerInfo lastConsumerInfo;
 
-        public string ConsumerName { get; }
+        public string ConsumerName => lastConsumerInfo.Name;
         
         internal ConsumerContext(StreamContext streamContext, ConsumerInfo ci)
         {
             this.streamContext = streamContext;
             js = new JetStream(streamContext.jsm.Conn, streamContext.jsm.JetStreamOptions);
-            ConsumerName = ci.Name;
+            lastConsumerInfo = ci;
         }
 
         public ConsumerInfo GetConsumerInfo()
         {
-            return streamContext.jsm.GetConsumerInfo(streamContext.StreamName, ConsumerName);
+            lastConsumerInfo = streamContext.jsm.GetConsumerInfo(streamContext.StreamName, lastConsumerInfo.Name);
+            return lastConsumerInfo;
+        }
+
+        public ConsumerInfo GetCachedConsumerInfo()
+        {
+            return lastConsumerInfo;
         }
 
         public Msg Next() {
@@ -69,24 +76,24 @@ namespace NATS.Client.JetStream
             return new FetchConsumer(new SubscriptionMaker(this), fetchConsumeOptions);
         }
 
-        public IManualConsumer consume() {
-            return new ManualConsumer(new SubscriptionMaker(this), DefaultConsumeOptions);
+        public IIterableConsumer consume() {
+            return new IterableConsumer(new SubscriptionMaker(this), DefaultConsumeOptions);
         }
 
-        public IManualConsumer consume(ConsumeOptions consumeOptions) {
+        public IIterableConsumer consume(ConsumeOptions consumeOptions) {
             Validator.Required(consumeOptions, "Consume Options");
-            return new ManualConsumer(new SubscriptionMaker(this), consumeOptions);
+            return new IterableConsumer(new SubscriptionMaker(this), consumeOptions);
         }
 
-        public ISimpleConsumer consume(EventHandler<MsgHandlerEventArgs> handler) {
+        public IMessageConsumer consume(EventHandler<MsgHandlerEventArgs> handler) {
             Validator.Required(handler, "Msg Handler");
-            return new SimpleConsumer(new SubscriptionMaker(this), handler, DefaultConsumeOptions);
+            return new MessageConsumer(new SubscriptionMaker(this), handler, DefaultConsumeOptions);
         }
 
-        public ISimpleConsumer consume(EventHandler<MsgHandlerEventArgs> handler, ConsumeOptions consumeOptions) {
+        public IMessageConsumer consume(EventHandler<MsgHandlerEventArgs> handler, ConsumeOptions consumeOptions) {
             Validator.Required(handler, "Msg Handler");
             Validator.Required(consumeOptions, "Consume Options");
-            return new SimpleConsumer(new SubscriptionMaker(this), handler, consumeOptions);
+            return new MessageConsumer(new SubscriptionMaker(this), handler, consumeOptions);
         }
     }
 
@@ -104,7 +111,8 @@ namespace NATS.Client.JetStream
             if (handler == null) {
                 return (JetStreamPullSubscription)ctx.js.PullSubscribe(null, pso);
             }
-            return (JetStreamPullSubscription)ctx.js.PullSubscribeAsync(null, handler, pso);
+            // return (JetStreamPullSubscription)ctx.js.PullSubscribeAsync(null, handler, pso);
+            return null;
         }
     }
 }

@@ -16,7 +16,7 @@ namespace NATS.Client.JetStream
     /// <summary>
     /// SIMPLIFICATION IS EXPERIMENTAL AND SUBJECT TO CHANGE
     /// </summary>
-    public interface IFetchConsumer : ISimpleConsumer
+    public interface IFetchConsumer : IMessageConsumer
     {
         Msg NextMessage();
     }

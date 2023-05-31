@@ -17,21 +17,12 @@ using NATS.Client.Internals;
 
 namespace NATS.Client.JetStream
 {
-    public enum ManageResult
-    {
-        MESSAGE,
-        STATUS,
-        TERMINUS,
-        ERROR
-    }
-
     public abstract class MessageManager
     {
         public const int Threshold = 3;
 
         protected readonly object StateChangeLock;
         protected readonly Connection Conn;
-        protected readonly SubscribeOptions SubOpts;
         protected readonly bool SyncMode;
 
         protected IJetStreamSubscription Sub; // not readonly it is not set until after construction
@@ -40,18 +31,15 @@ namespace NATS.Client.JetStream
         protected ulong LastConsumerSeq;
         protected long LastMsgReceived;
 
-        // heartbeat stuff
         protected bool Hb;
         protected int IdleHeartbeatSetting;
         protected int AlarmPeriodSetting;
         protected Timer heartbeatTimer;
 
-        protected MessageManager(Connection conn, SubscribeOptions so, bool syncMode)
+        protected MessageManager(Connection conn, bool syncMode)
         {
             StateChangeLock = new object();
-            
             Conn = conn;
-            SubOpts = so;
             SyncMode = syncMode;
             LastStreamSeq = 0;
             LastConsumerSeq = 0;
@@ -73,8 +61,7 @@ namespace NATS.Client.JetStream
             ShutdownHeartbeatTimer();
         }
 
-        public virtual void StartPullRequest(string pullId, PullRequestOptions pullRequestOptions,
-            bool raiseStatusWarnings, ITrackPendingListener trackPendingListener) {
+        public virtual void StartPullRequest(PullRequestOptions pullRequestOptions) {
             // does nothing - only implemented for pulls, but in base class since instance is always referenced as MessageManager, not subclass
         }
 
@@ -91,7 +78,7 @@ namespace NATS.Client.JetStream
             return true;
         }
 
-        public abstract ManageResult Manage(Msg msg);
+        public abstract bool Manage(Msg msg);
         
         protected void TrackJsMessage(Msg msg) {
             lock (StateChangeLock)

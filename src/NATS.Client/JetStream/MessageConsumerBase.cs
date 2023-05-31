@@ -18,14 +18,14 @@ namespace NATS.Client.JetStream
     /// <summary>
     /// SIMPLIFICATION IS EXPERIMENTAL AND SUBJECT TO CHANGE
     /// </summary>
-    internal class SimpleConsumerBase : ISimpleConsumer
+    internal class MessageConsumerBase : IMessageConsumer
     {
         protected JetStreamPullSubscription sub;
         protected PullMessageManager pmm;
         protected readonly object subLock;
         protected Task drainTask;
 
-        public SimpleConsumerBase()
+        public MessageConsumerBase()
         {
             subLock = new object();
         }

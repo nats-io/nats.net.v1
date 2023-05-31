@@ -32,11 +32,12 @@ namespace NATS.Client.JetStream
             SubscribeOptions so,
             ConsumerConfiguration originalCc, 
             bool queueMode, 
-            bool syncMode) : base(conn, so, syncMode)
+            bool syncMode) : base(conn, syncMode)
         {
-            Js = js;
+            this.Js = js;
             Stream = stream;
             OriginalCc = originalCc;
+
             QueueMode = queueMode;
 
             if (queueMode) {
@@ -84,16 +85,17 @@ namespace NATS.Client.JetStream
             return msg.Header == null ? null : msg.Header[JetStreamConstants.ConsumerStalledHeader];
         }
 
-        public override ManageResult Manage(Msg msg) {
+        public override bool Manage(Msg msg) {
             if (!msg.HasStatus)
             {
                 TrackJsMessage(msg);
-                return ManageResult.MESSAGE;
+                return false;
             }
-            return ManageStatus(msg);
+            ManageStatus(msg);
+            return true; // all status are managed
         }
 
-        protected ManageResult ManageStatus(Msg msg) {
+        protected void ManageStatus(Msg msg) {
             // this checks fc, hb and unknown
             // only process fc and hb if those flags are set
             // otherwise they are simply known statuses
@@ -102,7 +104,7 @@ namespace NATS.Client.JetStream
                 String fcSubject = isFlowControl ? msg.Reply : extractFcSubject(msg);
                 if (fcSubject != null) {
                     _processFlowControl(fcSubject, isFlowControl ? FlowControlSource.FlowControl : FlowControlSource.Heartbeat);
-                    return ManageResult.STATUS;
+                    return;
                 }
             }
             Conn.Opts.UnhandledStatusEventHandlerOrDefault.Invoke(this, new UnhandledStatusEventArgs(Conn, (Subscription)Sub, msg.Status));
@@ -110,7 +112,6 @@ namespace NATS.Client.JetStream
             {
                 throw new NATSJetStreamStatusException((Subscription)Sub, msg.Status);
             }
-            return ManageResult.ERROR;
         }
 
         private void _processFlowControl(string fcSubject, FlowControlSource source) {

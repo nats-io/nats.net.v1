@@ -19,7 +19,7 @@ namespace NATS.Client.JetStream
     /// <summary>
     /// SIMPLIFICATION IS EXPERIMENTAL AND SUBJECT TO CHANGE
     /// </summary>
-    public interface ISimpleConsumer : IDisposable
+    public interface IMessageConsumer : IDisposable
     {
         /// <summary>
         /// Gets information about the consumer behind this subscription.

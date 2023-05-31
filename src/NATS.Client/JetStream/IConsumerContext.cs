@@ -36,6 +36,13 @@ namespace NATS.Client.JetStream
         ConsumerInfo GetConsumerInfo();
 
         /// <summary>
+        /// Gets information about the consumer behind this subscription.
+        /// This returns the last read version of Consumer Info, which could technically be out of date.
+        /// </summary>
+        /// <returns>consumer information</returns>
+        ConsumerInfo GetCachedConsumerInfo();
+
+        /// <summary>
         /// Read the next message with max wait set to {@value BaseConsumeOptions#DEFAULT_EXPIRES_IN_MS} ms
         /// </summary>
         /// <returns>the next message or null if the max wait expires</returns>
@@ -74,7 +81,7 @@ namespace NATS.Client.JetStream
         /// Manual Consumers require the developer call nextMessage. See {@link IManualConsumer}
         /// </summary>
         /// <returns>the IManualConsumer instance</returns>
-        IManualConsumer consume();
+        IIterableConsumer consume();
 
         /// <summary>
         /// Create a long-running Manual Consumer with custom ConsumeOptions. See {@link IManualConsumer} and {@link ConsumeOptions}
@@ -82,21 +89,21 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="consumeOptions">the custom consume options</param>
         /// <returns>the IManualConsumer instance</returns>
-        IManualConsumer consume(ConsumeOptions consumeOptions);
+        IIterableConsumer consume(ConsumeOptions consumeOptions);
 
         /// <summary>
-        /// Create a long-running Simple Consumer with default ConsumeOptions. See {@link ISimpleConsumer} and  {@link ConsumeOptions}
+        /// Create a long-running MessageConsumer with default ConsumeOptions. See {@link IMessageConsumer} and {@link ConsumeOptions}
         /// </summary>
         /// <param name="handler">the MessageHandler used for receiving messages.</param>
-        /// <returns>the ISimpleConsumer instance</returns>
-        ISimpleConsumer consume(EventHandler<MsgHandlerEventArgs> handler);
+        /// <returns>the IMessageConsumer instance</returns>
+        IMessageConsumer consume(EventHandler<MsgHandlerEventArgs> handler);
 
         /// <summary>
-        /// Create a long-running Simple Consumer with custom ConsumeOptions. See {@link ISimpleConsumer} and  {@link ConsumeOptions}
+        /// Create a long-running MessageConsumer with custom ConsumeOptions. See {@link IMessageConsumer} and {@link ConsumeOptions}
         /// </summary>
         /// <param name="handler">the MessageHandler used for receiving messages.</param>
         /// <param name="consumeOptions">the custom consume options</param>
-        /// <returns>the ISimpleConsumer instance</returns>
-        ISimpleConsumer consume(EventHandler<MsgHandlerEventArgs> handler, ConsumeOptions consumeOptions);
+        /// <returns>the IMessageConsumer instance</returns>
+        IMessageConsumer consume(EventHandler<MsgHandlerEventArgs> handler, ConsumeOptions consumeOptions);
     }
 }

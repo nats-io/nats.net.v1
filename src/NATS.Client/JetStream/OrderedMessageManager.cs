@@ -37,11 +37,11 @@ namespace NATS.Client.JetStream
             TargetSid = Sub.Sid;
         }
 
-        public override ManageResult Manage(Msg msg)
+        public override bool Manage(Msg msg)
         {
             if (msg.Sid != TargetSid)
             {
-                return ManageResult.STATUS; // wrong sid is throwaway from previous consumer that errored
+                return true; // wrong sid is throwaway from previous consumer that errored
             }
             
             if (msg.IsJetStream)
@@ -49,14 +49,15 @@ namespace NATS.Client.JetStream
                 ulong receivedConsumerSeq = msg.MetaData.ConsumerSequence;
                 if (ExpectedExternalConsumerSeq != receivedConsumerSeq) {
                     HandleErrorCondition();
-                    return ManageResult.STATUS;
+                    return true;
                 }
                 TrackJsMessage(msg);
                 ExpectedExternalConsumerSeq++;
-                return ManageResult.MESSAGE;
+                return false;
             }
             
-            return ManageStatus(msg);
+            ManageStatus(msg);
+            return true; // all statuses are managed
         }
         
         private void HandleErrorCondition()

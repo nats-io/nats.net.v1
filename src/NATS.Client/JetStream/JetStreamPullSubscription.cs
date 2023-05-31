@@ -43,11 +43,13 @@ namespace NATS.Client.JetStream
 
         public string _pull(PullRequestOptions pullRequestOptions, bool raiseStatusWarnings, ITrackPendingListener trackPendingListener) {
             string publishSubject = Context.PrependPrefix(string.Format(JetStreamConstants.JsapiConsumerMsgNext, Stream, Consumer));
-            string pullId = Subject.Replace("*", pullIdIncrementer.Increment().ToString());
-            MessageManager.StartPullRequest(pullId, pullRequestOptions, raiseStatusWarnings, trackPendingListener);
-            Connection.Publish(publishSubject, pullId, pullRequestOptions.Serialize());
+            // string pullIdAsloReplyTo = Subject.Replace("*", pullIdIncrementer.Increment().ToString());
+            // Console.WriteLine("---> _pull " + publishSubject + " " + pullIdAsloReplyTo);
+            string pullIdAsloReplyTo = Subject;
+            // MessageManager.StartPullRequest(pullIdAsloReplyTo, pullRequestOptions, raiseStatusWarnings, trackPendingListener);
+            Connection.Publish(publishSubject, pullIdAsloReplyTo, pullRequestOptions.Serialize());
             Connection.FlushBuffer();
-            return pullId;
+            return pullIdAsloReplyTo;
         }
 
         public void PullExpiresIn(int batchSize, int expiresInMillis)
@@ -97,19 +99,9 @@ namespace NATS.Client.JetStream
                 int timeLeft = maxWaitMillis;
                 while (batchLeft > 0 && timeLeft > 0) {
                     Msg msg = NextMessageImpl(timeLeft);
-                    switch (MessageManager.Manage(msg)) {
-                        case ManageResult.MESSAGE:
-                            messages.Add(msg);
-                            batchLeft--;
-                            break;
-                        case ManageResult.TERMINUS:
-                        case ManageResult.ERROR:
-                            // if there is a match, the status applies
-                            if (pullId.Equals(msg.Subject))
-                            {
-                                return messages;
-                            }
-                            break;
+                    if (!MessageManager.Manage(msg)) {
+                        messages.Add(msg);
+                        batchLeft--;
                     }
                     // case STATUS, try again while we have time
                     timeLeft = maxWaitMillis - (int)sw.ElapsedMilliseconds;

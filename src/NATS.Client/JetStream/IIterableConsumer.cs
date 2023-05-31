@@ -16,14 +16,15 @@ namespace NATS.Client.JetStream
     /// <summary>
     /// SIMPLIFICATION IS EXPERIMENTAL AND SUBJECT TO CHANGE
     /// </summary>
-    internal class ManualConsumer : SimpleConsumer, IManualConsumer
+    public interface IIterableConsumer : IMessageConsumer
     {
-        internal ManualConsumer(SubscriptionMaker subscriptionMaker, ConsumeOptions opts) 
-            : base(subscriptionMaker, null, opts) {}
-
-        public Msg NextMessage(int timeoutMillis)
-        {
-            return sub.NextMessage(timeoutMillis);
-        }
+        /// <summary>
+        /// Read the next message. Return null if the calls times out.
+        /// Use a timeout of 0 to wait indefinitely. This could still be interrupted if
+        /// the subscription is unsubscribed or the client connection is closed.
+        /// </summary>
+        /// <param name="timeoutMillis">the maximum time to wait</param>
+        /// <returns>the next message for this subscriber.</returns>
+        Msg NextMessage(int timeoutMillis);
     }
 }

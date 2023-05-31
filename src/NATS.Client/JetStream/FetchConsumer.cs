@@ -12,13 +12,14 @@
 // limitations under the License.
 
 using System.Diagnostics;
+using NATS.Client.Internals;
 
 namespace NATS.Client.JetStream
 {
     /// <summary>
     /// SIMPLIFICATION IS EXPERIMENTAL AND SUBJECT TO CHANGE
     /// </summary>
-    internal class FetchConsumer : SimpleConsumerBase, IFetchConsumer
+    internal class FetchConsumer : MessageConsumerBase, IFetchConsumer
     {
         private readonly int maxWaitMillis;
         private Stopwatch sw;
@@ -44,11 +45,13 @@ namespace NATS.Client.JetStream
             // if the manager thinks it has received everything in the pull, it means
             // that all the messages are already in the internal queue and there is
             // no waiting necessary
-            if (timeLeftMillis < 1 | pmm.pendingMessages < 1 || (pmm.trackingBytes && pmm.pendingBytes < 1))
-            {
-                return sub.NextMessage(1); // 1 is the shortest time I can give
-            }
+            // if (timeLeftMillis < 1 | pmm.pendingMessages < 1 || (pmm.trackingBytes && pmm.pendingBytes < 1))
+            // {
+                // Dbg.msg("NM 1", null, timeLeftMillis);
+                // return sub.NextMessage(1); // 1 is the shortest time I can give
+            // }
 
+            Dbg.msg("NM 2 ", null, timeLeftMillis);
             return sub.NextMessage(timeLeftMillis);
         }
     }

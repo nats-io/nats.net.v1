@@ -162,7 +162,7 @@ namespace NATS.Client.JetStream
 
         internal MessageManagerFactory _pullMessageManagerFactory =
             (conn, js, stream, so, cc, queueMode, syncMode) =>
-                new PullMessageManager(conn, so, syncMode);
+                new PullMessageManager(conn, syncMode);
         
         Subscription CreateSubscription(string subject, string queueName,
             EventHandler<MsgHandlerEventArgs> userHandler, bool autoAck,
@@ -307,11 +307,7 @@ namespace NATS.Client.JetStream
             }
 
             // 4. If no deliver subject (inbox) provided or found, make an inbox.
-            if (isPullMode)
-            {
-                inboxDeliver = Conn.NewInbox() + ".*";
-            }
-            else if (string.IsNullOrWhiteSpace(inboxDeliver)) {
+            if (string.IsNullOrWhiteSpace(inboxDeliver)) {
                 inboxDeliver = Conn.NewInbox();
             }
 
@@ -390,13 +386,15 @@ namespace NATS.Client.JetStream
                 bool handlerAutoAck = autoAck && serverCC.AckPolicy != AckPolicy.None;
                 EventHandler<MsgHandlerEventArgs> handler = (sender, args) => 
                 {
-                    if (mm.Manage(args.Message) == ManageResult.MESSAGE)
+                    if (mm.Manage(args.Message))
                     {
-                        userHandler.Invoke(sender, args);
-                        if (handlerAutoAck)
-                        {
-                            args.Message.Ack();
-                        }
+                        return; // manager handled the message
+                    }
+                            
+                    userHandler.Invoke(sender, args);
+                    if (handlerAutoAck)
+                    {
+                        args.Message.Ack();
                     }
                 };
                 sub = ((Connection)Conn).subscribeAsync(inboxDeliver, queueName, handler, asyncSubDelegate);
@@ -478,13 +476,6 @@ namespace NATS.Client.JetStream
             return (IJetStreamPullSubscription) CreateSubscription(subject, null, null, false, null, options);
         }
 
-        public IJetStreamPullSubscription PullSubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler, PullSubscribeOptions options)
-        {
-            ValidateNotNull(options, "Pull Subscribe Options");
-            ValidateSubject(subject, IsSubjectRequired(options));
-            return (IJetStreamPullSubscription) CreateSubscription(subject, null, handler, false, null, options);
-        }
-
         public IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler, bool autoAck)
         {
             ValidateSubject(subject, true);
@@ -542,22 +533,5 @@ namespace NATS.Client.JetStream
         }
 
         private bool IsSubjectRequired(SubscribeOptions options) => options == null || !options.Bind;
-        
-        public IStreamContext CreateStreamContext(string streamName)
-        {
-            Validator.ValidateStreamName(streamName, true);
-            return GetStreamContext(streamName);
-        }
-        
-        public IConsumerContext CreateConsumerContext(string streamName, string consumerName)
-        {
-            Validator.ValidateStreamName(streamName, true);
-            Validator.Required(consumerName, "Consumer Name");
-            return GetStreamContext(streamName).CreateConsumerContext(consumerName);
-        }
-
-        private StreamContext GetStreamContext(string streamName) {
-            return new StreamContext(Conn, JetStreamOptions, streamName);
-        }
     }
 }

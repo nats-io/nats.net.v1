@@ -1862,11 +1862,11 @@ namespace NATS.Client
                 {
                     Msg m = mm[ii];
                     mm[ii] = null; // do not hold onto the Msg any longer than we need to
-                    if (!m._sub.processMsg(m))
+                    if (!m.sub.processMsg(m))
                     {
                         lock (mu)
                         {
-                            removeSub(m._sub);
+                            removeSub(m.sub);
                         }
                     }
                 }
@@ -2844,7 +2844,7 @@ namespace NATS.Client
             {
                 throw new ArgumentNullException("msg");
             }
-            PublishImpl(msg.Subject, msg.Reply, msg._header, msg.Data, 0, null, false);
+            PublishImpl(msg.Subject, msg.Reply, msg.header, msg.Data, 0, null, false);
         }
 
         private void RemoveOutstandingRequest(string requestId)
@@ -3326,7 +3326,7 @@ namespace NATS.Client
             {
                 throw new ArgumentNullException("message");
             }
-            return RequestSyncImpl(message.Subject, message._header, message.Data, 0, null, timeout);
+            return RequestSyncImpl(message.Subject, message.header, message.Data, 0, null, timeout);
         }
 
         /// <summary>
@@ -3359,7 +3359,7 @@ namespace NATS.Client
             {
                 throw new ArgumentNullException("message");
             }
-            return RequestSyncImpl(message.Subject, message._header, message.Data, 0, null, Timeout.Infinite);
+            return RequestSyncImpl(message.Subject, message.header, message.Data, 0, null, Timeout.Infinite);
         }
 
         private Task<Msg> OldRequestAsyncImpl(string subject, MsgHeader headers, byte[] data, int offset, int? count, int timeout, CancellationToken ct)
@@ -3935,7 +3935,7 @@ namespace NATS.Client
             {
                 throw new ArgumentNullException("message");
             }
-            return RequestAsyncImpl(message.Subject, message._header, message.Data, 0, null, timeout, CancellationToken.None);
+            return RequestAsyncImpl(message.Subject, message.header, message.Data, 0, null, timeout, CancellationToken.None);
         }
 
         /// <summary>
@@ -4055,7 +4055,7 @@ namespace NATS.Client
                 throw new ArgumentNullException("message");
             }
 
-            return RequestAsyncImpl(message.Subject, message._header, message.Data, 0, null, Timeout.Infinite, token);
+            return RequestAsyncImpl(message.Subject, message.header, message.Data, 0, null, Timeout.Infinite, token);
         }
 
         /// <summary>
@@ -5185,28 +5185,6 @@ namespace NATS.Client
         }
 
         #endregion
-
-        public IStreamContext CreateStreamContext(string streamName)
-        {
-            Validator.ValidateStreamName(streamName, true);
-            return new StreamContext(this, null, streamName);
-        }
-
-        public IStreamContext CreateStreamContext(string streamName, JetStreamOptions options)
-        {
-            Validator.ValidateStreamName(streamName, true);
-            return new StreamContext(this, options, streamName);
-        }
-
-        public IConsumerContext CreateConsumerContext(string streamName, string consumerName)
-        {
-            return CreateStreamContext(streamName).CreateConsumerContext(consumerName);
-        }
-
-        public IConsumerContext CreateConsumerContext(string streamName, string consumerName, JetStreamOptions options)
-        {
-            return CreateStreamContext(streamName, options).CreateConsumerContext(consumerName);
-        }
 
         #region JetStream
 
