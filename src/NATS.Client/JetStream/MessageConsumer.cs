@@ -44,7 +44,7 @@ namespace NATS.Client.JetStream
             thresholdMessages = bm - rePullMessages;
             thresholdBytes = bb == 0 ? int.MinValue : bb - rePullBytes;
 
-            sub._pull(PullRequestOptions.Builder(bm)
+            sub._pullInternal(PullRequestOptions.Builder(bm)
                     .WithMaxBytes(bb)
                     .WithExpiresIn(opts.ExpiresIn)
                     .WithIdleHeartbeat(opts.IdleHeartbeat)

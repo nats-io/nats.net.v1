@@ -656,7 +656,7 @@ namespace IntegrationTests
         }
 
         // This just flaps. It's a timing thing. Already spent too much time, it should work as is.
-        // [Fact]
+        [Fact(Skip = "Flapper")]
         public void TestConsumerDeleted()
         {
             PullSubscribeOptions so = PullSubscribeOptions.BindTo(STREAM, Durable(1));

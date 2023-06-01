@@ -8,7 +8,7 @@ namespace NATS.Client.JetStream
         protected long pendingBytes;
         protected bool trackingBytes;
 
-        public PullMessageManager(Connection conn, bool syncMode) : base(conn, syncMode)
+        public PullMessageManager(Connection conn, SubscribeOptions so, bool syncMode) : base(conn, so, syncMode)
         {
             trackingBytes = false;
             pendingMessages = 0;
@@ -21,7 +21,7 @@ namespace NATS.Client.JetStream
             ((Subscription)Sub).BeforeChannelAddCheck = BeforeChannelAddCheck;
         }
 
-        public override void StartPullRequest(PullRequestOptions pro)
+        public override void StartPullRequest(string pullSubject, PullRequestOptions pro, bool raiseStatusWarnings, ITrackPendingListener trackPendingListener)
         {
             lock (StateChangeLock)
             {

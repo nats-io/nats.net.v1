@@ -23,6 +23,7 @@ namespace NATS.Client.JetStream
 
         protected readonly object StateChangeLock;
         protected readonly Connection Conn;
+        protected readonly SubscribeOptions SubOpts;
         protected readonly bool SyncMode;
 
         protected IJetStreamSubscription Sub; // not readonly it is not set until after construction
@@ -36,9 +37,10 @@ namespace NATS.Client.JetStream
         protected int AlarmPeriodSetting;
         protected Timer heartbeatTimer;
 
-        protected MessageManager(Connection conn, bool syncMode)
+        protected MessageManager(Connection conn, SubscribeOptions so, bool syncMode)
         {
             StateChangeLock = new object();
+            SubOpts = so;
             Conn = conn;
             SyncMode = syncMode;
             LastStreamSeq = 0;
@@ -61,7 +63,7 @@ namespace NATS.Client.JetStream
             ShutdownHeartbeatTimer();
         }
 
-        public virtual void StartPullRequest(PullRequestOptions pullRequestOptions) {
+        public virtual void StartPullRequest(string pullSubject, PullRequestOptions pullRequestOptions, bool raiseStatusWarnings, ITrackPendingListener trackPendingListener) {
             // does nothing - only implemented for pulls, but in base class since instance is always referenced as MessageManager, not subclass
         }
 

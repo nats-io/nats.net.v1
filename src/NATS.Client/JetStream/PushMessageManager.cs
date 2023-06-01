@@ -32,7 +32,7 @@ namespace NATS.Client.JetStream
             SubscribeOptions so,
             ConsumerConfiguration originalCc, 
             bool queueMode, 
-            bool syncMode) : base(conn, syncMode)
+            bool syncMode) : base(conn, so, syncMode)
         {
             this.Js = js;
             Stream = stream;

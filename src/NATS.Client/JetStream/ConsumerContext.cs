@@ -59,7 +59,7 @@ namespace NATS.Client.JetStream
             long expires = maxWaitMillis - JetStreamPullSubscription.ExpireAdjustment;
 
             JetStreamPullSubscription sub = new SubscriptionMaker(this).makeSubscription(null);
-            sub._pull(PullRequestOptions.Builder(1).WithExpiresIn(expires).Build(), false, null);
+            sub._pullInternal(PullRequestOptions.Builder(1).WithExpiresIn(expires).Build(), false, null);
             return sub.NextMessage(maxWaitMillis);
         }
 

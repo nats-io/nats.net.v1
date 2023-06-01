@@ -18,6 +18,7 @@ using NATS.Client;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using Xunit;
+using Xunit.Abstractions;
 using static UnitTests.TestBase;
 using static IntegrationTests.JetStreamTestBase;
 using static NATS.Client.ClientExDetail;
@@ -26,7 +27,13 @@ namespace IntegrationTestsInternal
 {
     public class TestJetStreamConsumer : TestSuite<JetStreamSuiteContext>
     {
-        public TestJetStreamConsumer(JetStreamSuiteContext context) : base(context) {}
+        private readonly ITestOutputHelper output;
+
+        public TestJetStreamConsumer(ITestOutputHelper output, JetStreamSuiteContext context) : base(context)
+        {
+            this.output = output;
+            Console.SetOut(new ConsoleWriter(output));
+        }
 
         // ------------------------------------------------------------------------------------------
         // this allows me to intercept messages before it gets to the connection queue
@@ -114,8 +121,8 @@ namespace IntegrationTestsInternal
             public readonly CountdownEvent latch;
 
             public PullHeartbeatErrorSimulator(
-                Connection conn, bool syncMode, CountdownEvent latch)
-                : base(conn, syncMode)
+                Connection conn, SubscribeOptions so, bool syncMode, CountdownEvent latch)
+                : base(conn, so, syncMode)
             {
                 this.latch = latch;
             }
@@ -306,7 +313,7 @@ namespace IntegrationTestsInternal
             CountdownEvent latch = new CountdownEvent(2);
             ((JetStream)js)._pullMessageManagerFactory = 
                 (conn, lJs, stream, so, serverCC, qmode, dispatcher) => 
-                    new PullHeartbeatErrorSimulator(conn, false, latch);
+                    new PullHeartbeatErrorSimulator(conn, so, false, latch);
             return latch;
         }
     }

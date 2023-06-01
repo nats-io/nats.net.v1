@@ -20,53 +20,51 @@ namespace NATS.Client.JetStream
 {
     public class JetStreamPullSubscription : JetStreamAbstractSyncSubscription, IJetStreamPullSubscription
     {
-        private readonly InterlockedLong pullIdIncrementer;
+        private readonly InterlockedLong pullSubjectIdHolder;
 
         internal JetStreamPullSubscription(Connection conn, string subject,
             JetStream js, string stream, string consumer, string deliver,
             MessageManager messageManager)
             : base(conn, subject, null, js, stream, consumer, deliver, messageManager)
         {
-            pullIdIncrementer = new InterlockedLong();
+            pullSubjectIdHolder = new InterlockedLong();
         }
 
         public bool IsPullMode() => true;
         
         public void Pull(int batchSize)
         {
-            _pull(PullRequestOptions.Builder(batchSize).Build(), false, null);
+            _pullInternal(PullRequestOptions.Builder(batchSize).Build(), false, null);
         }
 
         public void Pull(PullRequestOptions pullRequestOptions) {
-            _pull(pullRequestOptions, false, null);
+            _pullInternal(pullRequestOptions, false, null);
         }
 
-        public string _pull(PullRequestOptions pullRequestOptions, bool raiseStatusWarnings, ITrackPendingListener trackPendingListener) {
+        public string _pullInternal(PullRequestOptions pullRequestOptions, bool raiseStatusWarnings, ITrackPendingListener trackPendingListener) {
             string publishSubject = Context.PrependPrefix(string.Format(JetStreamConstants.JsapiConsumerMsgNext, Stream, Consumer));
-            // string pullIdAsloReplyTo = Subject.Replace("*", pullIdIncrementer.Increment().ToString());
-            // Console.WriteLine("---> _pull " + publishSubject + " " + pullIdAsloReplyTo);
-            string pullIdAsloReplyTo = Subject;
-            // MessageManager.StartPullRequest(pullIdAsloReplyTo, pullRequestOptions, raiseStatusWarnings, trackPendingListener);
-            Connection.Publish(publishSubject, pullIdAsloReplyTo, pullRequestOptions.Serialize());
-            Connection.FlushBuffer();
-            return pullIdAsloReplyTo;
+            string pullSubject = Subject.Replace("*", pullSubjectIdHolder.Increment().ToString());
+            Console.WriteLine("---> PLLSB " + pullSubject);
+            MessageManager.StartPullRequest(pullSubject, pullRequestOptions, raiseStatusWarnings, trackPendingListener);	
+            Connection.Publish(publishSubject, pullSubject, pullRequestOptions.Serialize());
+            return pullSubject;
         }
 
         public void PullExpiresIn(int batchSize, int expiresInMillis)
         {
             DurationGtZeroRequired(expiresInMillis, "Expires In");
-            _pull(PullRequestOptions.Builder(batchSize).WithExpiresIn(expiresInMillis).Build(), false, null);
+            _pullInternal(PullRequestOptions.Builder(batchSize).WithExpiresIn(expiresInMillis).Build(), false, null);
         }
 
         public void PullNoWait(int batchSize)
         {
-            _pull(PullRequestOptions.Builder(batchSize).WithNoWait().Build(), false, null);
+            _pullInternal(PullRequestOptions.Builder(batchSize).WithNoWait().Build(), false, null);
         }
 
         public void PullNoWait(int batchSize, int expiresInMillis)
         {
             DurationGtZeroRequired(expiresInMillis, "NoWait Expires In");
-            _pull(PullRequestOptions.Builder(batchSize).WithNoWait().WithExpiresIn(expiresInMillis).Build(), false, null);
+            _pullInternal(PullRequestOptions.Builder(batchSize).WithNoWait().WithExpiresIn(expiresInMillis).Build(), false, null);
         }
 
         private void DurationGtZeroRequired(long millis, string label) {
@@ -89,7 +87,7 @@ namespace NATS.Client.JetStream
 
             Duration expires = Duration.OfMillis(
                 maxWaitMillis > ExpireAdjustment ? maxWaitMillis - ExpireAdjustment : maxWaitMillis);
-            string pullId = _pull(PullRequestOptions.Builder(batchLeft).WithExpiresIn(expires).Build(), false, null);
+            string pullSubject = _pullInternal(PullRequestOptions.Builder(batchLeft).WithExpiresIn(expires).Build(), false, null);
 
             try
             {
