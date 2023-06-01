@@ -310,7 +310,6 @@ namespace NATS.Client.JetStream
             if (isPullMode)
             {
                 inboxDeliver = Conn.NewInbox() + ".*";
-                Console.WriteLine("---> JSSUB " + inboxDeliver);
             }
             else if (string.IsNullOrWhiteSpace(inboxDeliver)) {
                 inboxDeliver = Conn.NewInbox();

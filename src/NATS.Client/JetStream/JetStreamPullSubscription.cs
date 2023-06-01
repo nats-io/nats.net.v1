@@ -44,7 +44,6 @@ namespace NATS.Client.JetStream
         public string _pullInternal(PullRequestOptions pullRequestOptions, bool raiseStatusWarnings, ITrackPendingListener trackPendingListener) {
             string publishSubject = Context.PrependPrefix(string.Format(JetStreamConstants.JsapiConsumerMsgNext, Stream, Consumer));
             string pullSubject = Subject.Replace("*", pullSubjectIdHolder.Increment().ToString());
-            Console.WriteLine("---> PLLSB " + pullSubject);
             MessageManager.StartPullRequest(pullSubject, pullRequestOptions, raiseStatusWarnings, trackPendingListener);	
             Connection.Publish(publishSubject, pullSubject, pullRequestOptions.Serialize());
             return pullSubject;
