@@ -19,6 +19,7 @@ using NATS.Client;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using Xunit;
+using Xunit.Abstractions;
 using static UnitTests.TestBase;
 using static IntegrationTests.JetStreamTestBase;
 using static NATS.Client.ClientExDetail;
@@ -27,8 +28,12 @@ namespace IntegrationTests
 {
     public class TestJetStream : TestSuite<JetStreamSuiteContext>
     {
-        public TestJetStream(JetStreamSuiteContext context) : base(context)
+        private readonly ITestOutputHelper output;
+
+        public TestJetStream(ITestOutputHelper output, JetStreamSuiteContext context) : base(context)
         {
+            this.output = output;
+            Console.SetOut(new ConsoleWriter(output));
         }
 
         [Fact]

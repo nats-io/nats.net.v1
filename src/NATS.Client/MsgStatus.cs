@@ -74,5 +74,10 @@ namespace NATS.Client
         public bool IsNoResponders() {
             return _code == NatsConstants.NoRespondersCode && _message.Equals(NoRespondersText);
         }
+
+        public override string ToString()
+        {
+            return $"Status {Code} {Message}";
+        }
     }
 }

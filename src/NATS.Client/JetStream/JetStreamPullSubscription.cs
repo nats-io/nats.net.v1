@@ -11,7 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using NATS.Client.Internals;
@@ -20,56 +19,46 @@ namespace NATS.Client.JetStream
 {
     public class JetStreamPullSubscription : JetStreamAbstractSyncSubscription, IJetStreamPullSubscription
     {
-        private readonly InterlockedLong pullSubjectIdHolder;
+        internal readonly JetStreamPullApiImpl PullApiImpl;
 
         internal JetStreamPullSubscription(Connection conn, string subject,
             JetStream js, string stream, string consumer, string deliver,
             MessageManager messageManager)
             : base(conn, subject, null, js, stream, consumer, deliver, messageManager)
         {
-            pullSubjectIdHolder = new InterlockedLong();
+            PullApiImpl = new JetStreamPullApiImpl(conn, js, messageManager, stream, subject, consumer);
         }
 
-        public bool IsPullMode() => true;
+        internal override void UpdateConsumer(string consumer)
+        {
+            base.UpdateConsumer(consumer);
+            PullApiImpl.UpdateConsumer(consumer);
+        }
         
+        public bool IsPullMode() => true;
+
         public void Pull(int batchSize)
         {
-            _pullInternal(PullRequestOptions.Builder(batchSize).Build(), false, null);
+            PullApiImpl.PullInternal(PullRequestOptions.Builder(batchSize).Build(), false, null);
         }
 
         public void Pull(PullRequestOptions pullRequestOptions) {
-            _pullInternal(pullRequestOptions, false, null);
-        }
-
-        public string _pullInternal(PullRequestOptions pullRequestOptions, bool raiseStatusWarnings, ITrackPendingListener trackPendingListener) {
-            string publishSubject = Context.PrependPrefix(string.Format(JetStreamConstants.JsapiConsumerMsgNext, Stream, Consumer));
-            string pullSubject = Subject.Replace("*", pullSubjectIdHolder.Increment().ToString());
-            MessageManager.StartPullRequest(pullSubject, pullRequestOptions, raiseStatusWarnings, trackPendingListener);	
-            Connection.Publish(publishSubject, pullSubject, pullRequestOptions.Serialize());
-            return pullSubject;
+            PullApiImpl.PullInternal(pullRequestOptions, false, null);
         }
 
         public void PullExpiresIn(int batchSize, int expiresInMillis)
         {
-            DurationGtZeroRequired(expiresInMillis, "Expires In");
-            _pullInternal(PullRequestOptions.Builder(batchSize).WithExpiresIn(expiresInMillis).Build(), false, null);
+            PullApiImpl.PullExpiresIn(batchSize, expiresInMillis);
         }
 
         public void PullNoWait(int batchSize)
         {
-            _pullInternal(PullRequestOptions.Builder(batchSize).WithNoWait().Build(), false, null);
+            PullApiImpl.PullNoWait(batchSize);
         }
 
         public void PullNoWait(int batchSize, int expiresInMillis)
         {
-            DurationGtZeroRequired(expiresInMillis, "NoWait Expires In");
-            _pullInternal(PullRequestOptions.Builder(batchSize).WithNoWait().WithExpiresIn(expiresInMillis).Build(), false, null);
-        }
-
-        private void DurationGtZeroRequired(long millis, string label) {
-            if (millis <= 0) {
-                throw new ArgumentException(label + " wait duration must be supplied and greater than 0.");
-            }
+            PullApiImpl.PullNoWait(batchSize, expiresInMillis);
         }
 
         internal const int ExpireAdjustment = 10;
@@ -77,7 +66,7 @@ namespace NATS.Client.JetStream
 
         public IList<Msg> Fetch(int batchSize, int maxWaitMillis)
         {
-            DurationGtZeroRequired(maxWaitMillis, "Fetch");
+            Validator.ValidateDurationGtZeroRequired(maxWaitMillis, "Fetch");
 
             IList<Msg> messages = new List<Msg>();
             int batchLeft = batchSize;
@@ -86,7 +75,7 @@ namespace NATS.Client.JetStream
 
             Duration expires = Duration.OfMillis(
                 maxWaitMillis > ExpireAdjustment ? maxWaitMillis - ExpireAdjustment : maxWaitMillis);
-            string pullSubject = _pullInternal(PullRequestOptions.Builder(batchLeft).WithExpiresIn(expires).Build(), false, null);
+            string pullSubject = PullApiImpl.PullInternal(PullRequestOptions.Builder(batchLeft).WithExpiresIn(expires).Build(), false, null);
 
             try
             {

@@ -349,22 +349,32 @@ namespace NATS.Client.JetStream
             if (isPullMode)
             {
                 mm = _pullMessageManagerFactory.Invoke((Connection)Conn, this, stream, so, serverCC, qgroup != null, syncMode);
-                syncSubDelegate = (dConn, dSubject, dQueue) =>
+                if (syncMode)
                 {
-                    return new JetStreamPullSubscription(dConn, dSubject, this, stream, consumerName, inboxDeliver, mm);
-                };
+                    syncSubDelegate = (dConn, dSubject, dQueue) =>
+                    {
+                        return new JetStreamPullSubscription(dConn, dSubject, this, stream, consumerName, inboxDeliver, mm);
+                    };
+                }
+                else
+                {
+                    // asyncSubDelegate = (dConn, dSubject, dQueue) =>
+                    // {
+                        // JetStreamPushAsyncSubscription asub = new JetStreamPushAsyncSubscription(dConn, dSubject, dQueue, this, stream, consumerName, inboxDeliver, mm);
+                        // asub.SetPendingLimits(so.PendingMessageLimit, so.PendingByteLimit);
+                        // return asub;
+                    // };
+                }
             }
             else
             {
                 MessageManagerFactory mmFactory = so.Ordered ? _pushOrderedMessageManagerFactory : _pushMessageManagerFactory;
                 mm = mmFactory((Connection)Conn, this, stream, so, serverCC, qgroup != null, syncMode);
-                
                 if (syncMode)
                 {
                     syncSubDelegate = (dConn, dSubject, dQueue) =>
                     {
-                        JetStreamPushSyncSubscription ssub = new JetStreamPushSyncSubscription(dConn, dSubject, dQueue,
-                            this, stream, consumerName, inboxDeliver, mm);
+                        JetStreamPushSyncSubscription ssub = new JetStreamPushSyncSubscription(dConn, dSubject, dQueue, this, stream, consumerName, inboxDeliver, mm);
                         ssub.SetPendingLimits(so.PendingMessageLimit, so.PendingByteLimit);
                         return ssub;
                     };
@@ -373,8 +383,7 @@ namespace NATS.Client.JetStream
                 {
                     asyncSubDelegate = (dConn, dSubject, dQueue) =>
                     {
-                        JetStreamPushAsyncSubscription asub = new JetStreamPushAsyncSubscription(dConn, dSubject,
-                            dQueue, this, stream, consumerName, inboxDeliver, mm);
+                        JetStreamPushAsyncSubscription asub = new JetStreamPushAsyncSubscription(dConn, dSubject, dQueue, this, stream, consumerName, inboxDeliver, mm);
                         asub.SetPendingLimits(so.PendingMessageLimit, so.PendingByteLimit);
                         return asub;
                     };
@@ -413,11 +422,11 @@ namespace NATS.Client.JetStream
                     ConsumerInfo ci = AddOrUpdateConsumerInternal(stream, serverCC);
                     if (sub is JetStreamAbstractSyncSubscription syncSub)
                     {
-                        syncSub.Consumer = ci.Name;
+                        syncSub.UpdateConsumer(ci.Name);
                     }
                     else if (sub is JetStreamPushAsyncSubscription asyncSub)
                     {
-                        asyncSub.Consumer = ci.Name;
+                        asyncSub.UpdateConsumer(ci.Name);
                     }
                 }
                 catch
@@ -481,12 +490,12 @@ namespace NATS.Client.JetStream
             return (IJetStreamPullSubscription) CreateSubscription(subject, null, null, false, null, options);
         }
 
-        // public IJetStreamPullSubscription PullSubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler, PullSubscribeOptions options)
-        // {
-        //     ValidateNotNull(options, "Pull Subscribe Options");
-        //     ValidateSubject(subject, IsSubjectRequired(options));
-        //     return (IJetStreamPullSubscription) CreateSubscription(subject, null, handler, false, null, options);
-        // }
+        public IJetStreamPullSubscription PullSubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler, PullSubscribeOptions options)
+        {
+            ValidateNotNull(options, "Pull Subscribe Options");
+            ValidateSubject(subject, IsSubjectRequired(options));
+            return (IJetStreamPullSubscription) CreateSubscription(subject, null, handler, false, null, options);
+        }
 
         public IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler, bool autoAck)
         {

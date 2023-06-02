@@ -19,23 +19,29 @@ namespace NATS.Client.JetStream
     public class JetStreamAbstractSyncSubscription : SyncSubscription
     {
         internal readonly MessageManager MessageManager;
+        internal string _consumer;
         
         // properties of IJetStreamSubscription
         public JetStream Context { get; }
         public string Stream { get; }
-        public string Consumer { get; internal set; }
+        public string Consumer => _consumer;
         public string DeliverSubject { get; }
-
+        
         internal JetStreamAbstractSyncSubscription(Connection conn, string subject, string queue,
             JetStream js, string stream, string consumer, string deliver, MessageManager messageManager)
             : base(conn, subject, queue)
         {
             Context = js;
             Stream = stream;
-            Consumer = consumer; // might be null, someone will call set on ConsumerName
+            _consumer = consumer; // might be null, JetStream will call UpdateConsumer later
             DeliverSubject = deliver;
             MessageManager = messageManager;
             MessageManager.Startup((IJetStreamSubscription)this);
+        }
+
+        internal virtual void UpdateConsumer(string consumer)
+        {
+            _consumer = consumer;
         }
 
         public ConsumerInfo GetConsumerInformation() => Context.LookupConsumerInfo(Stream, Consumer);
@@ -76,7 +82,7 @@ namespace NATS.Client.JetStream
             while (timeLeft > 0)
             {
                 Msg msg = NextMessageImpl(timeLeft);
-                if (!MessageManager.Manage(msg)) { // not managed means JS Message
+                if (msg != null && !MessageManager.Manage(msg)) { // not managed means JS Message
                     return msg;
                 }
                 timeLeft = timeout - (int)sw.ElapsedMilliseconds;

@@ -23,7 +23,21 @@ namespace NATS.Client.JetStream
 
         public Msg NextMessage(int timeoutMillis)
         {
-            return sub.NextMessage(timeoutMillis);
+            try
+            {
+                return sub.NextMessage(timeoutMillis);
+            }
+            catch (NATSBadSubscriptionException e)
+            {
+                // if we started to drain, we will eventually close the subscription
+                // which is why this exception happens.
+                // We do not want the user to get that.
+                if (drainTask == null)
+                {
+                    throw e;
+                }
+                throw new NATSTimeoutException();
+            }
         }
     }
 }

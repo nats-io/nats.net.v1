@@ -94,43 +94,38 @@ namespace IntegrationTests
             return new NATSServer(TimeSpan.Zero, port, args); 
         }
         
-        public static NATSServer CreateJetStreamFastAndVerify(int port, Action<Options> optionsModifier)
+        public static Action<Options> QuietOptionsModifier = options =>
         {
-            return CreateJetStreamFastAndVerify(port, null, optionsModifier);
-        }
-        
-        public static NATSServer CreateJetStreamFastAndVerify(int port, string args = null, Action<Options> optionsModifier = null)
+            options.ClosedEventHandler = ((s, a) => {});
+            options.ServerDiscoveredEventHandler = ((s, a) => { });
+            options.DisconnectedEventHandler = ((s, a) => { });
+            options.ReconnectedEventHandler = ((s, a) => { });
+            options.LameDuckModeEventHandler = ((s, a) => { });
+            options.AsyncErrorEventHandler = ((s, a) => { });
+            options.HeartbeatAlarmEventHandler = ((s, a) => { });
+            options.UnhandledStatusEventHandler = ((s, a) => { });
+            options.PullStatusWarningEventHandler = ((s, a) => { });
+            options.PullStatusErrorEventHandler = ((s, a) => { });
+            options.FlowControlProcessedEventHandler = ((s, a) => { });
+        };
+
+        public static NATSServer CreateJetStreamFastAndVerify(int port, string args = null)
         {
             args = args == null ? $"-js" : $"{args} -js";
-
-            return CreateFastAndVerify(port, args, optionsModifier);
+            return CreateFastAndVerify(port, args);
         }
 
         public static NATSServer CreateFastAndVerify(string args = null)
             => CreateFastAndVerify(Defaults.Port, args);
 
-        public static NATSServer CreateFastAndVerifyQuietHandlers()
-            => CreateFastAndVerify(Defaults.Port, null, opts =>
-            {
-                opts.ClosedEventHandler = (s, e) => { };
-                opts.ServerDiscoveredEventHandler = (s, e) => { };
-                opts.DisconnectedEventHandler = (s, e) => { };
-                opts.ReconnectedEventHandler = (s, e) => { };
-                opts.LameDuckModeEventHandler = (s, e) => { };
-                opts.AsyncErrorEventHandler = (s, e) => { };
-                opts.HeartbeatAlarmEventHandler = (s, e) => { };
-                opts.UnhandledStatusEventHandler = (s, e) => { };
-                opts.FlowControlProcessedEventHandler = (s, e) => { };
-            });
-
-        public static NATSServer CreateFastAndVerify(int port, string args = null, Action<Options> optionsModifier = null)
+        public static NATSServer CreateFastAndVerify(int port, string args = null)
         {
             var server = new NATSServer(TimeSpan.Zero, port, args);
             var cf = new ConnectionFactory();
 
             var opts = ConnectionFactory.GetDefaultOptions();
             opts.Url = $"nats://localhost:{port}";
-            optionsModifier?.Invoke(opts);
+            QuietOptionsModifier.Invoke(opts);
 
             var isVerifiedOk = false;
 

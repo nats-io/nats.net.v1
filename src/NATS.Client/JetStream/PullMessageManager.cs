@@ -4,9 +4,9 @@ namespace NATS.Client.JetStream
 {
     internal class PullMessageManager : MessageManager
     {
-        protected long pendingMessages;
-        protected long pendingBytes;
-        protected bool trackingBytes;
+        internal long pendingMessages;
+        internal long pendingBytes;
+        internal bool trackingBytes;
 
         public PullMessageManager(Connection conn, SubscribeOptions so, bool syncMode) : base(conn, so, syncMode)
         {
@@ -112,6 +112,7 @@ namespace NATS.Client.JetStream
                 }
                 // fall through
             }
+            Dbg.msg("UH", msg);
 
             // all others are errors
             Conn.Opts.PullStatusErrorEventHandlerOrDefault.Invoke(this, new StatusEventArgs(Conn, (Subscription)Sub, msg.Status));

@@ -52,59 +52,12 @@ namespace NATS.Client.JetStream
     public interface IJetStreamPushAsyncSubscription : IJetStreamSubscription, IAsyncSubscription
     {
     }
-    
+
     /// <summary>
     /// Pull Subscription on a JetStream context.
     /// </summary>
-    public interface IJetStreamPullSubscription : IJetStreamSubscription, ISyncSubscription
+    public interface IJetStreamPullSubscription : IJetStreamPullApi, IJetStreamSubscription, ISyncSubscription
     {
-        /// <summary>
-        /// Initiate pull with the specified batch size.
-        /// </summary>
-        /// <remarks>
-        /// Primitive API for ADVANCED use only, officially not supported. Prefer Fetch 
-        /// </remarks>
-        /// <param name="batchSize">the size of the batch</param>
-        void Pull(int batchSize);
-
-        /// <summary>
-        /// Initiate pull with the specified request options.
-        /// </summary>
-        /// <remarks>
-        /// Primitive API for ADVANCED use only, officially not supported. Prefer Fetch 
-        /// </remarks>
-        /// <param name="pullRequestOptions">the options object</param>
-        void Pull(PullRequestOptions pullRequestOptions);
-
-        /// <summary>
-        /// Do a pull in noWait mode with the specified batch size.
-        /// </summary>
-        /// <remarks>
-        /// Primitive API for ADVANCED use only, officially not supported. Prefer Fetch 
-        /// </remarks>
-        /// <param name="batchSize">the size of the batch</param>
-        void PullNoWait(int batchSize);
-
-        /// <summary>
-        /// Do a pull in noWait + expire mode with the specified batch size.
-        /// </summary>
-        /// <remarks>
-        /// Primitive API for ADVANCED use only, officially not supported. Prefer Fetch 
-        /// </remarks>
-        /// <param name="batchSize">the size of the batch</param>
-        /// <param name="expiresInMillis">how long from now the server should expire this request</param>
-        void PullNoWait(int batchSize, int expiresInMillis);
-
-        /// <summary>
-        /// Initiate pull for all messages available before expiration.
-        /// </summary>
-        /// <remarks>
-        /// Primitive API for ADVANCED use only, officially not supported. Prefer Fetch 
-        /// </remarks>
-        /// <param name="batchSize">the size of the batch</param>
-        /// <param name="expiresInMillis">how long from now the server should expire this request</param>
-        void PullExpiresIn(int batchSize, int expiresInMillis);
-
         /// <summary>
         /// Fetch a list of messages up to the batch size, waiting no longer than maxWait.
         /// </summary>
@@ -119,9 +72,13 @@ namespace NATS.Client.JetStream
     }
     
     /// <summary>
-    /// Pull Subscription on a JetStream context.
+    /// Async Pull Subscription on a JetStream context.
     /// </summary>
-    public interface IJetStreamPullAsyncSubscription : IJetStreamSubscription, IAsyncSubscription
+    public interface IJetStreamPullAsyncSubscription : IJetStreamPullApi, IJetStreamSubscription, IAsyncSubscription
+    {
+    }
+    
+    public interface IJetStreamPullApi
     {
         /// <summary>
         /// Initiate pull with the specified batch size.

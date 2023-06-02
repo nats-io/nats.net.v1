@@ -99,7 +99,7 @@ namespace IntegrationTests
 
         public void RunInServer(TestServerInfo testServerInfo, Action<IConnection> test)
         {
-            using (var s = NATSServer.CreateFastAndVerify(testServerInfo.Port))
+            using (var s = NATSServer.CreateFast(testServerInfo.Port))
             {
                 using (var c = OpenConnection(testServerInfo.Port))
                 {
@@ -108,26 +108,11 @@ namespace IntegrationTests
             }
         }
 
-        Action<Options> quietOptionsModifier = options =>
-        {
-            options.ClosedEventHandler = ((s, a) => {});
-            options.ServerDiscoveredEventHandler = ((s, a) => { });
-            options.DisconnectedEventHandler = ((s, a) => { });
-            options.ReconnectedEventHandler = ((s, a) => { });
-            options.LameDuckModeEventHandler = ((s, a) => { });
-            options.AsyncErrorEventHandler = ((s, a) => { });
-            options.HeartbeatAlarmEventHandler = ((s, a) => { });
-            options.UnhandledStatusEventHandler = ((s, a) => { });
-            options.PullStatusWarningEventHandler = ((s, a) => { });
-            options.PullStatusErrorEventHandler = ((s, a) => { });
-            options.FlowControlProcessedEventHandler = ((s, a) => { });
-        };
-
         public void RunInJsServer(TestServerInfo testServerInfo, Action<IConnection> test)
         {
-            using (var s = NATSServer.CreateJetStreamFastAndVerify(testServerInfo.Port))
+            using (var s = NATSServer.CreateJetStreamFast(testServerInfo.Port))
             {
-                using (var c = OpenConnection(testServerInfo.Port, quietOptionsModifier))
+                using (var c = OpenConnection(testServerInfo.Port, NATSServer.QuietOptionsModifier))
                 {
                     try
                     {
@@ -145,7 +130,7 @@ namespace IntegrationTests
         {
             using (var s = NATSServer.CreateJetStreamWithConfig(testServerInfo.Port, config))
             {
-                using (var c = OpenConnection(testServerInfo.Port, quietOptionsModifier))
+                using (var c = OpenConnection(testServerInfo.Port, NATSServer.QuietOptionsModifier))
                 {
                     try
                     {
@@ -161,11 +146,11 @@ namespace IntegrationTests
 
         public void RunInJsServer(TestServerInfo testServerInfo, Action<Options> optionsModifier, Action<IConnection> test)
         {
-            using (var s = NATSServer.CreateJetStreamFastAndVerify(testServerInfo.Port, optionsModifier))
+            using (var s = NATSServer.CreateJetStreamFast(testServerInfo.Port))
             {
                 Action<Options> combinedOptionsModifier = options =>
                 {
-                    quietOptionsModifier.Invoke(options);
+                    NATSServer.QuietOptionsModifier.Invoke(options);
                     optionsModifier.Invoke(options);
                 }; 
                 
@@ -216,8 +201,8 @@ namespace IntegrationTests
             using (var hub = NATSServer.CreateJetStreamFast(int.MinValue, $"--config {hubConfFile}"))
             using (var leaf = NATSServer.CreateJetStreamFast(int.MinValue, $"--config {leafConfFile}"))
             {
-                using (var cHub = OpenConnection(hubServerInfo.Port, quietOptionsModifier))
-                using (var cLeaf = OpenConnection(leafServerInfo.Port, quietOptionsModifier))
+                using (var cHub = OpenConnection(hubServerInfo.Port, NATSServer.QuietOptionsModifier))
+                using (var cLeaf = OpenConnection(leafServerInfo.Port, NATSServer.QuietOptionsModifier))
                 {
                     try
                     {
