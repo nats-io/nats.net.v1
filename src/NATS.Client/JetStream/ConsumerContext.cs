@@ -58,8 +58,8 @@ namespace NATS.Client.JetStream
 
             long expires = maxWaitMillis - JetStreamPullSubscription.ExpireAdjustment;
 
-            JetStreamPullSubscription sub = new SubscriptionMaker(this).makeSubscription(null);
-            sub.PullApiImpl.PullInternal(PullRequestOptions.Builder(1).WithExpiresIn(expires).Build(), false, null);
+            JetStreamPullSubscription sub = (JetStreamPullSubscription)new SubscriptionMaker(this).makeSubscription(null);
+            sub.pullImpl.Pull(false, null, PullRequestOptions.Builder(1).WithExpiresIn(expires).Build());
             return sub.NextMessage(maxWaitMillis);
         }
 
@@ -106,12 +106,12 @@ namespace NATS.Client.JetStream
             this.ctx = ctx;
         }
 
-        public JetStreamPullSubscription makeSubscription(EventHandler<MsgHandlerEventArgs> handler) {
+        public IJetStreamSubscription makeSubscription(EventHandler<MsgHandlerEventArgs> handler) {
             PullSubscribeOptions pso = PullSubscribeOptions.BindTo(ctx.streamContext.StreamName, ctx.ConsumerName);
             if (handler == null) {
                 return (JetStreamPullSubscription)ctx.js.PullSubscribe(null, pso);
             }
-            return (JetStreamPullSubscription)ctx.js.PullSubscribeAsync(null, handler, pso);
+            return (JetStreamPullAsyncSubscription)ctx.js.PullSubscribeAsync(null, handler, pso);
         }
     }
 }

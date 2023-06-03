@@ -358,12 +358,12 @@ namespace NATS.Client.JetStream
                 }
                 else
                 {
-                    // asyncSubDelegate = (dConn, dSubject, dQueue) =>
-                    // {
-                        // JetStreamPushAsyncSubscription asub = new JetStreamPushAsyncSubscription(dConn, dSubject, dQueue, this, stream, consumerName, inboxDeliver, mm);
-                        // asub.SetPendingLimits(so.PendingMessageLimit, so.PendingByteLimit);
-                        // return asub;
-                    // };
+                    asyncSubDelegate = (dConn, dSubject, dQueue) =>
+                    {
+                        JetStreamPullAsyncSubscription asub = new JetStreamPullAsyncSubscription(dConn, dSubject, this, stream, consumerName, inboxDeliver, mm);
+                        asub.SetPendingLimits(so.PendingMessageLimit, so.PendingByteLimit);
+                        return asub;
+                    };
                 }
             }
             else
@@ -424,7 +424,7 @@ namespace NATS.Client.JetStream
                     {
                         syncSub.UpdateConsumer(ci.Name);
                     }
-                    else if (sub is JetStreamPushAsyncSubscription asyncSub)
+                    else if (sub is JetStreamAbstractAsyncSubscription asyncSub)
                     {
                         asyncSub.UpdateConsumer(ci.Name);
                     }
@@ -490,11 +490,11 @@ namespace NATS.Client.JetStream
             return (IJetStreamPullSubscription) CreateSubscription(subject, null, null, false, null, options);
         }
 
-        public IJetStreamPullSubscription PullSubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler, PullSubscribeOptions options)
+        public IJetStreamPullAsyncSubscription PullSubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler, PullSubscribeOptions options)
         {
             ValidateNotNull(options, "Pull Subscribe Options");
             ValidateSubject(subject, IsSubjectRequired(options));
-            return (IJetStreamPullSubscription) CreateSubscription(subject, null, handler, false, null, options);
+            return (IJetStreamPullAsyncSubscription) CreateSubscription(subject, null, handler, false, null, options);
         }
 
         public IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler, bool autoAck)

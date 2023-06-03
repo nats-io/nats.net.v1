@@ -234,7 +234,7 @@ namespace NATS.Client.JetStream
         Task<PublishAck> PublishAsync(Msg message, PublishOptions publishOptions);
 
         /// <summary>
-        /// Creates a JetStream pull subscription.  Pull subscriptions fetch messages
+        /// Creates a JetStream pull subscription. Pull subscriptions fetch messages
         /// from the server in batches.
         /// </summary>
         /// <param name="subject">The subject on which to listen for messages.
@@ -243,6 +243,18 @@ namespace NATS.Client.JetStream
         /// <returns>An IJetStreamPullSubscription</returns>
         IJetStreamPullSubscription PullSubscribe(string subject, PullSubscribeOptions options);
 
+        /// <summary>
+        /// Creates a JetStream pull subscription with an eventHandler. Pull subscriptions fetch messages
+        /// from the server in batches.
+        /// </summary>
+        /// <param name="subject">The subject on which to listen for messages.
+        /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).</param>
+        /// <param name="handler">The <see cref="EventHandler{MsgHandlerEventArgs}"/> invoked when messages are received 
+        /// on the returned <see cref="IAsyncSubscription"/>.</param>
+        /// <param name="options">Pull Subscribe options for this subscription.</param>
+        /// <returns>An IJetStreamPullSubscription</returns>
+        IJetStreamPullAsyncSubscription PullSubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler, PullSubscribeOptions options);
+        
         /// <summary>
         /// Creates a push subscriber on the given <paramref name="subject"/>, and begins delivering
         /// messages to the given event handler.

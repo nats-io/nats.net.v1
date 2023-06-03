@@ -19,46 +19,48 @@ namespace NATS.Client.JetStream
 {
     public class JetStreamPullSubscription : JetStreamAbstractSyncSubscription, IJetStreamPullSubscription
     {
-        internal readonly JetStreamPullApiImpl PullApiImpl;
+        internal readonly JetStreamPullApiImpl pullImpl;
 
         internal JetStreamPullSubscription(Connection conn, string subject,
             JetStream js, string stream, string consumer, string deliver,
             MessageManager messageManager)
             : base(conn, subject, null, js, stream, consumer, deliver, messageManager)
         {
-            PullApiImpl = new JetStreamPullApiImpl(conn, js, messageManager, stream, subject, consumer);
+            pullImpl = new JetStreamPullApiImpl(conn, js, messageManager, stream, subject, consumer);
         }
 
         internal override void UpdateConsumer(string consumer)
         {
             base.UpdateConsumer(consumer);
-            PullApiImpl.UpdateConsumer(consumer);
+            pullImpl.UpdateConsumer(consumer);
         }
         
         public bool IsPullMode() => true;
 
         public void Pull(int batchSize)
         {
-            PullApiImpl.PullInternal(PullRequestOptions.Builder(batchSize).Build(), false, null);
+            pullImpl.Pull(true, null, PullRequestOptions.Builder(batchSize).Build());
         }
 
         public void Pull(PullRequestOptions pullRequestOptions) {
-            PullApiImpl.PullInternal(pullRequestOptions, false, null);
+            pullImpl.Pull(true, null, pullRequestOptions);
         }
 
         public void PullExpiresIn(int batchSize, int expiresInMillis)
         {
-            PullApiImpl.PullExpiresIn(batchSize, expiresInMillis);
+            Validator.ValidateDurationGtZeroRequired(expiresInMillis, "Expires In");
+            pullImpl.Pull(true, null, PullRequestOptions.Builder(batchSize).WithExpiresIn(expiresInMillis).Build());
         }
 
         public void PullNoWait(int batchSize)
         {
-            PullApiImpl.PullNoWait(batchSize);
+            pullImpl.Pull(true, null, PullRequestOptions.Builder(batchSize).WithNoWait().Build());
         }
 
         public void PullNoWait(int batchSize, int expiresInMillis)
         {
-            PullApiImpl.PullNoWait(batchSize, expiresInMillis);
+            Validator.ValidateDurationGtZeroRequired(expiresInMillis, "NoWait Expires In");
+            pullImpl.Pull(true, null, PullRequestOptions.Builder(batchSize).WithNoWait().WithExpiresIn(expiresInMillis).Build());
         }
 
         internal const int ExpireAdjustment = 10;
@@ -75,7 +77,7 @@ namespace NATS.Client.JetStream
 
             Duration expires = Duration.OfMillis(
                 maxWaitMillis > ExpireAdjustment ? maxWaitMillis - ExpireAdjustment : maxWaitMillis);
-            string pullSubject = PullApiImpl.PullInternal(PullRequestOptions.Builder(batchLeft).WithExpiresIn(expires).Build(), false, null);
+            string pullSubject = pullImpl.Pull(false, null, PullRequestOptions.Builder(batchLeft).WithExpiresIn(expires).Build());
 
             try
             {

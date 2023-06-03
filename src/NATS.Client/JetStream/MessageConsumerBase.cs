@@ -20,9 +20,10 @@ namespace NATS.Client.JetStream
     /// </summary>
     internal class MessageConsumerBase : IMessageConsumer
     {
-        protected JetStreamPullSubscription sub;
-        protected PullMessageManager pmm;
         protected readonly object subLock;
+        protected IJetStreamSubscription sub;
+        protected PullMessageManager pmm;
+        protected JetStreamPullApiImpl pullImpl;
         protected Task drainTask;
 
         public MessageConsumerBase()
@@ -30,10 +31,19 @@ namespace NATS.Client.JetStream
             subLock = new object();
         }
 
-        protected void InitSub(JetStreamPullSubscription sub)
+        protected void InitSub(IJetStreamSubscription sub)
         {
             this.sub = sub;
-            pmm = (PullMessageManager)sub.MessageManager;
+            if (sub is JetStreamPullSubscription syncSub)
+            {
+                pmm = (PullMessageManager)syncSub.MessageManager;
+                pullImpl = syncSub.pullImpl;
+            }
+            else if (sub is JetStreamPullAsyncSubscription asyncSub)
+            {
+                pmm = (PullMessageManager)asyncSub.MessageManager;
+                pullImpl = asyncSub.pullImpl;
+            }
         }
         
         public ConsumerInfo GetConsumerInformation()

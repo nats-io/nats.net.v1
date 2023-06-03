@@ -44,12 +44,11 @@ namespace NATS.Client.JetStream
             thresholdMessages = bm - rePullMessages;
             thresholdBytes = bb == 0 ? int.MinValue : bb - rePullBytes;
 
-            sub.PullApiImpl.PullInternal(PullRequestOptions.Builder(bm)
-                    .WithMaxBytes(bb)
-                    .WithExpiresIn(opts.ExpiresIn)
-                    .WithIdleHeartbeat(opts.IdleHeartbeat)
-                    .Build(),
-                false, this);
+            pullImpl.Pull(false, this, PullRequestOptions.Builder(bm)
+                .WithMaxBytes(bb)
+                .WithExpiresIn(opts.ExpiresIn)
+                .WithIdleHeartbeat(opts.IdleHeartbeat)
+                .Build());
         }
 
         public void Track(int pendingMessages, long pendingBytes, bool trackingBytes) {
@@ -57,7 +56,7 @@ namespace NATS.Client.JetStream
                 (pmm.pendingMessages <= thresholdMessages
                  || (pmm.trackingBytes && pmm.pendingBytes <= thresholdBytes)))
             {
-                sub.PullApiImpl.PullInternal(rePullPro, false, this);
+                pullImpl.Pull(false, this, rePullPro);
             }
         }
     }

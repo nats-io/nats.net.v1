@@ -32,7 +32,7 @@ namespace NATS.Client.JetStream
                 .WithExpiresIn(opts.ExpiresIn)
                 .WithIdleHeartbeat(opts.IdleHeartbeat)
                 .Build();
-            sub.PullApiImpl.PullInternal(pro, false, null);
+            ((JetStreamPullSubscription)sub).pullImpl.Pull(false, null, pro);
         }
 
         public Msg NextMessage()
@@ -52,10 +52,10 @@ namespace NATS.Client.JetStream
             // no waiting necessary
             if (timeLeftMillis < 1 | pmm.pendingMessages < 1 || (pmm.trackingBytes && pmm.pendingBytes < 1))
             {
-                return sub.NextMessage(1); // 1 is the shortest time I can give
+                return ((JetStreamPullSubscription)sub).NextMessage(1); // 1 is the shortest time I can give
             }
 
-            return sub.NextMessage(timeLeftMillis);
+            return ((JetStreamPullSubscription)sub).NextMessage(timeLeftMillis);
         }
     }
 }

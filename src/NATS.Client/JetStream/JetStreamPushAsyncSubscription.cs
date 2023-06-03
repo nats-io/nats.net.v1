@@ -37,12 +37,13 @@ namespace NATS.Client.JetStream
             messageManager.Startup(this);
         }
 
-        internal virtual void UpdateConsumer(string consumer)
+        internal void UpdateConsumer(string consumer)
         {
             _consumer = consumer;
         }
 
         public ConsumerInfo GetConsumerInformation() => Context.LookupConsumerInfo(Stream, Consumer);
+
         public bool IsPullMode() => false;
 
         public override void Unsubscribe()

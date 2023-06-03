@@ -45,10 +45,16 @@ namespace NATS.Client.JetStream
         bool IsPullMode();
     }
 
+    /// <summary>
+    /// Push Subscription on a JetStream context.
+    /// </summary>
     public interface IJetStreamPushSyncSubscription : IJetStreamSubscription, ISyncSubscription
     {
     }
 
+    /// <summary>
+    /// Async Push Subscription on a JetStream context.
+    /// </summary>
     public interface IJetStreamPushAsyncSubscription : IJetStreamSubscription, IAsyncSubscription
     {
     }
@@ -56,7 +62,7 @@ namespace NATS.Client.JetStream
     /// <summary>
     /// Pull Subscription on a JetStream context.
     /// </summary>
-    public interface IJetStreamPullSubscription : IJetStreamPullApi, IJetStreamSubscription, ISyncSubscription
+    public interface IJetStreamPullSubscription : IJetStreamPullApiSubscription, IJetStreamSubscription, ISyncSubscription
     {
         /// <summary>
         /// Fetch a list of messages up to the batch size, waiting no longer than maxWait.
@@ -74,11 +80,11 @@ namespace NATS.Client.JetStream
     /// <summary>
     /// Async Pull Subscription on a JetStream context.
     /// </summary>
-    public interface IJetStreamPullAsyncSubscription : IJetStreamPullApi, IJetStreamSubscription, IAsyncSubscription
+    public interface IJetStreamPullAsyncSubscription : IJetStreamPullApiSubscription, IJetStreamSubscription, IAsyncSubscription
     {
     }
     
-    public interface IJetStreamPullApi
+    public interface IJetStreamPullApiSubscription
     {
         /// <summary>
         /// Initiate pull with the specified batch size.

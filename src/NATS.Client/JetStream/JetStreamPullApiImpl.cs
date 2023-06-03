@@ -24,43 +24,18 @@ namespace NATS.Client.JetStream
             _consumer = consumer;
         }
 
-        internal virtual void UpdateConsumer(string consumer)
+        internal void UpdateConsumer(string consumer)
         {
             _consumer = consumer;
         }
         
-        internal string PullInternal(PullRequestOptions pullRequestOptions, bool raiseStatusWarnings, ITrackPendingListener trackPendingListener) {
+        internal string Pull(bool raiseStatusWarnings, ITrackPendingListener trackPendingListener,
+            PullRequestOptions pullRequestOptions) {
             string publishSubject = _js.PrependPrefix(string.Format(JetStreamConstants.JsapiConsumerMsgNext, _stream, _consumer));
             string pullSubject = _subject.Replace("*", _pullSubjectIdHolder.Increment().ToString());
             _mm.StartPullRequest(pullSubject, pullRequestOptions, raiseStatusWarnings, trackPendingListener);	
             _conn.Publish(publishSubject, pullSubject, pullRequestOptions.Serialize());
             return pullSubject;
-        }
-        
-        internal void Pull(int batchSize)
-        {
-            PullInternal(PullRequestOptions.Builder(batchSize).Build(), false, null);
-        }
-
-        internal void Pull(PullRequestOptions pullRequestOptions) {
-            PullInternal(pullRequestOptions, false, null);
-        }
-
-        internal void PullNoWait(int batchSize)
-        {
-            PullInternal(PullRequestOptions.Builder(batchSize).WithNoWait().Build(), false, null);
-        }
-
-        internal void PullNoWait(int batchSize, int expiresInMillis)
-        {
-            Validator.ValidateDurationGtZeroRequired(expiresInMillis, "NoWait Expires In");
-            PullInternal(PullRequestOptions.Builder(batchSize).WithNoWait().WithExpiresIn(expiresInMillis).Build(), false, null);
-        }
-
-        internal void PullExpiresIn(int batchSize, int expiresInMillis)
-        {
-            Validator.ValidateDurationGtZeroRequired(expiresInMillis, "Expires In");
-            PullInternal(PullRequestOptions.Builder(batchSize).WithExpiresIn(expiresInMillis).Build(), false, null);
         }
     }
 }

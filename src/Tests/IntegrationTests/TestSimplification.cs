@@ -315,7 +315,6 @@ namespace IntegrationTests
                 EventHandler<MsgHandlerEventArgs> handler = (s, e) => {
                     e.Message.Ack();
                     latch.Signal();
-                    Dbg.msg("PMM-MAN", e.Message, $"{latch.CurrentCount}");
                 };
     
                 IMessageConsumer consumer = consumerContext.consume(handler);
@@ -348,7 +347,7 @@ namespace IntegrationTests
             });
         }
     
-        [Fact(Skip = "NOT READY")]
+        [Fact]
         public void TestCoverage() {
             Context.RunInJsServer(c => {
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
@@ -377,10 +376,9 @@ namespace IntegrationTests
     
                 closeConsumer(cctx1.consume(), Name(1), true);
                 closeConsumer(cctx2.consume(ConsumeOptions.DefaultConsumeOptions), Name(2), true);
-
                 
-                // closeConsumer(cctx3.consume((s, e) => {}), Name(3), true);
-                // closeConsumer(cctx4.consume((s, e) => {}, ConsumeOptions.DefaultConsumeOptions), Name(4), true);
+                closeConsumer(cctx3.consume((s, e) => {}), Name(3), true);
+                closeConsumer(cctx4.consume((s, e) => {}, ConsumeOptions.DefaultConsumeOptions), Name(4), true);
                 
                 closeConsumer(cctx5.FetchMessages(1), Name(5), false);
                 closeConsumer(cctx6.FetchBytes(1000), Name(6), false);

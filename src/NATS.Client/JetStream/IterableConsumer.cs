@@ -25,7 +25,7 @@ namespace NATS.Client.JetStream
         {
             try
             {
-                return sub.NextMessage(timeoutMillis);
+                return ((JetStreamPullSubscription)sub).NextMessage(timeoutMillis);
             }
             catch (NATSBadSubscriptionException e)
             {
