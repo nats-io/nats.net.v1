@@ -56,7 +56,6 @@ namespace IntegrationTests
                 {
                     received++;
                     args.Message.Ack();
-                    Dbg.msg("PMM-MAN", args.Message, $"{latch.CurrentCount}");
                     latch.Signal();
                 }
 

@@ -122,6 +122,17 @@ namespace NATS.Client
         }
 
         /// <summary>
+        /// Retrieves the default set of client options.
+        /// </summary>
+        /// <returns>The default <see cref="Options"/> object for the NATS client.</returns>
+        public static Options GetDefaultOptions(string server)
+        {
+            Options opts = new Options();
+            opts.Url = server;
+            return opts;
+        }
+
+        /// <summary>
         /// Attempt to connect to the NATS server using TLS referenced by <paramref name="url"/>.
         /// </summary>
         /// <remarks>

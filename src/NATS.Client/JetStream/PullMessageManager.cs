@@ -4,9 +4,11 @@ namespace NATS.Client.JetStream
 {
     internal class PullMessageManager : MessageManager
     {
-        internal long pendingMessages;
+        internal int pendingMessages;
         internal long pendingBytes;
         internal bool trackingBytes;
+        internal bool raiseStatusWarnings;
+        internal ITrackPendingListener trackPendingListener;
 
         public PullMessageManager(Connection conn, SubscribeOptions so, bool syncMode) : base(conn, so, syncMode)
         {
@@ -25,6 +27,8 @@ namespace NATS.Client.JetStream
         {
             lock (StateChangeLock)
             {
+                this.raiseStatusWarnings = raiseStatusWarnings;
+                this.trackPendingListener = trackPendingListener;
                 pendingMessages += pro.BatchSize;
                 pendingBytes += pro.MaxBytes;
                 trackingBytes = (pendingBytes > 0);
@@ -41,7 +45,7 @@ namespace NATS.Client.JetStream
             }
         }
 
-        private void TrackPending(long m, long b)
+        private void TrackPending(int m, long b)
         {
             lock (StateChangeLock)
             {
@@ -49,13 +53,16 @@ namespace NATS.Client.JetStream
                 pendingBytes -= b;
                 if (pendingMessages < 1 || (trackingBytes && pendingBytes < 1))
                 {
-                    pendingMessages = 0L;
+                    pendingMessages = 0;
                     pendingBytes = 0L;
                     trackingBytes = false;
                     if (Hb)
                     {
                         ShutdownHeartbeatTimer();
                     }
+                }
+                if (trackPendingListener != null) {
+                    trackPendingListener.Track(pendingMessages, pendingBytes, trackingBytes);
                 }
             }
         }
@@ -79,8 +86,8 @@ namespace NATS.Client.JetStream
             }
 
             string s = msg.Header[JetStreamConstants.NatsPendingMessages];
-            long m;
-            if (s != null && long.TryParse(s, out m))
+            int m;
+            if (s != null && int.TryParse(s, out m))
             {
                 long b;
                 s = msg.Header[JetStreamConstants.NatsPendingBytes];
@@ -107,12 +114,16 @@ namespace NATS.Client.JetStream
             if (msg.Status.Code == NatsConstants.ConflictCode) {
                 // sometimes just a warning
                 if (msg.Status.Message.Contains("Exceed")) {
-                    Conn.Opts.PullStatusWarningEventHandlerOrDefault.Invoke(this, new StatusEventArgs(Conn, (Subscription)Sub, msg.Status));
+                    if (raiseStatusWarnings)
+                    {
+                        Conn.Opts.PullStatusWarningEventHandlerOrDefault.Invoke(this,
+                            new StatusEventArgs(Conn, (Subscription)Sub, msg.Status));
+                    }
+
                     return true;
                 }
                 // fall through
             }
-            Dbg.msg("UH", msg);
 
             // all others are errors
             Conn.Opts.PullStatusErrorEventHandlerOrDefault.Invoke(this, new StatusEventArgs(Conn, (Subscription)Sub, msg.Status));
