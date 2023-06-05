@@ -1,4 +1,4 @@
-﻿// Copyright 2022 The NATS Authors
+﻿// Copyright 2022-2023 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -28,9 +28,9 @@ using static UnitTests.TestBase;
 namespace IntegrationTestsInternal
 {
     [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
-    public class TestService : TestSuite<ServiceSuiteContext>
+    public class TestService : TestSuite<AutoServerSuiteContext>
     {
-        public TestService(ServiceSuiteContext context) : base(context) {}
+        public TestService(AutoServerSuiteContext context) : base(context) {}
         
         const string ServiceName1 = "Service1";
         const string ServiceName2 = "Service2";
@@ -45,11 +45,12 @@ namespace IntegrationTestsInternal
         [Fact]
         public void TestServiceWorkflow()
         {
-            using (var s = NATSServer.CreateFastAndVerify(Context.Server1.Port))
+            TestServerInfo server = Context.AutoServer();
+            using (var s = NATSServer.CreateFastAndVerify(server.Port))
             {
-                using (IConnection serviceNc1 = Context.OpenConnection(Context.Server1.Port))
-                using (IConnection serviceNc2 = Context.OpenConnection(Context.Server1.Port))
-                using (IConnection clientNc = Context.OpenConnection(Context.Server1.Port))
+                using (IConnection serviceNc1 = Context.OpenConnection(server.Port))
+                using (IConnection serviceNc2 = Context.OpenConnection(server.Port))
+                using (IConnection clientNc = Context.OpenConnection(server.Port))
                 {
                     Endpoint endEcho = Endpoint.Builder()
                         .WithName(EchoEndpointName)

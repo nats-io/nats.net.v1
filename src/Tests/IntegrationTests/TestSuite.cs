@@ -1,4 +1,4 @@
-﻿// Copyright 2023 The NATS Authors
+﻿// Copyright 2015-2023 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -57,7 +57,7 @@ namespace IntegrationTests
         public const int ConnectionIpV6Suite = 11519; //1pc
         public const int KvSuite = 11520; //3pc
 
-        public static InterlockedInt AutoPort = new InterlockedInt(11523);
+        public static InterlockedInt AutoPort = new InterlockedInt(11550);
     }
 
     public abstract class SuiteContext
@@ -409,7 +409,6 @@ namespace IntegrationTests
     public class JetStreamPullSuiteContext : OneServerSuiteContext {}
     public class ObjectStoreSuiteContext : OneServerSuiteContext {}
     public class MirrorSourceSuiteContext : OneServerSuiteContext {}
-    public class ServiceSuiteContext : OneServerSuiteContext {}
     public class SimplificationSuiteContext : OneServerSuiteContext {}
 
     public class KeyValueSuiteContext : SuiteContext
@@ -438,6 +437,15 @@ namespace IntegrationTests
         public void RunInJsServer(Action<IConnection> test) => base.RunInJsServer(Server1, test);
         public void RunInServer(Action<IConnection> test) => base.RunInServer(Server1, test);
         public void RunInJsServer(Action<Options> optionsModifier, Action<IConnection> test) => base.RunInJsServer(Server1, optionsModifier, test);
+    }
+    
+    public class AutoServerSuiteContext : SuiteContext
+    {
+        public TestServerInfo AutoServer() => new TestServerInfo(TestSeedPorts.AutoPort.Increment());
+        
+        public void RunInJsServer(Action<IConnection> test) => base.RunInJsServer(AutoServer(), test);
+        public void RunInServer(Action<IConnection> test) => base.RunInServer(AutoServer(), test);
+        public void RunInJsServer(Action<Options> optionsModifier, Action<IConnection> test) => base.RunInJsServer(AutoServer(), optionsModifier, test);
     }
 
     public sealed class SkipPlatformsWithoutSignals : FactAttribute
