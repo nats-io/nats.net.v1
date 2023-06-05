@@ -13,73 +13,78 @@ using static UnitTests.TestBase;
 
 namespace IntegrationTests
 {
-    public class TestSimplification : TestSuite<SimplificationSuiteContext>
+    public class TestSimplification : TestSuite<OneServerSuiteContext>
     {
         private readonly ITestOutputHelper output;
 
-        public TestSimplification(ITestOutputHelper output, SimplificationSuiteContext context) : base(context)
+        public TestSimplification(ITestOutputHelper output, OneServerSuiteContext context) : base(context)
         {
             this.output = output;
             Console.SetOut(new ConsoleWriter(output));
         }
         
         [Fact]
-        public void TestStreamContext() {
+        public void TestStreamContext()
+        {
+            string stream = Stream(Nuid.NextGlobal());
+            string subject = Subject(Nuid.NextGlobal());
+            
             Context.RunInJsServer(c => {
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
                 IJetStream js = c.CreateJetStreamContext();
     
-                Assert.Throws<NATSJetStreamException>(() => c.CreateStreamContext(STREAM));
-                Assert.Throws<NATSJetStreamException>(() => c.CreateStreamContext(STREAM, JetStreamOptions.DefaultJsOptions));
-                Assert.Throws<NATSJetStreamException>(() => js.CreateStreamContext(STREAM));
+                Assert.Throws<NATSJetStreamException>(() => c.CreateStreamContext(stream));
+                Assert.Throws<NATSJetStreamException>(() => c.CreateStreamContext(stream, JetStreamOptions.DefaultJsOptions));
+                Assert.Throws<NATSJetStreamException>(() => js.CreateStreamContext(stream));
     
-                CreateMemoryStream(jsm, STREAM, SUBJECT);
-                IStreamContext streamContext = c.CreateStreamContext(STREAM);
-                Assert.Equal(STREAM, streamContext.StreamName);
-                _TestStreamContext(streamContext, js);
+                CreateMemoryStream(jsm, stream, subject);
+                IStreamContext streamContext = c.CreateStreamContext(stream);
+                Assert.Equal(stream, streamContext.StreamName);
+                _TestStreamContext(stream, subject, streamContext, js);
 
-                jsm.DeleteStream(STREAM);
+                jsm.DeleteStream(stream);
                 
-                CreateMemoryStream(jsm, STREAM, SUBJECT);
-                streamContext = js.CreateStreamContext(STREAM);
-                Assert.Equal(STREAM, streamContext.StreamName);
-                _TestStreamContext(streamContext, js);
+                CreateMemoryStream(jsm, stream, subject);
+                streamContext = js.CreateStreamContext(stream);
+                Assert.Equal(stream, streamContext.StreamName);
+                _TestStreamContext(stream, subject, streamContext, js);
 
             });
         }
 
-        private static void _TestStreamContext(IStreamContext streamContext, IJetStream js)
+        private static void _TestStreamContext(string expectedStreamName, string subject, IStreamContext streamContext, IJetStream js)
         {
-            Assert.Throws<NATSJetStreamException>(() => streamContext.CreateConsumerContext(DURABLE));
-            Assert.Throws<NATSJetStreamException>(() => streamContext.DeleteConsumer(DURABLE));
+            Assert.Throws<NATSJetStreamException>(() => streamContext.CreateConsumerContext(Nuid.NextGlobal()));
+            Assert.Throws<NATSJetStreamException>(() => streamContext.DeleteConsumer(Nuid.NextGlobal()));
 
-            ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithDurable(DURABLE).Build();
+            string durable = Nuid.NextGlobal();
+            ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithDurable(durable).Build();
             IConsumerContext consumerContext = streamContext.AddConsumer(cc);
             ConsumerInfo ci = consumerContext.GetConsumerInfo();
-            Assert.Equal(STREAM, ci.Stream);
-            Assert.Equal(DURABLE, ci.Name);
+            Assert.Equal(expectedStreamName, ci.Stream);
+            Assert.Equal(durable, ci.Name);
 
-            ci = streamContext.GetConsumerInfo(DURABLE);
+            ci = streamContext.GetConsumerInfo(durable);
             Assert.NotNull(ci);
-            Assert.Equal(STREAM, ci.Stream);
-            Assert.Equal(DURABLE, ci.Name);
+            Assert.Equal(expectedStreamName, ci.Stream);
+            Assert.Equal(durable, ci.Name);
 
             Assert.Equal(1, streamContext.GetConsumerNames().Count);
 
             Assert.Equal(1, streamContext.GetConsumers().Count);
-            Assert.NotNull(streamContext.CreateConsumerContext(DURABLE));
-            streamContext.DeleteConsumer(DURABLE);
+            Assert.NotNull(streamContext.CreateConsumerContext(durable));
+            streamContext.DeleteConsumer(durable);
 
-            Assert.Throws<NATSJetStreamException>(() => streamContext.CreateConsumerContext(DURABLE));
-            Assert.Throws<NATSJetStreamException>(() => streamContext.DeleteConsumer(DURABLE));
+            Assert.Throws<NATSJetStreamException>(() => streamContext.CreateConsumerContext(durable));
+            Assert.Throws<NATSJetStreamException>(() => streamContext.DeleteConsumer(durable));
 
             // coverage
-            js.Publish(SUBJECT, Encoding.UTF8.GetBytes("one"));
-            js.Publish(SUBJECT, Encoding.UTF8.GetBytes("two"));
-            js.Publish(SUBJECT, Encoding.UTF8.GetBytes("three"));
-            js.Publish(SUBJECT, Encoding.UTF8.GetBytes("four"));
-            js.Publish(SUBJECT, Encoding.UTF8.GetBytes("five"));
-            js.Publish(SUBJECT, Encoding.UTF8.GetBytes("six"));
+            js.Publish(subject, Encoding.UTF8.GetBytes("one"));
+            js.Publish(subject, Encoding.UTF8.GetBytes("two"));
+            js.Publish(subject, Encoding.UTF8.GetBytes("three"));
+            js.Publish(subject, Encoding.UTF8.GetBytes("four"));
+            js.Publish(subject, Encoding.UTF8.GetBytes("five"));
+            js.Publish(subject, Encoding.UTF8.GetBytes("six"));
 
             Assert.True(streamContext.DeleteMessage(3));
             Assert.True(streamContext.DeleteMessage(4, true));
@@ -87,13 +92,13 @@ namespace IntegrationTests
             MessageInfo mi = streamContext.GetMessage(1);
             Assert.Equal(1U, mi.Sequence);
 
-            mi = streamContext.GetFirstMessage(SUBJECT);
+            mi = streamContext.GetFirstMessage(subject);
             Assert.Equal(1U, mi.Sequence);
 
-            mi = streamContext.GetLastMessage(SUBJECT);
+            mi = streamContext.GetLastMessage(subject);
             Assert.Equal(6U, mi.Sequence);
 
-            mi = streamContext.GetNextMessage(3, SUBJECT);
+            mi = streamContext.GetNextMessage(3, subject);
             Assert.Equal(5U, mi.Sequence);
 
             Assert.NotNull(streamContext.GetStreamInfo());
@@ -102,35 +107,37 @@ namespace IntegrationTests
             streamContext.Purge(PurgeOptions.Builder().WithSequence(5).Build());
             Assert.Throws<NATSJetStreamException>(() => streamContext.GetMessage(1));
 
-            mi = streamContext.GetFirstMessage(SUBJECT);
+            mi = streamContext.GetFirstMessage(subject);
             Assert.Equal(5U, mi.Sequence);
 
             streamContext.Purge();
-            Assert.Throws<NATSJetStreamException>(() => streamContext.GetFirstMessage(SUBJECT));
+            Assert.Throws<NATSJetStreamException>(() => streamContext.GetFirstMessage(subject));
         }
 
         [Fact]
         public void TestFetch() {
+            string stream = Stream(Nuid.NextGlobal());
+            string subject = Subject(Nuid.NextGlobal());
             Context.RunInJsServer(c => {
-                CreateDefaultTestStream(c);
+                CreateMemoryStream(c, stream, subject);
                 IJetStream js = c.CreateJetStreamContext();
                 for (int x = 1; x <= 20; x++) {
-                    js.Publish(SUBJECT, Encoding.UTF8.GetBytes("test-fetch-msg-" + x));
+                    js.Publish(subject, Encoding.UTF8.GetBytes("test-fetch-msg-" + x));
                 }
     
                 // 1. Different fetch sizes demonstrate expiration behavior
     
                 // 1A. equal number of messages than the fetch size
-                _testFetch("1A", c, 20, 0, 20);
+                _testFetch(stream, "1A", c, 20, 0, 20);
     
                 // 1B. more messages than the fetch size
-                _testFetch("1B", c, 10, 0, 10);
+                _testFetch(stream, "1B", c, 10, 0, 10);
     
                 // 1C. fewer messages than the fetch size
-                _testFetch("1C", c, 40, 0, 40);
+                _testFetch(stream, "1C", c, 40, 0, 40);
     
                 // 1D. simple-consumer-40msgs was created in 1C and has no messages available
-                _testFetch("1D", c, 40, 0, 40);
+                _testFetch(stream, "1D", c, 40, 0, 40);
     
                 // don't test bytes before 2.9.1
                 if (c.ServerInfo.IsOlderThanVersion("2.9.1")) {
@@ -138,20 +145,20 @@ namespace IntegrationTests
                 }
     
                 // 2. Different max bytes sizes demonstrate expiration behavior
-                //    - each test message is approximately 100 bytes
+                //    - each test message is approximately 150 bytes
     
                 // 2A. max bytes is reached before message count
-                _testFetch("2A", c, 0, 750, 20);
+                _testFetch(stream, "2A", c, 0, 750, 20);
     
                 // 2B. fetch size is reached before byte count
-                _testFetch("2B", c, 10, 1500, 10);
+                _testFetch(stream, "2B", c, 10, 1600, 10);
     
                 // 2C. fewer bytes than the byte count
-                _testFetch("2C", c, 0, 3000, 40);
+                _testFetch(stream, "2C", c, 0, 3500, 40);
             });
         }
     
-        private static void _testFetch(string label, IConnection c, int maxMessages, int maxBytes, int testAmount) {
+        private static void _testFetch(string streamName, string label, IConnection c, int maxMessages, int maxBytes, int testAmount) {
             IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
             IJetStream js = c.CreateJetStreamContext();
 
@@ -159,10 +166,10 @@ namespace IntegrationTests
     
             // Pre define a consumer
             ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithDurable(name).Build();
-            ConsumerInfo ci = jsm.AddOrUpdateConsumer(STREAM, cc);
+            ConsumerInfo ci = jsm.AddOrUpdateConsumer(streamName, cc);
     
             // Consumer[Context]
-            IConsumerContext consumerContext = js.CreateConsumerContext(STREAM, name);
+            IConsumerContext consumerContext = js.CreateConsumerContext(streamName, name);
     
             // Custom consume options
             FetchConsumeOptions.FetchConsumeOptionsBuilder builder = FetchConsumeOptions.Builder().WithExpiresIn(2000);
@@ -182,10 +189,13 @@ namespace IntegrationTests
             // create the consumer then use it
             IFetchConsumer consumer = consumerContext.Fetch(fetchConsumeOptions);
             int rcvd = 0;
+            long bc = 0;
             try
             {
                 Msg msg = consumer.NextMessage();
-                while (true) {
+                while (true)
+                {
+                    bc += msg.ConsumeByteCount;
                     ++rcvd;
                     msg.Ack();
                     msg = consumer.NextMessage();
@@ -216,28 +226,30 @@ namespace IntegrationTests
     
         private static string generateConsumerName(int maxMessages, int maxBytes) {
             return maxBytes == 0
-                ? NAME + "-" + maxMessages + "msgs"
-                : NAME + "-" + maxBytes + "bytes-" + maxMessages + "msgs";
+                ? Name(Nuid.NextGlobal()) + "-" + maxMessages + "msgs"
+                : Name(Nuid.NextGlobal()) + "-" + maxBytes + "bytes-" + maxMessages + "msgs";
         }
     
         [Fact]
-        public void TestIterableConsumer() {
+        public void TestIterableConsumer()
+        {
+            string streamName = Stream(Nuid.NextGlobal());
+            string subject = Subject(Nuid.NextGlobal());
+            string durable = Nuid.NextGlobal();
+
             Context.RunInJsServer(c => {
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
     
-                CreateDefaultTestStream(jsm);
+                CreateMemoryStream(jsm, streamName, subject);
+
                 IJetStream js = c.CreateJetStreamContext();
         
-                // for (int x = 1; x <= 5000; x++) {
-                    // js.Publish(SUBJECT, Encoding.UTF8.GetBytes("iterable-" + x));
-                // }
-
                 // Pre define a consumer
-                ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithDurable(DURABLE).Build();
-                jsm.AddOrUpdateConsumer(STREAM, cc);
+                ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithDurable(durable).Build();
+                jsm.AddOrUpdateConsumer(streamName, cc);
 
                 // Consumer[Context]
-                IConsumerContext consumerContext = js.CreateConsumerContext(STREAM, DURABLE);
+                IConsumerContext consumerContext = js.CreateConsumerContext(streamName, durable);
     
                 int stopCount = 500;
     
@@ -278,7 +290,7 @@ namespace IntegrationTests
                 });
                 consumeThread.Start();
 
-                Publisher publisher = new Publisher(js, SUBJECT, 1);
+                Publisher publisher = new Publisher(js, subject, 1);
                 Thread pubThread = new Thread(publisher.Run);
                 pubThread.Start();
     
@@ -296,20 +308,25 @@ namespace IntegrationTests
         }
     
         [Fact]
-        public void TestConsumeWithHandler() {
+        public void TestConsumeWithHandler()
+        {
+            string streamName = Stream(Nuid.NextGlobal());
+            string subject = Subject(Nuid.NextGlobal());
+            string durable = Nuid.NextGlobal();
+
             Context.RunInJsServer(c => {
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
     
-                CreateDefaultTestStream(jsm);
+                CreateMemoryStream(jsm, streamName, subject);
                 IJetStream js = c.CreateJetStreamContext();
-                JsPublish(js, SUBJECT, 2500);
+                JsPublish(js, subject, 2500);
     
                 // Pre define a consumer
-                ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithDurable(NAME).Build();
-                jsm.AddOrUpdateConsumer(STREAM, cc);
+                ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithDurable(durable).Build();
+                jsm.AddOrUpdateConsumer(streamName, cc);
     
                 // Consumer[Context]
-                IConsumerContext consumerContext = js.CreateConsumerContext(STREAM, NAME);
+                IConsumerContext consumerContext = js.CreateConsumerContext(streamName, durable);
     
                 CountdownEvent latch = new CountdownEvent(500);
                 EventHandler<MsgHandlerEventArgs> handler = (s, e) => {
@@ -326,19 +343,23 @@ namespace IntegrationTests
     
         [Fact]
         public void TestNext() {
+            string streamName = Stream(Nuid.NextGlobal());
+            string subject = Subject(Nuid.NextGlobal());
+            string durable = Nuid.NextGlobal();
+
             Context.RunInJsServer(c => {
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
     
-                CreateDefaultTestStream(jsm);
+                CreateMemoryStream(jsm, streamName, subject);
                 IJetStream js = c.CreateJetStreamContext();
-                JsPublish(js, SUBJECT, 2);
+                JsPublish(js, subject, 2);
     
                 // Pre define a consumer
-                ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithDurable(NAME).Build();
-                jsm.AddOrUpdateConsumer(STREAM, cc);
+                ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithDurable(durable).Build();
+                jsm.AddOrUpdateConsumer(streamName, cc);
     
                 // Consumer[Context]
-                IConsumerContext consumerContext = js.CreateConsumerContext(STREAM, NAME);
+                IConsumerContext consumerContext = js.CreateConsumerContext(streamName, durable);
     
                 Assert.Throws<ArgumentException>(() => consumerContext.Next(1));
                 Assert.NotNull(consumerContext.Next(1000));
@@ -349,39 +370,48 @@ namespace IntegrationTests
     
         [Fact]
         public void TestCoverage() {
+            string stream = Stream(Nuid.NextGlobal());
+            string subject = Stream(Nuid.NextGlobal());
+            string durable1 = Nuid.NextGlobal();
+            string durable2 = Nuid.NextGlobal();
+            string durable3 = Nuid.NextGlobal();
+            string durable4 = Nuid.NextGlobal();
+            string durable5 = Nuid.NextGlobal();
+            string durable6 = Nuid.NextGlobal();
+
             Context.RunInJsServer(c => {
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
     
-                CreateDefaultTestStream(jsm);
+                CreateMemoryStream(jsm, stream, subject);
                 IJetStream js = c.CreateJetStreamContext();
     
                 // Pre define a consumer
-                jsm.AddOrUpdateConsumer(STREAM, ConsumerConfiguration.Builder().WithDurable(Name(1)).Build());
-                jsm.AddOrUpdateConsumer(STREAM, ConsumerConfiguration.Builder().WithDurable(Name(2)).Build());
-                jsm.AddOrUpdateConsumer(STREAM, ConsumerConfiguration.Builder().WithDurable(Name(3)).Build());
-                jsm.AddOrUpdateConsumer(STREAM, ConsumerConfiguration.Builder().WithDurable(Name(4)).Build());
+                jsm.AddOrUpdateConsumer(stream, ConsumerConfiguration.Builder().WithDurable(durable1).Build());
+                jsm.AddOrUpdateConsumer(stream, ConsumerConfiguration.Builder().WithDurable(durable2).Build());
+                jsm.AddOrUpdateConsumer(stream, ConsumerConfiguration.Builder().WithDurable(durable3).Build());
+                jsm.AddOrUpdateConsumer(stream, ConsumerConfiguration.Builder().WithDurable(durable4).Build());
     
                 // Stream[Context]
-                IStreamContext sctx1 = c.CreateStreamContext(STREAM);
-                c.CreateStreamContext(STREAM, JetStreamOptions.DefaultJsOptions);
-                js.CreateStreamContext(STREAM);
+                IStreamContext sctx1 = c.CreateStreamContext(stream);
+                c.CreateStreamContext(stream, JetStreamOptions.DefaultJsOptions);
+                js.CreateStreamContext(stream);
     
                 // Consumer[Context]
-                IConsumerContext cctx1 = c.CreateConsumerContext(STREAM, Name(1));
-                IConsumerContext cctx2 = c.CreateConsumerContext(STREAM, Name(2), JetStreamOptions.DefaultJsOptions);
-                IConsumerContext cctx3 = js.CreateConsumerContext(STREAM, Name(3));
-                IConsumerContext cctx4 = sctx1.CreateConsumerContext(Name(4));
-                IConsumerContext cctx5 = sctx1.AddConsumer(ConsumerConfiguration.Builder().WithDurable(Name(5)).Build());
-                IConsumerContext cctx6 = sctx1.AddConsumer(ConsumerConfiguration.Builder().WithDurable(Name(6)).Build());
+                IConsumerContext cctx1 = c.CreateConsumerContext(stream, durable1);
+                IConsumerContext cctx2 = c.CreateConsumerContext(stream, durable2, JetStreamOptions.DefaultJsOptions);
+                IConsumerContext cctx3 = js.CreateConsumerContext(stream, durable3);
+                IConsumerContext cctx4 = sctx1.CreateConsumerContext(durable4);
+                IConsumerContext cctx5 = sctx1.AddConsumer(ConsumerConfiguration.Builder().WithDurable(durable5).Build());
+                IConsumerContext cctx6 = sctx1.AddConsumer(ConsumerConfiguration.Builder().WithDurable(durable6).Build());
     
-                closeConsumer(cctx1.consume(), Name(1), true);
-                closeConsumer(cctx2.consume(ConsumeOptions.DefaultConsumeOptions), Name(2), true);
+                closeConsumer(cctx1.consume(), durable1, true);
+                closeConsumer(cctx2.consume(ConsumeOptions.DefaultConsumeOptions), durable2, true);
                 
-                closeConsumer(cctx3.consume((s, e) => {}), Name(3), true);
-                closeConsumer(cctx4.consume((s, e) => {}, ConsumeOptions.DefaultConsumeOptions), Name(4), true);
+                closeConsumer(cctx3.consume((s, e) => {}), durable3, true);
+                closeConsumer(cctx4.consume((s, e) => {}, ConsumeOptions.DefaultConsumeOptions), durable4, true);
                 
-                closeConsumer(cctx5.FetchMessages(1), Name(5), false);
-                closeConsumer(cctx6.FetchBytes(1000), Name(6), false);
+                closeConsumer(cctx5.FetchMessages(1), durable5, false);
+                closeConsumer(cctx6.FetchBytes(1000), durable6, false);
             });
         }
     

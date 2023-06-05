@@ -128,8 +128,6 @@ namespace NATS.Client.JetStream
 
                 return GetThis();
             }
-            // throw new ArgumentException($"Threshold percent must be between 1 and 100 inclusive, or less than 1 meaning default of ({DefaultThresholdPercent})");
-            // 
 
             /// <summary>
             /// Set the threshold percent of max bytes (if max bytes is specified) or messages
@@ -146,7 +144,6 @@ namespace NATS.Client.JetStream
             /// <returns>the builder</returns>
             public TB WithThresholdPercent(int thresholdPercent) {
                 this._thresholdPercent = thresholdPercent < 1 ? DefaultThresholdPercent : Math.Min(100, thresholdPercent);
-
                 return GetThis();
             }
 

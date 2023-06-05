@@ -407,9 +407,6 @@ namespace IntegrationTests
     public class JetStreamPushSyncSuiteContext : OneServerSuiteContext {}
     public class JetStreamPushSyncQueueSuiteContext : OneServerSuiteContext {}
     public class JetStreamPullSuiteContext : OneServerSuiteContext {}
-    public class ObjectStoreSuiteContext : OneServerSuiteContext {}
-    public class MirrorSourceSuiteContext : OneServerSuiteContext {}
-    public class SimplificationSuiteContext : OneServerSuiteContext {}
 
     public class KeyValueSuiteContext : SuiteContext
     {
@@ -442,7 +439,7 @@ namespace IntegrationTests
     public class AutoServerSuiteContext : SuiteContext
     {
         public TestServerInfo AutoServer() => new TestServerInfo(TestSeedPorts.AutoPort.Increment());
-        
+
         public void RunInJsServer(Action<IConnection> test) => base.RunInJsServer(AutoServer(), test);
         public void RunInServer(Action<IConnection> test) => base.RunInServer(AutoServer(), test);
         public void RunInJsServer(Action<Options> optionsModifier, Action<IConnection> test) => base.RunInJsServer(AutoServer(), optionsModifier, test);

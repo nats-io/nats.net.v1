@@ -1,4 +1,17 @@
-﻿using System;
+﻿// Copyright 2019-2023 The NATS Authors
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
 using System.IO;
 using System.Text;
 using NATS.Client;
@@ -106,80 +119,80 @@ namespace UnitTests
         public const string BUCKET = "bucket";
         public const string KEY = "key";
         public const string DATA = "data";
-
-        public static string Stream(int seq)
+        
+        public static string Stream(object seq)
         {
-            return STREAM + "-" + seq;
+            return $"{STREAM}-{seq}";
         }
 
-        public static string Field(String name, int seq)
+        public static string Field(String field, object seq)
         {
-            return name + "-" + seq;
+            return $"{field}-{seq}";
         }
 
-        public static string Subject(int seq)
+        public static string Subject(object seq)
         {
-            return SUBJECT + "-" + seq;
+            return $"{SUBJECT}-{seq}";
         }
 
-        public static string SubjectDot(string field)
+        public static string SubjectDot(string afterDot)
         {
-            return SUBJECT + "." + field;
+            return $"{SUBJECT}.{afterDot}";
         }
 
-        public static string Queue(int seq)
+        public static string Queue(object seq)
         {
-            return QUEUE + "-" + seq;
+            return $"{QUEUE}-{seq}";
         }
 
-        public static string Durable(int seq)
+        public static string Durable(object seq)
         {
-            return DURABLE + "-" + seq;
+            return $"{DURABLE}-{seq}";
         }
 
-        public static string Durable(string vary, int seq)
+        public static string Durable(string vary, object seq)
         {
-            return DURABLE + "-" + vary + "-" + seq;
+            return $"{DURABLE}-{vary}-{seq}";
         }
 
-        public static string Name(int seq)
+        public static string Name(object seq)
         {
-            return NAME + "-" + seq;
+            return $"{NAME}-{seq}";
         }
 
-        public static string Deliver(int seq)
+        public static string Deliver(object seq)
         {
-            return DELIVER + "-" + seq;
+            return $"{DELIVER}-{seq}";
         }
 
-        public static string Bucket(int seq)
+        public static string Bucket(object seq)
         {
-            return BUCKET + "-" + seq;
+            return $"{BUCKET}-{seq}";
         }
 
-        public static string Key(int seq)
+        public static string Key(object seq)
         {
-            return KEY + "-" + seq;
+            return $"{KEY}-{seq}";
         }
 
-        public static string Mrrr(int seq)
+        public static string Mrrr(object seq)
         {
-            return MIRROR + "-" + seq;
+            return $"{MIRROR}-{seq}";
         }
 
-        public static string Src(int seq)
+        public static string Src(object seq)
         {
-            return SOURCE + "-" + seq;
+            return $"{SOURCE}-{seq}";
         }
 
-        public static string MessageId(int seq)
+        public static string MessageId(object seq)
         {
-            return MESSAGE_ID + "-" + seq;
+            return $"{MESSAGE_ID}-{seq}";
         }
 
-        public static string Data(int seq)
+        public static string Data(object seq)
         {
-            return DATA + "-" + seq;
+            return $"{DATA}-{seq}";
         }
 
         public static byte[] DataBytes()
@@ -187,7 +200,7 @@ namespace UnitTests
             return Encoding.ASCII.GetBytes(DATA);
         }
 
-        public static byte[] DataBytes(int seq)
+        public static byte[] DataBytes(object seq)
         {
             return Encoding.ASCII.GetBytes(Data(seq));
         }
