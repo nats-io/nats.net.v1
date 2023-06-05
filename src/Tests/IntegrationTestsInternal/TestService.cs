@@ -115,7 +115,7 @@ namespace IntegrationTestsInternal
                         .AddServiceEndpoint(seSortD1)
                         .Build();
                     String serviceId1 = service1.Id;
-                    Task<bool> serviceDone1 = service1.StartService();
+                    Task<bool> serviceStoppedTask1 = service1.StartService();
 
                     Service service2 = new ServiceBuilder()
                         .WithName(ServiceName2)
@@ -126,7 +126,7 @@ namespace IntegrationTestsInternal
                         .AddServiceEndpoint(seSortD2)
                         .Build();
                     String serviceId2 = service2.Id;
-                    Task<bool> serviceDone2 = service2.StartService();
+                    Task<bool> serviceStoppedTask2 = service2.StartService();
 
                     Assert.NotEqual(serviceId1, serviceId2);
 
@@ -256,9 +256,9 @@ namespace IntegrationTestsInternal
 
                     // shutdown
                     service1.Stop();
-                    Assert.True(serviceDone1.Result);
+                    Assert.True(serviceStoppedTask1.Result);
                     service2.Stop(new Exception("Testing stop(Exception e)"));
-                    AggregateException ae = Assert.Throws<AggregateException>(() => serviceDone2.Result);
+                    AggregateException ae = Assert.Throws<AggregateException>(() => serviceStoppedTask2.Result);
                     Assert.Contains("Testing stop(Exception e)", ae.GetBaseException().Message);
                 }
             }
