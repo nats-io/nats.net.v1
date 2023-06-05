@@ -39,8 +39,8 @@ namespace NATS.Client.Service
         public PingResponse PingResponse { get; }
         public InfoResponse InfoResponse { get; }
 
-        private readonly Object stopLock;
-        private TaskCompletionSource<bool> doneTcs;
+        private readonly Object startStopLock;
+        private TaskCompletionSource<bool> runningIndicator;
         private DateTime started;
 
         internal Service(ServiceBuilder b)
@@ -48,7 +48,7 @@ namespace NATS.Client.Service
             string id = new Nuid().GetNext();
             conn = b.Conn;
             DrainTimeoutMillis = b.DrainTimeoutMillis;
-            stopLock = new object();
+            startStopLock = new object();
 
             // set up the service contexts
             // ! also while we are here, we need to collect the endpoints for the SchemaResponse
@@ -118,17 +118,23 @@ namespace NATS.Client.Service
 
         public Task<bool> StartService()
         {
-            doneTcs = new TaskCompletionSource<bool>();
-            foreach (var ctx in serviceContexts.Values)
+            lock (startStopLock)
             {
-                ctx.Start();
+                if (runningIndicator == null)
+                {
+                    runningIndicator = new TaskCompletionSource<bool>();
+                    foreach (var ctx in serviceContexts.Values)
+                    {
+                        ctx.Start();
+                    }
+                    foreach (var ctx in discoveryContexts)
+                    {
+                        ctx.Start();
+                    }
+                    started = DateTime.UtcNow;
+                }
+                return runningIndicator.Task;
             }
-            foreach (var ctx in discoveryContexts)
-            {
-                ctx.Start();
-            }
-            started = DateTime.UtcNow;
-            return doneTcs.Task;
         }
 
         public static ServiceBuilder Builder() {
@@ -141,8 +147,8 @@ namespace NATS.Client.Service
         }
 
         public void Stop(bool drain = true, Exception e = null) {
-            lock (stopLock) {
-                if (!doneTcs.Task.IsCompleted) {
+            lock (startStopLock) {
+                if (runningIndicator != null) {
                     if (drain)
                     {
                         List<Task> tasks = new List<Task>();
@@ -169,11 +175,12 @@ namespace NATS.Client.Service
 
                     // ok we are done
                     if (e == null) {
-                        doneTcs.SetResult(true);
+                        runningIndicator.SetResult(true);
                     }
                     else {
-                        doneTcs.SetException(e);
+                        runningIndicator.SetException(e);
                     }
+                    runningIndicator = null; // we don't need a copy anymore
                 }
             }
         }

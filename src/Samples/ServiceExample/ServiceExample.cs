@@ -97,8 +97,8 @@ namespace NATSExamples
                 // ----------------------------------------------------------------------------------------------------
                 // Start the services
                 // ----------------------------------------------------------------------------------------------------
-                Task<bool> done1 = service1.StartService();
-                Task<bool> done2 = service2.StartService();
+                Task<bool> serviceStoppedTask1 = service1.StartService();
+                Task<bool> serviceStoppedTask2 = service2.StartService();
 
                 // ----------------------------------------------------------------------------------------------------
                 // Call the services
@@ -173,8 +173,10 @@ namespace NATSExamples
                 // ----------------------------------------------------------------------------------------------------
                 service1.Stop();
                 service2.Stop();
-                Console.WriteLine("\nService 1 done ? " + done1.Result);
-                Console.WriteLine("Service 2 done ? " + done2.Result);
+
+                // stopping the service will complete the tasks received when starting the service
+                Console.WriteLine("\nService 1 stopped ? " + serviceStoppedTask1.Result);
+                Console.WriteLine("Service 2 stopped ? " + serviceStoppedTask2.Result);
             }
         }
 
