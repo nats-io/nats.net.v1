@@ -400,15 +400,13 @@ namespace NATS.Client.JetStream
                 bool handlerAutoAck = autoAck && serverCC.AckPolicy != AckPolicy.None;
                 EventHandler<MsgHandlerEventArgs> handler = (sender, args) =>
                 {
-                    if (mm.Manage(args.Message))
+                    if (mm.Manage(args.Message) == ManageResult.Message)
                     {
-                        return;
-                    }
-
-                    userHandler.Invoke(sender, args);
-                    if (handlerAutoAck)
-                    {
-                        args.Message.Ack();
+                        userHandler.Invoke(sender, args);
+                        if (handlerAutoAck)
+                        {
+                            args.Message.Ack();
+                        }
                     }
                 };
                 sub = ((Connection)Conn).subscribeAsync(inboxDeliver, queueName, handler, asyncSubDelegate);

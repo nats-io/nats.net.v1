@@ -52,11 +52,9 @@ namespace NATS.Client.JetStream
             // no waiting necessary
             if (timeLeftMillis < 1 | pmm.pendingMessages < 1 || (pmm.trackingBytes && pmm.pendingBytes < 1))
             {
-                // Console.WriteLine($"---> NM 1 {timeLeftMillis} {pmm.pendingMessages} {pmm.trackingBytes} {pmm.pendingBytes}");
                 return ((JetStreamPullSubscription)sub).NextMessage(1); // 1 is the shortest time I can give
             }
 
-            // Console.WriteLine($"---> NM 2 {timeLeftMillis} {pmm.pendingMessages} {pmm.trackingBytes} {pmm.pendingBytes}");
             return ((JetStreamPullSubscription)sub).NextMessage(timeLeftMillis);
         }
     }

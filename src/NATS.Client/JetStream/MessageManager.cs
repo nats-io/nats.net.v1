@@ -17,6 +17,8 @@ using NATS.Client.Internals;
 
 namespace NATS.Client.JetStream
 {
+    public enum ManageResult {Message, StatusHandled, StatusTerminus, StatusError}
+
     public abstract class MessageManager
     {
         public const int Threshold = 3;
@@ -80,7 +82,7 @@ namespace NATS.Client.JetStream
             return true;
         }
 
-        public abstract bool Manage(Msg msg);
+        public abstract ManageResult Manage(Msg msg);
         
         protected void TrackJsMessage(Msg msg) {
             lock (StateChangeLock)

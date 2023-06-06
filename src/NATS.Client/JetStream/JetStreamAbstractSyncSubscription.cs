@@ -60,35 +60,128 @@ namespace NATS.Client.JetStream
 
         public new Msg NextMessage()
         {
-            // this calls is intended to block indefinitely so if there is a managed
-            // message it's like not getting a message at all and we keep waiting
-            Msg msg = NextMessageImpl(-1);
-            while (msg != null && MessageManager.Manage(msg)) {
-                msg = NextMessageImpl(-1);
-            }
-            return msg;
+            return _nextUnmanagedWaitForever(null);
         }
 
         public new Msg NextMessage(int timeout)
         {
-            // < 0 means indefinite
             if (timeout < 0)
             {
-                return NextMessage();
+                return _nextUnmanagedWaitForever(null);
             }
-            
+            if (timeout == 0)
+            {
+                return _nextUnmanagedNoWait(null, true);
+            }
+            return _nextUnmanaged(timeout, null, true);
+        }
+
+        protected Msg _nextUnmanagedWaitForever(String expectedPullSubject)
+        {
+            // this calls is intended to block indefinitely so if there is a managed
+            // message it's like not getting a message at all and we keep waiting
+            while (true)
+            {
+                Msg msg = NextMessageImpl(-1);
+                if (msg != null)
+                {
+                    // null shouldn't happen, so just a code guard b/c NextMessageImpl can return null 
+                    {
+                        switch (MessageManager.Manage(msg))
+                        {
+                            case ManageResult.Message:
+                                return msg;
+                            case ManageResult.StatusError:
+                                // if the status applies throw exception, otherwise it's ignored, fall through
+                                if (expectedPullSubject == null || expectedPullSubject.Equals(msg.Subject))
+                                {
+                                    throw new NATSJetStreamStatusException(msg.Status, this);
+                                }
+
+                                break;
+                        }
+                        // StatusHandled, StatusTerminus and StatusError that aren't for expected pullSubject: check again since waiting forever
+                    }
+                }
+            }
+        }
+
+        protected Msg _nextUnmanagedNoWait(string expectedPullSubject, bool throwTimeoutOnNull)
+        {
+            while (true) {
+                Msg msg = NextMessageImpl(0);
+                if (msg == null) {
+                    if (throwTimeoutOnNull)
+                    {
+                        throw new NATSTimeoutException();
+                    }
+                    return null;
+                }
+                switch (MessageManager.Manage(msg)) {
+                    case ManageResult.Message:
+                        return msg;
+                    case ManageResult.StatusTerminus:
+                        // if the status applies return null, otherwise it's ignored, fall through
+                        if (expectedPullSubject == null || expectedPullSubject.Equals(msg.Subject)) {
+                            if (throwTimeoutOnNull)
+                            {
+                                throw new NATSTimeoutException();
+                            }
+                            return null;
+                        }
+                        break;
+                    case ManageResult.StatusError:
+                        // if the status applies throw exception, otherwise it's ignored, fall through
+                        if (expectedPullSubject == null || expectedPullSubject.Equals(msg.Subject)) {
+                            throw new NATSJetStreamStatusException(msg.Status, this);
+                        }
+                        break;
+                }
+                // StatusHandled: regular messages might have arrived, check again
+            }
+        }
+        
+        protected Msg _nextUnmanaged(int timeout, string expectedPullSubject, bool throwTimeoutOnNull)
+        {
+            int timeLeft = timeout;
             Stopwatch sw = Stopwatch.StartNew();
-            int timeLeft = Math.Max(timeout, 1); // 0 would never enter the loop
             while (timeLeft > 0)
             {
                 Msg msg = NextMessageImpl(timeLeft);
-                if (msg != null && !MessageManager.Manage(msg)) { // not managed means JS Message
-                    return msg;
+                if (msg != null)
+                {
+                    switch (MessageManager.Manage(msg))
+                    {
+                        case ManageResult.Message:
+                            return msg;
+                        case ManageResult.StatusTerminus:
+                            // if the status applies return null, otherwise it's ignored, fall through
+                            if (expectedPullSubject == null || expectedPullSubject.Equals(msg.Subject))
+                            {
+                                if (throwTimeoutOnNull)
+                                {
+                                    throw new NATSTimeoutException();
+                                }
+                                return null;
+                            }
+                            break;
+                        case ManageResult.StatusError:
+                            // if the status applies throw exception, otherwise it's ignored, fall through
+                            if (expectedPullSubject == null || expectedPullSubject.Equals(msg.Subject))
+                            {
+                                throw new NATSJetStreamStatusException(msg.Status, this);
+                            }
+                            break;
+                    }
                 }
                 timeLeft = timeout - (int)sw.ElapsedMilliseconds;
             }
-            
-            throw new NATSTimeoutException();
+            if (throwTimeoutOnNull)
+            {
+                throw new NATSTimeoutException();
+            }
+            return null;
         }
+
     }
 }

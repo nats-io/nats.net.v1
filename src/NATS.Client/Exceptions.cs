@@ -198,17 +198,12 @@ namespace NATS.Client
     public class NATSJetStreamStatusException : NATSException
     {
         private Subscription Sub { get; }
-        private string Description { get; }
         private MsgStatus Status { get; }
 
-        public NATSJetStreamStatusException(Subscription sub, MsgStatus status)
-            : this(sub, "Unknown or unprocessed status message", status) {}
-
-        public NATSJetStreamStatusException(Subscription sub, string description, MsgStatus status)
-            : base($"{description}: {status.Message}")
+        public NATSJetStreamStatusException(MsgStatus status, Subscription sub = null)
+            : base($"{(status == null ? "Unknown or unprocessed status message" : status.Message)}")
         {
             Sub = sub;
-            Description = description;
             Status = status;
         }
     }

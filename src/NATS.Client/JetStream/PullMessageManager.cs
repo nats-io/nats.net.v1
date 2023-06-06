@@ -76,10 +76,9 @@ namespace NATS.Client.JetStream
             // normal js message
             if (!msg.HasStatus) 
             {
-                TrackPending(1, BytesInMessage(msg));
+                TrackPending(1, msg.ConsumeByteCount);
                 return true;
             }
-
             // heartbeat just needed to be recorded
             if (status.IsHeartbeat()) {
                 return false;
@@ -102,44 +101,56 @@ namespace NATS.Client.JetStream
             return status.Code != NatsConstants.NotFoundCode && status.Code != NatsConstants.RequestTimeoutCode;
         }
 
-        public override bool Manage(Msg msg)
+        public override ManageResult Manage(Msg msg)
         {
             // normal js message
             if (!msg.HasStatus) 
             {
                 TrackJsMessage(msg);
-                return false;
+                return ManageResult.Message;
             }
+            Dbg.msg("MN", msg);
 
-            if (msg.Status.Code == NatsConstants.ConflictCode) {
-                // sometimes just a warning
-                if (msg.Status.Message.Contains("Exceed")) {
+            switch (msg.Status.Code)
+            {
+                case NatsConstants.NotFoundCode:
+                case NatsConstants.RequestTimeoutCode:
                     if (raiseStatusWarnings)
                     {
                         Conn.Opts.PullStatusWarningEventHandlerOrDefault.Invoke(this,
                             new StatusEventArgs(Conn, (Subscription)Sub, msg.Status));
                     }
+                    return ManageResult.StatusTerminus;
+                
+                case NatsConstants.ConflictCode:
+                    // sometimes just a warning
+                    string statMsg = msg.Status.Message;
+                    if (statMsg.StartsWith("Exceeded Max"))
+                    {
+                        if (raiseStatusWarnings)
+                        {
+                            Conn.Opts.PullStatusWarningEventHandlerOrDefault.Invoke(this,
+                                new StatusEventArgs(Conn, (Subscription)Sub, msg.Status));
+                        }
+                        return ManageResult.StatusHandled;
+                    }
 
-                    return true;
-                }
-                // fall through
+                    if (statMsg.Equals(JetStreamConstants.BatchCompleted) ||
+                        statMsg.Equals(JetStreamConstants.MessageSizeExceedsMaxBytes))
+                    {
+                        return ManageResult.StatusTerminus;
+                    } 
+                    break;
             }
 
             // all others are errors
             Conn.Opts.PullStatusErrorEventHandlerOrDefault.Invoke(this, new StatusEventArgs(Conn, (Subscription)Sub, msg.Status));
             if (SyncMode)
             {
-                throw new NATSJetStreamStatusException((Subscription)Sub, msg.Status);
+                throw new NATSJetStreamStatusException(msg.Status, (Subscription)Sub);
             }
 
-            return true; // all status are managed
-        }
-
-        private long BytesInMessage(Msg msg) {
-            return msg.Subject.Length
-                   + msg.headerLen
-                   + msg.Data.Length
-                   + (msg.Reply == null ? 0 : msg.Reply.Length);
+            return ManageResult.StatusError;
         }
     }
 }

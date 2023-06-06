@@ -87,9 +87,30 @@ namespace NATS.Client.JetStream
                 int timeLeft = maxWaitMillis;
                 while (batchLeft > 0 && timeLeft > 0) {
                     Msg msg = NextMessageImpl(timeLeft);
-                    if (!MessageManager.Manage(msg)) {
-                        messages.Add(msg);
-                        batchLeft--;
+                    if (msg == null)
+                    {
+                        return messages;
+                    }
+                    switch (MessageManager.Manage(msg))
+                    {
+                        case ManageResult.Message:
+                            messages.Add(msg);
+                            batchLeft--;
+                            break;
+                        case ManageResult.StatusTerminus:
+                            // if the status applies return null, otherwise it's ignored, fall through
+                            if (pullSubject.Equals(msg.Subject))
+                            {
+                                return messages;
+                            }
+                            break;
+                        case ManageResult.StatusError:
+                            // if the status applies throw exception, otherwise it's ignored, fall through
+                            if (pullSubject.Equals(msg.Subject))
+                            {
+                                throw new NATSJetStreamStatusException(msg.Status, this);
+                            }
+                            break;
                     }
                     // case STATUS, try again while we have time
                     timeLeft = maxWaitMillis - (int)sw.ElapsedMilliseconds;

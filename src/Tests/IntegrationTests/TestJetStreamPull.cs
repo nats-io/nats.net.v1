@@ -629,7 +629,7 @@ namespace IntegrationTests
         public void TestMessageSizeExceedsMaxBytes()
         {
             PullSubscribeOptions so = ConsumerConfiguration.Builder().BuildPullSubscribeOptions();
-            TestConflictStatus(MessageSizeExceedsMaxBytes, TypeWarning, true, "2.9.0", (jsm, js) => {
+            TestConflictStatus(MessageSizeExceedsMaxBytes, TypeNone, true, "2.9.0", (jsm, js) => {
                 js.Publish(SUBJECT, new byte[1000]);
                 IJetStreamPullSubscription sub = js.PullSubscribe(SUBJECT, so);
                 sub.Pull(PullRequestOptions.Builder(1).WithMaxBytes(100).Build());
@@ -742,12 +742,8 @@ namespace IntegrationTests
                 Assert.NotNull(sub.NextMessage(500));
                 Assert.NotNull(sub.NextMessage(500));
                 Assert.Throws<NATSTimeoutException>(() => sub.NextMessage(500));
+                CheckHandler(MessageSizeExceedsMaxBytes, TypeNone, handler);
             });
-            
-            if (!skip)
-            {
-                CheckHandler(MessageSizeExceedsMaxBytes, TypeWarning, handler);
-            }
         }
 
         [Fact]
@@ -784,12 +780,8 @@ namespace IntegrationTests
                 Assert.NotNull(sub.NextMessage(500));
                 Assert.NotNull(sub.NextMessage(500));
                 Assert.Throws<NATSTimeoutException>(() => sub.NextMessage(500));
-            });
-            
-            if (!skip)
-            {
                 CheckHandler(MessageSizeExceedsMaxBytes, TypeNone, handler);
-            }
+            });
         }
     }
 }
