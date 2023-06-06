@@ -109,7 +109,6 @@ namespace NATS.Client.JetStream
                 TrackJsMessage(msg);
                 return ManageResult.Message;
             }
-            Dbg.msg("MN", msg);
 
             switch (msg.Status.Code)
             {
