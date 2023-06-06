@@ -406,7 +406,6 @@ namespace IntegrationTests
     public class JetStreamPushAsyncSuiteContext : OneServerSuiteContext {}
     public class JetStreamPushSyncSuiteContext : OneServerSuiteContext {}
     public class JetStreamPushSyncQueueSuiteContext : OneServerSuiteContext {}
-    public class JetStreamPullSuiteContext : OneServerSuiteContext {}
 
     public class KeyValueSuiteContext : SuiteContext
     {
