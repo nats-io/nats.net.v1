@@ -58,12 +58,12 @@ namespace NATS.Client.JetStream
             base.close();
         }
 
-        public new Msg NextMessage()
+        public override Msg NextMessage()
         {
             return _nextUnmanagedWaitForever(null);
         }
 
-        public new Msg NextMessage(int timeout)
+        public override Msg NextMessage(int timeout)
         {
             if (timeout < 0)
             {
@@ -71,9 +71,9 @@ namespace NATS.Client.JetStream
             }
             if (timeout == 0)
             {
-                return _nextUnmanagedNoWait(null, true);
+                return _nextUnmanagedNoWait(null);
             }
-            return _nextUnmanaged(timeout, null, true);
+            return _nextUnmanaged(timeout, null);
         }
 
         protected Msg _nextUnmanagedWaitForever(String expectedPullSubject)
@@ -83,51 +83,33 @@ namespace NATS.Client.JetStream
             while (true)
             {
                 Msg msg = NextMessageImpl(-1);
-                if (msg != null)
+                switch (MessageManager.Manage(msg))
                 {
-                    // null shouldn't happen, so just a code guard b/c NextMessageImpl can return null 
-                    {
-                        switch (MessageManager.Manage(msg))
+                    case ManageResult.Message:
+                        return msg;
+                    case ManageResult.StatusError:
+                        // if the status applies throw exception, otherwise it's ignored, fall through
+                        if (expectedPullSubject == null || expectedPullSubject.Equals(msg.Subject))
                         {
-                            case ManageResult.Message:
-                                return msg;
-                            case ManageResult.StatusError:
-                                // if the status applies throw exception, otherwise it's ignored, fall through
-                                if (expectedPullSubject == null || expectedPullSubject.Equals(msg.Subject))
-                                {
-                                    throw new NATSJetStreamStatusException(msg.Status, this);
-                                }
-
-                                break;
+                            throw new NATSJetStreamStatusException(msg.Status, this);
                         }
-                        // StatusHandled, StatusTerminus and StatusError that aren't for expected pullSubject: check again since waiting forever
-                    }
+                        break;
                 }
+                // StatusHandled, StatusTerminus and StatusError that isn't for expected pullSubject: check again since waiting forever
             }
         }
 
-        protected Msg _nextUnmanagedNoWait(string expectedPullSubject, bool throwTimeoutOnNull)
+        protected Msg _nextUnmanagedNoWait(string expectedPullSubject)
         {
             while (true) {
                 Msg msg = NextMessageImpl(0);
-                if (msg == null) {
-                    if (throwTimeoutOnNull)
-                    {
-                        throw new NATSTimeoutException();
-                    }
-                    return null;
-                }
                 switch (MessageManager.Manage(msg)) {
                     case ManageResult.Message:
                         return msg;
                     case ManageResult.StatusTerminus:
                         // if the status applies return null, otherwise it's ignored, fall through
                         if (expectedPullSubject == null || expectedPullSubject.Equals(msg.Subject)) {
-                            if (throwTimeoutOnNull)
-                            {
-                                throw new NATSTimeoutException();
-                            }
-                            return null;
+                            throw new NATSTimeoutException();
                         }
                         break;
                     case ManageResult.StatusError:
@@ -137,51 +119,40 @@ namespace NATS.Client.JetStream
                         }
                         break;
                 }
-                // StatusHandled: regular messages might have arrived, check again
+                // StatusHandled and StatusTerminus / StatusError that aren't for expected pullSubject: check again
             }
         }
         
-        protected Msg _nextUnmanaged(int timeout, string expectedPullSubject, bool throwTimeoutOnNull)
+        protected Msg _nextUnmanaged(int timeout, string expectedPullSubject)
         {
             int timeLeft = timeout;
             Stopwatch sw = Stopwatch.StartNew();
             while (timeLeft > 0)
             {
                 Msg msg = NextMessageImpl(timeLeft);
-                if (msg != null)
+                switch (MessageManager.Manage(msg))
                 {
-                    switch (MessageManager.Manage(msg))
-                    {
-                        case ManageResult.Message:
-                            return msg;
-                        case ManageResult.StatusTerminus:
-                            // if the status applies return null, otherwise it's ignored, fall through
-                            if (expectedPullSubject == null || expectedPullSubject.Equals(msg.Subject))
-                            {
-                                if (throwTimeoutOnNull)
-                                {
-                                    throw new NATSTimeoutException();
-                                }
-                                return null;
-                            }
-                            break;
-                        case ManageResult.StatusError:
-                            // if the status applies throw exception, otherwise it's ignored, fall through
-                            if (expectedPullSubject == null || expectedPullSubject.Equals(msg.Subject))
-                            {
-                                throw new NATSJetStreamStatusException(msg.Status, this);
-                            }
-                            break;
-                    }
+                    case ManageResult.Message:
+                        return msg;
+                    case ManageResult.StatusTerminus:
+                        // if the status applies return null, otherwise it's ignored, fall through
+                        if (expectedPullSubject == null || expectedPullSubject.Equals(msg.Subject))
+                        {
+                            throw new NATSTimeoutException();
+                        }
+                        break;
+                    case ManageResult.StatusError:
+                        // if the status applies throw exception, otherwise it's ignored, fall through
+                        if (expectedPullSubject == null || expectedPullSubject.Equals(msg.Subject))
+                        {
+                            throw new NATSJetStreamStatusException(msg.Status, this);
+                        }
+                        break;
                 }
+                // StatusHandled and StatusTerminus / StatusError that aren't for expected pullSubject: check again while have time
                 timeLeft = timeout - (int)sw.ElapsedMilliseconds;
             }
-            if (throwTimeoutOnNull)
-            {
-                throw new NATSTimeoutException();
-            }
-            return null;
+            throw new NATSTimeoutException();
         }
-
     }
 }
