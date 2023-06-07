@@ -52,7 +52,7 @@ namespace NATS.Client.JetStream
         }
 
         public void Track(int pendingMessages, long pendingBytes, bool trackingBytes) {
-            if (drainTask == null &&
+            if (!stopped &&
                 (pmm.pendingMessages <= thresholdMessages
                  || (pmm.trackingBytes && pmm.pendingBytes <= thresholdBytes)))
             {
