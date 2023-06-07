@@ -29,14 +29,13 @@ namespace NATS.Client.JetStream
             }
             catch (NATSBadSubscriptionException e)
             {
-                // if we started to drain, we will eventually close the subscription
-                // which is why this exception happens.
-                // We do not want the user to get that.
-                if (drainTask == null)
+                // this happens if the consumer is stopped, since it is
+                // drained/unsubscribed, so don't pass it on if it's expected
+                if (stopped)
                 {
-                    throw e;
+                    throw new NATSTimeoutException();
                 }
-                throw new NATSTimeoutException();
+                throw e;
             }
         }
     }

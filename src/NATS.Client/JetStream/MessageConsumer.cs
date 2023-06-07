@@ -18,17 +18,14 @@ namespace NATS.Client.JetStream
     /// <summary>
     /// SIMPLIFICATION IS EXPERIMENTAL AND SUBJECT TO CHANGE
     /// </summary>
-    internal class MessageConsumer : MessageConsumerBase, IMessageConsumer, ITrackPendingListener
+    internal class MessageConsumer : MessageConsumerBase, ITrackPendingListener
     {
-        protected readonly PullRequestOptions rePullPro;
-        protected readonly int thresholdMessages;
-        protected readonly long thresholdBytes;
-        protected readonly SubscriptionMaker subscriptionMaker;
+        private readonly PullRequestOptions rePullPro;
+        private readonly int thresholdMessages;
+        private readonly long thresholdBytes;
 
         internal MessageConsumer(SubscriptionMaker subscriptionMaker, EventHandler<MsgHandlerEventArgs> messageHandler, BaseConsumeOptions opts) {
-            this.subscriptionMaker = subscriptionMaker;
-
-            InitSub(subscriptionMaker.makeSubscription(messageHandler));
+            InitSub(subscriptionMaker.MakeSubscription(messageHandler));
 
             int bm = opts.Messages;
             long bb = opts.Bytes;
@@ -52,7 +49,7 @@ namespace NATS.Client.JetStream
         }
 
         public void Track(int pendingMessages, long pendingBytes, bool trackingBytes) {
-            if (drainTask == null &&
+            if (!stopped &&
                 (pmm.pendingMessages <= thresholdMessages
                  || (pmm.trackingBytes && pmm.pendingBytes <= thresholdBytes)))
             {

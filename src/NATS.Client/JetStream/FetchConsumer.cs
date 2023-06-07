@@ -25,7 +25,7 @@ namespace NATS.Client.JetStream
 
         internal FetchConsumer(SubscriptionMaker subscriptionMaker, FetchConsumeOptions opts) 
         {
-            InitSub(subscriptionMaker.makeSubscription(null));
+            InitSub(subscriptionMaker.MakeSubscription());
             maxWaitMillis = opts.ExpiresIn;
             PullRequestOptions pro = PullRequestOptions.Builder(opts.MaxMessages)
                 .WithMaxBytes(opts.MaxBytes)
