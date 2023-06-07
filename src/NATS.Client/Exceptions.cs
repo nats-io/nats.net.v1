@@ -1,4 +1,4 @@
-﻿// Copyright 2015-2018 The NATS Authors
+﻿// Copyright 2015-2023 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -198,17 +198,12 @@ namespace NATS.Client
     public class NATSJetStreamStatusException : NATSException
     {
         private Subscription Sub { get; }
-        private string Description { get; }
         private MsgStatus Status { get; }
 
-        public NATSJetStreamStatusException(Subscription sub, MsgStatus status)
-            : this(sub, "Unknown or unprocessed status message", status) {}
-
-        public NATSJetStreamStatusException(Subscription sub, string description, MsgStatus status)
-            : base($"{description}: {status.Message}")
+        public NATSJetStreamStatusException(MsgStatus status, Subscription sub = null)
+            : base($"{(status == null ? "Unknown or unprocessed status message" : status.Message)}")
         {
             Sub = sub;
-            Description = description;
             Status = status;
         }
     }

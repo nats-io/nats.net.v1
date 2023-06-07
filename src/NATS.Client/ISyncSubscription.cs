@@ -29,11 +29,12 @@ namespace NATS.Client
         /// <summary>
         /// Returns the next <see cref="Msg"/> available to a synchronous
         /// subscriber, or block up to a given timeout until the next one is available.
-        /// timeout less than zero means block until a message is available
+        /// Timeout less than zero means block until a message is available
         /// </summary>
         /// <param name="timeout">The amount of time, in milliseconds, to wait for
         /// the next message.</param>
         /// <returns>The next <see cref="Msg"/> available to a subscriber.</returns>
+        /// <exception cref="NATSTimeoutException">When the call times out</exception>
         Msg NextMessage(int timeout);
     }
 }

@@ -17,12 +17,15 @@ using NATS.Client.Internals;
 
 namespace NATS.Client.JetStream
 {
+    public enum ManageResult {Message, StatusHandled, StatusTerminus, StatusError}
+
     public abstract class MessageManager
     {
         public const int Threshold = 3;
 
         protected readonly object StateChangeLock;
         protected readonly Connection Conn;
+        protected readonly SubscribeOptions SubOpts;
         protected readonly bool SyncMode;
 
         protected IJetStreamSubscription Sub; // not readonly it is not set until after construction
@@ -36,9 +39,10 @@ namespace NATS.Client.JetStream
         protected int AlarmPeriodSetting;
         protected Timer heartbeatTimer;
 
-        protected MessageManager(Connection conn, bool syncMode)
+        protected MessageManager(Connection conn, SubscribeOptions so, bool syncMode)
         {
             StateChangeLock = new object();
+            SubOpts = so;
             Conn = conn;
             SyncMode = syncMode;
             LastStreamSeq = 0;
@@ -61,7 +65,7 @@ namespace NATS.Client.JetStream
             ShutdownHeartbeatTimer();
         }
 
-        public virtual void StartPullRequest(PullRequestOptions pullRequestOptions) {
+        public virtual void StartPullRequest(string pullSubject, PullRequestOptions pullRequestOptions, bool raiseStatusWarnings, ITrackPendingListener trackPendingListener) {
             // does nothing - only implemented for pulls, but in base class since instance is always referenced as MessageManager, not subclass
         }
 
@@ -78,7 +82,7 @@ namespace NATS.Client.JetStream
             return true;
         }
 
-        public abstract bool Manage(Msg msg);
+        public abstract ManageResult Manage(Msg msg);
         
         protected void TrackJsMessage(Msg msg) {
             lock (StateChangeLock)

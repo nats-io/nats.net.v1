@@ -26,11 +26,11 @@ using static NATS.Client.Internals.JetStreamConstants;
 
 namespace IntegrationTests
 {
-    public class TestJetStreamPull : TestSuite<JetStreamPullSuiteContext>
+    public class TestJetStreamPull : TestSuite<AutoServerSuiteContext>
     {
         private readonly ITestOutputHelper output;
 
-        public TestJetStreamPull(ITestOutputHelper output, JetStreamPullSuiteContext context) : base(context)
+        public TestJetStreamPull(ITestOutputHelper output, AutoServerSuiteContext context) : base(context)
         {
             this.output = output;
             Console.SetOut(new ConsoleWriter(output));
@@ -42,7 +42,10 @@ namespace IntegrationTests
             Context.RunInJsServer(c =>
             {
                 // create the stream.
-                CreateDefaultTestStream(c);
+                string stream = Stream(Nuid.NextGlobal());
+                string subject = Subject(Nuid.NextGlobal());
+                string durable = Nuid.NextGlobal();
+                CreateMemoryStream(c, stream, subject);
 
                 // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
@@ -55,12 +58,12 @@ namespace IntegrationTests
                     .Build();
                 
                 PullSubscribeOptions options = PullSubscribeOptions.Builder()
-                    .WithDurable(DURABLE)
+                    .WithDurable(durable)
                     .WithConfiguration(cc)
                     .Build();
 
-                IJetStreamPullSubscription sub = js.PullSubscribe(SUBJECT, options);
-                AssertSubscription(sub, STREAM, DURABLE, null, true);
+                IJetStreamPullSubscription sub = js.PullSubscribe(subject, options);
+                AssertSubscription(sub, stream, durable, null, true);
                 c.Flush(DefaultTimeout); // flush outgoing communication with/to the server
                 
                 IList<Msg> messages = sub.Fetch(10, fetchMs);
@@ -68,12 +71,12 @@ namespace IntegrationTests
                 AckAll(messages);
                 Thread.Sleep(ackWaitMs); // let the pull expire
 
-                JsPublish(js, SUBJECT, "A", 10);
+                JsPublish(js, subject, "A", 10);
                 messages = sub.Fetch(10, fetchMs);
                 ValidateRead(10, messages.Count);
                 AckAll(messages);
 
-                JsPublish(js, SUBJECT, "B", 20);
+                JsPublish(js, subject, "B", 20);
                 messages = sub.Fetch(10, fetchMs);
                 ValidateRead(10, messages.Count);
                 AckAll(messages);
@@ -82,13 +85,13 @@ namespace IntegrationTests
                 ValidateRead(10, messages.Count);
                 AckAll(messages);
 
-                JsPublish(js, SUBJECT, "C", 5);
+                JsPublish(js, subject, "C", 5);
                 messages = sub.Fetch(10, fetchMs);
                 ValidateRead(5, messages.Count);
                 AckAll(messages);
                 Thread.Sleep(fetchMs * 2); // let the pull expire
 
-                JsPublish(js, SUBJECT, "D", 15);
+                JsPublish(js, subject, "D", 15);
                 messages = sub.Fetch(10, fetchMs);
                 ValidateRead(10, messages.Count);
                 AckAll(messages);
@@ -97,7 +100,7 @@ namespace IntegrationTests
                 ValidateRead(5, messages.Count);
                 AckAll(messages);
 
-                JsPublish(js, SUBJECT, "E", 10);
+                JsPublish(js, subject, "E", 10);
                 messages = sub.Fetch(10, fetchMs);
                 ValidateRead(10, messages.Count);
                 Thread.Sleep(ackWaitMs);
@@ -114,21 +117,24 @@ namespace IntegrationTests
             Context.RunInJsServer(c =>
             {
                 // create the stream.
-                CreateDefaultTestStream(c);
+                string stream = Stream(Nuid.NextGlobal());
+                string subject = Subject(Nuid.NextGlobal());
+                string durable = Nuid.NextGlobal();
+                CreateMemoryStream(c, stream, subject);
 
                 // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
 
                 // Build our subscription options. Durable is REQUIRED for pull based subscriptions
-                PullSubscribeOptions options = PullSubscribeOptions.Builder().WithDurable(DURABLE).Build();
+                PullSubscribeOptions options = PullSubscribeOptions.Builder().WithDurable(durable).Build();
 
                 // Pull Subscribe.
-                IJetStreamPullSubscription sub = js.PullSubscribe(SUBJECT, options);
-                AssertSubscription(sub, STREAM, DURABLE, null, true);
+                IJetStreamPullSubscription sub = js.PullSubscribe(subject, options);
+                AssertSubscription(sub, stream, durable, null, true);
                 c.Flush(DefaultTimeout); // flush outgoing communication with/to the server
 
                 // publish some amount of messages, but not entire pull size
-                JsPublish(js, SUBJECT, "A", 4);
+                JsPublish(js, subject, "A", 4);
 
                 // start the pull
                 sub.Pull(10);
@@ -139,7 +145,7 @@ namespace IntegrationTests
                 ValidateRedAndTotal(4, messages.Count, 4, total);
 
                 // publish some more covering our initial pull and more
-                JsPublish(js, SUBJECT, "B", 10);
+                JsPublish(js, subject, "B", 10);
 
                 // read what is available, expect 6 more
                 messages = ReadMessagesAck(sub);
@@ -160,7 +166,7 @@ namespace IntegrationTests
                 ValidateRedAndTotal(4, messages.Count, 14, total);
 
                 // publish some more
-                JsPublish(js, SUBJECT, "C", 10);
+                JsPublish(js, subject, "C", 10);
 
                 // read what is available, should be 6 since we didn't finish the last batch
                 messages = ReadMessagesAck(sub);
@@ -199,22 +205,25 @@ namespace IntegrationTests
             Context.RunInJsServer(c =>
             {
                 // create the stream.
-                CreateDefaultTestStream(c);
+                string stream = Stream(Nuid.NextGlobal());
+                string subject = Subject(Nuid.NextGlobal());
+                string durable = Nuid.NextGlobal();
+                CreateMemoryStream(c, stream, subject);
 
                 // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
 
                 // Build our subscription options. Durable is REQUIRED for pull based subscriptions
-                PullSubscribeOptions options = PullSubscribeOptions.Builder().WithDurable(DURABLE).Build();
+                PullSubscribeOptions options = PullSubscribeOptions.Builder().WithDurable(durable).Build();
 
                 // Pull Subscribe.
-                IJetStreamPullSubscription sub = js.PullSubscribe(SUBJECT, options);
-                AssertSubscription(sub, STREAM, DURABLE, null, true);
+                IJetStreamPullSubscription sub = js.PullSubscribe(subject, options);
+                AssertSubscription(sub, stream, durable, null, true);
                 c.Flush(DefaultTimeout); // flush outgoing communication with/to the server
 
                 // publish 10 messages
                 // no wait, batch size 10, there are 10 messages, we will read them all and not trip nowait
-                JsPublish(js, SUBJECT, "A", 10);
+                JsPublish(js, subject, "A", 10);
                 sub.PullNoWait(10);
                 IList<Msg> messages = ReadMessagesAck(sub);
                 Assert.Equal(10, messages.Count);
@@ -222,7 +231,7 @@ namespace IntegrationTests
 
                 // publish 20 messages
                 // no wait, batch size 10, there are 20 messages, we will read 10
-                JsPublish(js, SUBJECT, "B", 20);
+                JsPublish(js, subject, "B", 20);
                 sub.PullNoWait(10);
                 messages = ReadMessagesAck(sub);
                 Assert.Equal(10, messages.Count);
@@ -235,14 +244,14 @@ namespace IntegrationTests
 
                 // publish 5 messages
                 // no wait, batch size 10, there are 5 messages, we WILL trip nowait
-                JsPublish(js, SUBJECT, "C", 5);
+                JsPublish(js, subject, "C", 5);
                 sub.PullNoWait(10);
                 messages = ReadMessagesAck(sub);
                 Assert.Equal(5, messages.Count);
 
                 // publish 12 messages
                 // no wait, batch size 10, there are more than batch messages we will read 10
-                JsPublish(js, SUBJECT, "D", 12);
+                JsPublish(js, subject, "D", 12);
                 sub.PullNoWait(10);
                 messages = ReadMessagesAck(sub);
                 Assert.Equal(10, messages.Count);
@@ -261,71 +270,74 @@ namespace IntegrationTests
             Context.RunInJsServer(c =>
             {
                 // create the stream.
-                CreateDefaultTestStream(c);
+                string stream = Stream(Nuid.NextGlobal());
+                string subject = Subject(Nuid.NextGlobal());
+                string durable = Nuid.NextGlobal();
+                CreateMemoryStream(c, stream, subject);
 
                 // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
 
                 // Build our subscription options. Durable is REQUIRED for pull based subscriptions
-                PullSubscribeOptions options = PullSubscribeOptions.Builder().WithDurable(DURABLE).Build();
+                PullSubscribeOptions options = PullSubscribeOptions.Builder().WithDurable(durable).Build();
                
                 // Subscribe synchronously.
-                IJetStreamPullSubscription sub = js.PullSubscribe(SUBJECT, options);
-                AssertSubscription(sub, STREAM, DURABLE, null, true);
+                IJetStreamPullSubscription sub = js.PullSubscribe(subject, options);
+                AssertSubscription(sub, stream, durable, null, true);
                 c.Flush(DefaultTimeout); // flush outgoing communication with/to the server
 
                 int expires = 250; // millis
 
                 // publish 10 messages
-                JsPublish(js, SUBJECT, "A", 5);
+                JsPublish(js, subject, "A", 5);
                 sub.PullExpiresIn(10, expires);
                 IList<Msg> messages = ReadMessagesAck(sub);
                 Assert.Equal(5, messages.Count);
                 AssertAllJetStream(messages);
                 Thread.Sleep(expires); // make sure the pull actually expires
 
-                JsPublish(js, SUBJECT, "B", 10);
+                JsPublish(js, subject, "B", 10);
                 sub.PullExpiresIn(10, expires);
                 messages = ReadMessagesAck(sub);
                 Assert.Equal(10, messages.Count);
                 Thread.Sleep(expires); // make sure the pull actually expires
 
-                JsPublish(js, SUBJECT, "C", 5);
+                JsPublish(js, subject, "C", 5);
                 sub.PullExpiresIn(10, expires);
                 messages = ReadMessagesAck(sub);
                 Assert.Equal(5, messages.Count);
                 AssertAllJetStream(messages);
                 Thread.Sleep(expires); // make sure the pull actually expires
 
-                JsPublish(js, SUBJECT, "D", 10);
+                JsPublish(js, subject, "D", 10);
                 sub.Pull(10);
                 messages = ReadMessagesAck(sub);
                 Assert.Equal(10, messages.Count);
 
-                JsPublish(js, SUBJECT, "E", 5);
+                JsPublish(js, subject, "E", 5);
                 sub.PullExpiresIn(10, expires); // using millis version here
                 messages = ReadMessagesAck(sub);
                 Assert.Equal(5, messages.Count);
                 AssertAllJetStream(messages);
                 Thread.Sleep(expires); // make sure the pull actually expires
 
-                JsPublish(js, SUBJECT, "F", 10);
+                JsPublish(js, subject, "F", 10);
                 sub.PullNoWait(10);
                 messages = ReadMessagesAck(sub);
                 Assert.Equal(10, messages.Count);
 
-                JsPublish(js, SUBJECT, "G", 5);
+                JsPublish(js, subject, "G", 5);
                 sub.PullExpiresIn(10, expires); // using millis version here
                 messages = ReadMessagesAck(sub);
                 Assert.Equal(5, messages.Count);
                 AssertAllJetStream(messages);
 
-                JsPublish(js, SUBJECT, "H", 10);
+                JsPublish(js, subject, "H", 10);
                 messages = sub.Fetch(10, expires);
                 Assert.Equal(10, messages.Count);
                 AssertAllJetStream(messages);
 
-                JsPublish(js, SUBJECT, "I", 5);
+                JsPublish(js, subject, "I", 5);
                 sub.PullExpiresIn(10, expires);
                 messages = ReadMessagesAck(sub);
                 Assert.Equal(5, messages.Count);
@@ -340,18 +352,21 @@ namespace IntegrationTests
             Context.RunInJsServer(c =>
             {
                 // create the stream.
-                CreateDefaultTestStream(c);
+                string stream = Stream(Nuid.NextGlobal());
+                string subject = Subject(Nuid.NextGlobal());
+                string durable = Nuid.NextGlobal();
+                CreateMemoryStream(c, stream, subject);
 
                 // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
 
                 // Build our subscription options. Durable is REQUIRED for pull based subscriptions
-                PullSubscribeOptions options = PullSubscribeOptions.Builder().WithDurable(DURABLE).Build();
-                IJetStreamPullSubscription sub = js.PullSubscribe(SUBJECT, options);
+                PullSubscribeOptions options = PullSubscribeOptions.Builder().WithDurable(durable).Build();
+                IJetStreamPullSubscription sub = js.PullSubscribe(subject, options);
                 c.Flush(DefaultTimeout); // flush outgoing communication with/to the server
 
                 // NAK
-                JsPublish(js, SUBJECT, "NAK", 1);
+                JsPublish(js, subject, "NAK", 1);
 
                 sub.Pull(1);
 
@@ -377,18 +392,21 @@ namespace IntegrationTests
             Context.RunInJsServer(c =>
             {
                 // create the stream.
-                CreateDefaultTestStream(c);
+                string stream = Stream(Nuid.NextGlobal());
+                string subject = Subject(Nuid.NextGlobal());
+                string durable = Nuid.NextGlobal();
+                CreateMemoryStream(c, stream, subject);
 
                 // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
 
                 // Build our subscription options. Durable is REQUIRED for pull based subscriptions
-                PullSubscribeOptions options = PullSubscribeOptions.Builder().WithDurable(DURABLE).Build();
-                IJetStreamPullSubscription sub = js.PullSubscribe(SUBJECT, options);
+                PullSubscribeOptions options = PullSubscribeOptions.Builder().WithDurable(durable).Build();
+                IJetStreamPullSubscription sub = js.PullSubscribe(subject, options);
                 c.Flush(DefaultTimeout); // flush outgoing communication with/to the server
 
                 // TERM
-                JsPublish(js, SUBJECT, "TERM", 1);
+                JsPublish(js, subject, "TERM", 1);
 
                 sub.Pull(1);
                 Msg message = sub.NextMessage(1000);
@@ -407,15 +425,17 @@ namespace IntegrationTests
             Context.RunInJsServer(c =>
             {
                 // create the stream.
-                CreateDefaultTestStream(c);
+                string stream = Stream(Nuid.NextGlobal());
+                string subject = Subject(Nuid.NextGlobal());
+                CreateMemoryStream(c, stream, subject);
 
                 // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
 
-                IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(SUBJECT);
+                IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(subject);
                 c.Flush(DefaultTimeout); // flush outgoing communication with/to the server
 
-                JsPublish(js, SUBJECT, "COVERAGE", 1);
+                JsPublish(js, subject, "COVERAGE", 1);
 
                 Msg message = sub.NextMessage(1000);
                 Assert.NotNull(message);
@@ -431,7 +451,10 @@ namespace IntegrationTests
             Context.RunInJsServer(c =>
             {
                 // create the stream.
-                CreateDefaultTestStream(c);
+                string stream = Stream(Nuid.NextGlobal());
+                string subject = Subject(Nuid.NextGlobal());
+                string durable = Nuid.NextGlobal();
+                CreateMemoryStream(c, stream, subject);
 
                 // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
@@ -440,14 +463,14 @@ namespace IntegrationTests
                     .WithAckWait(1500)
                     .Build();
                 PullSubscribeOptions pso = PullSubscribeOptions.Builder()
-                    .WithDurable(DURABLE)
+                    .WithDurable(durable)
                     .WithConfiguration(cc)
                     .Build();
-                IJetStreamPullSubscription sub = js.PullSubscribe(SUBJECT, pso);
+                IJetStreamPullSubscription sub = js.PullSubscribe(subject, pso);
                 c.Flush(DefaultTimeout); // flush outgoing communication with/to the server
 
                 // Ack Wait timeout
-                JsPublish(js, SUBJECT, "WAIT", 1);
+                JsPublish(js, subject, "WAIT", 1);
 
                 sub.Pull(1);
                 Msg message = sub.NextMessage(1000);
@@ -471,32 +494,35 @@ namespace IntegrationTests
             Context.RunInJsServer(c =>
             {
                 // create the stream.
-                CreateDefaultTestStream(c);
+                string stream = Stream(Nuid.NextGlobal());
+                string subject = Subject(Nuid.NextGlobal());
+                string durable = Nuid.NextGlobal();
+                CreateMemoryStream(c, stream, subject);
 
                 // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
 
                 // Build our subscription options normally
-                PullSubscribeOptions options1 = PullSubscribeOptions.Builder().WithDurable(DURABLE).Build();
-                _testDurable(js, () => js.PullSubscribe(SUBJECT, options1));
+                PullSubscribeOptions options1 = PullSubscribeOptions.Builder().WithDurable(durable).Build();
+                _testDurable(js, subject, () => js.PullSubscribe(subject, options1));
 
                 // bind long form
                 PullSubscribeOptions options2 = PullSubscribeOptions.Builder()
-                    .WithStream(STREAM)
-                    .WithDurable(DURABLE)
+                    .WithStream(stream)
+                    .WithDurable(durable)
                     .WithBind(true)
                     .Build();
-                _testDurable(js, () => js.PullSubscribe(null, options2));
+                _testDurable(js, subject, () => js.PullSubscribe(null, options2));
 
                 // bind short form
-                PullSubscribeOptions options3 = PullSubscribeOptions.BindTo(STREAM, DURABLE);
-                _testDurable(js, () => js.PullSubscribe(null, options3));
+                PullSubscribeOptions options3 = PullSubscribeOptions.BindTo(stream, durable);
+                _testDurable(js, subject, () => js.PullSubscribe(null, options3));
             });
         }
 
-        private void _testDurable(IJetStream js, PullSubSupplier supplier)
+        private void _testDurable(IJetStream js, string subject, PullSubSupplier supplier)
         {
-            JsPublish(js, SUBJECT, 2);
+            JsPublish(js, subject, 2);
 
             IJetStreamPullSubscription sub = supplier.Invoke();
 
@@ -548,7 +574,7 @@ namespace IntegrationTests
             Assert.False(pro.NoWait);
         }
 
-        delegate IJetStreamPullSubscription ConflictSetup(IJetStreamManagement jsm, IJetStream js);
+        delegate IJetStreamPullSubscription ConflictSetup(IJetStreamManagement jsm, IJetStream js, string stream, string subject);
 
         private bool VersionIsBefore(IConnection conn, string version)
         {
@@ -570,10 +596,14 @@ namespace IntegrationTests
                 {
                     return;
                 }
-                CreateDefaultTestStream(c);
+                string stream = Stream(Nuid.NextGlobal());
+                string subject = Subject(Nuid.NextGlobal());
+                string durable = Nuid.NextGlobal();
+
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                CreateMemoryStream(jsm, stream, subject);
                 IJetStream js = c.CreateJetStreamContext();
-                IJetStreamPullSubscription sub = setup.Invoke(jsm, js);
+                IJetStreamPullSubscription sub = setup.Invoke(jsm, js, stream, subject);
                 if (type == TypeError && syncMode)
                 {
                     Assert.Throws<NATSJetStreamStatusException>(() => sub.NextMessage(5000));
@@ -605,8 +635,8 @@ namespace IntegrationTests
         public void TestExceedsMaxWaiting()
         {
             PullSubscribeOptions so = ConsumerConfiguration.Builder().WithMaxPullWaiting(1).BuildPullSubscribeOptions();
-            TestConflictStatus(ExceededMaxWaiting, TypeWarning, true, null, (jsm, js) => {
-                IJetStreamPullSubscription sub = js.PullSubscribe(SUBJECT, so);
+            TestConflictStatus(ExceededMaxWaiting, TypeWarning, true, null, (jsm, js, stream, subject) => {
+                IJetStreamPullSubscription sub = js.PullSubscribe(subject, so);
                 sub.Pull(1);
                 sub.Pull(1);
                 return sub;
@@ -617,8 +647,8 @@ namespace IntegrationTests
         public void TestExceedsMaxRequestBatch()
         {
             PullSubscribeOptions so = ConsumerConfiguration.Builder().WithMaxBatch(1).BuildPullSubscribeOptions();
-            TestConflictStatus(ExceededMaxRequestBatch, TypeWarning, true, null, (jsm, js) => {
-                IJetStreamPullSubscription sub = js.PullSubscribe(SUBJECT, so);
+            TestConflictStatus(ExceededMaxRequestBatch, TypeWarning, true, null, (jsm, js, stream, subject) => {
+                IJetStreamPullSubscription sub = js.PullSubscribe(subject, so);
                 sub.Pull(2);
                 return sub;
             });
@@ -629,9 +659,9 @@ namespace IntegrationTests
         public void TestMessageSizeExceedsMaxBytes()
         {
             PullSubscribeOptions so = ConsumerConfiguration.Builder().BuildPullSubscribeOptions();
-            TestConflictStatus(MessageSizeExceedsMaxBytes, TypeWarning, true, "2.9.0", (jsm, js) => {
-                js.Publish(SUBJECT, new byte[1000]);
-                IJetStreamPullSubscription sub = js.PullSubscribe(SUBJECT, so);
+            TestConflictStatus(MessageSizeExceedsMaxBytes, TypeNone, true, "2.9.0", (jsm, js, stream, subject) => {
+                js.Publish(subject, new byte[1000]);
+                IJetStreamPullSubscription sub = js.PullSubscribe(subject, so);
                 sub.Pull(PullRequestOptions.Builder(1).WithMaxBytes(100).Build());
                 return sub;
             });
@@ -641,8 +671,8 @@ namespace IntegrationTests
         public void TestExceedsMaxRequestExpires()
         {
             PullSubscribeOptions so = ConsumerConfiguration.Builder().WithMaxExpires(1000).BuildPullSubscribeOptions();
-            TestConflictStatus(ExceededMaxRequestExpires, TypeWarning, true, null, (jsm, js) => {
-                IJetStreamPullSubscription sub = js.PullSubscribe(SUBJECT, so);
+            TestConflictStatus(ExceededMaxRequestExpires, TypeWarning, true, null, (jsm, js, stream, subject) => {
+                IJetStreamPullSubscription sub = js.PullSubscribe(subject, so);
                 sub.PullExpiresIn(1, 2000);
                 return sub;
             });
@@ -651,12 +681,14 @@ namespace IntegrationTests
         [Fact]
         public void TestConsumerIsPushBased()
         {
-            PullSubscribeOptions so = PullSubscribeOptions.BindTo(STREAM, Durable(1));
-            TestConflictStatus(ConsumerIsPushBased, TypeError, true, null, (jsm, js) => {
-                jsm.AddOrUpdateConsumer(STREAM, ConsumerConfiguration.Builder().WithDurable(Durable(1)).Build());
+            TestConflictStatus(ConsumerIsPushBased, TypeError, true, null, (jsm, js, stream, subject) =>
+            {
+                string durable = Nuid.NextGlobal();
+                PullSubscribeOptions so = PullSubscribeOptions.BindTo(stream, durable);
+                jsm.AddOrUpdateConsumer(stream, ConsumerConfiguration.Builder().WithDurable(durable).Build());
                 IJetStreamPullSubscription sub = js.PullSubscribe(null, so);
-                jsm.DeleteConsumer(STREAM, Durable(1));
-                jsm.AddOrUpdateConsumer(STREAM, ConsumerConfiguration.Builder().WithDurable(Durable(1)).WithDeliverSubject(Deliver(1)).Build());
+                jsm.DeleteConsumer(stream, durable);
+                jsm.AddOrUpdateConsumer(stream, ConsumerConfiguration.Builder().WithDurable(durable).WithDeliverSubject(Deliver(1)).Build());
                 sub.Pull(1);
                 return sub;
             });
@@ -666,12 +698,13 @@ namespace IntegrationTests
         [Fact(Skip = "Flapper")]
         public void TestConsumerDeleted()
         {
-            PullSubscribeOptions so = PullSubscribeOptions.BindTo(STREAM, Durable(1));
-            TestConflictStatus(ConsumerDeleted, TypeError, true, "2.9.6", (jsm, js) => {
-                jsm.AddOrUpdateConsumer(STREAM, ConsumerConfiguration.Builder().WithDurable(Durable(1)).Build());
+            TestConflictStatus(ConsumerDeleted, TypeError, true, "2.9.6", (jsm, js, stream, subject) => {
+                string durable = Nuid.NextGlobal();
+                PullSubscribeOptions so = PullSubscribeOptions.BindTo(stream, durable);
+                jsm.AddOrUpdateConsumer(stream, ConsumerConfiguration.Builder().WithDurable(durable).Build());
                 IJetStreamPullSubscription sub = js.PullSubscribe(null, so);
                 sub.PullExpiresIn(1, 10000);
-                jsm.DeleteConsumer(STREAM, Durable(1));
+                jsm.DeleteConsumer(stream, durable);
                 return sub;
             });
         }
@@ -679,9 +712,9 @@ namespace IntegrationTests
         [Fact]
         public void TestBadRequest()
         {
-            PullSubscribeOptions so = ConsumerConfiguration.Builder().BuildPullSubscribeOptions();
-            TestConflictStatus(BadRequest, TypeError, true, null, (jsm, js) => {
-                IJetStreamPullSubscription sub = js.PullSubscribe(SUBJECT, so);
+            TestConflictStatus(BadRequest, TypeError, true, null, (jsm, js, stream, subject) => {
+                PullSubscribeOptions so = ConsumerConfiguration.Builder().BuildPullSubscribeOptions();
+                IJetStreamPullSubscription sub = js.PullSubscribe(subject, so);
                 sub.Pull(PullRequestOptions.Builder(1).WithNoWait().WithIdleHeartbeat(1).Build());
                 return sub;
             });
@@ -690,9 +723,9 @@ namespace IntegrationTests
         [Fact]
         public void TestNotFound()
         {
-            PullSubscribeOptions so = ConsumerConfiguration.Builder().BuildPullSubscribeOptions();
-            TestConflictStatus(NoMessages, TypeNone, true, null, (jsm, js) => {
-                IJetStreamPullSubscription sub = js.PullSubscribe(SUBJECT, so);
+            TestConflictStatus(NoMessages, TypeNone, true, null, (jsm, js, stream, subject) => {
+                PullSubscribeOptions so = ConsumerConfiguration.Builder().BuildPullSubscribeOptions();
+                IJetStreamPullSubscription sub = js.PullSubscribe(subject, so);
                 sub.PullNoWait(1);
                 return sub;
             });
@@ -701,9 +734,9 @@ namespace IntegrationTests
         [Fact]
         public void TestExceedsMaxRequestBytes1stMessage()
         {
-            PullSubscribeOptions so = ConsumerConfiguration.Builder().WithMaxBytes(1).BuildPullSubscribeOptions();
-            TestConflictStatus(ExceededMaxRequestMaxBytes, TypeWarning, true, null, (jsm, js) => {
-                IJetStreamPullSubscription sub = js.PullSubscribe(SUBJECT, so);
+            TestConflictStatus(ExceededMaxRequestMaxBytes, TypeWarning, true, null, (jsm, js, stream, subject) => {
+                PullSubscribeOptions so = ConsumerConfiguration.Builder().WithMaxBytes(1).BuildPullSubscribeOptions();
+                IJetStreamPullSubscription sub = js.PullSubscribe(subject, so);
                 sub.Pull(PullRequestOptions.Builder(1).WithMaxBytes(2).Build());
                 return sub;
             });
@@ -721,33 +754,33 @@ namespace IntegrationTests
                 {
                     return;
                 }
-                CreateDefaultTestStream(c);
+
+                string stream = Stream(Nuid.NextGlobal());
+                string subject = Subject(Nuid.NextGlobal());
+                string durable = Nuid.NextGlobal();
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                CreateMemoryStream(jsm, stream, subject);
                 IJetStream js = c.CreateJetStreamContext();
-                jsm.AddOrUpdateConsumer(STREAM, ConsumerConfiguration.Builder().WithDurable(Durable(1)).Build());
-                PullSubscribeOptions so = PullSubscribeOptions.BindTo(STREAM, Durable(1));
-                IJetStreamPullSubscription sub = js.PullSubscribe(SUBJECT, so);
+                jsm.AddOrUpdateConsumer(stream, ConsumerConfiguration.Builder().WithDurable(durable).Build());
+                PullSubscribeOptions so = PullSubscribeOptions.BindTo(stream, durable);
+                IJetStreamPullSubscription sub = js.PullSubscribe(subject, so);
                 
                 MsgHeader h = new MsgHeader();
                 h["foo"] = "bar";
                 // subject 7 + reply 52 + bytes 100 = 159
                 // subject 7 + reply 52 + bytes 100 + headers 21 = 180
-                js.Publish(SUBJECT, new byte[100]);
-                js.Publish(SUBJECT, h, new byte[100]);
+                js.Publish(subject, new byte[100]);
+                js.Publish(subject, h, new byte[100]);
                 // 1000 - 159 - 180 = 661
                 // subject 7 + reply 52 + bytes 610 = 669 > 661
-                js.Publish(SUBJECT, new byte[610]);
+                js.Publish(subject, new byte[610]);
 
                 sub.Pull(PullRequestOptions.Builder(10).WithMaxBytes(1000).WithExpiresIn(1000).Build());
                 Assert.NotNull(sub.NextMessage(500));
                 Assert.NotNull(sub.NextMessage(500));
                 Assert.Throws<NATSTimeoutException>(() => sub.NextMessage(500));
+                CheckHandler(MessageSizeExceedsMaxBytes, TypeNone, handler);
             });
-            
-            if (!skip)
-            {
-                CheckHandler(MessageSizeExceedsMaxBytes, TypeWarning, handler);
-            }
         }
 
         [Fact]
@@ -762,34 +795,32 @@ namespace IntegrationTests
                 {
                     return;
                 }
-                CreateDefaultTestStream(c);
+                string stream = Stream(Nuid.NextGlobal());
+                string subject = "subject-ExMaxRqBytesExactBytes";
+                string durable = Nuid.NextGlobal();
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                CreateMemoryStream(jsm, stream, subject);
                 IJetStream js = c.CreateJetStreamContext();
-                jsm.AddOrUpdateConsumer(STREAM, ConsumerConfiguration.Builder().WithDurable(Durable(1)).Build());
-                PullSubscribeOptions so = PullSubscribeOptions.BindTo(STREAM, Durable(1));
-                IJetStreamPullSubscription sub = js.PullSubscribe(SUBJECT, so);
+                jsm.AddOrUpdateConsumer(stream, ConsumerConfiguration.Builder().WithDurable(durable).Build());
+                PullSubscribeOptions so = PullSubscribeOptions.BindTo(stream, durable);
+                IJetStreamPullSubscription sub = js.PullSubscribe(subject, so);
                 
                 MsgHeader h = new MsgHeader();
                 h["foo"] = "bar";
-                // 159 + 180 + 661 = 1000
-                // subject 7 + reply 52 + bytes 100 = 159
-                // subject 7 + reply 52 + bytes 100 + headers 21 = 180
-                // subject 7 + reply 52 + bytes 602 = 661
-                js.Publish(SUBJECT, new byte[100]);
-                js.Publish(SUBJECT, h, new byte[100]);
-                js.Publish(SUBJECT, new byte[602]);
-
-                sub.Pull(PullRequestOptions.Builder(10).WithMaxBytes(1000).WithExpiresIn(1000).Build());
+                // 218 + 239 + 543 = 1000
+                // subject 30 + reply 88 + bytes 100 = 218
+                // subject 30 + reply 88 + bytes 100 + headers 21 = 239
+                // subject 30 + reply 88 + bytes 425 = 543
+                js.Publish(subject, new byte[100]);
+                js.Publish(subject, h, new byte[100]);
+                js.Publish(subject, new byte[425]);
+                sub.Pull(PullRequestOptions.Builder(10).WithMaxBytes(1000).WithExpiresIn(5000).Build());
                 Assert.NotNull(sub.NextMessage(500));
                 Assert.NotNull(sub.NextMessage(500));
                 Assert.NotNull(sub.NextMessage(500));
                 Assert.Throws<NATSTimeoutException>(() => sub.NextMessage(500));
-            });
-            
-            if (!skip)
-            {
                 CheckHandler(MessageSizeExceedsMaxBytes, TypeNone, handler);
-            }
+            });
         }
     }
 }

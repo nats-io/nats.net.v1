@@ -1,4 +1,4 @@
-﻿// Copyright 2015-2020 The NATS Authors
+﻿// Copyright 2015-2023 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -418,5 +418,13 @@ namespace NATS.Client
         public virtual bool IsJetStream { get { return false; } }
 
         #endregion
+
+        /// <summary>
+        /// The number of bytes the server counts for the message when calculating byte counts.
+        /// Only applies to JetStream messages received from the server.
+        /// </summary>
+        /// <returns>the consumption byte count or -1 if the message implementation does not support this method</returns>
+        public long ConsumeByteCount => 
+            subject.Length + headerLen + (data == null ? 0 : data.Length) + (_reply == null ? 0 : _reply.Length);
     }
 }

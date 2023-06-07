@@ -1,4 +1,4 @@
-﻿// Copyright 2021 The NATS Authors
+﻿// Copyright 2021-2023 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -234,7 +234,7 @@ namespace NATS.Client.JetStream
         Task<PublishAck> PublishAsync(Msg message, PublishOptions publishOptions);
 
         /// <summary>
-        /// Creates a JetStream pull subscription.  Pull subscriptions fetch messages
+        /// Creates a JetStream pull subscription. Pull subscriptions fetch messages
         /// from the server in batches.
         /// </summary>
         /// <param name="subject">The subject on which to listen for messages.
@@ -243,6 +243,18 @@ namespace NATS.Client.JetStream
         /// <returns>An IJetStreamPullSubscription</returns>
         IJetStreamPullSubscription PullSubscribe(string subject, PullSubscribeOptions options);
 
+        /// <summary>
+        /// Creates a JetStream pull subscription with an eventHandler. Pull subscriptions fetch messages
+        /// from the server in batches.
+        /// </summary>
+        /// <param name="subject">The subject on which to listen for messages.
+        /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).</param>
+        /// <param name="handler">The <see cref="EventHandler{MsgHandlerEventArgs}"/> invoked when messages are received 
+        /// on the returned <see cref="IAsyncSubscription"/>.</param>
+        /// <param name="options">Pull Subscribe options for this subscription.</param>
+        /// <returns>An IJetStreamPullSubscription</returns>
+        IJetStreamPullAsyncSubscription PullSubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler, PullSubscribeOptions options);
+        
         /// <summary>
         /// Creates a push subscriber on the given <paramref name="subject"/>, and begins delivering
         /// messages to the given event handler.
@@ -383,5 +395,23 @@ namespace NATS.Client.JetStream
         /// <seealso cref="ISubscription.Subject"/>
         /// <seealso cref="ISubscription.Queue"/>
         IJetStreamPushSyncSubscription PushSubscribeSync(string subject, string queue, PushSubscribeOptions options);
+
+        /// <summary>
+        /// Create a stream context for a specific named stream. Verifies that the stream exists.
+        /// EXPERIMENTAL API SUBJECT TO CHANGE
+        /// </summary>
+        /// <param name="streamName">the name of the stream</param>
+        /// <returns>an IStreamContext instance</returns>
+        IStreamContext CreateStreamContext(string streamName);
+    
+        /// <summary>
+        /// Create a consumer context for a specific named stream and specific named consumer.
+        /// Verifies that the stream and consumer exist.
+        /// EXPERIMENTAL API SUBJECT TO CHANGE
+        /// </summary>
+        /// <param name="streamName">the name of the stream</param>
+        /// <param name="consumerName">the name of the consumer</param>
+        /// <returns>an IConsumerContext instance</returns>
+        IConsumerContext CreateConsumerContext(string streamName, string consumerName);
     }
 }

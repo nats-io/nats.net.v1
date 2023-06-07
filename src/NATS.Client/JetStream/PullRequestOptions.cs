@@ -1,4 +1,17 @@
-﻿using NATS.Client.Internals;
+﻿// Copyright 2022-2023 The NATS Authors
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at:
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client.JetStream
@@ -16,7 +29,7 @@ namespace NATS.Client.JetStream
         /// <summary>
         /// The maximum number of bytes in the batch
         /// </summary>
-        public int MaxBytes { get; }
+        public long MaxBytes { get; }
 
         /// <summary>
         /// The no wait flag
@@ -81,7 +94,7 @@ namespace NATS.Client.JetStream
         public sealed class PullRequestOptionsBuilder
         {
             internal int _batchSize;
-            internal int _maxBytes;
+            internal long _maxBytes;
             internal bool _noWait;
             internal Duration _expiresIn;
             internal Duration _idleHeartbeat;
@@ -102,7 +115,7 @@ namespace NATS.Client.JetStream
             /// </summary>
             /// <param name="maxBytes">The maximum bytes</param>
             /// <returns>The builder</returns>
-            public PullRequestOptionsBuilder WithMaxBytes(int maxBytes)
+            public PullRequestOptionsBuilder WithMaxBytes(long maxBytes)
             {
                 _maxBytes = maxBytes;
                 return this;

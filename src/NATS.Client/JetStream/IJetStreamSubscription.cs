@@ -1,4 +1,4 @@
-﻿// Copyright 2021 The NATS Authors
+﻿// Copyright 2021-2023 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -45,18 +45,46 @@ namespace NATS.Client.JetStream
         bool IsPullMode();
     }
 
+    /// <summary>
+    /// Push Subscription on a JetStream context.
+    /// </summary>
     public interface IJetStreamPushSyncSubscription : IJetStreamSubscription, ISyncSubscription
     {
     }
 
+    /// <summary>
+    /// Async Push Subscription on a JetStream context.
+    /// </summary>
     public interface IJetStreamPushAsyncSubscription : IJetStreamSubscription, IAsyncSubscription
     {
     }
-    
+
     /// <summary>
     /// Pull Subscription on a JetStream context.
     /// </summary>
-    public interface IJetStreamPullSubscription : IJetStreamSubscription, ISyncSubscription
+    public interface IJetStreamPullSubscription : IJetStreamPullApiSubscription, IJetStreamSubscription, ISyncSubscription
+    {
+        /// <summary>
+        /// Fetch a list of messages up to the batch size, waiting no longer than maxWait.
+        /// </summary>
+        /// <remarks>
+        /// This uses <code>pullExpiresIn</code> under the covers, and manages all responses
+        /// from<code> sub.NextMessage(...)</code> to only return regular JetStream messages.
+        /// </remarks>
+        /// <param name="batchSize">the size of the batch</param>
+        /// <param name="maxWaitMillis">The maximum time to wait for the first message.</param>
+        /// <returns>A list of messages</returns>
+        IList<Msg> Fetch(int batchSize, int maxWaitMillis);
+    }
+    
+    /// <summary>
+    /// Async Pull Subscription on a JetStream context.
+    /// </summary>
+    public interface IJetStreamPullAsyncSubscription : IJetStreamPullApiSubscription, IJetStreamSubscription, IAsyncSubscription
+    {
+    }
+    
+    public interface IJetStreamPullApiSubscription
     {
         /// <summary>
         /// Initiate pull with the specified batch size.
@@ -104,17 +132,5 @@ namespace NATS.Client.JetStream
         /// <param name="batchSize">the size of the batch</param>
         /// <param name="expiresInMillis">how long from now the server should expire this request</param>
         void PullExpiresIn(int batchSize, int expiresInMillis);
-
-        /// <summary>
-        /// Fetch a list of messages up to the batch size, waiting no longer than maxWait.
-        /// </summary>
-        /// <remarks>
-        /// This uses <code>pullExpiresIn</code> under the covers, and manages all responses
-        /// from<code> sub.NextMessage(...)</code> to only return regular JetStream messages.
-        /// </remarks>
-        /// <param name="batchSize">the size of the batch</param>
-        /// <param name="maxWaitMillis">The maximum time to wait for the first message.</param>
-        /// <returns>A list of messages</returns>
-        IList<Msg> Fetch(int batchSize, int maxWaitMillis);
     }
 }

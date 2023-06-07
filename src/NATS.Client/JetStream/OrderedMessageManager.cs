@@ -1,4 +1,4 @@
-﻿// Copyright 2022 The NATS Authors
+﻿// Copyright 2022-2023 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at:
@@ -37,11 +37,11 @@ namespace NATS.Client.JetStream
             TargetSid = Sub.Sid;
         }
 
-        public override bool Manage(Msg msg)
+        public override ManageResult Manage(Msg msg)
         {
             if (msg.Sid != TargetSid)
             {
-                return true; // wrong sid is throwaway from previous consumer that errored
+                return ManageResult.StatusHandled; // wrong sid is throwaway from previous consumer that errored
             }
             
             if (msg.IsJetStream)
@@ -49,15 +49,14 @@ namespace NATS.Client.JetStream
                 ulong receivedConsumerSeq = msg.MetaData.ConsumerSequence;
                 if (ExpectedExternalConsumerSeq != receivedConsumerSeq) {
                     HandleErrorCondition();
-                    return true;
+                    return ManageResult.StatusHandled; // not technically a status
                 }
                 TrackJsMessage(msg);
                 ExpectedExternalConsumerSeq++;
-                return false;
+                return ManageResult.Message;
             }
             
-            ManageStatus(msg);
-            return true; // all statuses are managed
+            return ManageStatus(msg);
         }
         
         private void HandleErrorCondition()

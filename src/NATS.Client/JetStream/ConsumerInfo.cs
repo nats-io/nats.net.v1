@@ -77,8 +77,8 @@ namespace NATS.Client.JetStream
                    ", Created=" + Created +
                    ", Delivered=" + Delivered +
                    ", AckFloor=" + AckFloor +
-                   ", " + ObjectString("ConsumerConfiguration", ConsumerConfiguration) +
                    ", " + ObjectString("ClusterInfo", ClusterInfo) +
+                   ", " + "ConsumerConfiguration" + ConsumerConfiguration.ToJsonString() +
                    '}';
         }
     }

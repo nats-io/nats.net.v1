@@ -13,11 +13,10 @@
 
 using System;
 using System.Security.Cryptography;
-using System.Threading;
 
 namespace NATS.Client.Internals
 {
-    internal sealed class Nuid
+    public sealed class Nuid
     {
         private const uint PREFIX_LENGTH = 12;
         private const uint SEQUENTIAL_LENGTH = 10;

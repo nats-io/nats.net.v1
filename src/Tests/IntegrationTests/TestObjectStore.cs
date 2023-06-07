@@ -1,4 +1,4 @@
-﻿// Copyright 2021 The NATS Authors
+﻿// Copyright 2021-2023 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -32,39 +32,41 @@ using static NATS.Client.ObjectStore.ObjectStoreWatchOption;
 namespace IntegrationTests
 {
     [SuppressMessage("ReSharper", "ParameterOnlyUsedForPreconditionCheck.Local")]
-    public class TestObjectStore : TestSuite<ObjectStoreSuiteContext>
+    public class TestObjectStore : TestSuite<OneServerSuiteContext>
     {
-        public TestObjectStore(ObjectStoreSuiteContext context) : base(context) { }
+        public TestObjectStore(OneServerSuiteContext context) : base(context) { }
 
         [Fact]
         public void TestWorkFlow()
         {
+            string bucketName = Bucket(Nuid.NextGlobal());
+            
             Context.RunInJsServer(nc =>
             {
                 IObjectStoreManagement osm = nc.CreateObjectStoreManagementContext();
                 nc.CreateObjectStoreManagementContext(ObjectStoreOptions.Builder(DefaultJsOptions).Build()); // coverage
 
                 // create the bucket
-                ObjectStoreConfiguration osc = ObjectStoreConfiguration.Builder(BUCKET)
+                ObjectStoreConfiguration osc = ObjectStoreConfiguration.Builder(bucketName)
                     .WithDescription(Plain)
                     .WithTtl(Duration.OfHours(24))
                     .WithStorageType(StorageType.Memory)
                     .Build();
 
                 ObjectStoreStatus status = osm.Create(osc);
-                ValidateStatus(status);
-                ValidateStatus(osm.GetStatus(BUCKET));
+                ValidateStatus(bucketName, status);
+                ValidateStatus(bucketName, osm.GetStatus(bucketName));
 
                 IJetStreamManagement jsm = nc.CreateJetStreamManagementContext();
-                Assert.NotNull(jsm.GetStreamInfo("OBJ_" + BUCKET));
+                Assert.NotNull(jsm.GetStreamInfo("OBJ_" + bucketName));
 
                 IList<string> names = osm.GetBucketNames();
                 Assert.Equal(1, names.Count);
-                Assert.True(names.Contains(BUCKET));
+                Assert.True(names.Contains(bucketName));
 
                 // put some objects into the stores
-                IObjectStore os = nc.CreateObjectStoreContext(BUCKET);
-                ValidateStatus(os.GetStatus());
+                IObjectStore os = nc.CreateObjectStoreContext(bucketName);
+                ValidateStatus(bucketName, os.GetStatus());
 
                 // object not found errors
                 AssertClientError(OsObjectNotFound, () => os.Get("notFound", new MemoryStream()));
@@ -92,9 +94,9 @@ namespace IntegrationTests
                 }
 
                 FileInfo fileInfo = (FileInfo)input[1];
-                ObjectInfo oi1 = ValidateObjectInfo(os.Put(meta, fileInfo.OpenRead()), len, expectedChunks, 4096);
+                ObjectInfo oi1 = ValidateObjectInfo(bucketName, os.Put(meta, fileInfo.OpenRead()), len, expectedChunks, 4096);
 
-                MemoryStream baos = ValidateGet(os, len, expectedChunks, 4096);
+                MemoryStream baos = ValidateGet(bucketName, os, len, expectedChunks, 4096);
                 byte[] bytes = baos.ToArray();
                 byte[] bytes4K = new byte[4096];
                 for (int x = 0; x < 4096; x++)
@@ -102,8 +104,8 @@ namespace IntegrationTests
                     bytes4K[x] = bytes[x];
                 }
 
-                ObjectInfo oi2 = ValidateObjectInfo(os.Put(meta, new MemoryStream(bytes4K)), 4096, 1, 4096);
-                ValidateGet(os, 4096, 1, 4096);
+                ObjectInfo oi2 = ValidateObjectInfo(bucketName, os.Put(meta, new MemoryStream(bytes4K)), 4096, 1, 4096);
+                ValidateGet(bucketName, os, 4096, 1, 4096);
 
                 Assert.NotEqual(oi1.Nuid, oi2.Nuid);
 
@@ -155,16 +157,16 @@ namespace IntegrationTests
                 if (expectedChunks * DefaultChunkSize < len) {
                     expectedChunks++;
                 }
-                ValidateObjectInfo(os.Put(name, fileInfo.OpenRead()), name, null, false, len, expectedChunks, DefaultChunkSize);
+                ValidateObjectInfo(bucketName, os.Put(name, fileInfo.OpenRead()), name, null, false, len, expectedChunks, DefaultChunkSize);
 
                 name = fileInfo.Name;
-                ValidateObjectInfo(os.Put(fileInfo), name, null, false, len, expectedChunks, DefaultChunkSize);
+                ValidateObjectInfo(bucketName, os.Put(fileInfo), name, null, false, len, expectedChunks, DefaultChunkSize);
             });
         }
 
-        private static void ValidateStatus(ObjectStoreStatus status)
+        private static void ValidateStatus(string bucketName, ObjectStoreStatus status)
         {
-            Assert.Equal(BUCKET, status.BucketName);
+            Assert.Equal(bucketName, status.BucketName);
             Assert.Equal(Plain, status.Description);
             Assert.False(status.Sealed);
             Assert.Equal(0U, status.Size);
@@ -177,22 +179,23 @@ namespace IntegrationTests
             Assert.Equal("JetStream", status.BackingStore);
         }
 
-        private MemoryStream ValidateGet(IObjectStore os, long len, long chunks, int chunkSize) {
+        private MemoryStream ValidateGet(string bucketName, IObjectStore os, long len, long chunks, int chunkSize) {
             MemoryStream ms = new MemoryStream();
             ObjectInfo oi = os.Get("object-name", ms);
             byte[] bytes = ms.ToArray();
             Assert.Equal(len, bytes.Length);
-            ValidateObjectInfo(oi, len, chunks, chunkSize);
+            ValidateObjectInfo(bucketName, oi, len, chunks, chunkSize);
             return ms;
         }
 
-        private ObjectInfo ValidateObjectInfo(ObjectInfo oi, long size, long chunks, int chunkSize)
+        private ObjectInfo ValidateObjectInfo(string bucketName, ObjectInfo oi, long size, long chunks, int chunkSize)
         {
-            return ValidateObjectInfo(oi, "object-name", "object-desc", true, size, chunks, chunkSize);
+            return ValidateObjectInfo(bucketName, oi, "object-name", "object-desc", true, size, chunks, chunkSize);
         }
 
-        private ObjectInfo ValidateObjectInfo(ObjectInfo oi, string objectName, string objectDesc, bool headers, long size, long chunks, int chunkSize) {
-            Assert.Equal(BUCKET, oi.Bucket);
+        private ObjectInfo ValidateObjectInfo(string bucketName, ObjectInfo oi, string objectName, string objectDesc,
+            bool headers, long size, long chunks, int chunkSize) {
+            Assert.Equal(bucketName, oi.Bucket);
             Assert.Equal(objectName, oi.ObjectName);
             if (objectDesc == null) {
                 Assert.Null(oi.Description);
@@ -427,13 +430,15 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public void TestList() {
+        public void TestList()
+        {
+            string bucketName = Bucket(Nuid.NextGlobal());
             Context.RunInJsServer(nc =>
             {
                 IObjectStoreManagement osm = nc.CreateObjectStoreManagementContext();
-                osm.Create(ObjectStoreConfiguration.Builder(BUCKET).WithStorageType(StorageType.Memory).Build());
+                osm.Create(ObjectStoreConfiguration.Builder(bucketName).WithStorageType(StorageType.Memory).Build());
 
-                IObjectStore os = nc.CreateObjectStoreContext(BUCKET);
+                IObjectStore os = nc.CreateObjectStoreContext(bucketName);
 
                 os.Put(Key(1), Encoding.UTF8.GetBytes("11"));
                 os.Put(Key(2), Encoding.UTF8.GetBytes("21"));
@@ -461,15 +466,17 @@ namespace IntegrationTests
 
         [Fact]
         public void TestSeal() {
+            string bucketName = Bucket(Nuid.NextGlobal());
+
             Context.RunInJsServer(nc =>
             {
                 IObjectStoreManagement osm = nc.CreateObjectStoreManagementContext();
 
-                osm.Create(ObjectStoreConfiguration.Builder(BUCKET)
+                osm.Create(ObjectStoreConfiguration.Builder(bucketName)
                     .WithStorageType(StorageType.Memory)
                     .Build());
 
-                IObjectStore os = nc.CreateObjectStoreContext(BUCKET);
+                IObjectStore os = nc.CreateObjectStoreContext(bucketName);
                 os.Put("name", Encoding.UTF8.GetBytes("data"));
 
                 os.Seal();

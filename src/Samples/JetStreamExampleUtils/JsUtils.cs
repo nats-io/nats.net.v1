@@ -1,4 +1,4 @@
-﻿// Copyright 2021 The NATS Authors
+﻿// Copyright 2021-2023 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,6 +17,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using NATS.Client;
+using NATS.Client.Internals;
 using NATS.Client.JetStream;
 
 namespace NATSExamples
@@ -26,23 +27,30 @@ namespace NATSExamples
         // ----------------------------------------------------------------------------------------------------
         // STREAM INFO / CREATE / UPDATE 
         // ----------------------------------------------------------------------------------------------------
-        public static StreamInfo GetStreamInfoOrNullWhenNotExist(IJetStreamManagement jsm, string streamName) {
-            try {
+        public static StreamInfo GetStreamInfoOrNullWhenNotExist(IJetStreamManagement jsm, string streamName)
+        {
+            try
+            {
                 return jsm.GetStreamInfo(streamName);
             }
-            catch (NATSJetStreamException e) {
-                if (e.ErrorCode == 404) {
+            catch (NATSJetStreamException e)
+            {
+                if (e.ErrorCode == 404)
+                {
                     return null;
                 }
+
                 throw;
             }
         }
 
-        public static bool StreamExists(IConnection c, string streamName) {
+        public static bool StreamExists(IConnection c, string streamName)
+        {
             return GetStreamInfoOrNullWhenNotExist(c.CreateJetStreamManagementContext(), streamName) != null;
         }
 
-        public static bool StreamExists(IJetStreamManagement jsm, string streamName) {
+        public static bool StreamExists(IJetStreamManagement jsm, string streamName)
+        {
             return GetStreamInfoOrNullWhenNotExist(jsm, streamName) != null;
         }
 
@@ -57,15 +65,19 @@ namespace NATSExamples
             }
         }
 
-        public static void ExitIfStreamNotExists(IConnection c, string streamName) {
-            if (!StreamExists(c, streamName)) {
+        public static void ExitIfStreamNotExists(IConnection c, string streamName)
+        {
+            if (!StreamExists(c, streamName))
+            {
                 Console.WriteLine("\nThe example cannot run since the stream '" + streamName + "' does not exist.\n" +
-                                   "It depends on the stream existing and having data.");
+                                  "It depends on the stream existing and having data.");
                 Environment.Exit(-1);
             }
         }
 
-        public static StreamInfo CreateStream(IJetStreamManagement jsm, string streamName, StorageType storageType, params string[] subjects) {
+        public static StreamInfo CreateStream(IJetStreamManagement jsm, string streamName, StorageType storageType,
+            params string[] subjects)
+        {
             // Create a stream, here will use a file storage type, and one subject,
             // the passed subject.
             StreamConfiguration sc = StreamConfiguration.Builder()
@@ -76,29 +88,35 @@ namespace NATSExamples
 
             // Add or use an existing stream.
             StreamInfo si = jsm.AddStream(sc);
-            Console.WriteLine("Created stream '{0}' with subject(s) [{1}]\n", streamName, string.Join(",", si.Config.Subjects));
+            Console.WriteLine("Created stream '{0}' with subject(s) [{1}]\n", streamName,
+                string.Join(",", si.Config.Subjects));
             return si;
         }
 
-        public static StreamInfo CreateStream(IJetStreamManagement jsm, string stream, params string[] subjects) {
+        public static StreamInfo CreateStream(IJetStreamManagement jsm, string stream, params string[] subjects)
+        {
             return CreateStream(jsm, stream, StorageType.Memory, subjects);
         }
 
-        public static StreamInfo CreateStream(IConnection c, string stream, params string[] subjects) {
+        public static StreamInfo CreateStream(IConnection c, string stream, params string[] subjects)
+        {
             return CreateStream(c.CreateJetStreamManagementContext(), stream, StorageType.Memory, subjects);
         }
 
-        public static StreamInfo CreateStreamExitWhenExists(IConnection c, string streamName, params string[] subjects) {
+        public static StreamInfo CreateStreamExitWhenExists(IConnection c, string streamName, params string[] subjects)
+        {
             return CreateStreamExitWhenExists(c.CreateJetStreamManagementContext(), streamName, subjects);
         }
 
-        public static StreamInfo CreateStreamExitWhenExists(IJetStreamManagement jsm, string streamName, params string[] subjects)
+        public static StreamInfo CreateStreamExitWhenExists(IJetStreamManagement jsm, string streamName,
+            params string[] subjects)
         {
             ExitIfStreamExists(jsm, streamName);
             return CreateStream(jsm, streamName, StorageType.Memory, subjects);
         }
 
-        public static void CreateStreamWhenDoesNotExist(IJetStreamManagement jsm, string stream, params string[] subjects)
+        public static void CreateStreamWhenDoesNotExist(IJetStreamManagement jsm, string stream,
+            params string[] subjects)
         {
             try
             {
@@ -123,24 +141,30 @@ namespace NATSExamples
             CreateStreamWhenDoesNotExist(c.CreateJetStreamManagementContext(), stream, subjects);
         }
 
-        public static StreamInfo CreateStreamOrUpdateSubjects(IJetStreamManagement jsm, string streamName, StorageType storageType, params string[] subjects) {
+        public static StreamInfo CreateStreamOrUpdateSubjects(IJetStreamManagement jsm, string streamName,
+            StorageType storageType, params string[] subjects)
+        {
 
             StreamInfo si = GetStreamInfoOrNullWhenNotExist(jsm, streamName);
-            if (si == null) {
+            if (si == null)
+            {
                 return CreateStream(jsm, streamName, storageType, subjects);
             }
 
             // check to see if the configuration has all the subject we want
             StreamConfiguration sc = si.Config;
             bool needToUpdate = false;
-            foreach (string sub in subjects) {
-                if (!sc.Subjects.Contains(sub)) {
+            foreach (string sub in subjects)
+            {
+                if (!sc.Subjects.Contains(sub))
+                {
                     needToUpdate = true;
                     sc.Subjects.Add(sub);
                 }
             }
 
-            if (needToUpdate) {
+            if (needToUpdate)
+            {
                 si = jsm.UpdateStream(sc);
                 Console.WriteLine("Existing stream '{0}' was updated, has subject(s) [{1}]\n",
                     streamName, string.Join(",", si.Config.Subjects));
@@ -155,48 +179,86 @@ namespace NATSExamples
             return si;
         }
 
-        public static StreamInfo CreateStreamOrUpdateSubjects(IJetStreamManagement jsm, string streamName, params string[] subjects) {
+        public static StreamInfo CreateStreamOrUpdateSubjects(IJetStreamManagement jsm, string streamName,
+            params string[] subjects)
+        {
             return CreateStreamOrUpdateSubjects(jsm, streamName, StorageType.Memory, subjects);
         }
 
-        public static StreamInfo CreateStreamOrUpdateSubjects(IConnection c, string stream, params string[] subjects) {
-            return CreateStreamOrUpdateSubjects(c.CreateJetStreamManagementContext(), stream, StorageType.Memory, subjects);
+        public static StreamInfo CreateStreamOrUpdateSubjects(IConnection c, string stream, params string[] subjects)
+        {
+            return CreateStreamOrUpdateSubjects(c.CreateJetStreamManagementContext(), stream, StorageType.Memory,
+                subjects);
+        }
+
+        public static void CreateOrReplaceStream(IJetStreamManagement jsm, String stream, String subject)
+        {
+            // in case the stream was here before, we want a completely new one
+            try
+            {
+                jsm.DeleteStream(stream);
+            }
+            catch (Exception)
+            {
+            }
+
+            jsm.AddStream(StreamConfiguration.Builder()
+                .WithName(stream)
+                .WithStorageType(StorageType.Memory)
+                .WithSubjects(subject)
+                .Build());
         }
 
         // ----------------------------------------------------------------------------------------------------
         // PUBLISH
         // ----------------------------------------------------------------------------------------------------
-        public static void Publish(IConnection c, string subject, int count) {
+        public static void Publish(IConnection c, string subject, int count)
+        {
             Publish(c.CreateJetStreamContext(), subject, "data", count, false);
         }
 
-        public static void Publish(IJetStream js, String subject, int count) {
+        public static void Publish(IJetStream js, String subject, int count)
+        {
             Publish(js, subject, "data", count, false);
         }
 
-        public static void Publish(IJetStream js, String subject, String prefix, int count, bool verbose = true) {
-            if (verbose) {
+        public static void Publish(IJetStream js, String subject, String prefix, int count, bool verbose = true)
+        {
+            if (verbose)
+            {
                 Console.Write("Publish ->");
             }
-            for (int x = 1; x <= count; x++) {
+
+            for (int x = 1; x <= count; x++)
+            {
                 String data = prefix + x;
-                if (verbose) {
+                if (verbose)
+                {
                     Console.Write(" " + data);
                 }
+
                 js.Publish(subject, Encoding.UTF8.GetBytes(data));
             }
-            if (verbose) {
+
+            if (verbose)
+            {
                 Console.WriteLine(" <-");
             }
         }
 
-        public static void PublishInBackground(IJetStream js, String subject, String prefix, int count) {
-            new Thread(() => {
-                try {
-                    for (int x = 1; x <= count; x++) {
+        public static void PublishInBackground(IJetStream js, String subject, String prefix, int count)
+        {
+            new Thread(() =>
+            {
+                try
+                {
+                    for (int x = 1; x <= count; x++)
+                    {
                         js.Publish(subject, Encoding.ASCII.GetBytes(prefix + "-" + x));
                     }
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     Console.WriteLine(e);
                     Environment.Exit(-1);
                 }
@@ -207,11 +269,13 @@ namespace NATSExamples
         // ----------------------------------------------------------------------------------------------------
         // READ MESSAGES
         // ----------------------------------------------------------------------------------------------------
-        public static IList<Msg> ReadMessagesAck(ISyncSubscription sub, bool verbose = true, int timeout = 1000) {
+        public static IList<Msg> ReadMessagesAck(ISyncSubscription sub, bool verbose = true, int timeout = 1000)
+        {
             if (verbose)
             {
                 Console.Write("Read/Ack ->");
             }
+
             IList<Msg> messages = new List<Msg>();
             bool keepGoing = true;
             while (keepGoing)
@@ -239,32 +303,69 @@ namespace NATSExamples
 
             return messages;
         }
- 
+
         // ----------------------------------------------------------------------------------------------------
         // REPORT
         // ----------------------------------------------------------------------------------------------------
-        public static void Report(IList<Msg> list) {
+        public static void Report(IList<Msg> list)
+        {
             Console.Write("Fetch ->");
-            foreach (Msg m in list) {
+            foreach (Msg m in list)
+            {
                 Console.Write(" " + Encoding.UTF8.GetString(m.Data));
             }
+
             Console.Write(" <- \n");
         }
-    
+
         private static readonly Random Random = new Random();
         private const string RandomChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz";
         private const string RandomIdChars = "0123456789abcdef";
-        
+
         public static string RandomText()
         {
             return new string(Enumerable.Repeat(RandomChars, 20)
                 .Select(s => s[Random.Next(s.Length)]).ToArray());
         }
-        
+
         public static string RandomId()
         {
             return new string(Enumerable.Repeat(RandomIdChars, 6)
                 .Select(s => s[Random.Next(s.Length)]).ToArray());
+        }
+    }
+
+    public class Publisher
+    {
+        private readonly Random random = new Random();
+        private readonly IJetStream js;
+        private readonly string subject;
+        private readonly string messageText;
+        private readonly int jitter;
+        private readonly InterlockedBoolean keepGoing = new InterlockedBoolean(true);
+        private int pubNo;
+
+        public Publisher(IJetStream js, string subject, string messageText, int jitter)
+        {
+            this.js = js;
+            this.subject = subject;
+            this.messageText = messageText;
+            this.jitter = jitter;
+        }
+
+        public void StopPublishing()
+        {
+            keepGoing.Set(false);
+        }
+
+        public void run()
+        {
+            while (keepGoing.IsTrue())
+            {
+                //noinspection BusyWait
+                Thread.Sleep(random.Next(jitter));
+                js.Publish(subject, Encoding.UTF8.GetBytes(messageText + "-" + (++pubNo)));
+            }
         }
     }
 }

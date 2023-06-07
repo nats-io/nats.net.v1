@@ -327,6 +327,12 @@ namespace NATS.Client.Internals
             return d;
         }
 
+        internal static void ValidateDurationGtZeroRequired(long millis, string label) {
+            if (millis <= 0) {
+                throw new ArgumentException($"{label} duration must be supplied and greater than 0.");
+            }
+        }
+
         internal static Duration ValidateDurationNotRequiredGtOrEqZero(Duration d)
         {
             if (d == null)
@@ -402,6 +408,16 @@ namespace NATS.Client.Internals
             if (i < 1)
             {
                 throw new ArgumentException($"{label} must be greater than zero");
+            }
+
+            return i;
+        }
+
+        internal static int ValidateGtEqZero(int i, string label)
+        {
+            if (i < 0)
+            {
+                throw new ArgumentException($"{label} must be greater than or equal to zero");
             }
 
             return i;

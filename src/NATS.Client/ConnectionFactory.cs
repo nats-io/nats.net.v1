@@ -44,11 +44,7 @@ namespace NATS.Client
         /// details.</para></exception>
         public IConnection CreateConnection(string url)
         {
-            Options opts = new Options
-            {
-                Url = url
-            };
-            return CreateConnection(opts);
+            return CreateConnection(GetDefaultOptions(url));
         }
         
         /// <summary>
@@ -72,10 +68,7 @@ namespace NATS.Client
             if (string.IsNullOrWhiteSpace(credentialsPath))
                 throw new ArgumentException("Invalid credentials path", nameof(credentialsPath));
 
-            Options opts = new Options
-            {
-                Url = url
-            };
+            Options opts = GetDefaultOptions(url);
             opts.SetUserCredentials(credentialsPath);
             return CreateConnection(opts);
         }
@@ -104,10 +97,7 @@ namespace NATS.Client
             if (string.IsNullOrWhiteSpace(privateNkey))
                 throw new ArgumentException("Invalid nkey path", nameof(privateNkey));
 
-            Options opts = new Options
-            {
-                Url = url
-            };
+            Options opts = GetDefaultOptions(url);
             opts.SetUserCredentials(jwt, privateNkey);
             return CreateConnection(opts);
         }
@@ -115,10 +105,17 @@ namespace NATS.Client
         /// <summary>
         /// Retrieves the default set of client options.
         /// </summary>
+        /// <param name="server">Optionally set the server. Still can be set or overriden with
+        /// <see cref="Options.Url"/> or <see cref="Options.Servers"/> properties</param>
         /// <returns>The default <see cref="Options"/> object for the NATS client.</returns>
-        public static Options GetDefaultOptions()
+        public static Options GetDefaultOptions(string server = null)
         {
-            return new Options();
+            Options opts = new Options();
+            if (server != null)
+            {
+                opts.Url = server;
+            }
+            return opts;
         }
 
         /// <summary>
@@ -138,11 +135,8 @@ namespace NATS.Client
         /// details.</para></exception>
         public IConnection CreateSecureConnection(string url)
         {
-            Options opts = new Options
-            {
-                Url = url,
-                Secure = true
-            };
+            Options opts = GetDefaultOptions(url);
+            opts.Secure = true;
             return CreateConnection(opts);
         }
 
@@ -218,11 +212,7 @@ namespace NATS.Client
         /// details.</para></exception>
         public IEncodedConnection CreateEncodedConnection(string url)
         {
-            Options opts = new Options
-            {
-                Url = url
-            };
-            return CreateEncodedConnection(opts);
+            return CreateEncodedConnection(GetDefaultOptions(url));
         }
 
         /// <summary>

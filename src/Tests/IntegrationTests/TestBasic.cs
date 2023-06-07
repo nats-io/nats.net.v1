@@ -41,7 +41,7 @@ namespace IntegrationTests
         [Fact]
         public void TestConnectedServer()
         {
-            using (NATSServer.CreateFastAndVerifyQuietHandlers())
+            using (NATSServer.CreateFastAndVerify())
             {
                 using (var c = Context.OpenConnection())
                 {
@@ -62,7 +62,7 @@ namespace IntegrationTests
         [Fact]
         public void TestMultipleClose()
         {
-            using (NATSServer.CreateFastAndVerifyQuietHandlers())
+            using (NATSServer.CreateFastAndVerify())
             {
                 using (var c = Context.OpenConnection())
                 {
@@ -81,7 +81,7 @@ namespace IntegrationTests
         [Fact]
         public void TestSimplePublish()
         {
-            using (NATSServer.CreateFastAndVerifyQuietHandlers())
+            using (NATSServer.CreateFastAndVerify())
             {
                 using (IConnection c = Context.OpenConnection())
                 {
@@ -93,7 +93,7 @@ namespace IntegrationTests
         [Fact]
         public void TestSimplePublishNoData()
         {
-            using (NATSServer.CreateFastAndVerifyQuietHandlers())
+            using (NATSServer.CreateFastAndVerify())
             {
                 using (IConnection c = Context.OpenConnection())
                 {
@@ -117,7 +117,7 @@ namespace IntegrationTests
         [Fact]
         public void TestPublishDataWithOffsets()
         {
-            using (NATSServer.CreateFastAndVerifyQuietHandlers())
+            using (NATSServer.CreateFastAndVerify())
             {
                 using (IConnection c = Context.OpenConnection())
                 {

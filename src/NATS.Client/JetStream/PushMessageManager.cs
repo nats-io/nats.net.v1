@@ -1,4 +1,4 @@
-﻿// Copyright 2022 The NATS Authors
+﻿// Copyright 2022-2023 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at:
@@ -32,7 +32,7 @@ namespace NATS.Client.JetStream
             SubscribeOptions so,
             ConsumerConfiguration originalCc, 
             bool queueMode, 
-            bool syncMode) : base(conn, syncMode)
+            bool syncMode) : base(conn, so, syncMode)
         {
             this.Js = js;
             Stream = stream;
@@ -66,10 +66,10 @@ namespace NATS.Client.JetStream
                 MessageReceived(); // only need to track when heartbeats are expected
                 if (msg.HasStatus)
                 {
-                    // only plain heartbeats do not get queued
+                    // only fc heartbeats get queued
                     if (msg.Status.IsHeartbeat())
                     {
-                        return hasFcSubject(msg); // true if not a plain hb
+                        return hasFcSubject(msg); // true if a fc hb
                     }
                 }
             }
@@ -85,17 +85,16 @@ namespace NATS.Client.JetStream
             return msg.Header == null ? null : msg.Header[JetStreamConstants.ConsumerStalledHeader];
         }
 
-        public override bool Manage(Msg msg) {
+        public override ManageResult Manage(Msg msg) {
             if (!msg.HasStatus)
             {
                 TrackJsMessage(msg);
-                return false;
+                return ManageResult.Message;
             }
-            ManageStatus(msg);
-            return true; // all status are managed
+            return ManageStatus(msg);
         }
 
-        protected void ManageStatus(Msg msg) {
+        protected ManageResult ManageStatus(Msg msg) {
             // this checks fc, hb and unknown
             // only process fc and hb if those flags are set
             // otherwise they are simply known statuses
@@ -104,14 +103,15 @@ namespace NATS.Client.JetStream
                 String fcSubject = isFlowControl ? msg.Reply : extractFcSubject(msg);
                 if (fcSubject != null) {
                     _processFlowControl(fcSubject, isFlowControl ? FlowControlSource.FlowControl : FlowControlSource.Heartbeat);
-                    return;
+                    return ManageResult.StatusHandled;
                 }
             }
             Conn.Opts.UnhandledStatusEventHandlerOrDefault.Invoke(this, new UnhandledStatusEventArgs(Conn, (Subscription)Sub, msg.Status));
             if (SyncMode)
             {
-                throw new NATSJetStreamStatusException((Subscription)Sub, msg.Status);
+                throw new NATSJetStreamStatusException(msg.Status, (Subscription)Sub);
             }
+            return ManageResult.StatusError;
         }
 
         private void _processFlowControl(string fcSubject, FlowControlSource source) {

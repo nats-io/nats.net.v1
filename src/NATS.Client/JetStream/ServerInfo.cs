@@ -20,6 +20,7 @@ namespace NATS.Client.JetStream
 {
     public sealed class ServerInfo
     {
+        private readonly string sourceJson;
         public string ServerId { get; }
         public string ServerName { get; }
         public string Version { get; }
@@ -43,6 +44,7 @@ namespace NATS.Client.JetStream
 
         public ServerInfo(string json)
         {
+            sourceJson = json;
             var siNode = JSON.Parse(json);
             ServerId = siNode[ApiConstants.ServerId].Value;
             ServerName = siNode[ApiConstants.ServerName].Value;
@@ -85,6 +87,11 @@ namespace NATS.Client.JetStream
 
         public bool IsSameOrNewerThanVersion(string vTarget) {
             return ServerVersion.IsSameOrNewer(Version, vTarget);
+        }
+
+        public override string ToString()
+        {
+            return sourceJson;
         }
     }
 }

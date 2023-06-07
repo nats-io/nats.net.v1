@@ -1,4 +1,4 @@
-﻿// Copyright 2022 The NATS Authors
+﻿// Copyright 2022-2023 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -23,14 +23,21 @@ using NATS.Client.Internals.SimpleJSON;
 using NATS.Client.Service;
 using UnitTests;
 using Xunit;
+using Xunit.Abstractions;
 using static UnitTests.TestBase;
 
 namespace IntegrationTestsInternal
 {
     [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
-    public class TestService : TestSuite<ServiceSuiteContext>
+    public class TestService : TestSuite<AutoServerSuiteContext>
     {
-        public TestService(ServiceSuiteContext context) : base(context) {}
+        private readonly ITestOutputHelper output;
+
+        public TestService(ITestOutputHelper output, AutoServerSuiteContext context) : base(context)
+        {
+            this.output = output;
+            Console.SetOut(new ConsoleWriter(output));
+        }
         
         const string ServiceName1 = "Service1";
         const string ServiceName2 = "Service2";
@@ -45,11 +52,12 @@ namespace IntegrationTestsInternal
         [Fact]
         public void TestServiceWorkflow()
         {
-            using (var s = NATSServer.CreateFastAndVerify(Context.Server1.Port))
+            TestServerInfo server = Context.AutoServer();
+            using (var s = NATSServer.CreateFastAndVerify(server.Port))
             {
-                using (IConnection serviceNc1 = Context.OpenConnection(Context.Server1.Port))
-                using (IConnection serviceNc2 = Context.OpenConnection(Context.Server1.Port))
-                using (IConnection clientNc = Context.OpenConnection(Context.Server1.Port))
+                using (IConnection serviceNc1 = Context.OpenConnection(server.Port))
+                using (IConnection serviceNc2 = Context.OpenConnection(server.Port))
+                using (IConnection clientNc = Context.OpenConnection(server.Port))
                 {
                     Endpoint endEcho = Endpoint.Builder()
                         .WithName(EchoEndpointName)
@@ -331,6 +339,7 @@ namespace IntegrationTestsInternal
         [Fact]
         public void TestServiceBuilderConstruction()
         {
+            string name = Name(Nuid.NextGlobal());
             Connection conn = new Connection(ConnectionFactory.GetDefaultOptions());
             ServiceEndpoint se = ServiceEndpoint.Builder()
                 .WithEndpoint(new Endpoint(Name(0)))
@@ -338,15 +347,15 @@ namespace IntegrationTestsInternal
                 .Build();
 
             // minimum valid service
-            Service service = Service.Builder().WithConnection(conn).WithName(NAME).WithVersion("1.0.0").AddServiceEndpoint(se).Build();
+            Service service = Service.Builder().WithConnection(conn).WithName(name).WithVersion("1.0.0").AddServiceEndpoint(se).Build();
             Assert.NotNull(service.ToString()); // coverage
             Assert.NotNull(service.Id);
-            Assert.Equal(NAME, service.Name);
+            Assert.Equal(name, service.Name);
             Assert.Equal(ServiceBuilder.DefaultDrainTimeoutMillis, service.DrainTimeoutMillis);
             Assert.Equal("1.0.0", service.Version);
             Assert.Null(service.Description);
 
-            service = Service.Builder().WithConnection(conn).WithName(NAME).WithVersion("1.0.0").AddServiceEndpoint(se)
+            service = Service.Builder().WithConnection(conn).WithName(name).WithVersion("1.0.0").AddServiceEndpoint(se)
                 .WithApiUrl("apiUrl")
                 .WithDescription("desc")
                 .WithDrainTimeoutMillis(1000)
@@ -374,7 +383,7 @@ namespace IntegrationTestsInternal
             Assert.Throws<ArgumentException>(() => Service.Builder().WithVersion("not-semver"));
 
             ArgumentException ae = Assert.Throws<ArgumentException>(
-                () => Service.Builder().WithName(NAME).WithVersion("1.0.0").AddServiceEndpoint(se).Build());
+                () => Service.Builder().WithName(name).WithVersion("1.0.0").AddServiceEndpoint(se).Build());
             Assert.Contains("Connection cannot be null or empty", ae.Message);
 
             ae = Assert.Throws<ArgumentException>(
@@ -382,11 +391,11 @@ namespace IntegrationTestsInternal
             Assert.Contains("Name cannot be null or empty", ae.Message);
 
             ae = Assert.Throws<ArgumentException>(() =>
-                Service.Builder().WithConnection(conn).WithName(NAME).AddServiceEndpoint(se).Build());
+                Service.Builder().WithConnection(conn).WithName(name).AddServiceEndpoint(se).Build());
             Assert.Contains("Version cannot be null or empty", ae.Message);
 
             ae = Assert.Throws<ArgumentException>(() =>
-                Service.Builder().WithConnection(conn).WithName(NAME).WithVersion("1.0.0").Build());
+                Service.Builder().WithConnection(conn).WithName(name).WithVersion("1.0.0").Build());
             Assert.Contains("Endpoints cannot be null or empty", ae.Message);
         }
 
