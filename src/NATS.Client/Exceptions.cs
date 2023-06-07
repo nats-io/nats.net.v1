@@ -119,6 +119,7 @@ namespace NATS.Client
     /// The exception that is thrown when a message payload exceeds what
     /// the maximum configured.
     /// </summary>
+    [Obsolete("This exception is no longer thrown.", false)]
     public class NATSMaxPayloadException : NATSException
     {
         public NATSMaxPayloadException() : base("Maximum payload size has been exceeded") { }

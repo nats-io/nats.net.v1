@@ -109,12 +109,12 @@ namespace NATS.Client
 
         private readonly Nuid _nuid = new Nuid();
 
-        private readonly Options opts; // assigned in constructor
+        private readonly Options _opts; // assigned in constructor
 
         /// <summary>
         /// Gets the configuration options for this instance.
         /// </summary>
-        public Options Opts => opts;
+        public Options Opts => _opts;
 
         private readonly List<Thread> wg = new List<Thread>(2);
 
@@ -701,10 +701,10 @@ namespace NATS.Client
         {
             lock (mu)
             {
-                if (opts.subscriberDeliveryTaskCount > 0 && subChannelPool == null)
+                if (_opts.subscriberDeliveryTaskCount > 0 && subChannelPool == null)
                 {
                     subChannelPool = new SubChannelPool(this,
-                        opts.subscriberDeliveryTaskCount);
+                        _opts.subscriberDeliveryTaskCount);
                 }
 
                 if (subChannelPool != null)
@@ -724,14 +724,14 @@ namespace NATS.Client
         /// <see cref="Connection"/>.</param>
         internal Connection(Options options)
         {
-            opts = new Options(options);
+            _opts = new Options(options);
 
-            if (opts.ReconnectDelayHandler == null)
+            if (_opts.ReconnectDelayHandler == null)
             {
-                opts.ReconnectDelayHandler = DefaultReconnectDelayHandler;
+                _opts.ReconnectDelayHandler = DefaultReconnectDelayHandler;
             }
 
-            srvProvider = opts.ServerProvider ?? new ServerPool();
+            srvProvider = _opts.ServerProvider ?? new ServerPool();
                 
             PING_P_BYTES = Encoding.UTF8.GetBytes(IC.pingProto);
             PING_P_BYTES_LEN = PING_P_BYTES.Length;
@@ -826,7 +826,7 @@ namespace NATS.Client
             ex = null;
             try
             {
-                conn.open(s, opts.Timeout);
+                conn.open(s, _opts.Timeout);
 
                 if (pending != null && bw != null)
                 {
@@ -855,7 +855,7 @@ namespace NATS.Client
         // makeSecureConn will wrap an existing Conn using TLS
         private void makeTLSConn()
         {
-            conn.makeTLS(this.opts);
+            conn.makeTLS(this._opts);
 
             bw = conn.getWriteBufferedStream(defaultBufSize);
             br = conn.getReadBufferedStream();
@@ -935,7 +935,7 @@ namespace NATS.Client
             if (Opts.PingInterval > 0)
             {
                 ptmr = new Timer(pingTimerCallback, null,
-                    opts.PingInterval,
+                    _opts.PingInterval,
                     Timeout.Infinite); // do not trigger timer automatically : risk of having too many threads spawn during reconnect
             }
         }
@@ -943,9 +943,9 @@ namespace NATS.Client
         private string generateThreadName(string prefix)
         {
             string name = "unknown";
-            if (opts.Name != null)
+            if (_opts.Name != null)
             {
-                name = opts.Name;
+                name = _opts.Name;
             }
 
             return prefix + "-" + name;
@@ -1121,7 +1121,7 @@ namespace NATS.Client
 
             try
             {
-                conn.ReceiveTimeout = opts.Timeout;
+                conn.ReceiveTimeout = _opts.Timeout;
                 processExpectedInfo(s);
                 sendConnect();
             }
@@ -1207,7 +1207,7 @@ namespace NATS.Client
         internal void ScheduleErrorEvent(object sender, NATSException ex, Subscription subscription = null)
         {
             callbackScheduler.Add(() => 
-                opts.AsyncErrorEventHandlerOrDefault(sender, new ErrEventArgs(this, subscription, ex.Message)));
+                _opts.AsyncErrorEventHandlerOrDefault(sender, new ErrEventArgs(this, subscription, ex.Message)));
         }
 
         internal void connect()
@@ -1349,15 +1349,15 @@ namespace NATS.Client
             }
             else
             {
-                user = opts.user;
-                pass = opts.password;
-                token = opts.token;
-                nkey = opts.nkey;
+                user = _opts.user;
+                pass = _opts.password;
+                token = _opts.token;
+                nkey = _opts.nkey;
             }
 
             // Look for user jwt
             string userJWT = null;
-            if (opts.UserJWTEventHandler != null)
+            if (_opts.UserJWTEventHandler != null)
             {
                 if (nkey != null)
                     throw new NATSConnectionException("User event handler and Nkey has been defined.");
@@ -1365,7 +1365,7 @@ namespace NATS.Client
                 var args = new UserJWTEventArgs();
                 try
                 {
-                    opts.UserJWTEventHandler(this, args);
+                    _opts.UserJWTEventHandler(this, args);
                 }
                 catch (Exception ex)
                 {
@@ -1379,7 +1379,7 @@ namespace NATS.Client
 
             if (userJWT != null || nkey != null)
             {
-                if (opts.UserSignatureEventHandler == null)
+                if (_opts.UserSignatureEventHandler == null)
                 {
                     if (userJWT == null) {
                         throw new NATSConnectionException("Nkey defined without a user signature event handler");
@@ -1390,7 +1390,7 @@ namespace NATS.Client
                 var args = new UserSignatureEventArgs(Encoding.ASCII.GetBytes(this.info.Nonce));
                 try
                 {
-                    opts.UserSignatureEventHandler(this, args);
+                    _opts.UserSignatureEventHandler(this, args);
                 }
                 catch (Exception ex)
                 {
@@ -1403,10 +1403,10 @@ namespace NATS.Client
                 sig = NaCl.CryptoBytes.ToBase64String(args.SignedNonce);               
             }
 
-            ConnectInfo info = new ConnectInfo(opts.Verbose, opts.Pedantic, userJWT, nkey, sig, user,
-                pass, token, opts.Secure, opts.Name, !opts.NoEcho);
+            ConnectInfo info = new ConnectInfo(_opts.Verbose, _opts.Pedantic, userJWT, nkey, sig, user,
+                pass, token, _opts.Secure, _opts.Name, !_opts.NoEcho);
 
-            if (opts.NoEcho && info.protocol < 1)
+            if (_opts.NoEcho && info.protocol < 1)
                 throw new NATSProtocolException("Echo is not supported by the server.");
 
             var sb = new StringBuilder().Append(IC.conProtoNoCRLF).Append(" ");
@@ -1441,7 +1441,7 @@ namespace NATS.Client
                 result = sr.ReadLine();
 
                 // If opts.verbose is set, handle +OK.
-                if (opts.Verbose && IC.okProtoNoCRLF.Equals(result))
+                if (_opts.Verbose && IC.okProtoNoCRLF.Equals(result))
                 {
                     result = sr.ReadLine();
                 }
@@ -1588,9 +1588,9 @@ namespace NATS.Client
 
         private void DefaultReconnectDelayHandler(object o, ReconnectDelayEventArgs args)
         {
-            int jitter = srvProvider.HasSecureServer() ? random.Next(opts.ReconnectJitterTLS) : random.Next(opts.ReconnectJitter);
+            int jitter = srvProvider.HasSecureServer() ? random.Next(_opts.ReconnectJitterTLS) : random.Next(_opts.ReconnectJitter);
 
-            Thread.Sleep(opts.ReconnectWait + jitter);
+            Thread.Sleep(_opts.ReconnectWait + jitter);
         }
 
         // Try to reconnect using the option parameters.
@@ -1656,7 +1656,7 @@ namespace NATS.Client
                     {
                         try
                         {
-                            opts?.ReconnectDelayHandler(this, new ReconnectDelayEventArgs(timesAllServersSeen - 1));
+                            _opts?.ReconnectDelayHandler(this, new ReconnectDelayEventArgs(timesAllServersSeen - 1));
                         }
                         catch { } // swallow user exceptions
                     }
@@ -1838,7 +1838,7 @@ namespace NATS.Client
             int batchSize;
             lock (mu)
             {
-                batchSize = opts.subscriptionBatchSize;
+                batchSize = _opts.subscriptionBatchSize;
             }
 
             // dispatch buffer
@@ -2247,7 +2247,7 @@ namespace NATS.Client
             if (!s.sc)
             {
                 callbackScheduler.Add(
-                    () => { opts.AsyncErrorEventHandlerOrDefault(this, new ErrEventArgs(this, s, "Slow Consumer")); }
+                    () => { _opts.AsyncErrorEventHandlerOrDefault(this, new ErrEventArgs(this, s, "Slow Consumer")); }
                 );
             }
             s.sc = true;
@@ -2381,12 +2381,12 @@ namespace NATS.Client
             var serverAdded = srvProvider.AcceptDiscoveredServers(info.ConnectURLs);
             if (notify && serverAdded)
             {
-                scheduleConnEvent(opts.ServerDiscoveredEventHandlerOrDefault);
+                scheduleConnEvent(_opts.ServerDiscoveredEventHandlerOrDefault);
             }
 
             if (notify && info.LameDuckMode)
             {
-                scheduleConnEvent(opts.LameDuckModeEventHandlerOrDefault);
+                scheduleConnEvent(_opts.LameDuckModeEventHandlerOrDefault);
             }
         }
 
@@ -2597,10 +2597,6 @@ namespace NATS.Client
                 if (isDrainingPubs())
                     throw new NATSConnectionDrainingException();
 
-                // Proactively reject payloads over the threshold set by server.
-                if (count > info.MaxPayload)
-                    throw new NATSMaxPayloadException();
-
                 if (lastEx != null)
                     throw lastEx;
 
@@ -2625,7 +2621,7 @@ namespace NATS.Client
                 // Don't use IsReconnecting to avoid locking.
                 if (status == ConnState.RECONNECTING)
                 {
-                    int rbsize = opts.ReconnectBufferSize;
+                    int rbsize = _opts.ReconnectBufferSize;
                     if (rbsize != 0)
                     {
                         if (rbsize == -1)
@@ -2680,8 +2676,6 @@ namespace NATS.Client
         /// to the connected NATS server.</param>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is 
         /// <c>null</c> or entirely whitespace.</exception>
-        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
-        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call
         /// while publishing. See <see cref="Exception.InnerException"/> for more details.</exception>
@@ -2701,8 +2695,6 @@ namespace NATS.Client
         /// to the connected NATS server.</param>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is 
         /// <c>null</c> or entirely whitespace.</exception>
-        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
-        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call
         /// while publishing. See <see cref="Exception.InnerException"/> for more details.</exception>
@@ -2755,8 +2747,6 @@ namespace NATS.Client
         /// to the connected NATS server.</param>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or
         /// entirely whitespace.</exception>
-        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size 
-        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call
         /// while publishing. See <see cref="Exception.InnerException"/> for more details.</exception>
@@ -2777,8 +2767,6 @@ namespace NATS.Client
         /// to the connected NATS server.</param>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or
         /// entirely whitespace.</exception>
-        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size 
-        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call
         /// while publishing. See <see cref="Exception.InnerException"/> for more details.</exception>
@@ -2832,8 +2820,6 @@ namespace NATS.Client
         /// <exception cref="ArgumentNullException"><paramref name="msg"/> is <c>null</c>.</exception>
         /// <exception cref="NATSBadSubscriptionException">The <see cref="Msg.Subject"/> property of
         /// <paramref name="msg"/> is <c>null</c> or entirely whitespace.</exception>
-        /// <exception cref="NATSMaxPayloadException">The <see cref="Msg.Data"/> property of <paramref name="msg"/> 
-        /// exceeds the maximum payload size supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call 
         /// while publishing. See <see cref="Exception.InnerException"/> for more details.</exception>
@@ -2959,7 +2945,7 @@ namespace NATS.Client
 
             // offset/count checking covered by publish
             Msg m;
-            if (opts.UseOldRequestStyle)
+            if (_opts.UseOldRequestStyle)
             {
                 m = OldRequestImpl(subject, headers, data, offset, count, timeout);
             }
@@ -2995,7 +2981,7 @@ namespace NATS.Client
 
             // offset/count checking covered by publish
 
-            if (opts.UseOldRequestStyle)
+            if (_opts.UseOldRequestStyle)
                 return await OldRequestAsyncImpl(subject, headers, data, offset, count, timeout, token).ConfigureAwait(false);
 
             using (var request = setupRequest(timeout, token))
@@ -3050,8 +3036,6 @@ namespace NATS.Client
         /// (<c>0</c>).</exception>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or
         /// entirely whitespace.</exception>
-        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size 
-        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the 
         /// response.</exception>
@@ -3085,8 +3069,6 @@ namespace NATS.Client
         /// (<c>0</c>).</exception>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or
         /// entirely whitespace.</exception>
-        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size 
-        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the 
         /// response.</exception>
@@ -3166,8 +3148,6 @@ namespace NATS.Client
         /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or 
         /// entirely whitespace.</exception>
-        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size 
-        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
@@ -3197,8 +3177,6 @@ namespace NATS.Client
         /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or 
         /// entirely whitespace.</exception>
-        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size 
-        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
@@ -3229,16 +3207,12 @@ namespace NATS.Client
         /// the current connection.</param>
         /// <param name="data">An array of type <see cref="Byte"/> that contains the request data to publish
         /// to the connected NATS server.</param>
-        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size 
-        /// supported by the NATS server.</exception>
         /// <param name="offset">The zero-based byte offset in <paramref name="data"/> at which to begin publishing
         /// bytes to the subject.</param>
         /// <param name="count">The number of bytes to be published to the subject.</param>
         /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or 
         /// entirely whitespace.</exception>
-        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size 
-        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
@@ -3270,16 +3244,12 @@ namespace NATS.Client
         /// <param name="headers">Optional headers to publish with the message.</param>
         /// <param name="data">An array of type <see cref="Byte"/> that contains the request data to publish
         /// to the connected NATS server.</param>
-        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size 
-        /// supported by the NATS server.</exception>
         /// <param name="offset">The zero-based byte offset in <paramref name="data"/> at which to begin publishing
         /// bytes to the subject.</param>
         /// <param name="count">The number of bytes to be published to the subject.</param>
         /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or 
         /// entirely whitespace.</exception>
-        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size 
-        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
@@ -3311,8 +3281,6 @@ namespace NATS.Client
         /// <exception cref="ArgumentNullException"><paramref name="message"/> is null.</exception>
         /// <exception cref="NATSBadSubscriptionException">The <paramref name="message"/> subject is <c>null</c>
         /// or entirely whitespace.</exception>
-        /// <exception cref="NATSMaxPayloadException"><paramref name="message"/> payload exceeds the maximum payload size 
-        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the 
         /// response.</exception>
@@ -3344,8 +3312,6 @@ namespace NATS.Client
         /// <exception cref="ArgumentNullException"><paramref name="message"/> is null.</exception>
         /// <exception cref="NATSBadSubscriptionException">The <paramref name="message"/> subject is <c>null</c>
         /// or entirely whitespace.</exception>
-        /// <exception cref="NATSMaxPayloadException"><paramref name="message"/> payload exceeds the maximum payload size 
-        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
@@ -3462,8 +3428,6 @@ namespace NATS.Client
         /// (<c>0</c>).</exception>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c>
         /// or entirely whitespace.</exception>
-        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
-        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
@@ -3500,8 +3464,6 @@ namespace NATS.Client
         /// (<c>0</c>).</exception>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c>
         /// or entirely whitespace.</exception>
-        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
-        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
@@ -3587,8 +3549,6 @@ namespace NATS.Client
         /// server.</returns>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or
         /// entirely whitespace.</exception>
-        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size 
-        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
@@ -3622,8 +3582,6 @@ namespace NATS.Client
         /// server.</returns>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or
         /// entirely whitespace.</exception>
-        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size 
-        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
@@ -3713,8 +3671,6 @@ namespace NATS.Client
         /// (<c>0</c>).</exception>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or
         /// entirely whitespace.</exception>
-        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
-        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
@@ -3754,8 +3710,6 @@ namespace NATS.Client
         /// (<c>0</c>).</exception>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or
         /// entirely whitespace.</exception>
-        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
-        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
@@ -3790,8 +3744,6 @@ namespace NATS.Client
         /// server.</returns>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c>
         /// or entirely whitespace.</exception>
-        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size supported
-        /// by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the 
         /// response.</exception>
@@ -3827,8 +3779,6 @@ namespace NATS.Client
         /// server.</returns>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c>
         /// or entirely whitespace.</exception>
-        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size supported
-        /// by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the 
         /// response.</exception>
@@ -3918,8 +3868,6 @@ namespace NATS.Client
         /// <exception cref="ArgumentNullException"><paramref name="message"/> is null.</exception>
         /// <exception cref="NATSBadSubscriptionException">The <paramref name="message"/> subject is <c>null</c>
         /// or entirely whitespace.</exception>
-        /// <exception cref="NATSMaxPayloadException"><paramref name="message"/> payload exceeds the maximum payload size
-        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
@@ -3955,8 +3903,6 @@ namespace NATS.Client
         /// <exception cref="ArgumentNullException"><paramref name="message"/> is null.</exception>
         /// <exception cref="NATSBadSubscriptionException">The <paramref name="message"/> subject is <c>null</c>
         /// or entirely whitespace.</exception>
-        /// <exception cref="NATSMaxPayloadException"><paramref name="message"/> payload exceeds the maximum payload size 
-        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
@@ -3998,8 +3944,6 @@ namespace NATS.Client
         /// <exception cref="ArgumentNullException"><paramref name="message"/> is null.</exception>
         /// <exception cref="NATSBadSubscriptionException">The <paramref name="message"/> subject is <c>null</c>
         /// or entirely whitespace.</exception>
-        /// <exception cref="NATSMaxPayloadException"><paramref name="message"/> payload exceeds the maximum payload size
-        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
@@ -4037,8 +3981,6 @@ namespace NATS.Client
         /// <exception cref="ArgumentNullException"><paramref name="message"/> is null.</exception>
         /// <exception cref="NATSBadSubscriptionException">The <paramref name="message"/> subject is <c>null</c>
         /// or entirely whitespace.</exception>
-        /// <exception cref="NATSMaxPayloadException"><paramref name="message"/> payload exceeds the maximum payload size
-        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the 
         /// response.</exception>
@@ -4068,7 +4010,7 @@ namespace NATS.Client
         /// <returns>A unique inbox string.</returns>
         public string NewInbox()
         {
-            var prefix = opts.customInboxPrefix ?? IC.inboxPrefix;
+            var prefix = _opts.customInboxPrefix ?? IC.inboxPrefix;
             return prefix + _nuid.GetNext();
         }
 
@@ -4103,10 +4045,10 @@ namespace NATS.Client
             if (subChannelPool != null)
                 return;
 
-            if (opts.subscriberDeliveryTaskCount > 0)
+            if (_opts.subscriberDeliveryTaskCount > 0)
             {
                 subChannelPool = new SubChannelPool(this,
-                    opts.subscriberDeliveryTaskCount);
+                    _opts.subscriberDeliveryTaskCount);
             }
         }
 
@@ -4151,7 +4093,7 @@ namespace NATS.Client
                     createAsyncSubscriptionDelegate = (lConn, lSubject, lQueue) =>
                     {
                         AsyncSubscription asub = new AsyncSubscription(lConn, lSubject, lQueue);
-                        asub.SetPendingLimits(opts.subChanLen, SubPendingBytesLimit);
+                        asub.SetPendingLimits(_opts.subChanLen, SubPendingBytesLimit);
                         return asub;
                     };
                 }
@@ -4197,7 +4139,7 @@ namespace NATS.Client
                     syncSubDelegate = (lConn, lSubject, lQueue) =>
                     {
                         SyncSubscription ssub = new SyncSubscription(this, subject, queue);
-                        ssub.SetPendingLimits(opts.subChanLen, SubPendingBytesLimit);
+                        ssub.SetPendingLimits(_opts.subChanLen, SubPendingBytesLimit);
                         return ssub;
                     };
                 }
@@ -4531,7 +4473,7 @@ namespace NATS.Client
                     sendPing(ch);
                 }
 
-                bool rv = ch.get(opts.Timeout);
+                bool rv = ch.get(_opts.Timeout);
                 sw.Stop();
                 if (!rv)
                 {
@@ -4729,7 +4671,7 @@ namespace NATS.Client
 
                 if (invokeDelegates)
                 {
-                    scheduleConnEvent(opts.ClosedEventHandlerOrDefault, error);
+                    scheduleConnEvent(_opts.ClosedEventHandlerOrDefault, error);
                 }
 
                 status = closeState;
@@ -4827,7 +4769,7 @@ namespace NATS.Client
         internal void pushDrainException(Subscription s, Exception ex)
         {
             callbackScheduler.Add(
-                () => { opts.AsyncErrorEventHandlerOrDefault(s, new ErrEventArgs(this, s, ex.Message)); }
+                () => { _opts.AsyncErrorEventHandlerOrDefault(s, new ErrEventArgs(this, s, ex.Message)); }
             );
         }
 

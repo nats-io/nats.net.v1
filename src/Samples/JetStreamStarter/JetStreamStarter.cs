@@ -33,7 +33,7 @@ namespace NATSExamples
             {
                 Console.WriteLine($"Reconnected to {a.Conn.ConnectedUrl}");
             };
-            opts.DisconnectedEventHandler = (obj, a) =>
+            opts.DisconnectedEventHandler += (obj, a) =>
             {
                 Console.WriteLine("Disconnected.");
             };
