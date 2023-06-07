@@ -937,6 +937,70 @@ namespace IntegrationTests
                 Assert.Contains(JsSubFcHbNotValidQueue.Id, e.Message);
             });
         }
-        
+
+        [Fact]
+        public void TestMaxPayloadJs()
+        {
+            string streamName = "stream-max-payload-test";
+            string subject = "mptest";
+            
+            Options opts = ConnectionFactory.GetDefaultOptions();
+            opts.AllowReconnect = false;
+            NATSServer.QuietOptionsModifier.Invoke(opts);
+
+            using (NATSServer.CreateJetStreamFast())
+            {
+                Assert.Throws<NATSJetStreamException>(() =>
+                {
+                    using (var c = Context.ConnectionFactory.CreateConnection(opts))
+                    {
+                        IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                        try
+                        {
+                            jsm.DeleteStream(streamName);
+                        }
+                        catch (NATSJetStreamException)
+                        {
+                        }
+
+                        jsm.AddStream(StreamConfiguration.Builder()
+                            .WithName(streamName)
+                            .WithStorageType(StorageType.Memory)
+                            .WithSubjects(subject)
+                            .WithMaxMsgSize(1000)
+                            .Build()
+                        );
+
+                        IJetStream js = c.CreateJetStreamContext();
+                        long size = 0;
+                        for (int x = -1; x < 10; x++)
+                        {
+                            size = 1000 + x;
+                            js.Publish("mptest", new byte[size]);
+                            Thread.Sleep(100);
+                        }
+                    }
+                });
+                
+                bool receivedDisconnect = false;
+                opts.DisconnectedEventHandler = (sender, args) =>
+                {
+                    receivedDisconnect = true;
+                };
+
+                using (var c = Context.ConnectionFactory.CreateConnection(opts))
+                {
+                    IJetStream js = c.CreateJetStreamContext();
+                    long size = 0;
+                    for (int x = -1; x < 10; x++)
+                    {
+                        size = 1000 + x;
+                        js.PublishAsync("mptest", new byte[size]);
+                        Thread.Sleep(100);
+                    }
+                }
+                Assert.True(receivedDisconnect);
+            }
+        }
     }
 }

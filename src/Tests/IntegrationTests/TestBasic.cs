@@ -2082,7 +2082,31 @@ namespace IntegrationTests
                 c.Publish(m);
             }
         }
-       
+
+        [Fact]
+        public void TestMaxPayload()
+        {
+            Assert.Throws<NATSConnectionClosedException>(() =>
+            {
+                using (NATSServer.CreateFast())
+                {
+                    var opts = Context.GetTestOptions();
+                    opts.AllowReconnect = false;
+                    using (var c = Context.ConnectionFactory.CreateConnection(opts))
+                    {
+                        long size = 0;
+                        long maxPayload = c.ServerInfo.MaxPayload;
+                        for (int x = -1; x < 10; x++)
+                        {
+                            size = maxPayload + x;
+                            c.Publish("mp", new byte[size]);
+                            Thread.Sleep(100);
+                        }
+                    }
+                }
+            });
+        }
+
     } // class
 
 } // namespace
