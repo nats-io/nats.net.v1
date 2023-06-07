@@ -74,6 +74,11 @@ namespace IntegrationTests
             return opts;
         }
 
+        public Options GetQuietTestOptions(int? port = null, Action<Options> optionsModifier = null)
+        {
+            return GetTestOptions(port, NATSServer.QuietOptionsModifier);
+        }
+    
         public Options GetTestOptions(int? port = null, Action<Options> optionsModifier = null)
         {
             var opts = GetTestOptionsWithDefaultTimeout(port);

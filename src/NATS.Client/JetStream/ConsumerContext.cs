@@ -23,16 +23,18 @@ namespace NATS.Client.JetStream
     /// </summary>
     internal class ConsumerContext : IConsumerContext
     {
-        internal readonly StreamContext streamContext;
-        internal readonly JetStream js;
-        internal ConsumerInfo lastConsumerInfo;
+        private readonly StreamContext streamContext;
+        private readonly JetStream js;
+        private readonly PullSubscribeOptions bindPso;
+        private ConsumerInfo lastConsumerInfo;
 
         public string ConsumerName => lastConsumerInfo.Name;
         
-        internal ConsumerContext(StreamContext streamContext, ConsumerInfo ci)
+        internal ConsumerContext(StreamContext sc, ConsumerInfo ci)
         {
-            this.streamContext = streamContext;
+            streamContext = sc;
             js = new JetStream(streamContext.jsm.Conn, streamContext.jsm.JetStreamOptions);
+            bindPso = PullSubscribeOptions.BindTo(streamContext.StreamName, ci.Name);
             lastConsumerInfo = ci;
         }
 
@@ -57,8 +59,8 @@ namespace NATS.Client.JetStream
             }
 
             long expires = maxWaitMillis - JetStreamPullSubscription.ExpireAdjustment;
-
-            JetStreamPullSubscription sub = (JetStreamPullSubscription)new SubscriptionMaker(this).makeSubscription(null);
+            JetStreamPullSubscription sub 
+                = (JetStreamPullSubscription)new SubscriptionMaker(js, bindPso).MakeSubscription();
             sub.pullImpl.Pull(false, null, PullRequestOptions.Builder(1).WithExpiresIn(expires).Build());
             return sub.NextMessage(maxWaitMillis);
         }
@@ -73,45 +75,46 @@ namespace NATS.Client.JetStream
 
         public IFetchConsumer Fetch(FetchConsumeOptions fetchConsumeOptions) {
             Validator.Required(fetchConsumeOptions, "Fetch Consume Options");
-            return new FetchConsumer(new SubscriptionMaker(this), fetchConsumeOptions);
+            return new FetchConsumer(new SubscriptionMaker(js, bindPso), fetchConsumeOptions);
         }
 
         public IIterableConsumer consume() {
-            return new IterableConsumer(new SubscriptionMaker(this), DefaultConsumeOptions);
+            return new IterableConsumer(new SubscriptionMaker(js, bindPso), DefaultConsumeOptions);
         }
 
         public IIterableConsumer consume(ConsumeOptions consumeOptions) {
             Validator.Required(consumeOptions, "Consume Options");
-            return new IterableConsumer(new SubscriptionMaker(this), consumeOptions);
+            return new IterableConsumer(new SubscriptionMaker(js, bindPso), consumeOptions);
         }
 
         public IMessageConsumer consume(EventHandler<MsgHandlerEventArgs> handler) {
             Validator.Required(handler, "Msg Handler");
-            return new MessageConsumer(new SubscriptionMaker(this), handler, DefaultConsumeOptions);
+            return new MessageConsumer(new SubscriptionMaker(js, bindPso), handler, DefaultConsumeOptions);
         }
 
         public IMessageConsumer consume(EventHandler<MsgHandlerEventArgs> handler, ConsumeOptions consumeOptions) {
             Validator.Required(handler, "Msg Handler");
             Validator.Required(consumeOptions, "Consume Options");
-            return new MessageConsumer(new SubscriptionMaker(this), handler, consumeOptions);
+            return new MessageConsumer(new SubscriptionMaker(js, bindPso), handler, consumeOptions);
         }
     }
 
     internal class SubscriptionMaker
     {
-        private ConsumerContext ctx;
+        private readonly IJetStream js;
+        private readonly PullSubscribeOptions pso;
 
-        public SubscriptionMaker(ConsumerContext ctx)
+        public SubscriptionMaker(IJetStream js, PullSubscribeOptions pso)
         {
-            this.ctx = ctx;
+            this.js = js;
+            this.pso = pso;
         }
 
-        public IJetStreamSubscription makeSubscription(EventHandler<MsgHandlerEventArgs> handler) {
-            PullSubscribeOptions pso = PullSubscribeOptions.BindTo(ctx.streamContext.StreamName, ctx.ConsumerName);
+        public IJetStreamSubscription MakeSubscription(EventHandler<MsgHandlerEventArgs> handler = null) {
             if (handler == null) {
-                return (JetStreamPullSubscription)ctx.js.PullSubscribe(null, pso);
+                return (JetStreamPullSubscription)js.PullSubscribe(null, pso);
             }
-            return (JetStreamPullAsyncSubscription)ctx.js.PullSubscribeAsync(null, handler, pso);
+            return (JetStreamPullAsyncSubscription)js.PullSubscribeAsync(null, handler, pso);
         }
     }
 }

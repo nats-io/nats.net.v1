@@ -247,38 +247,76 @@ namespace IntegrationTestsInternal
         [Fact]
         public void TestHeartbeatError()
         {
-            TestEventHandler handler = new TestEventHandler();
-            Action<Options> modifier = options => options.HeartbeatAlarmEventHandler = handler.HeartbeatAlarmHandler;
-            Context.RunInJsServer(modifier, c =>
+            Context.RunInJsServer(mainC =>
             {
-                CreateDefaultTestStream(c);
-                IJetStream js = c.CreateJetStreamContext();
+                CreateDefaultTestStream(mainC);
+                
+                int port = mainC.ServerInfo.Port;
                 
                 ConsumerConfiguration cc = ConsumerConfiguration.Builder()
                     .WithFlowControl(2000).WithIdleHeartbeat(100).Build();
 
                 PushSubscribeOptions pso = PushSubscribeOptions.Builder().WithConfiguration(cc).Build();
-                CountdownEvent latch = setupFactory(js);
-                IJetStreamSubscription sub = js.PushSubscribeSync(SUBJECT, pso);
-                validate(sub, handler, latch);
-                
-                latch = setupFactory(js);
-                sub = js.PushSubscribeAsync(SUBJECT, (sender, a) => {}, false, pso);
-                validate(sub, handler, latch);
+
+                Options opts = Context.GetQuietTestOptions(port);
+                TestEventHandler handler = new TestEventHandler();
+                opts.HeartbeatAlarmEventHandler = handler.HeartbeatAlarmHandler;
+                using (var c = Context.ConnectionFactory.CreateConnection(opts))
+                {
+                    IJetStream js = c.CreateJetStreamContext();
+                    CountdownEvent latch = setupFactory(js);
+                    IJetStreamSubscription sub = js.PushSubscribeSync(SUBJECT, pso);
+                    validate(sub, handler, latch);
+                }
+
+                opts = Context.GetQuietTestOptions(port);
+                handler = new TestEventHandler();
+                opts.HeartbeatAlarmEventHandler = handler.HeartbeatAlarmHandler;
+                using (var c = Context.ConnectionFactory.CreateConnection(opts))
+                {
+                    IJetStream js = c.CreateJetStreamContext();
+                    CountdownEvent latch = setupFactory(js);
+                    IJetStreamSubscription sub = js.PushSubscribeAsync(SUBJECT, (sender, a) => { }, false, pso);
+                    validate(sub, handler, latch);
+                }
+
+                // ----------
                 
                 pso = PushSubscribeOptions.Builder().WithOrdered(true).WithConfiguration(cc).Build();
-                latch = setupOrderedFactory(js);
-                sub = js.PushSubscribeSync(SUBJECT, pso);
-                validate(sub, handler, latch);
-                
-                latch = setupOrderedFactory(js);
-                sub = js.PushSubscribeAsync(SUBJECT, (sender, a) => {}, false, pso);
-                validate(sub, handler, latch);
 
-                latch = setupPullFactory(js);
-                IJetStreamPullSubscription lsub = js.PullSubscribe(SUBJECT, PullSubscribeOptions.DefaultPullOpts);
-                lsub.Pull(PullRequestOptions.Builder(1).WithIdleHeartbeat(100).WithExpiresIn(2000).Build());
-                validate(sub, handler, latch);
+                opts = Context.GetQuietTestOptions(port);
+                handler = new TestEventHandler();
+                opts.HeartbeatAlarmEventHandler = handler.HeartbeatAlarmHandler;
+                using (var c = Context.ConnectionFactory.CreateConnection(opts))
+                {
+                    IJetStream js = c.CreateJetStreamContext();
+                    CountdownEvent latch = setupOrderedFactory(js);
+                    IJetStreamSubscription sub = js.PushSubscribeSync(SUBJECT, pso);
+                    validate(sub, handler, latch);
+                }
+
+                opts = Context.GetQuietTestOptions(port);
+                handler = new TestEventHandler();
+                opts.HeartbeatAlarmEventHandler = handler.HeartbeatAlarmHandler;
+                using (var c = Context.ConnectionFactory.CreateConnection(opts))
+                {
+                    IJetStream js = c.CreateJetStreamContext();
+                    CountdownEvent latch = setupOrderedFactory(js);
+                    IJetStreamSubscription sub = js.PushSubscribeAsync(SUBJECT, (sender, a) => { }, false, pso);
+                    validate(sub, handler, latch);
+                }
+
+                opts = Context.GetQuietTestOptions(port);
+                handler = new TestEventHandler();
+                opts.HeartbeatAlarmEventHandler = handler.HeartbeatAlarmHandler;
+                using (var c = Context.ConnectionFactory.CreateConnection(opts))
+                {
+                    IJetStream js = c.CreateJetStreamContext();
+                    CountdownEvent latch = setupPullFactory(js);
+                    IJetStreamPullSubscription lsub = js.PullSubscribe(SUBJECT, PullSubscribeOptions.DefaultPullOpts);
+                    lsub.Pull(PullRequestOptions.Builder(1).WithIdleHeartbeat(100).WithExpiresIn(2000).Build());
+                    validate(lsub, handler, latch);
+                }
             });
         }
         
@@ -287,7 +325,6 @@ namespace IntegrationTestsInternal
             latch.Wait(TimeSpan.FromSeconds(10));
             Assert.Equal(0, latch.CurrentCount);
             Assert.True(handler.HeartbeatAlarmEvents.Count > 0);
-            handler.Reset();
         }
         
         private static CountdownEvent setupFactory(IJetStream js)

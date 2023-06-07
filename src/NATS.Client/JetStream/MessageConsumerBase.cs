@@ -20,20 +20,22 @@ namespace NATS.Client.JetStream
     /// </summary>
     internal class MessageConsumerBase : IMessageConsumer
     {
-        protected readonly object subLock;
+        private readonly object subLock;
+        private Task drainTask;
+        
         protected IJetStreamSubscription sub;
         protected PullMessageManager pmm;
         protected JetStreamPullApiImpl pullImpl;
-        protected Task drainTask;
+        protected bool stopped;
 
-        public MessageConsumerBase()
+        internal MessageConsumerBase()
         {
             subLock = new object();
         }
 
-        protected void InitSub(IJetStreamSubscription sub)
+        protected void InitSub(IJetStreamSubscription inSub)
         {
-            this.sub = sub;
+            sub = inSub;
             if (sub is JetStreamPullSubscription syncSub)
             {
                 pmm = (PullMessageManager)syncSub.MessageManager;
@@ -58,11 +60,11 @@ namespace NATS.Client.JetStream
         {
             lock (subLock)
             {
-                if (drainTask == null)
+                if (!stopped)
                 {
+                    stopped = true;
                     drainTask = sub.DrainAsync(timeout);
                 }
-
                 return drainTask;
             }
         }
@@ -70,7 +72,9 @@ namespace NATS.Client.JetStream
         public void Dispose()
         {
             lock (subLock) {
-                if (drainTask == null && sub.IsValid) {
+                if (!stopped && sub.IsValid)
+                {
+                    stopped = true;
                     sub.Unsubscribe();
                 }
             }
