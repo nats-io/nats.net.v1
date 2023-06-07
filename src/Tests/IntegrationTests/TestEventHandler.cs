@@ -11,13 +11,6 @@ namespace IntegrationTests
         public readonly IList<StatusEventArgs> PullStatusWarningEvents = new List<StatusEventArgs>();
         public readonly IList<StatusEventArgs> PullStatusErrorEvents = new List<StatusEventArgs>();
 
-        public void Reset()
-        {
-            HeartbeatAlarmEvents.Clear();
-            PullStatusWarningEvents.Clear();
-            PullStatusErrorEvents.Clear();
-        }
-
         public EventHandler<HeartbeatAlarmEventArgs> HeartbeatAlarmHandler
             => (sender, e) => HeartbeatAlarmEvents.Add(e);
         
