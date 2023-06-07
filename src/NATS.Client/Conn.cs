@@ -109,12 +109,12 @@ namespace NATS.Client
 
         private readonly Nuid _nuid = new Nuid();
 
-        private readonly Options _opts; // assigned in constructor
+        private readonly Options opts; // assigned in constructor
 
         /// <summary>
         /// Gets the configuration options for this instance.
         /// </summary>
-        public Options Opts => _opts;
+        public Options Opts => opts;
 
         private readonly List<Thread> wg = new List<Thread>(2);
 
@@ -701,10 +701,10 @@ namespace NATS.Client
         {
             lock (mu)
             {
-                if (_opts.subscriberDeliveryTaskCount > 0 && subChannelPool == null)
+                if (opts.subscriberDeliveryTaskCount > 0 && subChannelPool == null)
                 {
                     subChannelPool = new SubChannelPool(this,
-                        _opts.subscriberDeliveryTaskCount);
+                        opts.subscriberDeliveryTaskCount);
                 }
 
                 if (subChannelPool != null)
@@ -724,14 +724,14 @@ namespace NATS.Client
         /// <see cref="Connection"/>.</param>
         internal Connection(Options options)
         {
-            _opts = new Options(options);
+            opts = new Options(options);
 
-            if (_opts.ReconnectDelayHandler == null)
+            if (opts.ReconnectDelayHandler == null)
             {
-                _opts.ReconnectDelayHandler = DefaultReconnectDelayHandler;
+                opts.ReconnectDelayHandler = DefaultReconnectDelayHandler;
             }
 
-            srvProvider = _opts.ServerProvider ?? new ServerPool();
+            srvProvider = opts.ServerProvider ?? new ServerPool();
                 
             PING_P_BYTES = Encoding.UTF8.GetBytes(IC.pingProto);
             PING_P_BYTES_LEN = PING_P_BYTES.Length;
@@ -826,7 +826,7 @@ namespace NATS.Client
             ex = null;
             try
             {
-                conn.open(s, _opts.Timeout);
+                conn.open(s, opts.Timeout);
 
                 if (pending != null && bw != null)
                 {
@@ -855,7 +855,7 @@ namespace NATS.Client
         // makeSecureConn will wrap an existing Conn using TLS
         private void makeTLSConn()
         {
-            conn.makeTLS(this._opts);
+            conn.makeTLS(this.opts);
 
             bw = conn.getWriteBufferedStream(defaultBufSize);
             br = conn.getReadBufferedStream();
@@ -935,7 +935,7 @@ namespace NATS.Client
             if (Opts.PingInterval > 0)
             {
                 ptmr = new Timer(pingTimerCallback, null,
-                    _opts.PingInterval,
+                    opts.PingInterval,
                     Timeout.Infinite); // do not trigger timer automatically : risk of having too many threads spawn during reconnect
             }
         }
@@ -943,9 +943,9 @@ namespace NATS.Client
         private string generateThreadName(string prefix)
         {
             string name = "unknown";
-            if (_opts.Name != null)
+            if (opts.Name != null)
             {
-                name = _opts.Name;
+                name = opts.Name;
             }
 
             return prefix + "-" + name;
@@ -1121,7 +1121,7 @@ namespace NATS.Client
 
             try
             {
-                conn.ReceiveTimeout = _opts.Timeout;
+                conn.ReceiveTimeout = opts.Timeout;
                 processExpectedInfo(s);
                 sendConnect();
             }
@@ -1207,7 +1207,7 @@ namespace NATS.Client
         internal void ScheduleErrorEvent(object sender, NATSException ex, Subscription subscription = null)
         {
             callbackScheduler.Add(() => 
-                _opts.AsyncErrorEventHandlerOrDefault(sender, new ErrEventArgs(this, subscription, ex.Message)));
+                opts.AsyncErrorEventHandlerOrDefault(sender, new ErrEventArgs(this, subscription, ex.Message)));
         }
 
         internal void connect()
@@ -1349,15 +1349,15 @@ namespace NATS.Client
             }
             else
             {
-                user = _opts.user;
-                pass = _opts.password;
-                token = _opts.token;
-                nkey = _opts.nkey;
+                user = opts.user;
+                pass = opts.password;
+                token = opts.token;
+                nkey = opts.nkey;
             }
 
             // Look for user jwt
             string userJWT = null;
-            if (_opts.UserJWTEventHandler != null)
+            if (opts.UserJWTEventHandler != null)
             {
                 if (nkey != null)
                     throw new NATSConnectionException("User event handler and Nkey has been defined.");
@@ -1365,7 +1365,7 @@ namespace NATS.Client
                 var args = new UserJWTEventArgs();
                 try
                 {
-                    _opts.UserJWTEventHandler(this, args);
+                    opts.UserJWTEventHandler(this, args);
                 }
                 catch (Exception ex)
                 {
@@ -1379,7 +1379,7 @@ namespace NATS.Client
 
             if (userJWT != null || nkey != null)
             {
-                if (_opts.UserSignatureEventHandler == null)
+                if (opts.UserSignatureEventHandler == null)
                 {
                     if (userJWT == null) {
                         throw new NATSConnectionException("Nkey defined without a user signature event handler");
@@ -1390,7 +1390,7 @@ namespace NATS.Client
                 var args = new UserSignatureEventArgs(Encoding.ASCII.GetBytes(this.info.Nonce));
                 try
                 {
-                    _opts.UserSignatureEventHandler(this, args);
+                    opts.UserSignatureEventHandler(this, args);
                 }
                 catch (Exception ex)
                 {
@@ -1403,10 +1403,10 @@ namespace NATS.Client
                 sig = NaCl.CryptoBytes.ToBase64String(args.SignedNonce);               
             }
 
-            ConnectInfo info = new ConnectInfo(_opts.Verbose, _opts.Pedantic, userJWT, nkey, sig, user,
-                pass, token, _opts.Secure, _opts.Name, !_opts.NoEcho);
+            ConnectInfo info = new ConnectInfo(opts.Verbose, opts.Pedantic, userJWT, nkey, sig, user,
+                pass, token, opts.Secure, opts.Name, !opts.NoEcho);
 
-            if (_opts.NoEcho && info.protocol < 1)
+            if (opts.NoEcho && info.protocol < 1)
                 throw new NATSProtocolException("Echo is not supported by the server.");
 
             var sb = new StringBuilder().Append(IC.conProtoNoCRLF).Append(" ");
@@ -1441,7 +1441,7 @@ namespace NATS.Client
                 result = sr.ReadLine();
 
                 // If opts.verbose is set, handle +OK.
-                if (_opts.Verbose && IC.okProtoNoCRLF.Equals(result))
+                if (opts.Verbose && IC.okProtoNoCRLF.Equals(result))
                 {
                     result = sr.ReadLine();
                 }
@@ -1588,9 +1588,9 @@ namespace NATS.Client
 
         private void DefaultReconnectDelayHandler(object o, ReconnectDelayEventArgs args)
         {
-            int jitter = srvProvider.HasSecureServer() ? random.Next(_opts.ReconnectJitterTLS) : random.Next(_opts.ReconnectJitter);
+            int jitter = srvProvider.HasSecureServer() ? random.Next(opts.ReconnectJitterTLS) : random.Next(opts.ReconnectJitter);
 
-            Thread.Sleep(_opts.ReconnectWait + jitter);
+            Thread.Sleep(opts.ReconnectWait + jitter);
         }
 
         // Try to reconnect using the option parameters.
@@ -1656,7 +1656,7 @@ namespace NATS.Client
                     {
                         try
                         {
-                            _opts?.ReconnectDelayHandler(this, new ReconnectDelayEventArgs(timesAllServersSeen - 1));
+                            opts?.ReconnectDelayHandler(this, new ReconnectDelayEventArgs(timesAllServersSeen - 1));
                         }
                         catch { } // swallow user exceptions
                     }
@@ -1838,7 +1838,7 @@ namespace NATS.Client
             int batchSize;
             lock (mu)
             {
-                batchSize = _opts.subscriptionBatchSize;
+                batchSize = opts.subscriptionBatchSize;
             }
 
             // dispatch buffer
@@ -2247,7 +2247,7 @@ namespace NATS.Client
             if (!s.sc)
             {
                 callbackScheduler.Add(
-                    () => { _opts.AsyncErrorEventHandlerOrDefault(this, new ErrEventArgs(this, s, "Slow Consumer")); }
+                    () => { opts.AsyncErrorEventHandlerOrDefault(this, new ErrEventArgs(this, s, "Slow Consumer")); }
                 );
             }
             s.sc = true;
@@ -2381,12 +2381,12 @@ namespace NATS.Client
             var serverAdded = srvProvider.AcceptDiscoveredServers(info.ConnectURLs);
             if (notify && serverAdded)
             {
-                scheduleConnEvent(_opts.ServerDiscoveredEventHandlerOrDefault);
+                scheduleConnEvent(opts.ServerDiscoveredEventHandlerOrDefault);
             }
 
             if (notify && info.LameDuckMode)
             {
-                scheduleConnEvent(_opts.LameDuckModeEventHandlerOrDefault);
+                scheduleConnEvent(opts.LameDuckModeEventHandlerOrDefault);
             }
         }
 
@@ -2621,7 +2621,7 @@ namespace NATS.Client
                 // Don't use IsReconnecting to avoid locking.
                 if (status == ConnState.RECONNECTING)
                 {
-                    int rbsize = _opts.ReconnectBufferSize;
+                    int rbsize = opts.ReconnectBufferSize;
                     if (rbsize != 0)
                     {
                         if (rbsize == -1)
@@ -2945,7 +2945,7 @@ namespace NATS.Client
 
             // offset/count checking covered by publish
             Msg m;
-            if (_opts.UseOldRequestStyle)
+            if (opts.UseOldRequestStyle)
             {
                 m = OldRequestImpl(subject, headers, data, offset, count, timeout);
             }
@@ -2981,7 +2981,7 @@ namespace NATS.Client
 
             // offset/count checking covered by publish
 
-            if (_opts.UseOldRequestStyle)
+            if (opts.UseOldRequestStyle)
                 return await OldRequestAsyncImpl(subject, headers, data, offset, count, timeout, token).ConfigureAwait(false);
 
             using (var request = setupRequest(timeout, token))
@@ -4010,7 +4010,7 @@ namespace NATS.Client
         /// <returns>A unique inbox string.</returns>
         public string NewInbox()
         {
-            var prefix = _opts.customInboxPrefix ?? IC.inboxPrefix;
+            var prefix = opts.customInboxPrefix ?? IC.inboxPrefix;
             return prefix + _nuid.GetNext();
         }
 
@@ -4045,10 +4045,10 @@ namespace NATS.Client
             if (subChannelPool != null)
                 return;
 
-            if (_opts.subscriberDeliveryTaskCount > 0)
+            if (opts.subscriberDeliveryTaskCount > 0)
             {
                 subChannelPool = new SubChannelPool(this,
-                    _opts.subscriberDeliveryTaskCount);
+                    opts.subscriberDeliveryTaskCount);
             }
         }
 
@@ -4093,7 +4093,7 @@ namespace NATS.Client
                     createAsyncSubscriptionDelegate = (lConn, lSubject, lQueue) =>
                     {
                         AsyncSubscription asub = new AsyncSubscription(lConn, lSubject, lQueue);
-                        asub.SetPendingLimits(_opts.subChanLen, SubPendingBytesLimit);
+                        asub.SetPendingLimits(opts.subChanLen, SubPendingBytesLimit);
                         return asub;
                     };
                 }
@@ -4139,7 +4139,7 @@ namespace NATS.Client
                     syncSubDelegate = (lConn, lSubject, lQueue) =>
                     {
                         SyncSubscription ssub = new SyncSubscription(this, subject, queue);
-                        ssub.SetPendingLimits(_opts.subChanLen, SubPendingBytesLimit);
+                        ssub.SetPendingLimits(opts.subChanLen, SubPendingBytesLimit);
                         return ssub;
                     };
                 }
@@ -4473,7 +4473,7 @@ namespace NATS.Client
                     sendPing(ch);
                 }
 
-                bool rv = ch.get(_opts.Timeout);
+                bool rv = ch.get(opts.Timeout);
                 sw.Stop();
                 if (!rv)
                 {
@@ -4671,7 +4671,7 @@ namespace NATS.Client
 
                 if (invokeDelegates)
                 {
-                    scheduleConnEvent(_opts.ClosedEventHandlerOrDefault, error);
+                    scheduleConnEvent(opts.ClosedEventHandlerOrDefault, error);
                 }
 
                 status = closeState;
@@ -4769,7 +4769,7 @@ namespace NATS.Client
         internal void pushDrainException(Subscription s, Exception ex)
         {
             callbackScheduler.Add(
-                () => { _opts.AsyncErrorEventHandlerOrDefault(s, new ErrEventArgs(this, s, ex.Message)); }
+                () => { opts.AsyncErrorEventHandlerOrDefault(s, new ErrEventArgs(this, s, ex.Message)); }
             );
         }
 
