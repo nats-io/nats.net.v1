@@ -966,10 +966,9 @@ namespace IntegrationTests
                     );
 
                     IJetStream js = c.CreateJetStreamContext();
-                    long size = 0;
                     for (ulong x = 1; x <= 3; x++)
                     {
-                        size = 1000 + (long)x - 2;
+                        long size = 1000 + (long)x - 2;
                         if (size > 1000)
                         {
                             NATSJetStreamException e = Assert.Throws<NATSJetStreamException>(() => js.Publish(subject1, new byte[size]));
@@ -992,10 +991,9 @@ namespace IntegrationTests
                 using (var c = Context.ConnectionFactory.CreateConnection(opts))
                 {
                     IJetStream js = c.CreateJetStreamContext();
-                    long size = 0;
                     for (ulong x = 1; x <= 3; x++)
                     {
-                        size = 1000 + (long)x - 2;
+                        long size = 1000 + (long)x - 2;
                         if (size > 1000)
                         {
                             try
