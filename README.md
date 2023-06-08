@@ -106,9 +106,9 @@ As of version 1.0.5, there is no longer client side checking
 2. is less than the stream configuration (JetStream publishes)
 
 Please see unit test for examples of this behavior. 
-`TestMaxPayload` in [TestBasic.cs](src/Tests/IntegrationTests/TestBasic.cs)
+`TestMaxPayload` in [TestBasic](src/Tests/IntegrationTests/TestBasic.cs)
 and
-`TestMaxPayloadJs` in [TestJetStream.cs](src/Tests/IntegrationTests/TestJetStream.cs)
+`TestMaxPayloadJs` in [TestJetStream](src/Tests/IntegrationTests/TestJetStream.cs)
 
 ### Version 1.0.1 Consumer Create
 
