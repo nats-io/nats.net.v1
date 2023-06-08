@@ -15,6 +15,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using NATS.Client;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
@@ -939,48 +940,47 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public void TestMaxPayloadJs()
+        public async Task TestMaxPayloadJs()
         {
             string streamName = "stream-max-payload-test";
-            string subject = "mptest";
+            string subject1 = "mptest1";
+            string subject2 = "mptest2";
             
             Options opts = ConnectionFactory.GetDefaultOptions();
             opts.AllowReconnect = false;
             NATSServer.QuietOptionsModifier.Invoke(opts);
 
+            ulong expectedSeq = 0;
             using (NATSServer.CreateJetStreamFast())
             {
-                Assert.Throws<NATSJetStreamException>(() =>
+                using (var c = Context.ConnectionFactory.CreateConnection(opts))
                 {
-                    using (var c = Context.ConnectionFactory.CreateConnection(opts))
+                    IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                    try { jsm.DeleteStream(streamName); } catch (NATSJetStreamException) {}
+                    jsm.AddStream(StreamConfiguration.Builder()
+                        .WithName(streamName)
+                        .WithStorageType(StorageType.Memory)
+                        .WithSubjects(subject1, subject2)
+                        .WithMaxMsgSize(1000)
+                        .Build()
+                    );
+
+                    IJetStream js = c.CreateJetStreamContext();
+                    long size = 0;
+                    for (ulong x = 1; x <= 3; x++)
                     {
-                        IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
-                        try
+                        size = 1000 + (long)x - 2;
+                        if (size > 1000)
                         {
-                            jsm.DeleteStream(streamName);
+                            Assert.Throws<NATSJetStreamException>(() => js.Publish(subject1, new byte[size]));
                         }
-                        catch (NATSJetStreamException)
+                        else
                         {
-                        }
-
-                        jsm.AddStream(StreamConfiguration.Builder()
-                            .WithName(streamName)
-                            .WithStorageType(StorageType.Memory)
-                            .WithSubjects(subject)
-                            .WithMaxMsgSize(1000)
-                            .Build()
-                        );
-
-                        IJetStream js = c.CreateJetStreamContext();
-                        long size = 0;
-                        for (int x = -1; x < 10; x++)
-                        {
-                            size = 1000 + x;
-                            js.Publish("mptest", new byte[size]);
-                            Thread.Sleep(100);
+                            PublishAck pa = js.Publish(subject1, new byte[size]);
+                            Assert.Equal(++expectedSeq, pa.Seq);
                         }
                     }
-                });
+                }
                 
                 bool receivedDisconnect = false;
                 opts.DisconnectedEventHandler = (sender, args) =>
@@ -992,11 +992,21 @@ namespace IntegrationTests
                 {
                     IJetStream js = c.CreateJetStreamContext();
                     long size = 0;
-                    for (int x = -1; x < 10; x++)
+                    for (ulong x = 1; x <= 3; x++)
                     {
-                        size = 1000 + x;
-                        js.PublishAsync("mptest", new byte[size]);
-                        Thread.Sleep(100);
+                        size = 1000 + (long)x - 2;
+                        Task<PublishAck> paTask = js.PublishAsync(subject2, new byte[size]);
+                        if (size > 1000)
+                        {
+                            AggregateException e = Assert.Throws<AggregateException>(() => paTask.Wait(100));
+                            Assert.True(e.InnerException is NATSJetStreamException);
+                        }
+                        else
+                        {
+                            paTask.Wait(100);
+                            PublishAck pa = paTask.Result;
+                            Assert.Equal(++expectedSeq, pa.Seq);
+                        }
                     }
                 }
                 Assert.True(receivedDisconnect);
