@@ -72,7 +72,43 @@ Doxygen is required to be installed and in the PATH.  Version 1.8 is known to wo
 
 [Current API Documentation](http://nats-io.github.io/nats.net)
 
+## BETA / Experimental News
+
+### Simplification
+
+There is a new simplified api that makes working with streams and consumers well, simpler!
+
+Check out the examples:
+
+* [SimplificationContextExample](src/Samples/SimplificationContext/SimplificationContextExample.cs)
+* [FetchBytesExample](src/Samples/SimplificationFetchBytes/FetchBytesExample.cs)
+* [FetchMessagesExample](src/Samples/SimplificationFetchMessages/FetchMessagesExample.cs)
+* [IterableConsumerExample](src/Samples/SimplificationIterableConsumer/IterableConsumerExample.cs)
+* [MessageConsumerExample](src/Samples/SimplificationMessageConsumer/MessageConsumerExample.cs)
+* [NextExample](src/Samples/SimplificationNext/NextExample.cs)
+
+### Service Framework
+
+The service API allows you to easily build NATS services The services API is currently in beta functionality.
+
+The Services Framework introduces a higher-level API for implementing services with NATS. NATS has always been a strong technology on which to build services, as they are easy to write, are location and DNS independent and can be scaled up or down by simply adding or removing instances of the service.
+
+The Services Framework further streamlines their development by providing observability and standardization. The Service Framework allows your services to be discovered, queried for status and schema information without additional work.
+
+Check out the [ServiceExample](src/Samples/ServiceExample/ServiceExample.cs)
+
 ## Version Notes
+
+### Version 1.0.5 Max Payload Check
+
+As of version 1.0.5, there is no longer client side checking 
+1. that a message payload is less than the server configuration (Core and JetStream publishes)
+2. is less than the stream configuration (JetStream publishes)
+
+Please see unit test for examples of this behavior. 
+`TestMaxPayload` in [TestBasic](src/Tests/IntegrationTests/TestBasic.cs)
+and
+`TestMaxPayloadJs` in [TestJetStream](src/Tests/IntegrationTests/TestJetStream.cs)
 
 ### Version 1.0.1 Consumer Create
 
