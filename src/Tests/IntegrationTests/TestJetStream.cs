@@ -996,21 +996,20 @@ namespace IntegrationTests
                     for (ulong x = 1; x <= 3; x++)
                     {
                         size = 1000 + (long)x - 2;
-                        Task<PublishAck> paTask = js.PublishAsync(subject2, new byte[size]);
                         if (size > 1000)
                         {
                             try
                             {
-                                paTask.Wait(100);
+                                PublishAck paTask = await js.PublishAsync(subject2, new byte[size]);
                             }
-                            catch (AggregateException e)
+                            catch (NATSJetStreamException j)
                             {
-                                Assert.True(e.InnerException is NATSJetStreamException);
-                                Assert.Equal(10054, ((NATSJetStreamException)e.InnerException).ApiErrorCode);
+                                Assert.Equal(10054, j.ApiErrorCode);
                             }
                         }
                         else
                         {
+                            Task<PublishAck> paTask = js.PublishAsync(subject2, new byte[size]);
                             paTask.Wait(100);
                             PublishAck pa = paTask.Result;
                             Assert.Equal(++expectedSeq, pa.Seq);
