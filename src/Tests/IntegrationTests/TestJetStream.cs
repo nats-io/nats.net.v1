@@ -972,7 +972,8 @@ namespace IntegrationTests
                         size = 1000 + (long)x - 2;
                         if (size > 1000)
                         {
-                            Assert.Throws<NATSJetStreamException>(() => js.Publish(subject1, new byte[size]));
+                            NATSJetStreamException e = Assert.Throws<NATSJetStreamException>(() => js.Publish(subject1, new byte[size]));
+                            Assert.Equal(10054, e.ApiErrorCode);
                         }
                         else
                         {
@@ -1000,6 +1001,7 @@ namespace IntegrationTests
                         {
                             AggregateException e = Assert.Throws<AggregateException>(() => paTask.Wait(100));
                             Assert.True(e.InnerException is NATSJetStreamException);
+                            Assert.Equal(10054, ((NATSJetStreamException)e.InnerException).ApiErrorCode);
                         }
                         else
                         {
