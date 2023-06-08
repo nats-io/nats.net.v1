@@ -109,24 +109,28 @@ namespace NATS.Client
                 msg = localChannel.get(-1);
             }
 
-            if (msg != null)
+            if (msg == null)
             {
-                long d;
-                lock (mu)
-                {
-                    d = tallyDeliveredMessage(msg);
-                }
+                // This could happen during shutdown.
+                // Not sure what else I can do at least this can be dealt with
+                throw new NATSTimeoutException();
+            }
 
-                if (d == localMax)
-                {
-                    // Remove subscription if we have reached max.
-                    localConn.removeSubSafe(this);
-                }
+            long d;
+            lock (mu)
+            {
+                d = tallyDeliveredMessage(msg);
+            }
 
-                if (localMax > 0 && d > localMax)
-                {
-                    throw new NATSMaxMessagesException();
-                }
+            if (d == localMax)
+            {
+                // Remove subscription if we have reached max.
+                localConn.removeSubSafe(this);
+            }
+
+            if (localMax > 0 && d > localMax)
+            {
+                throw new NATSMaxMessagesException();
             }
 
             return msg;
