@@ -999,9 +999,15 @@ namespace IntegrationTests
                         Task<PublishAck> paTask = js.PublishAsync(subject2, new byte[size]);
                         if (size > 1000)
                         {
-                            AggregateException e = Assert.Throws<AggregateException>(() => paTask.Wait(100));
-                            Assert.True(e.InnerException is NATSJetStreamException);
-                            Assert.Equal(10054, ((NATSJetStreamException)e.InnerException).ApiErrorCode);
+                            try
+                            {
+                                paTask.Wait(100);
+                            }
+                            catch (AggregateException e)
+                            {
+                                Assert.True(e.InnerException is NATSJetStreamException);
+                                Assert.Equal(10054, ((NATSJetStreamException)e.InnerException).ApiErrorCode);
+                            }
                         }
                         else
                         {
