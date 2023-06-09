@@ -28,17 +28,12 @@ The repository contains several projects, all located under `src\`
 * NATS - The NATS.Client assembly
 * Tests
     * IntegrationTests - XUnit tests, verifying the client integration with `nats-server.exe` (ensure you have `nats-server.exe` in your path to run these).
+    * IntegrationTestsInternal - XUnit tests, verifying internal only functionality
+    * IntegrationTestsUsingNitoAsyncEx - XUnit tests, verifying functionality that depends on NitoAsyncEx 
     * UnitTests - XUnit tests that requires no dependencies
 * Samples
-    * Publish Subscribe
-        * Publish - A sample publisher.
-        * Subscribe - A sample subscriber.
-    * QueueGroup - An example queue group subscriber.
-    * Request Reply
-        * Requestor - A requestor sample.
-        * Replier - A sample replier for the Requestor application.
-
-All examples provide statistics for benchmarking.
+    
+    To see, the full set of samples is documented in the [Samples Readme](src/Samples/README.md). Some examples provide statistics for benchmarking.
 
 ### .NET Core SDK
 .NET Core SDK style projects are used, so ensure your environment (command line, VSCode, Visual Studio, etc) supports the targetted .NET Core SDK in `src\global.json` as well as .NET Framework 4.6 or greater.
@@ -152,73 +147,73 @@ using NATS.Client;
 Here are example snippets of using the API to create a connection, subscribe, publish, and request data.
 
 ```c#
-            // Create a new connection factory to create
-            // a connection.
-            ConnectionFactory cf = new ConnectionFactory();
+// Create a new connection factory to create
+// a connection.
+ConnectionFactory cf = new ConnectionFactory();
 
-            // Creates a live connection to the default
-            // NATS Server running locally
-            IConnection c = cf.CreateConnection();
+// Creates a live connection to the default
+// NATS Server running locally
+IConnection c = cf.CreateConnection();
 
-            // Setup an event handler to process incoming messages.
-            // An anonymous delegate function is used for brevity.
-            EventHandler<MsgHandlerEventArgs> h = (sender, args) =>
-            {
-                // print the message
-                Console.WriteLine(args.Message);
+// Setup an event handler to process incoming messages.
+// An anonymous delegate function is used for brevity.
+EventHandler<MsgHandlerEventArgs> h = (sender, args) =>
+{
+    // print the message
+    Console.WriteLine(args.Message);
 
-                // Here are some of the accessible properties from
-                // the message:
-                // args.Message.Data;
-                // args.Message.Reply;
-                // args.Message.Subject;
-                // args.Message.ArrivalSubcription.Subject;
-                // args.Message.ArrivalSubcription.QueuedMessageCount;
-                // args.Message.ArrivalSubcription.Queue;
+    // Here are some of the accessible properties from
+    // the message:
+    // args.Message.Data;
+    // args.Message.Reply;
+    // args.Message.Subject;
+    // args.Message.ArrivalSubcription.Subject;
+    // args.Message.ArrivalSubcription.QueuedMessageCount;
+    // args.Message.ArrivalSubcription.Queue;
 
-                // Unsubscribing from within the delegate function is supported.
-                args.Message.ArrivalSubcription.Unsubscribe();
-            };
+    // Unsubscribing from within the delegate function is supported.
+    args.Message.ArrivalSubcription.Unsubscribe();
+};
 
-            // The simple way to create an asynchronous subscriber
-            // is to simply pass the event in.  Messages will start
-            // arriving immediately.
-            IAsyncSubscription s = c.SubscribeAsync("foo", h);
+// The simple way to create an asynchronous subscriber
+// is to simply pass the event in.  Messages will start
+// arriving immediately.
+IAsyncSubscription s = c.SubscribeAsync("foo", h);
 
-            // Alternatively, create an asynchronous subscriber on subject foo,
-            // assign a message handler, then start the subscriber.   When
-            // multicasting delegates, this allows all message handlers
-            // to be setup before messages start arriving.
-            IAsyncSubscription sAsync = c.SubscribeAsync("foo");
-            sAsync.MessageHandler += h;
-            sAsync.Start();
+// Alternatively, create an asynchronous subscriber on subject foo,
+// assign a message handler, then start the subscriber.   When
+// multicasting delegates, this allows all message handlers
+// to be setup before messages start arriving.
+IAsyncSubscription sAsync = c.SubscribeAsync("foo");
+sAsync.MessageHandler += h;
+sAsync.Start();
 
-            // Simple synchronous subscriber
-            ISyncSubscription sSync = c.SubscribeSync("foo");
+// Simple synchronous subscriber
+ISyncSubscription sSync = c.SubscribeSync("foo");
 
-            // Using a synchronous subscriber, gets the first message available,
-            // waiting up to 1000 milliseconds (1 second)
-            Msg m = sSync.NextMessage(1000);
+// Using a synchronous subscriber, gets the first message available,
+// waiting up to 1000 milliseconds (1 second)
+Msg m = sSync.NextMessage(1000);
 
-            c.Publish("foo", Encoding.UTF8.GetBytes("hello world"));
+c.Publish("foo", Encoding.UTF8.GetBytes("hello world"));
 
-            // Unsubscribing
-            sAsync.Unsubscribe();
+// Unsubscribing
+sAsync.Unsubscribe();
 
-            // Publish requests to the given reply subject:
-            c.Publish("foo", "bar", Encoding.UTF8.GetBytes("help!"));
+// Publish requests to the given reply subject:
+c.Publish("foo", "bar", Encoding.UTF8.GetBytes("help!"));
 
-            // Sends a request (internally creates an inbox) and Auto-Unsubscribe the
-            // internal subscriber, which means that the subscriber is unsubscribed
-            // when receiving the first response from potentially many repliers.
-            // This call will wait for the reply for up to 1000 milliseconds (1 second).
-            m = c.Request("foo", Encoding.UTF8.GetBytes("help"), 1000);
+// Sends a request (internally creates an inbox) and Auto-Unsubscribe the
+// internal subscriber, which means that the subscriber is unsubscribed
+// when receiving the first response from potentially many repliers.
+// This call will wait for the reply for up to 1000 milliseconds (1 second).
+m = c.Request("foo", Encoding.UTF8.GetBytes("help"), 1000);
 
-            // Draining and closing a connection
-            c.Drain();
+// Draining and closing a connection
+c.Drain();
 
-            // Closing a connection
-            c.Close();
+// Closing a connection
+c.Close();
 ```
 
 ## RX Usage
@@ -235,53 +230,7 @@ You can now import the namespace `NATS.Client.Rx.Ops`. After this you get builti
 If you want, you could instead take an external dependency on `System.Reactive` and use that
 instead of `NATS.RX.Ops`.
 
-```csharp
-using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using NATS.Client;
-using NATS.Client.Rx;
-using NATS.Client.Rx.Ops; //Can be replaced with using System.Reactive.Linq;
-
-namespace RxSample
-{
-    class Program
-    {
-        static void Main(string[] args)
-        {
-            using (var cn = new ConnectionFactory().CreateConnection())
-            {
-                var temperatures =
-                    cn.Observe("temperatures")
-                        .Where(m => m.Data?.Any() == true)
-                        .Select(m => BitConverter.ToInt32(m.Data, 0));
-
-                temperatures.Subscribe(t => Console.WriteLine($"{t}C"));
-
-                temperatures.Subscribe(t => Console.WriteLine($"{(t * 9 / 5) + 32}F"));
-
-                var cts = new CancellationTokenSource();
-
-                Task.Run(async () =>
-                {
-                    var rnd = new Random();
-
-                    while (!cts.IsCancellationRequested)
-                    {
-                        cn.Publish("temperatures", BitConverter.GetBytes(rnd.Next(-10, 40)));
-
-                        await Task.Delay(1000, cts.Token);
-                    }
-                }, cts.Token);
-
-                Console.ReadKey();
-                cts.Cancel();
-            }
-        }
-    }
-}
-```
+See the full example here: [RxSample](src/Samples/RxSample/RxSample.cs)
 
 ## Basic Encoded Usage
 The .NET NATS client mirrors go encoding through serialization and
@@ -293,30 +242,30 @@ objects can be overridden.  The NATS core version does not have serialization
 defaults and they must be specified.
 
 ```c#
-        using (IEncodedConnection c = new ConnectionFactory().CreateEncodedConnection())
-        {
-            EventHandler<EncodedMessageEventArgs> eh = (sender, args) =>
-            {
-                // Here, obj is an instance of the object published to
-                // this subscriber.  Retrieve it through the
-                // ReceivedObject property of the arguments.
-                MyObject obj = (MyObject)args.ReceivedObject;
+using (IEncodedConnection c = new ConnectionFactory().CreateEncodedConnection())
+{
+    EventHandler<EncodedMessageEventArgs> eh = (sender, args) =>
+    {
+        // Here, obj is an instance of the object published to
+        // this subscriber.  Retrieve it through the
+        // ReceivedObject property of the arguments.
+        MyObject obj = (MyObject)args.ReceivedObject;
 
-                System.Console.WriteLine("Company: " + obj.Company);
-            };
+        System.Console.WriteLine("Company: " + obj.Company);
+    };
 
-            // Subscribe using the encoded message event handler
-            IAsyncSubscription s = c.SubscribeAsync("foo", eh);
+    // Subscribe using the encoded message event handler
+    IAsyncSubscription s = c.SubscribeAsync("foo", eh);
 
-            MyObject obj = new MyObject();
-            obj.Company = "MyCompany";
+    MyObject obj = new MyObject();
+    obj.Company = "MyCompany";
 
-            // To publish an instance of your object, simply
-            // call the IEncodedConnection publish API and pass
-            // your object.
-            c.Publish("foo", obj);
-            c.Flush();
-        }
+    // To publish an instance of your object, simply
+    // call the IEncodedConnection publish API and pass
+    // your object.
+    c.Publish("foo", obj);
+    c.Flush();
+}
 ```
 
 ### Other Types of Serialization
@@ -325,37 +274,37 @@ third party packages used, objects can be serialized to JSON, SOAP, or a custom
 scheme.  XML was chosen as the example here as it is natively supported by .NET 4.6.
 
 ```c#
-        // Example XML serialization.
-        byte[] serializeToXML(Object obj)
-        {
-            MemoryStream  ms = new MemoryStream();
-            XmlSerializer x = new XmlSerializer(((SerializationTestObj)obj).GetType());
+// Example XML serialization.
+byte[] serializeToXML(Object obj)
+{
+    MemoryStream  ms = new MemoryStream();
+    XmlSerializer x = new XmlSerializer(((SerializationTestObj)obj).GetType());
 
-            x.Serialize(ms, obj);
+    x.Serialize(ms, obj);
 
-            byte[] content = new byte[ms.Position];
-            Array.Copy(ms.GetBuffer(), content, ms.Position);
+    byte[] content = new byte[ms.Position];
+    Array.Copy(ms.GetBuffer(), content, ms.Position);
 
-            return content;
-        }
+    return content;
+}
 
-        Object deserializeFromXML(byte[] data)
-        {
-            XmlSerializer x = new XmlSerializer(new SerializationTestObj().GetType());
-            MemoryStream ms = new MemoryStream(data);
-            return x.Deserialize(ms);
-        }
+Object deserializeFromXML(byte[] data)
+{
+    XmlSerializer x = new XmlSerializer(new SerializationTestObj().GetType());
+    MemoryStream ms = new MemoryStream(data);
+    return x.Deserialize(ms);
+}
 
-        <...>
+<...>
 
-        // Create an encoded connection and override the OnSerialize and
-        // OnDeserialize delegates.
-        IEncodedConnection c = new ConnectionFactory().CreateEncodedConnection();
-        c.OnDeserialize = deserializeFromXML;
-        c.OnSerialize = serializeToXML;
+// Create an encoded connection and override the OnSerialize and
+// OnDeserialize delegates.
+IEncodedConnection c = new ConnectionFactory().CreateEncodedConnection();
+c.OnDeserialize = deserializeFromXML;
+c.OnSerialize = serializeToXML;
 
-        // From here on, the connection will use the custom delegates
-        // for serialization.
+// From here on, the connection will use the custom delegates
+// for serialization.
 ```
 
 One can also use `Data Contract` to serialize objects.  Below are simple example
@@ -478,29 +427,29 @@ c.Close();
 Connection and Subscriber objects implement IDisposable and can be created in a using statement.  Here is all the code required to connect to a default server, receive ten messages, and clean up, unsubcribing and closing the connection when finished.
 
 ```c#
-            using (IConnection c = new ConnectionFactory().CreateConnection())
-            {
-                using (ISyncSubscription s = c.SubscribeSync("foo"))
-                {
-                    for (int i = 0; i < 10; i++)
-                    {
-                        Msg m = s.NextMessage();
-                        System.Console.WriteLine("Received: " + m);
-                    }
-                }  
-            }
+using (IConnection c = new ConnectionFactory().CreateConnection())
+{
+    using (ISyncSubscription s = c.SubscribeSync("foo"))
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            Msg m = s.NextMessage();
+            System.Console.WriteLine("Received: " + m);
+        }
+    }  
+}
 ```
 
 Or to publish ten messages:
 
 ```c#
-            using (IConnection c = new ConnectionFactory().CreateConnection())
-            {
-                for (int i = 0; i < 10; i++)
-                {
-                    c.Publish("foo", Encoding.UTF8.GetBytes("hello"));
-                }
-            }
+using (IConnection c = new ConnectionFactory().CreateConnection())
+{
+    for (int i = 0; i < 10; i++)
+    {
+        c.Publish("foo", Encoding.UTF8.GetBytes("hello"));
+    }
+}
 ```
 
 Flush a connection to the server - this call returns when all messages have been processed.  Optionally, a timeout in milliseconds can be passed.
@@ -514,49 +463,49 @@ c.Flush(1000);
 Setup a subscriber to auto-unsubscribe after ten messsages.
 
 ```c#
-        IAsyncSubscription s = c.SubscribeAsync("foo");
-        s.MessageHandler += (sender, args) =>
-        {
-           Console.WriteLine("Received: " + args.Message);
-        };
+IAsyncSubscription s = c.SubscribeAsync("foo");
+s.MessageHandler += (sender, args) =>
+{
+   Console.WriteLine("Received: " + args.Message);
+};
 
-        s.Start();
-        s.AutoUnsubscribe(10);
+s.Start();
+s.AutoUnsubscribe(10);
 ```
 
 Note that an anonymous function was used.  This is for brevity here - in practice, delegate functions can be used as well.
 
 Other events can be assigned delegate methods through the options object.
 ```c#
-            Options opts = ConnectionFactory.GetDefaultOptions();
+Options opts = ConnectionFactory.GetDefaultOptions();
 
-            opts.AsyncErrorEventHandler += (sender, args) =>
-            {
-                Console.WriteLine("Error: ");
-                Console.WriteLine("   Server: " + args.Conn.ConnectedUrl);
-                Console.WriteLine("   Message: " + args.Error);
-                Console.WriteLine("   Subject: " + args.Subscription.Subject);
-            };
+opts.AsyncErrorEventHandler += (sender, args) =>
+{
+    Console.WriteLine("Error: ");
+    Console.WriteLine("   Server: " + args.Conn.ConnectedUrl);
+    Console.WriteLine("   Message: " + args.Error);
+    Console.WriteLine("   Subject: " + args.Subscription.Subject);
+};
 
-            opts.ServerDiscoveredEventHandler += (sender, args) =>
-            {
-                Console.WriteLine("A new server has joined the cluster:");
-                Console.WriteLine("    " + String.Join(", ", args.Conn.DiscoveredServers));
-            };
+opts.ServerDiscoveredEventHandler += (sender, args) =>
+{
+    Console.WriteLine("A new server has joined the cluster:");
+    Console.WriteLine("    " + String.Join(", ", args.Conn.DiscoveredServers));
+};
 
-            opts.ClosedEventHandler += (sender, args) =>
-            {
-                Console.WriteLine("Connection Closed: ");
-                Console.WriteLine("   Server: " + args.Conn.ConnectedUrl);
-            };
+opts.ClosedEventHandler += (sender, args) =>
+{
+    Console.WriteLine("Connection Closed: ");
+    Console.WriteLine("   Server: " + args.Conn.ConnectedUrl);
+};
 
-            opts.DisconnectedEventHandler += (sender, args) =>
-            {
-                Console.WriteLine("Connection Disconnected: ");
-                Console.WriteLine("   Server: " + args.Conn.ConnectedUrl);
-            };
+opts.DisconnectedEventHandler += (sender, args) =>
+{
+    Console.WriteLine("Connection Disconnected: ");
+    Console.WriteLine("   Server: " + args.Conn.ConnectedUrl);
+};
 
-            IConnection c = new ConnectionFactory().CreateConnection(opts);
+IConnection c = new ConnectionFactory().CreateConnection(opts);
 ```
 
 After version 0.5.0, the C# .NET client supports async Requests.
@@ -589,17 +538,17 @@ The NATS .NET client supports the cluster discovery protocol.  The list of serve
 ## Clustered Usage
 
 ```c#
-            string[] servers = new string[] {
-                "nats://localhost:1222",
-                "nats://localhost:1224"
-            };
+string[] servers = new string[] {
+    "nats://localhost:1222",
+    "nats://localhost:1224"
+};
 
-            Options opts = ConnectionFactory.GetDefaultOptions();
-            opts.MaxReconnect = 2;
-            opts.ReconnectWait = 1000;
-            opts.Servers = servers;
+Options opts = ConnectionFactory.GetDefaultOptions();
+opts.MaxReconnect = 2;
+opts.ReconnectWait = 1000;
+opts.Servers = servers;
 
-            IConnection c = new ConnectionFactory().CreateConnection(opts);
+IConnection c = new ConnectionFactory().CreateConnection(opts);
 ```
 
 ## TLS
@@ -612,23 +561,23 @@ In addition to the code found here, please refer to the sample code at
 [TlsVariationsExample](src/Samples/TlsVariationsExample/TlsVariationsExample.cs)
 
 ```c#
-        Options opts = ConnectionFactory.GetDefaultOptions();
-        opts.Secure = true;
+Options opts = ConnectionFactory.GetDefaultOptions();
+opts.Secure = true;
 
-        // .NET requires the private key and cert in the
-        //  same file. 'client.pfx' is generated from:
-        //
-        // openssl pkcs12 -export -out client.pfx
-        //    -inkey client-key.pem -in client-cert.pem
-        X509Certificate2 cert = new X509Certificate2("client.pfx", "password");
+// .NET requires the private key and cert in the
+//  same file. 'client.pfx' is generated from:
+//
+// openssl pkcs12 -export -out client.pfx
+//    -inkey client-key.pem -in client-cert.pem
+X509Certificate2 cert = new X509Certificate2("client.pfx", "password");
 
-        opts.AddCertificate(cert);
+opts.AddCertificate(cert);
 
-        // Some connections like those with OCSP 
-        // require CheckCertificateRevocation
-        opts.CheckCertificateRevocation = true;
-        
-        IConnection c = new ConnectionFactory().CreateConnection(opts);
+// Some connections like those with OCSP 
+// require CheckCertificateRevocation
+opts.CheckCertificateRevocation = true;
+
+IConnection c = new ConnectionFactory().CreateConnection(opts);
 ```
 
 Many times, it is useful when developing an application (or necessary
@@ -637,26 +586,25 @@ validation.  This is achieved by overriding the remove certificate
 validation callback through the NATS client options.
 
 ```c#
+private bool verifyServerCert(object sender,
+X509Certificate certificate, X509Chain chain,
+        SslPolicyErrors sslPolicyErrors)
+{
+    if (sslPolicyErrors == SslPolicyErrors.None)
+        return true;
 
-    private bool verifyServerCert(object sender,
-        X509Certificate certificate, X509Chain chain,
-                SslPolicyErrors sslPolicyErrors)
-        {
-            if (sslPolicyErrors == SslPolicyErrors.None)
-                return true;
+    // Do what is necessary to achieve the level of
+    // security you need given a policy error.
+}        
 
-            // Do what is necessary to achieve the level of
-            // security you need given a policy error.
-        }        
+<...>
 
-        <...>
+Options opts = ConnectionFactory.GetDefaultOptions();
+opts.Secure = true;
+opts.TLSRemoteCertificationValidationCallback = verifyServerCert;
+opts.AddCertificate("client.pfx");
 
-        Options opts = ConnectionFactory.GetDefaultOptions();
-        opts.Secure = true;
-        opts.TLSRemoteCertificationValidationCallback = verifyServerCert;
-        opts.AddCertificate("client.pfx");
-
-        IConnection c = new ConnectionFactory().CreateConnection(opts);
+IConnection c = new ConnectionFactory().CreateConnection(opts);
 ```
 
 The NATS server default cipher suites **may not be supported** by the Microsoft
@@ -777,7 +725,8 @@ The NATS .NET client can throw the following exceptions:
 * NATSMaxPayloadException - The exception that is thrown when a message payload exceeds what the maximum configured.
 * NATSBadSubscriptionException - The exception that is thrown when a subscriber operation is performed on an invalid subscriber.
 * NATSTimeoutException - The exception that is thrown when a NATS operation times out.
-
+* NATSJetStreamStatusException - The exception that is thrown when a JetStream subscription detects an exceptional or unknown status
+ 
 ## JetStream
 
 Publishing and subscribing to JetStream enabled servers is straightforward.  A
@@ -790,9 +739,9 @@ from both streams and directly from other NATS producers.
 
 After establishing a connection as described above, create a JetStream Context.
 
-   ```c#
-   IJetStream js = c.CreateJetStreamContext();
-   ```
+```c#
+IJetStream js = c.CreateJetStreamContext();
+```
 
 You can pass options to configure the JetStream client, although the defaults should
 suffice for most users.  See the `JetStreamOptions` class.
@@ -809,9 +758,9 @@ before publishing. You can publish in either a synchronous or asynchronous manne
 **Synchronous:**
 
 ```c#
-       // create a typical NATS message
-       Msg msg = new Msg("foo", Encoding.UTF8.GetBytes("hello"));
-       PublishAck pa = js.Publish(msg);
+// create a typical NATS message
+Msg msg = new Msg("foo", Encoding.UTF8.GetBytes("hello"));
+PublishAck pa = js.Publish(msg);
 ```
 
 See `JetStreamPublish` in the JetStream samples for a detailed and runnable sample.
@@ -832,16 +781,16 @@ The PublishOptions are immutable, but the builder can be re-used for expectation
 For example:
 
 ```c#
-      PublishOptions.PublishOptionsBuilder builder = PublishOptions.Builder()
-          .WithExpectedStream(stream)
-          .WithMessageId("mid1");
+PublishOptions.PublishOptionsBuilder builder = PublishOptions.Builder()
+  .WithExpectedStream(stream)
+  .WithMessageId("mid1");
 
-      PublishAck pa = js.Publish("foo", null, builder.Build());
-      
-      pubOptsBuilder.ClearExpected()
-          .WithExpectedLastSequence("mid1")
-          .WithMessageId("mid2");
-      pa = js.Publish("foo", null, pubOptsBuilder.build());
+PublishAck pa = js.Publish("foo", null, builder.Build());
+
+pubOptsBuilder.ClearExpected()
+  .WithExpectedLastSequence("mid1")
+  .WithMessageId("mid2");
+pa = js.Publish("foo", null, pubOptsBuilder.build());
 ```
 
 See `JetStreamPublishWithOptionsUseCases` in the JetStream samples for a detailed and runnable sample.
@@ -849,19 +798,18 @@ See `JetStreamPublishWithOptionsUseCases` in the JetStream samples for a detaile
 **Asynchronous:**
 
 ```c#
+IList<Task<PublishAck>> tasks = new new List<Task<PublishAck>>();
+for (int x = 1; x < roundCount; x++) {
+  // create a typical NATS message
+  Msg msg = new Msg("foo", Encoding.UTF8.GetBytes("hello"));
 
-      IList<Task<PublishAck>> tasks = new new List<Task<PublishAck>>();
-      for (int x = 1; x < roundCount; x++) {
-          // create a typical NATS message
-          Msg msg = new Msg("foo", Encoding.UTF8.GetBytes("hello"));
+  // Publish a message
+  tasks.Add(js.PublishAsync(msg));
+}
 
-          // Publish a message
-          tasks.Add(js.PublishAsync(msg));
-     }
-
-     foreach (Task<PublishAck> task in tasks) {
-         ... process the task
-     }
+foreach (Task<PublishAck> task in tasks) {
+ ... process the task
+}
 ```
 
 See the `JetStreamPublishAsync` in the JetStream samples for a detailed and runnable sample.
@@ -881,21 +829,21 @@ Push subscriptions can be synchronous or asynchronous. The server *pushes* messa
 ### Push Async Subscribing
 
 ```c#
-        void MyHandler(object sender, MsgHandlerEventArgs args)
-        {
-            // Process the message.
-            // Ack the message depending on the ack model
-        }
+void MyHandler(object sender, MsgHandlerEventArgs args)
+{
+    // Process the message.
+    // Ack the message depending on the ack model
+}
 
-        PushSubscribeOptions pso = PushSubscribeOptions.Builder()
-            .WithDurable("optional-durable-name")
-            .build();
-        
-        boolean autoAck = ...
-        
-        // Subscribe using the handler
-        IJetStreamPushAsyncSubscription sub = 
-            js.PushSubscribeAsync("subject", MyHandler, false, pso);
+PushSubscribeOptions pso = PushSubscribeOptions.Builder()
+    .WithDurable("optional-durable-name")
+    .build();
+
+boolean autoAck = ...
+
+// Subscribe using the handler
+IJetStreamPushAsyncSubscription sub = 
+    js.PushSubscribeAsync("subject", MyHandler, false, pso);
 ```
 
 See the `JetStreamPushSubcribeBasicAsync` in the JetStream samples for a detailed and runnable sample.
@@ -903,13 +851,13 @@ See the `JetStreamPushSubcribeBasicAsync` in the JetStream samples for a detaile
 ### Push Sync Subscribing
 
 ```c#
-        PushSubscribeOptions pso = PushSubscribeOptions.Builder()
-            .WithDurable("optional-durable-name")
-            .build();
-        
-        // Subscribe 
-        IJetStreamPushSyncSubscription sub = 
-                js.PushSubscribeSync("subject", pso);
+PushSubscribeOptions pso = PushSubscribeOptions.Builder()
+    .WithDurable("optional-durable-name")
+    .build();
+
+// Subscribe 
+IJetStreamPushSyncSubscription sub = 
+        js.PushSubscribeSync("subject", pso);
 ```
 
 See `JetStreamPushSubcribeSync` in the JetStream samples for a detailed and runnable sample.
@@ -920,21 +868,21 @@ Pull subscriptions are always synchronous. The server organizes messages into a 
 which it sends when requested.
 
 ```c#
-        PullSubscribeOptions options = PullSubscribeOptions.Builder()
-            .WithDurable("durable-name-is-required")
-            .Build();
+    PullSubscribeOptions options = PullSubscribeOptions.Builder()
+        .WithDurable("durable-name-is-required")
+        .Build();
 
-        IJetStreamPullSubscription sub = js.PullSubscribe("subject", options);
+    IJetStreamPullSubscription sub = js.PullSubscribe("subject", options);
 ```
 
 **Fetch:**
 
 ```c#
-        List<Msg> message = sub.Fetch(100, 1000); // 100 messages, 1000 millis timeout
-        for (Msg m : messages) {
-            // process message
-            m.Ack();
-        }
+List<Msg> message = sub.Fetch(100, 1000); // 100 messages, 1000 millis timeout
+for (Msg m : messages) {
+    // process message
+    m.Ack();
+}
 ```
 
 The fetch pull is a *macro* pull that uses advanced pulls under the covers to return a list of messages.
@@ -949,9 +897,9 @@ in the JetStream samples for a detailed and runnable sample.
 **Batch Size:**
 
 ```c#
-        sub.Pull(100); // 100 messages
-        ...
-        Msg m = sub.NextMessage(1000);
+sub.Pull(100); // 100 messages
+...
+Msg m = sub.NextMessage(1000);
 ```
 
 An advanced version of pull specifies a batch size. When asked, the server will send whatever
@@ -965,9 +913,9 @@ in the JetStream samples for detailed and runnable samples.
 **No Wait and Batch Size:**
 
 ```c#
-        sub.PullNoWait(100); // 100 messages
-        ...
-        Msg m = sub.NextMessage(1000);
+sub.PullNoWait(100); // 100 messages
+...
+Msg m = sub.NextMessage(1000);
 ```
 
 An advanced version of pull also specifies a batch size. When asked, the server will send whatever
@@ -981,9 +929,9 @@ See the `JetStreamPullSubNoWaitUseCases` in the JetStream samples for a detailed
 **Expires In and Batch Size:**
 
 ```c#
-        sub.PullExpiresIn(100, 3000); // 100 messages, expires in 3000 millis
-        ...
-        Msg m = sub.NextMessage(4000);
+sub.PullExpiresIn(100, 3000); // 100 messages, expires in 3000 millis
+...
+Msg m = sub.NextMessage(4000);
 ```
 
 Another advanced version of pull specifies a maximum time to wait for the batch to fill.

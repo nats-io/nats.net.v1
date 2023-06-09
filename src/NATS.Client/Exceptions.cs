@@ -194,7 +194,7 @@ namespace NATS.Client
     }
 
     /// <summary>
-    /// The exception that is thrown when a JetStream subscription detects a unknown status
+    /// The exception that is thrown when a JetStream subscription detects an exceptional or unknown status
     /// </summary>
     public class NATSJetStreamStatusException : NATSException
     {
