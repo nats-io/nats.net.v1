@@ -23,7 +23,6 @@ using NATS.Client.Internals.SimpleJSON;
 using NATS.Client.Service;
 using UnitTests;
 using Xunit;
-using Xunit.Abstractions;
 using static UnitTests.TestBase;
 
 namespace IntegrationTestsInternal
@@ -31,13 +30,7 @@ namespace IntegrationTestsInternal
     [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
     public class TestService : TestSuite<AutoServerSuiteContext>
     {
-        private readonly ITestOutputHelper output;
-
-        public TestService(ITestOutputHelper output, AutoServerSuiteContext context) : base(context)
-        {
-            this.output = output;
-            Console.SetOut(new ConsoleWriter(output));
-        }
+        public TestService(AutoServerSuiteContext context) : base(context) {}
         
         const string ServiceName1 = "Service1";
         const string ServiceName2 = "Service2";

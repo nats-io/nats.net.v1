@@ -18,7 +18,6 @@ using NATS.Client;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using Xunit;
-using Xunit.Abstractions;
 using static UnitTests.TestBase;
 using static IntegrationTests.JetStreamTestBase;
 using static NATS.Client.ClientExDetail;
@@ -27,13 +26,7 @@ namespace IntegrationTestsInternal
 {
     public class TestJetStreamConsumer : TestSuite<JetStreamSuiteContext>
     {
-        private readonly ITestOutputHelper output;
-
-        public TestJetStreamConsumer(ITestOutputHelper output, JetStreamSuiteContext context) : base(context)
-        {
-            this.output = output;
-            Console.SetOut(new ConsoleWriter(output));
-        }
+        public TestJetStreamConsumer(JetStreamSuiteContext context) : base(context) {}
 
         // ------------------------------------------------------------------------------------------
         // this allows me to intercept messages before it gets to the connection queue

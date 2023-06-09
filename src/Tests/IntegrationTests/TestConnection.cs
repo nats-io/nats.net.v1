@@ -1117,11 +1117,12 @@ namespace IntegrationTests
                         {
                             // timed out.
                         }
-
                         sw.Stop();
 
-                        // add slack for slow CI.
-                        Assert.True(sw.ElapsedMilliseconds >= 1000);
+                        // removed this check. This is not how the timeout works
+                        // The timeout is not a delay, it's a max time to wait
+                        // // add slack for slow CI.
+                        // Assert.True(sw.ElapsedMilliseconds >= 1000);
                     }
                 }
             }

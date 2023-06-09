@@ -18,9 +18,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NATS.Client;
-using UnitTests;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace IntegrationTests
 {
@@ -30,13 +28,7 @@ namespace IntegrationTests
     [Collection(DefaultSuiteContext.CollectionKey)]
     public class TestBasic : TestSuite<DefaultSuiteContext>
     {
-        private readonly ITestOutputHelper output;
-
-        public TestBasic(ITestOutputHelper output, DefaultSuiteContext context) : base(context)
-        {
-            this.output = output;
-            Console.SetOut(new TestBase.ConsoleWriter(output));
-        }
+        public TestBasic(DefaultSuiteContext context) : base(context) {}
 
         [Fact]
         public void TestConnectedServer()

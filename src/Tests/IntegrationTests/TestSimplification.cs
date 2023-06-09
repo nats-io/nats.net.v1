@@ -19,7 +19,6 @@ using NATS.Client;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using Xunit;
-using Xunit.Abstractions;
 using static IntegrationTests.JetStreamTestBase;
 using static NATS.Client.JetStream.BaseConsumeOptions;
 using static UnitTests.TestBase;
@@ -28,13 +27,7 @@ namespace IntegrationTests
 {
     public class TestSimplification : TestSuite<OneServerSuiteContext>
     {
-        private readonly ITestOutputHelper output;
-
-        public TestSimplification(ITestOutputHelper output, OneServerSuiteContext context) : base(context)
-        {
-            this.output = output;
-            Console.SetOut(new ConsoleWriter(output));
-        }
+        public TestSimplification(OneServerSuiteContext context) : base(context) {}
         
         [Fact]
         public void TestStreamContext()

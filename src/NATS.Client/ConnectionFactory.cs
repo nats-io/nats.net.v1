@@ -105,13 +105,29 @@ namespace NATS.Client
         /// <summary>
         /// Retrieves the default set of client options.
         /// </summary>
-        /// <param name="servers">Optionally set the server(s). Still can be set or overriden with
+        /// <param name="server">Optionally set the server. Still can be set or overriden with
         /// <see cref="Options.Url"/> or <see cref="Options.Servers"/> properties</param>
         /// <returns>The default <see cref="Options"/> object for the NATS client.</returns>
-        public static Options GetDefaultOptions(params string[] servers)
+        public static Options GetDefaultOptions(string server = null)
         {
             Options opts = new Options();
-            if (servers != null && servers.Length > 0)
+            if (server != null)
+            {
+                opts.Url = server;
+            }
+            return opts;
+        }
+
+        /// <summary>
+        /// Retrieves the default set of client options.
+        /// </summary>
+        /// <param name="servers">Optionally set the servers. Still can be set or overriden with
+        /// <see cref="Options.Url"/> or <see cref="Options.Servers"/> properties</param>
+        /// <returns>The default <see cref="Options"/> object for the NATS client.</returns>
+        public static Options GetDefaultOptions(string[] servers)
+        {
+            Options opts = new Options();
+            if (servers != null)
             {
                 opts.Servers = servers;
             }
