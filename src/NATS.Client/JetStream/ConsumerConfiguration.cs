@@ -232,7 +232,7 @@ namespace NATS.Client.JetStream
             RecordWouldBeChange(DeliverSubject, server.DeliverSubject, "DeliverSubject", changes);
             RecordWouldBeChange(DeliverGroup, server.DeliverGroup, "DeliverGroup", changes);
 
-            if (_backoff != null && !SequenceEqual(_backoff, server._backoff, true)) { changes.Add("Backoff"); }
+            if (_backoff != null && !SequenceEqual(_backoff, server._backoff)) { changes.Add("Backoff"); }
             if (_metadata != null && !DictionariesEqual(_metadata, server._metadata)) { changes.Add("Metadata"); }
 
             return changes;

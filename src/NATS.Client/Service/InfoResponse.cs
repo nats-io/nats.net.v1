@@ -26,13 +26,13 @@ namespace NATS.Client.Service
         public const string ResponseType = "io.nats.micro.v1.info_response";
 
         public string Description { get; }
-        public IList<string> Subjects { get; }
+        public IList<Endpoint> Endpoints { get; }
 
-        public InfoResponse(string id, string name, string version, Dictionary<string, string> metadata, string description, IList<string> subjects)
+        public InfoResponse(string id, string name, string version, IDictionary<string, string> metadata, string description, IList<Endpoint> endpoints)
             : base(ResponseType, id, name, version, metadata)
         {
             Description = description;
-            Subjects = subjects;
+            Endpoints = endpoints;
         }
 
         internal InfoResponse(string json) : this(JSON.Parse(json)) {}
@@ -40,20 +40,21 @@ namespace NATS.Client.Service
         internal InfoResponse(JSONNode node) : base(ResponseType, node)
         {
             Description = node[ApiConstants.Description];
-            Subjects = JsonUtils.StringList(node, ApiConstants.Subjects);
+            Endpoints = JsonUtils.ListOf<Endpoint>(
+                node, ApiConstants.Endpoints, jsonNode => new Endpoint(jsonNode));
         }
 
         public override JSONNode ToJsonNode()
         {
             JSONObject jso = BaseJsonObject();
             JsonUtils.AddField(jso, ApiConstants.Description, Description);
-            JsonUtils.AddField(jso, ApiConstants.Subjects, Subjects);
+            JsonUtils.AddField(jso, ApiConstants.Endpoints, Endpoints);
             return jso;
         }
 
         protected bool Equals(InfoResponse other)
         {
-            return base.Equals(other) && Description == other.Description && Equals(Subjects, other.Subjects);
+            return base.Equals(other) && Description == other.Description && Validator.SequenceEqual(Endpoints, other.Endpoints);
         }
 
         public override bool Equals(object obj)
@@ -70,7 +71,7 @@ namespace NATS.Client.Service
             {
                 int hashCode = base.GetHashCode();
                 hashCode = (hashCode * 397) ^ (Description != null ? Description.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (Subjects != null ? Subjects.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Endpoints != null ? Endpoints.GetHashCode() : 0);
                 return hashCode;
             }
         }

@@ -16,10 +16,14 @@ namespace NATS.Client.Service
 
         public Endpoint(string name) : this(name, null, null, true) {}
 
+        public Endpoint(string name, IDictionary<string, string> metadata) : this(name, null, metadata, true) {}
+
         public Endpoint(string name, string subject) : this(name, subject, null, true) {}
 
+        public Endpoint(string name, string subject, IDictionary<string, string> metadata) : this(name, subject, metadata, true) {}
+
         // internal use constructors
-        internal Endpoint(string name, string subject, Dictionary<string, string> metadata, bool validate) {
+        internal Endpoint(string name, string subject, IDictionary<string, string> metadata, bool validate) {
             if (validate) {
                 Name = Validator.ValidateIsRestrictedTerm(name, "Endpoint Name", true);
                 if (subject == null) {
@@ -33,14 +37,26 @@ namespace NATS.Client.Service
                 Name = name;
                 Subject = subject;
             }
-            Metadata = metadata == null || metadata.Count == 0 ? null : metadata;
+
+            if (metadata == null || metadata.Count == 0)
+            {
+                Metadata = null;
+            }
+            else
+            {
+                Metadata = new Dictionary<string, string>();
+                foreach (var key in metadata.Keys)
+                {
+                    Metadata[key] = metadata[key];
+                }
+            }
         }
 
         internal Endpoint(JSONNode node)
         {
             Name = node[ApiConstants.Name];
             Subject = node[ApiConstants.Subject];
-            Metadata = JsonUtils.StringStringDictionary(node, ApiConstants.Metadata);
+            Metadata = JsonUtils.StringStringDictionary(node, ApiConstants.Metadata, true);
         }
 
         private Endpoint(EndpointBuilder b) 
@@ -79,9 +95,20 @@ namespace NATS.Client.Service
                 return this;
             }
 
-            public EndpointBuilder WithMetadata(Dictionary<string, string> metadata)
+            public EndpointBuilder WithMetadata(IDictionary<string, string> metadata)
             {
-                Metadata = metadata;
+                if (metadata == null || metadata.Count == 0)
+                {
+                    Metadata = null;
+                }
+                else
+                {
+                    Metadata = new Dictionary<string, string>();
+                    foreach (var key in metadata.Keys)
+                    {
+                        Metadata[key] = metadata[key];
+                    }
+                }
                 return this;
             }
 
@@ -97,7 +124,7 @@ namespace NATS.Client.Service
 
         protected bool Equals(Endpoint other)
         {
-            return Name == other.Name && Subject == other.Subject && Validator.DictionariesEqual(Metadata, other.Metadata);
+            return Name == other.Name && Subject == other.Subject && Equals(Metadata, other.Metadata);
         }
 
         public override bool Equals(object obj)
