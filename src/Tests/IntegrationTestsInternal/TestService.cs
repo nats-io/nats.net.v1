@@ -609,7 +609,7 @@ namespace IntegrationTestsInternal
             Assert.Equal(zdt, er.Started);
 
             string j = er.ToJsonString();
-            Assert.True(j.StartsWith("{"));
+            Assert.StartsWith("{", j);
             Assert.Contains("\"name\":\"name\"", j);
             Assert.Contains("\"subject\":\"subject\"", j);
             Assert.Contains("\"last_error\":\"lastError\"", j);
@@ -730,11 +730,11 @@ namespace IntegrationTestsInternal
     
             ArgumentException iae = Assert.Throws<ArgumentException>(
                 () => ServiceEndpoint.Builder().Build());
-            Assert.True(iae.Message.Contains("Endpoint"));
+            Assert.Contains("Endpoint", iae.Message);
     
             iae = Assert.Throws<ArgumentException>(
                 () => ServiceEndpoint.Builder().WithEndpoint(e1).Build());
-            Assert.True(iae.Message.Contains("Handler"));
+            Assert.Contains("Handler", iae.Message);
         }
 
         [Fact]
@@ -756,8 +756,8 @@ namespace IntegrationTestsInternal
             ValidateApiInOutPingResponse(pr1);
             ValidateApiInOutPingResponse(pr2);
             ArgumentException iae = Assert.Throws<ArgumentException>(() => new TestServiceResponses(pr1.ToJsonNode()));
-            Assert.True(iae.Message.Contains("Invalid type"));
-    
+            Assert.Contains("Invalid type", iae.Message);
+
             iae = Assert.Throws<ArgumentException>(() => new TestServiceResponses("{[bad json"));
             Assert.True(iae.Message.Contains("Type cannot be null"));
     
