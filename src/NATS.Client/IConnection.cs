@@ -1041,7 +1041,7 @@ namespace NATS.Client
         /// has moved from draining to closed.
         /// </remarks>
         /// <seealso cref="Close()"/>
-        /// <param name="timeout">The duration to wait before draining.</param> 
+        /// <param name="timeout">The duration to wait for the drain to complete.</param> 
         /// <returns>A task that represents the asynchronous drain operation.</returns>
         Task DrainAsync(int timeout);
 

@@ -4,11 +4,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using NATS.Client;
 using NATS.Client.Rx;
-using NATS.Client.Rx.Ops; //Can be replaced with using System.Reactive.Linq;
+using NATS.Client.Rx.Ops;
 
-namespace RxSample
+//Can be replaced with using System.Reactive.Linq;
+
+namespace NATSExamples
 {
-    class Program
+    class RxSample
     {
         static void Main(string[] args)
         {

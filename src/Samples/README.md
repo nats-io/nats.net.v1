@@ -4,17 +4,30 @@
 
 This folder contains a number of samples:
 
-### Regular Nats Sample Projects
+### Core Nats
 
-1. `Publish`
-1. `QueueGroup`
-1. `Replier`
-1. `Requestor`
-1. `RxSample`
-1. `Subscribe`
+1. `Publish` - A sample publisher.
+1. `QueueGroup` - An example queue group subscriber.
+1. `Requestor` - A requestor sample.
+1. `Replier` - A sample replier for the Requestor application.
+1. `RxSample` - Rx integration / functionality
+1. `Subscribe` - A sample subscriber.
 1. `WinFormsSample`
+1. `TlsVariationsExample`
+1. `JetStreamStarter` - A starter app for JetStream projects. 
 
-### JetStream Sample Projects
+### Simplification
+
+Examples show the simplification JetStream stream and consume api.
+
+1. `SimplificationContext` - Examples on how to get simplification stream and consumer contexts. 
+1. `SimplificationFetchBytes` - How to fetch with byte limits.
+1. `SimplificationFetchMessages` - How to fetch with message limits.
+1. `SimplificationIterableConsumer` - How to endlessly consume with an iteration pattern.
+1. `SimplificationMessageConsumer` - How to endless consume with an Event Handler
+1. `SimplificationNext` - How to consume one message at a time.
+
+### JetStream
 
 1. `JetStreamPublish` - publish JetStream messages
 1. `JetStreamPublishAsync` - publish JetStream messages asynchronously
@@ -34,18 +47,38 @@ This folder contains a number of samples:
 1. `JetStreamPushSubscribeBindDurable` - push subscribing with the bind options
 1. `JetStreamPushSubscribeDeliverSubject` - push subscribing with a deliver subject and how the subject can be read as a regular Nats Message
 1. `JetStreamPushSubscribeFilterSubject` - push subscribing with a filter on the subjects.
-1. `JetStreamPushSubscribeFlowControl` - TBD
-1. `JetStreamPushSubscribeHeartbeat` - TBD
-1. `JetStreamPushSubscribeQueueDurable` - TBD push subscribing to read messages in a load balance queue using a durable consumer.
+1. `JetStreamPushSubscribeQueueDurable` - push subscribing to read messages in a load balance queue using a durable consumer.
 
-### JetStream Management / Admin Samples
+### JetStream Management / Admin
 1. `JetStreamManageConsumers` - demonstrate the management of consumers
 1. `JetStreamManageStreams` - demonstrate the management of streams
-1. `JetStreamMirrorSubUseCases` - TBD
-1. `JetStreamPrefix` - TBD
+
+### Key Value
+1. `KeyValueFull` -  complete example showing aspects of KV operation
+
+### Service Framework
+1. `ServiceExample` - complete example showing service running and discovery
+
+### Miscellany
+
+The miscellany is just a general purpose project with other examples
+
+1. `NatsByExample` - copies of projects put into the NatsByExample website
+   * `KvIntro` - introduction to Key Value
+   * `PubSub` - basic publish subscribe
+   * `RequestReply` - basic request reply
+1. `ScatterGather` - one publish many replies.
+1. `ServiceCrossClientValidator` - a testing program to validate the service api 
 
 ### Sample Support
 1. `ExampleArgs` - Helper to manage command line arguments.
 1. `ExampleAuthHandler` - Example of an auth handler.
 1. `ExampleUtils` - Miscellaneous utils used to start or in running examples.
 1. `JetStreamExampleUtils` - Miscellaneous utils specific to JetStream examples.
+
+### Example Ideas
+1. `JetStreamPushSubscribeFlowControl`
+1. `JetStreamPushSubscribeHeartbeat`
+1. `JetStreamMirrorSubUseCases`
+1. `JetStreamPrefix`
+
