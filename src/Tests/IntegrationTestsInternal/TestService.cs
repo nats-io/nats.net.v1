@@ -759,23 +759,23 @@ namespace IntegrationTestsInternal
             Assert.Contains("Invalid type", iae.Message);
 
             iae = Assert.Throws<ArgumentException>(() => new TestServiceResponses("{[bad json"));
-            Assert.True(iae.Message.Contains("Type cannot be null"));
+            Assert.Contains("Type cannot be null", iae.Message);
     
             string json1 = "{\"id\":\"id\",\"name\":\"name\",\"version\":\"0.0.0\"}";
             iae = Assert.Throws<ArgumentException>(() => new TestServiceResponses(json1));
-            Assert.True(iae.Message.Contains("Type cannot be null"));
+            Assert.Contains("Type cannot be null", iae.Message);
     
             string json2 = "{\"name\":\"name\",\"version\":\"0.0.0\",\"type\":\"io.nats.micro.v1.test_response\"}";
             iae = Assert.Throws<ArgumentException>(() => new TestServiceResponses(json2));
-            Assert.True(iae.Message.Contains("Id cannot be null"));
+            Assert.Contains("Id cannot be null", iae.Message);
     
             string json3 = "{\"id\":\"id\",\"version\":\"0.0.0\",\"type\":\"io.nats.micro.v1.test_response\"}";
             iae = Assert.Throws<ArgumentException>(() => new TestServiceResponses(json3));
-            Assert.True(iae.Message.Contains("Name cannot be null"));
+            Assert.Contains("Name cannot be null", iae.Message);
     
             string json4 = "{\"id\":\"id\",\"name\":\"name\",\"type\":\"io.nats.micro.v1.test_response\"}";
             iae = Assert.Throws<ArgumentException>(() => new TestServiceResponses(json4));
-            Assert.True(iae.Message.Contains("Version cannot be null"));
+            Assert.Contains("Version cannot be null", iae.Message);
     
             IDictionary<string, string> endMeta = new Dictionary<string, string>();
             endMeta["foo"] = "bar";
