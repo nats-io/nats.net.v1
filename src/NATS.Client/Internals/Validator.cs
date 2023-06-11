@@ -654,7 +654,7 @@ namespace NATS.Client.Internals
             return Regex.IsMatch(s, SemVerPattern);
         }
 
-        public static bool SequenceEqual<TSource>(IList<TSource> l1, IList<TSource> l2, bool nullSecondEqualsEmptyFirst)
+        public static bool SequenceEqual<TSource>(IList<TSource> l1, IList<TSource> l2, bool nullSecondEqualsEmptyFirst = true)
         {
             if (l1 == null)
             {

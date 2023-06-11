@@ -79,6 +79,17 @@ namespace NATS.Client.Internals
             return list.Count == 0 && nullIfEmpty ? null : list;
         }
 
+        public static List<T> ListOf<T>(JSONNode node, string field, Func<JSONNode, T> provider, bool nullIfEmpty = false)
+        {
+            List<T> list = new List<T>();
+            foreach (var child in node[field].Children)
+            {
+                list.Add(provider.Invoke(child));
+            }
+          
+            return list.Count == 0 && nullIfEmpty ? null : list;
+        }
+
         public static List<string> OptionalStringList(JSONNode node, string field)
         {
             List<string> list = StringList(node, field);

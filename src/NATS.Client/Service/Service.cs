@@ -52,17 +52,17 @@ namespace NATS.Client.Service
 
             // set up the service contexts
             // ! also while we are here, we need to collect the endpoints for the SchemaResponse
-            IList<string> infoSubjects = new List<string>();
+            IList<Endpoint> infoEndpoints = new List<Endpoint>();
             serviceContexts = new Dictionary<string, EndpointContext>();
             foreach (ServiceEndpoint se in b.ServiceEndpoints.Values)
             {
                 serviceContexts[se.Name] = new EndpointContext(conn, true, se);
-                infoSubjects.Add(se.Subject);
+                infoEndpoints.Add(se.Endpoint);
             }
 
             // build static responses
             PingResponse = new PingResponse(id, b.Name, b.Version, b.Metadata);
-            InfoResponse = new InfoResponse(id, b.Name, b.Version, b.Metadata, b.Description, infoSubjects);
+            InfoResponse = new InfoResponse(id, b.Name, b.Version, b.Metadata, b.Description, infoEndpoints);
 
             discoveryContexts = new List<EndpointContext>();
             AddDiscoveryContexts(SrvPing, PingResponse);

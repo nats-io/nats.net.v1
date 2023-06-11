@@ -17,13 +17,24 @@ namespace NATS.Client.Service
         public string Version { get; }
         public Dictionary<string, string> Metadata { get; }
 
-        internal ServiceResponse(string type, string id, string name, string version, Dictionary<string, string> metadata)
+        internal ServiceResponse(string type, string id, string name, string version, IDictionary<string, string> metadata)
         {
             Type = type;
             Id = id;
             Name = name;
             Version = version;
-            Metadata = metadata == null || metadata.Count == 0 ? null : metadata;
+            if (metadata == null || metadata.Count == 0)
+            {
+                Metadata = null;
+            }
+            else
+            {
+                Metadata = new Dictionary<string, string>();
+                foreach (var key in metadata.Keys)
+                {
+                    Metadata[key] = metadata[key];
+                }
+            }
         }
         
         internal ServiceResponse(string type, ServiceResponse template)

@@ -23,7 +23,7 @@ namespace NATS.Client.Service
     {
         public const string ResponseType = "io.nats.micro.v1.ping_response";
 
-        internal PingResponse(string id, string name, string version, Dictionary<string, string> metadata) 
+        internal PingResponse(string id, string name, string version, IDictionary<string, string> metadata) 
             : base(ResponseType, id, name, version, metadata) {}
 
         internal PingResponse(string json) : this(JSON.Parse(json)) {}
