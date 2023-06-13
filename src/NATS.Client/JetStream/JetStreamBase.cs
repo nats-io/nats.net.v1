@@ -11,7 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using NATS.Client.Internals;
@@ -70,25 +69,22 @@ namespace NATS.Client.JetStream
         internal ConsumerInfo AddOrUpdateConsumerInternal(string streamName, ConsumerConfiguration config)
         {
             bool consumerCreate290Available = ServerInfoOrException(Conn).IsSameOrNewerThanVersion("2.9.0") && !JetStreamOptions.IsOptOut290ConsumerCreate;
-            
-            string name = Validator.EmptyAsNull(config.Name);
-            if (!string.IsNullOrWhiteSpace(name) && !consumerCreate290Available)
+
+            // ConsumerConfiguration validates that name and durable are the same if both are supplied.
+            string consumerName = Validator.EmptyAsNull(config.Name);
+            if (consumerName != null && !consumerCreate290Available)
             {
                 throw ClientExDetail.JsConsumerCreate290NotAvailable.Instance();
             }
-            
             string durable = Validator.EmptyAsNull(config.Durable);
 
-            string consumerName = name ?? durable;
-
             string subj;
-
-            if (consumerName == null) // just use old template
+            if (consumerCreate290Available)
             {
-                subj = string.Format(JetStreamConstants.JsapiConsumerCreate, streamName);
-            }
-            else if (consumerCreate290Available)
-            {
+                if (consumerName == null) {
+                    // if both consumerName and durable are null, generate a name
+                    consumerName = durable == null ? GenerateConsumerName() : durable;
+                }
                 string fs = Validator.EmptyAsNull(config.FilterSubject);
                 if (fs == null || fs.Equals(">"))
                 {
@@ -99,14 +95,21 @@ namespace NATS.Client.JetStream
                     subj = string.Format(JetStreamConstants.JsapiConsumerCreateV290WithFilter, streamName, consumerName, fs);
                 }
             }
-            else // server is old and consumerName must be durable since name was checked for JsConsumerCreate290NotAvailable
-            {
+            else if (durable == null) {
+                subj = string.Format(JetStreamConstants.JsapiConsumerCreate, streamName);
+            }
+            else {
                 subj = string.Format(JetStreamConstants.JsapiDurableCreate, streamName, durable);
             }
 
             var ccr = new ConsumerCreateRequest(streamName, config);
             var m = RequestResponseRequired(subj, ccr.Serialize(), Timeout);
             return new ConsumerInfo(m, true);
+        }
+
+        private string GenerateConsumerName()
+        {
+            return Nuid.NextGlobalSequence();
         }
 
         internal StreamInfo GetStreamInfoInternal(string streamName, StreamInfoOptions options)

@@ -18,9 +18,9 @@ namespace NATS.Client.Internals
 {
     public sealed class Nuid
     {
-        private const uint PREFIX_LENGTH = 12;
-        private const uint SEQUENTIAL_LENGTH = 10;
-        private const uint NUID_LENGTH = PREFIX_LENGTH + SEQUENTIAL_LENGTH;
+        private const int PREFIX_LENGTH = 12;
+        private const int SEQUENTIAL_LENGTH = 10;
+        private const int NUID_LENGTH = PREFIX_LENGTH + SEQUENTIAL_LENGTH;
         private const int MIN_INCREMENT = 33;
         private const int MAX_INCREMENT = 333;
         private const ulong MAX_SEQUENTIAL = 0x1000_0000_0000_0000; //64^10
@@ -89,7 +89,7 @@ namespace NATS.Client.Internals
         /// <summary>
         /// Initializes a new instance of <see cref="Nuid"/>.
         /// </summary>
-        internal Nuid() : this(null) {}
+        public Nuid() : this(null) {}
 
         /// <summary>
         /// Returns a random Nuid string.
@@ -98,7 +98,7 @@ namespace NATS.Client.Internals
         /// A Nuid is a 132 bit pseudo-random integer encoded as a base64 string
         /// </remarks>
         /// <returns>The Nuid</returns>
-        internal string GetNext()
+        public string GetNext()
         {
             var nuidBuffer = new char[NUID_LENGTH];
             var sequential = 0UL;
@@ -120,7 +120,43 @@ namespace NATS.Client.Internals
                 }
             }
 
-            for (var i = PREFIX_LENGTH; i < NUID_LENGTH; i++)
+            for (int i = NUID_LENGTH - 1; i >= PREFIX_LENGTH; i--)
+            {
+                // We operate on unsigned integers and BASE is a power of two
+                // therefore we can optimize sequential % BASE to sequential & (BASE - 1)
+                nuidBuffer[i] = (char)_digits[sequential & (BASE - 1)];
+                // BASE is 64 = 2^6 and sequential >= 0
+                // therefore we can optimize sequential / BASE to sequential >> 6
+                sequential >>= 6;
+            }
+
+            return new string(nuidBuffer);
+        }
+
+        /// <summary>
+        /// Returns a random Nuid string.
+        /// </summary>
+        /// <remarks>
+        /// A Nuid is a 132 bit pseudo-random integer encoded as a base64 string
+        /// </remarks>
+        /// <returns>The Nuid</returns>
+        public string GetNextSequence()
+        {
+            var sequential = 0UL;
+
+            lock (_nuidLock)
+            {
+                sequential = _sequential += _increment;
+                if (_sequential >= MAX_SEQUENTIAL)
+                {
+                    SetPrefix();
+                    sequential = _sequential = GetSequential();
+                    _increment = GetIncrement();
+                }
+            }
+
+            var nuidBuffer = new char[SEQUENTIAL_LENGTH];
+            for (int i = SEQUENTIAL_LENGTH - 1; i >= 0 ; i--)
             {
                 // We operate on unsigned integers and BASE is a power of two
                 // therefore we can optimize sequential % BASE to sequential & (BASE - 1)
@@ -137,6 +173,7 @@ namespace NATS.Client.Internals
         /// Returns the next NUID from the global instance.
         /// </summary>
         public static string NextGlobal() => _global.GetNext();
+        public static string NextGlobalSequence() => _global.GetNextSequence();
 
         private uint GetIncrement()
         {
