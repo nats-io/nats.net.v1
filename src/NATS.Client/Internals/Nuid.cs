@@ -134,7 +134,7 @@ namespace NATS.Client.Internals
         }
 
         /// <summary>
-        /// Returns a random Nuid string.
+        /// Returns the sequence portion of a random Nuid string.
         /// </summary>
         /// <remarks>
         /// A Nuid is a 132 bit pseudo-random integer encoded as a base64 string
