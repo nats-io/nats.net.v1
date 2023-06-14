@@ -173,6 +173,10 @@ namespace NATS.Client.Internals
         /// Returns the next NUID from the global instance.
         /// </summary>
         public static string NextGlobal() => _global.GetNext();
+        
+        /// <summary>
+        /// Returns the sequence portion from the next NUID from the global instance.
+        /// </summary>
         public static string NextGlobalSequence() => _global.GetNextSequence();
 
         private uint GetIncrement()
