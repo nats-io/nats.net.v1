@@ -584,9 +584,18 @@ namespace IntegrationTests
                     () => jsm.AddOrUpdateConsumer(STREAM, null));
                 Assert.Contains("Value cannot be null", e.Message);
                 
-                e = Assert.Throws<ArgumentNullException>(
-                    () => jsm.AddOrUpdateConsumer(STREAM, cc));
-                Assert.Contains("Value cannot be null", e.Message);
+                // durable and name can both be null
+                ConsumerInfo ci = jsm.AddOrUpdateConsumer(STREAM, cc);
+                Assert.NotNull(ci.Name);
+
+                // threshold can be set for durable
+                ConsumerConfiguration cc2 = ConsumerConfiguration.Builder().WithDurable(DURABLE).WithInactiveThreshold(10000).Build();
+                ci = jsm.AddOrUpdateConsumer(STREAM, cc2);
+                Assert.Equal(10000, ci.ConsumerConfiguration.InactiveThreshold.Millis);
+
+                // prep for next part of test
+                jsm.DeleteStream(STREAM);
+                CreateMemoryStream(jsm, STREAM, SubjectDot(">"));
 
                 // with and w/o deliver subject for push/pull
                 AddConsumer(jsm, atLeast290, 1, false, null, ConsumerConfiguration.Builder()

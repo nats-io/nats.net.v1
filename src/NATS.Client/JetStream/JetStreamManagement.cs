@@ -86,7 +86,6 @@ namespace NATS.Client.JetStream
         {
             Validator.ValidateStreamName(streamName, true);
             Validator.ValidateNotNull(config, nameof(config));
-            Validator.ValidateNotNull(config.Durable, nameof(config.Durable)); // durable name is required when creating consumers
             return AddOrUpdateConsumerInternal(streamName, config);
         }
 

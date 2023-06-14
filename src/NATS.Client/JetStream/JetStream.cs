@@ -233,6 +233,10 @@ namespace NATS.Client.JetStream
 
             ConsumerConfiguration serverCC = null;
             string consumerName = userCC.Durable;
+            if (consumerName == null) 
+            {
+                consumerName = userCC.Name;
+            }
             string inboxDeliver = userCC.DeliverSubject;
             
             // 3. Does this consumer already exist?
