@@ -233,7 +233,8 @@ namespace NATS.Client.JetStream
 
             ConsumerConfiguration serverCC = null;
             string consumerName = userCC.Durable;
-            if (consumerName == null) {
+            if (consumerName == null) 
+            {
                 consumerName = userCC.Name;
             }
             string inboxDeliver = userCC.DeliverSubject;

@@ -81,7 +81,8 @@ namespace NATS.Client.JetStream
             string subj;
             if (consumerCreate290Available)
             {
-                if (consumerName == null) {
+                if (consumerName == null) 
+                {
                     // if both consumerName and durable are null, generate a name
                     consumerName = durable == null ? GenerateConsumerName() : durable;
                 }
@@ -95,10 +96,12 @@ namespace NATS.Client.JetStream
                     subj = string.Format(JetStreamConstants.JsapiConsumerCreateV290WithFilter, streamName, consumerName, fs);
                 }
             }
-            else if (durable == null) {
+            else if (durable == null) 
+            {
                 subj = string.Format(JetStreamConstants.JsapiConsumerCreate, streamName);
             }
-            else {
+            else 
+            {
                 subj = string.Format(JetStreamConstants.JsapiDurableCreate, streamName, durable);
             }
 
