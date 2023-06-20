@@ -52,10 +52,22 @@ namespace NATS.Client.JetStream
             base.Unsubscribe();
         }
 
+        public override void AutoUnsubscribe(int max)
+        {
+            MessageManager.Shutdown();
+            base.AutoUnsubscribe(max);
+        }
+
         internal override void close()
         {
             MessageManager.Shutdown();
             base.close();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            MessageManager.Shutdown();
+            base.Dispose(disposing);
         }
 
         public override Msg NextMessage()
@@ -93,9 +105,12 @@ namespace NATS.Client.JetStream
                         {
                             throw new NATSJetStreamStatusException(msg.Status, this);
                         }
+
                         break;
                 }
-                // StatusHandled, StatusTerminus and StatusError that isn't for expected pullSubject: check again since waiting forever
+                // Check again since waiting forever when:
+                // 1. Any StatusHandled or StatusTerminus 
+                // 2. StatusError that aren't for expected pullSubject
             }
         }
 
@@ -108,18 +123,22 @@ namespace NATS.Client.JetStream
                         return msg;
                     case ManageResult.StatusTerminus:
                         // if the status applies return null, otherwise it's ignored, fall through
-                        if (expectedPullSubject == null || expectedPullSubject.Equals(msg.Subject)) {
+                        if (expectedPullSubject == null || expectedPullSubject.Equals(msg.Subject)) 
+                        {
                             throw new NATSTimeoutException();
                         }
                         break;
                     case ManageResult.StatusError:
                         // if the status applies throw exception, otherwise it's ignored, fall through
-                        if (expectedPullSubject == null || expectedPullSubject.Equals(msg.Subject)) {
+                        if (expectedPullSubject == null || expectedPullSubject.Equals(msg.Subject)) 
+                        {
                             throw new NATSJetStreamStatusException(msg.Status, this);
                         }
                         break;
                 }
-                // StatusHandled and StatusTerminus / StatusError that aren't for expected pullSubject: check again
+                // Check again when, regular messages might have arrived
+                // 1. Any StatusHandled
+                // 2. StatusTerminus or StatusError that aren't for expected pullSubject
             }
         }
         
@@ -149,7 +168,7 @@ namespace NATS.Client.JetStream
                         }
                         break;
                 }
-                // StatusHandled and StatusTerminus / StatusError that aren't for expected pullSubject: check again while have time
+                // anything else, try again while we have time
                 timeLeft = timeout - (int)sw.ElapsedMilliseconds;
             }
             throw new NATSTimeoutException();

@@ -57,65 +57,68 @@ namespace NATSExamples
                 simpleFetch(c, js, "D", 40);
             }
         }
-    
-        private static void simpleFetch(IConnection c, IJetStream js, string label, int maxMessages) {
+
+        private static void simpleFetch(IConnection c, IJetStream js, string label, int maxMessages)
+        {
             string consumerName = CONSUMER_NAME_PREFIX + "-" + maxMessages + "-messages";
-    
+
             // get stream context, create consumer and get the consumer context
             IStreamContext streamContext;
             IConsumerContext consumerContext;
             try
             {
                 streamContext = c.CreateStreamContext(STREAM);
-                consumerContext = streamContext.AddConsumer(ConsumerConfiguration.Builder().WithDurable(consumerName).Build());
+                consumerContext =
+                    streamContext.CreateOrUpdateConsumer(ConsumerConfiguration.Builder().WithDurable(consumerName)
+                        .Build());
             }
-            catch (Exception) {
+            catch (Exception)
+            {
                 // possible exceptions
                 // - a connection problem
                 // - the stream or consumer did not exist
                 return;
             }
-    
+
             // Custom FetchConsumeOptions
             FetchConsumeOptions fetchConsumeOptions = FetchConsumeOptions.Builder()
                 .WithMaxMessages(maxMessages)
                 .WithExpiresIn(EXPIRES_SECONDS * 1000)
                 .Build();
             printExplanation(label, consumerName, maxMessages);
-    
-            Stopwatch sw = new Stopwatch();
 
             // create the consumer then use it
-            int receivedMessages = 0;
-            using (IFetchConsumer consumer = consumerContext.Fetch(fetchConsumeOptions))
+            try
             {
-                try
+                int receivedMessages = 0;
+                Stopwatch sw = Stopwatch.StartNew();
+                using (IFetchConsumer consumer = consumerContext.Fetch(fetchConsumeOptions))
                 {
-                    while (true)
+                    Msg msg = consumer.NextMessage();
+                    while (msg != null)
                     {
-                        Msg msg = consumer.NextMessage();
-                        receivedMessages++;
                         msg.Ack();
+                        if (++receivedMessages == maxMessages)
+                        {
+                            msg = null;
+                        }
+                        else
+                        {
+                            msg = consumer.NextMessage();
+                        }
                     }
                 }
-                catch (NATSTimeoutException)
-                {
-                    // normal termination of message loop
-                    Console.WriteLine(
-                        "!!! Timeout indicates no more messages, either due to completion or messages not available.");
-                }
-                catch (NATSJetStreamStatusException)
-                {
-                    // Either the consumer was deleted in the middle
-                    // of the pull or there is a new status from the
-                    // server that this client is not aware of
-                }
                 sw.Stop();
+                printSummary(receivedMessages, sw.ElapsedMilliseconds);
             }
-
-            printSummary(receivedMessages, sw.ElapsedMilliseconds);
+            catch (NATSJetStreamStatusException)
+            {
+                // Either the consumer was deleted in the middle
+                // of the pull or there is a new status from the
+                // server that this client is not aware of
+            }
         }
-    
+
         private static void printSummary(int received, long elapsed) {
             Console.WriteLine("+++ " + received + " message(s) were received in " + elapsed + "ms\n");
         }
@@ -127,17 +130,17 @@ namespace NATSExamples
                 case "A":
                 case "B":
                     Console.WriteLine("=== Fetch (" + maxMessages + ") is less than or equal to available messages (" + MESSAGES + ")");
-                    Console.WriteLine("=== nextMessage() will \"fast\" timeout when the fetch has been fulfilled.");
+                    Console.WriteLine("=== nextMessage() will return null when consume is done");
                     break;
                 case "C":
                     Console.WriteLine("=== Fetch (" + maxMessages + ") is larger than available messages (" + MESSAGES + ")");
                     Console.WriteLine("=== FetchConsumeOption \"expires in\" is " + EXPIRES_SECONDS + " seconds.");
-                    Console.WriteLine("=== nextMessage() blocks until expiration when there are no messages available, then times out.");
+                    Console.WriteLine("=== nextMessage() blocks until expiration when there are no messages available, then returns null.");
                     break;
                 case "D":
                     Console.WriteLine("=== Fetch (" + maxMessages + ") is larger than available messages (0)");
                     Console.WriteLine("=== FetchConsumeOption \"expires in\" is " + EXPIRES_SECONDS + " seconds.");
-                    Console.WriteLine("=== nextMessage() blocks until expiration when there are no messages available, then times out.");
+                    Console.WriteLine("=== nextMessage() blocks until expiration when there are no messages available, then returns null.");
                     break;
             }
         }

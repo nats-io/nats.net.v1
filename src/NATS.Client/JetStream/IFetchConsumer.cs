@@ -18,6 +18,13 @@ namespace NATS.Client.JetStream
     /// </summary>
     public interface IFetchConsumer : IMessageConsumer
     {
+        /// <summary>
+        /// Read the next message. Return null if the fetch has been fulfilled either
+        /// because max messages or bytes max bytes have been reached,
+        /// or because the fetch was not fulfilled in the timeout set byt the fetch options.
+        /// @return the next message for this subscriber or null if there is a timeout
+        /// </summary>
+        /// <returns>the next message or null if there is a timeout</returns>
         Msg NextMessage();
     }
 }

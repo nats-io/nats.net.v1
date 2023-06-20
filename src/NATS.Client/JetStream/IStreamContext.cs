@@ -70,7 +70,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="config">the consumer configuration to use.</param>
         /// <returns>consumer information.</returns>
-        IConsumerContext AddConsumer(ConsumerConfiguration config);
+        IConsumerContext CreateOrUpdateConsumer(ConsumerConfiguration config);
 
         /// <summary>
         /// Management function to deletes a consumer.

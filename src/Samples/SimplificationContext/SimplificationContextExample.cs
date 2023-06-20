@@ -50,7 +50,7 @@ namespace NATSExamples
                 Console.WriteLine("S3. " + streamContext.GetStreamInfo());
     
                 // when you create a consumer from the stream context you get a ConsumerContext in return
-                IConsumerContext consumerContext = streamContext.AddConsumer(ConsumerConfiguration.Builder().WithDurable(CONSUMER_NAME).Build());
+                IConsumerContext consumerContext = streamContext.CreateOrUpdateConsumer(ConsumerConfiguration.Builder().WithDurable(CONSUMER_NAME).Build());
                 Console.WriteLine("C1. " + consumerContext.GetCachedConsumerInfo());
     
                 // get a ConsumerContext from the connection for a pre-existing consumer

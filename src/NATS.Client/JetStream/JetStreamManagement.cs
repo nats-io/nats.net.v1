@@ -77,6 +77,7 @@ namespace NATS.Client.JetStream
         public PurgeResponse PurgeStream(string streamName, PurgeOptions options)
         {
             Validator.ValidateStreamName(streamName, true);
+            Validator.ValidateNotNull(options, nameof(options));
             string subj = string.Format(JetStreamConstants.JsapiStreamPurge, streamName);
             Msg m = RequestResponseRequired(subj, options.Serialize(), Timeout);
             return new PurgeResponse(m, true);

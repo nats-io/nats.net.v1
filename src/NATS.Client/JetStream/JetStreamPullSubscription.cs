@@ -39,28 +39,28 @@ namespace NATS.Client.JetStream
 
         public void Pull(int batchSize)
         {
-            pullImpl.Pull(true, null, PullRequestOptions.Builder(batchSize).Build());
+            pullImpl.Pull(PullRequestOptions.Builder(batchSize).Build(), true, null);
         }
 
         public void Pull(PullRequestOptions pullRequestOptions) {
-            pullImpl.Pull(true, null, pullRequestOptions);
+            pullImpl.Pull(pullRequestOptions, true, null);
         }
 
         public void PullExpiresIn(int batchSize, int expiresInMillis)
         {
             Validator.ValidateDurationGtZeroRequired(expiresInMillis, "Expires In");
-            pullImpl.Pull(true, null, PullRequestOptions.Builder(batchSize).WithExpiresIn(expiresInMillis).Build());
+            pullImpl.Pull(PullRequestOptions.Builder(batchSize).WithExpiresIn(expiresInMillis).Build(), true, null);
         }
 
         public void PullNoWait(int batchSize)
         {
-            pullImpl.Pull(true, null, PullRequestOptions.Builder(batchSize).WithNoWait().Build());
+            pullImpl.Pull(PullRequestOptions.Builder(batchSize).WithNoWait().Build(), true, null);
         }
 
         public void PullNoWait(int batchSize, int expiresInMillis)
         {
             Validator.ValidateDurationGtZeroRequired(expiresInMillis, "NoWait Expires In");
-            pullImpl.Pull(true, null, PullRequestOptions.Builder(batchSize).WithNoWait().WithExpiresIn(expiresInMillis).Build());
+            pullImpl.Pull(PullRequestOptions.Builder(batchSize).WithNoWait().WithExpiresIn(expiresInMillis).Build(), true, null);
         }
 
         internal const int ExpireAdjustment = 10;
@@ -77,7 +77,7 @@ namespace NATS.Client.JetStream
 
             Duration expires = Duration.OfMillis(
                 maxWaitMillis > ExpireAdjustment ? maxWaitMillis - ExpireAdjustment : maxWaitMillis);
-            string pullSubject = pullImpl.Pull(false, null, PullRequestOptions.Builder(batchLeft).WithExpiresIn(expires).Build());
+            string pullSubject = pullImpl.Pull(PullRequestOptions.Builder(batchLeft).WithExpiresIn(expires).Build(), false, null);
 
             try
             {

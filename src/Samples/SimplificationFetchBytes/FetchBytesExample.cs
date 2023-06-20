@@ -73,7 +73,7 @@ namespace NATSExamples
             try
             {
                 streamContext = c.CreateStreamContext(STREAM);
-                streamContext.AddConsumer(ConsumerConfiguration.Builder().WithDurable(consumerName).Build());
+                streamContext.CreateOrUpdateConsumer(ConsumerConfiguration.Builder().WithDurable(consumerName).Build());
                 consumerContext = js.CreateConsumerContext(STREAM, consumerName);
             }
             catch (Exception) {
@@ -99,40 +99,35 @@ namespace NATSExamples
 
             printExplanation(label, consumerName, maxMessages, maxBytes);
 
-            Stopwatch sw = new Stopwatch();
-
             // create the consumer then use it
-            int receivedMessages = 0;
-            long receivedBytes = 0;
-            using (IFetchConsumer consumer = consumerContext.Fetch(fetchConsumeOptions))
+            // note: no need to catch NATSTimeoutException because the NextMessage will return null
+            try
             {
-                sw.Start();
-                try
-                {
-                    while (true)
-                    {
-                        Msg msg = consumer.NextMessage();
-                        receivedMessages++;
-                        receivedBytes += msg.ConsumeByteCount;
-                        msg.Ack();
+                int receivedMessages = 0;
+                long receivedBytes = 0;
+                Stopwatch sw = new Stopwatch();
+                IFetchConsumer consumer = consumerContext.Fetch(fetchConsumeOptions);
+                Msg msg = consumer.NextMessage();
+                while (msg != null) {
+                    msg.Ack();
+                    receivedMessages++;
+                    receivedBytes += msg.ConsumeByteCount;
+                    if (receivedBytes >= maxBytes || receivedMessages == maxMessages) {
+                        msg = null;
+                    }
+                    else {
+                        msg = consumer.NextMessage();
                     }
                 }
-                catch (NATSTimeoutException)
-                {
-                    // normal termination of message loop
-                    Console.WriteLine(
-                        "!!! Timeout indicates no more messages, either due to completion or messages not available.");
-                }
-                catch (NATSJetStreamStatusException)
-                {
-                    // Either the consumer was deleted in the middle
-                    // of the pull or there is a new status from the
-                    // server that this client is not aware of
-                }
                 sw.Stop();
+                printSummary(receivedMessages, receivedBytes, sw.ElapsedMilliseconds);
             }
-
-            printSummary(receivedMessages, receivedBytes, sw.ElapsedMilliseconds);
+            catch (NATSJetStreamStatusException)
+            {
+                // Either the consumer was deleted in the middle
+                // of the pull or there is a new status from the
+                // server that this client is not aware of
+            }
         }
 
         private static string generateConsumerName(int maxMessages, int maxBytes)
@@ -158,16 +153,16 @@ namespace NATSExamples
             {
                 case "A":
                     Console.WriteLine("=== Max bytes (" + maxBytes + ") threshold will be met since the next message would put the byte count over " + maxBytes + " bytes");
-                    Console.WriteLine("=== nextMessage() will \"fast\" timeout when the fetch has been fulfilled.");
+                    Console.WriteLine("=== nextMessage() will return null when consume is done.");
                     break;
                 case "B":
                     Console.WriteLine("=== Fetch max messages (" + maxMessages + ") will be reached before max bytes (" + maxBytes + ")");
-                    Console.WriteLine("=== nextMessage() will \"fast\" timeout when the fetch has been fulfilled.");
+                    Console.WriteLine("=== nextMessage() will return null when consume is done.");
                     break;
                 case "C":
                     Console.WriteLine("=== Max bytes (" + maxBytes + ") is larger than available bytes (about 2700).");
                     Console.WriteLine("=== FetchConsumeOption \"expires in\" is " + EXPIRES_SECONDS + " seconds.");
-                    Console.WriteLine("=== nextMessage() blocks until expiration when there are no messages available, then times out.");
+                    Console.WriteLine("=== nextMessage() blocks until expiration when there are no messages available, then returns null.");
                     break;
             }
         }

@@ -49,7 +49,7 @@ namespace NATSExamples
                 try
                 {
                     streamContext = c.CreateStreamContext(STREAM);
-                    consumerContext = streamContext.AddConsumer(ConsumerConfiguration.Builder().WithDurable(CONSUMER_NAME).Build());
+                    consumerContext = streamContext.CreateOrUpdateConsumer(ConsumerConfiguration.Builder().WithDurable(CONSUMER_NAME).Build());
                 }
                 catch (Exception)
                 {
@@ -77,10 +77,12 @@ namespace NATSExamples
                     latch.Wait();
                     // once the consumer is stopped, the client will drain messages
                     Console.WriteLine("Stop the consumer...");
-                    consumer.Stop(1000).Wait(1000);
+                    consumer.Stop(1000);
+                    Thread.Sleep(1000); // enough for messages to drain after stop
                 }
 
                 report("Final", sw.ElapsedMilliseconds, count);
+                Console.WriteLine();
             }
         }
 

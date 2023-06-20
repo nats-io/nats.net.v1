@@ -12,9 +12,11 @@
 // limitations under the License.
 
 using System;
+using System.Threading.Tasks;
 using NATS.Client.Internals;
 using static NATS.Client.JetStream.BaseConsumeOptions;
 using static NATS.Client.JetStream.ConsumeOptions;
+using static NATS.Client.JetStream.JetStreamPullSubscription;
 
 namespace NATS.Client.JetStream
 {
@@ -50,19 +52,16 @@ namespace NATS.Client.JetStream
         }
 
         public Msg Next() {
-            return Next(DefaultExpiresInMillis);
+            return new NextSub(js, bindPso, DefaultExpiresInMillis).Next();
         }
 
-        public Msg Next(int maxWaitMillis) {
-            if (maxWaitMillis < MinExpiresMills) {
+        public Msg Next(int maxWaitMillis) 
+        {
+            if (maxWaitMillis < MinExpiresMills) 
+            {
                 throw new ArgumentException($"Max wait must be at least {MinExpiresMills} milliseconds.");
             }
-
-            long expires = maxWaitMillis - JetStreamPullSubscription.ExpireAdjustment;
-            JetStreamPullSubscription sub 
-                = (JetStreamPullSubscription)new SubscriptionMaker(js, bindPso).MakeSubscription();
-            sub.pullImpl.Pull(false, null, PullRequestOptions.Builder(1).WithExpiresIn(expires).Build());
-            return sub.NextMessage(maxWaitMillis);
+            return new NextSub(js, bindPso, maxWaitMillis).Next();
         }
 
         public IFetchConsumer FetchMessages(int maxMessages) {
@@ -99,6 +98,45 @@ namespace NATS.Client.JetStream
         }
     }
 
+    internal class NextSub
+    {
+        private int maxWaitMillis;
+        private JetStreamPullSubscription sub; 
+
+        public NextSub(IJetStream js, PullSubscribeOptions pso, int maxWaitMillis)
+        {
+            sub = (JetStreamPullSubscription)new SubscriptionMaker(js, pso).MakeSubscription();
+            this.maxWaitMillis = maxWaitMillis;
+            sub.pullImpl.Pull(PullRequestOptions.Builder(1).WithExpiresIn(maxWaitMillis - ExpireAdjustment).Build(), false, null);
+        }
+
+        internal Msg Next()
+        {
+            try
+            {
+                return sub.NextMessage(maxWaitMillis);
+            }
+            catch (NATSTimeoutException)
+            {
+                return null;
+            }
+            finally
+            {
+                Task.Run(() =>
+                {
+                    try
+                    {
+                        sub.Unsubscribe();
+                    }
+                    catch (Exception)
+                    {
+                        // intentionally ignored, nothing we can do anyway
+                    }
+                });
+            }
+        }
+    }
+    
     internal class SubscriptionMaker
     {
         private readonly IJetStream js;

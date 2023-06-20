@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Threading.Tasks;
+using System;
 
 namespace NATS.Client.JetStream
 {
@@ -21,7 +21,6 @@ namespace NATS.Client.JetStream
     internal class MessageConsumerBase : IMessageConsumer
     {
         private readonly object subLock;
-        private Task drainTask;
         
         protected IJetStreamSubscription sub;
         protected PullMessageManager pmm;
@@ -56,27 +55,31 @@ namespace NATS.Client.JetStream
             }
         }
 
-        public Task Stop(int timeout)
+        public void Stop(int timeout)
         {
             lock (subLock)
             {
                 if (!stopped)
                 {
                     stopped = true;
-                    drainTask = sub.DrainAsync(timeout);
+                    sub.DrainAsync(timeout);
                 }
-                return drainTask;
             }
         }
 
         public void Dispose()
         {
-            lock (subLock) {
+            try
+            {
                 if (!stopped && sub.IsValid)
                 {
                     stopped = true;
                     sub.Unsubscribe();
                 }
+            }
+            catch (Exception)
+            {
+                // ignored
             }
         }
     }

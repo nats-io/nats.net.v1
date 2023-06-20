@@ -37,7 +37,6 @@ namespace NATS.Client.JetStream
             this.Js = js;
             Stream = stream;
             OriginalCc = originalCc;
-
             QueueMode = queueMode;
 
             if (queueMode) {
