@@ -15,6 +15,7 @@ using System;
 using NATS.Client.Internals;
 using static NATS.Client.JetStream.BaseConsumeOptions;
 using static NATS.Client.JetStream.ConsumeOptions;
+using static NATS.Client.JetStream.JetStreamPullSubscription;
 
 namespace NATS.Client.JetStream
 {
@@ -50,25 +51,16 @@ namespace NATS.Client.JetStream
         }
 
         public Msg Next() {
-            return Next(DefaultExpiresInMillis);
+            return new NextSub(js, bindPso, DefaultExpiresInMillis).Next();
         }
 
-        public Msg Next(int maxWaitMillis) {
-            if (maxWaitMillis < MinExpiresMills) {
+        public Msg Next(int maxWaitMillis) 
+        {
+            if (maxWaitMillis < MinExpiresMills) 
+            {
                 throw new ArgumentException($"Max wait must be at least {MinExpiresMills} milliseconds.");
             }
-
-            long expires = maxWaitMillis - JetStreamPullSubscription.ExpireAdjustment;
-            NextSubWrapper nsw = new NextSubWrapper(js, bindPso);
-            nsw.sub.pullImpl.Pull(PullRequestOptions.Builder(1).WithExpiresIn(expires).Build(), false, null);
-            try
-            {
-                return nsw.sub.NextMessage(maxWaitMillis);
-            }
-            catch (NATSTimeoutException)
-            {
-                return null;
-            }
+            return new NextSub(js, bindPso, maxWaitMillis).Next();
         }
 
         public IFetchConsumer FetchMessages(int maxMessages) {
@@ -105,16 +97,31 @@ namespace NATS.Client.JetStream
         }
     }
 
-    internal class NextSubWrapper
+    internal class NextSub
     {
-        internal JetStreamPullSubscription sub; 
+        private int maxWaitMillis;
+        private JetStreamPullSubscription sub; 
 
-        public NextSubWrapper(IJetStream js, PullSubscribeOptions pso)
+        public NextSub(IJetStream js, PullSubscribeOptions pso, int maxWaitMillis)
         {
-            this.sub = (JetStreamPullSubscription)new SubscriptionMaker(js, pso).MakeSubscription();
+            sub = (JetStreamPullSubscription)new SubscriptionMaker(js, pso).MakeSubscription();
+            this.maxWaitMillis = maxWaitMillis;
+            sub.pullImpl.Pull(PullRequestOptions.Builder(1).WithExpiresIn(maxWaitMillis - ExpireAdjustment).Build(), false, null);
         }
 
-        ~NextSubWrapper()
+        internal Msg Next()
+        {
+            try
+            {
+                return sub.NextMessage(maxWaitMillis);
+            }
+            catch (NATSTimeoutException)
+            {
+                return null;
+            }
+        }
+        
+        ~NextSub()
         {
             try
             {
