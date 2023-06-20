@@ -12,7 +12,6 @@
 // limitations under the License.
 
 using System;
-using System.Threading.Tasks;
 
 namespace NATS.Client.JetStream
 {
@@ -22,7 +21,6 @@ namespace NATS.Client.JetStream
     internal class MessageConsumerBase : IMessageConsumer
     {
         private readonly object subLock;
-        private Task drainTask;
         
         protected IJetStreamSubscription sub;
         protected PullMessageManager pmm;

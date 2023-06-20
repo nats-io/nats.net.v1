@@ -31,7 +31,7 @@ namespace NATS.Client.JetStream
             {
                 return null;
             }
-            catch (NATSBadSubscriptionException e)
+            catch (NATSBadSubscriptionException)
             {
                 // this happens if the consumer is stopped, since it is
                 // drained/unsubscribed, so don't pass it on if it's expected
