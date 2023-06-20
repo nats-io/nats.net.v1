@@ -11,15 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Threading.Tasks;
-
 namespace NATS.Client.JetStream
 {
     /// <summary>
     /// SIMPLIFICATION IS EXPERIMENTAL AND SUBJECT TO CHANGE
     /// </summary>
-    public interface IMessageConsumer : IDisposable
+    public interface IMessageConsumer
     {
         /// <summary>
         /// Gets information about the consumer behind this subscription.
@@ -34,6 +31,6 @@ namespace NATS.Client.JetStream
         /// <param name="timeout">The time to wait for the stop to succeed, pass 0 to wait forever.
         /// Stop involves moving messages to and from the server so a very short timeout is not recommended.</param>
         /// <returns>A task so you could wait for the stop to know when there are no more messages.</returns>
-        Task Stop(int timeout);
+        void Stop(int timeout);
     }
 }

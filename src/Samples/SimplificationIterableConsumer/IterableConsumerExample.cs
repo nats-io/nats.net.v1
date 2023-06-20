@@ -50,7 +50,7 @@ namespace NATSExamples
                 {
                     streamContext = c.CreateStreamContext(STREAM);
                     consumerContext =
-                        streamContext.AddConsumer(ConsumerConfiguration.Builder().WithDurable(CONSUMER_NAME).Build());
+                        streamContext.CreateOrUpdateConsumer(ConsumerConfiguration.Builder().WithDurable(CONSUMER_NAME).Build());
                 }
                 catch (Exception)
                 {
@@ -63,62 +63,45 @@ namespace NATSExamples
                 Thread consumeThread = new Thread(() =>
                 {
                     int count = 0;
-                    using (IIterableConsumer consumer = consumerContext.consume())
+                    Stopwatch sw = Stopwatch.StartNew();
+                    try
                     {
                         Msg msg;
+                        IIterableConsumer consumer = consumerContext.consume();
                         Console.WriteLine("Starting main loop.");
-                        Stopwatch sw = Stopwatch.StartNew();
                         while (count < STOP_COUNT)
                         {
-                            try
+                            msg = consumer.NextMessage(1000);
+                            msg.Ack();
+                            if (++count % REPORT_EVERY == 0)
                             {
-                                msg = consumer.NextMessage(1000);
-                                msg.Ack();
-                                if (++count % REPORT_EVERY == 0) {
-                                    report("Main Loop Running", sw.ElapsedMilliseconds, count);
-                                }
-                            }
-                            catch (NATSTimeoutException)
-                            {
-                                // normal termination of message loop
-                                Console.WriteLine("!!! Timeout indicates no more messages, either due to completion or messages not available.");
-                            }
-                            catch (NATSJetStreamStatusException)
-                            {
-                                // Either the consumer was deleted in the middle
-                                // of the pull or there is a new status from the
-                                // server that this client is not aware of
+                                report("Main Loop Running", sw.ElapsedMilliseconds, count);
                             }
                         }
+
                         report("Main Loop Stopped", sw.ElapsedMilliseconds, count);
     
                         Console.WriteLine("Pausing for effect...allow more messages come across.");
                         Thread.Sleep(JITTER * 2); // allows more messages to come across
                         consumer.Stop(1000);
-    
-                        Console.WriteLine("Starting post-drain loop.");
-                        try
+
+                        Console.WriteLine("Starting post-stop loop.");
+                        msg = consumer.NextMessage(1000);
+                        while (msg != null)
                         {
-                            while (true)
-                            {
-                                msg = consumer.NextMessage(1000);
-                                msg.Ack();
-                                report("Post Drain Loop Running", sw.ElapsedMilliseconds, ++count);
-                            }
+                            msg.Ack();
+                            report("Post-stop loop running", sw.ElapsedMilliseconds, ++count);
+                            msg = consumer.NextMessage(1000);
                         }
-                        catch (NATSTimeoutException)
-                        {
-                            // normal termination of message loop
-                            Console.WriteLine("!!! Timeout indicates no more messages, either due to completion or messages not available.");
-                        }
-                        catch (NATSJetStreamStatusException)
-                        {
-                            // Either the consumer was deleted in the middle
-                            // of the pull or there is a new status from the
-                            // server that this client is not aware of
-                        }
-                        report("Done", sw.ElapsedMilliseconds, count);
                     }
+                    catch (NATSJetStreamStatusException)
+                    {
+                        // Either the consumer was deleted in the middle
+                        // of the pull or there is a new status from the
+                        // server that this client is not aware of
+                    }
+                    report("Done", sw.ElapsedMilliseconds, count);
+                    
                 });
                 consumeThread.Start();
     
@@ -133,7 +116,7 @@ namespace NATSExamples
         }
 
         private static void report(string label, long elapsed, int count) {
-            Console.WriteLine($"{label}: Received {count} messages in {elapsed} ms.");
+            Console.WriteLine($"{label}: Received {count} messages in {elapsed} ms.\n");
         }
     }
 }

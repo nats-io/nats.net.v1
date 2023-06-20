@@ -32,30 +32,38 @@ namespace NATS.Client.JetStream
                 .WithExpiresIn(opts.ExpiresIn)
                 .WithIdleHeartbeat(opts.IdleHeartbeat)
                 .Build();
-            ((JetStreamPullSubscription)sub).pullImpl.Pull(false, null, pro);
+            ((JetStreamPullSubscription)sub).pullImpl.Pull(pro, false, null);
         }
 
         public Msg NextMessage()
         {
-            int timeLeftMillis;
-            if (sw == null) {
-                sw = Stopwatch.StartNew();
-                timeLeftMillis = maxWaitMillis;
-            }
-            else
+            try
             {
-                timeLeftMillis = maxWaitMillis - (int)sw.ElapsedMilliseconds;
-            }
+                int timeLeftMillis;
+                if (sw == null)
+                {
+                    sw = Stopwatch.StartNew();
+                    timeLeftMillis = maxWaitMillis;
+                }
+                else
+                {
+                    timeLeftMillis = maxWaitMillis - (int)sw.ElapsedMilliseconds;
+                }
 
-            // if the manager thinks it has received everything in the pull, it means
-            // that all the messages are already in the internal queue and there is
-            // no waiting necessary
-            if (timeLeftMillis < 1 | pmm.pendingMessages < 1 || (pmm.trackingBytes && pmm.pendingBytes < 1))
+                // if the manager thinks it has received everything in the pull, it means
+                // that all the messages are already in the internal queue and there is
+                // no waiting necessary
+                if (timeLeftMillis < 1 | pmm.pendingMessages < 1 || (pmm.trackingBytes && pmm.pendingBytes < 1))
+                {
+                    return ((JetStreamPullSubscription)sub).NextMessage(1); // 1 is the shortest time I can give
+                }
+
+                return ((JetStreamPullSubscription)sub).NextMessage(timeLeftMillis);
+            }
+            catch (NATSTimeoutException)
             {
-                return ((JetStreamPullSubscription)sub).NextMessage(1); // 1 is the shortest time I can give
+                return null;
             }
-
-            return ((JetStreamPullSubscription)sub).NextMessage(timeLeftMillis);
         }
     }
 }

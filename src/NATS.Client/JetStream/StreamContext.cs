@@ -62,7 +62,7 @@ namespace NATS.Client.JetStream
             return new ConsumerContext(this, jsm.GetConsumerInfo(StreamName, consumerName));
         }
 
-        public IConsumerContext AddConsumer(ConsumerConfiguration config)
+        public IConsumerContext CreateOrUpdateConsumer(ConsumerConfiguration config)
         {
             return new ConsumerContext(this, jsm.AddOrUpdateConsumer(StreamName, config));
         }

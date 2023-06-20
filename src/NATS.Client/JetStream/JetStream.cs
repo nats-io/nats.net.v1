@@ -439,6 +439,7 @@ namespace NATS.Client.JetStream
                 }
             }
 
+            Conn.FlushBuffer();
             return sub;
         }
         
@@ -494,8 +495,9 @@ namespace NATS.Client.JetStream
 
         public IJetStreamPullAsyncSubscription PullSubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler, PullSubscribeOptions options)
         {
-            ValidateNotNull(options, "Pull Subscribe Options");
             ValidateSubject(subject, IsSubjectRequired(options));
+            ValidateNotNull(handler, "Handler");
+            ValidateNotNull(options, "Pull Subscribe Options");
             return (IJetStreamPullAsyncSubscription) CreateSubscription(subject, null, handler, false, null, options);
         }
 

@@ -65,7 +65,7 @@ namespace IntegrationTests
 
             string durable = Nuid.NextGlobal();
             ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithDurable(durable).Build();
-            IConsumerContext consumerContext = streamContext.AddConsumer(cc);
+            IConsumerContext consumerContext = streamContext.CreateOrUpdateConsumer(cc);
             ConsumerInfo ci = consumerContext.GetConsumerInfo();
             Assert.Equal(expectedStreamName, ci.Stream);
             Assert.Equal(durable, ci.Name);
@@ -195,19 +195,13 @@ namespace IntegrationTests
             // create the consumer then use it
             IFetchConsumer consumer = consumerContext.Fetch(fetchConsumeOptions);
             int rcvd = 0;
-            long bc = 0;
-            try
+            Msg msg = consumer.NextMessage();
+            while (msg != null)
             {
-                Msg msg = consumer.NextMessage();
-                while (true)
-                {
-                    bc += msg.ConsumeByteCount;
-                    ++rcvd;
-                    msg.Ack();
-                    msg = consumer.NextMessage();
-                }
+                ++rcvd;
+                msg.Ack();
+                msg = consumer.NextMessage();
             }
-            catch (NATSTimeoutException) {}
             sw.Stop();
     
             switch (label) {
@@ -265,34 +259,34 @@ namespace IntegrationTests
                 InterlockedInt count = new InterlockedInt();
                 Thread consumeThread = new Thread(() =>
                 {
-                    Msg msg;
-                    while (count.Read() < stopCount)
-                    {
-                        try
-                        {
-                            msg = consumer.NextMessage(1000);
-                            msg.Ack();
-                            count.Increment();
-                        }
-                        catch (NATSTimeoutException)
-                        {
-                            // this is expected
-                        }
-                    }
-
-                    Thread.Sleep(1000); // allows more messages to come across
-                    consumer.Stop(200);
-
                     try
                     {
-                        while (true)
+                        Msg msg;
+                        while (count.Read() < stopCount)
                         {
                             msg = consumer.NextMessage(1000);
+                            if (msg != null)
+                            {
+                                msg.Ack();
+                                count.Increment();
+                            }
+                        }
+
+                        Thread.Sleep(50); // allows more messages to come across
+                        consumer.Stop(200);
+
+                        msg = consumer.NextMessage(1000);
+                        while (msg != null)
+                        {
                             msg.Ack();
                             count.Increment();
+                            msg = consumer.NextMessage(1000);
                         }
                     }
-                    catch (NATSTimeoutException) {}
+                    catch (NATSTimeoutException)
+                    {
+                        // this is expected
+                    }
                 });
                 consumeThread.Start();
 
@@ -304,7 +298,7 @@ namespace IntegrationTests
                 publisher.Stop();
                 pubThread.Join();
     
-                Assert.True(count.Read() >= 500);
+                Assert.True(count.Read() > 500);
     
                 // coverage
                 consumerContext.consume(ConsumeOptions.DefaultConsumeOptions);
@@ -370,7 +364,7 @@ namespace IntegrationTests
                 Assert.Throws<ArgumentException>(() => consumerContext.Next(1));
                 Assert.NotNull(consumerContext.Next(1000));
                 Assert.NotNull(consumerContext.Next());
-                Assert.Throws<NATSTimeoutException>(() => consumerContext.Next(1000));
+                Assert.Null(consumerContext.Next(1000));
             });
         }
     
@@ -407,8 +401,8 @@ namespace IntegrationTests
                 IConsumerContext cctx2 = c.CreateConsumerContext(stream, durable2, JetStreamOptions.DefaultJsOptions);
                 IConsumerContext cctx3 = js.CreateConsumerContext(stream, durable3);
                 IConsumerContext cctx4 = sctx1.CreateConsumerContext(durable4);
-                IConsumerContext cctx5 = sctx1.AddConsumer(ConsumerConfiguration.Builder().WithDurable(durable5).Build());
-                IConsumerContext cctx6 = sctx1.AddConsumer(ConsumerConfiguration.Builder().WithDurable(durable6).Build());
+                IConsumerContext cctx5 = sctx1.CreateOrUpdateConsumer(ConsumerConfiguration.Builder().WithDurable(durable5).Build());
+                IConsumerContext cctx6 = sctx1.CreateOrUpdateConsumer(ConsumerConfiguration.Builder().WithDurable(durable6).Build());
     
                 closeConsumer(cctx1.consume(), durable1, true);
                 closeConsumer(cctx2.consume(ConsumeOptions.DefaultConsumeOptions), durable2, true);
@@ -425,9 +419,8 @@ namespace IntegrationTests
             ConsumerInfo ci = con.GetConsumerInformation();
             Assert.Equal(name, ci.Name);
             if (doStop) {
-                Assert.True(con.Stop(100).Wait(100));
+                con.Stop(100);
             }
-            con.Dispose();
         }
 
         [Fact]

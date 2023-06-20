@@ -27,15 +27,15 @@ namespace NATS.Client.JetStream
             {
                 return ((JetStreamPullSubscription)sub).NextMessage(timeoutMillis);
             }
+            catch (NATSTimeoutException)
+            {
+                return null;
+            }
             catch (NATSBadSubscriptionException e)
             {
                 // this happens if the consumer is stopped, since it is
                 // drained/unsubscribed, so don't pass it on if it's expected
-                if (stopped)
-                {
-                    throw new NATSTimeoutException();
-                }
-                throw e;
+                return null;
             }
         }
     }

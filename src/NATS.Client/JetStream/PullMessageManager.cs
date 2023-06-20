@@ -92,6 +92,7 @@ namespace NATS.Client.JetStream
                 TrackPending(1, msg.ConsumeByteCount);
                 return true;
             }
+            
             // heartbeat just needed to be recorded
             if (status.IsHeartbeat()) {
                 return false;
@@ -109,9 +110,7 @@ namespace NATS.Client.JetStream
                 }
             }
 
-            // not found or timeout only have message/byte tracking, so no need for them to be queued (return false)
-            // all other statuses are either warnings or errors and handled in manage
-            return status.Code != NatsConstants.NotFoundCode && status.Code != NatsConstants.RequestTimeoutCode;
+            return true;
         }
 
         public override ManageResult Manage(Msg msg)

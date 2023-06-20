@@ -46,7 +46,7 @@ namespace NATSExamples
                 try
                 {
                     streamContext = c.CreateStreamContext(STREAM);
-                    consumerContext = streamContext.AddConsumer(ConsumerConfiguration.Builder().WithDurable(CONSUMER_NAME).Build());
+                    consumerContext = streamContext.CreateOrUpdateConsumer(ConsumerConfiguration.Builder().WithDurable(CONSUMER_NAME).Build());
                 }
                 catch (Exception) {
                     // possible exceptions
@@ -79,24 +79,24 @@ namespace NATSExamples
                 });
                 t.Start();
 
+                Stopwatch sw = new Stopwatch();
                 int received = 0;
                 while (received < count)
                 {
-                    Stopwatch sw = Stopwatch.StartNew();
                     try
                     {
-                        while (true)
-                        {
-                            Msg msg = consumerContext.Next(1000);
-                            received++;
+                        sw.Restart();
+                        Msg msg = consumerContext.Next(1000);
+                        sw.Stop();
+                        long elapsed = sw.ElapsedMilliseconds;
+                        if (msg == null) {
+                            Console.WriteLine($"Waited {sw.ElapsedMilliseconds}ms for message, got null");
+                        }
+                        else {
+                            ++received;
                             msg.Ack();
                             Console.WriteLine($"Waited {sw.ElapsedMilliseconds}ms for message, got {Encoding.UTF8.GetString(msg.Data)}.");
                         }
-                    }
-                    catch (NATSTimeoutException)
-                    {
-                        // normal termination of message loop
-                        Console.WriteLine($"Waited {sw.ElapsedMilliseconds}ms for message but timed out.");
                     }
                     catch (NATSJetStreamStatusException)
                     {

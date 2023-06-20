@@ -59,10 +59,16 @@ namespace NATS.Client.JetStream
             }
 
             long expires = maxWaitMillis - JetStreamPullSubscription.ExpireAdjustment;
-            JetStreamPullSubscription sub 
-                = (JetStreamPullSubscription)new SubscriptionMaker(js, bindPso).MakeSubscription();
-            sub.pullImpl.Pull(false, null, PullRequestOptions.Builder(1).WithExpiresIn(expires).Build());
-            return sub.NextMessage(maxWaitMillis);
+            NextSubWrapper nsw = new NextSubWrapper(js, bindPso);
+            nsw.sub.pullImpl.Pull(PullRequestOptions.Builder(1).WithExpiresIn(expires).Build(), false, null);
+            try
+            {
+                return nsw.sub.NextMessage(maxWaitMillis);
+            }
+            catch (NATSTimeoutException)
+            {
+                return null;
+            }
         }
 
         public IFetchConsumer FetchMessages(int maxMessages) {
@@ -99,6 +105,28 @@ namespace NATS.Client.JetStream
         }
     }
 
+    internal class NextSubWrapper
+    {
+        internal JetStreamPullSubscription sub; 
+
+        public NextSubWrapper(IJetStream js, PullSubscribeOptions pso)
+        {
+            this.sub = (JetStreamPullSubscription)new SubscriptionMaker(js, pso).MakeSubscription();
+        }
+
+        ~NextSubWrapper()
+        {
+            try
+            {
+                sub.Unsubscribe();
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+        }
+    }
+    
     internal class SubscriptionMaker
     {
         private readonly IJetStream js;

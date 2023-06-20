@@ -42,8 +42,7 @@ namespace NATS.Client.JetStream
             _consumer = consumer;
         }
         
-        internal string Pull(bool raiseStatusWarnings, ITrackPendingListener trackPendingListener,
-            PullRequestOptions pullRequestOptions) {
+        internal string Pull(PullRequestOptions pullRequestOptions, bool raiseStatusWarnings, ITrackPendingListener trackPendingListener) {
             string publishSubject = _js.PrependPrefix(string.Format(JetStreamConstants.JsapiConsumerMsgNext, _stream, _consumer));
             string pullSubject = _subject.Replace("*", _pullSubjectIdHolder.Increment().ToString());
             _mm.StartPullRequest(pullSubject, pullRequestOptions, raiseStatusWarnings, trackPendingListener);	
