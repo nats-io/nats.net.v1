@@ -302,11 +302,12 @@ namespace IntegrationTests
                     pubThread.Join();
     
                     Assert.True(count.Read() > 500);
-    
-                    // coverage
-                    consumerContext.consume(ConsumeOptions.DefaultConsumeOptions);
-                    Assert.Throws<ArgumentException>(() => consumerContext.consume((ConsumeOptions)null));
                 }
+                    
+                // coverage
+                IIterableConsumer consumer2 = consumerContext.consume(ConsumeOptions.DefaultConsumeOptions);
+                consumer2.Dispose();
+                Assert.Throws<ArgumentException>(() => consumerContext.consume((ConsumeOptions)null));
             });
         }
     
