@@ -101,12 +101,11 @@ namespace NATSExamples
 
             // create the consumer then use it
             // note: no need to catch NATSTimeoutException because the NextMessage will return null
-            Stopwatch sw = new Stopwatch();
-            int receivedMessages = 0;
-            long receivedBytes = 0;
             try
             {
-                sw.Start();
+                int receivedMessages = 0;
+                long receivedBytes = 0;
+                Stopwatch sw = new Stopwatch();
                 IFetchConsumer consumer = consumerContext.Fetch(fetchConsumeOptions);
                 Msg msg = consumer.NextMessage();
                 while (msg != null) {
@@ -120,6 +119,8 @@ namespace NATSExamples
                         msg = consumer.NextMessage();
                     }
                 }
+                sw.Stop();
+                printSummary(receivedMessages, receivedBytes, sw.ElapsedMilliseconds);
             }
             catch (NATSJetStreamStatusException)
             {
@@ -127,9 +128,6 @@ namespace NATSExamples
                 // of the pull or there is a new status from the
                 // server that this client is not aware of
             }
-            sw.Stop();
-
-            printSummary(receivedMessages, receivedBytes, sw.ElapsedMilliseconds);
         }
 
         private static string generateConsumerName(int maxMessages, int maxBytes)

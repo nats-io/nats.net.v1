@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System;
+using System.Threading.Tasks;
 using NATS.Client.Internals;
 using static NATS.Client.JetStream.BaseConsumeOptions;
 using static NATS.Client.JetStream.ConsumeOptions;
@@ -119,17 +120,19 @@ namespace NATS.Client.JetStream
             {
                 return null;
             }
-        }
-        
-        ~NextSub()
-        {
-            try
+            finally
             {
-                sub.Unsubscribe();
-            }
-            catch (Exception)
-            {
-                // ignored
+                Task.Run(() =>
+                {
+                    try
+                    {
+                        sub.Unsubscribe();
+                    }
+                    catch (Exception)
+                    {
+                        // intentionally ignored, nothing we can do anyway
+                    }
+                });
             }
         }
     }

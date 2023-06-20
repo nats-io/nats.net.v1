@@ -11,12 +11,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+
 namespace NATS.Client.JetStream
 {
     /// <summary>
     /// SIMPLIFICATION IS EXPERIMENTAL AND SUBJECT TO CHANGE
     /// </summary>
-    public interface IMessageConsumer
+    public interface IMessageConsumer : IDisposable
     {
         /// <summary>
         /// Gets information about the consumer behind this subscription.

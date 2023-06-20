@@ -67,12 +67,13 @@ namespace NATS.Client.JetStream
             }
         }
 
-        ~MessageConsumerBase()
+        public void Dispose()
         {
             try
             {
                 if (!stopped && sub.IsValid)
                 {
+                    stopped = true;
                     sub.Unsubscribe();
                 }
             }

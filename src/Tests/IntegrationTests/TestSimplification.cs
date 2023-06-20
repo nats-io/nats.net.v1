@@ -193,17 +193,20 @@ namespace IntegrationTests
             Stopwatch sw = Stopwatch.StartNew();
     
             // create the consumer then use it
-            IFetchConsumer consumer = consumerContext.Fetch(fetchConsumeOptions);
             int rcvd = 0;
-            Msg msg = consumer.NextMessage();
-            while (msg != null)
+            using (IFetchConsumer consumer = consumerContext.Fetch(fetchConsumeOptions))
             {
-                ++rcvd;
-                msg.Ack();
-                msg = consumer.NextMessage();
+                Msg msg = consumer.NextMessage();
+                while (msg != null)
+                {
+                    ++rcvd;
+                    msg.Ack();
+                    msg = consumer.NextMessage();
+                }
+
+                sw.Stop();
             }
-            sw.Stop();
-    
+
             switch (label) {
                 case "1A":
                 case "1B":
@@ -254,56 +257,56 @@ namespace IntegrationTests
                 int stopCount = 500;
     
                 // create the consumer then use it
-                IIterableConsumer consumer = consumerContext.consume();
-
-                InterlockedInt count = new InterlockedInt();
-                Thread consumeThread = new Thread(() =>
+                using (IIterableConsumer consumer = consumerContext.consume())
                 {
-                    try
+                    InterlockedInt count = new InterlockedInt();
+                    Thread consumeThread = new Thread(() =>
                     {
-                        Msg msg;
-                        while (count.Read() < stopCount)
+                        try
                         {
+                            Msg msg;
+                            while (count.Read() < stopCount)
+                            {
+                                msg = consumer.NextMessage(1000);
+                                if (msg != null)
+                                {
+                                    msg.Ack();
+                                    count.Increment();
+                                }
+                            }
+
+                            Thread.Sleep(50); // allows more messages to come across
+                            consumer.Stop(200);
+
                             msg = consumer.NextMessage(1000);
-                            if (msg != null)
+                            while (msg != null)
                             {
                                 msg.Ack();
                                 count.Increment();
+                                msg = consumer.NextMessage(1000);
                             }
                         }
-
-                        Thread.Sleep(50); // allows more messages to come across
-                        consumer.Stop(200);
-
-                        msg = consumer.NextMessage(1000);
-                        while (msg != null)
+                        catch (NATSTimeoutException)
                         {
-                            msg.Ack();
-                            count.Increment();
-                            msg = consumer.NextMessage(1000);
+                            // this is expected
                         }
-                    }
-                    catch (NATSTimeoutException)
-                    {
-                        // this is expected
-                    }
-                });
-                consumeThread.Start();
+                    });
+                    consumeThread.Start();
 
-                Publisher publisher = new Publisher(js, subject, 1);
-                Thread pubThread = new Thread(publisher.Run);
-                pubThread.Start();
+                    Publisher publisher = new Publisher(js, subject, 1);
+                    Thread pubThread = new Thread(publisher.Run);
+                    pubThread.Start();
     
-                consumeThread.Join();
-                publisher.Stop();
-                pubThread.Join();
+                    consumeThread.Join();
+                    publisher.Stop();
+                    pubThread.Join();
     
-                Assert.True(count.Read() > 500);
+                    Assert.True(count.Read() > 500);
     
-                // coverage
-                consumerContext.consume(ConsumeOptions.DefaultConsumeOptions);
-                Assert.Throws<ArgumentException>(() => consumerContext.consume((ConsumeOptions)null));
-                
+                    // coverage
+                    consumerContext.consume(ConsumeOptions.DefaultConsumeOptions);
+                    Assert.Throws<ArgumentException>(() => consumerContext.consume((ConsumeOptions)null));
+                }
             });
         }
     
@@ -333,11 +336,13 @@ namespace IntegrationTests
                     e.Message.Ack();
                     latch.Signal();
                 };
-    
-                IMessageConsumer consumer = consumerContext.consume(handler);
-                latch.Wait(10_000);
-                consumer.Stop(200);
-                Assert.Equal(0, latch.CurrentCount);
+
+                using (IMessageConsumer consumer = consumerContext.consume(handler))
+                {
+                    latch.Wait(10_000);
+                    consumer.Stop(200);
+                    Assert.Equal(0, latch.CurrentCount);
+                }
             });
         }
     

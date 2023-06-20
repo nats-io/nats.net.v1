@@ -52,10 +52,22 @@ namespace NATS.Client.JetStream
             base.Unsubscribe();
         }
 
+        public override void AutoUnsubscribe(int max)
+        {
+            MessageManager.Shutdown();
+            base.AutoUnsubscribe(max);
+        }
+
         internal override void close()
         {
             MessageManager.Shutdown();
             base.close();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            MessageManager.Shutdown();
+            base.Dispose(disposing);
         }
 
         public override Msg NextMessage()

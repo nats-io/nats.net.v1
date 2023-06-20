@@ -88,25 +88,28 @@ namespace NATSExamples
             printExplanation(label, consumerName, maxMessages);
 
             // create the consumer then use it
-            Stopwatch sw = new Stopwatch();
-            int receivedMessages = 0;
             try
             {
-                sw.Start();
-                IFetchConsumer consumer = consumerContext.Fetch(fetchConsumeOptions);
-                Msg msg = consumer.NextMessage();
-                while (msg != null)
+                int receivedMessages = 0;
+                Stopwatch sw = Stopwatch.StartNew();
+                using (IFetchConsumer consumer = consumerContext.Fetch(fetchConsumeOptions))
                 {
-                    msg.Ack();
-                    if (++receivedMessages == maxMessages)
+                    Msg msg = consumer.NextMessage();
+                    while (msg != null)
                     {
-                        msg = null;
-                    }
-                    else
-                    {
-                        msg = consumer.NextMessage();
+                        msg.Ack();
+                        if (++receivedMessages == maxMessages)
+                        {
+                            msg = null;
+                        }
+                        else
+                        {
+                            msg = consumer.NextMessage();
+                        }
                     }
                 }
+                sw.Stop();
+                printSummary(receivedMessages, sw.ElapsedMilliseconds);
             }
             catch (NATSJetStreamStatusException)
             {
@@ -114,10 +117,6 @@ namespace NATSExamples
                 // of the pull or there is a new status from the
                 // server that this client is not aware of
             }
-
-            sw.Stop();
-
-            printSummary(receivedMessages, sw.ElapsedMilliseconds);
         }
 
         private static void printSummary(int received, long elapsed) {
