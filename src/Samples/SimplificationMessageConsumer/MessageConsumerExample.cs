@@ -77,7 +77,7 @@ namespace NATSExamples
                 // once the consumer is stopped, the client will drain messages
                 Console.WriteLine("Stop the consumer...");
                 consumer.Stop(1000);
-                Thread.Sleep(1000); // enough for the stop to finish
+                Thread.Sleep(1000); // enough for messages to drain after stop
 
                 report("Final", sw.ElapsedMilliseconds, count);
                 Console.WriteLine();
