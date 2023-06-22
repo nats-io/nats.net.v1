@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">1.0.4</span>
+   &#160;<span id="projectnumber">1.0.5</span>
    </div>
    <div id="projectbrief">The NATS.io .NET C# Client</div>
   </td>
@@ -219,6 +219,14 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>Flush</b> ()</td></tr
 <tr class="separator:a921deb6275bb7b3247f76f78b0f66d5c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa1a9a2ee8b7fb39353df8ad2364968d2"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#aa1a9a2ee8b7fb39353df8ad2364968d2">IsDraining</a> ()</td></tr>
 <tr class="separator:aa1a9a2ee8b7fb39353df8ad2364968d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9b79a58a64910f3b9615c30a6678259c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_stream_context.html">IStreamContext</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a9b79a58a64910f3b9615c30a6678259c">CreateStreamContext</a> (string streamName)</td></tr>
+<tr class="separator:a9b79a58a64910f3b9615c30a6678259c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8b05437c632018e0ae0c0396609a2d44"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_stream_context.html">IStreamContext</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a8b05437c632018e0ae0c0396609a2d44">CreateStreamContext</a> (string streamName, JetStreamOptions options)</td></tr>
+<tr class="separator:a8b05437c632018e0ae0c0396609a2d44"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1152c86ffb218633cc2d4076c3d2f3a2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_consumer_context.html">IConsumerContext</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a1152c86ffb218633cc2d4076c3d2f3a2">CreateConsumerContext</a> (string streamName, string consumerName)</td></tr>
+<tr class="separator:a1152c86ffb218633cc2d4076c3d2f3a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4f33f8e3ba7bc28d39f51b1f9afd7944"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_consumer_context.html">IConsumerContext</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a4f33f8e3ba7bc28d39f51b1f9afd7944">CreateConsumerContext</a> (string streamName, string consumerName, JetStreamOptions options)</td></tr>
+<tr class="separator:a4f33f8e3ba7bc28d39f51b1f9afd7944"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a35fbe184e030f2cdc59e8d8513067b73"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream.html">IJetStream</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a35fbe184e030f2cdc59e8d8513067b73">CreateJetStreamContext</a> (JetStreamOptions options=null)</td></tr>
 <tr class="separator:a35fbe184e030f2cdc59e8d8513067b73"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acd5ef8fa7f9c1940a1350f5b31bad78c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html">IJetStreamManagement</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#acd5ef8fa7f9c1940a1350f5b31bad78c">CreateJetStreamManagementContext</a> (JetStreamOptions options=null)</td></tr>
@@ -292,6 +300,93 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>SubscriptionCount</b><
 
 </div>
 </div>
+<a id="a1152c86ffb218633cc2d4076c3d2f3a2" name="a1152c86ffb218633cc2d4076c3d2f3a2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1152c86ffb218633cc2d4076c3d2f3a2">&#9670;&nbsp;</a></span>CreateConsumerContext() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_consumer_context.html">IConsumerContext</a> NATS.Client.IConnection.CreateConsumerContext </td>
+          <td>(</td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>streamName</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>consumerName</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a consumer context for a specific named stream and specific named consumer. Verifies that the stream and consumer exist. EXPERIMENTAL API SUBJECT TO CHANGE </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">streamName</td><td>the name of the stream</td></tr>
+    <tr><td class="paramname">consumerName</td><td>the name of the consumer</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>an IConsumerContext instance</dd></dl>
+
+<p>Implemented in <a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#a2dda706a5cbd44510ea3a8b66517bb07">NATS.Client.Connection</a>.</p>
+
+</div>
+</div>
+<a id="a4f33f8e3ba7bc28d39f51b1f9afd7944" name="a4f33f8e3ba7bc28d39f51b1f9afd7944"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4f33f8e3ba7bc28d39f51b1f9afd7944">&#9670;&nbsp;</a></span>CreateConsumerContext() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_consumer_context.html">IConsumerContext</a> NATS.Client.IConnection.CreateConsumerContext </td>
+          <td>(</td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>streamName</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>consumerName</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">JetStreamOptions&#160;</td>
+          <td class="paramname"><em>options</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a consumer context for a specific named stream and specific named consumer. Verifies that the stream and consumer exist. EXPERIMENTAL API SUBJECT TO CHANGE </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">streamName</td><td>the name of the stream</td></tr>
+    <tr><td class="paramname">consumerName</td><td>the name of the consumer</td></tr>
+    <tr><td class="paramname">options</td><td><a class="el" href="namespace_n_a_t_s_1_1_client_1_1_jet_stream.html">JetStream</a> options.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>an IConsumerContext instance</dd></dl>
+
+<p>Implemented in <a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#a8cd8f79818f9bfb53bddbc1a94b70577">NATS.Client.Connection</a>.</p>
+
+</div>
+</div>
 <a id="a35fbe184e030f2cdc59e8d8513067b73" name="a35fbe184e030f2cdc59e8d8513067b73"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a35fbe184e030f2cdc59e8d8513067b73">&#9670;&nbsp;</a></span>CreateJetStreamContext()</h2>
 
@@ -344,7 +439,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>SubscriptionCount</b><
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd></dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>an IJetStreamManagement instance</dd></dl>
 
 <p>Implemented in <a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#a27c37411750a8b9f268b1fe57669306c">NATS.Client.Connection</a>.</p>
 
@@ -488,6 +583,77 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>SubscriptionCount</b><
 
 </div>
 </div>
+<a id="a9b79a58a64910f3b9615c30a6678259c" name="a9b79a58a64910f3b9615c30a6678259c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9b79a58a64910f3b9615c30a6678259c">&#9670;&nbsp;</a></span>CreateStreamContext() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_stream_context.html">IStreamContext</a> NATS.Client.IConnection.CreateStreamContext </td>
+          <td>(</td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>streamName</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Gets a stream context. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">streamName</td><td>the stream for the context</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><p class="startdd">a StreamContext instance.</p>
+<p class="enddd">an IStreamContext instance</p>
+</dd></dl>
+
+<p>Implemented in <a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#aa28dfed3f0fac36b23396a2d7575b339">NATS.Client.Connection</a>.</p>
+
+</div>
+</div>
+<a id="a8b05437c632018e0ae0c0396609a2d44" name="a8b05437c632018e0ae0c0396609a2d44"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8b05437c632018e0ae0c0396609a2d44">&#9670;&nbsp;</a></span>CreateStreamContext() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_stream_context.html">IStreamContext</a> NATS.Client.IConnection.CreateStreamContext </td>
+          <td>(</td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>streamName</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">JetStreamOptions&#160;</td>
+          <td class="paramname"><em>options</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Gets a stream context. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">streamName</td><td>the stream for the context</td></tr>
+    <tr><td class="paramname">options</td><td><a class="el" href="namespace_n_a_t_s_1_1_client_1_1_jet_stream.html">JetStream</a> options.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>an IStreamContext instance</dd></dl>
+
+<p>Implemented in <a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#a72e62e3dfd94952744187e3a732a5449">NATS.Client.Connection</a>.</p>
+
+</div>
+</div>
 <a id="a5f898fa24ddc5c6154cf910aabfa6bda" name="a5f898fa24ddc5c6154cf910aabfa6bda"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a5f898fa24ddc5c6154cf910aabfa6bda">&#9670;&nbsp;</a></span>Drain() <span class="overload">[1/2]</span></h2>
 
@@ -588,7 +754,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>SubscriptionCount</b><
 <dl class="section see"><dt>See also</dt><dd><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a168251a7112d288d198fbb32515649ed" title="Closes the IConnection and all associated subscriptions.">Close()</a></dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">timeout</td><td>The duration to wait before draining.</td></tr>
+    <tr><td class="paramname">timeout</td><td>The duration to wait for the drain to complete.</td></tr>
   </table>
   </dd>
 </dl>

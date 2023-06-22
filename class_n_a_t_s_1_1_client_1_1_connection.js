@@ -1,12 +1,16 @@
 var class_n_a_t_s_1_1_client_1_1_connection =
 [
     [ "Close", "class_n_a_t_s_1_1_client_1_1_connection.html#a1f4e7da68d58ff8ea02a6ca4a1df89f5", null ],
+    [ "CreateConsumerContext", "class_n_a_t_s_1_1_client_1_1_connection.html#a2dda706a5cbd44510ea3a8b66517bb07", null ],
+    [ "CreateConsumerContext", "class_n_a_t_s_1_1_client_1_1_connection.html#a8cd8f79818f9bfb53bddbc1a94b70577", null ],
     [ "CreateJetStreamContext", "class_n_a_t_s_1_1_client_1_1_connection.html#a3b8b1e2d8f0e658ee68557beb6a40a77", null ],
     [ "CreateJetStreamManagementContext", "class_n_a_t_s_1_1_client_1_1_connection.html#a27c37411750a8b9f268b1fe57669306c", null ],
     [ "CreateKeyValueContext", "class_n_a_t_s_1_1_client_1_1_connection.html#a16d6f9547f971ce79d5ded59ee271cdb", null ],
     [ "CreateKeyValueManagementContext", "class_n_a_t_s_1_1_client_1_1_connection.html#aa69ba63cd4a206c7ba8526e7d33c7934", null ],
     [ "CreateObjectStoreContext", "class_n_a_t_s_1_1_client_1_1_connection.html#a27866b95c0fce8ce3a2d91b7b79a8a5f", null ],
     [ "CreateObjectStoreManagementContext", "class_n_a_t_s_1_1_client_1_1_connection.html#a58f3fdfc2f88257f79f22df4d067e6d1", null ],
+    [ "CreateStreamContext", "class_n_a_t_s_1_1_client_1_1_connection.html#aa28dfed3f0fac36b23396a2d7575b339", null ],
+    [ "CreateStreamContext", "class_n_a_t_s_1_1_client_1_1_connection.html#a72e62e3dfd94952744187e3a732a5449", null ],
     [ "Dispose", "class_n_a_t_s_1_1_client_1_1_connection.html#adf7e7a90a13e426ccdd1a970254a3bb8", null ],
     [ "Dispose", "class_n_a_t_s_1_1_client_1_1_connection.html#a017dfe347437eeeb2d91ccba1a91e91a", null ],
     [ "Drain", "class_n_a_t_s_1_1_client_1_1_connection.html#a16d89d624d9cda1f8930b86bfabd16ef", null ],

@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">1.0.4</span>
+   &#160;<span id="projectnumber">1.0.5</span>
    </div>
    <div id="projectbrief">The NATS.io .NET C# Client</div>
   </td>
@@ -103,16 +103,6 @@ Inheritance diagram for NATS.Client.JetStream.IJetStreamPullSubscription:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a330ffbc28b66a4491f0a0fa8c48cd5c5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_pull_subscription.html#a330ffbc28b66a4491f0a0fa8c48cd5c5">Pull</a> (int batchSize)</td></tr>
-<tr class="separator:a330ffbc28b66a4491f0a0fa8c48cd5c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af35db1e3083a3517679c806d48ac9a49"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_pull_subscription.html#af35db1e3083a3517679c806d48ac9a49">Pull</a> (<a class="el" href="class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_pull_request_options.html">PullRequestOptions</a> pullRequestOptions)</td></tr>
-<tr class="separator:af35db1e3083a3517679c806d48ac9a49"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aebb0eb036ba4dd72099f5a5486205fc8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_pull_subscription.html#aebb0eb036ba4dd72099f5a5486205fc8">PullNoWait</a> (int batchSize)</td></tr>
-<tr class="separator:aebb0eb036ba4dd72099f5a5486205fc8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aab3d439ddb520e951be4b7034cfba817"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_pull_subscription.html#aab3d439ddb520e951be4b7034cfba817">PullNoWait</a> (int batchSize, int expiresInMillis)</td></tr>
-<tr class="separator:aab3d439ddb520e951be4b7034cfba817"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a26b825c1f233c574833bbdd345ac41d2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_pull_subscription.html#a26b825c1f233c574833bbdd345ac41d2">PullExpiresIn</a> (int batchSize, int expiresInMillis)</td></tr>
-<tr class="separator:a26b825c1f233c574833bbdd345ac41d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1e00126e533aff8c76d61ea007c890b9"><td class="memItemLeft" align="right" valign="top">IList&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg.html">Msg</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_pull_subscription.html#a1e00126e533aff8c76d61ea007c890b9">Fetch</a> (int batchSize, int maxWaitMillis)</td></tr>
 <tr class="separator:a1e00126e533aff8c76d61ea007c890b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_interface_n_a_t_s_1_1_client_1_1_i_sync_subscription"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_interface_n_a_t_s_1_1_client_1_1_i_sync_subscription')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_sync_subscription.html">NATS.Client.ISyncSubscription</a></td></tr>
@@ -226,163 +216,6 @@ long&#160;</td><td class="memItemRight" valign="bottom"><b>Delivered</b><code> [
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>A list of messages</dd></dl>
-
-</div>
-</div>
-<a id="a330ffbc28b66a4491f0a0fa8c48cd5c5" name="a330ffbc28b66a4491f0a0fa8c48cd5c5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a330ffbc28b66a4491f0a0fa8c48cd5c5">&#9670;&nbsp;</a></span>Pull() <span class="overload">[1/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void NATS.Client.JetStream.IJetStreamPullSubscription.Pull </td>
-          <td>(</td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>batchSize</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Initiate pull with the specified batch size. </p>
-<p >Primitive API for ADVANCED use only, officially not supported. Prefer Fetch </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">batchSize</td><td>the size of the batch</td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="af35db1e3083a3517679c806d48ac9a49" name="af35db1e3083a3517679c806d48ac9a49"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af35db1e3083a3517679c806d48ac9a49">&#9670;&nbsp;</a></span>Pull() <span class="overload">[2/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void NATS.Client.JetStream.IJetStreamPullSubscription.Pull </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_pull_request_options.html">PullRequestOptions</a>&#160;</td>
-          <td class="paramname"><em>pullRequestOptions</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Initiate pull with the specified request options. </p>
-<p >Primitive API for ADVANCED use only, officially not supported. Prefer Fetch </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">pullRequestOptions</td><td>the options object</td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="a26b825c1f233c574833bbdd345ac41d2" name="a26b825c1f233c574833bbdd345ac41d2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a26b825c1f233c574833bbdd345ac41d2">&#9670;&nbsp;</a></span>PullExpiresIn()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void NATS.Client.JetStream.IJetStreamPullSubscription.PullExpiresIn </td>
-          <td>(</td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>batchSize</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>expiresInMillis</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Initiate pull for all messages available before expiration. </p>
-<p >Primitive API for ADVANCED use only, officially not supported. Prefer Fetch </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">batchSize</td><td>the size of the batch</td></tr>
-    <tr><td class="paramname">expiresInMillis</td><td>how long from now the server should expire this request</td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="aebb0eb036ba4dd72099f5a5486205fc8" name="aebb0eb036ba4dd72099f5a5486205fc8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aebb0eb036ba4dd72099f5a5486205fc8">&#9670;&nbsp;</a></span>PullNoWait() <span class="overload">[1/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void NATS.Client.JetStream.IJetStreamPullSubscription.PullNoWait </td>
-          <td>(</td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>batchSize</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Do a pull in noWait mode with the specified batch size. </p>
-<p >Primitive API for ADVANCED use only, officially not supported. Prefer Fetch </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">batchSize</td><td>the size of the batch</td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="aab3d439ddb520e951be4b7034cfba817" name="aab3d439ddb520e951be4b7034cfba817"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aab3d439ddb520e951be4b7034cfba817">&#9670;&nbsp;</a></span>PullNoWait() <span class="overload">[2/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void NATS.Client.JetStream.IJetStreamPullSubscription.PullNoWait </td>
-          <td>(</td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>batchSize</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>expiresInMillis</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Do a pull in noWait + expire mode with the specified batch size. </p>
-<p >Primitive API for ADVANCED use only, officially not supported. Prefer Fetch </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">batchSize</td><td>the size of the batch</td></tr>
-    <tr><td class="paramname">expiresInMillis</td><td>how long from now the server should expire this request</td></tr>
-  </table>
-  </dd>
-</dl>
 
 </div>
 </div>

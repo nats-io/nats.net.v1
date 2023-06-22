@@ -1,4 +1,25 @@
 var searchData=
 [
-  ['keyvalueconfigurationbuilder_0',['KeyValueConfigurationBuilder',['../class_n_a_t_s_1_1_client_1_1_key_value_1_1_key_value_configuration_1_1_key_value_configuration_builder.html',1,'NATS::Client::KeyValue::KeyValueConfiguration']]]
+  ['iasyncsubscription_0',['IAsyncSubscription',['../interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html',1,'NATS::Client']]],
+  ['iconnection_1',['IConnection',['../interface_n_a_t_s_1_1_client_1_1_i_connection.html',1,'NATS::Client']]],
+  ['iconsumercontext_2',['IConsumerContext',['../interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_consumer_context.html',1,'NATS::Client::JetStream']]],
+  ['iencodedconnection_3',['IEncodedConnection',['../interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html',1,'NATS::Client']]],
+  ['ifetchconsumer_4',['IFetchConsumer',['../interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_fetch_consumer.html',1,'NATS::Client::JetStream']]],
+  ['iiterableconsumer_5',['IIterableConsumer',['../interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_iterable_consumer.html',1,'NATS::Client::JetStream']]],
+  ['ijetstream_6',['IJetStream',['../interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream.html',1,'NATS::Client::JetStream']]],
+  ['ijetstreammanagement_7',['IJetStreamManagement',['../interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html',1,'NATS::Client::JetStream']]],
+  ['ijetstreampullasyncsubscription_8',['IJetStreamPullAsyncSubscription',['../interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_pull_async_subscription.html',1,'NATS::Client::JetStream']]],
+  ['ijetstreampullsubscription_9',['IJetStreamPullSubscription',['../interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_pull_subscription.html',1,'NATS::Client::JetStream']]],
+  ['ijetstreampushasyncsubscription_10',['IJetStreamPushAsyncSubscription',['../interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_push_async_subscription.html',1,'NATS::Client::JetStream']]],
+  ['ijetstreampushsyncsubscription_11',['IJetStreamPushSyncSubscription',['../interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_push_sync_subscription.html',1,'NATS::Client::JetStream']]],
+  ['imessageconsumer_12',['IMessageConsumer',['../interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_message_consumer.html',1,'NATS::Client::JetStream']]],
+  ['inatsobservable_13',['INATSObservable',['../interface_n_a_t_s_1_1_client_1_1_rx_1_1_i_n_a_t_s_observable.html',1,'NATS::Client::Rx']]],
+  ['inatsobservable_3c_20t_20_3e_14',['INATSObservable&lt; T &gt;',['../interface_n_a_t_s_1_1_client_1_1_rx_1_1_i_n_a_t_s_observable.html',1,'NATS::Client::Rx']]],
+  ['inatsobservable_3c_20tresult_20_3e_15',['INATSObservable&lt; TResult &gt;',['../interface_n_a_t_s_1_1_client_1_1_rx_1_1_i_n_a_t_s_observable.html',1,'NATS::Client::Rx']]],
+  ['inatsobservable_3c_20tsrc_20_3e_16',['INATSObservable&lt; TSrc &gt;',['../interface_n_a_t_s_1_1_client_1_1_rx_1_1_i_n_a_t_s_observable.html',1,'NATS::Client::Rx']]],
+  ['inforesponse_17',['InfoResponse',['../class_n_a_t_s_1_1_client_1_1_service_1_1_info_response.html',1,'NATS::Client::Service']]],
+  ['istatistics_18',['IStatistics',['../interface_n_a_t_s_1_1_client_1_1_i_statistics.html',1,'NATS::Client']]],
+  ['istreamcontext_19',['IStreamContext',['../interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_stream_context.html',1,'NATS::Client::JetStream']]],
+  ['isubscription_20',['ISubscription',['../interface_n_a_t_s_1_1_client_1_1_i_subscription.html',1,'NATS::Client']]],
+  ['isyncsubscription_21',['ISyncSubscription',['../interface_n_a_t_s_1_1_client_1_1_i_sync_subscription.html',1,'NATS::Client']]]
 ];

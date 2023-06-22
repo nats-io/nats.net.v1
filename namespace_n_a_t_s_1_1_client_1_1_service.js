@@ -6,8 +6,6 @@ var namespace_n_a_t_s_1_1_client_1_1_service =
     [ "Group", "class_n_a_t_s_1_1_client_1_1_service_1_1_group.html", null ],
     [ "InfoResponse", "class_n_a_t_s_1_1_client_1_1_service_1_1_info_response.html", null ],
     [ "PingResponse", "class_n_a_t_s_1_1_client_1_1_service_1_1_ping_response.html", null ],
-    [ "Schema", "class_n_a_t_s_1_1_client_1_1_service_1_1_schema.html", null ],
-    [ "SchemaResponse", "class_n_a_t_s_1_1_client_1_1_service_1_1_schema_response.html", null ],
     [ "Service", "class_n_a_t_s_1_1_client_1_1_service_1_1_service.html", null ],
     [ "ServiceBuilder", "class_n_a_t_s_1_1_client_1_1_service_1_1_service_builder.html", null ],
     [ "ServiceEndpoint", "class_n_a_t_s_1_1_client_1_1_service_1_1_service_endpoint.html", null ],

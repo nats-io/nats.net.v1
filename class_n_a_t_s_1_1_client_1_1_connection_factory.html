@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">1.0.4</span>
+   &#160;<span id="projectnumber">1.0.5</span>
    </div>
    <div id="projectbrief">The NATS.io .NET C# Client</div>
   </td>
@@ -120,8 +120,8 @@ Public Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:aead806fcd34d9edbbc2fcaa3ada6b7c3"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html">Options</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection_factory.html#aead806fcd34d9edbbc2fcaa3ada6b7c3">GetDefaultOptions</a> ()</td></tr>
-<tr class="separator:aead806fcd34d9edbbc2fcaa3ada6b7c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae02c2786686c684b90b69c9a5759b71e"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html">Options</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection_factory.html#ae02c2786686c684b90b69c9a5759b71e">GetDefaultOptions</a> (string server=null)</td></tr>
+<tr class="separator:ae02c2786686c684b90b69c9a5759b71e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p >Provides factory methods to create connections to <a class="el" href="namespace_n_a_t_s.html">NATS</a> Servers. </p>
@@ -150,7 +150,7 @@ Static Public Member Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section see"><dt>See also</dt><dd><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection_factory.html#aead806fcd34d9edbbc2fcaa3ada6b7c3" title="Retrieves the default set of client options.">GetDefaultOptions</a></dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection_factory.html#ae02c2786686c684b90b69c9a5759b71e" title="Retrieves the default set of client options.">GetDefaultOptions</a></dd></dl>
 
 </div>
 </div>
@@ -339,7 +339,7 @@ Static Public Member Functions</h2></td></tr>
 
 <p>Attempt to connect to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server, with an encoded connection, using the default options. </p>
 <dl class="section return"><dt>Returns</dt><dd>An <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html" title="Represents a connection to a NATS Server which uses a client specified encoding scheme.">IEncodedConnection</a> object connected to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server.</dd></dl>
-<dl class="section see"><dt>See also</dt><dd><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection_factory.html#aead806fcd34d9edbbc2fcaa3ada6b7c3" title="Retrieves the default set of client options.">GetDefaultOptions</a></dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection_factory.html#ae02c2786686c684b90b69c9a5759b71e" title="Retrieves the default set of client options.">GetDefaultOptions</a></dd></dl>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
     <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_no_servers_exception.html" title="The exception that is thrown when a connection cannot be made to any server.">NATSNoServersException</a></td><td>No connection to a <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server could be established.</td></tr>
@@ -454,8 +454,8 @@ Static Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="aead806fcd34d9edbbc2fcaa3ada6b7c3" name="aead806fcd34d9edbbc2fcaa3ada6b7c3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aead806fcd34d9edbbc2fcaa3ada6b7c3">&#9670;&nbsp;</a></span>GetDefaultOptions()</h2>
+<a id="ae02c2786686c684b90b69c9a5759b71e" name="ae02c2786686c684b90b69c9a5759b71e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae02c2786686c684b90b69c9a5759b71e">&#9670;&nbsp;</a></span>GetDefaultOptions()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -466,7 +466,8 @@ Static Public Member Functions</h2></td></tr>
         <tr>
           <td class="memname">static <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html">Options</a> NATS.Client.ConnectionFactory.GetDefaultOptions </td>
           <td>(</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>server</em> = <code>null</code></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -478,6 +479,12 @@ Static Public Member Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Retrieves the default set of client options. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">server</td><td>Optionally set the server. Still can be set or overriden with <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a4952cb3e82ca4692896f289d9825682a" title="Gets or sets the url used to connect to the NATs server. Can be a comma delimited list,...">Options.Url</a> or <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a2e0b5fe52ae54b89e42a9e49b47f94e1" title="Gets or sets the array of servers that the NATS client will connect to.">Options.Servers</a> properties</td></tr>
+  </table>
+  </dd>
+</dl>
 <dl class="section return"><dt>Returns</dt><dd>The default <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html" title="This class is used to setup all NATs client options.">Options</a> object for the <a class="el" href="namespace_n_a_t_s.html">NATS</a> client.</dd></dl>
 
 </div>

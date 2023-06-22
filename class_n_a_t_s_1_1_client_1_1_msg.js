@@ -18,6 +18,7 @@ var class_n_a_t_s_1_1_client_1_1_msg =
     [ "ToString", "class_n_a_t_s_1_1_client_1_1_msg.html#a6bc71a9bed471b1d9da6907dee108480", null ],
     [ "ArrivalSubcription", "class_n_a_t_s_1_1_client_1_1_msg.html#a5abab008521e1950c41163a06e20ec78", null ],
     [ "ArrivalSubscription", "class_n_a_t_s_1_1_client_1_1_msg.html#a1b4c73e4bce3aa9d9d1487bd55ab4acd", null ],
+    [ "ConsumeByteCount", "class_n_a_t_s_1_1_client_1_1_msg.html#a167c0c54ecd44a456a2ef55f721dcbf2", null ],
     [ "Data", "class_n_a_t_s_1_1_client_1_1_msg.html#ac4deb024e50d441e9b20da3466b1309d", null ],
     [ "HasHeaders", "class_n_a_t_s_1_1_client_1_1_msg.html#a4d34041e3188846896668a7cb64d62dd", null ],
     [ "HasStatus", "class_n_a_t_s_1_1_client_1_1_msg.html#ab42da21f2c1db1b99bc7f3f05b8b8e84", null ],

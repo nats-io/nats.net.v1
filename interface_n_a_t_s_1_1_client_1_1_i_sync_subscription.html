@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">1.0.4</span>
+   &#160;<span id="projectnumber">1.0.5</span>
    </div>
    <div id="projectbrief">The NATS.io .NET C# Client</div>
   </td>
@@ -96,9 +96,10 @@ Inheritance diagram for NATS.Client.ISyncSubscription:</div>
  <div class="center">
   <img src="interface_n_a_t_s_1_1_client_1_1_i_sync_subscription.png" usemap="#NATS.Client.ISyncSubscription_map" alt=""/>
   <map id="NATS.Client.ISyncSubscription_map" name="NATS.Client.ISyncSubscription_map">
-<area href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html" title="Represents interest in a NATS topic." alt="NATS.Client.ISubscription" shape="rect" coords="152,0,447,24"/>
-<area href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_pull_subscription.html" title="Pull Subscription on a JetStream context." alt="NATS.Client.JetStream.IJetStreamPullSubscription" shape="rect" coords="0,112,295,136"/>
-<area href="class_n_a_t_s_1_1_client_1_1_sync_subscription.html" title="SyncSubscription provides messages for a subject through calls to NextMessage() and NextMessage(int)...." alt="NATS.Client.SyncSubscription" shape="rect" coords="305,112,600,136"/>
+<area href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html" title="Represents interest in a NATS topic." alt="NATS.Client.ISubscription" shape="rect" coords="341,0,672,24"/>
+<area href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_pull_subscription.html" title="Pull Subscription on a JetStream context." alt="NATS.Client.JetStream.IJetStreamPullSubscription" shape="rect" coords="0,112,331,136"/>
+<area href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_push_sync_subscription.html" title="Push Subscription on a JetStream context." alt="NATS.Client.JetStream.IJetStreamPushSyncSubscription" shape="rect" coords="341,112,672,136"/>
+<area href="class_n_a_t_s_1_1_client_1_1_sync_subscription.html" title="SyncSubscription provides messages for a subject through calls to NextMessage() and NextMessage(int)...." alt="NATS.Client.SyncSubscription" shape="rect" coords="682,112,1013,136"/>
   </map>
 </div></div>
 <table class="memberdecls">
@@ -214,7 +215,7 @@ long&#160;</td><td class="memItemRight" valign="bottom"><b>Delivered</b><code> [
       </table>
 </div><div class="memdoc">
 
-<p>Returns the next <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg.html" title="A NATS message is an object encapsulating a subject, optional reply payload, optional header,...">Msg</a> available to a synchronous subscriber, or block up to a given timeout until the next one is available. timeout less than zero means block until a message is available </p>
+<p>Returns the next <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg.html" title="A NATS message is an object encapsulating a subject, optional reply payload, optional header,...">Msg</a> available to a synchronous subscriber, or block up to a given timeout until the next one is available. Timeout less than zero means block until a message is available </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">timeout</td><td>The amount of time, in milliseconds, to wait for the next message.</td></tr>
@@ -222,6 +223,12 @@ long&#160;</td><td class="memItemRight" valign="bottom"><b>Delivered</b><code> [
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>The next <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg.html" title="A NATS message is an object encapsulating a subject, optional reply payload, optional header,...">Msg</a> available to a subscriber.</dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_timeout_exception.html" title="The exception that is thrown when a NATS operation times out.">NATSTimeoutException</a></td><td>When the call times out</td></tr>
+  </table>
+  </dd>
+</dl>
 
 <p>Implemented in <a class="el" href="class_n_a_t_s_1_1_client_1_1_sync_subscription.html#a5cab1198002ff904aa025891ee47d30a">NATS.Client.SyncSubscription</a>.</p>
 

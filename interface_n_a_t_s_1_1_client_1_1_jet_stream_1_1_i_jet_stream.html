@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">1.0.4</span>
+   &#160;<span id="projectnumber">1.0.5</span>
    </div>
    <div id="projectbrief">The NATS.io .NET C# Client</div>
   </td>
@@ -121,27 +121,98 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a1354c8145e579e72dcbfe9e8bf4f19a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a65ce0f130c9c4243f2e2d0be0ae07c79"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_pull_subscription.html">IJetStreamPullSubscription</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream.html#a65ce0f130c9c4243f2e2d0be0ae07c79">PullSubscribe</a> (string subject, PullSubscribeOptions options)</td></tr>
 <tr class="separator:a65ce0f130c9c4243f2e2d0be0ae07c79"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a96cac87cb9bf45b39953bdc50b5e42e0"><td class="memItemLeft" align="right" valign="top">IJetStreamPushAsyncSubscription&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream.html#a96cac87cb9bf45b39953bdc50b5e42e0">PushSubscribeAsync</a> (string subject, EventHandler&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg_handler_event_args.html">MsgHandlerEventArgs</a> &gt; handler, bool autoAck)</td></tr>
+<tr class="memitem:a108936ccac89a0a0cf0787954b1a1fd4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_pull_async_subscription.html">IJetStreamPullAsyncSubscription</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream.html#a108936ccac89a0a0cf0787954b1a1fd4">PullSubscribeAsync</a> (string subject, EventHandler&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg_handler_event_args.html">MsgHandlerEventArgs</a> &gt; handler, PullSubscribeOptions options)</td></tr>
+<tr class="separator:a108936ccac89a0a0cf0787954b1a1fd4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a96cac87cb9bf45b39953bdc50b5e42e0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_push_async_subscription.html">IJetStreamPushAsyncSubscription</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream.html#a96cac87cb9bf45b39953bdc50b5e42e0">PushSubscribeAsync</a> (string subject, EventHandler&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg_handler_event_args.html">MsgHandlerEventArgs</a> &gt; handler, bool autoAck)</td></tr>
 <tr class="separator:a96cac87cb9bf45b39953bdc50b5e42e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aca957fdd9b2186c54f581c58e3ea992e"><td class="memItemLeft" align="right" valign="top">IJetStreamPushAsyncSubscription&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream.html#aca957fdd9b2186c54f581c58e3ea992e">PushSubscribeAsync</a> (string subject, EventHandler&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg_handler_event_args.html">MsgHandlerEventArgs</a> &gt; handler, bool autoAck, PushSubscribeOptions options)</td></tr>
+<tr class="memitem:aca957fdd9b2186c54f581c58e3ea992e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_push_async_subscription.html">IJetStreamPushAsyncSubscription</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream.html#aca957fdd9b2186c54f581c58e3ea992e">PushSubscribeAsync</a> (string subject, EventHandler&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg_handler_event_args.html">MsgHandlerEventArgs</a> &gt; handler, bool autoAck, PushSubscribeOptions options)</td></tr>
 <tr class="separator:aca957fdd9b2186c54f581c58e3ea992e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7600e7c2fed470ece63ebaf7c279b2fc"><td class="memItemLeft" align="right" valign="top">IJetStreamPushAsyncSubscription&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream.html#a7600e7c2fed470ece63ebaf7c279b2fc">PushSubscribeAsync</a> (string subject, string queue, EventHandler&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg_handler_event_args.html">MsgHandlerEventArgs</a> &gt; handler, bool autoAck)</td></tr>
+<tr class="memitem:a7600e7c2fed470ece63ebaf7c279b2fc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_push_async_subscription.html">IJetStreamPushAsyncSubscription</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream.html#a7600e7c2fed470ece63ebaf7c279b2fc">PushSubscribeAsync</a> (string subject, string queue, EventHandler&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg_handler_event_args.html">MsgHandlerEventArgs</a> &gt; handler, bool autoAck)</td></tr>
 <tr class="separator:a7600e7c2fed470ece63ebaf7c279b2fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a13939b861142ecbef0c5473a6c059652"><td class="memItemLeft" align="right" valign="top">IJetStreamPushAsyncSubscription&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream.html#a13939b861142ecbef0c5473a6c059652">PushSubscribeAsync</a> (string subject, string queue, EventHandler&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg_handler_event_args.html">MsgHandlerEventArgs</a> &gt; handler, bool autoAck, PushSubscribeOptions options)</td></tr>
+<tr class="memitem:a13939b861142ecbef0c5473a6c059652"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_push_async_subscription.html">IJetStreamPushAsyncSubscription</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream.html#a13939b861142ecbef0c5473a6c059652">PushSubscribeAsync</a> (string subject, string queue, EventHandler&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg_handler_event_args.html">MsgHandlerEventArgs</a> &gt; handler, bool autoAck, PushSubscribeOptions options)</td></tr>
 <tr class="separator:a13939b861142ecbef0c5473a6c059652"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a42bf7d93a24bde1c13f5e364a9cb592f"><td class="memItemLeft" align="right" valign="top">IJetStreamPushSyncSubscription&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream.html#a42bf7d93a24bde1c13f5e364a9cb592f">PushSubscribeSync</a> (string subject)</td></tr>
+<tr class="memitem:a42bf7d93a24bde1c13f5e364a9cb592f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_push_sync_subscription.html">IJetStreamPushSyncSubscription</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream.html#a42bf7d93a24bde1c13f5e364a9cb592f">PushSubscribeSync</a> (string subject)</td></tr>
 <tr class="separator:a42bf7d93a24bde1c13f5e364a9cb592f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a258b115e3d14ef44b8b6bb04e19ac85a"><td class="memItemLeft" align="right" valign="top">IJetStreamPushSyncSubscription&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream.html#a258b115e3d14ef44b8b6bb04e19ac85a">PushSubscribeSync</a> (string subject, PushSubscribeOptions options)</td></tr>
+<tr class="memitem:a258b115e3d14ef44b8b6bb04e19ac85a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_push_sync_subscription.html">IJetStreamPushSyncSubscription</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream.html#a258b115e3d14ef44b8b6bb04e19ac85a">PushSubscribeSync</a> (string subject, PushSubscribeOptions options)</td></tr>
 <tr class="separator:a258b115e3d14ef44b8b6bb04e19ac85a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8297eb1d51af4a8a6252cda2c838985f"><td class="memItemLeft" align="right" valign="top">IJetStreamPushSyncSubscription&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream.html#a8297eb1d51af4a8a6252cda2c838985f">PushSubscribeSync</a> (string subject, string queue)</td></tr>
+<tr class="memitem:a8297eb1d51af4a8a6252cda2c838985f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_push_sync_subscription.html">IJetStreamPushSyncSubscription</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream.html#a8297eb1d51af4a8a6252cda2c838985f">PushSubscribeSync</a> (string subject, string queue)</td></tr>
 <tr class="separator:a8297eb1d51af4a8a6252cda2c838985f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a14ac4a882aa154273b536c9710c5ca3f"><td class="memItemLeft" align="right" valign="top">IJetStreamPushSyncSubscription&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream.html#a14ac4a882aa154273b536c9710c5ca3f">PushSubscribeSync</a> (string subject, string queue, PushSubscribeOptions options)</td></tr>
+<tr class="memitem:a14ac4a882aa154273b536c9710c5ca3f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_push_sync_subscription.html">IJetStreamPushSyncSubscription</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream.html#a14ac4a882aa154273b536c9710c5ca3f">PushSubscribeSync</a> (string subject, string queue, PushSubscribeOptions options)</td></tr>
 <tr class="separator:a14ac4a882aa154273b536c9710c5ca3f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af81f3a38f1658921a76458f73c5d0bf9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_stream_context.html">IStreamContext</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream.html#af81f3a38f1658921a76458f73c5d0bf9">CreateStreamContext</a> (string streamName)</td></tr>
+<tr class="separator:af81f3a38f1658921a76458f73c5d0bf9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2173dd2991799234e8446811aac91889"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_consumer_context.html">IConsumerContext</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream.html#a2173dd2991799234e8446811aac91889">CreateConsumerContext</a> (string streamName, string consumerName)</td></tr>
+<tr class="separator:a2173dd2991799234e8446811aac91889"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p >This is the <a class="el" href="namespace_n_a_t_s_1_1_client_1_1_jet_stream.html">JetStream</a> context for creation and access to persistent streams and consumers. </p>
 <p >A <a class="el" href="namespace_n_a_t_s_1_1_client_1_1_jet_stream.html">JetStream</a> context is created by the IConnect.JetStreamContext() API. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="a2173dd2991799234e8446811aac91889" name="a2173dd2991799234e8446811aac91889"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2173dd2991799234e8446811aac91889">&#9670;&nbsp;</a></span>CreateConsumerContext()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_consumer_context.html">IConsumerContext</a> NATS.Client.JetStream.IJetStream.CreateConsumerContext </td>
+          <td>(</td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>streamName</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>consumerName</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a consumer context for a specific named stream and specific named consumer. Verifies that the stream and consumer exist. EXPERIMENTAL API SUBJECT TO CHANGE </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">streamName</td><td>the name of the stream</td></tr>
+    <tr><td class="paramname">consumerName</td><td>the name of the consumer</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>an <a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_consumer_context.html" title="SIMPLIFICATION IS EXPERIMENTAL AND SUBJECT TO CHANGE">IConsumerContext</a> instance</dd></dl>
+
+</div>
+</div>
+<a id="af81f3a38f1658921a76458f73c5d0bf9" name="af81f3a38f1658921a76458f73c5d0bf9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af81f3a38f1658921a76458f73c5d0bf9">&#9670;&nbsp;</a></span>CreateStreamContext()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_stream_context.html">IStreamContext</a> NATS.Client.JetStream.IJetStream.CreateStreamContext </td>
+          <td>(</td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>streamName</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a stream context for a specific named stream. Verifies that the stream exists. EXPERIMENTAL API SUBJECT TO CHANGE </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">streamName</td><td>the name of the stream</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>an <a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_stream_context.html" title="SIMPLIFICATION IS EXPERIMENTAL AND SUBJECT TO CHANGE">IStreamContext</a> instance</dd></dl>
+
+</div>
+</div>
 <a id="a68dbe2d9d80e7431529106ef62bf65ae" name="a68dbe2d9d80e7431529106ef62bf65ae"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a68dbe2d9d80e7431529106ef62bf65ae">&#9670;&nbsp;</a></span>Publish() <span class="overload">[1/6]</span></h2>
 
@@ -707,6 +778,51 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="a108936ccac89a0a0cf0787954b1a1fd4" name="a108936ccac89a0a0cf0787954b1a1fd4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a108936ccac89a0a0cf0787954b1a1fd4">&#9670;&nbsp;</a></span>PullSubscribeAsync()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_pull_async_subscription.html">IJetStreamPullAsyncSubscription</a> NATS.Client.JetStream.IJetStream.PullSubscribeAsync </td>
+          <td>(</td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>subject</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">EventHandler&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg_handler_event_args.html">MsgHandlerEventArgs</a> &gt;&#160;</td>
+          <td class="paramname"><em>handler</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">PullSubscribeOptions&#160;</td>
+          <td class="paramname"><em>options</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Creates a <a class="el" href="namespace_n_a_t_s_1_1_client_1_1_jet_stream.html">JetStream</a> pull subscription with an eventHandler. Pull subscriptions fetch messages from the server in batches. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">subject</td><td>The subject on which to listen for messages. The subject can have wildcards (partial: <code>*</code>, full: <code>&gt;</code>).</td></tr>
+    <tr><td class="paramname">handler</td><td>The EventHandler&lt;MsgHandlerEventArgs&gt; invoked when messages are received on the returned <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html" title="IAsyncSubscription asynchronously delivers messages to listeners of the MessageHandler event.">IAsyncSubscription</a>.</td></tr>
+    <tr><td class="paramname">options</td><td>Pull Subscribe options for this subscription.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>An <a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_pull_subscription.html" title="Pull Subscription on a JetStream context.">IJetStreamPullSubscription</a></dd></dl>
+
+</div>
+</div>
 <a id="a96cac87cb9bf45b39953bdc50b5e42e0" name="a96cac87cb9bf45b39953bdc50b5e42e0"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a96cac87cb9bf45b39953bdc50b5e42e0">&#9670;&nbsp;</a></span>PushSubscribeAsync() <span class="overload">[1/4]</span></h2>
 
@@ -714,7 +830,7 @@ Public Member Functions</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">IJetStreamPushAsyncSubscription NATS.Client.JetStream.IJetStream.PushSubscribeAsync </td>
+          <td class="memname"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_push_async_subscription.html">IJetStreamPushAsyncSubscription</a> NATS.Client.JetStream.IJetStream.PushSubscribeAsync </td>
           <td>(</td>
           <td class="paramtype">string&#160;</td>
           <td class="paramname"><em>subject</em>, </td>
@@ -750,7 +866,7 @@ Public Member Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>An IJetStreamPushAsyncSubscription to use to read any messages received from the <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server on the given <em>subject</em> .</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>An <a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_push_async_subscription.html" title="Async Push Subscription on a JetStream context.">IJetStreamPushAsyncSubscription</a> to use to read any messages received from the <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server on the given <em>subject</em> .</dd></dl>
 <dl class="section see"><dt>See also</dt><dd><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#a3b28cf4ce3738917a420a65747d532eb" title="Gets the subject for this subscription.">ISubscription.Subject</a></dd></dl>
 <dl class="section return"><dt>Returns</dt><dd>A <a class="el" href="namespace_n_a_t_s_1_1_client_1_1_jet_stream.html">JetStream</a> push subscription</dd></dl>
 
@@ -763,7 +879,7 @@ Public Member Functions</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">IJetStreamPushAsyncSubscription NATS.Client.JetStream.IJetStream.PushSubscribeAsync </td>
+          <td class="memname"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_push_async_subscription.html">IJetStreamPushAsyncSubscription</a> NATS.Client.JetStream.IJetStream.PushSubscribeAsync </td>
           <td>(</td>
           <td class="paramtype">string&#160;</td>
           <td class="paramname"><em>subject</em>, </td>
@@ -800,13 +916,13 @@ Public Member Functions</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">subject</td><td>The subject on which to listen for messages. The subject can have wildcards (partial: <code>*</code>, full: <code>&gt;</code>).</td></tr>
-    <tr><td class="paramname">handler</td><td>The EventHandler&lt;MsgHandlerEventArgs&gt; invoked when messages are received on the returned IJetStreamPushAsyncSubscription.</td></tr>
+    <tr><td class="paramname">handler</td><td>The EventHandler&lt;MsgHandlerEventArgs&gt; invoked when messages are received on the returned <a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_push_async_subscription.html" title="Async Push Subscription on a JetStream context.">IJetStreamPushAsyncSubscription</a>.</td></tr>
     <tr><td class="paramname">autoAck</td><td>Whether or not to auto ack the message</td></tr>
     <tr><td class="paramname">options</td><td>Pull Subscribe options for this subscription.</td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>An IJetStreamPushAsyncSubscription to use to read any messages received from the <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server on the given <em>subject</em> .</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>An <a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_push_async_subscription.html" title="Async Push Subscription on a JetStream context.">IJetStreamPushAsyncSubscription</a> to use to read any messages received from the <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server on the given <em>subject</em> .</dd></dl>
 <dl class="section see"><dt>See also</dt><dd><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#a3b28cf4ce3738917a420a65747d532eb" title="Gets the subject for this subscription.">ISubscription.Subject</a></dd></dl>
 
 </div>
@@ -818,7 +934,7 @@ Public Member Functions</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">IJetStreamPushAsyncSubscription NATS.Client.JetStream.IJetStream.PushSubscribeAsync </td>
+          <td class="memname"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_push_async_subscription.html">IJetStreamPushAsyncSubscription</a> NATS.Client.JetStream.IJetStream.PushSubscribeAsync </td>
           <td>(</td>
           <td class="paramtype">string&#160;</td>
           <td class="paramname"><em>subject</em>, </td>
@@ -863,7 +979,7 @@ Public Member Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>An <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html" title="IAsyncSubscription asynchronously delivers messages to listeners of the MessageHandler event.">IAsyncSubscription</a> to use to read any messages received from the <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server on the given <em>subject</em> .</dd></dl>
 <dl class="section see"><dt>See also</dt><dd><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#a3b28cf4ce3738917a420a65747d532eb" title="Gets the subject for this subscription.">ISubscription.Subject</a>, <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#a3e505b346b8dc6339e84059441d9b1f4" title="Gets the optional queue group name.">ISubscription.Queue</a></dd></dl>
-<dl class="section return"><dt>Returns</dt><dd>An IJetStreamPushAsyncSubscription</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>An <a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_push_async_subscription.html" title="Async Push Subscription on a JetStream context.">IJetStreamPushAsyncSubscription</a></dd></dl>
 
 </div>
 </div>
@@ -874,7 +990,7 @@ Public Member Functions</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">IJetStreamPushAsyncSubscription NATS.Client.JetStream.IJetStream.PushSubscribeAsync </td>
+          <td class="memname"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_push_async_subscription.html">IJetStreamPushAsyncSubscription</a> NATS.Client.JetStream.IJetStream.PushSubscribeAsync </td>
           <td>(</td>
           <td class="paramtype">string&#160;</td>
           <td class="paramname"><em>subject</em>, </td>
@@ -931,7 +1047,7 @@ Public Member Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>An IJetStreamPushAsyncSubscription</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>An <a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_push_async_subscription.html" title="Async Push Subscription on a JetStream context.">IJetStreamPushAsyncSubscription</a></dd></dl>
 
 </div>
 </div>
@@ -942,7 +1058,7 @@ Public Member Functions</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">IJetStreamPushSyncSubscription NATS.Client.JetStream.IJetStream.PushSubscribeSync </td>
+          <td class="memname"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_push_sync_subscription.html">IJetStreamPushSyncSubscription</a> NATS.Client.JetStream.IJetStream.PushSubscribeSync </td>
           <td>(</td>
           <td class="paramtype">string&#160;</td>
           <td class="paramname"><em>subject</em></td><td>)</td>
@@ -958,7 +1074,7 @@ Public Member Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>An IJetStreamPushSyncSubscription to use to read any messages received from the <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server on the given <em>subject</em> , as part of the given queue group.</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>An <a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_push_sync_subscription.html" title="Push Subscription on a JetStream context.">IJetStreamPushSyncSubscription</a> to use to read any messages received from the <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server on the given <em>subject</em> , as part of the given queue group.</dd></dl>
 <dl class="section see"><dt>See also</dt><dd><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#a3b28cf4ce3738917a420a65747d532eb" title="Gets the subject for this subscription.">ISubscription.Subject</a></dd></dl>
 
 </div>
@@ -970,7 +1086,7 @@ Public Member Functions</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">IJetStreamPushSyncSubscription NATS.Client.JetStream.IJetStream.PushSubscribeSync </td>
+          <td class="memname"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_push_sync_subscription.html">IJetStreamPushSyncSubscription</a> NATS.Client.JetStream.IJetStream.PushSubscribeSync </td>
           <td>(</td>
           <td class="paramtype">string&#160;</td>
           <td class="paramname"><em>subject</em>, </td>
@@ -997,7 +1113,7 @@ Public Member Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>An IJetStreamPushSyncSubscription to use to read any messages received from the <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server on the given <em>subject</em> , as part of the given queue group.</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>An <a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_push_sync_subscription.html" title="Push Subscription on a JetStream context.">IJetStreamPushSyncSubscription</a> to use to read any messages received from the <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server on the given <em>subject</em> , as part of the given queue group.</dd></dl>
 <dl class="section see"><dt>See also</dt><dd><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#a3b28cf4ce3738917a420a65747d532eb" title="Gets the subject for this subscription.">ISubscription.Subject</a></dd></dl>
 
 </div>
@@ -1009,7 +1125,7 @@ Public Member Functions</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">IJetStreamPushSyncSubscription NATS.Client.JetStream.IJetStream.PushSubscribeSync </td>
+          <td class="memname"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_push_sync_subscription.html">IJetStreamPushSyncSubscription</a> NATS.Client.JetStream.IJetStream.PushSubscribeSync </td>
           <td>(</td>
           <td class="paramtype">string&#160;</td>
           <td class="paramname"><em>subject</em>, </td>
@@ -1037,7 +1153,7 @@ Public Member Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>An IJetStreamPushSyncSubscription to use to read any messages received from the <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server on the given <em>subject</em> , as part of the given queue group.</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>An <a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_push_sync_subscription.html" title="Push Subscription on a JetStream context.">IJetStreamPushSyncSubscription</a> to use to read any messages received from the <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server on the given <em>subject</em> , as part of the given queue group.</dd></dl>
 <dl class="section see"><dt>See also</dt><dd><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#a3b28cf4ce3738917a420a65747d532eb" title="Gets the subject for this subscription.">ISubscription.Subject</a>, <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#a3e505b346b8dc6339e84059441d9b1f4" title="Gets the optional queue group name.">ISubscription.Queue</a></dd></dl>
 
 </div>
@@ -1049,7 +1165,7 @@ Public Member Functions</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">IJetStreamPushSyncSubscription NATS.Client.JetStream.IJetStream.PushSubscribeSync </td>
+          <td class="memname"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_push_sync_subscription.html">IJetStreamPushSyncSubscription</a> NATS.Client.JetStream.IJetStream.PushSubscribeSync </td>
           <td>(</td>
           <td class="paramtype">string&#160;</td>
           <td class="paramname"><em>subject</em>, </td>
@@ -1084,7 +1200,7 @@ Public Member Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>An IJetStreamPushSyncSubscription to use to read any messages received from the <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server on the given <em>subject</em> , as part of the given queue group.</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>An <a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_push_sync_subscription.html" title="Push Subscription on a JetStream context.">IJetStreamPushSyncSubscription</a> to use to read any messages received from the <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server on the given <em>subject</em> , as part of the given queue group.</dd></dl>
 <dl class="section see"><dt>See also</dt><dd><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#a3b28cf4ce3738917a420a65747d532eb" title="Gets the subject for this subscription.">ISubscription.Subject</a>, <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_subscription.html#a3e505b346b8dc6339e84059441d9b1f4" title="Gets the optional queue group name.">ISubscription.Queue</a></dd></dl>
 
 </div>

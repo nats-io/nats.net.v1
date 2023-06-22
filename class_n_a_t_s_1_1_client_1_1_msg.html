@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">1.0.4</span>
+   &#160;<span id="projectnumber">1.0.5</span>
    </div>
    <div id="projectbrief">The NATS.io .NET C# Client</div>
   </td>
@@ -172,6 +172,8 @@ virtual <a class="el" href="class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_meta_dat
 <tr class="separator:a76df369c3442de7dcc1fd38db1539d0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afe2bf9957efe5c8276738d1d31c2d5c8"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_msg.html#afe2bf9957efe5c8276738d1d31c2d5c8">IsJetStream</a><code> [get]</code></td></tr>
 <tr class="separator:afe2bf9957efe5c8276738d1d31c2d5c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a167c0c54ecd44a456a2ef55f721dcbf2"><td class="memItemLeft" align="right" valign="top">long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_msg.html#a167c0c54ecd44a456a2ef55f721dcbf2">ConsumeByteCount</a><code> [get]</code></td></tr>
+<tr class="separator:a167c0c54ecd44a456a2ef55f721dcbf2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p >A <a class="el" href="namespace_n_a_t_s.html">NATS</a> message is an object encapsulating a subject, optional reply payload, optional header, and subscription information, sent or received by the client application. </p>
@@ -665,6 +667,31 @@ virtual <a class="el" href="class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_meta_dat
 </div>
 </div>
 <h2 class="groupheader">Property Documentation</h2>
+<a id="a167c0c54ecd44a456a2ef55f721dcbf2" name="a167c0c54ecd44a456a2ef55f721dcbf2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a167c0c54ecd44a456a2ef55f721dcbf2">&#9670;&nbsp;</a></span>ConsumeByteCount</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">long NATS.Client.Msg.ConsumeByteCount</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">get</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>The number of bytes the server counts for the message when calculating byte counts. Only applies to <a class="el" href="namespace_n_a_t_s_1_1_client_1_1_jet_stream.html">JetStream</a> messages received from the server. </p>
+<dl class="section return"><dt>Returns</dt><dd>the consumption byte count or -1 if the message implementation does not support this method</dd></dl>
+
+</div>
+</div>
 <a id="ac4deb024e50d441e9b20da3466b1309d" name="ac4deb024e50d441e9b20da3466b1309d"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac4deb024e50d441e9b20da3466b1309d">&#9670;&nbsp;</a></span>Data</h2>
 

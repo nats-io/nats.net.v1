@@ -1,5 +1,9 @@
 var hierarchy =
 [
+    [ "NATS.Client.JetStream.BaseConsumeOptions", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_base_consume_options.html", [
+      [ "NATS.Client.JetStream.ConsumeOptions", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_consume_options.html", null ],
+      [ "NATS.Client.JetStream.FetchConsumeOptions", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_fetch_consume_options.html", null ]
+    ] ],
     [ "NATS.Client.ConnectionFactory", "class_n_a_t_s_1_1_client_1_1_connection_factory.html", null ],
     [ "NATS.Client.ConnEventArgs", "class_n_a_t_s_1_1_client_1_1_conn_event_args.html", null ],
     [ "NATS.Client.ConnJsSubEventArgs", "class_n_a_t_s_1_1_client_1_1_conn_js_sub_event_args.html", [
@@ -23,11 +27,16 @@ var hierarchy =
         [ "NATS.Client.EncodedConnection", "class_n_a_t_s_1_1_client_1_1_encoded_connection.html", null ]
       ] ]
     ] ],
+    [ "NATS.Client.JetStream.IConsumerContext", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_consumer_context.html", null ],
     [ "NATS.Client.IEncodedConnection", "interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html", [
       [ "NATS.Client.EncodedConnection", "class_n_a_t_s_1_1_client_1_1_encoded_connection.html", null ]
     ] ],
     [ "NATS.Client.JetStream.IJetStream", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream.html", null ],
     [ "NATS.Client.JetStream.IJetStreamManagement", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html", null ],
+    [ "NATS.Client.JetStream.IMessageConsumer", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_message_consumer.html", [
+      [ "NATS.Client.JetStream.IFetchConsumer", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_fetch_consumer.html", null ],
+      [ "NATS.Client.JetStream.IIterableConsumer", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_iterable_consumer.html", null ]
+    ] ],
     [ "NATS.Client.Rx.INATSObservable< out T >", "interface_n_a_t_s_1_1_client_1_1_rx_1_1_i_n_a_t_s_observable.html", null ],
     [ "NATS.Client.Rx.INATSObservable< T >", "interface_n_a_t_s_1_1_client_1_1_rx_1_1_i_n_a_t_s_observable.html", [
       [ "NATS.Client.Rx.NATSObservable< T >", "class_n_a_t_s_1_1_client_1_1_rx_1_1_n_a_t_s_observable.html", null ]
@@ -37,13 +46,17 @@ var hierarchy =
     [ "NATS.Client.IStatistics", "interface_n_a_t_s_1_1_client_1_1_i_statistics.html", [
       [ "NATS.Client.Statistics", "class_n_a_t_s_1_1_client_1_1_statistics.html", null ]
     ] ],
+    [ "NATS.Client.JetStream.IStreamContext", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_stream_context.html", null ],
     [ "NATS.Client.ISubscription", "interface_n_a_t_s_1_1_client_1_1_i_subscription.html", [
       [ "NATS.Client.AsyncSubscription", "class_n_a_t_s_1_1_client_1_1_async_subscription.html", null ],
       [ "NATS.Client.IAsyncSubscription", "interface_n_a_t_s_1_1_client_1_1_i_async_subscription.html", [
-        [ "NATS.Client.AsyncSubscription", "class_n_a_t_s_1_1_client_1_1_async_subscription.html", null ]
+        [ "NATS.Client.AsyncSubscription", "class_n_a_t_s_1_1_client_1_1_async_subscription.html", null ],
+        [ "NATS.Client.JetStream.IJetStreamPullAsyncSubscription", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_pull_async_subscription.html", null ],
+        [ "NATS.Client.JetStream.IJetStreamPushAsyncSubscription", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_push_async_subscription.html", null ]
       ] ],
       [ "NATS.Client.ISyncSubscription", "interface_n_a_t_s_1_1_client_1_1_i_sync_subscription.html", [
         [ "NATS.Client.JetStream.IJetStreamPullSubscription", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_pull_subscription.html", null ],
+        [ "NATS.Client.JetStream.IJetStreamPushSyncSubscription", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_push_sync_subscription.html", null ],
         [ "NATS.Client.SyncSubscription", "class_n_a_t_s_1_1_client_1_1_sync_subscription.html", null ]
       ] ],
       [ "NATS.Client.Subscription", "class_n_a_t_s_1_1_client_1_1_subscription.html", [
@@ -108,7 +121,6 @@ var hierarchy =
     [ "NATS.Client.ReconnectDelayEventArgs", "class_n_a_t_s_1_1_client_1_1_reconnect_delay_event_args.html", null ],
     [ "NATS.Client.JetStream.Republish", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_republish.html", null ],
     [ "NATS.Client.JetStream.Republish.RepublishBuilder", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_republish_1_1_republish_builder.html", null ],
-    [ "NATS.Client.Service.Schema", "class_n_a_t_s_1_1_client_1_1_service_1_1_schema.html", null ],
     [ "NATS.Client.Service.Service", "class_n_a_t_s_1_1_client_1_1_service_1_1_service.html", null ],
     [ "NATS.Client.Service.ServiceBuilder", "class_n_a_t_s_1_1_client_1_1_service_1_1_service_builder.html", null ],
     [ "NATS.Client.Service.ServiceEndpoint", "class_n_a_t_s_1_1_client_1_1_service_1_1_service_endpoint.html", null ],
@@ -117,7 +129,6 @@ var hierarchy =
     [ "NATS.Client.Service.ServiceResponse", "class_n_a_t_s_1_1_client_1_1_service_1_1_service_response.html", [
       [ "NATS.Client.Service.InfoResponse", "class_n_a_t_s_1_1_client_1_1_service_1_1_info_response.html", null ],
       [ "NATS.Client.Service.PingResponse", "class_n_a_t_s_1_1_client_1_1_service_1_1_ping_response.html", null ],
-      [ "NATS.Client.Service.SchemaResponse", "class_n_a_t_s_1_1_client_1_1_service_1_1_schema_response.html", null ],
       [ "NATS.Client.Service.StatsResponse", "class_n_a_t_s_1_1_client_1_1_service_1_1_stats_response.html", null ]
     ] ],
     [ "NATS.Client.JetStream.Source", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_source.html", null ],
