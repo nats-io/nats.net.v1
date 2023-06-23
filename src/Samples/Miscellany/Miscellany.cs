@@ -1,4 +1,5 @@
 ﻿using System;
+using NATSExamples.NatsByExample;
 
 namespace NATSExamples
 {
@@ -10,7 +11,7 @@ namespace NATSExamples
         public static void Main(string[] args)
         {
             // Set the args manually to run the code you want.
-            // args = new[] { "PubSub" };
+            args = new[] { "SimplificationMigration" };
             
             if (args.Length == 1)
             {
@@ -35,6 +36,10 @@ namespace NATSExamples
                     case "ServiceCrossClientValidator":
                         ServiceCrossClientValidator.CrossClientValidationMain();
                         return;
+                    
+                    case "SimplificationMigration":
+                        SimplificationMigration.SimplificationMigrationMain();
+                        return;
                 }
             }
             
@@ -46,6 +51,7 @@ namespace NATSExamples
                 + "\n   KvIntro"
                 + "\n   ScatterGather"
                 + "\n   ServiceCrossClientValidator" 
+                + "\n   SimplificationMigration" 
             );
         }
     }

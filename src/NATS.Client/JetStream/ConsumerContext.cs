@@ -77,21 +77,21 @@ namespace NATS.Client.JetStream
             return new FetchConsumer(new SubscriptionMaker(js, bindPso), fetchConsumeOptions);
         }
 
-        public IIterableConsumer consume() {
+        public IIterableConsumer Consume() {
             return new IterableConsumer(new SubscriptionMaker(js, bindPso), DefaultConsumeOptions);
         }
 
-        public IIterableConsumer consume(ConsumeOptions consumeOptions) {
+        public IIterableConsumer Consume(ConsumeOptions consumeOptions) {
             Validator.Required(consumeOptions, "Consume Options");
             return new IterableConsumer(new SubscriptionMaker(js, bindPso), consumeOptions);
         }
 
-        public IMessageConsumer consume(EventHandler<MsgHandlerEventArgs> handler) {
+        public IMessageConsumer Consume(EventHandler<MsgHandlerEventArgs> handler) {
             Validator.Required(handler, "Msg Handler");
             return new MessageConsumer(new SubscriptionMaker(js, bindPso), handler, DefaultConsumeOptions);
         }
 
-        public IMessageConsumer consume(EventHandler<MsgHandlerEventArgs> handler, ConsumeOptions consumeOptions) {
+        public IMessageConsumer Consume(EventHandler<MsgHandlerEventArgs> handler, ConsumeOptions consumeOptions) {
             Validator.Required(handler, "Msg Handler");
             Validator.Required(consumeOptions, "Consume Options");
             return new MessageConsumer(new SubscriptionMaker(js, bindPso), handler, consumeOptions);

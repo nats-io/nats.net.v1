@@ -81,7 +81,7 @@ namespace NATS.Client.JetStream
         /// Manual Consumers require the developer call nextMessage. See {@link IManualConsumer}
         /// </summary>
         /// <returns>the IManualConsumer instance</returns>
-        IIterableConsumer consume();
+        IIterableConsumer Consume();
 
         /// <summary>
         /// Create a long-running Manual Consumer with custom ConsumeOptions. See {@link IManualConsumer} and {@link ConsumeOptions}
@@ -89,14 +89,14 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="consumeOptions">the custom consume options</param>
         /// <returns>the IManualConsumer instance</returns>
-        IIterableConsumer consume(ConsumeOptions consumeOptions);
+        IIterableConsumer Consume(ConsumeOptions consumeOptions);
 
         /// <summary>
         /// Create a long-running MessageConsumer with default ConsumeOptions. See {@link IMessageConsumer} and {@link ConsumeOptions}
         /// </summary>
         /// <param name="handler">the MessageHandler used for receiving messages.</param>
         /// <returns>the IMessageConsumer instance</returns>
-        IMessageConsumer consume(EventHandler<MsgHandlerEventArgs> handler);
+        IMessageConsumer Consume(EventHandler<MsgHandlerEventArgs> handler);
 
         /// <summary>
         /// Create a long-running MessageConsumer with custom ConsumeOptions. See {@link IMessageConsumer} and {@link ConsumeOptions}
@@ -104,6 +104,6 @@ namespace NATS.Client.JetStream
         /// <param name="handler">the MessageHandler used for receiving messages.</param>
         /// <param name="consumeOptions">the custom consume options</param>
         /// <returns>the IMessageConsumer instance</returns>
-        IMessageConsumer consume(EventHandler<MsgHandlerEventArgs> handler, ConsumeOptions consumeOptions);
+        IMessageConsumer Consume(EventHandler<MsgHandlerEventArgs> handler, ConsumeOptions consumeOptions);
     }
 }

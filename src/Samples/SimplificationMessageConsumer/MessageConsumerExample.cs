@@ -72,7 +72,7 @@ namespace NATSExamples
                     }
                 };
 
-                using (IMessageConsumer consumer = consumerContext.consume(handler))
+                using (IMessageConsumer consumer = consumerContext.Consume(handler))
                 {
                     latch.Wait();
                     // once the consumer is stopped, the client will drain messages

@@ -42,5 +42,10 @@ namespace NATS.Client.JetStream
             Name = name;
             Count = count;
         }
+
+        public override string ToString()
+        {
+            return $"{{Name: {Name}, Count: {Count}}}";
+        }
     }
 }

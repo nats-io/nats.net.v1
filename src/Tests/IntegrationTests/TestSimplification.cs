@@ -257,7 +257,7 @@ namespace IntegrationTests
                 int stopCount = 500;
     
                 // create the consumer then use it
-                using (IIterableConsumer consumer = consumerContext.consume())
+                using (IIterableConsumer consumer = consumerContext.Consume())
                 {
                     InterlockedInt count = new InterlockedInt();
                     Thread consumeThread = new Thread(() =>
@@ -305,9 +305,9 @@ namespace IntegrationTests
                 }
                     
                 // coverage
-                IIterableConsumer consumer2 = consumerContext.consume(ConsumeOptions.DefaultConsumeOptions);
+                IIterableConsumer consumer2 = consumerContext.Consume(ConsumeOptions.DefaultConsumeOptions);
                 consumer2.Dispose();
-                Assert.Throws<ArgumentException>(() => consumerContext.consume((ConsumeOptions)null));
+                Assert.Throws<ArgumentException>(() => consumerContext.Consume((ConsumeOptions)null));
             });
         }
     
@@ -338,7 +338,7 @@ namespace IntegrationTests
                     latch.Signal();
                 };
 
-                using (IMessageConsumer consumer = consumerContext.consume(handler))
+                using (IMessageConsumer consumer = consumerContext.Consume(handler))
                 {
                     latch.Wait(10_000);
                     consumer.Stop(200);
@@ -410,11 +410,11 @@ namespace IntegrationTests
                 IConsumerContext cctx5 = sctx1.CreateOrUpdateConsumer(ConsumerConfiguration.Builder().WithDurable(durable5).Build());
                 IConsumerContext cctx6 = sctx1.CreateOrUpdateConsumer(ConsumerConfiguration.Builder().WithDurable(durable6).Build());
     
-                closeConsumer(cctx1.consume(), durable1, true);
-                closeConsumer(cctx2.consume(ConsumeOptions.DefaultConsumeOptions), durable2, true);
+                closeConsumer(cctx1.Consume(), durable1, true);
+                closeConsumer(cctx2.Consume(ConsumeOptions.DefaultConsumeOptions), durable2, true);
                 
-                closeConsumer(cctx3.consume((s, e) => {}), durable3, true);
-                closeConsumer(cctx4.consume((s, e) => {}, ConsumeOptions.DefaultConsumeOptions), durable4, true);
+                closeConsumer(cctx3.Consume((s, e) => {}), durable3, true);
+                closeConsumer(cctx4.Consume((s, e) => {}, ConsumeOptions.DefaultConsumeOptions), durable4, true);
                 
                 closeConsumer(cctx5.FetchMessages(1), durable5, false);
                 closeConsumer(cctx6.FetchBytes(1000), durable6, false);
