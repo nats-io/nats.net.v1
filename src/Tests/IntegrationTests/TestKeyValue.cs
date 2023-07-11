@@ -21,6 +21,7 @@ using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using NATS.Client.KeyValue;
 using Xunit;
+using Xunit.Abstractions;
 using static UnitTests.TestBase;
 using static IntegrationTests.JetStreamTestBase;
 using static NATS.Client.JetStream.JetStreamOptions;
@@ -30,7 +31,13 @@ namespace IntegrationTests
 {
     public class TestKeyValue : TestSuite<KeyValueSuiteContext>
     {
-        public TestKeyValue(KeyValueSuiteContext context) : base(context) {}
+        private readonly ITestOutputHelper output;
+
+        public TestKeyValue(ITestOutputHelper output, KeyValueSuiteContext context) : base(context)
+        {
+            this.output = output;
+            Console.SetOut(new ConsoleWriter(output));
+        }
 
         [Fact]
         public void TestWorkFlow()
@@ -1228,7 +1235,49 @@ namespace IntegrationTests
                 }
                 ValidateWatcher(new Object[]{"bb0", "aaa" + num, KeyValueOperation.Delete}, oWatcher);
             }
-        }    
+        }
+        
+        [Fact]
+        public void TestDontGetNoResponders()
+        {
+            const int NUM_MESSAGES = 1000;
+    
+            Context.RunInJsServer(c =>
+            {
+                // get the kv management context
+                IKeyValueManagement kvm = c.CreateKeyValueManagementContext();
+
+                // create the bucket
+                kvm.Create(KeyValueConfiguration.Builder()
+                    .WithName(BUCKET)
+                    .WithMaxHistoryPerKey(10)
+                    .WithStorageType(StorageType.Memory)
+                    .Build());
+        
+                IKeyValue kvContext = c.CreateKeyValueContext(BUCKET);
+
+                for (int i = 0; i < NUM_MESSAGES; i++)
+                {
+                    kvContext.Put(i.ToString(), i.ToString());
+                }
+        
+                TestKeyValueWatcher watcher = new TestKeyValueWatcher(true);
+
+                var watch = kvContext.Watch(">", watcher, watcher.WatchOptions);
+
+                int count = 0;
+                while (watcher.EndOfDataReceived == 0 && count < 100)
+                {
+                    Thread.Sleep(10);
+                    count++;
+                }
+        
+                Assert.True(watcher.EndOfDataReceived == 1);
+                Assert.True(watcher.Entries.Count == 1000);
+        
+                watch.Unsubscribe();
+            });
+        }
     }
 
     class TestKeyValueWatcher : IKeyValueWatcher 
