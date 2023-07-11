@@ -941,10 +941,11 @@ namespace IntegrationTests
             
             Options opts = ConnectionFactory.GetDefaultOptions();
             opts.AllowReconnect = false;
+            opts.Url = $"nats://127.0.0.1:{Context.Server1.Port}";
             NATSServer.QuietOptionsModifier.Invoke(opts);
 
             ulong expectedSeq = 0;
-            using (NATSServer.CreateJetStreamFast())
+            using (NATSServer.CreateJetStreamFast(Context.Server1.Port))
             {
                 using (var c = Context.ConnectionFactory.CreateConnection(opts))
                 {
