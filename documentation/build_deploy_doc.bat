@@ -30,5 +30,5 @@ rd ..\nats.net\documentation\NATS.Client /S /Q
 
 : Step 7. git add, commit and push
 git add -A
-git commit -m "Docs for 1.0.7"
+git commit -m "Docs for 1.0.8"
 git push origin gh-pages
