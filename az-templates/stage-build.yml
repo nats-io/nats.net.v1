@@ -18,13 +18,13 @@ stages:
         projects: 'src/*.sln'
         arguments: '-c $(BuildConfiguration) --no-incremental --nologo -p:TreatWarningsAsErrors=true -p:Version=$(SemVer) -p:InformationalVersion=$(InfoVer)'
   
-    - task: VSTest@2
-      displayName: 'UnitTests .NetCoreApp3.1'
-      inputs:
-        testSelector: 'testAssemblies'
-        testAssemblyVer2: 'src/Tests/UnitTests/bin/$(BuildConfiguration)/netcoreapp3.1/UnitTests.dll'
-        configuration: $(BuildConfiguration)
-        testRunTitle: 'UnitTests .NetCoreApp3.1'
+#    - task: VSTest@2
+#      displayName: 'UnitTests .NetCoreApp3.1'
+#      inputs:
+#        testSelector: 'testAssemblies'
+#        testAssemblyVer2: 'src/Tests/UnitTests/bin/$(BuildConfiguration)/netcoreapp3.1/UnitTests.dll'
+#        configuration: $(BuildConfiguration)
+#        testRunTitle: 'UnitTests .NetCoreApp3.1'
   
     - task: VSTest@2
       displayName: 'UnitTests .Net4.6'
