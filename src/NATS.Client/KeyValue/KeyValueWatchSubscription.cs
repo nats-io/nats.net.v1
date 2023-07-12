@@ -21,18 +21,22 @@ namespace NATS.Client.KeyValue
     {
         private IJetStreamPushAsyncSubscription sub;
         private readonly InterlockedBoolean endOfDataSent;
+        private readonly object subLock;
 
         public KeyValueWatchSubscription(KeyValue kv, string keyPattern,
             IKeyValueWatcher watcher, params KeyValueWatchOption[] watchOptions)
         {
+            subLock = new object();
             string subscribeSubject = kv.ReadSubject(keyPattern);
             
             // figure out the result options
             bool headersOnly = false;
             bool includeDeletes = true;
             DeliverPolicy deliverPolicy = DeliverPolicy.LastPerSubject;
-            foreach (KeyValueWatchOption wo in watchOptions) {
-                switch (wo) {
+            foreach (KeyValueWatchOption wo in watchOptions)
+            {
+                switch (wo) 
+                {
                     case KeyValueWatchOption.MetaOnly: headersOnly = true; break;
                     case KeyValueWatchOption.IgnoreDelete: includeDeletes = false; break;
                     case KeyValueWatchOption.UpdatesOnly: deliverPolicy = DeliverPolicy.New; break;
@@ -40,8 +44,8 @@ namespace NATS.Client.KeyValue
                 }
             }
 
-            if (deliverPolicy == DeliverPolicy.New
-                || kv._getLast(subscribeSubject) == null) {
+            if (deliverPolicy == DeliverPolicy.New || kv._getLast(subscribeSubject) == null) 
+            {
                 endOfDataSent = new InterlockedBoolean(true);
                 watcher.EndOfData();
             }
@@ -91,13 +95,23 @@ namespace NATS.Client.KeyValue
 
         public void Unsubscribe()
         {
-            try
+            lock (subLock)
             {
-                sub?.Unsubscribe();
-            }
-            finally
-            {
-                sub = null;
+                if (sub != null)
+                {
+                    try
+                    {
+                        sub?.Unsubscribe();
+                    }
+                    catch (Exception)
+                    {
+                        // ignore all exceptions, nothing we can really do.
+                    }
+                    finally
+                    {
+                        sub = null;
+                    }
+                }
             }
         }
 

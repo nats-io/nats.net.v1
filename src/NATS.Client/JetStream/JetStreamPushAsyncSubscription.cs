@@ -13,49 +13,12 @@
 
 namespace NATS.Client.JetStream
 {
-    public class JetStreamPushAsyncSubscription : AsyncSubscription, IJetStreamPushAsyncSubscription
+    public class JetStreamPushAsyncSubscription : JetStreamAbstractAsyncSubscription, IJetStreamPushAsyncSubscription
     {
-        internal readonly MessageManager messageManager;
-        internal string _consumer;
-
-        // properties of IJetStreamSubscription
-        public JetStream Context { get; }
-        public string Stream { get; }
-        public string Consumer => _consumer;
-        public string DeliverSubject { get; }
-
         internal JetStreamPushAsyncSubscription(Connection conn, string subject, string queue,
             JetStream js, string stream, string consumer, string deliver, MessageManager messageManager)
-            : base(conn, subject, queue)
-        {
-            Context = js;
-            Stream = stream;
-            _consumer = consumer; // might be null, JetStream will call UpdateConsumer later
-            DeliverSubject = deliver;
-
-            this.messageManager = messageManager;
-            messageManager.Startup(this);
-        }
-
-        internal void UpdateConsumer(string consumer)
-        {
-            _consumer = consumer;
-        }
-
-        public ConsumerInfo GetConsumerInformation() => Context.LookupConsumerInfo(Stream, Consumer);
-
+            : base(conn, subject, queue, js, stream, consumer, deliver, messageManager) {}
+        
         public bool IsPullMode() => false;
-
-        public override void Unsubscribe()
-        {
-            messageManager.Shutdown();
-            base.Unsubscribe();
-        }
-
-        internal override void close()
-        {
-            messageManager.Shutdown();
-            base.close();
-        }
     }
 }
