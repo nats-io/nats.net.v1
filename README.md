@@ -1,3 +1,5 @@
+# DO NOT MERGE - THIS CHANGE IS FOR VERIFYING BUILD
+
 ![NATS](https://raw.githubusercontent.com/nats-io/nats.net/master/documentation/large-logo.png)
 
 # NATS - .NET C# Client
