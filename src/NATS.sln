@@ -113,6 +113,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimplificationNext", "Sampl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimplificationContext", "Samples\SimplificationContext\SimplificationContext.csproj", "{C7FB00D4-23F1-4F6A-A8C0-E58346F272DE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JetStreamPushSubscribeAsyncQueueDurable", "Samples\JetStreamPushSubscribeAsyncQueueDurable\JetStreamPushSubscribeAsyncQueueDurable.csproj", "{5DCD0666-5AC9-462F-99BD-5E8E95E4B749}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -311,6 +313,10 @@ Global
 		{C7FB00D4-23F1-4F6A-A8C0-E58346F272DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C7FB00D4-23F1-4F6A-A8C0-E58346F272DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C7FB00D4-23F1-4F6A-A8C0-E58346F272DE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5DCD0666-5AC9-462F-99BD-5E8E95E4B749}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5DCD0666-5AC9-462F-99BD-5E8E95E4B749}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5DCD0666-5AC9-462F-99BD-5E8E95E4B749}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5DCD0666-5AC9-462F-99BD-5E8E95E4B749}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -363,6 +369,7 @@ Global
 		{77526973-BA44-412F-BDAF-BF86BDE58F5F} = {776C2E80-958B-4C0D-BCC4-67D39DB4570B}
 		{78F922E7-1238-4DE8-9BCF-6D09B069F810} = {776C2E80-958B-4C0D-BCC4-67D39DB4570B}
 		{C7FB00D4-23F1-4F6A-A8C0-E58346F272DE} = {776C2E80-958B-4C0D-BCC4-67D39DB4570B}
+		{5DCD0666-5AC9-462F-99BD-5E8E95E4B749} = {776C2E80-958B-4C0D-BCC4-67D39DB4570B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0972F03C-E4DF-483A-B767-9216F4434F11}
