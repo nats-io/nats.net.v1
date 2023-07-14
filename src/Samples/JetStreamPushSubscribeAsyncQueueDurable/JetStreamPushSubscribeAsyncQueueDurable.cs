@@ -20,10 +20,10 @@ using NATS.Client.JetStream;
 
 namespace NATSExamples
 {
-    internal static class JetStreamPushSubscribeQueueDurable
+    internal static class JetStreamPushSubscribeAsyncQueueDurable
     {
         private const string Usage =
-            "Usage: JetStreamPushSubscribeQueueDurable [-url url] [-creds file] [-stream stream] " +
+            "Usage: JetStreamPushSubscribeAsyncQueueDurable [-url url] [-creds file] [-stream stream] " +
             "[-subject subject] [-queue queue] [-durable durable] [-deliver deliverSubject] [-count count] [-subscount numsubs]" +
             "\n\nDefault Values:" +
             "\n   [-stream]    qdur-stream" +
@@ -32,7 +32,7 @@ namespace NATSExamples
             "\n   [-durable]   qdur-durable" +
             "\n   [-count]     10000" +
             "\n   [-subscount] 5";
-
+        
         // THIS FLAG WILL DETERMINE IF THE CONSUMER IS CREATED AHEAD OF TIME. SEE CODE BELOW
         static bool CreateConsumerAheadOfTime = true;
 
@@ -91,25 +91,21 @@ namespace NATSExamples
                                 .Build()
                             ).Build();
                     }
-
-                    InterlockedLong allReceived = new InterlockedLong();
+                    
+                    CountdownEvent latch = new CountdownEvent(helper.Count);
                     IList<JsQueueSubscriber> subscribers = new List<JsQueueSubscriber>();
-                    IList<Thread> subThreads = new List<Thread>();
+                    IList<IJetStreamPushAsyncSubscription> subs = new List<IJetStreamPushAsyncSubscription>();
                     int readCount = helper.Count / helper.SubsCount;
-                    Console.WriteLine($"Each of the {helper.Count} queue subscriptions will read about {readCount} messages.");
+                    Console.WriteLine($"Each of the {helper.Count} queue subscriptions will receive about {readCount} messages.");
 
                     for (int id = 1; id <= helper.SubsCount; id++) {
-                        // setup the subscription
-                        IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(helper.Subject, helper.Queue, pso);
-                        
-                        // create and track the runnable
-                        JsQueueSubscriber qs = new JsQueueSubscriber(id, helper.Count, js, sub, allReceived);
+                        // create and track class with the handler
+                        JsQueueSubscriber qs = new JsQueueSubscriber(id, helper.Count, js, latch);
                         subscribers.Add(qs);
-                        
-                        // create, track and start the thread
-                        Thread t = new Thread(qs.Run);
-                        subThreads.Add(t);
-                        t.Start();
+
+                        // setup the subscription
+                        IJetStreamPushAsyncSubscription sub = js.PushSubscribeAsync(helper.Subject, helper.Queue,qs.Handler(), false, pso);
+                        subs.Add(sub); // just keeping a reference around
                     }
                     c.Flush(500); // flush outgoing communication with/to the server
 
@@ -124,12 +120,9 @@ namespace NATSExamples
                     });
                     pubThread.Start();
 
-                    // wait for all threads to finish
+                    // wait for publish to finish and then wait for all messages to be received.
                     pubThread.Join(10000);
-                    foreach (Thread t in subThreads)
-                    {
-                        t.Join(30000);
-                    }
+                    latch.Wait(60000);
 
                     foreach (JsQueueSubscriber qs in subscribers)
                     {
@@ -154,16 +147,14 @@ namespace NATSExamples
         private int id;
         int thisReceived;
         int msgCount;
-        IJetStreamPushSyncSubscription sub;
-        InterlockedLong allReceived;
+        CountdownEvent latch;
         public IList<string> datas;
 
-        public JsQueueSubscriber(int id, int msgCount, IJetStream js, IJetStreamPushSyncSubscription sub, InterlockedLong allReceived)
+        public JsQueueSubscriber(int id, int msgCount, IJetStream js, CountdownEvent latch)
         {
             this.id = id;
             this.msgCount = msgCount;
-            this.sub = sub;
-            this.allReceived = allReceived;
+            this.latch = latch;
             thisReceived = 0;
             datas = new List<string>();
         }
@@ -172,26 +163,17 @@ namespace NATSExamples
             Console.WriteLine($"Sub # {id} handled {thisReceived} messages.");
         }
 
-        public void Run()
+        public EventHandler<MsgHandlerEventArgs> Handler()
         {
-            while (allReceived.Read() < msgCount)
+            return (s, e) =>
             {
-                try
-                {
-                    Msg msg = sub.NextMessage(500);
-                    thisReceived++;
-                    allReceived.Increment();
-                    string data = Encoding.UTF8.GetString(msg.Data);
-                    datas.Add(data);
-                    Console.WriteLine($"QS # {id} message # {thisReceived} {data}");
-                    msg.Ack();
-                }
-                catch (NATSTimeoutException)
-                {
-                    // timeout is acceptable, means no messages available.
-                    Console.WriteLine($"QS # {id} Timeout is acceptable, means no messages available.");
-                }
-            }
+                thisReceived++;
+                latch.Signal(1);
+                string data = Encoding.UTF8.GetString(e.Message.Data);
+                datas.Add(data);
+                Console.WriteLine($"QS # {id} message # {thisReceived} {data}");
+                e.Message.Ack();
+            };
         }
     }
 
