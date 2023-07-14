@@ -2,8 +2,8 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <Title>NATS Simplification Next</Title>
-        <Description>NATS Simplification Next Sample</Description>
+        <Title>NATS Simplification Queue</Title>
+        <Description>NATS Simplification Queue Sample</Description>
         <IsPackable>false</IsPackable>
         <RootNamespace>NATSExamples</RootNamespace>
     </PropertyGroup>
