@@ -80,8 +80,8 @@ namespace NATSExamples
                     
                 // report
                 foreach (ConsumerHolder holder in holders) {
-                    holder.stop();
-                    holder.report();
+                    holder.Stop();
+                    holder.Report();
                 }
     
                 Console.WriteLine();
@@ -108,7 +108,7 @@ namespace NATSExamples
             });
         }
         
-        public override void stop() {
+        public override void Stop() {
             messageConsumer.Stop(1000);
         }
     }
@@ -142,7 +142,7 @@ namespace NATSExamples
             t.Start();
         }
 
-        public override void stop() {
+        public override void Stop() {
             finished.Wait(2000) ; // ensures the next loop realized it could stop
         }
     }
@@ -160,10 +160,10 @@ namespace NATSExamples
             consumerContext = sc.CreateConsumerContext(SimplificationQueue.CONSUMER_NAME);
         }
     
-        public void report() {
+        public void Report() {
             Console.WriteLine($"Instance # {id} handled {thisReceived} messages.");
         }
 
-        public abstract void stop();
+        public abstract void Stop();
     }
 }
