@@ -43,67 +43,47 @@ namespace NATS.Client.JetStream
         ConsumerInfo GetCachedConsumerInfo();
 
         /// <summary>
-        /// Read the next message with max wait set to {@value BaseConsumeOptions#DEFAULT_EXPIRES_IN_MS} ms
-        /// </summary>
-        /// <returns>the next message or null if the max wait expires</returns>
-        Msg Next();
-
-        /// <summary>
         /// Read the next message with provide max wait
         /// </summary>
-        /// <param name="maxWaitMillis">the max wait value in milliseconds</param>
+        /// <param name="maxWaitMillis">optional max wait value in milliseconds. Defaults to {@value BaseConsumeOptions#DEFAULT_EXPIRES_IN_MS}</param>
         /// <returns>the next message or null if the max wait expires</returns>
-        Msg Next(int maxWaitMillis);
+        Msg Next(int maxWaitMillis = BaseConsumeOptions.DefaultExpiresInMillis);
 
         /// <summary>
-        /// Create a one use Fetch Consumer using all defaults other than the number of messages. See {@link IFetchConsumer}
+        /// Create a one use Fetch Consumer using all defaults other than the number of messages. See IFetchConsumer
         /// </summary>
         /// <param name="maxMessages">the maximum number of message to consume</param>
         /// <returns>the IFetchConsumer instance</returns>
         IFetchConsumer FetchMessages(int maxMessages);
 
         /// <summary>
-        /// Create a one use Fetch Consumer using all defaults other than the number of bytes. See {@link IFetchConsumer}
+        /// Create a one use Fetch Consumer using all defaults other than the number of bytes. See IFetchConsumer
         /// </summary>
         /// <param name="maxBytes">the maximum number of bytes to consume</param>
         /// <returns>the IFetchConsumer instance</returns>
         IFetchConsumer FetchBytes(int maxBytes);
 
         /// <summary>
-        /// Create a one use Fetch Consumer with complete custom consume options. See {@link IFetchConsumer}
+        /// Create a one use Fetch Consumer with complete custom consume options. See IFetchConsumer
         /// </summary>
-        /// <param name="fetchConsumeOptions">the custom fetch consume options. See {@link FetchConsumeOptions}</param>
+        /// <param name="fetchConsumeOptions">the custom fetch consume options. See FetchConsumeOptions</param>
         /// <returns>the IFetchConsumer instance</returns>
         IFetchConsumer Fetch(FetchConsumeOptions fetchConsumeOptions);
 
         /// <summary>
-        /// Create a long-running Manual Consumer with default ConsumeOptions. See {@link ConsumeOptions}
-        /// Manual Consumers require the developer call nextMessage. See {@link IManualConsumer}
+        /// Create a long-running Manual Consumer with custom ConsumeOptions. See IManualConsumer and ConsumeOptions
+        /// IIterableConsumer requires the developer call nextMessage.
         /// </summary>
+        /// <param name="consumeOptions">optional custom consume options</param>
         /// <returns>the IManualConsumer instance</returns>
-        IIterableConsumer Consume();
+        IIterableConsumer Consume(ConsumeOptions consumeOptions = null);
 
         /// <summary>
-        /// Create a long-running Manual Consumer with custom ConsumeOptions. See {@link IManualConsumer} and {@link ConsumeOptions}
-        /// Manual Consumers require the developer call nextMessage.
-        /// </summary>
-        /// <param name="consumeOptions">the custom consume options</param>
-        /// <returns>the IManualConsumer instance</returns>
-        IIterableConsumer Consume(ConsumeOptions consumeOptions);
-
-        /// <summary>
-        /// Create a long-running MessageConsumer with default ConsumeOptions. See {@link IMessageConsumer} and {@link ConsumeOptions}
+        /// Create a long-running MessageConsumer with custom ConsumeOptions. See IMessageConsumer and ConsumeOptions
         /// </summary>
         /// <param name="handler">the MessageHandler used for receiving messages.</param>
+        /// <param name="consumeOptions">optional custom consume options</param>
         /// <returns>the IMessageConsumer instance</returns>
-        IMessageConsumer Consume(EventHandler<MsgHandlerEventArgs> handler);
-
-        /// <summary>
-        /// Create a long-running MessageConsumer with custom ConsumeOptions. See {@link IMessageConsumer} and {@link ConsumeOptions}
-        /// </summary>
-        /// <param name="handler">the MessageHandler used for receiving messages.</param>
-        /// <param name="consumeOptions">the custom consume options</param>
-        /// <returns>the IMessageConsumer instance</returns>
-        IMessageConsumer Consume(EventHandler<MsgHandlerEventArgs> handler, ConsumeOptions consumeOptions);
+        IMessageConsumer Consume(EventHandler<MsgHandlerEventArgs> handler, ConsumeOptions consumeOptions = null);
     }
 }

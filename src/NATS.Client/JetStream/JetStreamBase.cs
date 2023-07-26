@@ -110,7 +110,7 @@ namespace NATS.Client.JetStream
             return new ConsumerInfo(m, true);
         }
 
-        private string GenerateConsumerName()
+        public static string GenerateConsumerName()
         {
             return Nuid.NextGlobalSequence();
         }

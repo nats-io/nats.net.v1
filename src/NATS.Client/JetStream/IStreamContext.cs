@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 
 namespace NATS.Client.JetStream
@@ -143,5 +144,23 @@ namespace NATS.Client.JetStream
         /// <param name="erase">whether to erase the message (overwriting with garbage) or only mark it as erased.</param>
         /// <returns>true if the delete succeeded</returns>
         bool DeleteMessage(ulong seq, bool erase);
+        
+        /// <summary>
+        /// Create a long-running Ordered IIterableConsumer with custom ConsumeOptions. See IIterableConsumer and ConsumeOptions
+        /// IIterableConsumer requires the developer call nextMessage.  
+        /// </summary>
+        /// <param name="config">the configuration for the ordered consumer</param>
+        /// <param name="consumeOptions">optional custom consume options</param>
+        /// <returns></returns>
+        IIterableConsumer OrderedConsume(OrderedConsumerConfiguration config, ConsumeOptions consumeOptions = null);
+
+        /// <summary>
+        /// Create a long-running Ordered IMessageConsumer with custom ConsumeOptions. See IMessageConsumer and ConsumeOptions
+        /// </summary>
+        /// <param name="config">the configuration for the ordered consumer</param>
+        /// <param name="handler">the EventHandler used for receiving messages</param>
+        /// <param name="consumeOptions">optional custom consume options</param>
+        /// <returns></returns>
+        IMessageConsumer OrderedConsume(OrderedConsumerConfiguration config, EventHandler<MsgHandlerEventArgs> handler, ConsumeOptions consumeOptions = null);
     }
 }

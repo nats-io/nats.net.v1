@@ -23,14 +23,16 @@ namespace NATS.Client.JetStream
         private readonly int maxWaitMillis;
         private Stopwatch sw;
 
-        internal FetchConsumer(SubscriptionMaker subscriptionMaker, FetchConsumeOptions opts) 
+        internal FetchConsumer(SubscriptionMaker subscriptionMaker,
+            FetchConsumeOptions fetchConsumeOptions,
+            ConsumerInfo lastConsumerInfo) : base(lastConsumerInfo)  
         {
             InitSub(subscriptionMaker.MakeSubscription());
-            maxWaitMillis = opts.ExpiresIn;
-            PullRequestOptions pro = PullRequestOptions.Builder(opts.MaxMessages)
-                .WithMaxBytes(opts.MaxBytes)
-                .WithExpiresIn(opts.ExpiresIn)
-                .WithIdleHeartbeat(opts.IdleHeartbeat)
+            maxWaitMillis = fetchConsumeOptions.ExpiresIn;
+            PullRequestOptions pro = PullRequestOptions.Builder(fetchConsumeOptions.MaxMessages)
+                .WithMaxBytes(fetchConsumeOptions.MaxBytes)
+                .WithExpiresIn(fetchConsumeOptions.ExpiresIn)
+                .WithIdleHeartbeat(fetchConsumeOptions.IdleHeartbeat)
                 .Build();
             ((JetStreamPullSubscription)sub).pullImpl.Pull(pro, false, null);
         }

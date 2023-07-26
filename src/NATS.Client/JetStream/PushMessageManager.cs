@@ -72,7 +72,6 @@ namespace NATS.Client.JetStream
                     }
                 }
             }
-
             return true;
         }
 
@@ -106,10 +105,6 @@ namespace NATS.Client.JetStream
                 }
             }
             Conn.Opts.UnhandledStatusEventHandlerOrDefault.Invoke(this, new UnhandledStatusEventArgs(Conn, (Subscription)Sub, msg.Status));
-            if (SyncMode)
-            {
-                throw new NATSJetStreamStatusException(msg.Status, (Subscription)Sub);
-            }
             return ManageResult.StatusError;
         }
 

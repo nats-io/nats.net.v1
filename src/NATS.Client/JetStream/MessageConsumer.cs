@@ -24,18 +24,22 @@ namespace NATS.Client.JetStream
         private readonly int thresholdMessages;
         private readonly long thresholdBytes;
 
-        internal MessageConsumer(SubscriptionMaker subscriptionMaker, EventHandler<MsgHandlerEventArgs> messageHandler, BaseConsumeOptions opts) {
+        internal MessageConsumer(SubscriptionMaker subscriptionMaker,
+            EventHandler<MsgHandlerEventArgs> messageHandler,
+            BaseConsumeOptions consumeOptions,
+            ConsumerInfo lastConsumerInfo) : base(lastConsumerInfo) 
+        {
             InitSub(subscriptionMaker.MakeSubscription(messageHandler));
 
-            int bm = opts.Messages;
-            long bb = opts.Bytes;
+            int bm = consumeOptions.Messages;
+            long bb = consumeOptions.Bytes;
 
-            int rePullMessages = Math.Max(1, bm * opts.ThresholdPercent / 100);
-            long rePullBytes = bb == 0 ? 0 : Math.Max(1, bb * opts.ThresholdPercent / 100);
+            int rePullMessages = Math.Max(1, bm * consumeOptions.ThresholdPercent / 100);
+            long rePullBytes = bb == 0 ? 0 : Math.Max(1, bb * consumeOptions.ThresholdPercent / 100);
             rePullPro = PullRequestOptions.Builder(rePullMessages)
                 .WithMaxBytes(rePullBytes)
-                .WithExpiresIn(opts.ExpiresIn)
-                .WithIdleHeartbeat(opts.IdleHeartbeat)
+                .WithExpiresIn(consumeOptions.ExpiresIn)
+                .WithIdleHeartbeat(consumeOptions.IdleHeartbeat)
                 .Build();
 
             thresholdMessages = bm - rePullMessages;
@@ -43,8 +47,8 @@ namespace NATS.Client.JetStream
 
             pullImpl.Pull(PullRequestOptions.Builder(bm)
                 .WithMaxBytes(bb)
-                .WithExpiresIn(opts.ExpiresIn)
-                .WithIdleHeartbeat(opts.IdleHeartbeat)
+                .WithExpiresIn(consumeOptions.ExpiresIn)
+                .WithIdleHeartbeat(consumeOptions.IdleHeartbeat)
                 .Build(), false, this);
         }
 

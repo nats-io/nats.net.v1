@@ -51,11 +51,7 @@ namespace NATS.Client.JetStream
             return lastConsumerInfo;
         }
 
-        public Msg Next() {
-            return new NextSub(js, bindPso, DefaultExpiresInMillis).Next();
-        }
-
-        public Msg Next(int maxWaitMillis) 
+        public Msg Next(int maxWaitMillis = DefaultExpiresInMillis) 
         {
             if (maxWaitMillis < MinExpiresMills) 
             {
@@ -74,27 +70,16 @@ namespace NATS.Client.JetStream
 
         public IFetchConsumer Fetch(FetchConsumeOptions fetchConsumeOptions) {
             Validator.Required(fetchConsumeOptions, "Fetch Consume Options");
-            return new FetchConsumer(new SubscriptionMaker(js, bindPso), fetchConsumeOptions);
+            return new FetchConsumer(new SubscriptionMaker(js, bindPso), fetchConsumeOptions, lastConsumerInfo);
         }
 
-        public IIterableConsumer Consume() {
-            return new IterableConsumer(new SubscriptionMaker(js, bindPso), DefaultConsumeOptions);
+        public IIterableConsumer Consume(ConsumeOptions consumeOptions = null) {
+            return new IterableConsumer(new SubscriptionMaker(js, bindPso), consumeOptions ?? DefaultConsumeOptions, lastConsumerInfo);
         }
 
-        public IIterableConsumer Consume(ConsumeOptions consumeOptions) {
-            Validator.Required(consumeOptions, "Consume Options");
-            return new IterableConsumer(new SubscriptionMaker(js, bindPso), consumeOptions);
-        }
-
-        public IMessageConsumer Consume(EventHandler<MsgHandlerEventArgs> handler) {
+        public IMessageConsumer Consume(EventHandler<MsgHandlerEventArgs> handler, ConsumeOptions consumeOptions = null) {
             Validator.Required(handler, "Msg Handler");
-            return new MessageConsumer(new SubscriptionMaker(js, bindPso), handler, DefaultConsumeOptions);
-        }
-
-        public IMessageConsumer Consume(EventHandler<MsgHandlerEventArgs> handler, ConsumeOptions consumeOptions) {
-            Validator.Required(handler, "Msg Handler");
-            Validator.Required(consumeOptions, "Consume Options");
-            return new MessageConsumer(new SubscriptionMaker(js, bindPso), handler, consumeOptions);
+            return new MessageConsumer(new SubscriptionMaker(js, bindPso), handler, consumeOptions ?? DefaultConsumeOptions, lastConsumerInfo);
         }
     }
 
@@ -141,18 +126,20 @@ namespace NATS.Client.JetStream
     {
         private readonly IJetStream js;
         private readonly PullSubscribeOptions pso;
+        private readonly string subscribeSubject;
 
-        public SubscriptionMaker(IJetStream js, PullSubscribeOptions pso)
+        public SubscriptionMaker(IJetStream js, PullSubscribeOptions pso, string subscribeSubject = null)
         {
             this.js = js;
             this.pso = pso;
+            this.subscribeSubject = subscribeSubject;
         }
 
         public IJetStreamSubscription MakeSubscription(EventHandler<MsgHandlerEventArgs> handler = null) {
             if (handler == null) {
-                return (JetStreamPullSubscription)js.PullSubscribe(null, pso);
+                return (JetStreamPullSubscription)js.PullSubscribe(subscribeSubject, pso);
             }
-            return (JetStreamPullAsyncSubscription)js.PullSubscribeAsync(null, handler, pso);
+            return (JetStreamPullAsyncSubscription)js.PullSubscribeAsync(subscribeSubject, handler, pso);
         }
     }
 }

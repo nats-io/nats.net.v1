@@ -5131,13 +5131,13 @@ namespace NATS.Client
         public IStreamContext CreateStreamContext(string streamName)
         {
             Validator.ValidateStreamName(streamName, true);
-            return new StreamContext(this, null, streamName);
+            return new StreamContext(streamName, null, this, null);
         }
 
         public IStreamContext CreateStreamContext(string streamName, JetStreamOptions options)
         {
             Validator.ValidateStreamName(streamName, true);
-            return new StreamContext(this, options, streamName);
+            return new StreamContext(streamName, null, this, options);
         }
 
         public IConsumerContext CreateConsumerContext(string streamName, string consumerName)

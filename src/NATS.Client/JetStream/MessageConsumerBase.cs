@@ -26,15 +26,21 @@ namespace NATS.Client.JetStream
         protected PullMessageManager pmm;
         protected JetStreamPullApiImpl pullImpl;
         protected bool stopped;
+        protected ConsumerInfo lastConsumerInfo;
 
-        internal MessageConsumerBase()
+        internal MessageConsumerBase(ConsumerInfo lastConsumerInfo)
         {
             subLock = new object();
+            this.lastConsumerInfo = lastConsumerInfo;
         }
 
         protected void InitSub(IJetStreamSubscription inSub)
         {
             sub = inSub;
+            if (lastConsumerInfo == null)
+            {
+                lastConsumerInfo = sub.GetConsumerInformation();
+            }
             if (sub is JetStreamPullSubscription syncSub)
             {
                 pmm = (PullMessageManager)syncSub.MessageManager;
@@ -51,8 +57,14 @@ namespace NATS.Client.JetStream
         {
             lock (subLock)
             {
-                return sub.GetConsumerInformation();
+                lastConsumerInfo = sub.GetConsumerInformation();
+                return lastConsumerInfo;
             }
+        }
+
+        public ConsumerInfo GetCachedConsumerInformation()
+        {
+            return lastConsumerInfo;
         }
 
         public void Stop(int timeout)

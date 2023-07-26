@@ -27,6 +27,13 @@ namespace NATS.Client.JetStream
         ConsumerInfo GetConsumerInformation();
 
         /// <summary>
+        /// Gets information about the consumer behind this subscription.
+        /// This returns the last read version of Consumer Info, which could technically be out of date.
+        /// </summary>
+        /// <returns>consumer information</returns>
+        ConsumerInfo GetCachedConsumerInformation();
+
+        /// <summary>
         /// Stop the Simple Consumer from asking for any more messages from the server.
         /// Messages do not immediately stop
         /// </summary>

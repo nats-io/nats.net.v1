@@ -136,7 +136,7 @@ namespace IntegrationTestsInternal
         }
 
         // Expected consumer sequence numbers
-        static ulong[] ExpectedConSeqNums = {1, 1, 2, 3, 1, 2};
+        public static ulong[] ExpectedConSeqNums = {1, 1, 2, 3, 1, 2};
 
         [Fact]
         public void TestOrderedConsumerSync()

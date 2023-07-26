@@ -1,4 +1,4 @@
-﻿// Copyright 2022-2023 The NATS Authors
+﻿// Copyright 2023 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at:
@@ -15,82 +15,80 @@ using System;
 
 namespace NATS.Client.JetStream
 {
-    public class OrderedMessageManager : PushMessageManager
+    public class PullOrderedMessageManager : PullMessageManager
     {
+        protected readonly ConsumerConfiguration OriginalCc;
+        protected readonly JetStream Js;
+        protected readonly string Stream;
         protected ulong ExpectedExternalConsumerSeq;
-        protected long? TargetSid;
+        protected long TargetSid;
 
-        public OrderedMessageManager(Connection conn, 
-            JetStream js, 
-            string stream,
-            SubscribeOptions so,
-            ConsumerConfiguration originalCc, 
-            bool queueMode, 
-            bool syncMode) : base(conn, js, stream, so, originalCc, queueMode, syncMode)
+        public PullOrderedMessageManager(Connection conn, JetStream js, string stream,
+            SubscribeOptions so, ConsumerConfiguration originalCc, bool syncMode) : base(conn, so, syncMode) 
         {
+            Js = js;
+            Stream = stream;
+            OriginalCc = originalCc;
             ExpectedExternalConsumerSeq = 1; // always starts at 1
+            TargetSid = -1;
         }
 
         public override void Startup(IJetStreamSubscription sub)
         {
             base.Startup(sub);
-            TargetSid = Sub.Sid;
+            TargetSid = sub.Sid;
         }
 
         public override ManageResult Manage(Msg msg)
         {
-            if (msg.Sid != TargetSid)
-            {
+            if (msg.Sid != TargetSid) {
                 return ManageResult.StatusHandled; // wrong sid is throwaway from previous consumer that errored
             }
-            
-            if (msg.IsJetStream)
-            {
+    
+            if (msg.IsJetStream) {
                 ulong receivedConsumerSeq = msg.MetaData.ConsumerSequence;
                 if (ExpectedExternalConsumerSeq != receivedConsumerSeq) {
                     HandleErrorCondition();
-                    return ManageResult.StatusHandled; // not technically a status
+                    return ManageResult.StatusHandled;
                 }
                 TrackJsMessage(msg);
                 ExpectedExternalConsumerSeq++;
                 return ManageResult.Message;
             }
-            
+    
             return ManageStatus(msg);
         }
-        
-        private void HandleErrorCondition()
-        {
+    
+        private void HandleErrorCondition() {
             try
             {
-                TargetSid = null;
+                TargetSid = -1;
                 ExpectedExternalConsumerSeq = 1; // consumer always starts with consumer sequence 1
-
-                // 1. shutdown the managers, for instance stops heartbeat timers
+    
+                // 1. shutdown the manager, for instance stops heartbeat timers
                 Shutdown();
-
+    
                 // 2. re-subscribe. This means kill the sub then make a new one
-                //    New sub needs a new deliver subject
+                //    New sub needs a new deliverSubject
                 string newDeliverSubject = Sub.Connection.NewInbox();
                 ((Subscription)Sub).ReSubscribe(newDeliverSubject);
-                TargetSid = ((Subscription)Sub).Sid; 
-
+                TargetSid = Sub.Sid;
+    
                 // 3. make a new consumer using the same deliver subject but
                 //    with a new starting point
-                ConsumerConfiguration userCc = ConsumerConfiguration.Builder(OriginalCc)
+                ConsumerConfiguration userCC = ConsumerConfiguration.Builder(OriginalCc)
+                    .WithName(JetStreamBase.GenerateConsumerName())
                     .WithDeliverPolicy(DeliverPolicy.ByStartSequence)
                     .WithDeliverSubject(newDeliverSubject)
                     .WithStartSequence(LastStreamSeq + 1)
                     .WithStartTime(DateTime.MinValue) // clear start time in case it was originally set
                     .Build();
-
-                Js.AddOrUpdateConsumerInternal(Stream, userCc);
-
+                Js.AddOrUpdateConsumerInternal(Stream, userCC);
+    
                 // 4. restart the manager.
                 Startup(Sub);
             }
-            catch (Exception e)
-            {
+            catch (Exception e) {
                 NATSException n = new NATSException("Ordered subscription fatal error: " + e.Message); 
                 ((Connection)Js.Conn).ScheduleErrorEvent(this, n, (Subscription)Sub);
                 if (SyncMode)

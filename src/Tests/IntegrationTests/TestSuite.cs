@@ -115,10 +115,50 @@ namespace IntegrationTests
 
         public void RunInJsServer(TestServerInfo testServerInfo, Action<IConnection> test)
         {
+            RunInJsServer(testServerInfo, null, null, test);
+        }
+
+        public void RunInJsServer(Func<ServerInfo, bool> versionCheck, TestServerInfo testServerInfo, Action<IConnection> test)
+        {
+            RunInJsServer(testServerInfo, versionCheck, null, test);
+        }
+
+        public void RunInJsServer(TestServerInfo testServerInfo, Action<Options> optionsModifier,
+            Action<IConnection> test)
+        {
+            RunInJsServer(testServerInfo, null, null, test);
+        }
+
+        private static ServerInfo runServerInfo;
+
+        public void RunInJsServer(TestServerInfo testServerInfo, Func<ServerInfo, bool> versionCheck, Action<Options> optionsModifier, Action<IConnection> test)
+        {
+            if (versionCheck != null && runServerInfo != null) {
+                if (!versionCheck(runServerInfo)) {
+                    return;
+                }
+                versionCheck = null; // since we've already determined it should run, null this out so we don't check below
+            }
+
             using (var s = NATSServer.CreateJetStreamFast(testServerInfo.Port))
             {
-                using (var c = OpenConnection(testServerInfo.Port, NATSServer.QuietOptionsModifier))
+                Action<Options> runOptionsModifier = optionsModifier == null ? NATSServer.QuietOptionsModifier : 
+                    options =>
+                    {
+                        NATSServer.QuietOptionsModifier.Invoke(options);
+                        optionsModifier.Invoke(options);
+                    }; 
+                
+                using (var c = OpenConnection(testServerInfo.Port, runOptionsModifier))
                 {
+                    if (versionCheck != null)
+                    {
+                        runServerInfo = c.ServerInfo;
+                        if (!versionCheck(runServerInfo)) {
+                            return;
+                        }
+                    }
+
                     try
                     {
                         test(c);
@@ -136,30 +176,6 @@ namespace IntegrationTests
             using (var s = NATSServer.CreateJetStreamWithConfig(testServerInfo.Port, config))
             {
                 using (var c = OpenConnection(testServerInfo.Port, NATSServer.QuietOptionsModifier))
-                {
-                    try
-                    {
-                        test(c);
-                    }
-                    finally
-                    {
-                        CleanupJs(c);
-                    }
-                }
-            }
-        }
-
-        public void RunInJsServer(TestServerInfo testServerInfo, Action<Options> optionsModifier, Action<IConnection> test)
-        {
-            using (var s = NATSServer.CreateJetStreamFast(testServerInfo.Port))
-            {
-                Action<Options> combinedOptionsModifier = options =>
-                {
-                    NATSServer.QuietOptionsModifier.Invoke(options);
-                    optionsModifier.Invoke(options);
-                }; 
-                
-                using (var c = OpenConnection(testServerInfo.Port, combinedOptionsModifier))
                 {
                     try
                     {
@@ -434,9 +450,10 @@ namespace IntegrationTests
         {
             Server1 = new TestServerInfo(TestSeedPorts.AutoPort.Increment());
         }
-        
-        public void RunInJsServer(Action<IConnection> test) => base.RunInJsServer(Server1, test);
+
         public void RunInServer(Action<IConnection> test) => base.RunInServer(Server1, test);
+        public void RunInJsServer(Action<IConnection> test) => base.RunInJsServer(Server1, null, null, test);
+        public void RunInJsServer(Func<ServerInfo, bool> versionCheck, Action<IConnection> test) => base.RunInJsServer(Server1, versionCheck, null, test);
         public void RunInJsServer(Action<Options> optionsModifier, Action<IConnection> test) => base.RunInJsServer(Server1, optionsModifier, test);
     }
     
@@ -444,8 +461,9 @@ namespace IntegrationTests
     {
         public TestServerInfo AutoServer() => new TestServerInfo(TestSeedPorts.AutoPort.Increment());
 
-        public void RunInJsServer(Action<IConnection> test) => base.RunInJsServer(AutoServer(), test);
         public void RunInServer(Action<IConnection> test) => base.RunInServer(AutoServer(), test);
+        public void RunInJsServer(Action<IConnection> test) => base.RunInJsServer(AutoServer(), null, null, test);
+        public void RunInJsServer(Func<ServerInfo, bool> versionCheck, Action<IConnection> test) => base.RunInJsServer(AutoServer(), versionCheck, null, test);
         public void RunInJsServer(Action<Options> optionsModifier, Action<IConnection> test) => base.RunInJsServer(AutoServer(), optionsModifier, test);
     }
 

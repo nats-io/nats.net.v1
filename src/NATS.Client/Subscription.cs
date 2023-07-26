@@ -84,7 +84,7 @@ namespace NATS.Client
             BeforeChannelAddCheck = null;
         }
                 
-        internal void reSubscribe(string deliverSubject)
+        internal void ReSubscribe(string deliverSubject)
         {
             conn.SendUnsub(sid, 0);
             conn.RemoveSubscription(this);

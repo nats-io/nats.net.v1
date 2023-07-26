@@ -15,7 +15,7 @@ using NATS.Client.Internals;
 
 namespace NATS.Client.JetStream
 {
-    internal class PullMessageManager : MessageManager
+    public class PullMessageManager : MessageManager
     {
         internal int pendingMessages;
         internal long pendingBytes;
@@ -45,7 +45,6 @@ namespace NATS.Client.JetStream
                 pendingMessages += pro.BatchSize;
                 pendingBytes += pro.MaxBytes;
                 trackingBytes = (pendingBytes > 0);
-
                 ConfigureIdleHeartbeat(pro.IdleHeartbeat, -1);
                 if (Hb)
                 {
@@ -63,8 +62,13 @@ namespace NATS.Client.JetStream
             lock (StateChangeLock)
             {
                 pendingMessages -= m;
-                pendingBytes -= b;
-                if (pendingMessages < 1 || (trackingBytes && pendingBytes < 1))
+                bool zero = pendingMessages < 1;
+                if (trackingBytes)
+                {
+                    pendingBytes -= b;
+                    zero |= pendingBytes < 1;
+                }
+                if (zero)
                 {
                     pendingMessages = 0;
                     pendingBytes = 0L;
@@ -121,7 +125,11 @@ namespace NATS.Client.JetStream
                 TrackJsMessage(msg);
                 return ManageResult.Message;
             }
+            return ManageStatus(msg);
+        }
 
+        protected ManageResult ManageStatus(Msg msg)
+        {
             switch (msg.Status.Code)
             {
                 case NatsConstants.NotFoundCode:
@@ -132,7 +140,7 @@ namespace NATS.Client.JetStream
                             new StatusEventArgs(Conn, (Subscription)Sub, msg.Status));
                     }
                     return ManageResult.StatusTerminus;
-                
+
                 case NatsConstants.ConflictCode:
                     // sometimes just a warning
                     string statMsg = msg.Status.Message;
@@ -150,17 +158,13 @@ namespace NATS.Client.JetStream
                         statMsg.Equals(JetStreamConstants.MessageSizeExceedsMaxBytes))
                     {
                         return ManageResult.StatusTerminus;
-                    } 
+                    }
                     break;
             }
 
             // all others are errors
-            Conn.Opts.PullStatusErrorEventHandlerOrDefault.Invoke(this, new StatusEventArgs(Conn, (Subscription)Sub, msg.Status));
-            if (SyncMode)
-            {
-                throw new NATSJetStreamStatusException(msg.Status, (Subscription)Sub);
-            }
-
+            Conn.Opts.PullStatusErrorEventHandlerOrDefault.Invoke(this,
+                new StatusEventArgs(Conn, (Subscription)Sub, msg.Status));
             return ManageResult.StatusError;
         }
     }

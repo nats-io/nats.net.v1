@@ -18,10 +18,10 @@ namespace NATS.Client.JetStream
         public static readonly PushSubscribeOptions DefaultPushOpts = PushSubscribeOptions.Builder().Build();
 
         // Validation is done by base class
-        private PushSubscribeOptions(ISubscribeOptionsBuilder builder, bool ordered, 
+        private PushSubscribeOptions(ISubscribeOptionsBuilder builder, 
             string deliverSubject, string deliverGroup,
             long pendingMessageLimit, long pendingByteLimit) 
-            : base(builder, false, ordered, deliverSubject, deliverGroup, pendingMessageLimit, pendingByteLimit) {}
+            : base(builder, false, deliverSubject, deliverGroup, pendingMessageLimit, pendingByteLimit) {}
 
         /// <summary>
         /// Create PushSubscribeOptions where you are binding to
@@ -58,7 +58,6 @@ namespace NATS.Client.JetStream
         public sealed class PushSubscribeOptionsBuilder
             : SubscribeOptionsBuilder<PushSubscribeOptionsBuilder, PushSubscribeOptions>
         {
-            private bool _ordered;
             private string _deliverSubject;
             private string _deliverGroup;
             private long _pendingMessageLimit = Defaults.SubPendingMsgsLimit;
@@ -132,7 +131,7 @@ namespace NATS.Client.JetStream
             /// <returns>The PushSubscribeOptions object.</returns>
             public override PushSubscribeOptions Build()
             {
-                return new PushSubscribeOptions(this, _ordered, _deliverSubject, _deliverGroup,
+                return new PushSubscribeOptions(this, _deliverSubject, _deliverGroup,
                     _pendingMessageLimit, _pendingByteLimit);
             }
         }
