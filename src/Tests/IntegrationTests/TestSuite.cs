@@ -126,7 +126,7 @@ namespace IntegrationTests
         public void RunInJsServer(TestServerInfo testServerInfo, Action<Options> optionsModifier,
             Action<IConnection> test)
         {
-            RunInJsServer(testServerInfo, null, null, test);
+            RunInJsServer(testServerInfo, null, optionsModifier, test);
         }
 
         private static ServerInfo runServerInfo;
@@ -142,13 +142,9 @@ namespace IntegrationTests
 
             using (var s = NATSServer.CreateJetStreamFast(testServerInfo.Port))
             {
-                Action<Options> runOptionsModifier = optionsModifier == null ? NATSServer.QuietOptionsModifier : 
-                    options =>
-                    {
-                        NATSServer.QuietOptionsModifier.Invoke(options);
-                        optionsModifier.Invoke(options);
-                    }; 
-                
+                Action<Options> runOptionsModifier =
+                    optionsModifier == null ? NATSServer.QuietOptionsModifier : optionsModifier;
+
                 using (var c = OpenConnection(testServerInfo.Port, runOptionsModifier))
                 {
                     if (versionCheck != null)
