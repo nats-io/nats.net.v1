@@ -31,6 +31,7 @@ namespace NATS.Client.JetStream
         /// OrderedConsumerConfiguration creation works like a builder.
         /// The builder supports chaining and will create a default set of options if
         /// no methods are calls, including setting the filter subject to "&gt;"
+        /// </summary>
         public OrderedConsumerConfiguration()
         {
             StartSequence = ConsumerConfiguration.UlongUnset;
