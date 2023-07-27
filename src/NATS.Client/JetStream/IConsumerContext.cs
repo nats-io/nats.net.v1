@@ -50,36 +50,36 @@ namespace NATS.Client.JetStream
         Msg Next(int maxWaitMillis = BaseConsumeOptions.DefaultExpiresInMillis);
 
         /// <summary>
-        /// Create a one use Fetch Consumer using all defaults other than the number of messages. See IFetchConsumer
+        /// Create a one use Fetch Consumer using all defaults other than the number of messages. <see cref="IFetchConsumer"/>
         /// </summary>
         /// <param name="maxMessages">the maximum number of message to consume</param>
         /// <returns>the IFetchConsumer instance</returns>
         IFetchConsumer FetchMessages(int maxMessages);
 
         /// <summary>
-        /// Create a one use Fetch Consumer using all defaults other than the number of bytes. See IFetchConsumer
+        /// Create a one use Fetch Consumer using all defaults other than the number of bytes. <see cref="IFetchConsumer"/>
         /// </summary>
         /// <param name="maxBytes">the maximum number of bytes to consume</param>
         /// <returns>the IFetchConsumer instance</returns>
         IFetchConsumer FetchBytes(int maxBytes);
 
         /// <summary>
-        /// Create a one use Fetch Consumer with complete custom consume options. See IFetchConsumer
+        /// Create a one use Fetch Consumer with complete custom consume options. <see cref="IFetchConsumer"/>
         /// </summary>
         /// <param name="fetchConsumeOptions">the custom fetch consume options. See FetchConsumeOptions</param>
         /// <returns>the IFetchConsumer instance</returns>
         IFetchConsumer Fetch(FetchConsumeOptions fetchConsumeOptions);
 
         /// <summary>
-        /// Create a long-running Manual Consumer with custom ConsumeOptions. See IManualConsumer and ConsumeOptions
+        /// Create a long-running IterableConsumer with custom ConsumeOptions. <see cref="IIterableConsumer"/> and <see cref="ConsumeOptions"/>
         /// IIterableConsumer requires the developer call nextMessage.
         /// </summary>
         /// <param name="consumeOptions">optional custom consume options</param>
-        /// <returns>the IManualConsumer instance</returns>
+        /// <returns>the IIterableConsumer instance</returns>
         IIterableConsumer Consume(ConsumeOptions consumeOptions = null);
 
         /// <summary>
-        /// Create a long-running MessageConsumer with custom ConsumeOptions. See IMessageConsumer and ConsumeOptions
+        /// Create a long-running MessageConsumer with custom ConsumeOptions. <see cref="IManualConsumer"/> and <see cref="ConsumeOptions"/>
         /// </summary>
         /// <param name="handler">the MessageHandler used for receiving messages.</param>
         /// <param name="consumeOptions">optional custom consume options</param>

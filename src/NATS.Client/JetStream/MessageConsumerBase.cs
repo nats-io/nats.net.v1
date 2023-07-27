@@ -20,8 +20,6 @@ namespace NATS.Client.JetStream
     /// </summary>
     internal class MessageConsumerBase : IMessageConsumer
     {
-        private readonly object subLock;
-        
         protected IJetStreamSubscription sub;
         protected PullMessageManager pmm;
         protected JetStreamPullApiImpl pullImpl;
@@ -30,7 +28,6 @@ namespace NATS.Client.JetStream
 
         internal MessageConsumerBase(ConsumerInfo lastConsumerInfo)
         {
-            subLock = new object();
             this.lastConsumerInfo = lastConsumerInfo;
         }
 
@@ -55,11 +52,8 @@ namespace NATS.Client.JetStream
         
         public ConsumerInfo GetConsumerInformation()
         {
-            lock (subLock)
-            {
-                lastConsumerInfo = sub.GetConsumerInformation();
-                return lastConsumerInfo;
-            }
+            lastConsumerInfo = sub.GetConsumerInformation();
+            return lastConsumerInfo;
         }
 
         public ConsumerInfo GetCachedConsumerInformation()
@@ -69,13 +63,10 @@ namespace NATS.Client.JetStream
 
         public void Stop(int timeout)
         {
-            lock (subLock)
+            if (!stopped)
             {
-                if (!stopped)
-                {
-                    stopped = true;
-                    sub.DrainAsync(timeout);
-                }
+                stopped = true;
+                sub.DrainAsync(timeout);
             }
         }
 

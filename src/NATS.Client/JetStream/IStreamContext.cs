@@ -146,7 +146,7 @@ namespace NATS.Client.JetStream
         bool DeleteMessage(ulong seq, bool erase);
         
         /// <summary>
-        /// Create a long-running Ordered IIterableConsumer with custom ConsumeOptions. See IIterableConsumer and ConsumeOptions
+        /// Create a long-running Ordered IIterableConsumer with custom ConsumeOptions. <see cref="IIterableConsumer"/> and <see cref="ConsumeOptions"/>
         /// IIterableConsumer requires the developer call nextMessage.  
         /// </summary>
         /// <param name="config">the configuration for the ordered consumer</param>
@@ -155,7 +155,7 @@ namespace NATS.Client.JetStream
         IIterableConsumer OrderedConsume(OrderedConsumerConfiguration config, ConsumeOptions consumeOptions = null);
 
         /// <summary>
-        /// Create a long-running Ordered IMessageConsumer with custom ConsumeOptions. See IMessageConsumer and ConsumeOptions
+        /// Create a long-running Ordered IMessageConsumer with custom ConsumeOptions. <see cref="IMessageConsumer"/> and <see cref="ConsumeOptions"/>
         /// </summary>
         /// <param name="config">the configuration for the ordered consumer</param>
         /// <param name="handler">the EventHandler used for receiving messages</param>
