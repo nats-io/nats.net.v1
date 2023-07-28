@@ -79,7 +79,7 @@ namespace NATS.Client.JetStream
         IIterableConsumer Iterate(ConsumeOptions consumeOptions = null);
 
         /// <summary>
-        /// Create a long-running MessageConsumer with a handler and optional custom ConsumeOptions.<see cref="IManualConsumer"/> and <see cref="ConsumeOptions"/>
+        /// Create a long-running MessageConsumer with a handler and optional custom ConsumeOptions.<see cref="IIterableConsumer"/> and <see cref="ConsumeOptions"/>
         /// </summary>
         /// <param name="handler">the MessageHandler used for receiving messages.</param>
         /// <param name="consumeOptions">optional custom consume options</param>
