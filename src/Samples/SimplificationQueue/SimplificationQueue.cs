@@ -98,7 +98,7 @@ namespace NATSExamples
 
         public HandlerConsumerHolder(int id, IStreamContext sc, CountdownEvent latch) : base(id, sc, latch)
         {
-            messageConsumer = consumerContext.CreateConsumer((s, e) =>
+            messageConsumer = consumerContext.StartConsume((s, e) =>
             {
                 thisReceived++;
                 latch.Signal();
@@ -121,7 +121,7 @@ namespace NATSExamples
 
         public IterableConsumerHolder(int id, IStreamContext sc, CountdownEvent latch) : base(id, sc, latch)
         {
-            iterableConsumer = consumerContext.CreateIterable();
+            iterableConsumer = consumerContext.StartIterate();
             t = new Thread(() =>
             {
                 while (latch.CurrentCount > 0)

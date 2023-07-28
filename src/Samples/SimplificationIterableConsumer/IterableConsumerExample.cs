@@ -66,7 +66,7 @@ namespace NATSExamples
                     {
                         int count = 0;
                         Stopwatch sw = Stopwatch.StartNew();
-                        using (IIterableConsumer consumer = consumerContext.CreateIterable())
+                        using (IIterableConsumer consumer = consumerContext.StartIterate())
                         {
                             Msg msg;
                             Console.WriteLine("Starting main loop.");

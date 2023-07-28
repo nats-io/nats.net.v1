@@ -116,7 +116,7 @@ namespace NATS.Client.JetStream
             return jsm.DeleteMessage(StreamName, seq, erase);
         }
 
-        public IIterableConsumer CreateOrderedIterable(OrderedConsumerConfiguration config, ConsumeOptions consumeOptions = null)
+        public IIterableConsumer StartOrderedIterate(OrderedConsumerConfiguration config, ConsumeOptions consumeOptions = null)
         {
             Validator.Required(config, "Ordered Consumer Config");
             ConsumerConfiguration cc = GetBackingConsumerConfiguration(config);
@@ -125,7 +125,7 @@ namespace NATS.Client.JetStream
                 consumeOptions == null ? ConsumeOptions.DefaultConsumeOptions : consumeOptions, null);
         }
 
-        public IMessageConsumer CreateOrderedConsumer(OrderedConsumerConfiguration config, EventHandler<MsgHandlerEventArgs> handler,
+        public IMessageConsumer StartOrderedConsume(OrderedConsumerConfiguration config, EventHandler<MsgHandlerEventArgs> handler,
             ConsumeOptions consumeOptions = null)
         {
             Validator.Required(config, "Ordered Consumer Config");
