@@ -71,15 +71,15 @@ namespace NATS.Client.JetStream
         IFetchConsumer Fetch(FetchConsumeOptions fetchConsumeOptions);
 
         /// <summary>
-        /// Create a long-running IterableConsumer with custom ConsumeOptions. <see cref="IIterableConsumer"/> and <see cref="ConsumeOptions"/>
+        /// Create a long-running IterableConsumer with optional custom ConsumeOptions.<see cref="IIterableConsumer"/> and <see cref="ConsumeOptions"/>
         /// IIterableConsumer requires the developer call nextMessage.
         /// </summary>
         /// <param name="consumeOptions">optional custom consume options</param>
         /// <returns>the IIterableConsumer instance</returns>
-        IIterableConsumer Consume(ConsumeOptions consumeOptions = null);
+        IIterableConsumer Iterate(ConsumeOptions consumeOptions = null);
 
         /// <summary>
-        /// Create a long-running MessageConsumer with custom ConsumeOptions. <see cref="IManualConsumer"/> and <see cref="ConsumeOptions"/>
+        /// Create a long-running MessageConsumer with a handler and optional custom ConsumeOptions.<see cref="IManualConsumer"/> and <see cref="ConsumeOptions"/>
         /// </summary>
         /// <param name="handler">the MessageHandler used for receiving messages.</param>
         /// <param name="consumeOptions">optional custom consume options</param>

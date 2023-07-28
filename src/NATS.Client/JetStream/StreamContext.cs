@@ -116,7 +116,7 @@ namespace NATS.Client.JetStream
             return jsm.DeleteMessage(StreamName, seq, erase);
         }
 
-        public IIterableConsumer OrderedConsume(OrderedConsumerConfiguration config, ConsumeOptions consumeOptions = null)
+        public IIterableConsumer OrderedIterate(OrderedConsumerConfiguration config, ConsumeOptions consumeOptions = null)
         {
             Validator.Required(config, "Ordered Consumer Config");
             ConsumerConfiguration cc = GetBackingConsumerConfiguration(config);

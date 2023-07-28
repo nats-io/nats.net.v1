@@ -73,7 +73,7 @@ namespace NATS.Client.JetStream
             return new FetchConsumer(new SubscriptionMaker(js, bindPso), fetchConsumeOptions, lastConsumerInfo);
         }
 
-        public IIterableConsumer Consume(ConsumeOptions consumeOptions = null) {
+        public IIterableConsumer Iterate(ConsumeOptions consumeOptions = null) {
             return new IterableConsumer(new SubscriptionMaker(js, bindPso), consumeOptions ?? DefaultConsumeOptions, lastConsumerInfo);
         }
 

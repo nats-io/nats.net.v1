@@ -258,13 +258,13 @@ namespace IntegrationTests
     
                 int stopCount = 500;
                 // create the consumer then use it
-                using (IIterableConsumer consumer = consumerContext.Consume())
+                using (IIterableConsumer consumer = consumerContext.Iterate())
                 {
                     _testIterable(js, stopCount, consumer, subject);
                 }
                     
                 // coverage
-                IIterableConsumer consumer2 = consumerContext.Consume(ConsumeOptions.DefaultConsumeOptions);
+                IIterableConsumer consumer2 = consumerContext.Iterate(ConsumeOptions.DefaultConsumeOptions);
                 consumer2.Dispose();
             });
         }
@@ -285,7 +285,7 @@ namespace IntegrationTests
     
                 int stopCount = 500;
                 OrderedConsumerConfiguration occ = new OrderedConsumerConfiguration().WithFilterSubject(subject);
-                using (IIterableConsumer consumer = sc.OrderedConsume(occ)) {
+                using (IIterableConsumer consumer = sc.OrderedIterate(occ)) {
                     _testIterable(js, stopCount, consumer, subject);
                 }
             });
@@ -437,8 +437,8 @@ namespace IntegrationTests
                 IConsumerContext cctx5 = sctx1.CreateOrUpdateConsumer(ConsumerConfiguration.Builder().WithDurable(durable5).Build());
                 IConsumerContext cctx6 = sctx1.CreateOrUpdateConsumer(ConsumerConfiguration.Builder().WithDurable(durable6).Build());
     
-                closeConsumer(cctx1.Consume(), durable1, true);
-                closeConsumer(cctx2.Consume(ConsumeOptions.DefaultConsumeOptions), durable2, true);
+                closeConsumer(cctx1.Iterate(), durable1, true);
+                closeConsumer(cctx2.Iterate(ConsumeOptions.DefaultConsumeOptions), durable2, true);
                 
                 closeConsumer(cctx3.Consume((s, e) => {}), durable3, true);
                 closeConsumer(cctx4.Consume((s, e) => {}, ConsumeOptions.DefaultConsumeOptions), durable4, true);
@@ -589,7 +589,7 @@ namespace IntegrationTests
                 }).Start();
     
                 OrderedConsumerConfiguration occ = new OrderedConsumerConfiguration().WithFilterSubject(subject);
-                using (IIterableConsumer icon = sc.OrderedConsume(occ)) {
+                using (IIterableConsumer icon = sc.OrderedIterate(occ)) {
                     // Loop through the messages to make sure I get stream sequence 1 to 6
                     ulong expectedStreamSeq = 1;
                     while (expectedStreamSeq <= 6) {

@@ -121,7 +121,7 @@ namespace NATSExamples
 
         public IterableConsumerHolder(int id, IStreamContext sc, CountdownEvent latch) : base(id, sc, latch)
         {
-            iterableConsumer = consumerContext.Consume();
+            iterableConsumer = consumerContext.Iterate();
             t = new Thread(() =>
             {
                 while (latch.CurrentCount > 0)
