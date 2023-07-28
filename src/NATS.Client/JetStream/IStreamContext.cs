@@ -152,7 +152,7 @@ namespace NATS.Client.JetStream
         /// <param name="config">the configuration for the ordered consumer</param>
         /// <param name="consumeOptions">optional custom consume options</param>
         /// <returns></returns>
-        IIterableConsumer OrderedIterate(OrderedConsumerConfiguration config, ConsumeOptions consumeOptions = null);
+        IIterableConsumer CreateOrderedIterable(OrderedConsumerConfiguration config, ConsumeOptions consumeOptions = null);
 
         /// <summary>
         /// Create a long-running Ordered IMessageConsumer with a handler and optional custom ConsumeOptions.<see cref="IMessageConsumer"/> and <see cref="ConsumeOptions"/>
@@ -161,6 +161,6 @@ namespace NATS.Client.JetStream
         /// <param name="handler">the EventHandler used for receiving messages</param>
         /// <param name="consumeOptions">optional custom consume options</param>
         /// <returns></returns>
-        IMessageConsumer OrderedConsume(OrderedConsumerConfiguration config, EventHandler<MsgHandlerEventArgs> handler, ConsumeOptions consumeOptions = null);
+        IMessageConsumer CreateOrderedConsumer(OrderedConsumerConfiguration config, EventHandler<MsgHandlerEventArgs> handler, ConsumeOptions consumeOptions = null);
     }
 }

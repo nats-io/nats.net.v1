@@ -76,7 +76,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="consumeOptions">optional custom consume options</param>
         /// <returns>the IIterableConsumer instance</returns>
-        IIterableConsumer Iterate(ConsumeOptions consumeOptions = null);
+        IIterableConsumer CreateIterable(ConsumeOptions consumeOptions = null);
 
         /// <summary>
         /// Create a long-running MessageConsumer with a handler and optional custom ConsumeOptions.<see cref="IIterableConsumer"/> and <see cref="ConsumeOptions"/>
@@ -84,6 +84,6 @@ namespace NATS.Client.JetStream
         /// <param name="handler">the MessageHandler used for receiving messages.</param>
         /// <param name="consumeOptions">optional custom consume options</param>
         /// <returns>the IMessageConsumer instance</returns>
-        IMessageConsumer Consume(EventHandler<MsgHandlerEventArgs> handler, ConsumeOptions consumeOptions = null);
+        IMessageConsumer CreateConsumer(EventHandler<MsgHandlerEventArgs> handler, ConsumeOptions consumeOptions = null);
     }
 }

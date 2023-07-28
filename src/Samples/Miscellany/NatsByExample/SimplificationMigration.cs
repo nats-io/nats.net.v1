@@ -219,7 +219,7 @@ namespace NATSExamples.NatsByExample
                 Console.WriteLine($"   The consumer name is \"{consumerInfo.Name}\".");
                 Console.WriteLine($"   The consumer has {consumerInfo.NumPending} messages available.");
     
-                IMessageConsumer messageConsumer = consumerContext.Consume(
+                IMessageConsumer messageConsumer = consumerContext.CreateConsumer(
                     (s, e) => 
                     {
                         Console.WriteLine($"   Received {e.Message.Subject}");
@@ -253,7 +253,7 @@ namespace NATSExamples.NatsByExample
                 // operations. For instance, it is possible, but unlikely, that the consumer
                 // could be deleted by another application in your ecosystem and if that happens
                 // in the middle of the consumer, the exception would be thrown.
-                IIterableConsumer iterableConsumer = consumerContext.Iterate();
+                IIterableConsumer iterableConsumer = consumerContext.CreateIterable();
                 for (int x = 0; x < 3; x++) {
                     Msg msg1 = iterableConsumer.NextMessage(100);
                     Console.WriteLine($"   Received {msg1.Subject}");
