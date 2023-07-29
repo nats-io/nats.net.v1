@@ -216,6 +216,18 @@ namespace NATS.Client.Internals
             }
         }
 
+        public static void AddFieldEvenEmpty(JSONObject o, string field, string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                o[field] = "";
+            }
+            else
+            {
+                o[field] = value;
+            }
+        }
+
         public static void AddField(JSONObject o, string field, JsonSerializable value)
         {
             if (value != null)
@@ -308,6 +320,14 @@ namespace NATS.Client.Internals
         }
 
         public static void AddFieldWhenGtZero(JSONObject o, string field, long? value)
+        {
+            if (value != null && value > 0)
+            {
+                o[field] = value;
+            }
+        }
+
+        public static void AddFieldWhenGteMinusOne(JSONObject o, string field, long? value)
         {
             if (value != null && value > 0)
             {

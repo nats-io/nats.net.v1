@@ -10,11 +10,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-using NATS.Client.NaCl;
+
 using System;
 using System.IO;
-using System.Text;
 using System.Security.Cryptography;
+using System.Text;
+using NATS.Client.NaCl;
 
 namespace NATS.Client
 {
@@ -74,30 +75,42 @@ namespace NATS.Client
         private byte[] seed;
         private byte[] expandedPrivateKey;
         private byte[] key;
+        public Nkeys.PrefixType Type { get; }
 
-        internal NkeyPair(byte[] userSeed)
+        internal NkeyPair(byte[] publicKey, byte[] privateKey, Nkeys.PrefixType type) {
+            this.key = publicKey;
+            this.expandedPrivateKey = privateKey;
+            this.Type = type;
+        }
+
+        internal NkeyPair(byte[] userSeed, Nkeys.PrefixType type)
         {
             if (userSeed == null)
+            {
                 throw new NATSException("seed cannot be null");
+            }
 
             int len = userSeed.Length;
             if (len != Ed25519.PrivateKeySeedSize)
+            {
                 throw new NATSException("invalid seed length");
+            }
 
             seed = new byte[len];
             Buffer.BlockCopy(userSeed, 0, seed, 0, len);
             Ed25519.KeyPairFromSeed(out key, out expandedPrivateKey, seed);
+            Type = type;
         }
 
         /// <summary>
         /// Gets the public key of the keypair.
         /// </summary>
-        public byte[] PublicKey { get { return key; } }
+        public byte[] PublicKey => key;
 
         /// <summary>
         /// Gets the private key of the keypair.
         /// </summary>
-        public byte[] PrivateKeySeed { get { return seed; } }
+        public byte[] PrivateKeySeed => seed;
 
         /// <summary>
         /// Wipes clean the internal private keys.
@@ -178,6 +191,16 @@ namespace NATS.Client
 
         // PrefixByteUnknown is for unknown prefixes.
         const byte PrefixByteUknown = 23 << 3; // Base32-encodes to 'X...'
+        
+        public enum PrefixType
+        {
+            User,
+            Account,
+            Server,
+            Operator,
+            Cluster,
+            Private
+        };
 
         /// <summary>
         /// Decodes a base 32 encoded NKey into a nkey seed and verifies the checksum.
@@ -214,6 +237,19 @@ namespace NATS.Client
             return false;
         }
 
+        private static PrefixType? TypeFromPrefix(byte prefixByte)
+        {
+            switch (prefixByte)
+            {
+                case PrefixByteServer:   return PrefixType.Server;
+                case PrefixByteCluster:  return PrefixType.Cluster;
+                case PrefixByteOperator: return PrefixType.Operator;
+                case PrefixByteAccount:  return PrefixType.Account;
+                case PrefixByteUser:     return PrefixType.User;
+            }
+            return null;
+        }
+
         /// <summary>
         /// Wipes a byte array.
         /// </summary>
@@ -236,17 +272,27 @@ namespace NATS.Client
 
         internal static byte[] DecodeSeed(byte[] raw)
         {
+            PrefixType ignored;
+            return DecodeSeed(raw, out ignored);
+        }
+
+        internal static byte[] DecodeSeed(byte[] raw, out PrefixType type)
+        {
             // Need to do the reverse here to get back to internal representation.
             byte b1 = (byte)(raw[0] & 248);  // 248 = 11111000
-            byte b2 = (byte)((raw[0] & 7) << 5 | ((raw[1] & 248) >> 3)); // 7 = 00000111
+            byte prefix = (byte)((raw[0] & 7) << 5 | ((raw[1] & 248) >> 3)); // 7 = 00000111
 
             try
             {
                 if (b1 != PrefixByteSeed)
                     throw new NATSException("Invalid Seed.");
 
-                if (!IsValidPublicPrefixByte(b2))
+                PrefixType? tfp = TypeFromPrefix(prefix);
+                if (!tfp.HasValue)
+                {
                     throw new NATSException("Invalid Public Prefix Byte.");
+                }
+                type = tfp.Value;
 
                 // Trim off the first two bytes
                 byte[] data = new byte[raw.Length - 2];
@@ -268,6 +314,26 @@ namespace NATS.Client
             return DecodeSeed(Nkeys.Decode(src));
         }
 
+        internal static byte[] DecodeSeed(string src, out PrefixType type)
+        {
+            return DecodeSeed(Nkeys.Decode(src), out type);
+        }
+        
+        public static NkeyPair FromPublicKey(char[] publicKey)
+        {
+            string pkStr = new string(publicKey);
+            byte[] raw = Nkeys.Decode(pkStr);
+            byte prefix = (byte)(raw[0] & 0xFF);
+
+            PrefixType? tfp = TypeFromPrefix(prefix);
+            if (!tfp.HasValue)
+            {
+                throw new NATSException("Not a valid public NKey");
+            }
+
+            return new NkeyPair(Encoding.ASCII.GetBytes(pkStr), null, tfp.Value);
+        }
+
         /// <summary>
         /// Creates an NkeyPair from a private seed String.
         /// </summary>
@@ -275,10 +341,11 @@ namespace NATS.Client
         /// <returns>A NATS Ed25519 Keypair</returns>
         public static NkeyPair FromSeed(string seed)
         {
-            byte[] userSeed = DecodeSeed(seed);
+            PrefixType type;
+            byte[] userSeed = DecodeSeed(seed, out type);
             try
             {
-                var kp = new NkeyPair(userSeed);
+                var kp = new NkeyPair(userSeed, type);
                 return kp;
             }
             finally
@@ -286,7 +353,7 @@ namespace NATS.Client
                 Wipe(ref userSeed);
             }
         }
-
+        
         internal static string Encode(byte prefixbyte, bool seed, byte[] src)
         {
             if (!IsValidPublicPrefixByte(prefixbyte))
