@@ -329,7 +329,7 @@ namespace NATS.Client.Internals
 
         public static void AddFieldWhenGteMinusOne(JSONObject o, string field, long? value)
         {
-            if (value != null && value > 0)
+            if (value != null && value >= -1)
             {
                 o[field] = value;
             }

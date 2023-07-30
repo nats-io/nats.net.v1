@@ -23,8 +23,19 @@ namespace NATS.Client.Internals
 {
     public static class JwtUtils
     {
-        private static readonly string EncodedClaimHeader =
-            Convert.ToBase64String(Encoding.ASCII.GetBytes("{\"typ\":\"JWT\", \"alg\":\"ed25519-nkey\"}"));
+        private static string ToBase64(byte[] bytes)
+        {
+            string s = Convert.ToBase64String(bytes);
+            int at = s.IndexOf('=');
+            if (at != -1)
+            {
+                s = s.Substring(0, at);
+            }
+            return s.Replace("/", "_").Replace("+", "-");
+        }
+        
+        private static readonly string EncodedClaimHeader = 
+            ToBase64(Encoding.ASCII.GetBytes("{\"typ\":\"JWT\", \"alg\":\"ed25519-nkey\"}"));
 
         public static readonly long NoLimit = -1;
 
@@ -150,7 +161,7 @@ namespace NATS.Client.Internals
                 throw new ArgumentException("IssueUserJWT requires a user key for the publicUserKey, but got " + userKey.Type);
             }
 
-            string accSigningKeyPub = Encoding.UTF8.GetString(signingKey.PublicKey);
+            string accSigningKeyPub = signingKey.EncodedPublicKey;
 
             string claimName = string.IsNullOrWhiteSpace(name) ? publicUserKey : name;
 
@@ -184,16 +195,16 @@ namespace NATS.Client.Internals
 
             // Compute jti, a base32 encoded sha256 hash
             IncrementalHash hasher = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
-            hasher.AppendData(Encoding.UTF8.GetBytes(claimJson));
+            hasher.AppendData(Encoding.ASCII.GetBytes(claimJson));
 
             claim.Jti = Base32.Encode(hasher.GetHashAndReset());
 
             // all three components (header/body/signature) are base64url encoded
-            string encBody = Convert.ToBase64String(claim.Serialize());
+            string encBody = ToBase64(claim.Serialize());
 
             // compute the signature off of header + body (. included on purpose)
-            byte[] sig = Encoding.UTF8.GetBytes(EncodedClaimHeader + "." + encBody);
-            string encSig = Convert.ToBase64String(signingKey.Sign(sig));
+            byte[] sig = Encoding.ASCII.GetBytes(EncodedClaimHeader + "." + encBody);
+            string encSig = ToBase64(signingKey.Sign(sig));
 
             // append signature to header and body and return it
             return EncodedClaimHeader + "." + encBody + "." + encSig;

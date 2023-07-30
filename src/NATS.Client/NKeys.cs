@@ -107,11 +107,15 @@ namespace NATS.Client
         /// </summary>
         public byte[] PublicKey => key;
 
+        public string EncodedPublicKey => Nkeys.Encode(Nkeys.PrefixFromType(Type), false, key);
+
         /// <summary>
         /// Gets the private key of the keypair.
         /// </summary>
         public byte[] PrivateKeySeed => seed;
 
+        public string EncodedSeed => Nkeys.Encode(Nkeys.PrefixFromType(Type), true, seed);
+        
         /// <summary>
         /// Wipes clean the internal private keys.
         /// </summary>
@@ -169,28 +173,28 @@ namespace NATS.Client
     public class Nkeys
     {
         // PrefixByteSeed is the version byte used for encoded NATS Seeds
-        const byte PrefixByteSeed = 18 << 3; // Base32-encodes to 'S...'
+        internal const byte PrefixByteSeed = 18 << 3; // Base32-encodes to 'S...'
 
         // PrefixBytePrivate is the version byte used for encoded NATS Private keys
-        const byte PrefixBytePrivate = 15 << 3; // Base32-encodes to 'P...'
+        internal const byte PrefixBytePrivate = 15 << 3; // Base32-encodes to 'P...'
 
         // PrefixByteServer is the version byte used for encoded NATS Servers
-        const byte PrefixByteServer = 13 << 3; // Base32-encodes to 'N...'
+        internal const byte PrefixByteServer = 13 << 3; // Base32-encodes to 'N...'
 
         // PrefixByteCluster is the version byte used for encoded NATS Clusters
-        const byte PrefixByteCluster = 2 << 3; // Base32-encodes to 'C...'
+        internal const byte PrefixByteCluster = 2 << 3; // Base32-encodes to 'C...'
 
         // PrefixByteOperator is the version byte used for encoded NATS Operators
-        const byte PrefixByteOperator = 14 << 3; // Base32-encodes to 'O...'
+        internal const byte PrefixByteOperator = 14 << 3; // Base32-encodes to 'O...'
 
         // PrefixByteAccount is the version byte used for encoded NATS Accounts
-        const byte PrefixByteAccount = 0; // Base32-encodes to 'A...'
+        internal const byte PrefixByteAccount = 0; // Base32-encodes to 'A...'
 
         // PrefixByteUser is the version byte used for encoded NATS Users
-        const byte PrefixByteUser = 20 << 3; // Base32-encodes to 'U...'
+        internal const byte PrefixByteUser = 20 << 3; // Base32-encodes to 'U...'
 
         // PrefixByteUnknown is for unknown prefixes.
-        const byte PrefixByteUknown = 23 << 3; // Base32-encodes to 'X...'
+        internal const byte PrefixByteUknown = 23 << 3; // Base32-encodes to 'X...'
         
         public enum PrefixType
         {
@@ -210,6 +214,7 @@ namespace NATS.Client
         public static byte[] Decode(string src)
         {
             byte[] raw = Base32.Decode(src);
+            byte[] raw2 = Base32.FromBase32String(src);
             ushort crc = (ushort)(raw[raw.Length - 2] | raw[raw.Length - 1] << 8);
 
             // trim off the CRC16
@@ -237,7 +242,7 @@ namespace NATS.Client
             return false;
         }
 
-        private static PrefixType? TypeFromPrefix(byte prefixByte)
+        internal static PrefixType? TypeFromPrefix(byte prefixByte)
         {
             switch (prefixByte)
             {
@@ -248,6 +253,19 @@ namespace NATS.Client
                 case PrefixByteUser:     return PrefixType.User;
             }
             return null;
+        }
+
+        internal static byte PrefixFromType(PrefixType type)
+        {
+            switch (type)
+            {
+                case PrefixType.Server: return PrefixByteServer;
+                case PrefixType.Cluster: return PrefixByteCluster;
+                case PrefixType.Operator: return PrefixByteOperator;
+                case PrefixType.Account: return PrefixByteAccount;
+                case PrefixType.User: return PrefixByteUser;
+            }
+            return 0;
         }
 
         /// <summary>

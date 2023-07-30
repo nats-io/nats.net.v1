@@ -13,6 +13,7 @@
 
 using System;
 using NATS.Client;
+using NATS.Client.Internals;
 
 namespace NATSExamples
 {
