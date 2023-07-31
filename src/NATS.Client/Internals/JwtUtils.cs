@@ -17,25 +17,16 @@ using System.Security.Cryptography;
 using System.Text;
 using NATS.Client.Internals.SimpleJSON;
 using NATS.Client.JetStream;
+using static NATS.Client.EncodingUtils;
 using static NATS.Client.Internals.JsonUtils;
 
 namespace NATS.Client.Internals
 {
     public static class JwtUtils
     {
-        private static string ToBase64(byte[] bytes)
-        {
-            string s = Convert.ToBase64String(bytes);
-            int at = s.IndexOf('=');
-            if (at != -1)
-            {
-                s = s.Substring(0, at);
-            }
-            return s.Replace("/", "_").Replace("+", "-");
-        }
-        
-        private static readonly string EncodedClaimHeader = 
-            ToBase64(Encoding.ASCII.GetBytes("{\"typ\":\"JWT\", \"alg\":\"ed25519-nkey\"}"));
+
+        public static readonly string EncodedClaimHeader =
+            ToBase64UrlEncoded(Encoding.ASCII.GetBytes("{\"typ\":\"JWT\", \"alg\":\"ed25519-nkey\"}"));
 
         public static readonly long NoLimit = -1;
 
@@ -48,7 +39,7 @@ namespace NATS.Client.Internals
         /// String jwt = IssueUserJWT(signingKey, accountId, new String(userKey.getPublicKey()));
         /// String.format(JwtUtils.NatsUserJwtFormat, jwt, new String(userKey.getSeed()));
         /// </pre>
-        public static readonly string NatsUserJwtFormat = 
+        public static readonly string NatsUserJwtFormat =
             "-----BEGIN NATS USER JWT-----\n" +
             "{0}\n" +
             "------END NATS USER JWT------\n" +
@@ -63,6 +54,11 @@ namespace NATS.Client.Internals
             "\n" +
             "*************************************************************\n";
 
+        public static long UnixTimeSeconds()
+        {
+            return DateTimeOffset.Now.ToUnixTimeSeconds();
+        }
+
         /// <summary>
         /// Issue a user JWT from a scoped signing key. See <a href="https://docs.nats.io/nats-tools/nsc/signing_keys">Signing Keys</a>
         /// </summary>
@@ -72,7 +68,8 @@ namespace NATS.Client.Internals
         /// <returns>a JWT</returns>
         public static string IssueUserJWT(NkeyPair signingKey, string accountId, string publicUserKey)
         {
-            return IssueUserJWT(signingKey, accountId, publicUserKey, null, null);
+            return IssueUserJWT(signingKey, publicUserKey, null, null, UnixTimeSeconds(), null,
+                new UserClaim(accountId));
         }
 
         /// <summary>
@@ -85,7 +82,7 @@ namespace NATS.Client.Internals
         /// <returns>a JWT</returns>
         public static string IssueUserJWT(NkeyPair signingKey, string accountId, string publicUserKey, string name)
         {
-            return IssueUserJWT(signingKey, accountId, publicUserKey, name, null);
+            return IssueUserJWT(signingKey, publicUserKey, name, null, UnixTimeSeconds(), null, new UserClaim(accountId));
         }
 
         /// <summary>
@@ -98,11 +95,9 @@ namespace NATS.Client.Internals
         /// <param name="expiration">optional but recommended duration, when the generated jwt needs to expire. If not set, JWT will not expire.</param>
         /// <param name="tags">optional list of tags to be included in the JWT.</param>
         /// <returns>a JWT</returns>
-        public static string IssueUserJWT(NkeyPair signingKey, string accountId, string publicUserKey, string name,
-            Duration expiration, params string[] tags)
+        public static string IssueUserJWT(NkeyPair signingKey, string accountId, string publicUserKey, string name, Duration expiration, params string[] tags)
         {
-            return IssueUserJWT(signingKey, accountId, publicUserKey, name, expiration, tags,
-                DateTimeOffset.Now.ToUnixTimeSeconds());
+            return IssueUserJWT(signingKey, publicUserKey, name, expiration, UnixTimeSeconds(), null, new UserClaim(accountId, tags));
         }
 
         /// <summary>
@@ -116,12 +111,26 @@ namespace NATS.Client.Internals
         /// <param name="tags">optional list of tags to be included in the JWT.</param>
         /// <param name="issuedAt">the current epoch seconds.</param>
         /// <returns>a JWT</returns>
-        public static string IssueUserJWT(NkeyPair signingKey, string accountId, string publicUserKey, string name,
-            Duration expiration, String[] tags, long issuedAt)
+        public static string IssueUserJWT(NkeyPair signingKey, string accountId, string publicUserKey, string name, Duration expiration, String[] tags, long issuedAt)
         {
-            UserClaim uc = new UserClaim(accountId);
-            uc.Tags = tags;
-            return IssueUserJWT(signingKey, publicUserKey, name, expiration, issuedAt, uc);
+            return IssueUserJWT(signingKey, publicUserKey, name, expiration, issuedAt, null, new UserClaim(accountId, tags));
+        }
+
+        /// <summary>
+        /// Issue a user JWT from a scoped signing key. See <a href="https://docs.nats.io/nats-tools/nsc/signing_keys">Signing Keys</a>
+        /// </summary>
+        /// <param name="signingKey">a mandatory account nkey pair to sign the generated jwt.</param>
+        /// <param name="accountId">a mandatory public account nkey. Will throw error when not set or not account nkey.</param>
+        /// <param name="publicUserKey">a mandatory public user nkey. Will throw error when not set or not user nkey.</param>
+        /// <param name="name">optional human-readable name. When absent, default to publicUserKey.</param>
+        /// <param name="expiration">optional but recommended duration, when the generated jwt needs to expire. If not set, JWT will not expire.</param>
+        /// <param name="tags">optional list of tags to be included in the JWT.</param>
+        /// <param name="issuedAt">the current epoch seconds.</param>
+        /// <param name="audience">optional audience</param>
+        /// <returns>a JWT</returns>
+        public static string IssueUserJWT(NkeyPair signingKey, string accountId, string publicUserKey, string name, Duration expiration, String[] tags, long issuedAt, string audience)
+        {
+            return IssueUserJWT(signingKey, publicUserKey, name, expiration, issuedAt, audience, new UserClaim(accountId, tags));
         }
 
         /// <summary>
@@ -132,17 +141,16 @@ namespace NATS.Client.Internals
         /// <param name="name">optional human-readable name. When absent, default to publicUserKey.</param>
         /// <param name="expiration">optional but recommended duration, when the generated jwt needs to expire. If not set, JWT will not expire.</param>
         /// <param name="issuedAt">the current epoch seconds.</param>
+        /// <param name="audience">optional audience</param>
         /// <param name="nats">the user claim</param>
         /// <returns>a JWT</returns>
-        public static string IssueUserJWT(NkeyPair signingKey, string publicUserKey, string name, Duration expiration,
-            long issuedAt, UserClaim nats)
+        public static string IssueUserJWT(NkeyPair signingKey, string publicUserKey, string name, Duration expiration, long issuedAt, String audience, UserClaim nats)
         {
             // Validate the signingKey:
             if (signingKey.Type != Nkeys.PrefixType.Account)
             {
                 throw new ArgumentException(
-                    "IssueUserJWT requires an account key for the signingKey parameter, but got " +
-                    signingKey.Type);
+                    "IssueUserJWT requires an account key for the signingKey parameter, but got " + signingKey.Type);
             }
 
             // Validate the accountId:
@@ -150,22 +158,22 @@ namespace NATS.Client.Internals
             if (accountKey.Type != Nkeys.PrefixType.Account)
             {
                 throw new ArgumentException(
-                    "IssueUserJWT requires an account key for the accountId parameter, but got " +
-                    accountKey.Type);
+                    "IssueUserJWT requires an account key for the accountId parameter, but got " + accountKey.Type);
             }
 
             // Validate the publicUserKey:
             NkeyPair userKey = Nkeys.FromPublicKey(publicUserKey.ToCharArray());
             if (userKey.Type != Nkeys.PrefixType.User)
             {
-                throw new ArgumentException("IssueUserJWT requires a user key for the publicUserKey, but got " + userKey.Type);
+                throw new ArgumentException("IssueUserJWT requires a user key for the publicUserKey parameter, but got " + userKey.Type);
             }
 
             string accSigningKeyPub = signingKey.EncodedPublicKey;
 
             string claimName = string.IsNullOrWhiteSpace(name) ? publicUserKey : name;
 
-            return issueJWT(signingKey, publicUserKey, claimName, expiration, issuedAt, accSigningKeyPub, nats);
+            return issueJWT(signingKey, publicUserKey, claimName, expiration, issuedAt, accSigningKeyPub, audience,
+                nats);
         }
 
         /// <summary>
@@ -180,14 +188,15 @@ namespace NATS.Client.Internals
         /// <param name="nats">the generic nats claim</param>
         /// <returns>a JWT</returns>
         public static string issueJWT(NkeyPair signingKey, string publicUserKey, string name, Duration expiration,
-            long issuedAt, string accSigningKeyPub, JsonSerializable nats)
+            long issuedAt, string accSigningKeyPub, string audience, JsonSerializable nats)
         {
             Claim claim = new Claim();
-            claim.Exp = expiration;
+            claim.Aud = audience;
             claim.Iat = issuedAt;
             claim.Iss = accSigningKeyPub;
             claim.Name = name;
             claim.Sub = publicUserKey;
+            claim.Exp = expiration;
             claim.Nats = nats;
 
             // Issue At time is stored in unix seconds
@@ -200,14 +209,25 @@ namespace NATS.Client.Internals
             claim.Jti = Base32.Encode(hasher.GetHashAndReset());
 
             // all three components (header/body/signature) are base64url encoded
-            string encBody = ToBase64(claim.Serialize());
+            string encBody = ToBase64UrlEncoded(claim.Serialize());
 
             // compute the signature off of header + body (. included on purpose)
             byte[] sig = Encoding.ASCII.GetBytes(EncodedClaimHeader + "." + encBody);
-            string encSig = ToBase64(signingKey.Sign(sig));
+            string encSig = ToBase64UrlEncoded(signingKey.Sign(sig));
 
             // append signature to header and body and return it
             return EncodedClaimHeader + "." + encBody + "." + encSig;
+        }
+
+        /// <summary>
+        /// Get the claim body from a JWT
+
+        /// </summary>
+        /// <param name="jwt">the encoded jwt</param>
+        /// <returns>the claim body json</returns>
+        public static string GetClaimBody(String jwt)
+        {
+            return FromBase64UrlEncoded(jwt.Split('.')[1]);
         }
     }
 
@@ -230,6 +250,11 @@ namespace NATS.Client.Internals
     
         public UserClaim(string issuerAccount) {
             this.IssuerAccount = issuerAccount;
+        }
+    
+        public UserClaim(string issuerAccount, String[] tags) {
+            IssuerAccount = issuerAccount;
+            Tags = tags;
         }
     
         public override JSONNode ToJsonNode() {
@@ -295,28 +320,31 @@ namespace NATS.Client.Internals
     }
     
     public class Claim : JsonSerializable {
-        public Duration Exp;
+        public string Aud;
+        public string Jti;
         public long Iat;
         public string Iss;
-        public string Jti;
         public string Name;
-        public JsonSerializable Nats;
         public string Sub;
+        public Duration Exp;
+        public JsonSerializable Nats;
     
         public override JSONNode ToJsonNode() {
             JSONObject o = new JSONObject();
 
-            if (Exp != null && !Exp.IsZero() && !Exp.IsNegative()) {
-                long seconds = Exp.Millis / 1000;
-                AddField(o, "exp", Iat + seconds);
-            }
-            AddField(o, "iat", Iat);
+            AddField(o, "aud", Aud);
             AddFieldEvenEmpty(o, "jti", Jti);
+            AddField(o, "iat", Iat);
             AddField(o, "iss", Iss);
             AddField(o, "name", Name);
-            AddField(o, "nats", Nats);
             AddField(o, "sub", Sub);
-
+            
+            if (Exp != null && !Exp.IsZero() && !Exp.IsNegative()) {
+                long seconds = Exp.Millis / 1000;
+                AddField(o, "exp", Iat + seconds);  // relative to the iat
+            }
+            
+            AddField(o, "nats", Nats);
             return o;
         }
     }

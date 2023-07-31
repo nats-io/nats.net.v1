@@ -16,6 +16,41 @@ using System.Text;
 
 namespace NATS.Client
 {
+    public static class EncodingUtils
+    {
+        public static string ToBase64UrlEncoded(byte[] bytes)
+        {
+            string s = Convert.ToBase64String(bytes);
+            int at = s.IndexOf('=');
+            if (at != -1)
+            {
+                s = s.Substring(0, at);
+            }
+            return s.Replace("/", "_").Replace("+", "-");
+        }
+
+        public static string FromBase64UrlEncoded(string s)
+        {
+            try
+            {
+                return Encoding.ASCII.GetString(Convert.FromBase64String(s));
+            }
+            catch (System.FormatException)
+            {
+                // maybe wasn't padded correctly?
+                try
+                {
+                    return Encoding.ASCII.GetString(Convert.FromBase64String(s + "="));
+                }
+                catch (System.FormatException)
+                {
+                    // maybe wasn't padded correctly?
+                    return Encoding.ASCII.GetString(Convert.FromBase64String(s + "=="));
+                }
+            }
+        }
+    }
+    
     public class Base32
     {
         public static byte[] Decode(string input)
@@ -151,7 +186,7 @@ namespace NATS.Client
         /// </summary>
         /// <param name="bytes">An array of bytes to convert to Base32 format</param>
         /// <returns>Returns a string representing byte array</returns>
-        internal static string ToBase32String(byte[] bytes)
+        public static string ToBase32String(byte[] bytes)
         {
             // Check if byte array is null
             if (bytes == null)
@@ -241,7 +276,7 @@ namespace NATS.Client
         /// </summary>
         /// <param name="base32String">Base32 string to convert</param>
         /// <returns>Returns a byte array converted from the string</returns>
-        internal static byte[] FromBase32String(string base32String)
+        public static byte[] FromBase32String(string base32String)
         {
             // Check if string is null
             if (base32String == null)
@@ -324,5 +359,6 @@ namespace NATS.Client
             }
 
             return outputBytes;
-        }    }
+        }    
+    }
 }

@@ -337,7 +337,7 @@ namespace NATS.Client.Internals
 
         public static void AddField(JSONObject o, string field, Duration value)
         {
-            if (value != null)
+            if (value != null && value.IsPositive())
             {
                 o[field] = value.Nanos;
             }
