@@ -186,6 +186,7 @@ namespace NATS.Client.Internals
         /// <param name="expiration">optional but recommended duration, when the generated jwt needs to expire. If not set, JWT will not expire.</param>
         /// <param name="issuedAt">the current epoch seconds.</param>
         /// <param name="accSigningKeyPub">the account signing key</param>
+        /// <param name="audience">optional audience</param>
         /// <param name="nats">the generic nats claim</param>
         /// <returns>a JWT</returns>
         public static string issueJWT(NkeyPair signingKey, string publicUserKey, string name, Duration expiration,
