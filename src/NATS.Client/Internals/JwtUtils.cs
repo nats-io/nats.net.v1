@@ -36,9 +36,10 @@ namespace NATS.Client.Internals
         /// <pre>
         /// NKey userKey = NKey.createUser(new SecureRandom());
         /// NKey signingKey = loadFromSecretStore();
-        /// String jwt = IssueUserJWT(signingKey, accountId, new String(userKey.getPublicKey()));
-        /// String.format(JwtUtils.NatsUserJwtFormat, jwt, new String(userKey.getSeed()));
+        /// String jwt = IssueUserJWT(signingKey, accountId, userKey.EncodedPublicKey);
+        /// String.format(JwtUtils.NatsUserJwtFormat, jwt, userKey.EncodedSeed);
         /// </pre>
+        /// </summary>
         public static readonly string NatsUserJwtFormat =
             "-----BEGIN NATS USER JWT-----\n" +
             "{0}\n" +
@@ -221,7 +222,6 @@ namespace NATS.Client.Internals
 
         /// <summary>
         /// Get the claim body from a JWT
-
         /// </summary>
         /// <param name="jwt">the encoded jwt</param>
         /// <returns>the claim body json</returns>
