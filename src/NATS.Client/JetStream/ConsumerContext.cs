@@ -28,27 +28,27 @@ namespace NATS.Client.JetStream
         private readonly StreamContext streamContext;
         private readonly JetStream js;
         private readonly PullSubscribeOptions bindPso;
-        private ConsumerInfo lastConsumerInfo;
+        private ConsumerInfo cachedConsumerInfo;
 
-        public string ConsumerName => lastConsumerInfo.Name;
+        public string ConsumerName => cachedConsumerInfo.Name;
         
         internal ConsumerContext(StreamContext sc, ConsumerInfo ci)
         {
             streamContext = sc;
             js = new JetStream(streamContext.jsm.Conn, streamContext.jsm.JetStreamOptions);
             bindPso = PullSubscribeOptions.BindTo(streamContext.StreamName, ci.Name);
-            lastConsumerInfo = ci;
+            cachedConsumerInfo = ci;
         }
 
         public ConsumerInfo GetConsumerInfo()
         {
-            lastConsumerInfo = streamContext.jsm.GetConsumerInfo(streamContext.StreamName, lastConsumerInfo.Name);
-            return lastConsumerInfo;
+            cachedConsumerInfo = streamContext.jsm.GetConsumerInfo(streamContext.StreamName, cachedConsumerInfo.Name);
+            return cachedConsumerInfo;
         }
 
         public ConsumerInfo GetCachedConsumerInfo()
         {
-            return lastConsumerInfo;
+            return cachedConsumerInfo;
         }
 
         public Msg Next(int maxWaitMillis = DefaultExpiresInMillis) 
@@ -70,16 +70,16 @@ namespace NATS.Client.JetStream
 
         public IFetchConsumer Fetch(FetchConsumeOptions fetchConsumeOptions) {
             Validator.Required(fetchConsumeOptions, "Fetch Consume Options");
-            return new FetchConsumer(new SubscriptionMaker(js, bindPso), fetchConsumeOptions, lastConsumerInfo);
+            return new FetchConsumer(new SubscriptionMaker(js, bindPso), fetchConsumeOptions, cachedConsumerInfo);
         }
 
         public IIterableConsumer StartIterate(ConsumeOptions consumeOptions = null) {
-            return new IterableConsumer(new SubscriptionMaker(js, bindPso), consumeOptions ?? DefaultConsumeOptions, lastConsumerInfo);
+            return new IterableConsumer(new SubscriptionMaker(js, bindPso), consumeOptions ?? DefaultConsumeOptions, cachedConsumerInfo);
         }
 
         public IMessageConsumer StartConsume(EventHandler<MsgHandlerEventArgs> handler, ConsumeOptions consumeOptions = null) {
             Validator.Required(handler, "Msg Handler");
-            return new MessageConsumer(new SubscriptionMaker(js, bindPso), handler, consumeOptions ?? DefaultConsumeOptions, lastConsumerInfo);
+            return new MessageConsumer(new SubscriptionMaker(js, bindPso), handler, consumeOptions ?? DefaultConsumeOptions, cachedConsumerInfo);
         }
     }
 

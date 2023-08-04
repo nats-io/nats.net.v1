@@ -15,7 +15,6 @@ using System;
 using System.Diagnostics;
 using System.Text;
 using System.Threading;
-using IntegrationTestsInternal;
 using NATS.Client;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
@@ -269,27 +268,27 @@ namespace IntegrationTests
             });
         }
     
-        [Fact]
-        public void TestOrderedIterableConsumerBasic() 
-        {
-            Context.RunInJsServer(si => RunTest(si), c => {
-                string streamName = Stream(Nuid.NextGlobal());
-                string subject = Subject(Nuid.NextGlobal());
-                string durable = Nuid.NextGlobal();
+        // [Fact]
+        // public void TestOrderedIterableConsumerBasic() 
+        // {
+            // Context.RunInJsServer(si => RunTest(si), c => {
+                // string streamName = Stream(Nuid.NextGlobal());
+                // string subject = Subject(Nuid.NextGlobal());
+                // string durable = Nuid.NextGlobal();
 
-                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                // IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
     
-                CreateMemoryStream(jsm, streamName, subject);
-                IJetStream js = c.CreateJetStreamContext();
-                IStreamContext sc = c.CreateStreamContext(streamName);
+                // CreateMemoryStream(jsm, streamName, subject);
+                // IJetStream js = c.CreateJetStreamContext();
+                // IStreamContext sc = c.CreateStreamContext(streamName);
     
-                int stopCount = 500;
-                OrderedConsumerConfiguration occ = new OrderedConsumerConfiguration().WithFilterSubject(subject);
-                using (IIterableConsumer consumer = sc.StartOrderedIterate(occ)) {
-                    _testIterable(js, stopCount, consumer, subject);
-                }
-            });
-        }
+                // int stopCount = 500;
+                // OrderedConsumerConfiguration occ = new OrderedConsumerConfiguration().WithFilterSubject(subject);
+                // using (IIterableConsumer consumer = sc.StartOrderedIterate(occ)) {
+                    // _testIterable(js, stopCount, consumer, subject);
+                // }
+            // });
+        // }
 
         private static void _testIterable(IJetStream js, int stopCount, IIterableConsumer consumer, string subject)
         {
@@ -563,95 +562,94 @@ namespace IntegrationTests
             }
         }
         
-        [Fact]
-        public void TestOrderedIterable() {
-            Context.RunInJsServer(si => RunTest(si), c => {
-                string streamName = Stream(Nuid.NextGlobal());
-                string subject = Subject(Nuid.NextGlobal());
-
-                // Setup
-                IJetStream js = c.CreateJetStreamContext();
-                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
-    
-                CreateMemoryStream(jsm, streamName, subject);
-    
-                IStreamContext sc = js.CreateStreamContext(streamName);
-    
-                // Get this in place before any subscriptions are made
-                ((JetStream)js)._pullOrderedMessageManagerFactory =
-                    (conn, lJs, lStream, so, cc, queueMode, syncMode) =>
-                        new PullOrderedTestDropSimulator(conn, lJs, lStream, so, cc, queueMode, syncMode);
-    
-                // Published messages will be intercepted by the OrderedTestDropSimulator
-                new Thread(() => {
-                    Thread.Sleep(1000); // give the consumer time to get setup before publishing
-                    JsPublish(js, subject, 101, 6);
-                }).Start();
-    
-                OrderedConsumerConfiguration occ = new OrderedConsumerConfiguration().WithFilterSubject(subject);
-                using (IIterableConsumer icon = sc.StartOrderedIterate(occ)) {
-                    // Loop through the messages to make sure I get stream sequence 1 to 6
-                    ulong expectedStreamSeq = 1;
-                    while (expectedStreamSeq <= 6) {
-                        Msg m = icon.NextMessage(1000);
-                        if (m != null) {
-                            Assert.Equal(expectedStreamSeq, m.MetaData.StreamSequence);
-                            Assert.Equal(TestJetStreamConsumer.ExpectedConSeqNums[expectedStreamSeq-1], m.MetaData.ConsumerSequence);
-                            ++expectedStreamSeq;
-                        }
-                    }
-                }
-            });
-        }
-        
-        [Fact]
-        public void TestOrderedConsume() {
-            Context.RunInJsServer(si => RunTest(si), c => {
-                string streamName = Stream(Nuid.NextGlobal());
-                string subject = Subject(Nuid.NextGlobal());
-
-                // Setup
-                IJetStream js = c.CreateJetStreamContext();
-                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
-    
-                CreateMemoryStream(jsm, streamName, subject);
-    
-                IStreamContext sc = js.CreateStreamContext(streamName);
-    
-                // Get this in place before any subscriptions are made
-                ((JetStream)js)._pullOrderedMessageManagerFactory =
-                    (conn, lJs, lStream, so, cc, queueMode, syncMode) =>
-                        new PullOrderedTestDropSimulator(conn, lJs, lStream, so, cc, queueMode, syncMode);
-    
-                CountdownEvent msgLatch = new CountdownEvent(6);
-                int received = 0;
-                ulong[] ssFlags = new ulong[6];
-                ulong[] csFlags = new ulong[6];
-                EventHandler<MsgHandlerEventArgs> handler = (s, e) => {
-                    int i = ++received - 1;
-                    ssFlags[i] = e.Message.MetaData.StreamSequence;
-                    csFlags[i] = e.Message.MetaData.ConsumerSequence;
-                    msgLatch.Signal();
-                };
-    
-                OrderedConsumerConfiguration occ = new OrderedConsumerConfiguration().WithFilterSubject(subject);
-                using (IMessageConsumer mcon = sc.StartOrderedConsume(occ, handler)) {
-                    JsPublish(js, subject, 201, 6);
-    
-                    // wait for the messages
-                    msgLatch.Wait(30000);
-    
-                    // Loop through the messages to make sure I get stream sequence 1 to 6
-                    ulong expectedStreamSeq = 1;
-                    while (expectedStreamSeq <= 6) {
-                        ulong idx = expectedStreamSeq - 1;
-                        Assert.Equal(expectedStreamSeq, ssFlags[idx]);
-                        Assert.Equal(TestJetStreamConsumer.ExpectedConSeqNums[idx], csFlags[idx]);
-                        ++expectedStreamSeq;
-                    }
-                }
-            });
-        }
-
+        // [Fact]
+        // public void TestOrderedIterable() {
+        //     Context.RunInJsServer(si => RunTest(si), c => {
+        //         string streamName = Stream(Nuid.NextGlobal());
+        //         string subject = Subject(Nuid.NextGlobal());
+        //
+        //         // Setup
+        //         IJetStream js = c.CreateJetStreamContext();
+        //         IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+        //
+        //         CreateMemoryStream(jsm, streamName, subject);
+        //
+        //         IStreamContext sc = js.CreateStreamContext(streamName);
+        //
+        //         // Get this in place before any subscriptions are made
+        //         ((JetStream)js)._pullOrderedMessageManagerFactory =
+        //             (conn, lJs, lStream, so, cc, queueMode, syncMode) =>
+        //                 new PullOrderedTestDropSimulator(conn, lJs, lStream, so, cc, queueMode, syncMode);
+        //
+        //         // Published messages will be intercepted by the OrderedTestDropSimulator
+        //         new Thread(() => {
+        //             Thread.Sleep(1000); // give the consumer time to get setup before publishing
+        //             JsPublish(js, subject, 101, 6);
+        //         }).Start();
+        //
+        //         OrderedConsumerConfiguration occ = new OrderedConsumerConfiguration().WithFilterSubject(subject);
+        //         using (IIterableConsumer icon = sc.StartOrderedIterate(occ)) {
+        //             // Loop through the messages to make sure I get stream sequence 1 to 6
+        //             ulong expectedStreamSeq = 1;
+        //             while (expectedStreamSeq <= 6) {
+        //                 Msg m = icon.NextMessage(1000);
+        //                 if (m != null) {
+        //                     Assert.Equal(expectedStreamSeq, m.MetaData.StreamSequence);
+        //                     Assert.Equal(TestJetStreamConsumer.ExpectedConSeqNums[expectedStreamSeq-1], m.MetaData.ConsumerSequence);
+        //                     ++expectedStreamSeq;
+        //                 }
+        //             }
+        //         }
+        //     });
+        // }
+        //
+        // [Fact]
+        // public void TestOrderedConsume() {
+        //     Context.RunInJsServer(si => RunTest(si), c => {
+        //         string streamName = Stream(Nuid.NextGlobal());
+        //         string subject = Subject(Nuid.NextGlobal());
+        //
+        //         // Setup
+        //         IJetStream js = c.CreateJetStreamContext();
+        //         IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+        //
+        //         CreateMemoryStream(jsm, streamName, subject);
+        //
+        //         IStreamContext sc = js.CreateStreamContext(streamName);
+        //
+        //         // Get this in place before any subscriptions are made
+        //         ((JetStream)js)._pullOrderedMessageManagerFactory =
+        //             (conn, lJs, lStream, so, cc, queueMode, syncMode) =>
+        //                 new PullOrderedTestDropSimulator(conn, lJs, lStream, so, cc, queueMode, syncMode);
+        //
+        //         CountdownEvent msgLatch = new CountdownEvent(6);
+        //         int received = 0;
+        //         ulong[] ssFlags = new ulong[6];
+        //         ulong[] csFlags = new ulong[6];
+        //         EventHandler<MsgHandlerEventArgs> handler = (s, e) => {
+        //             int i = ++received - 1;
+        //             ssFlags[i] = e.Message.MetaData.StreamSequence;
+        //             csFlags[i] = e.Message.MetaData.ConsumerSequence;
+        //             msgLatch.Signal();
+        //         };
+        //
+        //         OrderedConsumerConfiguration occ = new OrderedConsumerConfiguration().WithFilterSubject(subject);
+        //         using (IMessageConsumer mcon = sc.StartOrderedConsume(occ, handler)) {
+        //             JsPublish(js, subject, 201, 6);
+        //
+        //             // wait for the messages
+        //             msgLatch.Wait(30000);
+        //
+        //             // Loop through the messages to make sure I get stream sequence 1 to 6
+        //             ulong expectedStreamSeq = 1;
+        //             while (expectedStreamSeq <= 6) {
+        //                 ulong idx = expectedStreamSeq - 1;
+        //                 Assert.Equal(expectedStreamSeq, ssFlags[idx]);
+        //                 Assert.Equal(TestJetStreamConsumer.ExpectedConSeqNums[idx], csFlags[idx]);
+        //                 ++expectedStreamSeq;
+        //             }
+        //         }
+        //     });
+        // }
     }
 }

@@ -11,10 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Collections.Generic;
-using NATS.Client.Internals;
-using static NATS.Client.JetStream.PullSubscribeOptions;
 
 namespace NATS.Client.JetStream
 {
@@ -114,46 +111,6 @@ namespace NATS.Client.JetStream
         public bool DeleteMessage(ulong seq, bool erase)
         {
             return jsm.DeleteMessage(StreamName, seq, erase);
-        }
-
-        public IIterableConsumer StartOrderedIterate(OrderedConsumerConfiguration config, ConsumeOptions consumeOptions = null)
-        {
-            Validator.Required(config, "Ordered Consumer Config");
-            ConsumerConfiguration cc = GetBackingConsumerConfiguration(config);
-            PullSubscribeOptions pso = new OrderedPullSubscribeOptionsBuilder(StreamName, cc).Build();
-            return new IterableConsumer(new SubscriptionMaker(js, pso, cc.FilterSubject), 
-                consumeOptions == null ? ConsumeOptions.DefaultConsumeOptions : consumeOptions, null);
-        }
-
-        public IMessageConsumer StartOrderedConsume(OrderedConsumerConfiguration config, EventHandler<MsgHandlerEventArgs> handler,
-            ConsumeOptions consumeOptions = null)
-        {
-            Validator.Required(config, "Ordered Consumer Config");
-            Validator.Required(handler, "Msg Handler");
-            ConsumerConfiguration cc = GetBackingConsumerConfiguration(config);
-            PullSubscribeOptions pso = new OrderedPullSubscribeOptionsBuilder(StreamName, cc).Build();
-            return new MessageConsumer(new SubscriptionMaker(js, pso, cc.FilterSubject), handler, 
-                consumeOptions ?? ConsumeOptions.DefaultConsumeOptions, null);
-        }
-        
-        private ConsumerConfiguration GetBackingConsumerConfiguration(OrderedConsumerConfiguration occ) {
-            return ConsumerConfiguration.Builder()
-                .WithName(JetStreamBase.GenerateConsumerName())
-                .WithFilterSubject(occ.FilterSubject)
-                .WithDeliverPolicy(occ.DeliverPolicy)
-                .WithStartSequence(occ.StartSequence)
-                .WithStartTime(occ.StartTime)
-                .WithReplayPolicy(occ.ReplayPolicy)
-                .WithHeadersOnly(occ.HeadersOnly)
-                .Build();
-        }    
-    }
-    
-    internal class OrderedPullSubscribeOptionsBuilder : PullSubscribeOptionsBuilder {
-        public OrderedPullSubscribeOptionsBuilder(String streamName, ConsumerConfiguration config) {
-            WithStream(streamName);
-            WithConfiguration(config);
-            _ordered = true;
         }
     }
 }

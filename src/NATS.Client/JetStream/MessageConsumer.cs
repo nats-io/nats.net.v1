@@ -27,10 +27,9 @@ namespace NATS.Client.JetStream
         internal MessageConsumer(SubscriptionMaker subscriptionMaker,
             EventHandler<MsgHandlerEventArgs> messageHandler,
             BaseConsumeOptions consumeOptions,
-            ConsumerInfo lastConsumerInfo) : base(lastConsumerInfo) 
+            ConsumerInfo cachedConsumerInfo) 
+            : base(cachedConsumerInfo, subscriptionMaker.MakeSubscription(messageHandler)) 
         {
-            InitSub(subscriptionMaker.MakeSubscription(messageHandler));
-
             int bm = consumeOptions.Messages;
             long bb = consumeOptions.Bytes;
 
@@ -53,7 +52,7 @@ namespace NATS.Client.JetStream
         }
 
         public void Track(int pendingMessages, long pendingBytes, bool trackingBytes) {
-            if (!stopped &&
+            if (!Stopped &&
                 (pmm.pendingMessages <= thresholdMessages
                  || (pmm.trackingBytes && pmm.pendingBytes <= thresholdBytes)))
             {

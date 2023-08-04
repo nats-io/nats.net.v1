@@ -20,7 +20,8 @@ namespace NATS.Client.JetStream
     {
         internal IterableConsumer(SubscriptionMaker subscriptionMaker,
             ConsumeOptions consumeOptions,
-            ConsumerInfo lastConsumerInfo) : base(subscriptionMaker, null, consumeOptions, lastConsumerInfo) {}
+            ConsumerInfo cachedConsumerInfo) 
+            : base(subscriptionMaker, null, consumeOptions, cachedConsumerInfo) {}
 
         public Msg NextMessage(int timeoutMillis)
         {

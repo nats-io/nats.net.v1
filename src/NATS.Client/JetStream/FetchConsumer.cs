@@ -25,9 +25,9 @@ namespace NATS.Client.JetStream
 
         internal FetchConsumer(SubscriptionMaker subscriptionMaker,
             FetchConsumeOptions fetchConsumeOptions,
-            ConsumerInfo lastConsumerInfo) : base(lastConsumerInfo)  
+            ConsumerInfo cachedConsumerInfo) 
+            : base(cachedConsumerInfo, subscriptionMaker.MakeSubscription())  
         {
-            InitSub(subscriptionMaker.MakeSubscription());
             maxWaitMillis = fetchConsumeOptions.ExpiresIn;
             PullRequestOptions pro = PullRequestOptions.Builder(fetchConsumeOptions.MaxMessages)
                 .WithMaxBytes(fetchConsumeOptions.MaxBytes)
@@ -55,7 +55,7 @@ namespace NATS.Client.JetStream
                 // if the manager thinks it has received everything in the pull, it means
                 // that all the messages are already in the internal queue and there is
                 // no waiting necessary
-                if (timeLeftMillis < 1 | pmm.pendingMessages < 1 || (pmm.trackingBytes && pmm.pendingBytes < 1))
+                if (timeLeftMillis < 1 || pmm.pendingMessages < 1 || (pmm.trackingBytes && pmm.pendingBytes < 1))
                 {
                     return ((JetStreamPullSubscription)sub).NextMessage(1); // 1 is the shortest time I can give
                 }

@@ -23,21 +23,15 @@ namespace NATS.Client.JetStream
         protected IJetStreamSubscription sub;
         protected PullMessageManager pmm;
         protected JetStreamPullApiImpl pullImpl;
-        protected bool stopped;
-        protected ConsumerInfo lastConsumerInfo;
+        protected ConsumerInfo cachedConsumerInfo;
 
-        internal MessageConsumerBase(ConsumerInfo lastConsumerInfo)
-        {
-            this.lastConsumerInfo = lastConsumerInfo;
-        }
+        public bool Stopped { get; protected set; }
+        public bool Finished { get; protected set; }
 
-        protected void InitSub(IJetStreamSubscription inSub)
+        internal MessageConsumerBase(ConsumerInfo cachedConsumerInfo, IJetStreamSubscription inSub)
         {
+            this.cachedConsumerInfo = cachedConsumerInfo;
             sub = inSub;
-            if (lastConsumerInfo == null)
-            {
-                lastConsumerInfo = sub.GetConsumerInformation();
-            }
             if (sub is JetStreamPullSubscription syncSub)
             {
                 pmm = (PullMessageManager)syncSub.MessageManager;
@@ -50,23 +44,38 @@ namespace NATS.Client.JetStream
             }
         }
         
+        internal bool NoMorePending() {
+            return pmm.pendingMessages < 1 || (pmm.trackingBytes && pmm.pendingBytes < 1);
+        }
+
         public ConsumerInfo GetConsumerInformation()
         {
-            lastConsumerInfo = sub.GetConsumerInformation();
-            return lastConsumerInfo;
+            // don't look up consumer info if it was never set - this check is for ordered consumer
+            if (cachedConsumerInfo != null)
+            {
+                cachedConsumerInfo = sub.GetConsumerInformation();
+            }
+            return cachedConsumerInfo;
         }
 
         public ConsumerInfo GetCachedConsumerInformation()
         {
-            return lastConsumerInfo;
+            return cachedConsumerInfo;
         }
 
         public void Stop(int timeout)
         {
-            if (!stopped)
+            if (!Stopped)
             {
-                stopped = true;
-                sub.DrainAsync(timeout);
+                try
+                {
+                    sub.DrainAsync(timeout);
+                }
+                finally
+                {
+                    Stopped = true;
+                    Finished = true;
+                }
             }
         }
 
@@ -74,15 +83,20 @@ namespace NATS.Client.JetStream
         {
             try
             {
-                if (!stopped && sub.IsValid)
+                if (!Stopped && sub.IsValid)
                 {
-                    stopped = true;
+                    Stopped = true;
                     sub.Unsubscribe();
                 }
             }
             catch (Exception)
             {
                 // ignored
+            }
+            finally
+            {
+                Stopped = true;
+                Finished = true;
             }
         }
     }
