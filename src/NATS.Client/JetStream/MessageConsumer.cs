@@ -15,20 +15,21 @@ using System;
 
 namespace NATS.Client.JetStream
 {
+    
     /// <summary>
     /// SIMPLIFICATION IS EXPERIMENTAL AND SUBJECT TO CHANGE
     /// </summary>
-    internal class MessageConsumer : MessageConsumerBase, ITrackPendingListener
+    internal class MessageConsumer : MessageConsumerBase, IPullManagerObserver
     {
         private readonly PullRequestOptions rePullPro;
         private readonly int thresholdMessages;
         private readonly long thresholdBytes;
 
-        internal MessageConsumer(SubscriptionMaker subscriptionMaker,
-            EventHandler<MsgHandlerEventArgs> messageHandler,
+        internal MessageConsumer(SimplifiedSubscriptionMaker subscriptionMaker,
             BaseConsumeOptions consumeOptions,
-            ConsumerInfo cachedConsumerInfo) 
-            : base(cachedConsumerInfo, subscriptionMaker.MakeSubscription(messageHandler)) 
+            ConsumerInfo cachedConsumerInfo,
+            EventHandler<MsgHandlerEventArgs> userMessageHandler) 
+            : base(cachedConsumerInfo) 
         {
             int bm = consumeOptions.Messages;
             long bb = consumeOptions.Bytes;
@@ -37,24 +38,36 @@ namespace NATS.Client.JetStream
             long rePullBytes = bb == 0 ? 0 : Math.Max(1, bb * consumeOptions.ThresholdPercent / 100);
             rePullPro = PullRequestOptions.Builder(rePullMessages)
                 .WithMaxBytes(rePullBytes)
-                .WithExpiresIn(consumeOptions.ExpiresIn)
+                .WithExpiresIn(consumeOptions.ExpiresInMillis)
                 .WithIdleHeartbeat(consumeOptions.IdleHeartbeat)
                 .Build();
 
             thresholdMessages = bm - rePullMessages;
             thresholdBytes = bb == 0 ? int.MinValue : bb - rePullBytes;
 
+            EventHandler<MsgHandlerEventArgs> mh = null;
+            if (userMessageHandler != null)
+            {
+                mh = (sender, args) =>
+                {
+                    userMessageHandler.Invoke(sender, args);
+                    if (Stopped && pmm.NoMorePending())
+                    {
+                        Finished = true;
+                    }
+                };
+            }                
+            InitSub(subscriptionMaker.Subscribe(mh));
             pullImpl.Pull(PullRequestOptions.Builder(bm)
                 .WithMaxBytes(bb)
-                .WithExpiresIn(consumeOptions.ExpiresIn)
+                .WithExpiresIn(consumeOptions.ExpiresInMillis)
                 .WithIdleHeartbeat(consumeOptions.IdleHeartbeat)
                 .Build(), false, this);
         }
 
-        public void Track(int pendingMessages, long pendingBytes, bool trackingBytes) {
-            if (!Stopped &&
-                (pmm.pendingMessages <= thresholdMessages
-                 || (pmm.trackingBytes && pmm.pendingBytes <= thresholdBytes)))
+        public void PendingUpdated()
+        {
+            if (!Stopped && (pmm.pendingMessages <= thresholdMessages || (pmm.trackingBytes && pmm.pendingBytes <= thresholdBytes)))
             {
                 pullImpl.Pull(rePullPro, false, this);
             }

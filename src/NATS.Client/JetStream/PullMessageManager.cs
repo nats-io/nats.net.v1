@@ -21,7 +21,7 @@ namespace NATS.Client.JetStream
         internal long pendingBytes;
         internal bool trackingBytes;
         internal bool raiseStatusWarnings;
-        internal ITrackPendingListener trackPendingListener;
+        internal IPullManagerObserver pullManagerObserver;
 
         public PullMessageManager(Connection conn, SubscribeOptions so, bool syncMode) : base(conn, so, syncMode)
         {
@@ -36,12 +36,12 @@ namespace NATS.Client.JetStream
             ((Subscription)Sub).BeforeChannelAddCheck = BeforeChannelAddCheck;
         }
 
-        public override void StartPullRequest(string pullSubject, PullRequestOptions pro, bool raiseStatusWarnings, ITrackPendingListener trackPendingListener)
+        public override void StartPullRequest(string pullSubject, PullRequestOptions pro, bool raiseStatusWarnings, IPullManagerObserver pullManagerObserver)
         {
             lock (StateChangeLock)
             {
                 this.raiseStatusWarnings = raiseStatusWarnings;
-                this.trackPendingListener = trackPendingListener;
+                this.pullManagerObserver = pullManagerObserver;
                 pendingMessages += pro.BatchSize;
                 pendingBytes += pro.MaxBytes;
                 trackingBytes = (pendingBytes > 0);
@@ -78,8 +78,8 @@ namespace NATS.Client.JetStream
                         ShutdownHeartbeatTimer();
                     }
                 }
-                if (trackPendingListener != null) {
-                    trackPendingListener.Track(pendingMessages, pendingBytes, trackingBytes);
+                if (pullManagerObserver != null) {
+                    pullManagerObserver.PendingUpdated();
                 }
             }
         }
@@ -166,6 +166,10 @@ namespace NATS.Client.JetStream
             Conn.Opts.PullStatusErrorEventHandlerOrDefault.Invoke(this,
                 new StatusEventArgs(Conn, (Subscription)Sub, msg.Status));
             return ManageResult.StatusError;
+        }
+
+        internal bool NoMorePending() {
+            return pendingMessages < 1 || (trackingBytes && pendingBytes < 1);
         }
     }
 }

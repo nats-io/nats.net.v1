@@ -5128,26 +5128,26 @@ namespace NATS.Client
 
         #endregion
 
-        public IStreamContext CreateStreamContext(string streamName)
+        public IStreamContext GetStreamContext(string streamName)
         {
             Validator.ValidateStreamName(streamName, true);
             return new StreamContext(streamName, null, this, null);
         }
 
-        public IStreamContext CreateStreamContext(string streamName, JetStreamOptions options)
+        public IStreamContext GetStreamContext(string streamName, JetStreamOptions options)
         {
             Validator.ValidateStreamName(streamName, true);
             return new StreamContext(streamName, null, this, options);
         }
 
-        public IConsumerContext CreateConsumerContext(string streamName, string consumerName)
+        public IConsumerContext GetConsumerContext(string streamName, string consumerName)
         {
-            return CreateStreamContext(streamName).CreateConsumerContext(consumerName);
+            return GetStreamContext(streamName).GetConsumerContext(consumerName);
         }
 
-        public IConsumerContext CreateConsumerContext(string streamName, string consumerName, JetStreamOptions options)
+        public IConsumerContext GetConsumerContext(string streamName, string consumerName, JetStreamOptions options)
         {
-            return CreateStreamContext(streamName, options).CreateConsumerContext(consumerName);
+            return GetStreamContext(streamName, options).GetConsumerContext(consumerName);
         }
 
         #region JetStream

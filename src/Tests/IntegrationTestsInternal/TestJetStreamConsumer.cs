@@ -324,8 +324,8 @@ namespace IntegrationTestsInternal
         {
             CountdownEvent latch = new CountdownEvent(2);
             ((JetStream)js)._pushMessageManagerFactory = 
-                (conn, lJs, stream, so, serverCC, qmode, dispatcher) => 
-                    new HeartbeatErrorSimulator(conn, lJs, stream, so, serverCC, qmode, dispatcher, latch);
+                (conn, lJs, stream, so, cc, queueMode, syncMode) => 
+                    new HeartbeatErrorSimulator(conn, lJs, stream, so, cc, queueMode, syncMode, latch);
             return latch;
         }
         
@@ -333,16 +333,17 @@ namespace IntegrationTestsInternal
         {
             CountdownEvent latch = new CountdownEvent(2);
             ((JetStream)js)._pushOrderedMessageManagerFactory = 
-                (conn, lJs, stream, so, serverCC, qmode, dispatcher) => 
-                    new OrderedHeartbeatErrorSimulator(conn, lJs, stream, so, serverCC, qmode, dispatcher, latch);
+                (conn, ljs, stream, so, cc, queueMode, syncMode) => 
+                    new OrderedHeartbeatErrorSimulator(conn, ljs, stream, so, cc, queueMode, syncMode, latch);
             return latch;
+
         }
         
         private static CountdownEvent setupPullFactory(IJetStream js)
         {
             CountdownEvent latch = new CountdownEvent(2);
             ((JetStream)js)._pullMessageManagerFactory = 
-                (conn, lJs, stream, so, serverCC, qmode, dispatcher) => 
+                (conn, lJs, stream, so, cc, queueMode, syncMode) => 
                     new PullHeartbeatErrorSimulator(conn, so, false, latch);
             return latch;
         }

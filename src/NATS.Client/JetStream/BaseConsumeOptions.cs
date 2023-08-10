@@ -45,13 +45,13 @@ namespace NATS.Client.JetStream
 
         public int Messages { get; }
         public long Bytes { get; }
-        public int ExpiresIn { get; }
+        public int ExpiresInMillis { get; }
         public int IdleHeartbeat { get; }
         public int ThresholdPercent { get; }
 
         public override string ToString()
         {
-            return $"Messages: {Messages}, Bytes: {Bytes}, ExpiresIn: {ExpiresIn}, IdleHeartbeat: {IdleHeartbeat}, ThresholdPercent: {ThresholdPercent}";
+            return $"Messages: {Messages}, Bytes: {Bytes}, ExpiresIn: {ExpiresInMillis}, IdleHeartbeat: {IdleHeartbeat}, ThresholdPercent: {ThresholdPercent}";
         }
 
         protected BaseConsumeOptions(IBaseConsumeOptionsBuilder b)
@@ -67,10 +67,10 @@ namespace NATS.Client.JetStream
 
             // validation handled in builder
             ThresholdPercent = b.ThresholdPercent;
-            ExpiresIn = b.ExpiresIn;
+            ExpiresInMillis = b.ExpiresIn;
 
             // calculated
-            IdleHeartbeat = Math.Min(MaxHearbeatMillis, ExpiresIn * MaxIdleHeartbeatPercent / 100);
+            IdleHeartbeat = Math.Min(MaxHearbeatMillis, ExpiresInMillis * MaxIdleHeartbeatPercent / 100);
         }
         
         public interface IBaseConsumeOptionsBuilder

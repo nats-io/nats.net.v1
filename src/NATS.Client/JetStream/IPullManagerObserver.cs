@@ -13,8 +13,8 @@
 
 namespace NATS.Client.JetStream
 {
-    public interface ITrackPendingListener
+    public interface IPullManagerObserver
     {
-        void Track(int pendingMessages, long pendingBytes, bool trackingBytes);
+        void PendingUpdated();
     }
 }

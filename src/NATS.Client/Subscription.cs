@@ -68,7 +68,17 @@ namespace NATS.Client
         internal Func<Msg, bool> BeforeChannelAddCheck
         {
             get => _beforeChannelAddCheck;
-            set { _beforeChannelAddCheck = value == null ? m => true : value; }
+            set
+            {
+                if (value == null)
+                {
+                    _beforeChannelAddCheck = m => true;
+                }
+                else
+                {
+                    _beforeChannelAddCheck = value;
+                }
+            }
         }
 
         internal Subscription(Connection conn, string subject, string queue)

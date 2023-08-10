@@ -34,12 +34,13 @@ namespace NATS.Client.JetStream
         ConsumerInfo GetCachedConsumerInformation();
 
         /// <summary>
-        /// Stop the Simple Consumer from asking for any more messages from the server.
-        /// Messages do not immediately stop
+        /// Stop the MessageConsumer from asking for any more messages from the server.
+        /// The consumer will finish all pull request already in progress, but will not start any new ones.
         /// </summary>
-        /// <param name="timeout">The time to wait for the stop to succeed, pass 0 to wait forever.
-        /// Stop involves moving messages to and from the server so a very short timeout is not recommended.</param>
-        /// <returns>A task so you could wait for the stop to know when there are no more messages.</returns>
-        void Stop(int timeout);
+        void Stop();
+        
+        bool Stopped { get; }
+
+        bool Finished { get; }
     }
 }

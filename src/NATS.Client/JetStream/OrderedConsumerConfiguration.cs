@@ -21,11 +21,11 @@ namespace NATS.Client.JetStream
         public const string DefaultFilterSubject = ">";
         
         public string FilterSubject { get; private set; }
-        public DeliverPolicy DeliverPolicy { get; private set; }
+        public DeliverPolicy? DeliverPolicy { get; private set; }
         public ulong StartSequence { get; private set; }
         public DateTime StartTime { get; private set; }
-        public ReplayPolicy ReplayPolicy { get; private set; }
-        public bool HeadersOnly { get; private set; }
+        public ReplayPolicy? ReplayPolicy { get; private set; }
+        public bool? HeadersOnly { get; private set; }
 
         /// <summary>
         /// OrderedConsumerConfiguration creation works like a builder.
@@ -53,7 +53,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="deliverPolicy">the delivery policy.</param>
         /// <returns>Builder</returns>
-        public OrderedConsumerConfiguration WithDeliverPolicy(DeliverPolicy deliverPolicy) {
+        public OrderedConsumerConfiguration WithDeliverPolicy(DeliverPolicy? deliverPolicy) {
             DeliverPolicy = deliverPolicy;
             return this;
         }
@@ -83,7 +83,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="replayPolicy">the replay policy.</param>
         /// <returns>Builder</returns>
-        public OrderedConsumerConfiguration WithReplayPolicy(ReplayPolicy replayPolicy) {
+        public OrderedConsumerConfiguration WithReplayPolicy(ReplayPolicy? replayPolicy) {
             ReplayPolicy = replayPolicy;
             return this;
         }
@@ -94,8 +94,12 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="headersOnly">the flag</param>
         /// <returns>Builder</returns>
-        public OrderedConsumerConfiguration WithHeadersOnly(bool headersOnly) {
-            HeadersOnly = headersOnly;
+        public OrderedConsumerConfiguration WithHeadersOnly(bool? headersOnly) {
+            HeadersOnly = null;
+            if (headersOnly.HasValue && headersOnly.Value)
+            {
+                HeadersOnly = true;
+            }
             return this;
         }
     }

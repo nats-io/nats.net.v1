@@ -77,7 +77,7 @@ namespace NATS.Client.JetStream
                 // 3. make a new consumer using the same deliver subject but
                 //    with a new starting point
                 ConsumerConfiguration userCC = ConsumerConfiguration.Builder(OriginalCc)
-                    .WithName(JetStreamBase.GenerateConsumerName())
+                    .WithName(Js.GenerateConsumerName())
                     .WithDeliverPolicy(DeliverPolicy.ByStartSequence)
                     .WithDeliverSubject(newDeliverSubject)
                     .WithStartSequence(LastStreamSeq + 1)

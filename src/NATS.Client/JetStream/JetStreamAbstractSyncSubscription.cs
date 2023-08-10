@@ -88,7 +88,7 @@ namespace NATS.Client.JetStream
             return _nextUnmanaged(timeout, null);
         }
 
-        protected Msg _nextUnmanagedWaitForever(String expectedPullSubject)
+        internal Msg _nextUnmanagedWaitForever(String expectedPullSubject)
         {
             // this calls is intended to block indefinitely so if there is a managed
             // message it's like not getting a message at all and we keep waiting
@@ -114,7 +114,7 @@ namespace NATS.Client.JetStream
             }
         }
 
-        protected Msg _nextUnmanagedNoWait(string expectedPullSubject)
+        internal Msg _nextUnmanagedNoWait(string expectedPullSubject)
         {
             while (true) {
                 Msg msg = NextMessageImpl(0);
@@ -142,7 +142,7 @@ namespace NATS.Client.JetStream
             }
         }
         
-        protected Msg _nextUnmanaged(int timeout, string expectedPullSubject)
+        internal Msg _nextUnmanaged(int timeout, string expectedPullSubject)
         {
             int timeLeft = timeout;
             Stopwatch sw = Stopwatch.StartNew();

@@ -46,7 +46,7 @@ namespace NATSExamples
                 IStreamContext streamContext;
                 try
                 {
-                    streamContext = c.CreateStreamContext(STREAM);
+                    streamContext = c.GetStreamContext(STREAM);
                     streamContext.CreateOrUpdateConsumer(ConsumerConfiguration.Builder().WithDurable(CONSUMER_NAME).Build());
                 }
                 catch (Exception) {
@@ -98,7 +98,7 @@ namespace NATSExamples
 
         public HandlerConsumerHolder(int id, IStreamContext sc, CountdownEvent latch) : base(id, sc, latch)
         {
-            messageConsumer = consumerContext.StartConsume((s, e) =>
+            messageConsumer = consumerContext.Consume((s, e) =>
             {
                 thisReceived++;
                 latch.Signal();
@@ -109,7 +109,7 @@ namespace NATSExamples
         }
         
         public override void Stop() {
-            messageConsumer.Stop(1000);
+            messageConsumer.Stop();
         }
     }
 
@@ -121,7 +121,7 @@ namespace NATSExamples
 
         public IterableConsumerHolder(int id, IStreamContext sc, CountdownEvent latch) : base(id, sc, latch)
         {
-            iterableConsumer = consumerContext.StartIterate();
+            iterableConsumer = consumerContext.Iterate();
             t = new Thread(() =>
             {
                 while (latch.CurrentCount > 0)
@@ -157,7 +157,7 @@ namespace NATSExamples
             this.id = id;
             thisReceived = 0;
             this.latch = latch;
-            consumerContext = sc.CreateConsumerContext(SimplificationQueue.CONSUMER_NAME);
+            consumerContext = sc.GetConsumerContext(SimplificationQueue.CONSUMER_NAME);
         }
     
         public void Report() {

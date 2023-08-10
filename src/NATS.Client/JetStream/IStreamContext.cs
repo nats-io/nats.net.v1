@@ -16,11 +16,10 @@ using System.Collections.Generic;
 namespace NATS.Client.JetStream
 {
     /// <summary>
+    /// The Stream Context provide a set of operations for managing the stream
+    /// and its contents and for managing consumers.
     /// SIMPLIFICATION IS EXPERIMENTAL AND SUBJECT TO CHANGE
     /// </summary>
-    /// <remarks>
-    /// A StreamContext is created by the various IJetStream.StreamContext(...) APIs.
-    /// </remarks>
     public interface IStreamContext
     {
         /// <summary>
@@ -62,15 +61,22 @@ namespace NATS.Client.JetStream
         /// Verifies that the consumer exists.
         /// </summary>
         /// <param name="consumerName">the name of the consumer</param>
-        /// <returns>a ConsumerContext object</returns>
-        IConsumerContext CreateConsumerContext(string consumerName);
+        /// <returns>an instance of IConsumerContext</returns>
+        IConsumerContext GetConsumerContext(string consumerName);
+
+        /// <summary>
+        /// Create an ordered consumer context for the context's stream.
+        /// </summary>
+        /// <param name="config">the configuration for the ordered consumer</param>
+        /// <returns>an instance of IConsumerContext</returns>
+        IConsumerContext CreateOrUpdateConsumer(ConsumerConfiguration config);
 
         /// <summary>
         /// Management function to creates a consumer on this stream.
         /// </summary>
         /// <param name="config">the consumer configuration to use.</param>
         /// <returns>consumer information.</returns>
-        IConsumerContext CreateOrUpdateConsumer(ConsumerConfiguration config);
+        IOrderedConsumerContext CreateOrderedConsumer(OrderedConsumerConfiguration config);
 
         /// <summary>
         /// Management function to deletes a consumer.

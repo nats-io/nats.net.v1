@@ -21,10 +21,10 @@ namespace NATSExamples
 {
     internal static class MessageConsumerExample
     {
-        private static readonly string STREAM = "consume-handler-stream";
-        private static readonly string SUBJECT = "consume-handler-subject";
-        private static readonly string CONSUMER_NAME = "consume-handler-consumer";
-        private static readonly string MESSAGE_TEXT = "consume-handler";
+        private static readonly string STREAM = "consume-stream";
+        private static readonly string SUBJECT = "consume-subject";
+        private static readonly string CONSUMER_NAME = "consume-consumer";
+        private static readonly string MESSAGE_TEXT = "consume";
         private static readonly int STOP_COUNT = 500;
         private static readonly int REPORT_EVERY = 100;
     
@@ -48,7 +48,7 @@ namespace NATSExamples
                 IConsumerContext consumerContext;
                 try
                 {
-                    streamContext = c.CreateStreamContext(STREAM);
+                    streamContext = c.GetStreamContext(STREAM);
                     consumerContext = streamContext.CreateOrUpdateConsumer(ConsumerConfiguration.Builder().WithDurable(CONSUMER_NAME).Build());
                 }
                 catch (Exception)
@@ -72,13 +72,18 @@ namespace NATSExamples
                     }
                 };
 
-                using (IMessageConsumer consumer = consumerContext.StartConsume(handler))
+                using (IMessageConsumer consumer = consumerContext.Consume(handler))
                 {
                     latch.Wait();
+                    
                     // once the consumer is stopped, the client will drain messages
                     Console.WriteLine("Stop the consumer...");
-                    consumer.Stop(1000);
-                    Thread.Sleep(1000); // enough for messages to drain after stop
+                    consumer.Stop();
+                    
+                    // wait until the consumer is finished
+                    while (!consumer.Finished) {
+                        Thread.Sleep(10);
+                    }
                 }
 
                 report("Final", sw.ElapsedMilliseconds, count);

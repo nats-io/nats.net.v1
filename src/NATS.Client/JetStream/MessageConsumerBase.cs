@@ -20,17 +20,21 @@ namespace NATS.Client.JetStream
     /// </summary>
     internal class MessageConsumerBase : IMessageConsumer
     {
-        protected IJetStreamSubscription sub;
-        protected PullMessageManager pmm;
-        protected JetStreamPullApiImpl pullImpl;
-        protected ConsumerInfo cachedConsumerInfo;
+        internal IJetStreamSubscription sub;
+        internal PullMessageManager pmm;
+        internal JetStreamPullApiImpl pullImpl;
+        internal ConsumerInfo cachedConsumerInfo;
 
-        public bool Stopped { get; protected set; }
-        public bool Finished { get; protected set; }
+        public bool Stopped { get; internal set; }
+        public bool Finished { get; internal set; }
 
-        internal MessageConsumerBase(ConsumerInfo cachedConsumerInfo, IJetStreamSubscription inSub)
+        internal MessageConsumerBase(ConsumerInfo cachedConsumerInfo)
         {
             this.cachedConsumerInfo = cachedConsumerInfo;
+        }
+
+        internal void InitSub(IJetStreamSubscription inSub)
+        {
             sub = inSub;
             if (sub is JetStreamPullSubscription syncSub)
             {
@@ -63,20 +67,9 @@ namespace NATS.Client.JetStream
             return cachedConsumerInfo;
         }
 
-        public void Stop(int timeout)
+        public void Stop()
         {
-            if (!Stopped)
-            {
-                try
-                {
-                    sub.DrainAsync(timeout);
-                }
-                finally
-                {
-                    Stopped = true;
-                    Finished = true;
-                }
-            }
+            Stopped = true;
         }
 
         public void Dispose()
@@ -92,11 +85,6 @@ namespace NATS.Client.JetStream
             catch (Exception)
             {
                 // ignored
-            }
-            finally
-            {
-                Stopped = true;
-                Finished = true;
             }
         }
     }

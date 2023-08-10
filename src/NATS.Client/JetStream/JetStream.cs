@@ -564,21 +564,16 @@ namespace NATS.Client.JetStream
 
         private bool IsSubjectRequired(SubscribeOptions options) => options == null || !options.Bind;
         
-        public IStreamContext CreateStreamContext(string streamName)
+        public IStreamContext GetStreamContext(string streamName)
         {
             Validator.ValidateStreamName(streamName, true);
-            return GetStreamContext(streamName);
+            return new StreamContext(streamName, this, Conn, JetStreamOptions);
         }
         
-        public IConsumerContext CreateConsumerContext(string streamName, string consumerName)
+        public IConsumerContext GetConsumerContext(string streamName, string consumerName)
         {
-            Validator.ValidateStreamName(streamName, true);
             Validator.Required(consumerName, "Consumer Name");
-            return GetStreamContext(streamName).CreateConsumerContext(consumerName);
-        }
-
-        private StreamContext GetStreamContext(string streamName) {
-            return new StreamContext(streamName, this, Conn, JetStreamOptions);
+            return GetStreamContext(streamName).GetConsumerContext(consumerName);
         }
     }
 }

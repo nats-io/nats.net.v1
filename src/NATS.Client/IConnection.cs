@@ -1090,12 +1090,12 @@ namespace NATS.Client
         int SubscriptionCount { get; }
 
         /// <summary>
-        /// Gets a stream context.
+        /// Get a stream context for a specific stream.
         /// </summary>
         /// <param name="streamName">the stream for the context</param>
         /// <returns>a StreamContext instance.</returns>
         /// <returns>an IStreamContext instance</returns>
-        IStreamContext CreateStreamContext(string streamName);
+        IStreamContext GetStreamContext(string streamName);
     
         /// <summary>
         /// Gets a stream context.
@@ -1103,20 +1103,20 @@ namespace NATS.Client
         /// <param name="streamName">the stream for the context</param>
         /// <param name="options">JetStream options.</param>
         /// <returns>an IStreamContext instance</returns>
-        IStreamContext CreateStreamContext(string streamName, JetStreamOptions options);
+        IStreamContext GetStreamContext(string streamName, JetStreamOptions options);
 
         /// <summary>
-        /// Create a consumer context for a specific named stream and specific named consumer.
+        /// Get a consumer context for a specific named stream and specific named consumer.
         /// Verifies that the stream and consumer exist.
         /// EXPERIMENTAL API SUBJECT TO CHANGE
         /// </summary>
         /// <param name="streamName">the name of the stream</param>
         /// <param name="consumerName">the name of the consumer</param>
         /// <returns>an IConsumerContext instance</returns>
-        IConsumerContext CreateConsumerContext(string streamName, string consumerName);
+        IConsumerContext GetConsumerContext(string streamName, string consumerName);
 
         /// <summary>
-        /// Create a consumer context for a specific named stream and specific named consumer.
+        /// Get a consumer context for a specific named stream and specific named consumer.
         /// Verifies that the stream and consumer exist.
         /// EXPERIMENTAL API SUBJECT TO CHANGE
         /// </summary>
@@ -1124,7 +1124,7 @@ namespace NATS.Client
         /// <param name="consumerName">the name of the consumer</param>
         /// <param name="options">JetStream options.</param>
         /// <returns>an IConsumerContext instance</returns>
-        IConsumerContext CreateConsumerContext(string streamName, string consumerName, JetStreamOptions options);
+        IConsumerContext GetConsumerContext(string streamName, string consumerName, JetStreamOptions options);
 
         /// <summary>
         /// Gets a context for publishing and subscribing to subjects

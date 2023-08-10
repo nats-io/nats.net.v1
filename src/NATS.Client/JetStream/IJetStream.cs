@@ -402,7 +402,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="streamName">the name of the stream</param>
         /// <returns>an IStreamContext instance</returns>
-        IStreamContext CreateStreamContext(string streamName);
+        IStreamContext GetStreamContext(string streamName);
     
         /// <summary>
         /// Create a consumer context for a specific named stream and specific named consumer.
@@ -412,6 +412,6 @@ namespace NATS.Client.JetStream
         /// <param name="streamName">the name of the stream</param>
         /// <param name="consumerName">the name of the consumer</param>
         /// <returns>an IConsumerContext instance</returns>
-        IConsumerContext CreateConsumerContext(string streamName, string consumerName);
+        IConsumerContext GetConsumerContext(string streamName, string consumerName);
     }
 }

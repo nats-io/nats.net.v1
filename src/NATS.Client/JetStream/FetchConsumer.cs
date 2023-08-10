@@ -21,26 +21,53 @@ namespace NATS.Client.JetStream
     internal class FetchConsumer : MessageConsumerBase, IFetchConsumer
     {
         private readonly int maxWaitMillis;
+        private readonly string pullSubject;
         private Stopwatch sw;
 
-        internal FetchConsumer(SubscriptionMaker subscriptionMaker,
-            FetchConsumeOptions fetchConsumeOptions,
-            ConsumerInfo cachedConsumerInfo) 
-            : base(cachedConsumerInfo, subscriptionMaker.MakeSubscription())  
+        internal FetchConsumer(SimplifiedSubscriptionMaker subscriptionMaker,
+            ConsumerInfo cachedConsumerInfo,
+            FetchConsumeOptions fetchConsumeOptions) 
+            : base(cachedConsumerInfo)  
         {
-            maxWaitMillis = fetchConsumeOptions.ExpiresIn;
+            maxWaitMillis = fetchConsumeOptions.ExpiresInMillis;
             PullRequestOptions pro = PullRequestOptions.Builder(fetchConsumeOptions.MaxMessages)
                 .WithMaxBytes(fetchConsumeOptions.MaxBytes)
-                .WithExpiresIn(fetchConsumeOptions.ExpiresIn)
+                .WithExpiresIn(fetchConsumeOptions.ExpiresInMillis)
                 .WithIdleHeartbeat(fetchConsumeOptions.IdleHeartbeat)
                 .Build();
-            ((JetStreamPullSubscription)sub).pullImpl.Pull(pro, false, null);
+            InitSub(subscriptionMaker.Subscribe());
+            pullSubject = ((JetStreamPullSubscription)sub).pullImpl.Pull(pro, false, null);
         }
 
         public Msg NextMessage()
         {
+            bool timeoutSetFinished = false;
+
             try
             {
+                if (Finished)
+                {
+                    return null;
+                }
+                
+                // if the manager thinks it has received everything in the pull, it means
+                // that all the messages are already in the internal queue and there is
+                // no waiting necessary
+                if (pmm.NoMorePending())
+                {
+                    timeoutSetFinished = true;
+                    Msg m = ((JetStreamPullSubscription)sub)._nextUnmanagedNoWait(pullSubject);
+                    if (m == null) {
+                        // if there are no messages in the internal cache AND there are no more pending,
+                        // they all have been read and we can go ahead and close the subscription.
+                        Finished = true;
+                        Dispose();
+                    }
+                    return m;
+                }
+
+                // by not starting the timer until the first call, it gives a little buffer around
+                // the next message to account for latency of incoming messages
                 int timeLeftMillis;
                 if (sw == null)
                 {
@@ -52,18 +79,21 @@ namespace NATS.Client.JetStream
                     timeLeftMillis = maxWaitMillis - (int)sw.ElapsedMilliseconds;
                 }
 
-                // if the manager thinks it has received everything in the pull, it means
-                // that all the messages are already in the internal queue and there is
-                // no waiting necessary
-                if (timeLeftMillis < 1 || pmm.pendingMessages < 1 || (pmm.trackingBytes && pmm.pendingBytes < 1))
+                // if the timer has run out, don't allow waiting
+                // this might happen once, but it should already be noMorePending
+                if (timeLeftMillis < 1)
                 {
-                    return ((JetStreamPullSubscription)sub).NextMessage(1); // 1 is the shortest time I can give
+                    return ((JetStreamPullSubscription)sub)._nextUnmanagedNoWait(pullSubject); // 1 is the shortest time I can give
                 }
 
-                return ((JetStreamPullSubscription)sub).NextMessage(timeLeftMillis);
+                return ((JetStreamPullSubscription)sub)._nextUnmanaged(timeLeftMillis, pullSubject);
             }
             catch (NATSTimeoutException)
             {
+                if (timeoutSetFinished)
+                {
+                    Finished = true;
+                }
                 return null;
             }
         }

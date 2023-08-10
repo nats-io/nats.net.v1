@@ -158,7 +158,7 @@ namespace NATSExamples.NatsByExample
                 // The `StreamContext` can be created from the `Connection` similar to
                 // the legacy API.
                 Console.WriteLine("\nD. Simplification StreamContext");
-                IStreamContext streamContext = conn.CreateStreamContext(streamName);
+                IStreamContext streamContext = conn.GetStreamContext(streamName);
                 StreamInfo streamInfo = streamContext.GetStreamInfo(StreamInfoOptions.Builder().WithAllSubjects().Build());
 
                 Console.WriteLine($"   Stream Name: {streamInfo.Config.Name}");
@@ -182,11 +182,11 @@ namespace NATSExamples.NatsByExample
                 // If your consumer already exists as a durable, you can create a
                 // `ConsumerContext` for that consumer from the stream context or directly
                 // from the connection by providing the stream and consumer name.
-                consumerContext = streamContext.CreateConsumerContext(consumerName);
+                consumerContext = streamContext.GetConsumerContext(consumerName);
                 consumerInfo = consumerContext.GetCachedConsumerInfo();
                 Console.WriteLine($"   The ConsumerContext for \"{consumerInfo.Name}\" was loaded from the StreamContext for \"{consumerInfo.Stream}\"");
     
-                consumerContext = conn.CreateConsumerContext(streamName, consumerName);
+                consumerContext = conn.GetConsumerContext(streamName, consumerName);
                 consumerInfo = consumerContext.GetCachedConsumerInfo();
                 Console.WriteLine($"   The ConsumerContext for \"{consumerInfo.Name}\" was loaded from the Connection on the stream \"{consumerInfo.Stream}\"");
     
@@ -219,7 +219,7 @@ namespace NATSExamples.NatsByExample
                 Console.WriteLine($"   The consumer name is \"{consumerInfo.Name}\".");
                 Console.WriteLine($"   The consumer has {consumerInfo.NumPending} messages available.");
     
-                IMessageConsumer messageConsumer = consumerContext.StartConsume(
+                IMessageConsumer messageConsumer = consumerContext.Consume(
                     (s, e) => 
                     {
                         Console.WriteLine($"   Received {e.Message.Subject}");
@@ -232,7 +232,7 @@ namespace NATSExamples.NatsByExample
                 // delete the consumer.
                 // However, the consumer will be automatically deleted by the server when the
                 // `inactiveThreshold` is reached.
-                messageConsumer.Stop(100);
+                messageConsumer.Stop();
                 Console.WriteLine("   stop was called.");
     
                 // #### IterableConsumer
@@ -253,13 +253,13 @@ namespace NATSExamples.NatsByExample
                 // operations. For instance, it is possible, but unlikely, that the consumer
                 // could be deleted by another application in your ecosystem and if that happens
                 // in the middle of the consumer, the exception would be thrown.
-                IIterableConsumer iterableConsumer = consumerContext.StartIterate();
+                IIterableConsumer iterableConsumer = consumerContext.Iterate();
                 for (int x = 0; x < 3; x++) {
                     Msg msg1 = iterableConsumer.NextMessage(100);
                     Console.WriteLine($"   Received {msg1.Subject}");
                     msg1.Ack();
                 }
-                iterableConsumer.Stop(100);
+                iterableConsumer.Stop();
                 Console.WriteLine("   stop was called.");
     
                 // ### Retrieving messages on demand with `fetch` and `next`
