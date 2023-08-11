@@ -44,6 +44,7 @@ namespace NATS.Client
         int timeout       = Defaults.Timeout;
         int reconnectJitter = Defaults.ReconnectJitter;
         int reconnectJitterTLS = Defaults.ReconnectJitterTLS;
+        ITCPConnection tcpConnection = null;
 
         internal X509Certificate2Collection certificates = null;
 
@@ -303,6 +304,7 @@ namespace NATS.Client
             subscriberDeliveryTaskCount = o.subscriberDeliveryTaskCount;
             subscriptionBatchSize = o.subscriptionBatchSize;
             customInboxPrefix = o.customInboxPrefix;
+            tcpConnection = o.TCPConnection;
 
             url = o.url;
             if (o.servers != null)
@@ -459,6 +461,15 @@ namespace NATS.Client
             set { secure = value; }
         }
 
+        /// <summary>
+        /// Get or sets a custom ITCPConnection object to use for communication
+        /// to the NATs Server.
+        /// </summary>
+        public ITCPConnection TCPConnection
+        {
+            get { return tcpConnection; }
+            set { tcpConnection = value; }
+        }
         /// <summary>
         /// Gets or sets a value indicating whether or not an <see cref="IConnection"/> will attempt
         /// to reconnect to the NATS server if a connection has been lost.
