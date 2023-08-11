@@ -183,7 +183,7 @@ namespace NATS.Client
         // 60 second default flush timeout
         static readonly int DEFAULT_FLUSH_TIMEOUT = 10000;
 
-        TCPConnection conn = new TCPConnection();
+        ITCPConnection conn = new TCPConnection();
 
         SubChannelPool subChannelPool = null;
 
@@ -336,7 +336,8 @@ namespace NATS.Client
         /// Convenience class representing the TCP connection to prevent 
         /// managing two variables throughout the NATs client code.
         /// </summary>
-        private sealed class TCPConnection : IDisposable
+
+        public class TCPConnection : ITCPConnection
         {
             /// A note on the use of streams.  .NET provides a BufferedStream
             /// that can sit on top of an IO stream, in this case the network
@@ -354,15 +355,19 @@ namespace NATS.Client
             ///          ->NetworkStream/SslStream (srvStream)
             ///              ->TCPClient (srvClient);
             /// 
-            object        mu        = new object();
-            TcpClient     client    = null;
-            NetworkStream stream    = null;
-            SslStream     sslStream = null;
+            Options options;
 
-            string        hostName  = null;
+            object mu = new object();
+            TcpClient client = null;
+            NetworkStream stream = null;
+            SslStream sslStream = null;
 
-            internal void open(Srv s, int timeoutMillis)
+            string hostName = null;
+
+            public virtual void open(Srv s, Options options)
             {
+                this.options = options;
+
                 lock (mu)
                 {
                     // If a connection was lost during a reconnect we 
@@ -384,12 +389,12 @@ namespace NATS.Client
 
                     var task = client.ConnectAsync(s.Url.Host, s.Url.Port);
                     // avoid raising TaskScheduler.UnobservedTaskException if the timeout occurs first
-                    task.ContinueWith(t => 
+                    task.ContinueWith(t =>
                     {
                         GC.KeepAlive(t.Exception);
                         close(client);
                     }, TaskContinuationOptions.OnlyOnFaulted);
-                    if (!task.Wait(TimeSpan.FromMilliseconds(timeoutMillis)))
+                    if (!task.Wait(TimeSpan.FromMilliseconds(options.Timeout)))
                     {
                         close(client);
                         client = null;
@@ -398,9 +403,9 @@ namespace NATS.Client
 
                     client.NoDelay = false;
 
-                    client.ReceiveBufferSize = defaultBufSize*2;
-                    client.SendBufferSize    = defaultBufSize;
-                    
+                    client.ReceiveBufferSize = defaultBufSize * 2;
+                    client.SendBufferSize = defaultBufSize;
+
                     stream = client.GetStream();
 
                     // save off the hostname
@@ -420,18 +425,20 @@ namespace NATS.Client
                 return false;
             }
 
-            internal static void close(TcpClient c)
+            public virtual void close(TcpClient c)
             {
 #if NET46
                     c?.Close();
 #else
-                    c?.Dispose();
+                c?.Dispose();
 #endif
                 c = null;
             }
 
-            internal void makeTLS(Options options)
+            public void makeTLS()
             {
+                
+
                 RemoteCertificateValidationCallback cb = null;
 
                 if (stream == null)
@@ -460,7 +467,7 @@ namespace NATS.Client
                 }
             }
 
-            internal int SendTimeout
+            public int SendTimeout
             {
                 set
                 {
@@ -469,11 +476,11 @@ namespace NATS.Client
                 }
             }
 
-            internal int ReceiveTimeout
+            public int ReceiveTimeout
             {
                 get
                 {
-                    if(client == null)
+                    if (client == null)
                         throw new InvalidOperationException("Connection not properly initialized.");
 
                     return client.ReceiveTimeout;
@@ -485,12 +492,12 @@ namespace NATS.Client
                 }
             }
 
-            internal bool isSetup()
+            public bool isSetup()
             {
                 return (client != null);
             }
 
-            internal void teardown()
+            public void teardown()
             {
                 TcpClient c;
                 Stream s;
@@ -516,7 +523,7 @@ namespace NATS.Client
                 catch (Exception) { }
             }
 
-            internal Stream getReadBufferedStream()
+            public Stream getReadBufferedStream()
             {
                 if (sslStream != null)
                     return sslStream;
@@ -524,7 +531,7 @@ namespace NATS.Client
                 return stream;
             }
 
-            internal Stream getWriteBufferedStream(int size)
+            public Stream getWriteBufferedStream(int size)
             {
 
                 BufferedStream bs = null;
@@ -536,7 +543,7 @@ namespace NATS.Client
                 return bs;
             }
 
-            internal bool Connected
+            public bool Connected
             {
                 get
                 {
@@ -548,7 +555,7 @@ namespace NATS.Client
                 }
             }
 
-            internal bool DataAvailable
+            public bool DataAvailable
             {
                 get
                 {
@@ -731,6 +738,11 @@ namespace NATS.Client
                 opts.ReconnectDelayHandler = DefaultReconnectDelayHandler;
             }
 
+            if(opts.TCPConnection != null)
+            {
+                conn = opts.TCPConnection;
+            }
+
             srvProvider = opts.ServerProvider ?? new ServerPool();
                 
             PING_P_BYTES = Encoding.UTF8.GetBytes(IC.pingProto);
@@ -826,7 +838,7 @@ namespace NATS.Client
             ex = null;
             try
             {
-                conn.open(s, opts.Timeout);
+                conn.open(s, opts);
 
                 if (pending != null && bw != null)
                 {
@@ -855,7 +867,7 @@ namespace NATS.Client
         // makeSecureConn will wrap an existing Conn using TLS
         private void makeTLSConn()
         {
-            conn.makeTLS(this.opts);
+            conn.makeTLS();
 
             bw = conn.getWriteBufferedStream(defaultBufSize);
             br = conn.getReadBufferedStream();

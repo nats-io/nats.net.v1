@@ -163,7 +163,7 @@ namespace NATS.Client
         internal const int MaxControlLineSize = 4096;
 
         // The size of the bufio writer on top of the socket.
-        internal const int defaultBufSize = 32768;
+        public const int defaultBufSize = 32768;
 
         // The read size from the network stream.
         internal const int defaultReadLength = 20480;

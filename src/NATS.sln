@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29230.47
@@ -116,6 +116,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JetStreamPushSubscribeAsyncQueueDurable", "Samples\JetStreamPushSubscribeAsyncQueueDurable\JetStreamPushSubscribeAsyncQueueDurable.csproj", "{5DCD0666-5AC9-462F-99BD-5E8E95E4B749}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimplificationQueue", "Samples\SimplificationQueue\SimplificationQueue.csproj", "{F8609197-D5B0-42CC-890E-921CAAA1589E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TLSReverseProxyExample", "Samples\TLSReverseProxyExample\TLSReverseProxyExample.csproj", "{98C52074-7693-48D4-B0A9-48920EEEDA24}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -377,6 +379,7 @@ Global
 		{C7FB00D4-23F1-4F6A-A8C0-E58346F272DE} = {776C2E80-958B-4C0D-BCC4-67D39DB4570B}
 		{5DCD0666-5AC9-462F-99BD-5E8E95E4B749} = {776C2E80-958B-4C0D-BCC4-67D39DB4570B}
 		{F8609197-D5B0-42CC-890E-921CAAA1589E} = {776C2E80-958B-4C0D-BCC4-67D39DB4570B}
+		{98C52074-7693-48D4-B0A9-48920EEEDA24} = {776C2E80-958B-4C0D-BCC4-67D39DB4570B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0972F03C-E4DF-483A-B767-9216F4434F11}

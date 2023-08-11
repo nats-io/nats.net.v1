@@ -612,6 +612,27 @@ The NATS server default cipher suites **may not be supported** by the Microsoft
 the  NATS server to include the most secure cipher suites supported by the
 .NET framework.
 
+## Custom Dialer/Custom TCP connection. 
+
+The NATs .NET client supports passing in a custom implementation of the [ITCPConnection](TCPConnCustom/src/NATS.Client/ITCPConnection.cs) class.
+
+```c#
+	public class TCPConnection : ITCPConnection
+    {
+        <Custom implementation of ITCPConnection>
+    }
+
+	<...>
+		Options opts = ConnectionFactory.GetDefaultOptions();
+        opts.TCPConnection = new CustomTCPConnection();
+
+        IConnection c = new ConnectionFactory().CreateConnection(opts);
+```
+
+This is useful for testing, or implementing a TCPConnection that supports TLS termination.
+
+See [TLSReverseProxyExample](src\Samples\TLSReverseProxyExample) for an implementation. 
+
 ## NATS 2.0 Authentication (Nkeys and User Credentials)
 
 This requires server with version >= 2.0.0
