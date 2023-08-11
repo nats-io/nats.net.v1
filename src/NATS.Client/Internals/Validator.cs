@@ -444,6 +444,11 @@ namespace NATS.Client.Internals
         // ----------------------------------------------------------------------------------------------------
         // Helpers
         // ----------------------------------------------------------------------------------------------------
+        
+        public static bool NullOrEmpty(String s)
+        {
+            return string.IsNullOrWhiteSpace(s);
+        }
 
         public static bool NotPrintable(string s) {
             for (int x = 0; x < s.Length; x++) {
@@ -599,7 +604,11 @@ namespace NATS.Client.Internals
 
         public static string EmptyAsNull(string s)
         {
-            return string.IsNullOrWhiteSpace(s) ? null : s;
+            return NullOrEmpty(s) ? null : s;
+        }
+
+        public static String EmptyOrNullAs(String s, String ifEmpty) {
+            return NullOrEmpty(s) ? ifEmpty : s;
         }
 
         public static bool ZeroOrLtMinus1(long l)

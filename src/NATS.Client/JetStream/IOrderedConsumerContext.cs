@@ -17,25 +17,7 @@ namespace NATS.Client.JetStream
     /// The Consumer Context provides a convenient interface around a defined JetStream Consumer
     /// SIMPLIFICATION IS EXPERIMENTAL AND SUBJECT TO CHANGE
     /// </summary>
-    public interface IConsumerContext : IBaseConsumerContext
+    public interface IOrderedConsumerContext : IBaseConsumerContext
     {
-        /// <summary>
-        /// Gets the consumer name that was used to create the context.
-        /// </summary>
-        /// <returns>the consumer name</returns>
-        string ConsumerName { get; }
-
-        /// <summary>
-        /// Gets information about the consumer behind this subscription.
-        /// </summary>
-        /// <returns>consumer information</returns>
-        ConsumerInfo GetConsumerInfo();
-
-        /// <summary>
-        /// Gets information about the consumer behind this subscription.
-        /// This returns the last read version of Consumer Info, which could technically be out of date.
-        /// </summary>
-        /// <returns>consumer information</returns>
-        ConsumerInfo GetCachedConsumerInfo();
     }
 }

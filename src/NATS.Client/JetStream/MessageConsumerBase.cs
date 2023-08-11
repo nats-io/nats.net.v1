@@ -20,19 +20,20 @@ namespace NATS.Client.JetStream
     /// </summary>
     internal class MessageConsumerBase : IMessageConsumer
     {
-        private readonly object subLock;
-        
-        protected IJetStreamSubscription sub;
-        protected PullMessageManager pmm;
-        protected JetStreamPullApiImpl pullImpl;
-        protected bool stopped;
+        internal IJetStreamSubscription sub;
+        internal PullMessageManager pmm;
+        internal JetStreamPullApiImpl pullImpl;
+        internal ConsumerInfo cachedConsumerInfo;
 
-        internal MessageConsumerBase()
+        public bool Stopped { get; internal set; }
+        public bool Finished { get; internal set; }
+
+        internal MessageConsumerBase(ConsumerInfo cachedConsumerInfo)
         {
-            subLock = new object();
+            this.cachedConsumerInfo = cachedConsumerInfo;
         }
 
-        protected void InitSub(IJetStreamSubscription inSub)
+        internal void InitSub(IJetStreamSubscription inSub)
         {
             sub = inSub;
             if (sub is JetStreamPullSubscription syncSub)
@@ -47,33 +48,37 @@ namespace NATS.Client.JetStream
             }
         }
         
-        public ConsumerInfo GetConsumerInformation()
-        {
-            lock (subLock)
-            {
-                return sub.GetConsumerInformation();
-            }
+        internal bool NoMorePending() {
+            return pmm.pendingMessages < 1 || (pmm.trackingBytes && pmm.pendingBytes < 1);
         }
 
-        public void Stop(int timeout)
+        public ConsumerInfo GetConsumerInformation()
         {
-            lock (subLock)
+            // don't look up consumer info if it was never set - this check is for ordered consumer
+            if (cachedConsumerInfo != null)
             {
-                if (!stopped)
-                {
-                    stopped = true;
-                    sub.DrainAsync(timeout);
-                }
+                cachedConsumerInfo = sub.GetConsumerInformation();
             }
+            return cachedConsumerInfo;
+        }
+
+        public ConsumerInfo GetCachedConsumerInformation()
+        {
+            return cachedConsumerInfo;
+        }
+
+        public void Stop()
+        {
+            Stopped = true;
         }
 
         public void Dispose()
         {
             try
             {
-                if (!stopped && sub.IsValid)
+                if (!Stopped && sub.IsValid)
                 {
-                    stopped = true;
+                    Stopped = true;
                     sub.Unsubscribe();
                 }
             }

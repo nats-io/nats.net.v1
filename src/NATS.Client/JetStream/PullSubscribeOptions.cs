@@ -18,17 +18,17 @@ namespace NATS.Client.JetStream
         public static readonly PullSubscribeOptions DefaultPullOpts = PullSubscribeOptions.Builder().Build();
 
         // Validation is done by base class
-        private PullSubscribeOptions(ISubscribeOptionsBuilder builder) : base(builder, true, false, null, null) {}
+        private PullSubscribeOptions(ISubscribeOptionsBuilder builder) : base(builder, true, null, null) {}
 
         /// <summary>
         /// Create PushSubscribeOptions where you are binding to
         /// a specific stream, specific durable and are using bind mode
         /// </summary>
         /// <param name="stream">the stream name to bind to</param>
-        /// <param name="durable">the durable name</param>
+        /// <param name="name">the consumer name, commonly the durable name</param>
         /// <returns>the PushSubscribeOptions</returns>
-        public static PullSubscribeOptions BindTo(string stream, string durable) {
-            return Builder().WithStream(stream).WithDurable(durable).WithBind(true).Build();
+        public static PullSubscribeOptions BindTo(string stream, string name) {
+            return Builder().WithStream(stream).WithDurable(name).WithBind(true).Build();
         }
 
         /// <summary>
@@ -40,7 +40,7 @@ namespace NATS.Client.JetStream
             return new PullSubscribeOptionsBuilder();
         }
 
-        public sealed class PullSubscribeOptionsBuilder : PullSubscribeOptionsSubscribeOptionsBuilder { }
+        public class PullSubscribeOptionsBuilder : PullSubscribeOptionsSubscribeOptionsBuilder { }
 
         /// <summary>
         /// PullSubscribeOptionsSubscribeOptionsBuilder was a naming type. Please use the simpler PullSubscribeOptionsBuilder

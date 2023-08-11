@@ -255,7 +255,7 @@ namespace NATS.Client
         public static readonly ClientExDetail JsSoOrderedNotAllowedWithDurable = new ClientExDetail(So, 90106, "Durable is not allowed with an ordered consumer.");
         public static readonly ClientExDetail JsSoOrderedNotAllowedWithDeliverSubject = new ClientExDetail(So, 90107, "Deliver subject is not allowed with an ordered consumer.");
         public static readonly ClientExDetail JsSoOrderedRequiresAckPolicyNone = new ClientExDetail(So, 90108, "Ordered consumer requires Ack Policy None.");
-        public static readonly ClientExDetail JsSoOrderedRequiresMaxDeliver = new ClientExDetail(So, 90109, "Max deliver is limited to 1 with an ordered consumer.");
+        public static readonly ClientExDetail JsSoOrderedRequiresMaxDeliverOfOne = new ClientExDetail(So, 90109, "Max deliver is limited to 1 with an ordered consumer.");
         public static readonly ClientExDetail JsSoNameMismatch = new ClientExDetail(So, 90110, "Builder name must match the consumer configuration name if both are provided.");
         public static readonly ClientExDetail JsSoOrderedMemStorageNotSuppliedOrTrue = new ClientExDetail(So, 90111, "Mem Storage must be true if supplied.");
         public static readonly ClientExDetail JsSoOrderedReplicasNotSuppliedOrOne = new ClientExDetail(So, 90112, "Replicas must be 1 if supplied.");
@@ -310,5 +310,8 @@ namespace NATS.Client
 
         [Obsolete("replaced with more comprehensive name, replaced with JsConsumerCreate290NotAvailable")]
         public static readonly ClientExDetail JsConsumerCantUseNameBefore290 = new ClientExDetail(Con, 90301, "Name field not valid against pre v2.9.0 servers.");
+
+        [Obsolete("replaced with more comprehensive name, replaced with JsSoOrderedRequiresMaxDeliverOfOne")]
+        public static readonly ClientExDetail JsSoOrderedRequiresMaxDeliver = new ClientExDetail(So, 90109, "Max deliver is limited to 1 with an ordered consumer.");
     }
 }

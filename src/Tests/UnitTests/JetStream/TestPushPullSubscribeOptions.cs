@@ -280,7 +280,7 @@ namespace UnitTests.JetStream
             PushSubscribeOptions.Builder().WithConfiguration(ccAckNoneOk).WithOrdered(true).Build();
 
             ConsumerConfiguration ccMax = ConsumerConfiguration.Builder().WithMaxDeliver(2).Build();
-            AssertClientError(JsSoOrderedRequiresMaxDeliver,
+            AssertClientError(JsSoOrderedRequiresMaxDeliverOfOne,
                 () => PushSubscribeOptions.Builder().WithConfiguration(ccMax).WithOrdered(true).Build());
 
             ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithIdleHeartbeat(100).Build();

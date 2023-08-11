@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using NATS.Client.Internals;
@@ -110,9 +111,22 @@ namespace NATS.Client.JetStream
             return new ConsumerInfo(m, true);
         }
 
-        private string GenerateConsumerName()
+        internal string GenerateConsumerName()
         {
             return Nuid.NextGlobalSequence();
+        }
+        
+        internal ConsumerConfiguration NextOrderedConsumerConfiguration(
+            ConsumerConfiguration originalCc,
+            ulong lastStreamSeq,
+            string newDeliverSubject)
+        {
+            return ConsumerConfiguration.Builder(originalCc)
+                .WithDeliverPolicy(DeliverPolicy.ByStartSequence)
+                .WithDeliverSubject(newDeliverSubject)
+                .WithStartSequence(Math.Max(1, lastStreamSeq + 1))
+                .WithStartTime(DateTime.MinValue) // clear start time in case it was originally set
+                .Build();
         }
 
         internal StreamInfo GetStreamInfoInternal(string streamName, StreamInfoOptions options)

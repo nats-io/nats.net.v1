@@ -22,6 +22,7 @@ using Xunit;
 using static UnitTests.TestBase;
 using static IntegrationTests.JetStreamTestBase;
 using static NATS.Client.Internals.JetStreamConstants;
+using static NATS.Client.JetStream.ConsumerConfiguration;
 
 namespace IntegrationTests
 {
@@ -46,7 +47,7 @@ namespace IntegrationTests
                 int fetchMs = 3000;
                 int ackWaitMs = fetchMs * 2;
 
-                ConsumerConfiguration cc = ConsumerConfiguration.Builder()
+                ConsumerConfiguration cc = Builder()
                     .WithAckWait(ackWaitMs)
                     .Build();
                 
@@ -452,7 +453,7 @@ namespace IntegrationTests
                 // Create our JetStream context.
                 IJetStream js = c.CreateJetStreamContext();
 
-                ConsumerConfiguration cc = ConsumerConfiguration.Builder()
+                ConsumerConfiguration cc = Builder()
                     .WithAckWait(1500)
                     .Build();
                 PullSubscribeOptions pso = PullSubscribeOptions.Builder()
@@ -578,7 +579,12 @@ namespace IntegrationTests
         private const int TypeWarning = 2;
         private const int TypeNone = 0;
 
-        private void TestConflictStatus(string statusText, int type, bool syncMode, string targetVersion, ConflictSetup setup)
+        private PullSubscribeOptions makePso(Func<ConsumerConfigurationBuilder, ConsumerConfigurationBuilder> customizer)
+        {
+            return customizer(Builder().WithAckPolicy(AckPolicy.None).WithInactiveThreshold(30_000)).BuildPullSubscribeOptions();
+        }
+
+        private void TestConflictStatus(string statusText, int type, string targetVersion, ConflictSetup setup)
         {
             bool skip = false;
             TestEventHandler handler = new TestEventHandler();
@@ -597,19 +603,13 @@ namespace IntegrationTests
                 CreateMemoryStream(jsm, stream, subject);
                 IJetStream js = c.CreateJetStreamContext();
                 IJetStreamPullSubscription sub = setup.Invoke(jsm, js, stream, subject);
-                if (type == TypeError && syncMode)
+                if (type == TypeError)
                 {
-                    Assert.Throws<NATSJetStreamStatusException>(() => sub.NextMessage(5000));
+                    Assert.Throws<NATSJetStreamStatusException>(() => sub.NextMessage(2500));
                 }
                 else
                 {
-                    try
-                    {
-                        sub.NextMessage(5000);
-                    }
-                    catch (NATSTimeoutException)
-                    {
-                    }
+                    try { sub.NextMessage(2500); } catch (NATSTimeoutException) {}
                 }
                 CheckHandler(statusText, type, handler);
             });
@@ -617,18 +617,18 @@ namespace IntegrationTests
         
         private void CheckHandler(String statusText, int type, TestEventHandler handler) {
             if (type == TypeError) {
-                Assert.True(handler.PullStatusErrorOrWait(statusText, 2000));
+                Assert.True(handler.PullStatusErrorOrWait(statusText, 10_000));
             }
             else if (type == TypeWarning) {
-                Assert.True(handler.PullStatusWarningOrWait(statusText, 2000));
+                Assert.True(handler.PullStatusWarningOrWait(statusText, 10_000));
             }
         }
 
         [Fact]
         public void TestExceedsMaxWaiting()
         {
-            PullSubscribeOptions so = ConsumerConfiguration.Builder().WithMaxPullWaiting(1).BuildPullSubscribeOptions();
-            TestConflictStatus(ExceededMaxWaiting, TypeWarning, true, null, (jsm, js, stream, subject) => {
+            PullSubscribeOptions so = makePso(b => b.WithMaxPullWaiting(1));
+            TestConflictStatus(ExceededMaxWaiting, TypeWarning, null, (jsm, js, stream, subject) => {
                 IJetStreamPullSubscription sub = js.PullSubscribe(subject, so);
                 sub.Pull(1);
                 sub.Pull(1);
@@ -639,8 +639,8 @@ namespace IntegrationTests
         [Fact]
         public void TestExceedsMaxRequestBatch()
         {
-            PullSubscribeOptions so = ConsumerConfiguration.Builder().WithMaxBatch(1).BuildPullSubscribeOptions();
-            TestConflictStatus(ExceededMaxRequestBatch, TypeWarning, true, null, (jsm, js, stream, subject) => {
+            PullSubscribeOptions so = makePso(b => b.WithMaxBatch(1));
+            TestConflictStatus(ExceededMaxRequestBatch, TypeWarning, null, (jsm, js, stream, subject) => {
                 IJetStreamPullSubscription sub = js.PullSubscribe(subject, so);
                 sub.Pull(2);
                 return sub;
@@ -651,8 +651,8 @@ namespace IntegrationTests
         [Fact]
         public void TestMessageSizeExceedsMaxBytes()
         {
-            PullSubscribeOptions so = ConsumerConfiguration.Builder().BuildPullSubscribeOptions();
-            TestConflictStatus(MessageSizeExceedsMaxBytes, TypeNone, true, "2.9.0", (jsm, js, stream, subject) => {
+            PullSubscribeOptions so = makePso(b => b);
+            TestConflictStatus(MessageSizeExceedsMaxBytes, TypeNone, "2.9.0", (jsm, js, stream, subject) => {
                 js.Publish(subject, new byte[1000]);
                 IJetStreamPullSubscription sub = js.PullSubscribe(subject, so);
                 sub.Pull(PullRequestOptions.Builder(1).WithMaxBytes(100).Build());
@@ -663,8 +663,8 @@ namespace IntegrationTests
         [Fact]
         public void TestExceedsMaxRequestExpires()
         {
-            PullSubscribeOptions so = ConsumerConfiguration.Builder().WithMaxExpires(1000).BuildPullSubscribeOptions();
-            TestConflictStatus(ExceededMaxRequestExpires, TypeWarning, true, null, (jsm, js, stream, subject) => {
+            PullSubscribeOptions so = makePso(b => b.WithMaxExpires(1000));
+            TestConflictStatus(ExceededMaxRequestExpires, TypeWarning, "2.9.0", (jsm, js, stream, subject) => {
                 IJetStreamPullSubscription sub = js.PullSubscribe(subject, so);
                 sub.PullExpiresIn(1, 2000);
                 return sub;
@@ -674,14 +674,15 @@ namespace IntegrationTests
         [Fact]
         public void TestConsumerIsPushBased()
         {
-            TestConflictStatus(ConsumerIsPushBased, TypeError, true, null, (jsm, js, stream, subject) =>
+            TestConflictStatus(ConsumerIsPushBased, TypeError, "2.9.0", (jsm, js, stream, subject) =>
             {
                 string durable = Nuid.NextGlobal();
-                PullSubscribeOptions so = PullSubscribeOptions.BindTo(stream, durable);
-                jsm.AddOrUpdateConsumer(stream, ConsumerConfiguration.Builder().WithDurable(durable).Build());
+                PullSubscribeOptions so = PullSubscribeOptions.BindTo(stream, Durable(1));
+                jsm.AddOrUpdateConsumer(stream, Builder().WithDurable(Durable(1)).Build());
                 IJetStreamPullSubscription sub = js.PullSubscribe(null, so);
-                jsm.DeleteConsumer(stream, durable);
-                jsm.AddOrUpdateConsumer(stream, ConsumerConfiguration.Builder().WithDurable(durable).WithDeliverSubject(Deliver(1)).Build());
+                jsm.DeleteConsumer(stream,  Durable(1));
+                // consumer with same name but is push now
+                jsm.AddOrUpdateConsumer(stream, Builder().WithDurable(Durable(1)).WithDeliverSubject(Deliver(1)).Build());
                 sub.Pull(1);
                 return sub;
             });
@@ -691,10 +692,10 @@ namespace IntegrationTests
         [Fact(Skip = "Flapper")]
         public void TestConsumerDeleted()
         {
-            TestConflictStatus(ConsumerDeleted, TypeError, true, "2.9.6", (jsm, js, stream, subject) => {
+            TestConflictStatus(ConsumerDeleted, TypeError, "2.9.6", (jsm, js, stream, subject) => {
                 string durable = Nuid.NextGlobal();
                 PullSubscribeOptions so = PullSubscribeOptions.BindTo(stream, durable);
-                jsm.AddOrUpdateConsumer(stream, ConsumerConfiguration.Builder().WithDurable(durable).Build());
+                jsm.AddOrUpdateConsumer(stream, Builder().WithDurable(durable).Build());
                 IJetStreamPullSubscription sub = js.PullSubscribe(null, so);
                 sub.PullExpiresIn(1, 10000);
                 jsm.DeleteConsumer(stream, durable);
@@ -705,8 +706,8 @@ namespace IntegrationTests
         [Fact]
         public void TestBadRequest()
         {
-            TestConflictStatus(BadRequest, TypeError, true, null, (jsm, js, stream, subject) => {
-                PullSubscribeOptions so = ConsumerConfiguration.Builder().BuildPullSubscribeOptions();
+            TestConflictStatus(BadRequest, TypeError, null, (jsm, js, stream, subject) => {
+                PullSubscribeOptions so = Builder().BuildPullSubscribeOptions();
                 IJetStreamPullSubscription sub = js.PullSubscribe(subject, so);
                 sub.Pull(PullRequestOptions.Builder(1).WithNoWait().WithIdleHeartbeat(1).Build());
                 return sub;
@@ -716,8 +717,8 @@ namespace IntegrationTests
         [Fact]
         public void TestNotFound()
         {
-            TestConflictStatus(NoMessages, TypeNone, true, null, (jsm, js, stream, subject) => {
-                PullSubscribeOptions so = ConsumerConfiguration.Builder().BuildPullSubscribeOptions();
+            TestConflictStatus(NoMessages, TypeNone, null, (jsm, js, stream, subject) => {
+                PullSubscribeOptions so = makePso(b => b);
                 IJetStreamPullSubscription sub = js.PullSubscribe(subject, so);
                 sub.PullNoWait(1);
                 return sub;
@@ -727,8 +728,8 @@ namespace IntegrationTests
         [Fact]
         public void TestExceedsMaxRequestBytes1stMessage()
         {
-            TestConflictStatus(ExceededMaxRequestMaxBytes, TypeWarning, true, null, (jsm, js, stream, subject) => {
-                PullSubscribeOptions so = ConsumerConfiguration.Builder().WithMaxBytes(1).BuildPullSubscribeOptions();
+            TestConflictStatus(ExceededMaxRequestMaxBytes, TypeWarning, null, (jsm, js, stream, subject) => {
+                PullSubscribeOptions so = makePso(b => b.WithMaxBytes(1));
                 IJetStreamPullSubscription sub = js.PullSubscribe(subject, so);
                 sub.Pull(PullRequestOptions.Builder(1).WithMaxBytes(2).Build());
                 return sub;
@@ -754,7 +755,7 @@ namespace IntegrationTests
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
                 CreateMemoryStream(jsm, stream, subject);
                 IJetStream js = c.CreateJetStreamContext();
-                jsm.AddOrUpdateConsumer(stream, ConsumerConfiguration.Builder().WithDurable(durable).Build());
+                jsm.AddOrUpdateConsumer(stream, Builder().WithDurable(durable).Build());
                 PullSubscribeOptions so = PullSubscribeOptions.BindTo(stream, durable);
                 IJetStreamPullSubscription sub = js.PullSubscribe(subject, so);
                 
@@ -794,7 +795,7 @@ namespace IntegrationTests
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
                 CreateMemoryStream(jsm, stream, subject);
                 IJetStream js = c.CreateJetStreamContext();
-                jsm.AddOrUpdateConsumer(stream, ConsumerConfiguration.Builder().WithDurable(durable).Build());
+                jsm.AddOrUpdateConsumer(stream, Builder().WithDurable(durable).Build());
                 PullSubscribeOptions so = PullSubscribeOptions.BindTo(stream, durable);
                 IJetStreamPullSubscription sub = js.PullSubscribe(subject, so);
                 

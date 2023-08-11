@@ -21,10 +21,10 @@ namespace NATSExamples
 {
     internal static class IterableConsumerExample
     {
-        private static readonly string STREAM = "manually-stream";
-        private static readonly string SUBJECT = "manually-subject";
-        private static readonly string CONSUMER_NAME = "manually-consumer";
-        private static readonly string MESSAGE_TEXT = "manually";
+        private static readonly string STREAM = "iterable-stream";
+        private static readonly string SUBJECT = "iterable-subject";
+        private static readonly string CONSUMER_NAME = "iterable-consumer";
+        private static readonly string MESSAGE_TEXT = "iterable";
         private static readonly int STOP_COUNT = 500;
         private static readonly int REPORT_EVERY = 50;
         private static readonly int JITTER = 20;
@@ -48,7 +48,7 @@ namespace NATSExamples
                 IConsumerContext consumerContext;
                 try
                 {
-                    streamContext = c.CreateStreamContext(STREAM);
+                    streamContext = c.GetStreamContext(STREAM);
                     consumerContext =
                         streamContext.CreateOrUpdateConsumer(ConsumerConfiguration.Builder().WithDurable(CONSUMER_NAME).Build());
                 }
@@ -66,7 +66,7 @@ namespace NATSExamples
                     {
                         int count = 0;
                         Stopwatch sw = Stopwatch.StartNew();
-                        using (IIterableConsumer consumer = consumerContext.Consume())
+                        using (IIterableConsumer consumer = consumerContext.Iterate())
                         {
                             Msg msg;
                             Console.WriteLine("Starting main loop.");
@@ -79,23 +79,26 @@ namespace NATSExamples
                                     report("Main Loop Running", sw.ElapsedMilliseconds, count);
                                 }
                             }
-
                             report("Main Loop Stopped", sw.ElapsedMilliseconds, count);
 
-                            Console.WriteLine("Pausing for effect...allow more messages come across.");
-                            Thread.Sleep(JITTER * 2); // allows more messages to come across
-                            consumer.Stop(1000);
+                            // The consumer has at least 1 pull request active. When stop is called,
+                            // no more pull requests will be made, but messages already requested
+                            // will still come across the wire to the client.
+                            consumer.Stop();
 
                             Console.WriteLine("Starting post-stop loop.");
                             msg = consumer.NextMessage(1000);
                             while (msg != null)
                             {
                                 msg.Ack();
-                                report("Post-stop loop running", sw.ElapsedMilliseconds, ++count);
+                                if (++count % REPORT_EVERY == 0)
+                                {
+                                    report("Post-stop loop running", sw.ElapsedMilliseconds, ++count);
+                                }
                                 msg = consumer.NextMessage(1000);
                             }
                         }
-                        report("Done", sw.ElapsedMilliseconds, count);
+                        report("Post-stop loop stopped", sw.ElapsedMilliseconds, count);
                     }
                     catch (NATSJetStreamStatusException)
                     {

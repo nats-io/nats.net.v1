@@ -163,6 +163,10 @@ namespace NATS.Client.JetStream
         internal MessageManagerFactory _pullMessageManagerFactory =
             (conn, js, stream, so, cc, queueMode, syncMode) =>
                 new PullMessageManager(conn, so, syncMode);
+
+        internal MessageManagerFactory _pullOrderedMessageManagerFactory =
+            (conn, js, stream, so, cc, queueMode, syncMode) =>
+                new PullOrderedMessageManager(conn, js, stream, so, cc, syncMode);
         
         Subscription CreateSubscription(string subject, string queueName,
             EventHandler<MsgHandlerEventArgs> userHandler, bool autoAck,
@@ -352,7 +356,8 @@ namespace NATS.Client.JetStream
             Connection.CreateAsyncSubscriptionDelegate asyncSubDelegate = null;
             if (isPullMode)
             {
-                mm = _pullMessageManagerFactory.Invoke((Connection)Conn, this, stream, so, serverCC, qgroup != null, syncMode);
+                MessageManagerFactory mmFactory = so.Ordered ? _pullOrderedMessageManagerFactory : _pullMessageManagerFactory;
+                mm = mmFactory((Connection)Conn, this, stream, so, serverCC, qgroup != null, syncMode);
                 if (syncMode)
                 {
                     syncSubDelegate = (dConn, dSubject, dQueue) =>
@@ -559,21 +564,16 @@ namespace NATS.Client.JetStream
 
         private bool IsSubjectRequired(SubscribeOptions options) => options == null || !options.Bind;
         
-        public IStreamContext CreateStreamContext(string streamName)
+        public IStreamContext GetStreamContext(string streamName)
         {
             Validator.ValidateStreamName(streamName, true);
-            return GetStreamContext(streamName);
+            return new StreamContext(streamName, this, Conn, JetStreamOptions);
         }
         
-        public IConsumerContext CreateConsumerContext(string streamName, string consumerName)
+        public IConsumerContext GetConsumerContext(string streamName, string consumerName)
         {
-            Validator.ValidateStreamName(streamName, true);
             Validator.Required(consumerName, "Consumer Name");
-            return GetStreamContext(streamName).CreateConsumerContext(consumerName);
-        }
-
-        private StreamContext GetStreamContext(string streamName) {
-            return new StreamContext(Conn, JetStreamOptions, streamName);
+            return GetStreamContext(streamName).GetConsumerContext(consumerName);
         }
     }
 }

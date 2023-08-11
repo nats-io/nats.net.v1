@@ -18,14 +18,17 @@ namespace NATS.Client.JetStream
     /// </summary>
     internal class IterableConsumer : MessageConsumer, IIterableConsumer
     {
-        internal IterableConsumer(SubscriptionMaker subscriptionMaker, ConsumeOptions opts) 
-            : base(subscriptionMaker, null, opts) {}
+        internal IterableConsumer(SimplifiedSubscriptionMaker subscriptionMaker,
+            ConsumeOptions consumeOptions,
+            ConsumerInfo cachedConsumerInfo) 
+            : base(subscriptionMaker, consumeOptions, cachedConsumerInfo, null) {}
 
         public Msg NextMessage(int timeoutMillis)
         {
+            Msg m = null;
             try
             {
-                return ((JetStreamPullSubscription)sub).NextMessage(timeoutMillis);
+                m = ((JetStreamPullSubscription)sub).NextMessage(timeoutMillis);
             }
             catch (NATSTimeoutException)
             {
@@ -37,6 +40,14 @@ namespace NATS.Client.JetStream
                 // drained/unsubscribed, so don't pass it on if it's expected
                 return null;
             }
+            finally
+            {
+                if (m != null && Stopped && pmm.NoMorePending())
+                {
+                    Finished = true;
+                }
+            }
+            return m;
         }
     }
 }

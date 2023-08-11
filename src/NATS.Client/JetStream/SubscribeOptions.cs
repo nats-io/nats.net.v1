@@ -14,6 +14,7 @@
 using NATS.Client.Internals;
 using static NATS.Client.ClientExDetail;
 using static NATS.Client.Internals.Validator;
+using static NATS.Client.JetStream.ConsumerConfiguration;
 
 namespace NATS.Client.JetStream
 {
@@ -49,14 +50,14 @@ namespace NATS.Client.JetStream
         /// </summary>
         public string DeliverGroup => ConsumerConfiguration.DeliverGroup;
 
-        protected SubscribeOptions(ISubscribeOptionsBuilder builder, bool pull, bool ordered, 
+        protected SubscribeOptions(ISubscribeOptionsBuilder builder, bool pull, 
             string deliverSubject, string deliverGroup,
             long pendingMessageLimit = Defaults.SubPendingMsgsLimit, 
             long pendingByteLimit = Defaults.SubPendingBytesLimit)
         {
             Pull = pull;
             Bind = builder.Bind;
-            Ordered = ordered;
+            Ordered = builder.Ordered;
             MessageAlarmTime = builder.MessageAlarmTime;
 
             if (Ordered && Bind)
@@ -106,7 +107,7 @@ namespace NATS.Client.JetStream
                         throw JsSoOrderedRequiresAckPolicyNone.Instance();
                     }
                     if (builder.Cc.MaxDeliver > 1) {
-                        throw JsSoOrderedRequiresMaxDeliver.Instance();
+                        throw JsSoOrderedRequiresMaxDeliverOfOne.Instance();
                     }
 
                     Duration ccHb = builder.Cc.IdleHeartbeat;
@@ -115,19 +116,25 @@ namespace NATS.Client.JetStream
                         hb = ccHb.Millis;
                     }
                 }
-                ConsumerConfiguration = ConsumerConfiguration.Builder(builder.Cc)
+                
+                ConsumerConfigurationBuilder ccbuilder = Builder(builder.Cc)
                     .WithAckPolicy(AckPolicy.None)
                     .WithMaxDeliver(1)
-                    .WithFlowControl(hb)
                     .WithAckWait(Duration.OfHours(22))
                     .WithName(name)
                     .WithMemStorage(true)
-                    .WithNumReplicas(1)
-                    .Build();
+                    .WithNumReplicas(1);
+
+                if (!pull)
+                {
+                    ccbuilder.WithFlowControl(hb);
+                }
+
+                ConsumerConfiguration = ccbuilder.Build();
             }
             else
             {
-                ConsumerConfiguration = ConsumerConfiguration.Builder(builder.Cc)
+                ConsumerConfiguration = Builder(builder.Cc)
                     .WithDurable(durable)
                     .WithDeliverSubject(deliverSubject)
                     .WithDeliverGroup(deliverGroup)
@@ -144,16 +151,18 @@ namespace NATS.Client.JetStream
             string Name { get; }
             ConsumerConfiguration Cc { get; }
             int MessageAlarmTime { get; }
+            bool Ordered { get; }
         }
             
         public abstract class SubscribeOptionsBuilder<TB, TSo> : ISubscribeOptionsBuilder
         {
-            string _stream;
-            bool _bind;
-            string _durable;
-            string _name;
-            ConsumerConfiguration _config;
-            int _messageAlarmTime = -1;
+            protected string _stream;
+            protected bool _bind;
+            protected string _durable;
+            protected string _name;
+            protected ConsumerConfiguration _config;
+            protected int _messageAlarmTime = -1;
+            protected bool _ordered;
 
             public string Stream => _stream;
             public bool Bind => _bind;
@@ -161,6 +170,7 @@ namespace NATS.Client.JetStream
             public string Name => _name;
             public ConsumerConfiguration Cc => _config;
             public int MessageAlarmTime => _messageAlarmTime;
+            public bool Ordered => _ordered;
 
             protected abstract TB GetThis();
 

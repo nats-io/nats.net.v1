@@ -20,21 +20,17 @@ namespace NATS.Client.JetStream
     /// </summary>
     internal class StreamContext : IStreamContext
     {
+        internal readonly JetStream js;
         internal readonly JetStreamManagement jsm;
 
         public string StreamName { get; }
 
-        internal StreamContext(IConnection connection, JetStreamOptions jsOptions, string streamName)
+        internal StreamContext(string streamName, JetStream js, IConnection connection, JetStreamOptions jsOptions)
         {
-            jsm = new JetStreamManagement(connection, jsOptions);
             StreamName = streamName;
+            this.js = js ?? new JetStream(connection, jsOptions);
+            jsm = new JetStreamManagement(connection, jsOptions);
             jsm.GetStreamInfo(StreamName); // this is just verifying that the stream exists
-        }
-
-        internal StreamContext(StreamContext streamContext)
-        {
-            jsm = streamContext.jsm;
-            StreamName = streamContext.StreamName;
         }
 
         public StreamInfo GetStreamInfo()
@@ -57,7 +53,7 @@ namespace NATS.Client.JetStream
             return jsm.PurgeStream(StreamName, options);
         }
 
-        public IConsumerContext CreateConsumerContext(string consumerName)
+        public IConsumerContext GetConsumerContext(string consumerName)
         {
             return new ConsumerContext(this, jsm.GetConsumerInfo(StreamName, consumerName));
         }
@@ -65,6 +61,11 @@ namespace NATS.Client.JetStream
         public IConsumerContext CreateOrUpdateConsumer(ConsumerConfiguration config)
         {
             return new ConsumerContext(this, jsm.AddOrUpdateConsumer(StreamName, config));
+        }
+
+        public IOrderedConsumerContext CreateOrderedConsumer(OrderedConsumerConfiguration config)
+        {
+            return new OrderedConsumerContext(this, config);
         }
 
         public bool DeleteConsumer(string consumerName)

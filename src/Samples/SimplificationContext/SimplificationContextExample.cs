@@ -38,15 +38,15 @@ namespace NATSExamples
                 JsUtils.CreateOrReplaceStream(jsm, STREAM, SUBJECT);
                 
                 // get a stream context from the connection
-                IStreamContext streamContext = c.CreateStreamContext(STREAM);
+                IStreamContext streamContext = c.GetStreamContext(STREAM);
                 Console.WriteLine("S1. " + streamContext.GetStreamInfo());
     
                 // get a stream context from the connection, supplying custom JetStreamOptions
-                streamContext = c.CreateStreamContext(STREAM, JetStreamOptions.Builder().Build());
+                streamContext = c.GetStreamContext(STREAM, JetStreamOptions.Builder().Build());
                 Console.WriteLine("S2. " + streamContext.GetStreamInfo());
     
                 // get a stream context from the JetStream context
-                streamContext = js.CreateStreamContext(STREAM);
+                streamContext = js.GetStreamContext(STREAM);
                 Console.WriteLine("S3. " + streamContext.GetStreamInfo());
     
                 // when you create a consumer from the stream context you get a ConsumerContext in return
@@ -54,15 +54,15 @@ namespace NATSExamples
                 Console.WriteLine("C1. " + consumerContext.GetCachedConsumerInfo());
     
                 // get a ConsumerContext from the connection for a pre-existing consumer
-                consumerContext = c.CreateConsumerContext(STREAM, CONSUMER_NAME);
+                consumerContext = c.GetConsumerContext(STREAM, CONSUMER_NAME);
                 Console.WriteLine("C2. " + consumerContext.GetCachedConsumerInfo());
     
                 // get a ConsumerContext from the connection for a pre-existing consumer, supplying custom JetStreamOptions
-                consumerContext = c.CreateConsumerContext(STREAM, CONSUMER_NAME, JetStreamOptions.Builder().Build());
+                consumerContext = c.GetConsumerContext(STREAM, CONSUMER_NAME, JetStreamOptions.Builder().Build());
                 Console.WriteLine("C3. " + consumerContext.GetCachedConsumerInfo());
     
                 // get a ConsumerContext from the stream context for a pre-existing consumer
-                consumerContext = streamContext.CreateConsumerContext(CONSUMER_NAME);
+                consumerContext = streamContext.GetConsumerContext(CONSUMER_NAME);
                 Console.WriteLine("C4. " + consumerContext.GetCachedConsumerInfo());
             }
         }

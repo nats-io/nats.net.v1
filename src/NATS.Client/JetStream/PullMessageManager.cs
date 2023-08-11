@@ -15,13 +15,13 @@ using NATS.Client.Internals;
 
 namespace NATS.Client.JetStream
 {
-    internal class PullMessageManager : MessageManager
+    public class PullMessageManager : MessageManager
     {
         internal int pendingMessages;
         internal long pendingBytes;
         internal bool trackingBytes;
         internal bool raiseStatusWarnings;
-        internal ITrackPendingListener trackPendingListener;
+        internal IPullManagerObserver pullManagerObserver;
 
         public PullMessageManager(Connection conn, SubscribeOptions so, bool syncMode) : base(conn, so, syncMode)
         {
@@ -36,16 +36,15 @@ namespace NATS.Client.JetStream
             ((Subscription)Sub).BeforeChannelAddCheck = BeforeChannelAddCheck;
         }
 
-        public override void StartPullRequest(string pullSubject, PullRequestOptions pro, bool raiseStatusWarnings, ITrackPendingListener trackPendingListener)
+        public override void StartPullRequest(string pullSubject, PullRequestOptions pro, bool raiseStatusWarnings, IPullManagerObserver pullManagerObserver)
         {
             lock (StateChangeLock)
             {
                 this.raiseStatusWarnings = raiseStatusWarnings;
-                this.trackPendingListener = trackPendingListener;
+                this.pullManagerObserver = pullManagerObserver;
                 pendingMessages += pro.BatchSize;
                 pendingBytes += pro.MaxBytes;
                 trackingBytes = (pendingBytes > 0);
-
                 ConfigureIdleHeartbeat(pro.IdleHeartbeat, -1);
                 if (Hb)
                 {
@@ -63,8 +62,13 @@ namespace NATS.Client.JetStream
             lock (StateChangeLock)
             {
                 pendingMessages -= m;
-                pendingBytes -= b;
-                if (pendingMessages < 1 || (trackingBytes && pendingBytes < 1))
+                bool zero = pendingMessages < 1;
+                if (trackingBytes)
+                {
+                    pendingBytes -= b;
+                    zero |= pendingBytes < 1;
+                }
+                if (zero)
                 {
                     pendingMessages = 0;
                     pendingBytes = 0L;
@@ -74,8 +78,8 @@ namespace NATS.Client.JetStream
                         ShutdownHeartbeatTimer();
                     }
                 }
-                if (trackPendingListener != null) {
-                    trackPendingListener.Track(pendingMessages, pendingBytes, trackingBytes);
+                if (pullManagerObserver != null) {
+                    pullManagerObserver.PendingUpdated();
                 }
             }
         }
@@ -121,7 +125,11 @@ namespace NATS.Client.JetStream
                 TrackJsMessage(msg);
                 return ManageResult.Message;
             }
+            return ManageStatus(msg);
+        }
 
+        protected ManageResult ManageStatus(Msg msg)
+        {
             switch (msg.Status.Code)
             {
                 case NatsConstants.NotFoundCode:
@@ -132,7 +140,7 @@ namespace NATS.Client.JetStream
                             new StatusEventArgs(Conn, (Subscription)Sub, msg.Status));
                     }
                     return ManageResult.StatusTerminus;
-                
+
                 case NatsConstants.ConflictCode:
                     // sometimes just a warning
                     string statMsg = msg.Status.Message;
@@ -150,18 +158,18 @@ namespace NATS.Client.JetStream
                         statMsg.Equals(JetStreamConstants.MessageSizeExceedsMaxBytes))
                     {
                         return ManageResult.StatusTerminus;
-                    } 
+                    }
                     break;
             }
 
             // all others are errors
-            Conn.Opts.PullStatusErrorEventHandlerOrDefault.Invoke(this, new StatusEventArgs(Conn, (Subscription)Sub, msg.Status));
-            if (SyncMode)
-            {
-                throw new NATSJetStreamStatusException(msg.Status, (Subscription)Sub);
-            }
-
+            Conn.Opts.PullStatusErrorEventHandlerOrDefault.Invoke(this,
+                new StatusEventArgs(Conn, (Subscription)Sub, msg.Status));
             return ManageResult.StatusError;
+        }
+
+        internal bool NoMorePending() {
+            return pendingMessages < 1 || (trackingBytes && pendingBytes < 1);
         }
     }
 }

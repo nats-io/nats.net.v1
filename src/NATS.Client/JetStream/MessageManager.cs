@@ -30,9 +30,9 @@ namespace NATS.Client.JetStream
 
         protected IJetStreamSubscription Sub; // not readonly it is not set until after construction
 
-        protected ulong LastStreamSeq;
-        protected ulong LastConsumerSeq;
-        protected long LastMsgReceived;
+        internal ulong LastStreamSeq;
+        internal ulong LastConsumerSeq;
+        internal long LastMsgReceived;
 
         protected bool Hb;
         protected int IdleHeartbeatSetting;
@@ -65,7 +65,7 @@ namespace NATS.Client.JetStream
             ShutdownHeartbeatTimer();
         }
 
-        public virtual void StartPullRequest(string pullSubject, PullRequestOptions pullRequestOptions, bool raiseStatusWarnings, ITrackPendingListener trackPendingListener) {
+        public virtual void StartPullRequest(string pullSubject, PullRequestOptions pullRequestOptions, bool raiseStatusWarnings, IPullManagerObserver pullManagerObserver) {
             // does nothing - only implemented for pulls, but in base class since instance is always referenced as MessageManager, not subclass
         }
 

@@ -72,9 +72,9 @@ namespace NATSExamples
             IConsumerContext consumerContext;
             try
             {
-                streamContext = c.CreateStreamContext(STREAM);
+                streamContext = c.GetStreamContext(STREAM);
                 streamContext.CreateOrUpdateConsumer(ConsumerConfiguration.Builder().WithDurable(consumerName).Build());
-                consumerContext = js.CreateConsumerContext(STREAM, consumerName);
+                consumerContext = js.GetConsumerContext(STREAM, consumerName);
             }
             catch (Exception) {
                 // possible exceptions

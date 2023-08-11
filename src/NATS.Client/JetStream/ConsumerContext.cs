@@ -12,56 +12,156 @@
 // limitations under the License.
 
 using System;
-using System.Threading.Tasks;
 using NATS.Client.Internals;
 using static NATS.Client.JetStream.BaseConsumeOptions;
 using static NATS.Client.JetStream.ConsumeOptions;
-using static NATS.Client.JetStream.JetStreamPullSubscription;
 
 namespace NATS.Client.JetStream
 {
+    internal interface SimplifiedSubscriptionMaker {
+        IJetStreamSubscription Subscribe(EventHandler<MsgHandlerEventArgs> handler = null);
+    }
+
+    internal class OrderedPullSubscribeOptionsBuilder : PullSubscribeOptions.PullSubscribeOptionsSubscribeOptionsBuilder
+    {
+        internal OrderedPullSubscribeOptionsBuilder(string streamName, ConsumerConfiguration cc)
+        {
+            WithStream(streamName);
+            WithConfiguration(cc);
+            _ordered = true;
+        }
+    }
+
     /// <summary>
     /// SIMPLIFICATION IS EXPERIMENTAL AND SUBJECT TO CHANGE
     /// </summary>
-    internal class ConsumerContext : IConsumerContext
+    internal class ConsumerContext : IConsumerContext, SimplifiedSubscriptionMaker
     {
-        private readonly StreamContext streamContext;
-        private readonly JetStream js;
-        private readonly PullSubscribeOptions bindPso;
-        private ConsumerInfo lastConsumerInfo;
+        private readonly object stateLock;
+        private readonly StreamContext streamCtx;
+        private readonly bool ordered;
+        private readonly ConsumerConfiguration originalOrderedCc;
+        private readonly string subscribeSubject;
+        private readonly PullSubscribeOptions unorderedBindPso;
+        
+        private ConsumerInfo cachedConsumerInfo;
+        private MessageConsumerBase lastConsumer;
+        private ulong highestSeq;
 
-        public string ConsumerName => lastConsumerInfo.Name;
+        public string ConsumerName { get; }
         
         internal ConsumerContext(StreamContext sc, ConsumerInfo ci)
         {
-            streamContext = sc;
-            js = new JetStream(streamContext.jsm.Conn, streamContext.jsm.JetStreamOptions);
-            bindPso = PullSubscribeOptions.BindTo(streamContext.StreamName, ci.Name);
-            lastConsumerInfo = ci;
+            stateLock = new object();
+            streamCtx = sc;
+            ordered = false;
+            ConsumerName = ci.Name;
+            unorderedBindPso = PullSubscribeOptions.BindTo(streamCtx.StreamName, ci.Name);
+            cachedConsumerInfo = ci;
+        }
+        
+        internal ConsumerContext(StreamContext sc, OrderedConsumerConfiguration config)
+        {
+            stateLock = new object();
+            streamCtx = sc;
+            ordered = true;
+            originalOrderedCc = ConsumerConfiguration.Builder()
+                .WithFilterSubject(config.FilterSubject)
+                .WithDeliverPolicy(config.DeliverPolicy)
+                .WithStartSequence(config.StartSequence)
+                .WithStartTime(config.StartTime)
+                .WithReplayPolicy(config.ReplayPolicy)
+                .WithHeadersOnly(config.HeadersOnly)
+                .Build();
+            subscribeSubject = originalOrderedCc.FilterSubject;
+            unorderedBindPso = null;
+
+        }
+        
+        public IJetStreamSubscription Subscribe(EventHandler<MsgHandlerEventArgs> handler = null) {
+            PullSubscribeOptions pso;
+            if (ordered) {
+                if (lastConsumer != null) {
+                    highestSeq = Math.Max(highestSeq, lastConsumer.pmm.LastStreamSeq);
+                }
+                ConsumerConfiguration cc = lastConsumer == null
+                    ? originalOrderedCc
+                    : streamCtx.js.NextOrderedConsumerConfiguration(originalOrderedCc, highestSeq, null);
+                pso = new OrderedPullSubscribeOptionsBuilder(streamCtx.StreamName, cc).Build();
+            }
+            else {
+                pso = unorderedBindPso;
+            }
+
+            if (handler == null) {
+                return (JetStreamPullSubscription)streamCtx.js.PullSubscribe(subscribeSubject, pso);
+            }
+            return (JetStreamPullAsyncSubscription)streamCtx.js.PullSubscribeAsync(subscribeSubject, handler, pso);
+        }
+    
+        private void CheckState() {
+            if (lastConsumer != null) {
+                if (ordered) {
+                    if (!lastConsumer.Finished) {
+                        throw new InvalidOperationException("The ordered consumer is already receiving messages. Ordered Consumer does not allow multiple instances at time.");
+                    }
+                }
+                if (lastConsumer.Finished && !lastConsumer.Stopped) {
+                    lastConsumer.Dispose(); // finished, might as well make sure the sub is closed.
+                }
+            }
+        }
+
+        private MessageConsumerBase TrackConsume(MessageConsumerBase con) {
+            lastConsumer = con;
+            return con;
         }
 
         public ConsumerInfo GetConsumerInfo()
         {
-            lastConsumerInfo = streamContext.jsm.GetConsumerInfo(streamContext.StreamName, lastConsumerInfo.Name);
-            return lastConsumerInfo;
+            cachedConsumerInfo = streamCtx.jsm.GetConsumerInfo(streamCtx.StreamName, cachedConsumerInfo.Name);
+            return cachedConsumerInfo;
         }
 
         public ConsumerInfo GetCachedConsumerInfo()
         {
-            return lastConsumerInfo;
+            return cachedConsumerInfo;
         }
 
-        public Msg Next() {
-            return new NextSub(js, bindPso, DefaultExpiresInMillis).Next();
-        }
-
-        public Msg Next(int maxWaitMillis) 
+        public Msg Next(int maxWaitMillis = DefaultExpiresInMillis)
         {
-            if (maxWaitMillis < MinExpiresMills) 
+            lock (stateLock)
             {
-                throw new ArgumentException($"Max wait must be at least {MinExpiresMills} milliseconds.");
+                CheckState();
+                if (maxWaitMillis < MinExpiresMills) 
+                {
+                    throw new ArgumentException($"Max wait must be at least {MinExpiresMills} milliseconds.");
+                }
             }
-            return new NextSub(js, bindPso, maxWaitMillis).Next();
+
+            using (MessageConsumerBase con = new MessageConsumerBase(cachedConsumerInfo))
+            {
+                try
+                {
+                    JetStreamPullSubscription sub = (JetStreamPullSubscription)Subscribe();
+                    con.InitSub(sub);
+                    con.pullImpl.Pull(PullRequestOptions.Builder(1)
+                        .WithExpiresIn(maxWaitMillis - JetStreamPullSubscription.ExpireAdjustment)
+                        .Build(), false, null);
+                    TrackConsume(con);
+                    Msg m = sub.NextMessage(maxWaitMillis);
+                    con.Finished = true;
+                    return m;
+                }
+                catch (NATSTimeoutException)
+                {
+                    return null;
+                }
+                finally
+                {
+                    con.Finished = true;
+                }
+            }
         }
 
         public IFetchConsumer FetchMessages(int maxMessages) {
@@ -73,86 +173,29 @@ namespace NATS.Client.JetStream
         }
 
         public IFetchConsumer Fetch(FetchConsumeOptions fetchConsumeOptions) {
-            Validator.Required(fetchConsumeOptions, "Fetch Consume Options");
-            return new FetchConsumer(new SubscriptionMaker(js, bindPso), fetchConsumeOptions);
-        }
-
-        public IIterableConsumer Consume() {
-            return new IterableConsumer(new SubscriptionMaker(js, bindPso), DefaultConsumeOptions);
-        }
-
-        public IIterableConsumer Consume(ConsumeOptions consumeOptions) {
-            Validator.Required(consumeOptions, "Consume Options");
-            return new IterableConsumer(new SubscriptionMaker(js, bindPso), consumeOptions);
-        }
-
-        public IMessageConsumer Consume(EventHandler<MsgHandlerEventArgs> handler) {
-            Validator.Required(handler, "Msg Handler");
-            return new MessageConsumer(new SubscriptionMaker(js, bindPso), handler, DefaultConsumeOptions);
-        }
-
-        public IMessageConsumer Consume(EventHandler<MsgHandlerEventArgs> handler, ConsumeOptions consumeOptions) {
-            Validator.Required(handler, "Msg Handler");
-            Validator.Required(consumeOptions, "Consume Options");
-            return new MessageConsumer(new SubscriptionMaker(js, bindPso), handler, consumeOptions);
-        }
-    }
-
-    internal class NextSub
-    {
-        private int maxWaitMillis;
-        private JetStreamPullSubscription sub; 
-
-        public NextSub(IJetStream js, PullSubscribeOptions pso, int maxWaitMillis)
-        {
-            sub = (JetStreamPullSubscription)new SubscriptionMaker(js, pso).MakeSubscription();
-            this.maxWaitMillis = maxWaitMillis;
-            sub.pullImpl.Pull(PullRequestOptions.Builder(1).WithExpiresIn(maxWaitMillis - ExpireAdjustment).Build(), false, null);
-        }
-
-        internal Msg Next()
-        {
-            try
+            lock (stateLock)
             {
-                return sub.NextMessage(maxWaitMillis);
-            }
-            catch (NATSTimeoutException)
-            {
-                return null;
-            }
-            finally
-            {
-                Task.Run(() =>
-                {
-                    try
-                    {
-                        sub.Unsubscribe();
-                    }
-                    catch (Exception)
-                    {
-                        // intentionally ignored, nothing we can do anyway
-                    }
-                });
+                CheckState();
+                Validator.Required(fetchConsumeOptions, "Fetch Consume Options");
+                return (IFetchConsumer)TrackConsume(new FetchConsumer(this, cachedConsumerInfo, fetchConsumeOptions));
             }
         }
-    }
-    
-    internal class SubscriptionMaker
-    {
-        private readonly IJetStream js;
-        private readonly PullSubscribeOptions pso;
 
-        public SubscriptionMaker(IJetStream js, PullSubscribeOptions pso)
-        {
-            this.js = js;
-            this.pso = pso;
+        public IIterableConsumer Iterate(ConsumeOptions consumeOptions = null) {
+            lock (stateLock)
+            {
+                CheckState();
+                return (IIterableConsumer)TrackConsume(new IterableConsumer(this, consumeOptions ?? DefaultConsumeOptions, cachedConsumerInfo));
+            }
         }
 
-        public IJetStreamSubscription MakeSubscription(EventHandler<MsgHandlerEventArgs> handler = null) {
-            if (handler == null) {
-                return (JetStreamPullSubscription)js.PullSubscribe(null, pso);
+        public IMessageConsumer Consume(EventHandler<MsgHandlerEventArgs> handler, ConsumeOptions consumeOptions = null) {
+            lock (stateLock)
+            {
+                CheckState();
+                Validator.Required(handler, "Msg Handler");
+                return TrackConsume(new MessageConsumer(this, consumeOptions ?? DefaultConsumeOptions, cachedConsumerInfo, handler));
             }
-            return (JetStreamPullAsyncSubscription)js.PullSubscribeAsync(null, handler, pso);
         }
     }
 }
