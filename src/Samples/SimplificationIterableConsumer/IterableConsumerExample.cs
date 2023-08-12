@@ -93,7 +93,7 @@ namespace NATSExamples
                                 msg.Ack();
                                 if (++count % REPORT_EVERY == 0)
                                 {
-                                    report("Post-stop loop running", sw.ElapsedMilliseconds, ++count);
+                                    report("Post-stop loop running", sw.ElapsedMilliseconds, count);
                                 }
                                 msg = consumer.NextMessage(1000);
                             }
