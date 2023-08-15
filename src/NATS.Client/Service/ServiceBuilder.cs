@@ -17,7 +17,7 @@ using static NATS.Client.Internals.Validator;
 namespace NATS.Client.Service
 {
     /// <summary>
-    /// SERVICE IS AN EXPERIMENTAL API SUBJECT TO CHANGE
+    /// Used to build a service
     /// </summary>
     public class ServiceBuilder
     {

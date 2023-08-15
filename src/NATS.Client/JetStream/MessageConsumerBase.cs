@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System;
+using NATS.Client.Internals;
 
 namespace NATS.Client.JetStream
 {
@@ -25,12 +26,41 @@ namespace NATS.Client.JetStream
         internal JetStreamPullApiImpl pullImpl;
         internal ConsumerInfo cachedConsumerInfo;
 
-        public bool Stopped { get; internal set; }
-        public bool Finished { get; internal set; }
+        private readonly InterlockedBoolean _stopped;
+        private readonly InterlockedBoolean _finished;
+
+        public bool Stopped
+        {
+            get
+            {
+                return _stopped.IsTrue();
+            }
+            
+            internal set
+            {
+                _stopped.Set(value);
+            }
+        }
+
+        public bool Finished
+        {
+            get
+            {
+                return _finished.IsTrue();
+            }
+            
+            internal set
+            {
+                _finished.Set(value);
+            }
+        }
+
 
         internal MessageConsumerBase(ConsumerInfo cachedConsumerInfo)
         {
             this.cachedConsumerInfo = cachedConsumerInfo;
+            _stopped = new InterlockedBoolean();
+            _finished = new InterlockedBoolean();
         }
 
         internal void InitSub(IJetStreamSubscription inSub)

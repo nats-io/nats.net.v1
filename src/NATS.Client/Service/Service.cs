@@ -21,7 +21,9 @@ using NATS.Client.JetStream;
 namespace NATS.Client.Service
 {
     /// <summary>
-    /// SERVICE IS AN EXPERIMENTAL API SUBJECT TO CHANGE
+    /// The Services Framework introduces a higher-level API for implementing services with NATS.
+    /// Simply put, services are endpoint listeners that respond to a subject to provide a remote response to a question.
+    /// When multiple instances of endpoints are active they work in a queue, meaning only one listener responds.
     /// </summary>
     public class Service
     {

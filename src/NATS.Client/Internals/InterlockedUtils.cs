@@ -19,9 +19,7 @@ namespace NATS.Client.Internals
     {
         private long count;
 
-        public InterlockedLong() {}
-
-        public InterlockedLong(long start)
+        public InterlockedLong(long start = 0)
         {
             count = start;
         }
@@ -65,12 +63,7 @@ namespace NATS.Client.Internals
     {
         private readonly InterlockedLong _il;
 
-        public InterlockedInt()
-        {
-            _il = new InterlockedLong();
-        }
-
-        public InterlockedInt(int start)
+        public InterlockedInt(int start = 0)
         {
             _il = new InterlockedLong(start);
         }
@@ -110,9 +103,7 @@ namespace NATS.Client.Internals
     {
         private long _flag;
 
-        public InterlockedBoolean() : this(false) {}
-
-        public InterlockedBoolean(bool flag)
+        public InterlockedBoolean(bool flag = false)
         {
             _flag = flag ? 1 : 0;
         }
