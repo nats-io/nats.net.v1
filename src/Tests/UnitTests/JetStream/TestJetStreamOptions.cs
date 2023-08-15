@@ -12,7 +12,6 @@
 // limitations under the License.
 
 using System;
-using NATS.Client;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using Xunit;
@@ -27,7 +26,7 @@ namespace UnitTests.JetStream
         {
             // default
             JetStreamOptions jso = JetStreamOptions.Builder().Build();
-            Assert.Equal(Duration.OfMillis(Defaults.Timeout), jso.RequestTimeout);
+            Assert.Null(jso.RequestTimeout);
             Assert.Equal(DefaultApiPrefix, jso.Prefix);
             Assert.True(jso.IsDefaultPrefix);
             Assert.False(jso.IsPublishNoAck);
@@ -35,7 +34,7 @@ namespace UnitTests.JetStream
 
             // default copy
             jso = JetStreamOptions.Builder(jso).Build();
-            Assert.Equal(Duration.OfMillis(Defaults.Timeout), jso.RequestTimeout);
+            Assert.Null(jso.RequestTimeout);
             Assert.Equal(DefaultApiPrefix, jso.Prefix);
             Assert.True(jso.IsDefaultPrefix);
             Assert.False(jso.IsPublishNoAck);
