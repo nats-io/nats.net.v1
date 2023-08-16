@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using NATS.Client.Internals;
 using static NATS.Client.Internals.JetStreamConstants;
 using static NATS.Client.Internals.NatsConstants;
@@ -20,7 +21,9 @@ namespace NATS.Client.JetStream
 {
     public sealed class JetStreamOptions
     {
+        [Obsolete("This property is obsolete. The connection options request timeout is used as the default", false)]
         public static readonly Duration DefaultTimeout = Duration.OfMillis(Defaults.Timeout);
+        
         public static readonly JetStreamOptions DefaultJsOptions = Builder().Build();
 
         private JetStreamOptions(JetStreamOptionsBuilder b)
@@ -94,7 +97,7 @@ namespace NATS.Client.JetStream
         public sealed class JetStreamOptionsBuilder
         {
             internal string _jsPrefix;
-            internal Duration _requestTimeout = DefaultTimeout;
+            internal Duration _requestTimeout;
             internal bool _publishNoAck;
             internal bool _optOut290ConsumerCreate;
 
@@ -160,7 +163,7 @@ namespace NATS.Client.JetStream
             /// <returns>The JetStreamOptionsBuilder</returns>
             public JetStreamOptionsBuilder WithRequestTimeout(Duration requestTimeout)
             {
-                _requestTimeout = EnsureNotNullAndNotLessThanMin(requestTimeout, Duration.Zero, DefaultTimeout);
+                _requestTimeout = requestTimeout;
                 return this;
             }
 
@@ -169,9 +172,9 @@ namespace NATS.Client.JetStream
             /// </summary>
             /// <param name="requestTimeoutMillis">The request timeout in millis.</param>
             /// <returns>The JetStreamOptionsBuilder</returns>
-            public JetStreamOptionsBuilder WithRequestTimeout(long requestTimeoutMillis) 
+            public JetStreamOptionsBuilder WithRequestTimeout(long requestTimeoutMillis)
             {
-                _requestTimeout = EnsureDurationNotLessThanMin(requestTimeoutMillis, Duration.Zero, DefaultTimeout);
+                _requestTimeout = requestTimeoutMillis < 0 ? null : Duration.OfMillis(requestTimeoutMillis);
                 return this;
             }
 
@@ -201,7 +204,6 @@ namespace NATS.Client.JetStream
             /// <returns>The JetStreamOptions object.</returns>
             public JetStreamOptions Build()
             {
-                _requestTimeout = _requestTimeout ?? DefaultTimeout;
                 return new JetStreamOptions(this);
             }
         }

@@ -44,7 +44,7 @@ namespace NATS.Client.JetStream
             Conn = connection;
             JetStreamOptions = options ?? JetStreamOptions.DefaultJsOptions;
             Prefix = JetStreamOptions.Prefix;
-            Timeout = JetStreamOptions.RequestTimeout.Millis;
+            Timeout = JetStreamOptions.RequestTimeout?.Millis ?? Conn.Opts.Timeout;
         }
 
         internal static ServerInfo ServerInfoOrException(IConnection conn)

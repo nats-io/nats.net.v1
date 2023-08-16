@@ -86,9 +86,7 @@ namespace NATS.Client.JetStream
                 return null;
             }
             
-            Duration timeout = options == null ? JetStreamOptions.RequestTimeout : options.StreamTimeout;
-            
-            return ProcessPublishResponse(Conn.Request(msg, timeout.Millis), options);
+            return ProcessPublishResponse(Conn.Request(msg, Timeout), options);
         }
 
         private async Task<PublishAck> PublishAsyncInternal(string subject, byte[] data, MsgHeader hdr, PublishOptions options)
@@ -102,9 +100,7 @@ namespace NATS.Client.JetStream
                 return null;
             }
 
-            Duration timeout = options == null ? JetStreamOptions.RequestTimeout : options.StreamTimeout;
-
-            var result = await Conn.RequestAsync(msg, timeout.Millis).ConfigureAwait(false);
+            var result = await Conn.RequestAsync(msg, Timeout).ConfigureAwait(false);
             return ProcessPublishResponse(result, options);
         }
 

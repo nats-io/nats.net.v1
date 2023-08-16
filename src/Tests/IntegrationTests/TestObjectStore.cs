@@ -319,7 +319,7 @@ namespace IntegrationTests
 
         private void AssertOso(ObjectStoreOptions oso) {
             JetStreamOptions jso = oso.JSOptions;
-            Assert.Equal(DefaultJsOptions.RequestTimeout, jso.RequestTimeout);
+            Assert.Null(jso.RequestTimeout);
             Assert.Equal(DefaultJsOptions.Prefix, jso.Prefix);
             Assert.Equal(DefaultJsOptions.IsDefaultPrefix, jso.IsDefaultPrefix);
             Assert.Equal(DefaultJsOptions.IsPublishNoAck, jso.IsPublishNoAck);
