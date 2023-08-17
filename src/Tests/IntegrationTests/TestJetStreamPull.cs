@@ -615,7 +615,7 @@ namespace IntegrationTests
             });
         }
         
-        private void CheckHandler(String statusText, int type, TestEventHandler handler) {
+        private void CheckHandler(string statusText, int type, TestEventHandler handler) {
             if (type == TypeError) {
                 Assert.True(handler.PullStatusErrorOrWait(statusText, 10_000));
             }

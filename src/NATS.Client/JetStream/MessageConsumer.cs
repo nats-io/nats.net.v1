@@ -17,7 +17,7 @@ namespace NATS.Client.JetStream
 {
     
     /// <summary>
-    /// SIMPLIFICATION IS EXPERIMENTAL AND SUBJECT TO CHANGE
+    /// Interface definition for a Message Consumer
     /// </summary>
     internal class MessageConsumer : MessageConsumerBase, IPullManagerObserver
     {

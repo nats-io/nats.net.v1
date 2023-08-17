@@ -27,7 +27,7 @@ namespace IntegrationTests
             options.PullStatusErrorEventHandler = PullStatusErrorEventHandler;
         };
         
-        public bool PullStatusWarningOrWait(String contains, long timeout)
+        public bool PullStatusWarningOrWait(string contains, long timeout)
         {
             Stopwatch sw = Stopwatch.StartNew();
             int i = 0;
@@ -43,7 +43,7 @@ namespace IntegrationTests
             return false;
         }
         
-        public bool PullStatusErrorOrWait(String contains, long timeout)
+        public bool PullStatusErrorOrWait(string contains, long timeout)
         {
             Stopwatch sw = Stopwatch.StartNew();
             int i = 0;

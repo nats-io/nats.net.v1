@@ -20,21 +20,21 @@ using NATS.Client.JetStream;
  *
  * \section intro_sec Introduction
  *
- * The %NATS .NET Client is part of %NATS an open-source, cloud-native 
+ * The %NATS .NET Client is part of %NATS an open-source, cloud-native
  * messaging system.
  * This client, written in C#, follows the go client closely, but
  * diverges in places to follow the common design semantics of a .NET API.
  *
  * \section install_sec Installation
- * 
+ *
  * Instructions to build and install the %NATS .NET C# client can be
  * found at the [NATS .NET C# GitHub page](https://github.com/nats-io/csharp-nats)
  *
  * \section other_doc_section Other Documentation
- * 
+ *
  * This documentation focuses on the %NATS .NET C# Client API; for additional
  * information, refer to the following:
- * 
+ *
  * - [General Documentation for nats.io](https://nats-io.github.io/docs/)
  * - [NATS .NET C# Client found on GitHub](https://github.com/nats-io/nats.net)
  * - [The NATS server found on GitHub](https://github.com/nats-io/nats-server)
@@ -210,7 +210,7 @@ namespace NATS.Client
         public static EventHandler<FlowControlProcessedEventArgs> DefaultFlowControlProcessedEventHandler() =>
             (sender, e) => WriteJsEvent("FlowControlProcessed", e, "FcSubject: ", e?.FcSubject, "Source: ", e?.Source);
 
-        private static void WriteJsEvent(String label, ConnJsSubEventArgs e, params object[] pairs) {
+        private static void WriteJsEvent(string label, ConnJsSubEventArgs e, params object[] pairs) {
             var sb = BeginFormatMessage(label, e?.Conn, e?.Sub, null);
             if (e?.JetStreamSub != null && e?.JetStreamSub.Consumer != null)
             {
@@ -223,7 +223,7 @@ namespace NATS.Client
             Console.Out.WriteLine(sb.ToString());
         }
 
-        private static void WriteEvent(String label, ConnEventArgs e)
+        private static void WriteEvent(string label, ConnEventArgs e)
         {
             if (e == null)
                 Console.Out.WriteLine(label);
@@ -233,7 +233,7 @@ namespace NATS.Client
                 Console.Error.WriteLine(BeginFormatMessage(label, e.Conn, null, e.Error.Message).ToString());
         }
 
-        private static void WriteError(String label, ErrEventArgs e) {
+        private static void WriteError(string label, ErrEventArgs e) {
             Console.Error.WriteLine(e == null ? label
                 : BeginFormatMessage(label, e.Conn, e.Subscription, e.Error).ToString());
         }

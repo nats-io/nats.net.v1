@@ -1511,13 +1511,13 @@ namespace IntegrationTests
             {
                 using (IConnection c = Context.OpenConnection())
                 {
-                    String subject = "";
+                    string subject = "";
                     for (int i = 0; i < 1024; i++)
                     {
                         subject += "A";
                     }
 
-                    String reply = "";
+                    string reply = "";
                     for (int i = 0; i < 1024; i++)
                     {
                         reply += "A";

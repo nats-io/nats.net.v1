@@ -16,7 +16,7 @@ using System;
 namespace NATS.Client.Service
 {
     /// <summary>
-    /// SERVICE IS AN EXPERIMENTAL API SUBJECT TO CHANGE
+    /// Event handler used to receive service request message.
     /// </summary>
     public class ServiceMsgHandlerEventArgs : EventArgs
     {

@@ -107,7 +107,7 @@ namespace IntegrationTests
                 Msg m = s.NextMessage(DefaultTimeout);
                 Assert.NotNull(m);
                 Assert.Equal(DATA, Encoding.UTF8.GetString(m.Data));
-                IList<String> names = jsm.GetConsumerNames(STREAM);
+                IList<string> names = jsm.GetConsumerNames(STREAM);
                 Assert.Equal(1, names.Count);
 
                 // default subscribe options // ephemeral subscription.
@@ -377,10 +377,10 @@ namespace IntegrationTests
                 () => PushSubscribeOptions.Builder().WithDurable(DURABLE).WithBind(true).Build());
 
                 Assert.Throws<ArgumentException>(
-                () => PushSubscribeOptions.Builder().WithStream(String.Empty).WithBind(true).Build());
+                () => PushSubscribeOptions.Builder().WithStream(string.Empty).WithBind(true).Build());
 
                 Assert.Throws<ArgumentException>(
-                () => PushSubscribeOptions.Builder().WithStream(STREAM).WithDurable(String.Empty).WithBind(true).Build());
+                () => PushSubscribeOptions.Builder().WithStream(STREAM).WithDurable(string.Empty).WithBind(true).Build());
             });
         }
 
@@ -535,7 +535,7 @@ namespace IntegrationTests
             Assert.Contains(JsSubSubjectDoesNotMatchFilter.Id, e.Message);
         }
 
-        private void SetupConsumer(IJetStreamManagement jsm, int i, String fs)
+        private void SetupConsumer(IJetStreamManagement jsm, int i, string fs)
         {
             jsm.AddOrUpdateConsumer(STREAM,
                 ConsumerConfiguration.Builder().WithDeliverSubject(Deliver(i)).WithDurable(Durable(i)).WithFilterSubject(fs).Build());
@@ -802,21 +802,21 @@ namespace IntegrationTests
             js.PullSubscribe(SUBJECT, PullSubscribeOptions.Builder().WithConfiguration(builder.Build()).Build()).Unsubscribe();
         }
 
-        private void ChangeExPush(IJetStream js, ConsumerConfiguration.ConsumerConfigurationBuilder builder, String changedField) {
+        private void ChangeExPush(IJetStream js, ConsumerConfiguration.ConsumerConfigurationBuilder builder, string changedField) {
             NATSJetStreamClientException e = Assert.Throws<NATSJetStreamClientException>(
                 () => js.PushSubscribeSync(SUBJECT, PushSubscribeOptions.Builder().WithConfiguration(builder.Build()).Build()));
             _ChangeEx(e, changedField);
         }
 
-        private void ChangeExPull(IJetStream js, ConsumerConfiguration.ConsumerConfigurationBuilder builder, String changedField) {
+        private void ChangeExPull(IJetStream js, ConsumerConfiguration.ConsumerConfigurationBuilder builder, string changedField) {
             NATSJetStreamClientException e = Assert.Throws<NATSJetStreamClientException>(
                 () => js.PullSubscribe(SUBJECT, PullSubscribeOptions.Builder().WithConfiguration(builder.Build()).Build()));
             _ChangeEx(e, changedField);
         }
 
-        private void _ChangeEx(NATSJetStreamClientException e, String changedField)
+        private void _ChangeEx(NATSJetStreamClientException e, string changedField)
         {
-            String msg = e.Message;
+            string msg = e.Message;
             Assert.Contains(JsSubExistingConsumerCannotBeModified.Id, msg);
             Assert.Contains(changedField, msg);
         }

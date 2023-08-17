@@ -398,7 +398,6 @@ namespace NATS.Client.JetStream
 
         /// <summary>
         /// Create a stream context for a specific named stream. Verifies that the stream exists.
-        /// EXPERIMENTAL API SUBJECT TO CHANGE
         /// </summary>
         /// <param name="streamName">the name of the stream</param>
         /// <returns>an IStreamContext instance</returns>
@@ -407,7 +406,6 @@ namespace NATS.Client.JetStream
         /// <summary>
         /// Create a consumer context for a specific named stream and specific named consumer.
         /// Verifies that the stream and consumer exist.
-        /// EXPERIMENTAL API SUBJECT TO CHANGE
         /// </summary>
         /// <param name="streamName">the name of the stream</param>
         /// <param name="consumerName">the name of the consumer</param>

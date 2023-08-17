@@ -11,7 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using NATS.Client.Internals;
 
 namespace NATS.Client.JetStream
@@ -19,7 +18,7 @@ namespace NATS.Client.JetStream
     public class PushMessageManager : MessageManager
     {
         protected readonly JetStream Js;
-        protected readonly String Stream;
+        protected readonly string Stream;
         protected readonly ConsumerConfiguration OriginalCc;
 
         protected readonly bool QueueMode;
@@ -79,7 +78,7 @@ namespace NATS.Client.JetStream
             return msg.Header != null && msg.Header[JetStreamConstants.ConsumerStalledHeader] != null;
         }
 
-        protected String extractFcSubject(Msg msg) {
+        protected string extractFcSubject(Msg msg) {
             return msg.Header == null ? null : msg.Header[JetStreamConstants.ConsumerStalledHeader];
         }
 
@@ -98,7 +97,7 @@ namespace NATS.Client.JetStream
             // otherwise they are simply known statuses
             if (Fc) {
                 bool isFlowControl = msg.Status.IsFlowControl();
-                String fcSubject = isFlowControl ? msg.Reply : extractFcSubject(msg);
+                string fcSubject = isFlowControl ? msg.Reply : extractFcSubject(msg);
                 if (fcSubject != null) {
                     _processFlowControl(fcSubject, isFlowControl ? FlowControlSource.FlowControl : FlowControlSource.Heartbeat);
                     return ManageResult.StatusHandled;

@@ -85,7 +85,7 @@ namespace UnitTests.JetStream
             Assert.True(oi.IsDeleted);
             Assert.Equal(modified, oi.Modified);
             Assert.Equal(2, oi.Headers.Count);
-            IList<String> list = oi.Headers.GetValues(Key(1));
+            IList<string> list = oi.Headers.GetValues(Key(1));
             Assert.Equal(1, list.Count);
             Assert.Equal(Data(1), oi.Headers[Key(1)]);
             list = oi.Headers.GetValues(Key(2));

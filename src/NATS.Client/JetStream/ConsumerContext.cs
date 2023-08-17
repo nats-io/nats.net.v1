@@ -33,7 +33,7 @@ namespace NATS.Client.JetStream
     }
 
     /// <summary>
-    /// SIMPLIFICATION IS EXPERIMENTAL AND SUBJECT TO CHANGE
+    /// Implementation of IConsumerContext
     /// </summary>
     internal class ConsumerContext : IConsumerContext, SimplifiedSubscriptionMaker
     {

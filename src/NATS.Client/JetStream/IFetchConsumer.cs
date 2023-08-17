@@ -14,7 +14,7 @@
 namespace NATS.Client.JetStream
 {
     /// <summary>
-    /// SIMPLIFICATION IS EXPERIMENTAL AND SUBJECT TO CHANGE
+    /// Interface definition for a Fetch Consumer
     /// </summary>
     public interface IFetchConsumer : IMessageConsumer
     {

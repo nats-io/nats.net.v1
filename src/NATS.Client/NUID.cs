@@ -123,7 +123,7 @@ namespace NATS.Client
                 b[i] = digits[(int)(l % nuidBase)];
             }
 
-            return new String(b);
+            return new string(b);
         }
 
         private void resetSequential()

@@ -11,7 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Collections.Generic;
 using NATS.Client.Internals.SimpleJSON;
 
@@ -30,7 +29,7 @@ namespace NATS.Client.JetStream
                 JSONNode.Enumerator e = subjectsNode.GetEnumerator();
                 while (e.MoveNext())
                 {
-                    KeyValuePair<String, JSONNode> pair = e.Current;
+                    KeyValuePair<string, JSONNode> pair = e.Current;
                     list.Add(new Subject(pair.Key, pair.Value.AsLong));
                 }
             }

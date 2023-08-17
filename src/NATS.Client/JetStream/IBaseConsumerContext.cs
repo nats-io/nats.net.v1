@@ -3,8 +3,7 @@
 namespace NATS.Client.JetStream
 {
     /// <summary>
-    /// The Consumer Context provides a convenient interface around a defined JetStream Consumer
-    /// SIMPLIFICATION IS EXPERIMENTAL AND SUBJECT TO CHANGE
+    /// Base class for IConsumerContext implementations
     /// </summary>
     public interface IBaseConsumerContext
     {

@@ -17,6 +17,9 @@ using NATS.Client.Internals;
 
 namespace NATS.Client.Service
 {
+    /// <summary>
+    /// Internal class to support service implementation
+    /// </summary>
     internal class EndpointContext
     {
         private const string QGroup = "q";
@@ -24,7 +27,7 @@ namespace NATS.Client.Service
         private readonly IConnection conn;
         private ServiceEndpoint se;
         private readonly bool recordStats;
-        private readonly String qGroup;
+        private readonly string qGroup;
         internal IAsyncSubscription Sub { get; private set; }
 
         private DateTime started;
@@ -88,8 +91,8 @@ namespace NATS.Client.Service
             }
         }
         
-        internal EndpointResponse GetEndpointStats() {
-            return new EndpointResponse(
+        internal EndpointStats GetEndpointStats() {
+            return new EndpointStats(
                 se.Endpoint.Name,
                 se.Subject,
                 numRequests.Read(),

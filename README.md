@@ -490,7 +490,7 @@ opts.AsyncErrorEventHandler += (sender, args) =>
 opts.ServerDiscoveredEventHandler += (sender, args) =>
 {
     Console.WriteLine("A new server has joined the cluster:");
-    Console.WriteLine("    " + String.Join(", ", args.Conn.DiscoveredServers));
+    Console.WriteLine("    " + string.Join(", ", args.Conn.DiscoveredServers));
 };
 
 opts.ClosedEventHandler += (sender, args) =>

@@ -97,14 +97,14 @@ namespace NATS.Client.Internals
         }
 
         [Obsolete("Method name replaced with proper spelling, 'StringStringDictionary'")]
-        public static Dictionary<string, string> StringStringDictionay(JSONNode node, string field)
+        public static IDictionary<string, string> StringStringDictionay(JSONNode node, string field)
         {
             return StringStringDictionary(node, field, false);
         }
 
-        public static Dictionary<string, string> StringStringDictionary(JSONNode node, string field, bool nullIfEmpty = false)
+        public static IDictionary<string, string> StringStringDictionary(JSONNode node, string field, bool nullIfEmpty = false)
         {
-            Dictionary<string, string> temp = new Dictionary<string, string>();
+            IDictionary<string, string> temp = new Dictionary<string, string>();
             JSONNode meta = node[field];
             foreach (string key in meta.Keys)
             {
@@ -244,7 +244,7 @@ namespace NATS.Client.Internals
             }
         }
 
-        public static void AddField(JSONObject o, String fname, Dictionary<string, string> dictionary) {
+        public static void AddField(JSONObject o, string fname, IDictionary<string, string> dictionary) {
             if (dictionary != null && dictionary.Count > 0) {
                 JSONObject d = new JSONObject();
                 foreach (string key in dictionary.Keys)

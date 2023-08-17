@@ -22,8 +22,9 @@ namespace NATS.Client.Service
 {
     /// <summary>
     /// The Services Framework introduces a higher-level API for implementing services with NATS.
-    /// Simply put, services are endpoint listeners that respond to a subject to provide a remote response to a question.
-    /// When multiple instances of endpoints are active they work in a queue, meaning only one listener responds.
+    /// Services automatically contain Ping, Info and Stats responders.
+    /// Services have one or more service endpoints. <see cref="ServiceEndpoint"/>.
+    /// When multiple instances of a service endpoints are active they work in a queue, meaning only one listener responds to any given request.
     /// </summary>
     public class Service
     {
@@ -35,10 +36,17 @@ namespace NATS.Client.Service
 
         private readonly IConnection conn;
         public int DrainTimeoutMillis { get; }
-        private readonly Dictionary<string, EndpointContext> serviceContexts;
+        private readonly IDictionary<string, EndpointContext> serviceContexts;
         private readonly IList<EndpointContext> discoveryContexts;
 
+        /// <summary>
+        /// The pre-constructed ping response.
+        /// </summary>
         public PingResponse PingResponse { get; }
+        
+        /// <summary>
+        /// The pre-constructed info response.
+        /// </summary>
         public InfoResponse InfoResponse { get; }
 
         private readonly Object startStopLock;
@@ -118,6 +126,10 @@ namespace NATS.Client.Service
             return DefaultServicePrefix + discoverySubject + "." + serviceName + "." + serviceId;
         }
 
+        /// <summary>
+        /// Start the service
+        /// </summary>
+        /// <returns>a task that can be held to see if another thread called stop</returns>
         public Task<bool> StartService()
         {
             lock (startStopLock)
@@ -139,16 +151,48 @@ namespace NATS.Client.Service
             }
         }
 
-        public static ServiceBuilder Builder() {
+        /// <summary>
+        /// Get an instance of a ServiceBuilder.
+        /// </summary>
+        /// <returns>the instance</returns>
+        public static ServiceBuilder Builder()
+        {
             return new ServiceBuilder();
         }
 
-        public void Stop(Exception e)
+        /// <summary>
+        /// Stop the service by draining.
+        /// </summary>
+        public void Stop() 
+        {
+            Stop(true, null);
+        }
+    
+        /// <summary>
+        /// Stop the service by draining. Mark the task that was received from the start method that the service had an exception.
+        /// </summary>
+        /// <param name="e">the error cause</param>
+        public void Stop(Exception e) 
         {
             Stop(true, e);
         }
-
-        public void Stop(bool drain = true, Exception e = null) {
+    
+        /// <summary>
+        /// Stop the service, optionally draining.
+        /// </summary>
+        /// <param name="drain">the flag indicating to drain or not</param>
+        public void Stop(bool drain) 
+        {
+            Stop(drain, null);
+        }
+    
+        /// <summary>
+        /// Stop the service, optionally draining and optionally with an error cause
+        /// </summary>
+        /// <param name="drain">the flag indicating to drain or not</param>
+        /// <param name="e">the optional error cause. If supplied, mark the task that was received from the start method that the service had an exception.</param>
+        public void Stop(bool drain, Exception e) 
+        {
             lock (startStopLock) {
                 if (runningIndicator != null) {
                     if (drain)
@@ -197,15 +241,26 @@ namespace NATS.Client.Service
                 c.Reset();
             }
         }
- 
+
+        /// <value>The id of the service</value>
         public string Id => InfoResponse.Id;
+
+        /// <value>The name of the service</value>
         public string Name => InfoResponse.Name;
+        
+        /// <value>The version of the service</value>
         public string Version => InfoResponse.Version;
+        
+        /// <value>The description of the service</value>
         public string Description => InfoResponse.Description;
 
+        /// <summary>
+        /// Get the up-to-date stats response which contains a list of all <see cref="EndpointStats"/>
+        /// </summary>
+        /// <returns>the stats response</returns>
         public StatsResponse GetStatsResponse()
         {
-            IList<EndpointResponse> endpointStatsList = new List<EndpointResponse>();
+            IList<EndpointStats> endpointStatsList = new List<EndpointStats>();
             foreach (EndpointContext c in serviceContexts.Values)
             {
                 endpointStatsList.Add(c.GetEndpointStats());
@@ -213,7 +268,12 @@ namespace NATS.Client.Service
             return new StatsResponse(PingResponse, started, endpointStatsList);
         }
         
-        public EndpointResponse GetEndpointStats(string endpointName)
+        /// <summary>
+        /// Get the up-to-date <see cref="EndpointStats"/> for a specific endpoint
+        /// </summary>
+        /// <param name="endpointName">the endpoint name</param>
+        /// <returns>the EndpointStats or null if the name is not found</returns>
+        public EndpointStats GetEndpointStats(string endpointName)
         {
             EndpointContext c;
             if (serviceContexts.TryGetValue(endpointName, out c))

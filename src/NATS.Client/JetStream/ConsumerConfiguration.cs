@@ -55,7 +55,7 @@ namespace NATS.Client.JetStream
         internal bool? _headersOnly;
         internal bool? _memStorage;
         internal IList<Duration> _backoff;
-        internal Dictionary<string, string> _metadata;
+        internal IDictionary<string, string> _metadata;
 
         public DeliverPolicy DeliverPolicy => _deliverPolicy ?? DeliverPolicy.All;
         public AckPolicy AckPolicy => _ackPolicy ?? AckPolicy.Explicit;
@@ -87,7 +87,7 @@ namespace NATS.Client.JetStream
         public bool HeadersOnly => _headersOnly ?? false;
         public bool MemStorage => _memStorage ?? false;
         public IList<Duration> Backoff => _backoff ?? new List<Duration>();
-        public Dictionary<string, string> Metadata => _metadata ?? new Dictionary<string, string>();
+        public IDictionary<string, string> Metadata => _metadata ?? new Dictionary<string, string>();
 
         internal ConsumerConfiguration(string json) : this(JSON.Parse(json)) {}
 

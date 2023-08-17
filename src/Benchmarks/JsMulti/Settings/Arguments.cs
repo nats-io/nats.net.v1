@@ -25,24 +25,24 @@ namespace JsMulti
         public const string Individual = "individual";
         public const string Shared = "shared";
 
-        private IList<String> args = new List<String>();
+        private IList<string> args = new List<string>();
 
         public static Arguments Instance() { return new Arguments(); }
-        public static Arguments Instance(String subject) { return Instance().Subject(subject); }
-        public static Arguments PubSync(String subject) { return Instance().Action(JsmAction.PubSync).Subject(subject); }
-        public static Arguments PubAsync(String subject) { return Instance().Action(JsmAction.PubAsync).Subject(subject); }
-        public static Arguments PubCore(String subject) { return Instance().Action(JsmAction.PubCore).Subject(subject); }
-        public static Arguments SubPush(String subject) { return Instance().Action(JsmAction.SubPush).Subject(subject); }
-        public static Arguments SubQueue(String subject) { return Instance().Action(JsmAction.SubQueue).Subject(subject); }
-        public static Arguments SubPull(String subject) { return Instance().Action(JsmAction.SubPull).Subject(subject); }
-        public static Arguments SubPullQueue(String subject) { return Instance().Action(JsmAction.SubPullQueue).Subject(subject); }
+        public static Arguments Instance(string subject) { return Instance().Subject(subject); }
+        public static Arguments PubSync(string subject) { return Instance().Action(JsmAction.PubSync).Subject(subject); }
+        public static Arguments PubAsync(string subject) { return Instance().Action(JsmAction.PubAsync).Subject(subject); }
+        public static Arguments PubCore(string subject) { return Instance().Action(JsmAction.PubCore).Subject(subject); }
+        public static Arguments SubPush(string subject) { return Instance().Action(JsmAction.SubPush).Subject(subject); }
+        public static Arguments SubQueue(string subject) { return Instance().Action(JsmAction.SubQueue).Subject(subject); }
+        public static Arguments SubPull(string subject) { return Instance().Action(JsmAction.SubPull).Subject(subject); }
+        public static Arguments SubPullQueue(string subject) { return Instance().Action(JsmAction.SubPullQueue).Subject(subject); }
 
-        private Arguments Add(String option) {
+        private Arguments Add(string option) {
             args.Add("-" + option);
             return this;
         }
 
-        private Arguments Add(String option, Object value) {
+        private Arguments Add(string option, Object value) {
             args.Add("-" + option);
             args.Add(value.ToString());
             return this;
@@ -52,7 +52,7 @@ namespace JsMulti
             return Add("a", action);
         }
 
-        public Arguments Server(String server) {
+        public Arguments Server(string server) {
             return Add("s", server);
         }
 
@@ -65,7 +65,7 @@ namespace JsMulti
         }
 
         // todo
-        // public ArgumentBuilder OptionsFactory(String optionsFactoryClassName) {
+        // public ArgumentBuilder OptionsFactory(string optionsFactoryClassName) {
             // return Add("of", optionsFactoryClassName);
         // }
 
@@ -93,7 +93,7 @@ namespace JsMulti
             return Add("c", replicas);
         }
 
-        public Arguments Subject(String subject) {
+        public Arguments Subject(string subject) {
             if (subject == null) {
                 return this;
             }
@@ -162,7 +162,7 @@ namespace JsMulti
         }
 
         public void PrintCommandLine(TextWriter ps) {
-            foreach (String a in args) {
+            foreach (string a in args) {
                 ps.Write(a + " ");
             }
             ps.WriteLine("");

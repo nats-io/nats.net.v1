@@ -33,48 +33,48 @@ namespace UnitTests.Internals
         public void TestValidateMessageSubjectRequired()
         {
             AllowedRequired(ValidateSubject, Plain, HasPrintable, HasDot, HasStar, HasGt, HasDollar);
-            NotAllowedRequired(ValidateSubject, null, String.Empty, HasSpace, HasLow, Has127);
+            NotAllowedRequired(ValidateSubject, null, string.Empty, HasSpace, HasLow, Has127);
             NotAllowedRequired(ValidateSubject, _utfOnlyStrings);
-            AllowedNotRequiredEmptyAsNull(ValidateSubject, null, String.Empty);
+            AllowedNotRequiredEmptyAsNull(ValidateSubject, null, string.Empty);
 
-            NotAllowedRequired(ValidateSubject, null, String.Empty, HasSpace, HasLow, Has127);
-            AllowedNotRequiredEmptyAsNull(ValidateSubject, null, String.Empty);
+            NotAllowedRequired(ValidateSubject, null, string.Empty, HasSpace, HasLow, Has127);
+            AllowedNotRequiredEmptyAsNull(ValidateSubject, null, string.Empty);
         }
 
         [Fact]
         public void TestValidateReplyTo()
         {
             AllowedRequired(ValidateReplyTo, Plain, HasPrintable, HasDot, HasDollar);
-            NotAllowedRequired(ValidateReplyTo, null, String.Empty, HasSpace, HasStar, HasGt, HasLow, Has127);
+            NotAllowedRequired(ValidateReplyTo, null, string.Empty, HasSpace, HasStar, HasGt, HasLow, Has127);
             NotAllowedRequired(ValidateReplyTo, _utfOnlyStrings);
-            AllowedNotRequiredEmptyAsNull(ValidateReplyTo, null, String.Empty);
+            AllowedNotRequiredEmptyAsNull(ValidateReplyTo, null, string.Empty);
         }
 
         [Fact]
         public void TestValidateQueueNameRequired()
         {
             AllowedRequired(ValidateQueueName, Plain, HasPrintable, HasDollar);
-            NotAllowedRequired(ValidateQueueName, null, String.Empty, HasSpace, HasDot, HasStar, HasGt, HasLow, Has127);
+            NotAllowedRequired(ValidateQueueName, null, string.Empty, HasSpace, HasDot, HasStar, HasGt, HasLow, Has127);
             NotAllowedRequired(ValidateQueueName, _utfOnlyStrings);
-            AllowedNotRequiredEmptyAsNull(ValidateQueueName, null, String.Empty);
+            AllowedNotRequiredEmptyAsNull(ValidateQueueName, null, string.Empty);
         }
 
         [Fact]
         public void TestValidateStreamName()
         {
             AllowedRequired(ValidateStreamName, Plain, HasPrintable, HasDollar);
-            NotAllowedRequired(ValidateStreamName, null, String.Empty, HasSpace, HasDot, HasStar, HasGt, HasLow, Has127);
+            NotAllowedRequired(ValidateStreamName, null, string.Empty, HasSpace, HasDot, HasStar, HasGt, HasLow, Has127);
             NotAllowedRequired(ValidateStreamName, _utfOnlyStrings);
-            AllowedNotRequiredEmptyAsNull(ValidateStreamName, null, String.Empty);
+            AllowedNotRequiredEmptyAsNull(ValidateStreamName, null, string.Empty);
         }
 
         [Fact]
         public void TestValidateDurable()
         {
             AllowedRequired(ValidateDurable, Plain, HasPrintable, HasDollar);
-            NotAllowedRequired(ValidateDurable, null, String.Empty, HasSpace, HasDot, HasStar, HasGt, HasLow, Has127);
+            NotAllowedRequired(ValidateDurable, null, string.Empty, HasSpace, HasDot, HasStar, HasGt, HasLow, Has127);
             NotAllowedRequired(ValidateDurable, _utfOnlyStrings);
-            AllowedNotRequiredEmptyAsNull(ValidateDurable, null, String.Empty);
+            AllowedNotRequiredEmptyAsNull(ValidateDurable, null, string.Empty);
         }
 
         [Fact]
@@ -251,21 +251,21 @@ namespace UnitTests.Internals
             Assert.False(ZeroOrLtMinus1(-1));
         }
 
-        private void AllowedRequired(Func<string, bool, string> test, params String[] strings)
+        private void AllowedRequired(Func<string, bool, string> test, params string[] strings)
         {
             foreach (string s in strings) {
                 Assert.Equal(s, test.Invoke(s, true));
             }
         }
 
-        private void AllowedNotRequiredEmptyAsNull(Func<string, bool, string> test, params String[] strings)
+        private void AllowedNotRequiredEmptyAsNull(Func<string, bool, string> test, params string[] strings)
         {
             foreach (string s in strings) {
                 Assert.Null(test.Invoke(s, false));
             }
         }
 
-        private void NotAllowedRequired(Func<string, bool, string> test, params String[] strings)
+        private void NotAllowedRequired(Func<string, bool, string> test, params string[] strings)
         {
             foreach (string s in strings)
             {
@@ -283,7 +283,7 @@ namespace UnitTests.Internals
         [Fact]
         public void TestSemVer()
         {
-            String label = "Version";
+            string label = "Version";
             ValidateSemVer("0.0.4", label, true);
             ValidateSemVer("1.2.3", label, true);
             ValidateSemVer("10.20.30", label, true);

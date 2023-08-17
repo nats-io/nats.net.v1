@@ -31,7 +31,7 @@ namespace JsMulti
             Run(new Context(args), false, true);
         }
 
-        public static IList<Stats> Run(String[] args) {
+        public static IList<Stats> Run(string[] args) {
             return Run(new Context(args), false, true);
         }
 
@@ -382,11 +382,11 @@ namespace JsMulti
             stats.Stop();
         }
 
-        private static void Report(string label, int total, String message) {
+        private static void Report(string label, int total, string message) {
             Log(label, message + " " + Stats.Format(total));
         }
 
-        private static int ReportMaybe(string label, Context ctx, int total, int unReported, String message) {
+        private static int ReportMaybe(string label, Context ctx, int total, int unReported, string message) {
             if (unReported >= ctx.ReportFrequency) {
                 Report(label, total, message);
                 return 0; // there are 0 unreported now

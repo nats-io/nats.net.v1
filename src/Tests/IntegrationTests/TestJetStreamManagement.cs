@@ -250,7 +250,7 @@ namespace IntegrationTests
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
                 Assert.Throws<NATSJetStreamException>(() => jsm.GetStreamInfo(STREAM));
 
-                String[] subjects = new String[6];
+                string[] subjects = new string[6];
                 for (int x = 0; x < 5; x++) {
                     subjects[x] = Subject(x);
                 }
@@ -842,7 +842,7 @@ namespace IntegrationTests
         private void AddConsumers(IJetStreamManagement jsm, string stream, int count, string durableVary, string filterSubject)
         {
             for (int x = 0; x < count; x++) {
-                String dur = Durable(durableVary, x + 1);
+                string dur = Durable(durableVary, x + 1);
                 ConsumerConfiguration cc = ConsumerConfiguration.Builder()
                         .WithDurable(dur)
                         .WithFilterSubject(filterSubject)
@@ -1007,7 +1007,7 @@ namespace IntegrationTests
             ValidateMgr(1, null, "first", MessageGetRequest.NextForSubject(1, "first"));
         }
         
-        private void ValidateMgr(ulong seq, String lastBySubject, String nextBySubject, MessageGetRequest mgr) {
+        private void ValidateMgr(ulong seq, string lastBySubject, string nextBySubject, MessageGetRequest mgr) {
             Assert.Equal(seq, mgr.Sequence);
             Assert.Equal(lastBySubject, mgr.LastBySubject);
             Assert.Equal(nextBySubject, mgr.NextBySubject);

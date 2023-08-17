@@ -3,7 +3,7 @@
 namespace NATS.Client.JetStream
 {
     /// <summary>
-    /// SIMPLIFICATION IS EXPERIMENTAL AND SUBJECT TO CHANGE
+    /// Implementation for the IOrderedConsumerContext
     /// </summary>
     internal class OrderedConsumerContext : IOrderedConsumerContext
     {

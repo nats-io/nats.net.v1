@@ -11,7 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Diagnostics;
 
 namespace NATS.Client.JetStream
@@ -88,7 +87,7 @@ namespace NATS.Client.JetStream
             return _nextUnmanaged(timeout, null);
         }
 
-        internal Msg _nextUnmanagedWaitForever(String expectedPullSubject)
+        internal Msg _nextUnmanagedWaitForever(string expectedPullSubject)
         {
             // this calls is intended to block indefinitely so if there is a managed
             // message it's like not getting a message at all and we keep waiting

@@ -152,7 +152,7 @@ namespace IntegrationTests
                 os.UpdateMeta(oi.ObjectName, ObjectMeta.ForObjectName(oi3.ObjectName));
 
                 // alternate puts
-                String name = "put-name-input-coverage";
+                string name = "put-name-input-coverage";
                 expectedChunks = len / DefaultChunkSize;
                 if (expectedChunks * DefaultChunkSize < len) {
                     expectedChunks++;
@@ -511,7 +511,7 @@ namespace IntegrationTests
         {
             IObjectStoreManagement osm = nc.CreateObjectStoreManagementContext();
 
-            String bucket = watcher.Name + "Bucket";
+            string bucket = watcher.Name + "Bucket";
             osm.Create(ObjectStoreConfiguration.Builder(bucket).WithStorageType(StorageType.Memory).Build());
 
             IObjectStore os = nc.CreateObjectStoreContext(bucket);

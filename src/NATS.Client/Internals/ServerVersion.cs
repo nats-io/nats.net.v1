@@ -23,7 +23,7 @@ namespace NATS.Client.Internals
         readonly int patch;
         readonly string extra;
 
-        internal ServerVersion(String v) {
+        internal ServerVersion(string v) {
             string[] split = v.Replace("v", "").Replace("-", ".").Split('.');
             if (v.StartsWith("v")) {
                 split = v.Substring(1).Replace("-", ".").Split('.');
@@ -93,23 +93,23 @@ namespace NATS.Client.Internals
             return c;
         }
 
-        public static bool IsNewer(String v, String than) {
+        public static bool IsNewer(string v, string than) {
             return new ServerVersion(v).CompareTo(new ServerVersion(than)) > 0;
         }
 
-        public static bool IsSame(String v, String than) {
+        public static bool IsSame(string v, string than) {
             return new ServerVersion(v).CompareTo(new ServerVersion(than)) == 0;
         }
 
-        public static bool IsOlder(String v, String than) {
+        public static bool IsOlder(string v, string than) {
             return new ServerVersion(v).CompareTo(new ServerVersion(than)) < 0;
         }
 
-        public static bool IsSameOrOlder(String v, String than) {
+        public static bool IsSameOrOlder(string v, string than) {
             return new ServerVersion(v).CompareTo(new ServerVersion(than)) <= 0;
         }
 
-        public static bool IsSameOrNewer(String v, String than) {
+        public static bool IsSameOrNewer(string v, string than) {
             return new ServerVersion(v).CompareTo(new ServerVersion(than)) >= 0;
         }
     }

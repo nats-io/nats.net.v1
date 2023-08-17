@@ -16,7 +16,7 @@ using System.Collections.Generic;
 namespace NATS.Client.JetStream
 {
     /// <summary>
-    /// SIMPLIFICATION IS EXPERIMENTAL AND SUBJECT TO CHANGE
+    /// Implementation for IStreamContext
     /// </summary>
     internal class StreamContext : IStreamContext
     {

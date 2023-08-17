@@ -11,7 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 using NATS.Client.JetStream;
@@ -26,8 +25,8 @@ namespace NATS.Client.ObjectStore
     {
         public string Bucket { get; }
         public string ObjectName { get; }
-        public bool IsObjectLink => !String.IsNullOrEmpty(ObjectName);
-        public bool IsBucketLink => String.IsNullOrEmpty(ObjectName);
+        public bool IsObjectLink => !string.IsNullOrEmpty(ObjectName);
+        public bool IsBucketLink => string.IsNullOrEmpty(ObjectName);
 
         internal static ObjectLink OptionalInstance(JSONNode objectLinkNode)
         {

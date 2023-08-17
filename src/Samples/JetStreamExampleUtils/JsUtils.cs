@@ -191,7 +191,7 @@ namespace NATSExamples
                 subjects);
         }
 
-        public static void CreateOrReplaceStream(IJetStreamManagement jsm, String stream, String subject)
+        public static void CreateOrReplaceStream(IJetStreamManagement jsm, string stream, string subject)
         {
             // in case the stream was here before, we want a completely new one
             try
@@ -217,12 +217,12 @@ namespace NATSExamples
             Publish(c.CreateJetStreamContext(), subject, "data", count, false);
         }
 
-        public static void Publish(IJetStream js, String subject, int count)
+        public static void Publish(IJetStream js, string subject, int count)
         {
             Publish(js, subject, "data", count, false);
         }
 
-        public static void Publish(IJetStream js, String subject, String prefix, int count, bool verbose = true)
+        public static void Publish(IJetStream js, string subject, string prefix, int count, bool verbose = true)
         {
             if (verbose)
             {
@@ -231,7 +231,7 @@ namespace NATSExamples
 
             for (int x = 1; x <= count; x++)
             {
-                String data = prefix + x;
+                string data = prefix + x;
                 if (verbose)
                 {
                     Console.Write(" " + data);
@@ -246,7 +246,7 @@ namespace NATSExamples
             }
         }
 
-        public static void PublishInBackground(IJetStream js, String subject, String prefix, int count)
+        public static void PublishInBackground(IJetStream js, string subject, string prefix, int count)
         {
             new Thread(() =>
             {

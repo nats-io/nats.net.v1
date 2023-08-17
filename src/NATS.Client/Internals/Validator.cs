@@ -39,7 +39,7 @@ namespace NATS.Client.Internals
             }
         }
         
-        internal static void Required<TKey, TValue>(Dictionary<TKey, TValue> d, string label) {
+        internal static void Required<TKey, TValue>(IDictionary<TKey, TValue> d, string label) {
             if (d == null || d.Count == 0) {
                 throw new ArgumentException($"{label} cannot be null or empty.");
             }
@@ -50,16 +50,16 @@ namespace NATS.Client.Internals
             return ValidateSubject(s, "Subject", required, false);
         }
         
-        public static String ValidateSubject(String subject, String label, bool required, bool cantEndWithGt) {
+        public static string ValidateSubject(string subject, string label, bool required, bool cantEndWithGt) {
             if (EmptyAsNull(subject) == null) {
                 if (required) {
                     throw new ArgumentException($"{label} cannot be null or empty.");
                 }
                 return null;
             }
-            String[] segments = subject.Split('.');
+            string[] segments = subject.Split('.');
             for (int x = 0; x < segments.Length; x++) {
-                String segment = segments[x];
+                string segment = segments[x];
                 if (segment.Equals(">")) {
                     if (cantEndWithGt || x != segments.Length - 1) { // if it can end with gt, gt must be last segment
                         throw new ArgumentException(label + " cannot contain '>'");
@@ -445,7 +445,7 @@ namespace NATS.Client.Internals
         // Helpers
         // ----------------------------------------------------------------------------------------------------
         
-        public static bool NullOrEmpty(String s)
+        public static bool NullOrEmpty(string s)
         {
             return string.IsNullOrWhiteSpace(s);
         }
@@ -607,7 +607,7 @@ namespace NATS.Client.Internals
             return NullOrEmpty(s) ? null : s;
         }
 
-        public static String EmptyOrNullAs(String s, String ifEmpty) {
+        public static string EmptyOrNullAs(string s, string ifEmpty) {
             return NullOrEmpty(s) ? ifEmpty : s;
         }
 
@@ -658,7 +658,7 @@ namespace NATS.Client.Internals
             });
         }
 
-        public static bool IsSemVer(String s)
+        public static bool IsSemVer(string s)
         {
             return Regex.IsMatch(s, SemVerPattern);
         }

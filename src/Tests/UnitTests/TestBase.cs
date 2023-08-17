@@ -95,7 +95,7 @@ namespace UnitTests
             return Path.GetTempPath() + "nats_net_test" + Guid.NewGuid() + ".conf";
         }
 
-        public string[] SplitLines(String text)
+        public string[] SplitLines(string text)
         {
             return text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
         }
@@ -125,7 +125,7 @@ namespace UnitTests
             return $"{STREAM}-{seq}";
         }
 
-        public static string Field(String field, object seq)
+        public static string Field(string field, object seq)
         {
             return $"{field}-{seq}";
         }

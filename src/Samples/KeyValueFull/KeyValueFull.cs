@@ -87,7 +87,7 @@ namespace NATSExamples
                     // as a UTF-8 string, the ValueAsString function is ok to use
                     Console.WriteLine("\n3. Get String Value");
 
-                    String svalue = kv.Get(ByteKey).ValueAsString();
+                    string svalue = kv.Get(ByteKey).ValueAsString();
                     Console.WriteLine(ByteKey + " from ValueAsString(): " + svalue);
 
                     svalue = kv.Get(StringKey).ValueAsString();

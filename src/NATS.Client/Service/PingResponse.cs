@@ -17,7 +17,8 @@ using NATS.Client.Internals.SimpleJSON;
 namespace NATS.Client.Service
 {
     /// <summary>
-    /// SERVICE IS AN EXPERIMENTAL API SUBJECT TO CHANGE
+    /// Ping response class forms the ping json payload, for example:
+    /// <code>{"id":"JlkwZvmHAXCQGwwxiPwaBJ","name":"MyService","version":"0.0.1","type":"io.nats.micro.v1.ping_response"}</code>
     /// </summary>
     public class PingResponse : ServiceResponse
     {

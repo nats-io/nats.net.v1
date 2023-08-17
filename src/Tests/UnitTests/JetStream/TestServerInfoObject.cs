@@ -11,7 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using Xunit;
@@ -67,7 +66,7 @@ namespace UnitTests.JetStream
                 ServerInfo si = infos[i];
                 for (int j = 0; j < infos.Length; j++)
                 {
-                    String v2 = new ServerVersion(infos[j].Version).ToString();
+                    string v2 = new ServerVersion(infos[j].Version).ToString();
                     if (i == j)
                     {
                         Assert.True(si.IsSameVersion(v2));
@@ -113,7 +112,7 @@ namespace UnitTests.JetStream
         [Fact]
         public void EmptyUrlParsedProperly()
         {        
-            String json = "INFO {" +
+            string json = "INFO {" +
                           "\"server_id\":\"myserver\"" + "," +
                           "\"connect_urls\":[\"one\", \"\"]" +
                           "}";
@@ -128,7 +127,7 @@ namespace UnitTests.JetStream
         [Fact]
         public void IPV6InBracketsParsedProperly()
         {
-            String json = "INFO {" +
+            string json = "INFO {" +
                           "\"server_id\":\"myserver\"" + "," +
                           "\"connect_urls\":[\"one:4222\", \"[a:b:c]:4222\", \"[d:e:f]:4223\"]" + "," +
                           "\"max_payload\":100000000000" +
@@ -143,7 +142,7 @@ namespace UnitTests.JetStream
 
         [Fact]
         public void EncodingInString() {
-            String json = "INFO {" +
+            string json = "INFO {" +
                           "\"server_id\":\"\\\\\\b\\f\\n\\r\\t\"" + "," +
                           "\"go\":\"my\\u0021go\"" + "," +
                           "\"host\":\"my\\\\host\"" + "," +

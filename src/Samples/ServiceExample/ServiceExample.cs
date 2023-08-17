@@ -76,7 +76,6 @@ namespace NATSExamples
                 Service service1 = new ServiceBuilder()
                     .WithConnection(c)
                     .WithName("Service1")
-                    .WithApiUrl("Service1 Api Url") // optional
                     .WithDescription("Service1 Description") // optional
                     .WithVersion("0.0.1")
                     .AddServiceEndpoint(seEcho1)
@@ -180,7 +179,7 @@ namespace NATSExamples
             }
         }
 
-        private static string ReplyBody(String label, byte[] data, String handlerId)
+        private static string ReplyBody(string label, byte[] data, string handlerId)
         {
             JSONObject o = new JSONObject();
             o[label] = Encoding.UTF8.GetString(data);
@@ -188,7 +187,7 @@ namespace NATSExamples
             return o.ToString();
         }
 
-        private static void HandlerSortDescending(IConnection nc, ServiceMsg smsg, String handlerId) {
+        private static void HandlerSortDescending(IConnection nc, ServiceMsg smsg, string handlerId) {
             Array.Sort(smsg.Data);
             int len = smsg.Data.Length;
             byte[] descending = new byte[len];
@@ -198,12 +197,12 @@ namespace NATSExamples
             smsg.Respond(nc, ReplyBody("sort_descending", descending, handlerId));
         }
 
-        private static void HandleSortAscending(IConnection nc, ServiceMsg smsg, String handlerId) {
+        private static void HandleSortAscending(IConnection nc, ServiceMsg smsg, string handlerId) {
             Array.Sort(smsg.Data);
             smsg.Respond(nc, ReplyBody("sort_ascending", smsg.Data, handlerId));
         }
 
-        private static void HandleEchoMessage(IConnection nc, ServiceMsg smsg, String handlerId) {
+        private static void HandleEchoMessage(IConnection nc, ServiceMsg smsg, string handlerId) {
             smsg.Respond(nc, ReplyBody("echo", smsg.Data, handlerId));
         }
 
@@ -269,7 +268,7 @@ namespace NATSExamples
         public readonly string SData;
         public readonly int IData;
 
-        public ExampleStatsData(String sData, int iData)
+        public ExampleStatsData(string sData, int iData)
         {
             SData = sData;
             IData = iData;

@@ -18,55 +18,138 @@ using NATS.Client.JetStream;
 namespace NATS.Client.Service
 {
     /// <summary>
-    /// SERVICE IS AN EXPERIMENTAL API SUBJECT TO CHANGE
+    /// Service Message is service specific object that exposes the service relevant parts of a NATS Message.
     /// </summary>
-    public class ServiceMsg : Msg
+    public class ServiceMsg
     {
+        /// <summary>
+        /// Standard header name used to report the text of an error
+        /// </summary>
         public const string NatsServiceError = "Nats-Service-Error";
+        
+        /// <summary>
+        /// Standard header name used to report the code of an error
+        /// </summary>
         public const string NatsServiceErrorCode = "Nats-Service-Error-Code";
+        
+        private readonly Msg msg;
 
-        internal ServiceMsg(Msg msg) : base(msg) {}
+        /// <value>The subject that this message was sent to.</value>
+        public string Subject => msg.Subject;
 
-        public void Respond(IConnection conn, byte[] response) {
-            conn.Publish(new Msg(_reply, null, null, response));
+        /// <value>The subject the application is expected to send a reply message on.</value>
+        public string Reply => msg.Reply;
+
+        /// <value>Whether there are headers.</value>
+        public bool HasHeaders => msg.HasHeaders;
+
+        /// <value>The headers object for the message.</value>
+        public MsgHeader Header => msg.Header;
+
+        /// <value>The data from the message.</value>
+        public byte[] Data => msg.Data;
+        
+        internal ServiceMsg(Msg msg)
+        {
+            this.msg = msg;
         }
 
-        public void Respond(IConnection conn, string response) {
-            conn.Publish(new Msg(_reply, null, null, Encoding.UTF8.GetBytes(response)));
+        /// <summary>
+        /// Respond to a service request message.
+        /// </summary>
+        /// <param name="conn">the NATS connection</param>
+        /// <param name="response">the response payload in the form of a byte array </param>
+        public void Respond(IConnection conn, byte[] response)
+        {
+            conn.Publish(new Msg(msg.Reply, null, null, response));
         }
 
-        public void Respond(IConnection conn, JsonSerializable response) {
-            conn.Publish(new Msg(_reply, null, null, response.Serialize()));
+        /// <summary>
+        /// Respond to a service request message.
+        /// </summary>
+        /// <param name="conn">the NATS connection</param>
+        /// <param name="response">the response payload in the form of a string</param>
+        public void Respond(IConnection conn, string response)
+        {
+            conn.Publish(new Msg(msg.Reply, null, null, Encoding.UTF8.GetBytes(response)));
         }
 
-        public void Respond(IConnection conn, JSONNode response) {
-            conn.Publish(new Msg(_reply, null, null, Encoding.UTF8.GetBytes(response.ToString())));
+        /// <summary>
+        /// Respond to a service request message.
+        /// </summary>
+        /// <param name="conn">the NATS connection</param>
+        /// <param name="response">the response payload in the form of a <see cref="JsonSerializable"/> object</param>
+        public void Respond(IConnection conn, JsonSerializable response) 
+        {
+            conn.Publish(new Msg(msg.Reply, null, null, response.Serialize()));
         }
 
+        /// <summary>
+        /// Respond to a service request message.
+        /// </summary>
+        /// <param name="conn">the NATS connection</param>
+        /// <param name="response">the response payload in the form of a <see cref="JSONNode"/> object</param>
+        public void Respond(IConnection conn, JSONNode response) 
+        {
+            conn.Publish(new Msg(msg.Reply, null, null, Encoding.UTF8.GetBytes(response.ToString())));
+        }
+
+        /// <summary>
+        /// Respond to a service request message with a response and custom headers.
+        /// </summary>
+        /// <param name="conn">the NATS connection</param>
+        /// <param name="response">the response payload in the form of a byte array</param>
+        /// <param name="headers">the custom headers</param>
         public void Respond(IConnection conn, byte[] response, MsgHeader headers)
         {
-            conn.Publish(new Msg(_reply, null, headers, response));
+            conn.Publish(new Msg(msg.Reply, null, headers, response));
         }
 
+        /// <summary>
+        /// Respond to a service request message with a response and custom headers.
+        /// </summary>
+        /// <param name="conn">the NATS connection</param>
+        /// <param name="response">the response payload in the form of a string</param>
+        /// <param name="headers">the custom headers</param>
         public void Respond(IConnection conn, string response, MsgHeader headers)
         {
-            conn.Publish(new Msg(_reply, null, headers, Encoding.UTF8.GetBytes(response)));
+            conn.Publish(new Msg(msg.Reply, null, headers, Encoding.UTF8.GetBytes(response)));
         }
 
-        public void Respond(IConnection conn, JsonSerializable response, MsgHeader headers) {
-            conn.Publish(new Msg(_reply, null, headers, response.Serialize()));
-        }
-
-        public void Respond(IConnection conn, JSONNode response, MsgHeader headers) {
-            conn.Publish(new Msg(_reply, null, headers, Encoding.UTF8.GetBytes(response.ToString())));
-        }
-
-        public void RespondStandardError(IConnection conn, string errorMessage, int errorCode)
+        /// <summary>
+        /// Respond to a service request message.
+        /// </summary>
+        /// <param name="conn">the NATS connection</param>
+        /// <param name="response">the response payload in the form of a <see cref="JsonSerializable"/> object</param>
+        /// <param name="headers">the custom headers</param>
+        public void Respond(IConnection conn, JsonSerializable response, MsgHeader headers) 
         {
-            conn.Publish(new Msg(_reply, null, 
+            conn.Publish(new Msg(msg.Reply, null, headers, response.Serialize()));
+        }
+
+        /// <summary>
+        /// Respond to a service request message.
+        /// </summary>
+        /// <param name="conn">the NATS connection</param>
+        /// <param name="response">the response payload in the form of a <see cref="JSONNode"/> object</param>
+        /// <param name="headers">the custom headers</param>
+        public void Respond(IConnection conn, JSONNode response, MsgHeader headers) 
+        {
+            conn.Publish(new Msg(msg.Reply, null, headers, Encoding.UTF8.GetBytes(response.ToString())));
+        }
+
+        /// <summary>
+        /// Respond to a service request message with a standard error.
+        /// </summary>
+        /// <param name="conn">the NATS connection</param>
+        /// <param name="errorText">the error message text</param>
+        /// <param name="errorCode">the error message code</param>
+        public void RespondStandardError(IConnection conn, string errorText, int errorCode)
+        {
+            conn.Publish(new Msg(msg.Reply, null, 
                 new MsgHeader 
                 {
-                    [NatsServiceError] = errorMessage,
+                    [NatsServiceError] = errorText,
                     [NatsServiceErrorCode] = $"{errorCode}" 
                 }, 
                 null));

@@ -16,7 +16,7 @@ using System.Diagnostics;
 namespace NATS.Client.JetStream
 {
     /// <summary>
-    /// SIMPLIFICATION IS EXPERIMENTAL AND SUBJECT TO CHANGE
+    /// Implementation of IFetchConsumer
     /// </summary>
     internal class FetchConsumer : MessageConsumerBase, IFetchConsumer
     {

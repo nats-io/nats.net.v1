@@ -103,7 +103,7 @@ namespace UnitTests
 
             for (int i = 0; i < count; i++)
             {
-                String n = NUID.NextGlobal;
+                string n = NUID.NextGlobal;
                 Assert.False(m.ContainsKey(n), string.Format("Duplicate NUID found: {0}", n));
 
                 m.Add(n, true);

@@ -16,20 +16,49 @@ using NATS.Client.Internals;
 namespace NATS.Client.Service
 {
     /// <summary>
-    /// SERVICE IS AN EXPERIMENTAL API SUBJECT TO CHANGE
+    /// Group is way to organize endpoints by serving as a common prefix to all endpoints registered in it.
     /// </summary>
     public class Group
     {
         private Group _next;
+        
+        /// <value>Get the name of the group.</value>
         public string Name { get; }
+        
+        /// <value>Get the next group after this group. May be null.</value>
         public Group Next => _next;
+        
+        /// <value>The resolved subject of a group by concatenating the group name and any groups.</value>
+        /// <summary>
+        /// For example, this:
+        /// <code>
+        /// Group g = new Group("A")
+        ///     .appendGroup(new Group("B"))
+        ///     .appendGroup(new Group("C"))
+        ///     .appendGroup(new Group("D"));
+        /// System.out.println(g.getSubject());
+        /// </code>
+        /// prints "A.B.C.D"
+        /// </summary>
         public string Subject => _next == null ? Name : $"{Name}.{_next.Subject}";
 
+        /// <summary>
+        /// Construct a group.
+        /// <p>Group names and subjects are considered 'Restricted Terms' and must only contain A-Z, a-z, 0-9, '-' or '_'</p>
+        /// </summary>
+        /// <param name="name">the group name</param>
         public Group(string name)
         {
             Name = Validator.ValidateSubject(name, "Group Name", true, true);
         }
 
+        /// <summary>
+        /// Append a group at the end of the list of groups this group starts or is a part of.
+        /// Appended groups can be traversed by doing <see cref="Next"/>
+        /// Subsequent appends add the group to the end of the list.
+        /// </summary>
+        /// <param name="group">the group to append</param>
+        /// <returns>like a fluent builder, return the Group instance</returns>
         public Group AppendGroup(Group group)
         {
             Group last = this;
