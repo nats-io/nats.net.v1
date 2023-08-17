@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">1.0.7</span>
+   &#160;<span id="projectnumber">1.0.8</span>
    </div>
    <div id="projectbrief">The NATS.io .NET C# Client</div>
   </td>
@@ -96,8 +96,8 @@ Inheritance diagram for NATS.Client.JetStream.IMessageConsumer:</div>
  <div class="center">
   <img src="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_message_consumer.png" usemap="#NATS.Client.JetStream.IMessageConsumer_map" alt=""/>
   <map id="NATS.Client.JetStream.IMessageConsumer_map" name="NATS.Client.JetStream.IMessageConsumer_map">
-<area href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_fetch_consumer.html" title="SIMPLIFICATION IS EXPERIMENTAL AND SUBJECT TO CHANGE" alt="NATS.Client.JetStream.IFetchConsumer" shape="rect" coords="0,56,256,80"/>
-<area href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_iterable_consumer.html" title="SIMPLIFICATION IS EXPERIMENTAL AND SUBJECT TO CHANGE" alt="NATS.Client.JetStream.IIterableConsumer" shape="rect" coords="266,56,522,80"/>
+<area href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_fetch_consumer.html" title="Interface definition for a Fetch Consumer" alt="NATS.Client.JetStream.IFetchConsumer" shape="rect" coords="0,56,256,80"/>
+<area href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_iterable_consumer.html" title="Interface definition for a Iterable Consumer" alt="NATS.Client.JetStream.IIterableConsumer" shape="rect" coords="266,56,522,80"/>
   </map>
 </div></div>
 <table class="memberdecls">
@@ -105,12 +105,35 @@ Inheritance diagram for NATS.Client.JetStream.IMessageConsumer:</div>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a798d5f5eb4e571209f281c01541b0bff"><td class="memItemLeft" align="right" valign="top">ConsumerInfo&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_message_consumer.html#a798d5f5eb4e571209f281c01541b0bff">GetConsumerInformation</a> ()</td></tr>
 <tr class="separator:a798d5f5eb4e571209f281c01541b0bff"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a035185440fc94714f2019d8f0f4315ae"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_message_consumer.html#a035185440fc94714f2019d8f0f4315ae">Stop</a> (int timeout)</td></tr>
-<tr class="separator:a035185440fc94714f2019d8f0f4315ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5fd6032df7f2c5859abf0d71e38a84d3"><td class="memItemLeft" align="right" valign="top">ConsumerInfo&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_message_consumer.html#a5fd6032df7f2c5859abf0d71e38a84d3">GetCachedConsumerInformation</a> ()</td></tr>
+<tr class="separator:a5fd6032df7f2c5859abf0d71e38a84d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab04ad9ae88a5b88085d82c8ec09580d0"><td class="memItemLeft" align="right" valign="top"><a id="ab04ad9ae88a5b88085d82c8ec09580d0" name="ab04ad9ae88a5b88085d82c8ec09580d0"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>Stop</b> ()</td></tr>
+<tr class="separator:ab04ad9ae88a5b88085d82c8ec09580d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p >SIMPLIFICATION IS EXPERIMENTAL AND SUBJECT TO CHANGE </p>
+<div class="textblock"><p >Interface definition for a Message Consumer </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="a5fd6032df7f2c5859abf0d71e38a84d3" name="a5fd6032df7f2c5859abf0d71e38a84d3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5fd6032df7f2c5859abf0d71e38a84d3">&#9670;&nbsp;</a></span>GetCachedConsumerInformation()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">ConsumerInfo NATS.Client.JetStream.IMessageConsumer.GetCachedConsumerInformation </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Gets information about the consumer behind this subscription. This returns the last read version of Consumer Info, which could technically be out of date. </p>
+<dl class="section return"><dt>Returns</dt><dd>consumer information</dd></dl>
+
+</div>
+</div>
 <a id="a798d5f5eb4e571209f281c01541b0bff" name="a798d5f5eb4e571209f281c01541b0bff"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a798d5f5eb4e571209f281c01541b0bff">&#9670;&nbsp;</a></span>GetConsumerInformation()</h2>
 
@@ -128,33 +151,6 @@ Public Member Functions</h2></td></tr>
 
 <p>Gets information about the consumer behind this subscription. </p>
 <dl class="section return"><dt>Returns</dt><dd>consumer information</dd></dl>
-
-</div>
-</div>
-<a id="a035185440fc94714f2019d8f0f4315ae" name="a035185440fc94714f2019d8f0f4315ae"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a035185440fc94714f2019d8f0f4315ae">&#9670;&nbsp;</a></span>Stop()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void NATS.Client.JetStream.IMessageConsumer.Stop </td>
-          <td>(</td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>timeout</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Stop the Simple Consumer from asking for any more messages from the server. Messages do not immediately stop </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">timeout</td><td>The time to wait for the stop to succeed, pass 0 to wait forever. Stop involves moving messages to and from the server so a very short timeout is not recommended.</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>A task so you could wait for the stop to know when there are no more messages.</dd></dl>
 
 </div>
 </div>

@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['pullstatuserroreventhandler_0',['PullStatusErrorEventHandler',['../class_n_a_t_s_1_1_client_1_1_options.html#accb0bec1dc317aff81ffcadddcdb1528',1,'NATS::Client::Options']]],
-  ['pullstatuswarningeventhandler_1',['PullStatusWarningEventHandler',['../class_n_a_t_s_1_1_client_1_1_options.html#a658126b42601e3c5cf8c63312fdef9d4',1,'NATS::Client::Options']]]
+  ['natsserviceerror_0',['NatsServiceError',['../class_n_a_t_s_1_1_client_1_1_service_1_1_service_msg.html#abbfe4e723ae23730085a5d23361732b9',1,'NATS::Client::Service::ServiceMsg']]],
+  ['natsserviceerrorcode_1',['NatsServiceErrorCode',['../class_n_a_t_s_1_1_client_1_1_service_1_1_service_msg.html#a95c99d71b0f0ab9918a9196f0fd39776',1,'NATS::Client::Service::ServiceMsg']]]
 ];

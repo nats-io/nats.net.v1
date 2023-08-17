@@ -44,6 +44,7 @@ var class_n_a_t_s_1_1_client_1_1_options =
     [ "SubChannelLength", "class_n_a_t_s_1_1_client_1_1_options.html#a82c9580a9c7dd0367c53f2c1d309a039", null ],
     [ "SubscriberDeliveryTaskCount", "class_n_a_t_s_1_1_client_1_1_options.html#a030dfa5eac04072735d7529147d5c562", null ],
     [ "SubscriptionBatchSize", "class_n_a_t_s_1_1_client_1_1_options.html#a4525f2afa6970381335c5dd3fc28a581", null ],
+    [ "TCPConnection", "class_n_a_t_s_1_1_client_1_1_options.html#ad6ab980242671f1b790827c9ff1172e8", null ],
     [ "Timeout", "class_n_a_t_s_1_1_client_1_1_options.html#a20342f2f3c596083d5989d12ee656155", null ],
     [ "Token", "class_n_a_t_s_1_1_client_1_1_options.html#ab82e941a962699f7aeca2a3508a7f2d7", null ],
     [ "Url", "class_n_a_t_s_1_1_client_1_1_options.html#a4952cb3e82ca4692896f289d9825682a", null ],

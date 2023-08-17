@@ -1,9 +1,9 @@
 var searchData=
 [
-  ['fetch_0',['Fetch',['../interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_consumer_context.html#ad8d5c8d797f3a8143bb748a2863c1101',1,'NATS.Client.JetStream.IConsumerContext.Fetch()'],['../interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_pull_subscription.html#a1e00126e533aff8c76d61ea007c890b9',1,'NATS.Client.JetStream.IJetStreamPullSubscription.Fetch()']]],
-  ['fetchbytes_1',['FetchBytes',['../interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_consumer_context.html#a5e7abd983109e710709ada248f7ed442',1,'NATS::Client::JetStream::IConsumerContext']]],
+  ['fetch_0',['Fetch',['../interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_base_consumer_context.html#a1b6b21e46ba0e4802ddd73e0896b6f63',1,'NATS.Client.JetStream.IBaseConsumerContext.Fetch()'],['../interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_pull_subscription.html#a1e00126e533aff8c76d61ea007c890b9',1,'NATS.Client.JetStream.IJetStreamPullSubscription.Fetch()']]],
+  ['fetchbytes_1',['FetchBytes',['../interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_base_consumer_context.html#a1c12b898138741c2e1e88cafa559dfe2',1,'NATS::Client::JetStream::IBaseConsumerContext']]],
   ['fetchconsumeoptions_2',['FetchConsumeOptions',['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_fetch_consume_options.html',1,'NATS::Client::JetStream']]],
-  ['fetchmessages_3',['FetchMessages',['../interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_consumer_context.html#a57228ba4e6bbdc02a6110ff16013c3b2',1,'NATS::Client::JetStream::IConsumerContext']]],
+  ['fetchmessages_3',['FetchMessages',['../interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_base_consumer_context.html#a9208ed8e4b0434afa5d1cbd371a69fe1',1,'NATS::Client::JetStream::IBaseConsumerContext']]],
   ['filtersubject_4',['FilterSubject',['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_mirror.html#a75023be06f3a3be1cf0574be1fe3323e',1,'NATS.Client.JetStream.Mirror.FilterSubject()'],['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_source.html#a06541673742dc23de606f401452db232',1,'NATS.Client.JetStream.Source.FilterSubject()']]],
   ['flowcontrolprocessedeventargs_5',['FlowControlProcessedEventArgs',['../class_n_a_t_s_1_1_client_1_1_flow_control_processed_event_args.html',1,'NATS::Client']]],
   ['flowcontrolprocessedeventhandler_6',['FlowControlProcessedEventHandler',['../class_n_a_t_s_1_1_client_1_1_options.html#a2c6f4bc65755ff61f81250a9386c0bbf',1,'NATS::Client::Options']]],

@@ -1,10 +1,11 @@
 var interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_stream_context =
 [
-    [ "CreateConsumerContext", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_stream_context.html#a7bea4a13a55f5309fca7a2d465b6a21d", null ],
+    [ "CreateOrderedConsumer", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_stream_context.html#ac46e2a3ca88ece127e7b3b1d614c08fe", null ],
     [ "CreateOrUpdateConsumer", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_stream_context.html#a95d6648311eefbfd3f6a78a8ed4141fc", null ],
     [ "DeleteConsumer", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_stream_context.html#aaae6b0f4fd8a02db0e3c0c36cb3ee388", null ],
     [ "DeleteMessage", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_stream_context.html#ae8439f33b81b2c8956d380de7963fff8", null ],
     [ "DeleteMessage", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_stream_context.html#ab879869677ac67470d43dfd4401ae915", null ],
+    [ "GetConsumerContext", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_stream_context.html#a46e1813bcc786e0ff117153ae983db20", null ],
     [ "GetConsumerInfo", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_stream_context.html#a2404b1092d84bf9ed271a83328006bf7", null ],
     [ "GetConsumerNames", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_stream_context.html#acb272facbbeab814e4303bd48e95c5cf", null ],
     [ "GetConsumers", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_stream_context.html#af2dda192324fa86aa45b8097a45bdb2e", null ],

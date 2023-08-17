@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">1.0.7</span>
+   &#160;<span id="projectnumber">1.0.8</span>
    </div>
    <div id="projectbrief">The NATS.io .NET C# Client</div>
   </td>
@@ -85,13 +85,81 @@ $(document).ready(function(){initNavTree('class_n_a_t_s_1_1_client_1_1_service_1
 
 <div class="header">
   <div class="summary">
+<a href="#nested-classes">Classes</a> &#124;
+<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
+<a href="#properties">Properties</a> &#124;
 <a href="class_n_a_t_s_1_1_client_1_1_service_1_1_service_endpoint-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">NATS.Client.Service.ServiceEndpoint Class Reference</div></div>
 </div><!--header-->
 <div class="contents">
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
+Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_service_1_1_service_endpoint_1_1_service_endpoint_builder.html">ServiceEndpointBuilder</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
+Static Public Member Functions</h2></td></tr>
+<tr class="memitem:a9f709419565a75ed265e7b87c68b8871"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="class_n_a_t_s_1_1_client_1_1_service_1_1_service_endpoint_1_1_service_endpoint_builder.html">ServiceEndpointBuilder</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_service_1_1_service_endpoint.html#a9f709419565a75ed265e7b87c68b8871">Builder</a> ()</td></tr>
+<tr class="separator:a9f709419565a75ed265e7b87c68b8871"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="properties" name="properties"></a>
+Properties</h2></td></tr>
+<tr class="memitem:a153db9bc6e46cb032e6198bfb3b7bbbe"><td class="memItemLeft" align="right" valign="top"><a id="a153db9bc6e46cb032e6198bfb3b7bbbe" name="a153db9bc6e46cb032e6198bfb3b7bbbe"></a>
+string&#160;</td><td class="memItemRight" valign="bottom"><b>Name</b><code> [get]</code></td></tr>
+<tr class="separator:a153db9bc6e46cb032e6198bfb3b7bbbe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a208321286939b2ab4e532f7aebac57a9"><td class="memItemLeft" align="right" valign="top"><a id="a208321286939b2ab4e532f7aebac57a9" name="a208321286939b2ab4e532f7aebac57a9"></a>
+string&#160;</td><td class="memItemRight" valign="bottom"><b>Subject</b><code> [get]</code></td></tr>
+<tr class="separator:a208321286939b2ab4e532f7aebac57a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a269769fbfdd4a4b030da7850e98befda"><td class="memItemLeft" align="right" valign="top"><a id="a269769fbfdd4a4b030da7850e98befda" name="a269769fbfdd4a4b030da7850e98befda"></a>
+IDictionary&lt; string, string &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>Metadata</b><code> [get]</code></td></tr>
+<tr class="separator:a269769fbfdd4a4b030da7850e98befda"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0a8a74325a754ba3cc5827ea444da79b"><td class="memItemLeft" align="right" valign="top"><a id="a0a8a74325a754ba3cc5827ea444da79b" name="a0a8a74325a754ba3cc5827ea444da79b"></a>
+string&#160;</td><td class="memItemRight" valign="bottom"><b>GroupName</b><code> [get]</code></td></tr>
+<tr class="separator:a0a8a74325a754ba3cc5827ea444da79b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p >SERVICE IS AN EXPERIMENTAL API SUBJECT TO CHANGE </p>
-</div><hr/>The documentation for this class was generated from the following file:<ul>
+<div class="textblock"><p >The <a class="el" href="class_n_a_t_s_1_1_client_1_1_service_1_1_service_endpoint.html" title="The ServiceEndpoint represents the working Endpoint It allows the endpoint to be grouped....">ServiceEndpoint</a> represents the working <a class="el" href="class_n_a_t_s_1_1_client_1_1_service_1_1_endpoint.html" title="Endpoint encapsulates the name, subject and metadata for a ServiceEndpoint.">Endpoint</a> </p><ul>
+<li>
+It allows the endpoint to be grouped.  </li>
+<li>
+It is where you can define the handler that will respond to incoming requests  </li>
+<li>
+It allows you to define it's dispatcher if desired giving granularity to threads running subscribers  </li>
+<li>
+It gives you a hook to provide custom data for the <a class="el" href="class_n_a_t_s_1_1_client_1_1_service_1_1_endpoint_stats.html" title="Endpoints stats contains various stats and custom data for an endpoint.">EndpointStats</a>  </li>
+</ul>
+<p >To create a <a class="el" href="class_n_a_t_s_1_1_client_1_1_service_1_1_service_endpoint.html" title="The ServiceEndpoint represents the working Endpoint It allows the endpoint to be grouped....">ServiceEndpoint</a>, use the <a class="el" href="class_n_a_t_s_1_1_client_1_1_service_1_1_service_endpoint.html" title="The ServiceEndpoint represents the working Endpoint It allows the endpoint to be grouped....">ServiceEndpoint</a> static method <code>builder()</code> or <code>new <a class="el" href="class_n_a_t_s_1_1_client_1_1_service_1_1_service_endpoint.html#a9f709419565a75ed265e7b87c68b8871" title="Get an instance of a ServiceEndpointBuilder.">ServiceEndpoint.Builder()</a> to get an instance.</code></p>
+</div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="a9f709419565a75ed265e7b87c68b8871" name="a9f709419565a75ed265e7b87c68b8871"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9f709419565a75ed265e7b87c68b8871">&#9670;&nbsp;</a></span>Builder()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static <a class="el" href="class_n_a_t_s_1_1_client_1_1_service_1_1_service_endpoint_1_1_service_endpoint_builder.html">ServiceEndpointBuilder</a> NATS.Client.Service.ServiceEndpoint.Builder </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Get an instance of a <a class="el" href="class_n_a_t_s_1_1_client_1_1_service_1_1_service_endpoint_1_1_service_endpoint_builder.html" title="Build a ServiceEndpoint using a fluent builder.">ServiceEndpointBuilder</a>. </p>
+<dl class="section return"><dt>Returns</dt><dd>the instance</dd></dl>
+
+</div>
+</div>
+<hr/>The documentation for this class was generated from the following file:<ul>
 <li>ServiceEndpoint.cs</li>
 </ul>
 </div><!-- contents -->

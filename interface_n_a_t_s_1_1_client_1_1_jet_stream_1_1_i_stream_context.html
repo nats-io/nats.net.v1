@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">1.0.7</span>
+   &#160;<span id="projectnumber">1.0.8</span>
    </div>
    <div id="projectbrief">The NATS.io .NET C# Client</div>
   </td>
@@ -104,10 +104,12 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a8c380edf4e2a9328f9525c48327c3cad"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae3761072d6e13b5eb974831c47b0d43b"><td class="memItemLeft" align="right" valign="top">PurgeResponse&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_stream_context.html#ae3761072d6e13b5eb974831c47b0d43b">Purge</a> (PurgeOptions options)</td></tr>
 <tr class="separator:ae3761072d6e13b5eb974831c47b0d43b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7bea4a13a55f5309fca7a2d465b6a21d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_consumer_context.html">IConsumerContext</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_stream_context.html#a7bea4a13a55f5309fca7a2d465b6a21d">CreateConsumerContext</a> (string consumerName)</td></tr>
-<tr class="separator:a7bea4a13a55f5309fca7a2d465b6a21d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a46e1813bcc786e0ff117153ae983db20"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_consumer_context.html">IConsumerContext</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_stream_context.html#a46e1813bcc786e0ff117153ae983db20">GetConsumerContext</a> (string consumerName)</td></tr>
+<tr class="separator:a46e1813bcc786e0ff117153ae983db20"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a95d6648311eefbfd3f6a78a8ed4141fc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_consumer_context.html">IConsumerContext</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_stream_context.html#a95d6648311eefbfd3f6a78a8ed4141fc">CreateOrUpdateConsumer</a> (ConsumerConfiguration config)</td></tr>
 <tr class="separator:a95d6648311eefbfd3f6a78a8ed4141fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac46e2a3ca88ece127e7b3b1d614c08fe"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_ordered_consumer_context.html">IOrderedConsumerContext</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_stream_context.html#ac46e2a3ca88ece127e7b3b1d614c08fe">CreateOrderedConsumer</a> (OrderedConsumerConfiguration config)</td></tr>
+<tr class="separator:ac46e2a3ca88ece127e7b3b1d614c08fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaae6b0f4fd8a02db0e3c0c36cb3ee388"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_stream_context.html#aaae6b0f4fd8a02db0e3c0c36cb3ee388">DeleteConsumer</a> (string consumerName)</td></tr>
 <tr class="separator:aaae6b0f4fd8a02db0e3c0c36cb3ee388"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2404b1092d84bf9ed271a83328006bf7"><td class="memItemLeft" align="right" valign="top">ConsumerInfo&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_stream_context.html#a2404b1092d84bf9ed271a83328006bf7">GetConsumerInfo</a> (string consumerName)</td></tr>
@@ -135,33 +137,32 @@ Properties</h2></td></tr>
 <tr class="separator:aefee0edcd930ba7691fc3118b92472ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p >SIMPLIFICATION IS EXPERIMENTAL AND SUBJECT TO CHANGE </p>
-<p >A StreamContext is created by the various IJetStream.StreamContext(...) APIs. </p>
+<div class="textblock"><p >The Stream Context provide a set of operations for managing the stream and its contents and for managing consumers. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="a7bea4a13a55f5309fca7a2d465b6a21d" name="a7bea4a13a55f5309fca7a2d465b6a21d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7bea4a13a55f5309fca7a2d465b6a21d">&#9670;&nbsp;</a></span>CreateConsumerContext()</h2>
+<a id="ac46e2a3ca88ece127e7b3b1d614c08fe" name="ac46e2a3ca88ece127e7b3b1d614c08fe"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac46e2a3ca88ece127e7b3b1d614c08fe">&#9670;&nbsp;</a></span>CreateOrderedConsumer()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_consumer_context.html">IConsumerContext</a> NATS.Client.JetStream.IStreamContext.CreateConsumerContext </td>
+          <td class="memname"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_ordered_consumer_context.html">IOrderedConsumerContext</a> NATS.Client.JetStream.IStreamContext.CreateOrderedConsumer </td>
           <td>(</td>
-          <td class="paramtype">string&#160;</td>
-          <td class="paramname"><em>consumerName</em></td><td>)</td>
+          <td class="paramtype">OrderedConsumerConfiguration&#160;</td>
+          <td class="paramname"><em>config</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>Create a consumer context for on the context's stream and specific named consumer. Verifies that the consumer exists. </p>
+<p>Management function to creates a consumer on this stream. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">consumerName</td><td>the name of the consumer</td></tr>
+    <tr><td class="paramname">config</td><td>the consumer configuration to use.</td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>a ConsumerContext object</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>consumer information.</dd></dl>
 
 </div>
 </div>
@@ -181,14 +182,14 @@ Properties</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Management function to creates a consumer on this stream. </p>
+<p>Create an ordered consumer context for the context's stream. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">config</td><td>the consumer configuration to use.</td></tr>
+    <tr><td class="paramname">config</td><td>the configuration for the ordered consumer</td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>consumer information.</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>an instance of <a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_consumer_context.html" title="The Consumer Context provides a convenient interface around a defined JetStream Consumer">IConsumerContext</a></dd></dl>
 
 </div>
 </div>
@@ -281,6 +282,33 @@ Properties</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>true if the delete succeeded</dd></dl>
+
+</div>
+</div>
+<a id="a46e1813bcc786e0ff117153ae983db20" name="a46e1813bcc786e0ff117153ae983db20"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a46e1813bcc786e0ff117153ae983db20">&#9670;&nbsp;</a></span>GetConsumerContext()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_consumer_context.html">IConsumerContext</a> NATS.Client.JetStream.IStreamContext.GetConsumerContext </td>
+          <td>(</td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>consumerName</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a consumer context for on the context's stream and specific named consumer. Verifies that the consumer exists. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">consumerName</td><td>the name of the consumer</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>an instance of <a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_consumer_context.html" title="The Consumer Context provides a convenient interface around a defined JetStream Consumer">IConsumerContext</a></dd></dl>
 
 </div>
 </div>

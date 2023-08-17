@@ -46,7 +46,7 @@ var NAVTREE =
         [ "All", "functions.html", "functions_dup" ],
         [ "Functions", "functions_func.html", "functions_func" ],
         [ "Variables", "functions_vars.html", null ],
-        [ "Properties", "functions_prop.html", null ],
+        [ "Properties", "functions_prop.html", "functions_prop" ],
         [ "Events", "functions_evnt.html", null ]
       ] ]
     ] ]
@@ -56,11 +56,12 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "annotated.html",
-"class_n_a_t_s_1_1_client_1_1_encoded_connection.html#aaaac96c480fdddde27c05cf57bb372ec",
-"class_n_a_t_s_1_1_client_1_1_msg.html#a341e615fc12b38958db4bc8a8947586d",
-"class_n_a_t_s_1_1_client_1_1_options.html#af72a56c42d59f70432c80f8526edda6e",
-"interface_n_a_t_s_1_1_client_1_1_i_connection.html#a4c2f3130ae9dbb07299d5aca8793061c",
-"interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_consumer_context.html#a6ceb37d6a5c1482d06eb21c745162790"
+"class_n_a_t_s_1_1_client_1_1_encoded_connection.html#aa0c4fa99a5826292e5551f76b81edff2",
+"class_n_a_t_s_1_1_client_1_1_msg.html#a1e876a9a2084d9dfff10e2a4e6925177",
+"class_n_a_t_s_1_1_client_1_1_options.html#aece501bf249fe525470dc4e0aa5a05d5",
+"class_n_a_t_s_1_1_client_1_1_statistics.html#ac2ef96188900a4921e5a4f1f8980ca32",
+"interface_n_a_t_s_1_1_client_1_1_i_connection.html#a774d24513a5077e76706ac5baf57e574",
+"interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream.html#a14ac4a882aa154273b536c9710c5ca3f"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
