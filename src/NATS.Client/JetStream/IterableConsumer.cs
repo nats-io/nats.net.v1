@@ -14,7 +14,7 @@
 namespace NATS.Client.JetStream
 {
     /// <summary>
-    /// SIMPLIFICATION IS EXPERIMENTAL AND SUBJECT TO CHANGE
+    /// Implementation for IIterableConsumer
     /// </summary>
     internal class IterableConsumer : MessageConsumer, IIterableConsumer
     {

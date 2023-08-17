@@ -17,7 +17,7 @@ using NATS.Client.Internals;
 namespace NATS.Client.JetStream
 {
     /// <summary>
-    /// SIMPLIFICATION IS EXPERIMENTAL AND SUBJECT TO CHANGE
+    /// Base class for Message Consumer implementations
     /// </summary>
     internal class MessageConsumerBase : IMessageConsumer
     {

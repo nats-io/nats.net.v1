@@ -18,7 +18,6 @@ namespace NATS.Client.JetStream
     /// <summary>
     /// Base Consume Options are provided to customize the way the consume and 
     /// fetch operate. It is the base class for ConsumeOptions and FetchConsumeOptions.
-    /// SIMPLIFICATION IS EXPERIMENTAL AND SUBJECT TO CHANGE
     /// </summary>
     public class BaseConsumeOptions
     {

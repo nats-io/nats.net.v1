@@ -15,7 +15,6 @@ namespace NATS.Client.JetStream
 {
     /// <summary>
     /// Consume Options are provided to customize the consume operation. 
-    /// SIMPLIFICATION IS EXPERIMENTAL AND SUBJECT TO CHANGE
     /// </summary>
     public class FetchConsumeOptions : BaseConsumeOptions
     {

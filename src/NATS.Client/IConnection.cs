@@ -1108,7 +1108,6 @@ namespace NATS.Client
         /// <summary>
         /// Get a consumer context for a specific named stream and specific named consumer.
         /// Verifies that the stream and consumer exist.
-        /// EXPERIMENTAL API SUBJECT TO CHANGE
         /// </summary>
         /// <param name="streamName">the name of the stream</param>
         /// <param name="consumerName">the name of the consumer</param>
@@ -1118,7 +1117,6 @@ namespace NATS.Client
         /// <summary>
         /// Get a consumer context for a specific named stream and specific named consumer.
         /// Verifies that the stream and consumer exist.
-        /// EXPERIMENTAL API SUBJECT TO CHANGE
         /// </summary>
         /// <param name="streamName">the name of the stream</param>
         /// <param name="consumerName">the name of the consumer</param>
