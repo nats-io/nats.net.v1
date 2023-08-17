@@ -132,7 +132,7 @@ namespace NATS.Client.Service
             /// </summary>
             /// <param name="metadata">the metadata</param>
             /// <returns>the ServiceEndpointBuilder</returns>
-            public ServiceEndpointBuilder WithMetaData(IDictionary<string, string> metadata) {
+            public ServiceEndpointBuilder WithEndpointMetadata(IDictionary<string, string> metadata) {
                 EndpointBuilder.WithMetadata(metadata);
                 return this;
             }

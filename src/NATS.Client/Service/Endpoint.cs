@@ -116,7 +116,7 @@ namespace NATS.Client.Service
         {
             internal string _name;
             internal string _subject;
-            internal Dictionary<string, string> _metadata;
+            internal IDictionary<string, string> _metadata;
 
             /// <summary>
             /// Copy the Endpoint, replacing all existing endpoint information.

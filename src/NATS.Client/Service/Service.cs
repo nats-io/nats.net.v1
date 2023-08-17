@@ -36,7 +36,7 @@ namespace NATS.Client.Service
 
         private readonly IConnection conn;
         public int DrainTimeoutMillis { get; }
-        private readonly Dictionary<string, EndpointContext> serviceContexts;
+        private readonly IDictionary<string, EndpointContext> serviceContexts;
         private readonly IList<EndpointContext> discoveryContexts;
 
         /// <summary>

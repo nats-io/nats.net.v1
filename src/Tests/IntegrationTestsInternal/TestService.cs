@@ -704,7 +704,7 @@ namespace IntegrationTestsInternal
     
             se = ServiceEndpoint.Builder()
                 .WithEndpoint(e1)
-                .WithEndpoint(e2)
+                .WithEndpoint(e2) // last one wins
                 .WithHandler(smh)
                 .Build();
             Assert.Equal(e2, se.Endpoint);
@@ -726,7 +726,23 @@ namespace IntegrationTestsInternal
                 .Build();
             Assert.Equal(e1.Name, se.Name);
             Assert.Equal(e2.Subject, se.Subject);
+        
+            IDictionary<string, string> metadata = new Dictionary<string, string>();
+            se = ServiceEndpoint.Builder()
+                .WithEndpoint(e1)
+                .WithEndpointMetadata(metadata)
+                .WithHandler(smh)
+                .Build();
+            Assert.Null(se.Metadata);
     
+            metadata["k"] = "v";
+            se = ServiceEndpoint.Builder()
+                .WithEndpoint(e1)
+                .WithEndpointMetadata(metadata)
+                .WithHandler(smh)
+                .Build();
+            Assert.True(Validator.DictionariesEqual(metadata, se.Metadata));
+
             ArgumentException iae = Assert.Throws<ArgumentException>(
                 () => ServiceEndpoint.Builder().Build());
             Assert.Contains("Endpoint", iae.Message);

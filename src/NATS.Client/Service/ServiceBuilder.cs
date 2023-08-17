@@ -27,9 +27,9 @@ namespace NATS.Client.Service
         internal string Name;
         internal string Description;
         internal string Version;
-        internal readonly Dictionary<string, ServiceEndpoint> ServiceEndpoints = new Dictionary<string, ServiceEndpoint>();
+        internal readonly IDictionary<string, ServiceEndpoint> ServiceEndpoints = new Dictionary<string, ServiceEndpoint>();
         internal int DrainTimeoutMillis = DefaultDrainTimeoutMillis;
-        internal Dictionary<string, string> Metadata;
+        internal IDictionary<string, string> Metadata;
 
         /// <summary>
         /// The connection the service runs on
@@ -80,7 +80,7 @@ namespace NATS.Client.Service
         /// </summary>
         /// <param name="metadata">the meta</param>
         /// <returns>the ServiceBuilder</returns>
-        public ServiceBuilder WithMetadata(Dictionary<string, string> metadata)
+        public ServiceBuilder WithMetadata(IDictionary<string, string> metadata)
         {
             Metadata = metadata;
             return this;
