@@ -148,7 +148,7 @@ namespace NATS.Client
         public string Queue => queue;
 
         internal string SubName() => subject + "(" + sid + ")" +
-                                (String.IsNullOrWhiteSpace(queue) ? "" : " (queue: " + queue + ")");
+                                (string.IsNullOrWhiteSpace(queue) ? "" : " (queue: " + queue + ")");
 
 
         /// <summary>

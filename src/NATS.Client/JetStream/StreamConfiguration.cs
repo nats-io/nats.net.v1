@@ -48,7 +48,7 @@ namespace NATS.Client.JetStream
         public bool DenyDelete { get; }
         public bool DenyPurge { get; }
         public bool DiscardNewPerSubject { get; }
-        public Dictionary<string, string> Metadata { get; }
+        public IDictionary<string, string> Metadata { get; }
 
         [Obsolete("MaxMsgSize was mistakenly renamed in a previous change.", false)]
         public long MaxValueSize => MaxMsgSize;

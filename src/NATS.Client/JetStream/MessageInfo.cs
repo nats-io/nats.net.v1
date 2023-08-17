@@ -30,7 +30,7 @@ namespace NATS.Client.JetStream
         [Obsolete("This property is obsolete. Use Sequence instead.", false)]
         public long Seq => Convert.ToInt64(Sequence);
 
-        internal MessageInfo(Msg msg, String streamName, bool fromDirect, bool throwOnError) : base(msg, throwOnError, fromDirect)
+        internal MessageInfo(Msg msg, string streamName, bool fromDirect, bool throwOnError) : base(msg, throwOnError, fromDirect)
         {
             Init(msg, fromDirect, streamName);
         }
@@ -40,7 +40,7 @@ namespace NATS.Client.JetStream
             Init(null, false, null);
         }
 
-        private void Init(Msg msg, bool fromDirect, String streamName)
+        private void Init(Msg msg, bool fromDirect, string streamName)
         {
             if (fromDirect)
             {
@@ -50,7 +50,7 @@ namespace NATS.Client.JetStream
                 Sequence = ulong.Parse(msg.Header[JetStreamConstants.NatsSequence]);
                 Time = JsonUtils.AsDate(msg.Header[JetStreamConstants.NatsTimestamp]);
                 Stream = msg.Header[JetStreamConstants.NatsStream];
-                String temp = msg.Header[JetStreamConstants.NatsLastSequence];
+                string temp = msg.Header[JetStreamConstants.NatsLastSequence];
                 if (temp != null)
                 {
                     LastSequence = ulong.Parse(temp);

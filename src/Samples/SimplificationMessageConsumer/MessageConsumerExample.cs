@@ -30,7 +30,7 @@ namespace NATSExamples
     
         private static readonly string SERVER = "nats://localhost:4222";
 
-        public static void Main(String[] args)
+        public static void Main(string[] args)
         {
             Options opts = ConnectionFactory.GetDefaultOptions(SERVER);
 

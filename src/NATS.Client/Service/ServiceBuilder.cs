@@ -17,7 +17,7 @@ using static NATS.Client.Internals.Validator;
 namespace NATS.Client.Service
 {
     /// <summary>
-    /// Used to build a service
+    /// Build a service using a fluent builder. Use Service.Builder() to get an instance or <c>new ServiceBuilder()</c>
     /// </summary>
     public class ServiceBuilder
     {
@@ -27,58 +27,90 @@ namespace NATS.Client.Service
         internal string Name;
         internal string Description;
         internal string Version;
-        internal string ApiUrl;
         internal readonly Dictionary<string, ServiceEndpoint> ServiceEndpoints = new Dictionary<string, ServiceEndpoint>();
         internal int DrainTimeoutMillis = DefaultDrainTimeoutMillis;
         internal Dictionary<string, string> Metadata;
 
+        /// <summary>
+        /// The connection the service runs on
+        /// </summary>
+        /// <param name="conn">connection</param>
+        /// <returns>the ServiceBuilder</returns>
         public ServiceBuilder WithConnection(IConnection conn) 
         {
             Conn = conn;
             return this;
         }
 
+        /// <summary>
+        /// The simple name of the service
+        /// </summary>
+        /// <param name="name">the name</param>
+        /// <returns>the ServiceBuilder</returns>
         public ServiceBuilder WithName(string name) 
         {
             Name = ValidateIsRestrictedTerm(name, "Service Name", true);
             return this;
         }
 
+        /// <summary>
+        /// The simple description of the service
+        /// </summary>
+        /// <param name="description">the description</param>
+        /// <returns>the ServiceBuilder</returns>
         public ServiceBuilder WithDescription(string description) 
         {
             Description = description;
             return this;
         }
 
+        /// <summary>
+        /// The simple version of the service.
+        /// </summary>
+        /// <param name="version">the version</param>
+        /// <returns>the ServiceBuilder</returns>
         public ServiceBuilder WithVersion(string version) 
         {
             Version = ValidateSemVer(version, "Service Version", true);
             return this;
         }
 
+        /// <summary>
+        /// Any meta information about this service
+        /// </summary>
+        /// <param name="metadata">the meta</param>
+        /// <returns>the ServiceBuilder</returns>
         public ServiceBuilder WithMetadata(Dictionary<string, string> metadata)
         {
             Metadata = metadata;
             return this;
         }
 
-        public ServiceBuilder WithApiUrl(string apiUrl)
-        {
-            ApiUrl = apiUrl;
+        /// <summary>
+        /// Add a service endpoint into the service. There can only be one instance of an endpoint by name
+        /// </summary>
+        /// <param name="serviceEndpoint">the endpoint</param>
+        /// <returns>the ServiceBuilder</returns>
+        public ServiceBuilder AddServiceEndpoint(ServiceEndpoint serviceEndpoint) {
+            ServiceEndpoints[serviceEndpoint.Name] = serviceEndpoint;
             return this;
         }
 
-        public ServiceBuilder AddServiceEndpoint(ServiceEndpoint endpoint) {
-            ServiceEndpoints[endpoint.Name] = endpoint;
-            return this;
-        }
-
+        /// <summary>
+        /// The timeout when stopping a service. Defaults to 5000 milliseconds
+        /// </summary>
+        /// <param name="drainTimeoutMillis">the drain timeout in milliseconds</param>
+        /// <returns>the ServiceBuilder</returns>
         public ServiceBuilder WithDrainTimeoutMillis(int drainTimeoutMillis)
         {
             DrainTimeoutMillis = drainTimeoutMillis;
             return this;
         }
             
+        /// <summary>
+        /// Build the Service instance
+        /// </summary>
+        /// <returns>the Service instance</returns>
         public Service Build() {
             Required(Conn, "Connection");
             Required(Name, "Name");

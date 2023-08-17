@@ -14,8 +14,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Security.Cryptography;
-using System.Text;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using static NATS.Client.ObjectStore.ObjectStoreUtil;
@@ -89,8 +87,8 @@ namespace NATS.Client.ObjectStore
                 throw OsLinkNotAllowOnPut.Instance();
             }
 
-            String nuid = Nuid.NextGlobal();
-            String chunkSubject = PubSubChunkSubject(nuid);
+            string nuid = Nuid.NextGlobal();
+            string chunkSubject = PubSubChunkSubject(nuid);
 
             int chunkSize = meta.ObjectMetaOptions.ChunkSize;
             if (chunkSize <= 0) {

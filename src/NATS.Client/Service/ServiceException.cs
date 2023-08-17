@@ -16,17 +16,18 @@ using System;
 namespace NATS.Client.Service
 {
     /// <summary>
-    /// SERVICE IS AN EXPERIMENTAL API SUBJECT TO CHANGE
+    /// Exception specific to Service
     /// </summary>
     public class ServiceException : Exception
     {
+        /// <value>The exception code</value>
         public int Code { get; }
-        
-        public ServiceException(string message, int code = -1) : base(message) {
+
+        internal ServiceException(string message, int code = -1) : base(message) {
             Code = code;
         }
 
-        public static ServiceException GetInstance(Exception e)
+        internal static ServiceException GetInstance(Exception e)
         {
             if (e is ServiceException se)
             {

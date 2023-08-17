@@ -113,11 +113,11 @@ namespace NATS.Client.ObjectStore
             }
         }
 
-        internal static ObjectInfoBuilder Builder(String bucket, String objectName) {
+        internal static ObjectInfoBuilder Builder(string bucket, string objectName) {
             return new ObjectInfoBuilder(bucket, objectName);
         }
 
-        internal static ObjectInfoBuilder Builder(String bucket, ObjectMeta meta) {
+        internal static ObjectInfoBuilder Builder(string bucket, ObjectMeta meta) {
             return new ObjectInfoBuilder(bucket, meta);
         }
 
@@ -135,12 +135,12 @@ namespace NATS.Client.ObjectStore
             internal bool _deleted;
             internal ObjectMeta.ObjectMetaBuilder _metaBuilder;
 
-            internal ObjectInfoBuilder(String bucket, String objectName) {
+            internal ObjectInfoBuilder(string bucket, string objectName) {
                 _metaBuilder = ObjectMeta.Builder(objectName);
                 WithBucket(bucket);
             }
 
-            public ObjectInfoBuilder(String bucket, ObjectMeta meta) {
+            public ObjectInfoBuilder(string bucket, ObjectMeta meta) {
                 _metaBuilder = ObjectMeta.Builder(meta);
                 WithBucket(bucket);
             }
@@ -156,17 +156,17 @@ namespace NATS.Client.ObjectStore
                 _metaBuilder = ObjectMeta.Builder(info.ObjectMeta);
             }
 
-            public ObjectInfoBuilder WithObjectName(String name) {
+            public ObjectInfoBuilder WithObjectName(string name) {
                 _metaBuilder.WithObjectName(name);
                 return this;
             }
 
-            public ObjectInfoBuilder WithBucket(String bucket) {
+            public ObjectInfoBuilder WithBucket(string bucket) {
                 this._bucket = Validator.ValidateBucketName(bucket, true);
                 return this;
             }
 
-            public ObjectInfoBuilder WithNuid(String nuid) {
+            public ObjectInfoBuilder WithNuid(string nuid) {
                 this._nuid = nuid;
                 return this;
             }

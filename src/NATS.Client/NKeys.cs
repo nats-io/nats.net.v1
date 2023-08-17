@@ -353,7 +353,7 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Creates an NkeyPair from a private seed String.
+        /// Creates an NkeyPair from a private seed string.
         /// </summary>
         /// <param name="seed"></param>
         /// <returns>A NATS Ed25519 Keypair</returns>
@@ -417,7 +417,7 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Creates a private user seed String.
+        /// Creates a private user seed string.
         /// </summary>
         /// <returns>A NATS Ed25519 User Seed</returns>
         public static string CreateUserSeed()
@@ -426,7 +426,7 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Creates a private account seed String.
+        /// Creates a private account seed string.
         /// </summary>
         /// <returns>A NATS Ed25519 Account Seed</returns>
         public static string CreateAccountSeed()
@@ -435,7 +435,7 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Creates a private operator seed String.
+        /// Creates a private operator seed string.
         /// </summary>
         /// <returns>A NATS Ed25519 Operator Seed</returns>
         public static string CreateOperatorSeed()

@@ -19,13 +19,17 @@ using NATS.Client.JetStream;
 namespace NATS.Client.Service
 {
     /// <summary>
-    /// SERVICE IS AN EXPERIMENTAL API SUBJECT TO CHANGE
+    /// Info response class forms the info json payload, for example:
+    /// <code>{"id":"JlkwZvmHAXCQGwwxiPwaBJ","name":"MyService","version":"0.0.1","endpoints":[{"name":"MyEndpoint","subject":"myend"}],"type":"io.nats.micro.v1.info_response"}</code>
     /// </summary>
     public class InfoResponse : ServiceResponse
     {
         public const string ResponseType = "io.nats.micro.v1.info_response";
 
+        /// <value>Description for the service</value>
         public string Description { get; }
+        
+        /// <value>List of endpoints</value>
         public IList<Endpoint> Endpoints { get; }
 
         public InfoResponse(string id, string name, string version, IDictionary<string, string> metadata, string description, IList<Endpoint> endpoints)

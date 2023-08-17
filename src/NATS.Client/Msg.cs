@@ -246,7 +246,7 @@ namespace NATS.Client
         /// </exception>
         public void Respond(byte[] data)
         {
-            if (String.IsNullOrEmpty(Reply))
+            if (string.IsNullOrEmpty(Reply))
             {
                 throw new NATSException("No Reply subject");
             }

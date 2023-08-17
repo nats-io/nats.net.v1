@@ -107,7 +107,7 @@ namespace NATSExamples
                     PrintUtils.PrintStreamInfo(streamInfo);
 
                     Console.WriteLine("----------\n4.2 getStreamNames");
-                    IList<String> streamNames = jsm.GetStreamNames();
+                    IList<string> streamNames = jsm.GetStreamNames();
                     PrintUtils.PrintObject(streamNames);
 
                     Console.WriteLine("----------\n4.3 getStreams");

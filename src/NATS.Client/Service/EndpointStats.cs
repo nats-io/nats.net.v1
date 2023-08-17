@@ -20,21 +20,79 @@ using NATS.Client.JetStream;
 namespace NATS.Client.Service
 {
     /// <summary>
-    /// SERVICE IS AN EXPERIMENTAL API SUBJECT TO CHANGE
+    /// Endpoints stats contains various stats and custom data for an endpoint.
+    /// <code>
+    /// {
+    /// "id": "ZP1oVevzLGu4CBORMXKKke",
+    /// "name": "Service1",
+    /// "version": "0.0.1",
+    /// "endpoints": [{
+    ///     "name": "SortEndpointAscending",
+    ///     "subject": "sort.ascending",
+    ///     "num_requests": 1,
+    ///     "processing_time": 538900,
+    ///     "average_processing_time": 538900,
+    ///     "started": "2023-08-15T13:51:41.318000000Z"
+    /// }
+    /// </code>
+    /// <code>
+    /// {
+    ///     "name": "SortEndpointDescending",
+    ///     "subject": "sort.descending",
+    ///     "num_requests": 1,
+    ///     "processing_time": 88400,
+    ///     "average_processing_time": 88400,
+    ///     "started": "2023-08-15T13:51:41.318000000Z"
+    /// }
+    /// </code>
+    /// <code>
+    /// {
+    ///     "name": "EchoEndpoint",
+    ///     "subject": "echo",
+    ///     "num_requests": 5,
+    ///     "processing_time": 1931600,
+    ///     "average_processing_time": 386320,
+    ///     "data": {
+    ///          "idata": 2,
+    ///          "sdata": "s-996409223"
+    ///     },
+    ///     "started": "2023-08-15T13:51:41.318000000Z"
+    /// }
+    /// </code>
     /// </summary>
-    public class EndpointResponse : JsonSerializable
+    public class EndpointStats : JsonSerializable
     {
+        /// <value>Get the name of the Endpoint</value>
         public string Name { get; }
+        
+        /// <value>Get the subject of the Endpoint</value>
         public string Subject { get; }
+            
+        /// <value>The number of requests received by the endpoint</value>
         public long NumRequests { get; } 
+        
+        /// <value>Number of errors that the endpoint has raised</value>
         public long NumErrors { get; } 
+        
+        /// <value>Total processing time for the endpoint</value>
         public long ProcessingTime { get; } 
+            
+        /// <value>Average processing time is the total processing time divided by the num requests</value>
         public long AverageProcessingTime { get; }
+
+        /// <value>If set, the last error triggered by the endpoint</value>
         public string LastError { get; }
+
+        /// <value>A field that can be customized with any data as returned by stats handler</value>
         public JSONNode Data { get; }
+
+        /// <value>The json representation of the custom data. May be null</value>
+        public string DataAsJson => Data == null ? null : Data.ToString();
+        
+        /// <value>Get the time the endpoint was started (or restarted)</value>
         public DateTime Started { get; }
 
-        internal EndpointResponse(string name, string subject, long numRequests, long numErrors, long processingTime, string lastError, JSONNode data, DateTime started) {
+        internal EndpointStats(string name, string subject, long numRequests, long numErrors, long processingTime, string lastError, JSONNode data, DateTime started) {
             Name = name;
             Subject = subject;
             NumRequests = numRequests;
@@ -46,7 +104,7 @@ namespace NATS.Client.Service
             Started = started;
         }
 
-        internal EndpointResponse(string name, string subject) {
+        internal EndpointStats(string name, string subject) {
             Name = name;
             Subject = subject;
             NumRequests = 0;
@@ -58,7 +116,7 @@ namespace NATS.Client.Service
             Started = DateTime.MinValue;
         }
 
-        internal EndpointResponse(JSONNode node)
+        internal EndpointStats(JSONNode node)
         {
             Name = node[ApiConstants.Name];
             Subject = node[ApiConstants.Subject];
@@ -71,14 +129,14 @@ namespace NATS.Client.Service
             Started = JsonUtils.AsDate(node[ApiConstants.Started]); 
         }
 
-        internal static IList<EndpointResponse> ListOf(JSONNode listNode)
+        internal static IList<EndpointStats> ListOf(JSONNode listNode)
         {
-            IList<EndpointResponse> list = new List<EndpointResponse>();
+            IList<EndpointStats> list = new List<EndpointStats>();
             if (listNode != null)
             {
                 foreach (var esNode in listNode.Children)
                 {
-                    list.Add(new EndpointResponse(esNode));
+                    list.Add(new EndpointStats(esNode));
                 }
             }
             return list;
@@ -104,7 +162,7 @@ namespace NATS.Client.Service
             return JsonUtils.ToKey(GetType()) + ToJsonString();
         }
         
-        protected bool Equals(EndpointResponse other)
+        protected bool Equals(EndpointStats other)
         {
             return Name == other.Name 
                    && Subject == other.Subject 
@@ -122,7 +180,7 @@ namespace NATS.Client.Service
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((EndpointResponse)obj);
+            return Equals((EndpointStats)obj);
         }
 
         public override int GetHashCode()

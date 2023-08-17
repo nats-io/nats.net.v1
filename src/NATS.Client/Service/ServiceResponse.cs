@@ -7,15 +7,27 @@ using NATS.Client.JetStream;
 namespace NATS.Client.Service
 {
     /// <summary>
-    /// SERVICE IS AN EXPERIMENTAL API SUBJECT TO CHANGE
+    /// Base class for service responses Info, Ping and Stats
     /// </summary>
     public abstract class ServiceResponse : JsonSerializable
     {
+        internal IDictionary<string, string> _metadata;
+
+        /// <value>The type of this response</value>
         public string Type { get; }
+        
+        /// <value>The unique ID of the service</value>
         public string Id { get; }
+        
+        /// <value>The name of the service</value>
         public string Name { get; }
+        
+        /// <value>The version of the service</value>
         public string Version { get; }
-        public Dictionary<string, string> Metadata { get; }
+        
+        /// <value>A copy of the metadata for the service, or null if there is no metadata</value>
+        public IDictionary<string, string> Metadata =>
+            _metadata == null ? null : new Dictionary<string, string>(_metadata);
 
         internal ServiceResponse(string type, string id, string name, string version, IDictionary<string, string> metadata)
         {
@@ -25,26 +37,16 @@ namespace NATS.Client.Service
             Version = version;
             if (metadata == null || metadata.Count == 0)
             {
-                Metadata = null;
+                _metadata = null;
             }
             else
             {
-                Metadata = new Dictionary<string, string>();
-                foreach (var key in metadata.Keys)
-                {
-                    Metadata[key] = metadata[key];
-                }
+                _metadata = new Dictionary<string, string>(metadata);
             }
         }
-        
+
         internal ServiceResponse(string type, ServiceResponse template)
-        {
-            Type = type;
-            Id = template.Id;
-            Name = template.Name;
-            Version = template.Version;
-            Metadata = template.Metadata;
-        }
+            : this(type, template.Id, template.Name, template.Version, template._metadata) {}
         
         internal ServiceResponse(string type, JSONNode node)
         {
@@ -59,7 +61,7 @@ namespace NATS.Client.Service
             Id = Validator.Required(node[ApiConstants.Id], "Id");
             Name = Validator.Required(node[ApiConstants.Name], "Name");
             Version = Validator.ValidateSemVer(node[ApiConstants.Version], "Version", true);
-            Metadata = JsonUtils.StringStringDictionary(node, ApiConstants.Metadata);
+            _metadata = JsonUtils.StringStringDictionary(node, ApiConstants.Metadata);
         }
         
         protected JSONObject BaseJsonObject()
@@ -69,7 +71,7 @@ namespace NATS.Client.Service
             JsonUtils.AddField(jso, ApiConstants.Name, Name);
             JsonUtils.AddField(jso, ApiConstants.Type, Type);
             JsonUtils.AddField(jso, ApiConstants.Version, Version);
-            JsonUtils.AddField(jso, ApiConstants.Metadata, Metadata);
+            JsonUtils.AddField(jso, ApiConstants.Metadata, _metadata);
             return jso;
         }
 

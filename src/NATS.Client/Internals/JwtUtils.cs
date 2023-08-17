@@ -36,8 +36,8 @@ namespace NATS.Client.Internals
         /// <pre>
         /// NKey userKey = NKey.createUser(new SecureRandom());
         /// NKey signingKey = loadFromSecretStore();
-        /// String jwt = IssueUserJWT(signingKey, accountId, userKey.EncodedPublicKey);
-        /// String.format(JwtUtils.NatsUserJwtFormat, jwt, userKey.EncodedSeed);
+        /// string jwt = IssueUserJWT(signingKey, accountId, userKey.EncodedPublicKey);
+        /// string.format(JwtUtils.NatsUserJwtFormat, jwt, userKey.EncodedSeed);
         /// </pre>
         /// </summary>
         public static readonly string NatsUserJwtFormat =
@@ -112,7 +112,7 @@ namespace NATS.Client.Internals
         /// <param name="tags">optional list of tags to be included in the JWT.</param>
         /// <param name="issuedAt">the current epoch seconds.</param>
         /// <returns>a JWT</returns>
-        public static string IssueUserJWT(NkeyPair signingKey, string accountId, string publicUserKey, string name, Duration expiration, String[] tags, long issuedAt)
+        public static string IssueUserJWT(NkeyPair signingKey, string accountId, string publicUserKey, string name, Duration expiration, string[] tags, long issuedAt)
         {
             return IssueUserJWT(signingKey, publicUserKey, name, expiration, issuedAt, null, new UserClaim(accountId, tags));
         }
@@ -129,7 +129,7 @@ namespace NATS.Client.Internals
         /// <param name="issuedAt">the current epoch seconds.</param>
         /// <param name="audience">optional audience</param>
         /// <returns>a JWT</returns>
-        public static string IssueUserJWT(NkeyPair signingKey, string accountId, string publicUserKey, string name, Duration expiration, String[] tags, long issuedAt, string audience)
+        public static string IssueUserJWT(NkeyPair signingKey, string accountId, string publicUserKey, string name, Duration expiration, string[] tags, long issuedAt, string audience)
         {
             return IssueUserJWT(signingKey, publicUserKey, name, expiration, issuedAt, audience, new UserClaim(accountId, tags));
         }
@@ -145,7 +145,7 @@ namespace NATS.Client.Internals
         /// <param name="audience">optional audience</param>
         /// <param name="nats">the user claim</param>
         /// <returns>a JWT</returns>
-        public static string IssueUserJWT(NkeyPair signingKey, string publicUserKey, string name, Duration expiration, long issuedAt, String audience, UserClaim nats)
+        public static string IssueUserJWT(NkeyPair signingKey, string publicUserKey, string name, Duration expiration, long issuedAt, string audience, UserClaim nats)
         {
             // Validate the signingKey:
             if (signingKey.Type != Nkeys.PrefixType.Account)
@@ -226,7 +226,7 @@ namespace NATS.Client.Internals
         /// </summary>
         /// <param name="jwt">the encoded jwt</param>
         /// <returns>the claim body json</returns>
-        public static string GetClaimBody(String jwt)
+        public static string GetClaimBody(string jwt)
         {
             return FromBase64UrlEncoded(jwt.Split('.')[1]);
         }
@@ -234,26 +234,26 @@ namespace NATS.Client.Internals
 
     public class UserClaim : JsonSerializable {
         public string IssuerAccount;            // User
-        public String[] Tags;                   // User/GenericFields
+        public string[] Tags;                   // User/GenericFields
         public string Type = "user";            // User/GenericFields
         public int Version = 2;                 // User/GenericFields
         public Permission Pub;                  // User/UserPermissionLimits/Permissions
         public Permission Sub;                  // User/UserPermissionLimits/Permissions
         public ResponsePermission Resp;         // User/UserPermissionLimits/Permissions
-        public String[] Src;                    // User/UserPermissionLimits/Limits/UserLimits
+        public string[] Src;                    // User/UserPermissionLimits/Limits/UserLimits
         public IList<TimeRange> Times;          // User/UserPermissionLimits/Limits/UserLimits
         public string Locale;                   // User/UserPermissionLimits/Limits/UserLimits
         public long Subs = JwtUtils.NoLimit;    // User/UserPermissionLimits/Limits/NatsLimits
         public long Data = JwtUtils.NoLimit;    // User/UserPermissionLimits/Limits/NatsLimits
         public long Payload = JwtUtils.NoLimit; // User/UserPermissionLimits/Limits/NatsLimits
         public bool BearerToken;                // User/UserPermissionLimits
-        public String[] AllowedConnectionTypes; // User/UserPermissionLimits
+        public string[] AllowedConnectionTypes; // User/UserPermissionLimits
     
         public UserClaim(string issuerAccount) {
             this.IssuerAccount = issuerAccount;
         }
     
-        public UserClaim(string issuerAccount, String[] tags) {
+        public UserClaim(string issuerAccount, string[] tags) {
             IssuerAccount = issuerAccount;
             Tags = tags;
         }

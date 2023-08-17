@@ -12,7 +12,6 @@
 // limitations under the License.
 
 using System;
-using System.Linq;
 using System.Net.Security;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
@@ -726,7 +725,7 @@ namespace NATS.Client
         // TODO After connect adr is complete
         internal IServerProvider ServerProvider { get => serverProvider; set => serverProvider = value; }
         
-        private void appendEventHandler(StringBuilder sb, String name, Delegate eh)
+        private void appendEventHandler(StringBuilder sb, string name, Delegate eh)
         {
             if (eh != null)
                 sb.AppendFormat("{0}={1};", name, eh.GetMethodInfo().Name);
@@ -823,7 +822,7 @@ namespace NATS.Client
         /// Returns a string representation of the
         /// value of this Options instance.
         /// </summary>
-        /// <returns>String value of this instance.</returns>
+        /// <returns>string value of this instance.</returns>
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();

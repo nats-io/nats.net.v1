@@ -11,7 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using NATS.Client;
 using NATS.Client.JetStream;
 using Xunit;
@@ -22,7 +21,7 @@ namespace UnitTests.JetStream
     {
         [Fact]
         public void IsValidAck() {
-            String json = "{\"stream\":\"test-stream\",\"seq\":42,\"domain\":\"test-domain\", \"duplicate\" : true }";
+            string json = "{\"stream\":\"test-stream\",\"seq\":42,\"domain\":\"test-domain\", \"duplicate\" : true }";
 
             PublishAck ack = new PublishAck(json);
             Assert.Equal("test-stream", ack.Stream);
@@ -33,7 +32,7 @@ namespace UnitTests.JetStream
       
         [Fact]
         public void ThrowsOnERR() {
-            String json ="{" +
+            string json ="{" +
                          "  \"type\": \"io.nats.jetstream.api.v1.pub_ack_response\"," +
                          "  \"error\": {" +
                          "    \"code\": 500," +
@@ -49,7 +48,7 @@ namespace UnitTests.JetStream
 
         [Fact]
         public void InvalidResponse() {
-            String json1 = "+OK {" +
+            string json1 = "+OK {" +
                            "\"missing_stream\":\"test\"" + "," +
                            "\"missing_seq\":\"0\"" +
                            "}";
@@ -57,7 +56,7 @@ namespace UnitTests.JetStream
             NATSException ioe = Assert.Throws<NATSException>(() => new PublishAck(json1));
             Assert.Equal("Invalid JetStream ack.", ioe.Message);
 
-            String json2 = "{\"stream\":\"test\", \"duplicate\" : true }";
+            string json2 = "{\"stream\":\"test\", \"duplicate\" : true }";
             Assert.Throws<NATSException>(() => new PublishAck(json2));
         }
     }

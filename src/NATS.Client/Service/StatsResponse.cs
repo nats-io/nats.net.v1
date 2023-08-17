@@ -20,16 +20,54 @@ using NATS.Client.JetStream;
 namespace NATS.Client.Service
 {
     /// <summary>
-    /// SERVICE IS AN EXPERIMENTAL API SUBJECT TO CHANGE
+    /// Stats response class forms the stats json payload, for example:
+    /// <code>
+    /// {
+    /// "id": "ZP1oVevzLGu4CBORMXKKke",
+    /// "name": "Service1",
+    /// "version": "0.0.1",
+    /// "endpoints": [{
+    ///     "name": "SortEndpointAscending",
+    ///     "subject": "sort.ascending",
+    ///     "num_requests": 1,
+    ///     "processing_time": 538900,
+    ///     "average_processing_time": 538900,
+    ///     "started": "2023-08-15T13:51:41.318000000Z"
+    /// }, {
+    ///     "name": "SortEndpointDescending",
+    ///     "subject": "sort.descending",
+    ///     "num_requests": 1,
+    ///     "processing_time": 88400,
+    ///     "average_processing_time": 88400,
+    ///     "started": "2023-08-15T13:51:41.318000000Z"
+    /// }, {
+    ///     "name": "EchoEndpoint",
+    ///     "subject": "echo",
+    ///     "num_requests": 5,
+    ///     "processing_time": 1931600,
+    ///     "average_processing_time": 386320,
+    ///     "data": {
+    ///          "idata": 2,
+    ///          "sdata": "s-996409223"
+    ///     },
+    ///     "started": "2023-08-15T13:51:41.318000000Z"
+    /// }],
+    /// "started": "2023-08-15T13:51:41.319000000Z",
+    /// "type": "io.nats.micro.v1.stats_response"
+    /// }
+    /// </code>
     /// </summary>
     public class StatsResponse : ServiceResponse
     {
         public const string ResponseType = "io.nats.micro.v1.stats_response";
 
+        /// <value>The time the endpoint was started (or restarted)</value>
         public DateTime Started { get; }
-        public IList<EndpointResponse> EndpointStatsList { get; }
         
-        internal StatsResponse(ServiceResponse template, DateTime started, IList<EndpointResponse> endpointStatsList) 
+        /// <value>Get the list of <see cref="EndpointStats"/></value>
+        public IList<EndpointStats> EndpointStatsList { get; }
+        
+        internal StatsResponse(ServiceResponse template, DateTime started, IList<EndpointStats> endpointStatsList) 
             :base(ResponseType, template)
         {
             Started = started;
@@ -41,7 +79,7 @@ namespace NATS.Client.Service
         internal StatsResponse(JSONNode node) : base(ResponseType, node)
         {
             Started = JsonUtils.AsDate(node[ApiConstants.Started]);
-            EndpointStatsList = EndpointResponse.ListOf(node[ApiConstants.Endpoints]);
+            EndpointStatsList = EndpointStats.ListOf(node[ApiConstants.Endpoints]);
         }
         
         public override JSONNode ToJsonNode()

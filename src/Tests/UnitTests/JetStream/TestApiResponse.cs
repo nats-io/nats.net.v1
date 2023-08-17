@@ -11,7 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using NATS.Client.JetStream;
 using Xunit;
 
@@ -34,7 +33,7 @@ namespace UnitTests.JetStream
         [Fact]
         public void MiscErrorResponsesAreUnderstood() {
             string text = ReadDataFile("ErrorResponses.json.txt");
-            String[] jsons = text.Split('~');
+            string[] jsons = text.Split('~');
 
             TestingApiResponse jsApiResp = new TestingApiResponse(jsons[0]);
             Assert.True(jsApiResp.HasError);

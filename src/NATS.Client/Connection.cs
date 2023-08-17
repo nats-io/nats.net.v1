@@ -1031,7 +1031,7 @@ namespace NATS.Client
                     clientIp = info.ClientIp;
                 }
                 
-                return !String.IsNullOrEmpty(clientIp) ? IPAddress.Parse(clientIp) : null;
+                return !string.IsNullOrEmpty(clientIp) ? IPAddress.Parse(clientIp) : null;
             }
         }
 

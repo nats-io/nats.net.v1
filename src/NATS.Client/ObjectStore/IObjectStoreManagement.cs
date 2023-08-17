@@ -11,7 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Collections.Generic;
 
 namespace NATS.Client.ObjectStore
@@ -31,7 +30,7 @@ namespace NATS.Client.ObjectStore
         /// OBJECT STORE IMPLEMENTATION IS EXPERIMENTAL AND SUBJECT TO CHANGE.
         /// </summary>
         /// <returns>list of object stores bucket names</returns>
-        IList<String> GetBucketNames();
+        IList<string> GetBucketNames();
 
         /// <summary>
         /// Gets the status for an existing object store.
@@ -50,6 +49,6 @@ namespace NATS.Client.ObjectStore
         /// Deletes an existing object store. Will throw a JetStreamApiException if the delete fails.
         /// OBJECT STORE IMPLEMENTATION IS EXPERIMENTAL AND SUBJECT TO CHANGE.
         /// </summary>
-        void Delete(String bucketName);
+        void Delete(string bucketName);
     }
 }

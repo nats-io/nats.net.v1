@@ -116,7 +116,7 @@ namespace IntegrationTestsInternal
                         .AddServiceEndpoint(seSortA1)
                         .AddServiceEndpoint(seSortD1)
                         .Build();
-                    String serviceId1 = service1.Id;
+                    string serviceId1 = service1.Id;
                     Task<bool> serviceStoppedTask1 = service1.StartService();
 
                     Service service2 = new ServiceBuilder()
@@ -127,7 +127,7 @@ namespace IntegrationTestsInternal
                         .AddServiceEndpoint(seSortA2)
                         .AddServiceEndpoint(seSortD2)
                         .Build();
-                    String serviceId2 = service2.Id;
+                    string serviceId2 = service2.Id;
                     Task<bool> serviceStoppedTask2 = service2.StartService();
 
                     Assert.NotEqual(serviceId1, serviceId2);
@@ -149,13 +149,13 @@ namespace IntegrationTestsInternal
                     InfoResponse infoResponse2 = service2.InfoResponse;
                     StatsResponse statsResponse1 = service1.GetStatsResponse();
                     StatsResponse statsResponse2 = service2.GetStatsResponse();
-                    EndpointResponse[] endpointResponseArray1 = new EndpointResponse[]
+                    EndpointStats[] endpointStatsArray1 = new EndpointStats[]
                     {
                         service1.GetEndpointStats(EchoEndpointName),
                         service1.GetEndpointStats(SortEndpointAscendingName),
                         service1.GetEndpointStats(SortEndpointDescendingName)
                     };
-                    EndpointResponse[] endpointResponseArray2 = new EndpointResponse[]
+                    EndpointStats[] endpointStatsArray2 = new EndpointStats[]
                     {
                         service2.GetEndpointStats(EchoEndpointName),
                         service2.GetEndpointStats(SortEndpointAscendingName),
@@ -176,8 +176,8 @@ namespace IntegrationTestsInternal
                     for (int x = 0; x < 3; x++)
                     {
                         Assert.Equal(requestCount,
-                            endpointResponseArray1[x].NumRequests
-                            + endpointResponseArray2[x].NumRequests);
+                            endpointStatsArray1[x].NumRequests
+                            + endpointStatsArray2[x].NumRequests);
                         Assert.Equal(requestCount,
                             statsResponse1.EndpointStatsList[x].NumRequests
                             + statsResponse2.EndpointStatsList[x].NumRequests);
@@ -234,7 +234,7 @@ namespace IntegrationTestsInternal
                         VerifyServiceResponseFields(r, exp);
                         Assert.Equal(exp.Started, r.Started);
                         for (int x = 0; x < 3; x++) {
-                            EndpointResponse es = exp.EndpointStatsList[x];
+                            EndpointStats es = exp.EndpointStatsList[x];
                             if (!es.Name.Equals(EchoEndpointName)) {
                                 // echo endpoint has data that will vary
                                 Assert.Equal(es, r.EndpointStatsList[x]);
@@ -288,7 +288,7 @@ namespace IntegrationTestsInternal
             string request = DateTime.UtcNow.ToLongDateString(); // just some random text
             string subject = group == null ? serviceSubject : group.Subject + "." + serviceSubject;
             Msg m = nc.Request(subject, Encoding.UTF8.GetBytes(request));
-            String response = Encoding.UTF8.GetString(m.Data);
+            string response = Encoding.UTF8.GetString(m.Data);
             switch (endpointName) {
                 case EchoEndpointName:
                     Assert.Equal(Echo(request), response);
@@ -353,7 +353,6 @@ namespace IntegrationTestsInternal
             Assert.Null(service.Description);
 
             service = Service.Builder().WithConnection(conn).WithName(name).WithVersion("1.0.0").AddServiceEndpoint(se)
-                .WithApiUrl("apiUrl")
                 .WithDescription("desc")
                 .WithDrainTimeoutMillis(1000)
                 .Build();
@@ -419,7 +418,7 @@ namespace IntegrationTestsInternal
                 Assert.Equal("System.Exception: handler-problem", m.Header[ServiceMsg.NatsServiceError]);
                 Assert.Equal("500", m.Header[ServiceMsg.NatsServiceErrorCode]);
                 StatsResponse sr = exService.GetStatsResponse();
-                EndpointResponse es = sr.EndpointStatsList[0];
+                EndpointStats es = sr.EndpointStatsList[0];
                 Assert.Equal(1, es.NumRequests);
                 Assert.Equal(1, es.NumErrors);
                 Assert.Equal("System.Exception: handler-problem", es.LastError);
@@ -558,7 +557,7 @@ namespace IntegrationTestsInternal
             Assert.Throws<ArgumentException>(() => Endpoint.Builder().Build());
     
             // many names are bad
-            Assert.Throws<ArgumentException>(() => new Endpoint((String) null));
+            Assert.Throws<ArgumentException>(() => new Endpoint((string) null));
             Assert.Throws<ArgumentException>(() => new Endpoint(string.Empty));
             Assert.Throws<ArgumentException>(() => new Endpoint(HasSpace));
             Assert.Throws<ArgumentException>(() => new Endpoint(HasPrintable));
@@ -581,11 +580,11 @@ namespace IntegrationTestsInternal
         }
     
         [Fact]
-        public void TestEndpointResponseConstruction()
+        public void TestEndpointStatsConstruction()
         {
             DateTime zdt = DateTime.UtcNow;
     
-            EndpointResponse er = new EndpointResponse("name", "subject", 0, 0, 0, null, null, zdt);
+            EndpointStats er = new EndpointStats("name", "subject", 0, 0, 0, null, null, zdt);
             Assert.Equal("name", er.Name);
             Assert.Equal("subject", er.Subject);
             Assert.Null(er.LastError);
@@ -597,7 +596,7 @@ namespace IntegrationTestsInternal
             Assert.Equal(zdt, er.Started);
 
             JSONNode data = new JSONString("data");
-            er = new EndpointResponse("name", "subject", 2, 4, 10, "lastError", data, zdt);
+            er = new EndpointStats("name", "subject", 2, 4, 10, "lastError", data, zdt);
             Assert.Equal("name", er.Name);
             Assert.Equal("subject", er.Subject);
             Assert.Equal("lastError", er.LastError);
@@ -618,7 +617,7 @@ namespace IntegrationTestsInternal
             Assert.Contains("\"num_errors\":4", j);
             Assert.Contains("\"processing_time\":10", j);
             Assert.Contains("\"average_processing_time\":5", j);
-            Assert.Equal(JsonUtils.ToKey(typeof(EndpointResponse)) + j, er.ToString());
+            Assert.Equal(JsonUtils.ToKey(typeof(EndpointStats)) + j, er.ToString());
         }
         
         [Fact]
@@ -794,10 +793,10 @@ namespace IntegrationTestsInternal
             Thread.Sleep(100);
             endStarteds[1] = DateTime.UtcNow;
 
-            IList<EndpointResponse> statsList = new List<EndpointResponse>();
+            IList<EndpointStats> statsList = new List<EndpointStats>();
             JSONNode[] data = new JSONNode[]{SupplyData(), SupplyData()};
-            statsList.Add(new EndpointResponse("endName0", "endSubject0", 1000, 0, 10000, "lastError0", data[0], endStarteds[0]));
-            statsList.Add(new EndpointResponse("endName1", "endSubject1", 2000, 10, 10000, "lastError1", data[1], endStarteds[1]));
+            statsList.Add(new EndpointStats("endName0", "endSubject0", 1000, 0, 10000, "lastError0", data[0], endStarteds[0]));
+            statsList.Add(new EndpointStats("endName1", "endSubject1", 2000, 10, 10000, "lastError1", data[1], endStarteds[1]));
     
             StatsResponse stat1 = new StatsResponse(pr1, serviceStarted, statsList);
             StatsResponse stat2 = new StatsResponse(stat1.ToJsonString());
@@ -811,7 +810,7 @@ namespace IntegrationTestsInternal
             Assert.Equal(serviceStarted, stat.Started);
             Assert.Equal(2, stat.EndpointStatsList.Count);
             for (int x = 0; x < 2; x++) {
-                EndpointResponse e = stat.EndpointStatsList[x];
+                EndpointStats e = stat.EndpointStatsList[x];
                 Assert.Equal("endName" + x, e.Name);
                 Assert.Equal("endSubject" + x, e.Subject);
                 long nr = x * 1000 + 1000;
