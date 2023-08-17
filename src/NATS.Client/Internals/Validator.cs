@@ -39,7 +39,7 @@ namespace NATS.Client.Internals
             }
         }
         
-        internal static void Required<TKey, TValue>(Dictionary<TKey, TValue> d, string label) {
+        internal static void Required<TKey, TValue>(IDictionary<TKey, TValue> d, string label) {
             if (d == null || d.Count == 0) {
                 throw new ArgumentException($"{label} cannot be null or empty.");
             }
