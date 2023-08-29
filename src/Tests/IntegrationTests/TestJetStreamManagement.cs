@@ -273,7 +273,15 @@ namespace IntegrationTests
                 Assert.Equal(0, si.State.Subjects.Count);
                 Assert.Equal(5, si.State.DeletedCount);
                 Assert.Empty(si.State.Deleted);
-
+                if (c.ServerInfo.IsSameOrOlderThanVersion("2.9.99")) 
+                {
+                    Assert.Equal(DateTime.MinValue, si.Timestamp);
+                }
+                else 
+                {
+                    Assert.NotEqual(DateTime.MinValue, si.Timestamp);
+                }
+                
                 si = jsm.GetStreamInfo(STREAM, 
                     StreamInfoOptions.Builder()
                         .WithAllSubjects()
@@ -818,6 +826,14 @@ namespace IntegrationTests
                 Assert.Equal(STREAM, ci.Stream);
                 Assert.Equal(DURABLE, ci.Name);
                 Assert.Throws<NATSJetStreamException>(() => jsm.GetConsumerInfo(STREAM, Durable(999)));
+                if (c.ServerInfo.IsSameOrOlderThanVersion("2.9.99")) 
+                {
+                    Assert.Equal(DateTime.MinValue, ci.Timestamp);
+                }
+                else 
+                {
+                    Assert.NotEqual(DateTime.MinValue, ci.Timestamp);
+                }
             });
         }
 

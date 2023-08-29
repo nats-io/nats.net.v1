@@ -25,6 +25,7 @@ namespace UnitTests.JetStream
             string json = ReadDataFile("StreamInfo.json");
             StreamInfo si = new StreamInfo(json, false);
             Assert.Equal(AsDateTime("2021-01-25T20:09:10.6225191Z"), si.Created);
+            Assert.Equal(AsDateTime("2023-08-29T19:33:21.163377Z"), si.Timestamp);
             
             // StreamConfiguration Config
             Assert.Equal("streamName", si.Config.Name);
