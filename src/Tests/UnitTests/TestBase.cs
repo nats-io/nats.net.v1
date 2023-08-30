@@ -15,6 +15,7 @@ using System;
 using System.IO;
 using System.Text;
 using NATS.Client;
+using NATS.Client.Internals;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -120,19 +121,23 @@ namespace UnitTests
         public const string KEY = "key";
         public const string DATA = "data";
         
-        public static string Stream(object seq)
-        {
-            return $"{STREAM}-{seq}";
+        public static String Variant(object variant) {
+            return variant == null ? Nuid.NextGlobalSequence() : variant.ToString();
         }
 
-        public static string Field(string field, object seq)
+        public static string Stream(object seq = null)
         {
-            return $"{field}-{seq}";
+            return $"{STREAM}-{Variant(seq)}";
         }
 
-        public static string Subject(object seq)
+        public static string Field(string field, object seq = null)
         {
-            return $"{SUBJECT}-{seq}";
+            return $"{field}-{Variant(seq)}";
+        }
+
+        public static string Subject(object seq = null)
+        {
+            return $"{SUBJECT}-{Variant(seq)}";
         }
 
         public static string SubjectDot(string afterDot)
@@ -140,59 +145,59 @@ namespace UnitTests
             return $"{SUBJECT}.{afterDot}";
         }
 
-        public static string Queue(object seq)
+        public static string Queue(object seq = null)
         {
-            return $"{QUEUE}-{seq}";
+            return $"{QUEUE}-{Variant(seq)}";
         }
 
-        public static string Durable(object seq)
+        public static string Durable(object seq = null)
         {
-            return $"{DURABLE}-{seq}";
+            return $"{DURABLE}-{Variant(seq)}";
         }
 
-        public static string Durable(string vary, object seq)
+        public static string Durable(string vary, object seq = null)
         {
-            return $"{DURABLE}-{vary}-{seq}";
+            return $"{DURABLE}-{vary}-{Variant(seq)}";
         }
 
-        public static string Name(object seq)
+        public static string Name(object seq = null)
         {
-            return $"{NAME}-{seq}";
+            return $"{NAME}-{Variant(seq)}";
         }
 
-        public static string Deliver(object seq)
+        public static string Deliver(object seq = null)
         {
-            return $"{DELIVER}-{seq}";
+            return $"{DELIVER}-{Variant(seq)}";
         }
 
-        public static string Bucket(object seq)
+        public static string Bucket(object seq = null)
         {
-            return $"{BUCKET}-{seq}";
+            return $"{BUCKET}-{Variant(seq)}";
         }
 
-        public static string Key(object seq)
+        public static string Key(object seq = null)
         {
-            return $"{KEY}-{seq}";
+            return $"{KEY}-{Variant(seq)}";
         }
 
-        public static string Mrrr(object seq)
+        public static string Mrrr(object seq = null)
         {
-            return $"{MIRROR}-{seq}";
+            return $"{MIRROR}-{Variant(seq)}";
         }
 
-        public static string Src(object seq)
+        public static string Src(object seq = null)
         {
-            return $"{SOURCE}-{seq}";
+            return $"{SOURCE}-{Variant(seq)}";
         }
 
-        public static string MessageId(object seq)
+        public static string MessageId(object seq = null)
         {
-            return $"{MESSAGE_ID}-{seq}";
+            return $"{MESSAGE_ID}-{Variant(seq)}";
         }
 
-        public static string Data(object seq)
+        public static string Data(object seq = null)
         {
-            return $"{DATA}-{seq}";
+            return $"{DATA}-{Variant(seq)}";
         }
 
         public static byte[] DataBytes()
@@ -200,7 +205,7 @@ namespace UnitTests
             return Encoding.ASCII.GetBytes(DATA);
         }
 
-        public static byte[] DataBytes(object seq)
+        public static byte[] DataBytes(object seq = null)
         {
             return Encoding.ASCII.GetBytes(Data(seq));
         }
