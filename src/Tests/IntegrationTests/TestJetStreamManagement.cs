@@ -298,6 +298,7 @@ namespace IntegrationTests
                 {
                     Assert.NotEqual(DateTime.MinValue, si.Timestamp);
                 }
+                Assert.Equal(1U, si.Config.FirstSequence);
                 
                 si = jsm.GetStreamInfo(STREAM, 
                     StreamInfoOptions.Builder()
