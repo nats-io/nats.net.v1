@@ -49,6 +49,7 @@ namespace NATS.Client.JetStream
         public bool DenyPurge { get; }
         public bool DiscardNewPerSubject { get; }
         public IDictionary<string, string> Metadata { get; }
+        public ulong FirstSequence { get; private set; }
 
         [Obsolete("MaxMsgSize was mistakenly renamed in a previous change.", false)]
         public long MaxValueSize => MaxMsgSize;
@@ -85,6 +86,7 @@ namespace NATS.Client.JetStream
             DenyPurge = scNode[ApiConstants.DenyPurge].AsBool;
             DiscardNewPerSubject = scNode[ApiConstants.DiscardNewPerSubject].AsBool;
             Metadata = JsonUtils.StringStringDictionary(scNode, ApiConstants.Metadata);
+            FirstSequence = AsUlongOr(scNode, ApiConstants.FirstSequence, 1U);
         }
         
         private StreamConfiguration(StreamConfigurationBuilder builder)
@@ -117,6 +119,7 @@ namespace NATS.Client.JetStream
             DenyPurge = builder._denyPurge;
             DiscardNewPerSubject = builder._discardNewPerSubject;
             Metadata = builder._metadata;
+            FirstSequence = builder._firstSequence;
         }
 
         public override JSONNode ToJsonNode()
@@ -150,6 +153,7 @@ namespace NATS.Client.JetStream
             AddField(o, ApiConstants.DenyPurge, DenyPurge);
             AddField(o, ApiConstants.DiscardNewPerSubject, DiscardNewPerSubject);
             AddField(o, ApiConstants.Metadata, Metadata);
+            AddFieldWhenGreaterThan(o, ApiConstants.FirstSequence, FirstSequence, 1);
             return o;
         }
 
@@ -193,42 +197,46 @@ namespace NATS.Client.JetStream
             internal bool _denyPurge;
             internal bool _discardNewPerSubject;
             internal Dictionary<string, string> _metadata = new Dictionary<string, string>();
+            internal ulong _firstSequence;
 
             public StreamConfigurationBuilder() {}
             
             public StreamConfigurationBuilder(StreamConfiguration sc)
             {
-                if (sc == null) return;
-                _name = sc.Name;
-                _description = sc.Description;
-                WithSubjects(sc.Subjects); // handles null
-                _retentionPolicy = sc.RetentionPolicy;
-                _maxConsumers = sc.MaxConsumers;
-                _maxMsgs = sc.MaxMsgs;
-                _maxMsgsPerSubject = sc.MaxMsgsPerSubject;
-                _maxBytes = sc.MaxBytes;
-                _maxAge = sc.MaxAge;
-                _maxMsgSize = sc.MaxMsgSize;
-                _storageType = sc.StorageType;
-                _replicas = sc.Replicas;
-                _noAck = sc.NoAck;
-                _templateOwner = sc.TemplateOwner;
-                _discardPolicy = sc.DiscardPolicy;
-                _duplicateWindow = sc.DuplicateWindow;
-                _placement = sc.Placement;
-                _republish = sc.Republish;
-                _mirror = sc.Mirror;
-                WithSources(sc.Sources);
-                _sealed = sc.Sealed;
-                _allowRollup = sc.AllowRollup;
-                _allowDirect = sc.AllowDirect;
-                _mirrorDirect = sc.MirrorDirect;
-                _denyDelete = sc.DenyDelete;
-                _denyPurge = sc.DenyPurge;
-                _discardNewPerSubject = sc.DiscardNewPerSubject;
-                foreach (string key in sc.Metadata.Keys)
+                if (sc != null)
                 {
-                    _metadata[key] = sc.Metadata[key];
+                    _name = sc.Name;
+                    _description = sc.Description;
+                    WithSubjects(sc.Subjects); // handles null
+                    _retentionPolicy = sc.RetentionPolicy;
+                    _maxConsumers = sc.MaxConsumers;
+                    _maxMsgs = sc.MaxMsgs;
+                    _maxMsgsPerSubject = sc.MaxMsgsPerSubject;
+                    _maxBytes = sc.MaxBytes;
+                    _maxAge = sc.MaxAge;
+                    _maxMsgSize = sc.MaxMsgSize;
+                    _storageType = sc.StorageType;
+                    _replicas = sc.Replicas;
+                    _noAck = sc.NoAck;
+                    _templateOwner = sc.TemplateOwner;
+                    _discardPolicy = sc.DiscardPolicy;
+                    _duplicateWindow = sc.DuplicateWindow;
+                    _placement = sc.Placement;
+                    _republish = sc.Republish;
+                    _mirror = sc.Mirror;
+                    WithSources(sc.Sources);
+                    _sealed = sc.Sealed;
+                    _allowRollup = sc.AllowRollup;
+                    _allowDirect = sc.AllowDirect;
+                    _mirrorDirect = sc.MirrorDirect;
+                    _denyDelete = sc.DenyDelete;
+                    _denyPurge = sc.DenyPurge;
+                    _discardNewPerSubject = sc.DiscardNewPerSubject;
+                    _firstSequence = sc.FirstSequence;
+                    foreach (string key in sc.Metadata.Keys)
+                    {
+                        _metadata[key] = sc.Metadata[key];
+                    }
                 }
             }
 
@@ -613,7 +621,17 @@ namespace NATS.Client.JetStream
                 _discardNewPerSubject = discardNewPerSubject;
                 return this;
             }
-
+            
+            /// <summary>
+            /// Sets the first sequence to be used. 1 is the default. 0 is treated as 1.
+            /// </summary>
+            /// <param name="firstSequence">specify the first_seq in the stream config when creating the stream.</param>
+            /// <returns></returns>
+            public StreamConfigurationBuilder WithFirstSequence(ulong firstSequence) {
+                _firstSequence = firstSequence == 0 ? 1 : firstSequence;
+                return this;
+            }
+            
             /// <summary>
             /// Set this stream to be sealed. This is irreversible.
             /// </summary>

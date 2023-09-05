@@ -26,6 +26,7 @@ namespace NATS.Client.JetStream
         public ClusterInfo ClusterInfo { get; private set; }
         public MirrorInfo MirrorInfo { get; private set; }
         public List<SourceInfo> SourceInfos { get; private set; }
+        public DateTime Timestamp { get; private set; }
 
         internal StreamInfo(Msg msg, bool throwOnError) : base(msg, throwOnError)
         {
@@ -50,12 +51,14 @@ namespace NATS.Client.JetStream
             ClusterInfo = ClusterInfo.OptionalInstance(siNode[ApiConstants.Cluster]);
             MirrorInfo = MirrorInfo.OptionalInstance(siNode[ApiConstants.Mirror]);
             SourceInfos = SourceInfo.OptionalListOf(siNode[ApiConstants.Sources]);
+            Timestamp = AsDate(siNode[ApiConstants.Timestamp]);
         }
 
         public override string ToString()
         {
             return "StreamInfo{" +
                    "Created=" + Created +
+                   "Timestamp=" + Timestamp +
                    ", " + ObjectString("StreamConfiguration", Config) +
                    ", " + ObjectString("StreamState", State) +
                    ", " + ObjectString("ClusterInfo", ClusterInfo) +

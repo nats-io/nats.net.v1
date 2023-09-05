@@ -32,6 +32,7 @@ namespace NATS.Client.JetStream
         public ClusterInfo ClusterInfo { get; private set; }
         public bool PushBound { get; private set; }
         public ulong CalculatedPending => NumPending + Delivered.ConsumerSeq;
+        public DateTime Timestamp { get; private set; }
 
         internal ConsumerInfo(Msg msg, bool throwOnError) : base(msg, throwOnError)
         {
@@ -62,6 +63,7 @@ namespace NATS.Client.JetStream
             NumRedelivered = ciNode[ApiConstants.NumRedelivered].AsLong;
             ClusterInfo = ClusterInfo.OptionalInstance(ciNode[ApiConstants.Cluster]);
             PushBound = ciNode[ApiConstants.PushBound].AsBool;
+            Timestamp = AsDate(ciNode[ApiConstants.Timestamp]);
         }
 
         public override string ToString()
@@ -75,6 +77,7 @@ namespace NATS.Client.JetStream
                    ", NumRedelivered=" + NumRedelivered +
                    ", PushBound=" + PushBound +
                    ", Created=" + Created +
+                   ", Timestamp=" + Timestamp +
                    ", Delivered=" + Delivered +
                    ", AckFloor=" + AckFloor +
                    ", " + ObjectString("ClusterInfo", ClusterInfo) +

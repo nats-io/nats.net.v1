@@ -67,6 +67,7 @@ namespace UnitTests.JetStream
                     .WithDenyPurge(testSc.DenyPurge)
                     .WithDiscardNewPerSubject(testSc.DiscardNewPerSubject)
                     .WithMetadata(metadata)
+                    .WithFirstSequence(82942U)
                 ;
             Validate(builder.Build(), false);
             Validate(builder.AddSources((Source)null).Build(), false);
@@ -299,6 +300,8 @@ namespace UnitTests.JetStream
 
                     Assert.Single(sc.Metadata);
                     Assert.Equal("meta-bar", sc.Metadata["meta-foo"]);
+                    Assert.Equal(82942U, sc.FirstSequence);
+
                 }
             }
         }

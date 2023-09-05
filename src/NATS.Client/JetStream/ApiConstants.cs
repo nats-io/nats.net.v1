@@ -67,7 +67,7 @@ namespace NATS.Client.JetStream
         internal const string External = "external";
         internal const string Filter = "filter";
         internal const string FilterSubject = "filter_subject";
-        internal const string FirstSeq = "first_seq";
+        internal const string FirstSequence = "first_seq";
         internal const string FirstTs = "first_ts";
         internal const string FlowControl = "flow_control";
         internal const string Go = "go";
@@ -181,6 +181,7 @@ namespace NATS.Client.JetStream
         internal const string TemplateOwner = "template_owner";
         internal const string Tiers = "tiers";
         internal const string Time = "time";
+        internal const string Timestamp = "ts";
         internal const string Tls = "tls_required";
         internal const string Total = "total";
         internal const string Type = "type";
