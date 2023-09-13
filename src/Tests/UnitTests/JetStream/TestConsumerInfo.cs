@@ -27,6 +27,8 @@ namespace UnitTests.JetStream
             ConsumerInfo ci = new ConsumerInfo(json, false);
             Assert.Equal("foo-stream", ci.Stream);
             Assert.Equal("foo-consumer", ci.Name);
+            Assert.Equal(AsDateTime("2020-11-05T19:33:21.163377Z"), ci.Created);
+            Assert.Equal(AsDateTime("2023-08-29T19:33:21.163377Z"), ci.Timestamp);
             
             SequencePair sp = ci.Delivered;
             Assert.Equal(1u, sp.ConsumerSeq);

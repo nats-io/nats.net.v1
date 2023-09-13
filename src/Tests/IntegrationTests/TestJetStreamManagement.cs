@@ -34,8 +34,9 @@ namespace IntegrationTests
             {
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
 
+                String stream = Stream();
                 StreamConfiguration sc = StreamConfiguration.Builder()
-                    .WithName(STREAM)
+                    .WithName(stream)
                     .WithStorageType(StorageType.Memory)
                     .WithSubjects(Subject(0), Subject(1))
                     .Build();
@@ -43,7 +44,7 @@ namespace IntegrationTests
                 StreamInfo si = jsm.AddStream(sc);
                 Assert.NotNull(si.Config);
                 sc = si.Config;
-                Assert.Equal(STREAM, sc.Name);
+                Assert.Equal(stream, sc.Name);
 
                 Assert.Equal(2, sc.Subjects.Count);
                 Assert.Equal(Subject(0), sc.Subjects[0]);
@@ -59,6 +60,7 @@ namespace IntegrationTests
                 Assert.Equal(-1, sc.MaxBytes);
                 Assert.Equal(-1, sc.MaxMsgSize);
                 Assert.Equal(1, sc.Replicas);
+                Assert.Equal(1U, sc.FirstSequence);
 
                 Assert.Equal(Duration.Zero, sc.MaxAge);
                 Assert.Equal(Duration.OfSeconds(120), sc.DuplicateWindow);
@@ -71,6 +73,21 @@ namespace IntegrationTests
                 Assert.Equal(0u, ss.FirstSeq);
                 Assert.Equal(0u, ss.LastSeq);
                 Assert.Equal(0u, ss.ConsumerCount);
+
+                IJetStream js = c.CreateJetStreamContext();
+                if (c.ServerInfo.IsNewerVersionThan("2.9.99")) {
+                    stream = Stream();
+                    sc = StreamConfiguration.Builder()
+                        .WithName(stream)
+                        .WithStorageType(StorageType.Memory)
+                        .WithFirstSequence(42)
+                        .WithSubjects("test-first-seq").Build();
+                    si = jsm.AddStream(sc);
+                    Assert.True(si.Timestamp > DateTime.MinValue);
+                    Assert.Equal(42U, si.Config.FirstSequence);
+                    PublishAck pa = js.Publish("test-first-seq", null);
+                    Assert.Equal(42U, pa.Seq);
+                }
             });
         }
 
@@ -273,7 +290,16 @@ namespace IntegrationTests
                 Assert.Equal(0, si.State.Subjects.Count);
                 Assert.Equal(5, si.State.DeletedCount);
                 Assert.Empty(si.State.Deleted);
-
+                if (c.ServerInfo.IsSameOrOlderThanVersion("2.9.99")) 
+                {
+                    Assert.Equal(DateTime.MinValue, si.Timestamp);
+                }
+                else 
+                {
+                    Assert.NotEqual(DateTime.MinValue, si.Timestamp);
+                }
+                Assert.Equal(1U, si.Config.FirstSequence);
+                
                 si = jsm.GetStreamInfo(STREAM, 
                     StreamInfoOptions.Builder()
                         .WithAllSubjects()
@@ -818,6 +844,14 @@ namespace IntegrationTests
                 Assert.Equal(STREAM, ci.Stream);
                 Assert.Equal(DURABLE, ci.Name);
                 Assert.Throws<NATSJetStreamException>(() => jsm.GetConsumerInfo(STREAM, Durable(999)));
+                if (c.ServerInfo.IsSameOrOlderThanVersion("2.9.99")) 
+                {
+                    Assert.Equal(DateTime.MinValue, ci.Timestamp);
+                }
+                else 
+                {
+                    Assert.NotEqual(DateTime.MinValue, ci.Timestamp);
+                }
             });
         }
 

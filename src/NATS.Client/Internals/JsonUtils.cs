@@ -47,6 +47,12 @@ namespace NATS.Client.Internals
             return possible.IsNumber ? possible.AsUlong : 0;
         }
 
+        public static ulong AsUlongOr(JSONNode node, string field, ulong dflt)
+        {
+            JSONNode possible = node[field];
+            return possible.IsNumber ? possible.AsUlong : dflt;
+        }
+
         public static Duration AsDuration(JSONNode node, string field, Duration dflt)
         {
             if (dflt == null)
@@ -346,6 +352,14 @@ namespace NATS.Client.Internals
         public static void AddField(JSONObject o, string field, ulong value)
         {
             o[field] = value;
+        }
+
+        public static void AddFieldWhenGreaterThan(JSONObject o, string field, ulong value, ulong gt)
+        {
+            if (value > gt)
+            {
+                o[field] = value;
+            }
         }
 
         public static void AddField(JSONObject o, string field, ulong? value)

@@ -42,7 +42,7 @@ namespace NATS.Client.JetStream
         {
             Messages = streamState[ApiConstants.Messages].AsUlong;
             Bytes = streamState[ApiConstants.Bytes].AsUlong;
-            FirstSeq = streamState[ApiConstants.FirstSeq].AsUlong;
+            FirstSeq = streamState[ApiConstants.FirstSequence].AsUlong;
             LastSeq = streamState[ApiConstants.LastSeq].AsUlong;
             ConsumerCount = streamState[ApiConstants.ConsumerCount].AsLong;
             SubjectCount = streamState[ApiConstants.NumSubjects].AsLong;
