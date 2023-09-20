@@ -81,10 +81,12 @@ namespace IntegrationTests
                         .WithName(stream)
                         .WithStorageType(StorageType.Memory)
                         .WithFirstSequence(42)
+                        .WithCompressionOption(CompressionOption.S2)
                         .WithSubjects("test-first-seq").Build();
                     si = jsm.AddStream(sc);
                     Assert.True(si.Timestamp > DateTime.MinValue);
                     Assert.Equal(42U, si.Config.FirstSequence);
+                    Assert.Equal(CompressionOption.S2, si.Config.CompressionOption);
                     PublishAck pa = js.Publish("test-first-seq", null);
                     Assert.Equal(42U, pa.Seq);
                 }
@@ -237,7 +239,13 @@ namespace IntegrationTests
                 StreamConfiguration scRetention = GetTestStreamConfigurationBuilder()
                     .WithRetentionPolicy(RetentionPolicy.Interest)
                     .Build();
-                Assert.Throws<NATSJetStreamException>(() => jsm.UpdateStream(scRetention));
+                if (c.ServerInfo.IsOlderThanVersion("2.10.0")) {
+                    // cannot change RetentionPolicy
+                    Assert.Throws<NATSJetStreamException>(() => jsm.UpdateStream(scRetention));
+                }
+                else {
+                    jsm.UpdateStream(scRetention);
+                }
             });
         }
 
@@ -798,9 +806,21 @@ namespace IntegrationTests
                 
                 ConsumerConfiguration.ConsumerConfigurationBuilder builder = ConsumerConfiguration.Builder().WithDurable(DURABLE);
                 jsm.AddOrUpdateConsumer(STREAM, builder.WithFilterSubject(SUBJECT).Build());
-                
-                Assert.Throws<NATSJetStreamException>(() => jsm.AddOrUpdateConsumer(STREAM,
-                    builder.WithFilterSubject(SubjectDot("not-match")).Build()));
+                IList<ConsumerInfo> cis = jsm.GetConsumers(STREAM);
+                Assert.Equal(SUBJECT, cis[0].ConsumerConfiguration.FilterSubject);
+
+                if (c.ServerInfo.IsSameOrOlderThanVersion("2.9.99"))
+                {
+                    Assert.Throws<NATSJetStreamException>(() => jsm.AddOrUpdateConsumer(STREAM,
+                        builder.WithFilterSubject(SubjectDot("not-match")).Build()));
+                }
+                else
+                {
+                    // 2.10 and later you can set the filter to something that does not match
+                    jsm.AddOrUpdateConsumer(STREAM, builder.WithFilterSubject(SubjectDot("two-ten-allows-not-matching")).Build());
+                    cis = jsm.GetConsumers(STREAM);
+                    Assert.Equal(SubjectDot("two-ten-allows-not-matching"),  cis[0].ConsumerConfiguration.FilterSubject);
+                }
 
                 // wildcard subject
                 jsm.DeleteStream(STREAM);

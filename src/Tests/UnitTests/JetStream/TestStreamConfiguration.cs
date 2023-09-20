@@ -32,19 +32,20 @@ namespace UnitTests.JetStream
         {
             StreamConfiguration testSc = GetTestConfiguration();
             // from json
-            Validate(testSc, false);
+            Validate(testSc, false, CompressionOption.S2);
 
             // Validate(new StreamConfiguration(testSc.ToJsonNode()));
-            Validate(new StreamConfiguration(testSc.ToJsonNode().ToString()), false);
+            Validate(new StreamConfiguration(testSc.ToJsonNode().ToString()), false, CompressionOption.S2);
 
             StreamConfiguration.StreamConfigurationBuilder builder = StreamConfiguration.Builder(testSc);
-            Validate(builder.Build(), false);
+            Validate(builder.Build(), false, CompressionOption.S2);
             
             Dictionary<string, string> metadata = new Dictionary<string, string>(); metadata["meta-foo"] = "meta-bar";
 
             builder.WithName(testSc.Name)
                     .WithSubjects(testSc.Subjects)
                     .WithRetentionPolicy(testSc.RetentionPolicy)
+                    .WithCompressionOption(testSc.CompressionOption)
                     .WithMaxConsumers(testSc.MaxConsumers)
                     .WithMaxMessages(testSc.MaxMsgs)
                     .WithMaxMessagesPerSubject(testSc.MaxMsgsPerSubject)
@@ -69,14 +70,14 @@ namespace UnitTests.JetStream
                     .WithMetadata(metadata)
                     .WithFirstSequence(82942U)
                 ;
-            Validate(builder.Build(), false);
-            Validate(builder.AddSources((Source)null).Build(), false);
+            Validate(builder.Build(), false, CompressionOption.S2);
+            Validate(builder.AddSources((Source)null).Build(), false, CompressionOption.S2);
 
             List<Source> sources = new List<Source>(testSc.Sources);
             sources.Add(null);
             Source copy = new Source(sources[0].ToJsonNode());
             sources.Add(copy);
-            Validate(builder.AddSources(sources).Build(), false);
+            Validate(builder.AddSources(sources).Build(), false, CompressionOption.S2);
             
             // covering add a single source
             sources = new List<Source>(testSc.Sources);
@@ -86,7 +87,7 @@ namespace UnitTests.JetStream
                 builder.AddSource(source);
             }
             builder.AddSource(sources[0]);
-            Validate(builder.Build(), false);
+            Validate(builder.Build(), false, CompressionOption.S2);
         }
 
         [Fact]
@@ -204,14 +205,35 @@ namespace UnitTests.JetStream
             StreamConfiguration.StreamConfigurationBuilder builder = StreamConfiguration.Builder();
             Assert.Equal(RetentionPolicy.Limits, builder.Build().RetentionPolicy);
 
+            builder.WithRetentionPolicy(RetentionPolicy.Limits);
+            Assert.Equal(RetentionPolicy.Limits, builder.Build().RetentionPolicy);
+
+            builder.WithRetentionPolicy(null);
+            Assert.Equal(RetentionPolicy.Limits, builder.Build().RetentionPolicy);
+
             builder.WithRetentionPolicy(RetentionPolicy.Interest);
             Assert.Equal(RetentionPolicy.Interest, builder.Build().RetentionPolicy);
 
             builder.WithRetentionPolicy(RetentionPolicy.WorkQueue);
             Assert.Equal(RetentionPolicy.WorkQueue, builder.Build().RetentionPolicy);
+        }
 
-            builder.WithRetentionPolicy(null);
-            Assert.Equal(RetentionPolicy.Limits, builder.Build().RetentionPolicy);
+        [Fact]
+        public void TestCompressionOption()
+        {
+            StreamConfiguration.StreamConfigurationBuilder builder = StreamConfiguration.Builder();
+            Assert.Equal(CompressionOption.None, builder.Build().CompressionOption);
+
+            builder.WithCompressionOption(CompressionOption.None);
+            Assert.Equal(CompressionOption.None, builder.Build().CompressionOption);
+
+            builder.WithCompressionOption(null);
+            Assert.Equal(CompressionOption.None, builder.Build().CompressionOption);
+            Assert.DoesNotContain("\"compression\"", builder.Build().ToJsonString());
+
+            builder.WithCompressionOption(CompressionOption.S2);
+            Assert.Equal(CompressionOption.S2, builder.Build().CompressionOption);
+            Assert.Contains("\"compression\":\"s2\"", builder.Build().ToJsonString());
         }
 
         [Fact]
@@ -238,7 +260,7 @@ namespace UnitTests.JetStream
             Assert.Equal(DiscardPolicy.Old, builder.Build().DiscardPolicy);
         }
 
-        private void Validate(StreamConfiguration sc, bool serverTest)
+        private void Validate(StreamConfiguration sc, bool serverTest, CompressionOption compressionOption)
         {
             {
                 Assert.Equal("sname", sc.Name);
@@ -247,6 +269,8 @@ namespace UnitTests.JetStream
                     item => item.Equals("foo"),
                     item => item.Equals("bar"),
                     item => item.Equals("repub.>"));
+
+                Assert.Equal(compressionOption, sc.CompressionOption);
 
                 Assert.Equal(RetentionPolicy.Interest, sc.RetentionPolicy);
                 Assert.Equal(730, sc.MaxConsumers);
