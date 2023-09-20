@@ -40,6 +40,7 @@ namespace NATS.Client.JetStream
         public Duration DuplicateWindow { get; }
         public Placement Placement { get; }
         public Republish Republish { get; }
+        public SubjectTransform SubjectTransform { get; }
         public Mirror Mirror { get; }
         public List<Source> Sources { get; }
         public bool Sealed { get; }
@@ -78,6 +79,7 @@ namespace NATS.Client.JetStream
             DuplicateWindow = AsDuration(scNode, ApiConstants.DuplicateWindow, Duration.Zero);
             Placement = Placement.OptionalInstance(scNode[ApiConstants.Placement]);
             Republish = Republish.OptionalInstance(scNode[ApiConstants.Republish]);
+            SubjectTransform = SubjectTransform.OptionalInstance(scNode[ApiConstants.SubjectTransform]);
             Mirror = Mirror.OptionalInstance(scNode[ApiConstants.Mirror]);
             Sources = Source.OptionalListOf(scNode[ApiConstants.Sources]);
             Sealed = scNode[ApiConstants.Sealed].AsBool;
@@ -112,6 +114,7 @@ namespace NATS.Client.JetStream
             DuplicateWindow = builder._duplicateWindow;
             Placement = builder._placement;
             Republish = builder._republish;
+            SubjectTransform = builder._subjectTransform;
             Mirror = builder._mirror;
             Sources = builder._sources;
             Sealed = builder._sealed;
@@ -150,6 +153,7 @@ namespace NATS.Client.JetStream
             AddField(o, ApiConstants.DuplicateWindow, DuplicateWindow.Nanos);
             AddField(o, ApiConstants.Placement, Placement?.ToJsonNode());
             AddField(o, ApiConstants.Republish, Republish?.ToJsonNode());
+            AddField(o, ApiConstants.SubjectTransform, SubjectTransform?.ToJsonNode());
             AddField(o, ApiConstants.Mirror, Mirror?.ToJsonNode());
             AddField(o, ApiConstants.Sources, Sources);
             AddField(o, ApiConstants.Sealed, Sealed);
@@ -195,6 +199,7 @@ namespace NATS.Client.JetStream
             internal Duration _duplicateWindow = Duration.Zero;
             internal Placement _placement;
             internal Republish _republish;
+            internal SubjectTransform _subjectTransform;
             internal Mirror _mirror;
             internal readonly List<Source> _sources = new List<Source>();
             internal bool _sealed;
@@ -232,6 +237,7 @@ namespace NATS.Client.JetStream
                     _duplicateWindow = sc.DuplicateWindow;
                     _placement = sc.Placement;
                     _republish = sc.Republish;
+                    _subjectTransform = sc.SubjectTransform;
                     _mirror = sc.Mirror;
                     WithSources(sc.Sources);
                     _sealed = sc.Sealed;
@@ -504,6 +510,16 @@ namespace NATS.Client.JetStream
             /// <returns>The StreamConfigurationBuilder</returns>
             public StreamConfigurationBuilder WithRepublish(Republish republish) {
                 _republish = republish;
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the subjectTransform object
+            /// </summary>
+            /// <param name="subjectTransform">the subjectTransform object</param>
+            /// <returns>The StreamConfigurationBuilder</returns>
+            public StreamConfigurationBuilder WithSubjectTransform(SubjectTransform subjectTransform) {
+                _subjectTransform = subjectTransform;
                 return this;
             }
 

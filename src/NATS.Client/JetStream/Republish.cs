@@ -57,6 +57,8 @@ namespace NATS.Client.JetStream
         /// <param name="headersOnly">Whether to RePublish only headers (no body)</param>
         public Republish(string source, string destination, bool headersOnly)
         {
+            Validator.Required(source, "Source");
+            Validator.Required(destination, "Destination");
             Source = source;
             Destination = destination;
             HeadersOnly = headersOnly;
@@ -64,9 +66,11 @@ namespace NATS.Client.JetStream
 
         public override JSONNode ToJsonNode()
         {
-            JSONObject o = new JSONObject();
-            o[ApiConstants.Src] = Source;
-            o[ApiConstants.Dest] = Destination;
+            JSONObject o = new JSONObject
+            {
+                [ApiConstants.Src] = Source,
+                [ApiConstants.Dest] = Destination
+            };
             AddField(o, ApiConstants.HeadersOnly, HeadersOnly);
             return o;
         }
@@ -122,8 +126,6 @@ namespace NATS.Client.JetStream
             /// </summary>
             /// <returns>The Republish</returns>
             public Republish Build() {
-                Validator.Required(_source, "Source");
-                Validator.Required(_destination, "Destination");
                 return new Republish(_source, _destination, _headersOnly);
             }
         }
