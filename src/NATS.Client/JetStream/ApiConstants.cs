@@ -33,6 +33,7 @@ namespace NATS.Client.JetStream
         internal const string ClientIp = "client_ip";
         internal const string Cluster = "cluster";
         internal const string Code = "code";
+        internal const string Compression = "compression";
         internal const string Config = "config";
         internal const string ConnectUrls = "connect_urls";
         internal const string ConsumerCount = "consumer_count";

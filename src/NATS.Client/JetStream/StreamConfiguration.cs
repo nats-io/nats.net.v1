@@ -25,6 +25,7 @@ namespace NATS.Client.JetStream
         public string Description { get; }
         public List<string> Subjects { get; }
         public RetentionPolicy RetentionPolicy { get; }
+        public CompressionOption CompressionOption { get; }
         public long MaxConsumers { get; }
         public long MaxMsgs { get; }
         public long MaxMsgsPerSubject { get; }
@@ -59,6 +60,7 @@ namespace NATS.Client.JetStream
         internal StreamConfiguration(JSONNode scNode)
         {
             RetentionPolicy = ApiEnums.GetValueOrDefault(scNode[ApiConstants.Retention].Value,RetentionPolicy.Limits);
+            CompressionOption = ApiEnums.GetValueOrDefault(scNode[ApiConstants.Compression].Value,CompressionOption.None);
             StorageType = ApiEnums.GetValueOrDefault(scNode[ApiConstants.Storage].Value,StorageType.File);
             DiscardPolicy = ApiEnums.GetValueOrDefault(scNode[ApiConstants.Discard].Value,DiscardPolicy.Old);
             Name = scNode[ApiConstants.Name].Value;
@@ -95,6 +97,7 @@ namespace NATS.Client.JetStream
             Description = builder._description; 
             Subjects = builder._subjects;
             RetentionPolicy = builder._retentionPolicy;
+            CompressionOption = builder._compressionOption;
             MaxConsumers = builder._maxConsumers;
             MaxMsgs = builder._maxMsgs;
             MaxMsgsPerSubject = builder._maxMsgsPerSubject;
@@ -126,6 +129,10 @@ namespace NATS.Client.JetStream
         {
             JSONObject o = new JSONObject();
             AddField(o, ApiConstants.Retention, RetentionPolicy.GetString());
+            if (CompressionOption != CompressionOption.None)
+            {
+                AddField(o, ApiConstants.Compression, CompressionOption.GetString());
+            }
             AddField(o, ApiConstants.Storage, StorageType.GetString());
             AddField(o, ApiConstants.Discard, DiscardPolicy.GetString());
             AddField(o, ApiConstants.Name, Name);
@@ -173,6 +180,7 @@ namespace NATS.Client.JetStream
             internal string _description;
             internal readonly List<string> _subjects = new List<string>();
             internal RetentionPolicy _retentionPolicy = RetentionPolicy.Limits;
+            internal CompressionOption _compressionOption = CompressionOption.None;
             internal long _maxConsumers = -1;
             internal long _maxMsgs = -1;
             internal long _maxMsgsPerSubject = -1;
@@ -209,6 +217,7 @@ namespace NATS.Client.JetStream
                     _description = sc.Description;
                     WithSubjects(sc.Subjects); // handles null
                     _retentionPolicy = sc.RetentionPolicy;
+                    _compressionOption = sc.CompressionOption;
                     _maxConsumers = sc.MaxConsumers;
                     _maxMsgs = sc.MaxMsgs;
                     _maxMsgsPerSubject = sc.MaxMsgsPerSubject;
@@ -320,6 +329,16 @@ namespace NATS.Client.JetStream
             /// <returns>The StreamConfigurationBuilder</returns>
             public StreamConfigurationBuilder WithRetentionPolicy(RetentionPolicy? policy) {
                 _retentionPolicy = policy ?? RetentionPolicy.Limits;
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the compression option in the StreamConfiguration.
+            /// </summary>
+            /// <param name="option">the compression option of the StreamConfiguration</param>
+            /// <returns>The StreamConfigurationBuilder</returns>
+            public StreamConfigurationBuilder WithCompressionOption(CompressionOption? option) {
+                _compressionOption = option ?? CompressionOption.None;
                 return this;
             }
 

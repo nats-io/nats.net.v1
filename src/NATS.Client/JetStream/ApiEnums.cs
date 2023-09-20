@@ -25,6 +25,8 @@ namespace NATS.Client.JetStream
 
     public enum StorageType { File, Memory }
 
+    public enum CompressionOption { None, S2 }
+
     public static class ApiEnums
     {
         public static string GetString(this AckPolicy ackPolicy)
@@ -89,6 +91,16 @@ namespace NATS.Client.JetStream
             {
                 case StorageType.File:   return "file";
                 case StorageType.Memory: return "memory";
+            }
+            return null;
+        }
+        
+        public static string GetString(this CompressionOption compressionOption)
+        {
+            switch (compressionOption)
+            {
+                case CompressionOption.None: return "none";
+                case CompressionOption.S2:   return "s2";
             }
             return null;
         }
@@ -176,6 +188,20 @@ namespace NATS.Client.JetStream
                 {
                     case "file": return StorageType.File;
                     case "memory": return StorageType.Memory;
+                }
+            }
+
+            return aDefault;
+        }
+
+        public static CompressionOption GetValueOrDefault(string value, CompressionOption aDefault)
+        {
+            if (value != null)
+            {
+                switch (value)
+                {
+                    case "none": return CompressionOption.None;
+                    case "s2": return CompressionOption.S2;
                 }
             }
 
