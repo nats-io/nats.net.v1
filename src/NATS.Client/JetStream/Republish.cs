@@ -66,11 +66,9 @@ namespace NATS.Client.JetStream
 
         public override JSONNode ToJsonNode()
         {
-            JSONObject o = new JSONObject
-            {
-                [ApiConstants.Src] = Source,
-                [ApiConstants.Dest] = Destination
-            };
+            JSONObject o = new JSONObject();
+            AddField(o, ApiConstants.Src, Source);
+            AddField(o, ApiConstants.Dest, Destination);
             AddField(o, ApiConstants.HeadersOnly, HeadersOnly);
             return o;
         }

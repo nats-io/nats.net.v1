@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using NATS.Client.Internals.SimpleJSON;
+using static NATS.Client.Internals.JsonUtils;
 
 namespace NATS.Client.JetStream
 {
@@ -54,11 +55,9 @@ namespace NATS.Client.JetStream
 
         public override JSONNode ToJsonNode()
         {
-            JSONObject o = new JSONObject
-            {
-                [ApiConstants.Src] = Source,
-                [ApiConstants.Dest] = Destination
-            };
+            JSONObject o = new JSONObject();
+            AddField(o, ApiConstants.Src, Source);
+            AddField(o, ApiConstants.Dest, Destination);
             return o;
         }
 
