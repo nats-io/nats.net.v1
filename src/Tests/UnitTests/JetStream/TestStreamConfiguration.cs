@@ -399,7 +399,7 @@ namespace UnitTests.JetStream
         [Fact]
         public void TestConsumerLimits() {
             ConsumerLimits cl = ConsumerLimits.Builder().Build();
-            Assert.Equal(null, cl.InactiveThreshold);
+            Assert.Null(cl.InactiveThreshold);
             Assert.Equal(IntUnset, cl.MaxAckPending);
 
             cl = ConsumerLimits.Builder().WithInactiveThreshold(Duration.OfMillis(0)).Build();
