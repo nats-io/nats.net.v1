@@ -32,13 +32,13 @@ namespace UnitTests.JetStream
         {
             StreamConfiguration testSc = GetTestConfiguration();
             // from json
-            Validate(testSc, false, CompressionOption.S2);
+            Validate(testSc, false);
 
             // Validate(new StreamConfiguration(testSc.ToJsonNode()));
-            Validate(new StreamConfiguration(testSc.ToJsonNode().ToString()), false, CompressionOption.S2);
+            Validate(new StreamConfiguration(testSc.ToJsonNode().ToString()), false);
 
             StreamConfiguration.StreamConfigurationBuilder builder = StreamConfiguration.Builder(testSc);
-            Validate(builder.Build(), false, CompressionOption.S2);
+            Validate(builder.Build(), false);
             
             Dictionary<string, string> metadata = new Dictionary<string, string>(); metadata["meta-foo"] = "meta-bar";
 
@@ -59,6 +59,8 @@ namespace UnitTests.JetStream
                     .WithDiscardPolicy(testSc.DiscardPolicy)
                     .WithDuplicateWindow(testSc.DuplicateWindow)
                     .WithPlacement(testSc.Placement)
+                    .WithRepublish(testSc.Republish)
+                    .WithSubjectTransform(testSc.SubjectTransform)
                     .WithMirror(testSc.Mirror)
                     .WithSources(testSc.Sources)
                     .WithAllowRollup(testSc.AllowRollup)
@@ -70,14 +72,14 @@ namespace UnitTests.JetStream
                     .WithMetadata(metadata)
                     .WithFirstSequence(82942U)
                 ;
-            Validate(builder.Build(), false, CompressionOption.S2);
-            Validate(builder.AddSources((Source)null).Build(), false, CompressionOption.S2);
+            Validate(builder.Build(), false);
+            Validate(builder.AddSources((Source)null).Build(), false);
 
             List<Source> sources = new List<Source>(testSc.Sources);
             sources.Add(null);
             Source copy = new Source(sources[0].ToJsonNode());
             sources.Add(copy);
-            Validate(builder.AddSources(sources).Build(), false, CompressionOption.S2);
+            Validate(builder.AddSources(sources).Build(), false);
             
             // covering add a single source
             sources = new List<Source>(testSc.Sources);
@@ -87,7 +89,7 @@ namespace UnitTests.JetStream
                 builder.AddSource(source);
             }
             builder.AddSource(sources[0]);
-            Validate(builder.Build(), false, CompressionOption.S2);
+            Validate(builder.Build(), false);
         }
 
         [Fact]
@@ -260,7 +262,7 @@ namespace UnitTests.JetStream
             Assert.Equal(DiscardPolicy.Old, builder.Build().DiscardPolicy);
         }
 
-        private void Validate(StreamConfiguration sc, bool serverTest, CompressionOption compressionOption)
+        private void Validate(StreamConfiguration sc, bool serverTest)
         {
             {
                 Assert.Equal("sname", sc.Name);
@@ -268,9 +270,8 @@ namespace UnitTests.JetStream
                 Assert.Collection(sc.Subjects,
                     item => item.Equals("foo"),
                     item => item.Equals("bar"),
-                    item => item.Equals("repub.>"));
-
-                Assert.Equal(compressionOption, sc.CompressionOption);
+                    item => item.Equals("repub.>"),
+                    item => item.Equals("st.>"));
 
                 Assert.Equal(RetentionPolicy.Interest, sc.RetentionPolicy);
                 Assert.Equal(730, sc.MaxConsumers);
@@ -325,7 +326,12 @@ namespace UnitTests.JetStream
                     Assert.Single(sc.Metadata);
                     Assert.Equal("meta-bar", sc.Metadata["meta-foo"]);
                     Assert.Equal(82942U, sc.FirstSequence);
+                    
+                    Assert.Equal(CompressionOption.S2, sc.CompressionOption);
 
+                    Assert.NotNull(sc.SubjectTransform);
+                    Assert.Equal("st.>", sc.SubjectTransform.Source);
+                    Assert.Equal("stdest.>", sc.SubjectTransform.Destination);
                 }
             }
         }
@@ -354,6 +360,34 @@ namespace UnitTests.JetStream
             p = Placement.Builder().WithCluster("cluster").WithTags(tags).Build();
             Assert.Equal("cluster", p.Cluster);
             Assert.Equal(2, p.Tags.Count);
+        }
+
+        [Fact]
+        public void TestRepublish() {
+            Assert.Throws<ArgumentException>(() => Republish.Builder().Build());
+            Assert.Throws<ArgumentException>(() => Republish.Builder().WithSource("src.>").Build());
+            Assert.Throws<ArgumentException>(() => Republish.Builder().WithDestination("dest.>").Build());
+
+            Republish r = Republish.Builder().WithSource("src.>").WithDestination("dest.>").Build();
+            Assert.Equal("src.>", r.Source);
+            Assert.Equal("dest.>", r.Destination);
+            Assert.False(r.HeadersOnly);
+
+            r = Republish.Builder().WithSource("src.>").WithDestination("dest.>").WithHeadersOnly(true).Build();
+            Assert.Equal("src.>", r.Source);
+            Assert.Equal("dest.>", r.Destination);
+            Assert.True(r.HeadersOnly);
+        }
+
+        [Fact]
+        public void TestSubjectTransform() {
+            SubjectTransform st = SubjectTransform.Builder().WithSource("src.>").WithDestination("dest.>").Build();
+            Assert.Equal("src.>", st.Source);
+            Assert.Equal("dest.>", st.Destination);
+
+            st = SubjectTransform.Builder().Build();
+            Assert.Null(st.Source);
+            Assert.Null(st.Destination);
         }
 
         [Fact]
