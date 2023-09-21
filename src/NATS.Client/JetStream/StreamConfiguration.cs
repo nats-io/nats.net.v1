@@ -41,6 +41,7 @@ namespace NATS.Client.JetStream
         public Placement Placement { get; }
         public Republish Republish { get; }
         public SubjectTransform SubjectTransform { get; }
+        public ConsumerLimits ConsumerLimits { get; }
         public Mirror Mirror { get; }
         public List<Source> Sources { get; }
         public bool Sealed { get; }
@@ -80,6 +81,7 @@ namespace NATS.Client.JetStream
             Placement = Placement.OptionalInstance(scNode[ApiConstants.Placement]);
             Republish = Republish.OptionalInstance(scNode[ApiConstants.Republish]);
             SubjectTransform = SubjectTransform.OptionalInstance(scNode[ApiConstants.SubjectTransform]);
+            ConsumerLimits = ConsumerLimits.OptionalInstance(scNode[ApiConstants.ConsumerLimits]);
             Mirror = Mirror.OptionalInstance(scNode[ApiConstants.Mirror]);
             Sources = Source.OptionalListOf(scNode[ApiConstants.Sources]);
             Sealed = scNode[ApiConstants.Sealed].AsBool;
@@ -115,6 +117,7 @@ namespace NATS.Client.JetStream
             Placement = builder._placement;
             Republish = builder._republish;
             SubjectTransform = builder._subjectTransform;
+            ConsumerLimits = builder._consumerLimits;
             Mirror = builder._mirror;
             Sources = builder._sources;
             Sealed = builder._sealed;
@@ -154,6 +157,7 @@ namespace NATS.Client.JetStream
             AddField(o, ApiConstants.Placement, Placement?.ToJsonNode());
             AddField(o, ApiConstants.Republish, Republish?.ToJsonNode());
             AddField(o, ApiConstants.SubjectTransform, SubjectTransform?.ToJsonNode());
+            AddField(o, ApiConstants.ConsumerLimits, ConsumerLimits?.ToJsonNode());
             AddField(o, ApiConstants.Mirror, Mirror?.ToJsonNode());
             AddField(o, ApiConstants.Sources, Sources);
             AddField(o, ApiConstants.Sealed, Sealed);
@@ -200,6 +204,7 @@ namespace NATS.Client.JetStream
             internal Placement _placement;
             internal Republish _republish;
             internal SubjectTransform _subjectTransform;
+            internal ConsumerLimits _consumerLimits;
             internal Mirror _mirror;
             internal readonly List<Source> _sources = new List<Source>();
             internal bool _sealed;
@@ -238,6 +243,7 @@ namespace NATS.Client.JetStream
                     _placement = sc.Placement;
                     _republish = sc.Republish;
                     _subjectTransform = sc.SubjectTransform;
+                    _consumerLimits = sc.ConsumerLimits;
                     _mirror = sc.Mirror;
                     WithSources(sc.Sources);
                     _sealed = sc.Sealed;
@@ -524,6 +530,16 @@ namespace NATS.Client.JetStream
             }
 
             /// <summary>
+            /// Sets the consumerLimits object
+            /// </summary>
+            /// <param name="consumerLimits">the consumerLimits object</param>
+            /// <returns>The StreamConfigurationBuilder</returns>
+            public StreamConfigurationBuilder WithConsumerLimits(ConsumerLimits consumerLimits) {
+                _consumerLimits = consumerLimits;
+                return this;
+            }
+
+            /// <summary>
             /// Sets the mirror  object
             /// </summary>
             /// <param name="mirror">the mirror object</param>
@@ -681,7 +697,7 @@ namespace NATS.Client.JetStream
             /// </summary>
             /// <param name="metadata">the metadata dictionary</param>
             /// <returns>The ConsumerConfigurationBuilder</returns>
-            public StreamConfigurationBuilder WithMetadata(Dictionary<string, string> metadata) {
+            public StreamConfigurationBuilder WithMetadata(IDictionary<string, string> metadata) {
                 _metadata.Clear();
                 if (metadata != null)
                 {

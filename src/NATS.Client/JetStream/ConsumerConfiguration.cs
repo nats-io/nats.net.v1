@@ -249,12 +249,12 @@ namespace NATS.Client.JetStream
             if (request != DateTime.MinValue && !request.Equals(server)) { changes.Add(field); }
         }
         
-        private static int GetOrUnset(int? val)
+        internal static int GetOrUnset(int? val)
         {
             return val ?? IntUnset;
         }
 
-        private static ulong GetOrUnset(ulong? val)
+        internal static ulong GetOrUnset(ulong? val)
         {
             return val ?? UlongUnset;
         }
