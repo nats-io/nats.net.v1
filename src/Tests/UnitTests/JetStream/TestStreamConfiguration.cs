@@ -17,6 +17,7 @@ using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 using NATS.Client.JetStream;
 using Xunit;
+using static NATS.Client.JetStream.ConsumerConfiguration;
 
 namespace UnitTests.JetStream
 {
@@ -69,8 +70,9 @@ namespace UnitTests.JetStream
                     .WithDenyDelete(testSc.DenyDelete)
                     .WithDenyPurge(testSc.DenyPurge)
                     .WithDiscardNewPerSubject(testSc.DiscardNewPerSubject)
-                    .WithMetadata(metadata)
-                    .WithFirstSequence(82942U)
+                    .WithMetadata(testSc.Metadata)
+                    .WithFirstSequence(testSc.FirstSequence)
+                    .WithConsumerLimits(testSc.ConsumerLimits)
                 ;
             Validate(builder.Build(), false);
             Validate(builder.AddSources((Source)null).Build(), false);
@@ -332,6 +334,10 @@ namespace UnitTests.JetStream
                     Assert.NotNull(sc.SubjectTransform);
                     Assert.Equal("st.>", sc.SubjectTransform.Source);
                     Assert.Equal("stdest.>", sc.SubjectTransform.Destination);
+                    
+                    Assert.NotNull(sc.ConsumerLimits);
+                    Assert.Equal(Duration.OfSeconds(50), sc.ConsumerLimits.InactiveThreshold);
+                    Assert.Equal(42, sc.ConsumerLimits.MaxAckPending);
                 }
             }
         }
@@ -388,6 +394,43 @@ namespace UnitTests.JetStream
             st = SubjectTransform.Builder().Build();
             Assert.Null(st.Source);
             Assert.Null(st.Destination);
+        }
+
+        [Fact]
+        public void TestConsumerLimits() {
+            ConsumerLimits cl = ConsumerLimits.Builder().Build();
+            Assert.Null(cl.InactiveThreshold);
+            Assert.Equal(IntUnset, cl.MaxAckPending);
+
+            cl = ConsumerLimits.Builder().WithInactiveThreshold(Duration.OfMillis(0)).Build();
+            Assert.Equal(Duration.Zero, cl.InactiveThreshold);
+
+            cl = ConsumerLimits.Builder().WithInactiveThreshold(0L).Build();
+            Assert.Equal(Duration.Zero, cl.InactiveThreshold);
+
+            cl = ConsumerLimits.Builder().WithInactiveThreshold(Duration.OfMillis(1)).Build();
+            Assert.Equal(Duration.OfMillis(1), cl.InactiveThreshold);
+
+            cl = ConsumerLimits.Builder().WithInactiveThreshold(1L).Build();
+            Assert.Equal(Duration.OfMillis(1), cl.InactiveThreshold);
+
+            cl = ConsumerLimits.Builder().WithInactiveThreshold(Duration.OfMillis(-1)).Build();
+            Assert.Equal(DurationUnset, cl.InactiveThreshold);
+
+            cl = ConsumerLimits.Builder().WithInactiveThreshold(-1).Build();
+            Assert.Equal(DurationUnset, cl.InactiveThreshold);
+
+            cl = ConsumerLimits.Builder().WithMaxAckPending(StandardMin).Build();
+            Assert.Equal(StandardMin, cl.MaxAckPending);
+
+            cl = ConsumerLimits.Builder().WithMaxAckPending(IntUnset).Build();
+            Assert.Equal(IntUnset, cl.MaxAckPending);
+
+            cl = ConsumerLimits.Builder().WithMaxAckPending(-2).Build();
+            Assert.Equal(IntUnset, cl.MaxAckPending);
+
+            cl = ConsumerLimits.Builder().WithMaxAckPending(long.MaxValue).Build();
+            Assert.Equal(int.MaxValue, cl.MaxAckPending);        
         }
 
         [Fact]

@@ -249,12 +249,12 @@ namespace NATS.Client.JetStream
             if (request != DateTime.MinValue && !request.Equals(server)) { changes.Add(field); }
         }
         
-        private static int GetOrUnset(int? val)
+        internal static int GetOrUnset(int? val)
         {
             return val ?? IntUnset;
         }
 
-        private static ulong GetOrUnset(ulong? val)
+        internal static ulong GetOrUnset(ulong? val)
         {
             return val ?? UlongUnset;
         }
@@ -377,6 +377,7 @@ namespace NATS.Client.JetStream
 
                 if (cc._metadata != null)
                 {
+                    _metadata = new Dictionary<string, string>();
                     foreach (string key in cc.Metadata.Keys)
                     {
                         _metadata[key] = cc.Metadata[key];

@@ -37,6 +37,7 @@ namespace NATS.Client.JetStream
         internal const string Config = "config";
         internal const string ConnectUrls = "connect_urls";
         internal const string ConsumerCount = "consumer_count";
+        internal const string ConsumerLimits = "consumer_limits";
         internal const string ConsumerSeq = "consumer_seq";
         internal const string Consumers = "consumers";
         internal const string Created = "created";
