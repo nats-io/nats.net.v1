@@ -430,7 +430,8 @@ namespace UnitTests.JetStream
             Assert.Equal(IntUnset, cl.MaxAckPending);
 
             cl = ConsumerLimits.Builder().WithMaxAckPending(long.MaxValue).Build();
-            Assert.Equal(int.MaxValue, cl.MaxAckPending);        }
+            Assert.Equal(int.MaxValue, cl.MaxAckPending);        
+        }
 
         [Fact]
         public void TestExternal()

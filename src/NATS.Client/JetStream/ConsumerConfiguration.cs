@@ -377,6 +377,7 @@ namespace NATS.Client.JetStream
 
                 if (cc._metadata != null)
                 {
+                    _metadata = new Dictionary<string, string>();
                     foreach (string key in cc.Metadata.Keys)
                     {
                         _metadata[key] = cc.Metadata[key];

@@ -783,7 +783,7 @@ namespace IntegrationTests
 
                     // metadata server not null versus new null
                     jsm.AddOrUpdateConsumer(STREAM, PushDurableBuilder().WithMetadata(metadataA).Build());
-                    ChangeExPush(js, PushDurableBuilder(), "Metadata");
+                    ChangeOkPush(js, PushDurableBuilder());
 
                     // metadata server not null versus new not null but different
                     ChangeExPush(js, PushDurableBuilder().WithMetadata(metadataB), "Metadata");
