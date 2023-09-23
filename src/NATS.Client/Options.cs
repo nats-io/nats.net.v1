@@ -36,6 +36,7 @@ namespace NATS.Client
         bool allowReconnect = true;
         bool noEcho = false;
         bool ignoreDiscoveredServers = false;
+        private bool clientSideLimitChecks = true;
         IServerProvider serverProvider = null;
         int maxReconnect  = Defaults.MaxReconnect;
         int reconnectWait = Defaults.ReconnectWait;
@@ -285,6 +286,7 @@ namespace NATS.Client
             noRandomize = o.noRandomize;
             noEcho = o.noEcho;
             ignoreDiscoveredServers = o.ignoreDiscoveredServers;
+            clientSideLimitChecks = o.clientSideLimitChecks;
             serverProvider = o.serverProvider;
             pedantic = o.pedantic;
             reconnectBufSize = o.reconnectBufSize;
@@ -722,6 +724,11 @@ namespace NATS.Client
         /// </summary>
         public bool IgnoreDiscoveredServers { get => ignoreDiscoveredServers; set => ignoreDiscoveredServers = value; }
 
+        /// <summary>
+        /// Whether or not to make client side limit checks, currently only core publish/request max payload
+        /// </summary>
+        public bool ClientSideLimitChecks { get => clientSideLimitChecks; set => clientSideLimitChecks = value; }
+
         // TODO After connect adr is complete
         internal IServerProvider ServerProvider { get => serverProvider; set => serverProvider = value; }
         
@@ -849,6 +856,7 @@ namespace NATS.Client
             sb.AppendFormat("NoRandomize={0};", NoRandomize);
             sb.AppendFormat("NoEcho={0};", NoEcho);
             sb.AppendFormat("IgnoreDiscoveredServers={0};", ignoreDiscoveredServers);
+            sb.AppendFormat("clientSideLimitChecks={0};", clientSideLimitChecks);
             sb.AppendFormat("ServerProvider={0};", serverProvider == null ? "Default" : "Provided");
             sb.AppendFormat("Pedantic={0};", Pedantic);
             sb.AppendFormat("UseOldRequestStyle={0};", UseOldRequestStyle);

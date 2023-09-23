@@ -2609,6 +2609,12 @@ namespace NATS.Client
                 if (isDrainingPubs())
                     throw new NATSConnectionDrainingException();
 
+                // Proactively reject payloads over the threshold set by server.
+                if (opts.ClientSideLimitChecks && count > info.MaxPayload && info.MaxPayload > 0)
+                {
+                    throw new NATSMaxPayloadException();
+                }
+                
                 if (lastEx != null)
                     throw lastEx;
 
@@ -2678,7 +2684,7 @@ namespace NATS.Client
             }
 
         } // publish
-
+        
         /// <summary>
         /// Publishes <paramref name="data"/> to the given <paramref name="subject"/>.
         /// </summary>
@@ -2688,6 +2694,8 @@ namespace NATS.Client
         /// to the connected NATS server.</param>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is 
         /// <c>null</c> or entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call
         /// while publishing. See <see cref="Exception.InnerException"/> for more details.</exception>
@@ -2707,6 +2715,8 @@ namespace NATS.Client
         /// to the connected NATS server.</param>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is 
         /// <c>null</c> or entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call
         /// while publishing. See <see cref="Exception.InnerException"/> for more details.</exception>
@@ -2727,6 +2737,8 @@ namespace NATS.Client
         /// bytes to the subject.</param>
         /// <param name="count">The number of bytes to be published to the subject.</param>
         /// <seealso cref="IConnection.Publish(string, byte[])"/>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         public void Publish(string subject, byte[] data, int offset, int count)
         {
             PublishImpl(subject, null, null, data, offset, count, false);
@@ -2744,6 +2756,8 @@ namespace NATS.Client
         /// bytes to the subject.</param>
         /// <param name="count">The number of bytes to be published to the subject.</param>
         /// <seealso cref="IConnection.Publish(string, byte[])"/>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         public void Publish(string subject, MsgHeader headers, byte[] data, int offset, int count)
         {
             PublishImpl(subject, null, headers, data, offset, count, false);
@@ -2759,6 +2773,8 @@ namespace NATS.Client
         /// to the connected NATS server.</param>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or
         /// entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call
         /// while publishing. See <see cref="Exception.InnerException"/> for more details.</exception>
@@ -2779,6 +2795,8 @@ namespace NATS.Client
         /// to the connected NATS server.</param>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or
         /// entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call
         /// while publishing. See <see cref="Exception.InnerException"/> for more details.</exception>
@@ -2800,6 +2818,8 @@ namespace NATS.Client
         /// bytes to the subject.</param>
         /// <param name="count">The number of bytes to be published to the subject.</param>
         /// <seealso cref="IConnection.Publish(string, byte[])"/>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         public void Publish(string subject, string reply, byte[] data, int offset, int count)
         {
             PublishImpl(subject, reply, null, data, offset, count, false);
@@ -2818,6 +2838,8 @@ namespace NATS.Client
         /// bytes to the subject.</param>
         /// <param name="count">The number of bytes to be published to the subject.</param>
         /// <seealso cref="IConnection.Publish(string, byte[])"/>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         public void Publish(string subject, string reply, MsgHeader headers, byte[] data, int offset, int count)
         {
             PublishImpl(subject, reply, headers, data, offset, count, false);
@@ -2832,6 +2854,8 @@ namespace NATS.Client
         /// <exception cref="ArgumentNullException"><paramref name="msg"/> is <c>null</c>.</exception>
         /// <exception cref="NATSBadSubscriptionException">The <see cref="Msg.Subject"/> property of
         /// <paramref name="msg"/> is <c>null</c> or entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException">Message data exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call 
         /// while publishing. See <see cref="Exception.InnerException"/> for more details.</exception>
@@ -3048,6 +3072,8 @@ namespace NATS.Client
         /// (<c>0</c>).</exception>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or
         /// entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the 
         /// response.</exception>
@@ -3081,6 +3107,8 @@ namespace NATS.Client
         /// (<c>0</c>).</exception>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or
         /// entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the 
         /// response.</exception>
@@ -3113,6 +3141,8 @@ namespace NATS.Client
         /// <param name="timeout">The number of milliseconds to wait.</param>
         /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
         /// <seealso cref="IConnection.Request(string, byte[])"/>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         public Msg Request(string subject, byte[] data, int offset, int count, int timeout)
         {
             return RequestSyncImpl(subject, null, data, offset, count, timeout);
@@ -3139,6 +3169,8 @@ namespace NATS.Client
         /// <param name="timeout">The number of milliseconds to wait.</param>
         /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
         /// <seealso cref="IConnection.Request(string, byte[])"/>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         public Msg Request(string subject, MsgHeader headers, byte[] data, int offset, int count, int timeout)
         {
             return RequestSyncImpl(subject, headers, data, offset, count, timeout);
@@ -3160,6 +3192,8 @@ namespace NATS.Client
         /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or 
         /// entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
@@ -3196,6 +3230,8 @@ namespace NATS.Client
         /// <exception cref="NATSException">There was an unexpected exception performing an internal NATS call while
         /// executing the request. See <see cref="Exception.InnerException"/> for more details.</exception>
         /// <exception cref="IOException">There was a failure while writing to the network.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         public Msg Request(string subject, MsgHeader headers, byte[] data)
         {
             return RequestSyncImpl(subject, headers, data, 0, null, Timeout.Infinite);
@@ -3225,6 +3261,8 @@ namespace NATS.Client
         /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or 
         /// entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
@@ -3262,6 +3300,8 @@ namespace NATS.Client
         /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or 
         /// entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
@@ -3293,6 +3333,8 @@ namespace NATS.Client
         /// <exception cref="ArgumentNullException"><paramref name="message"/> is null.</exception>
         /// <exception cref="NATSBadSubscriptionException">The <paramref name="message"/> subject is <c>null</c>
         /// or entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException">Message data exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the 
         /// response.</exception>
@@ -3324,6 +3366,8 @@ namespace NATS.Client
         /// <exception cref="ArgumentNullException"><paramref name="message"/> is null.</exception>
         /// <exception cref="NATSBadSubscriptionException">The <paramref name="message"/> subject is <c>null</c>
         /// or entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException">Message data exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
@@ -3440,6 +3484,8 @@ namespace NATS.Client
         /// (<c>0</c>).</exception>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c>
         /// or entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
@@ -3476,6 +3522,8 @@ namespace NATS.Client
         /// (<c>0</c>).</exception>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c>
         /// or entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
@@ -3511,6 +3559,8 @@ namespace NATS.Client
         /// <returns>A task that represents the asynchronous read operation. The value of the <see cref="Task{TResult}.Result"/>
         /// parameter contains a <see cref="Msg"/> with the response from the NATS server.</returns>
         /// <seealso cref="IConnection.Request(string, byte[])"/>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         public Task<Msg> RequestAsync(string subject, byte[] data, int offset, int count, int timeout)
         {
             return RequestAsyncImpl(subject, null, data, offset, count, timeout, CancellationToken.None);
@@ -3538,6 +3588,8 @@ namespace NATS.Client
         /// <returns>A task that represents the asynchronous read operation. The value of the <see cref="Task{TResult}.Result"/>
         /// parameter contains a <see cref="Msg"/> with the response from the NATS server.</returns>
         /// <seealso cref="IConnection.Request(string, byte[])"/>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         public Task<Msg> RequestAsync(string subject, MsgHeader headers, byte[] data, int offset, int count, int timeout)
         {
             return RequestAsyncImpl(subject, headers, data, offset, count, timeout, CancellationToken.None);
@@ -3561,6 +3613,8 @@ namespace NATS.Client
         /// server.</returns>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or
         /// entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
@@ -3594,6 +3648,8 @@ namespace NATS.Client
         /// server.</returns>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or
         /// entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
@@ -3628,6 +3684,8 @@ namespace NATS.Client
         /// <see cref="Task{TResult}.Result"/> parameter contains a <see cref="Msg"/> with the response from the NATS
         /// server.</returns>
         /// <seealso cref="IConnection.Request(string, byte[])"/>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         public Task<Msg> RequestAsync(string subject, byte[] data, int offset, int count)
         {
             return RequestAsyncImpl(subject, null, data, offset, count, Timeout.Infinite, CancellationToken.None);
@@ -3654,6 +3712,8 @@ namespace NATS.Client
         /// <see cref="Task{TResult}.Result"/> parameter contains a <see cref="Msg"/> with the response from the NATS
         /// server.</returns>
         /// <seealso cref="IConnection.Request(string, byte[])"/>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         public Task<Msg> RequestAsync(string subject, MsgHeader headers, byte[] data, int offset, int count)
         {
             return RequestAsyncImpl(subject, headers, data, offset, count, Timeout.Infinite, CancellationToken.None);
@@ -3683,6 +3743,8 @@ namespace NATS.Client
         /// (<c>0</c>).</exception>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or
         /// entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
@@ -3722,6 +3784,8 @@ namespace NATS.Client
         /// (<c>0</c>).</exception>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or
         /// entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
@@ -3756,6 +3820,8 @@ namespace NATS.Client
         /// server.</returns>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c>
         /// or entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the 
         /// response.</exception>
@@ -3791,6 +3857,8 @@ namespace NATS.Client
         /// server.</returns>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c>
         /// or entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the 
         /// response.</exception>
@@ -3827,6 +3895,8 @@ namespace NATS.Client
         /// <see cref="Task{TResult}.Result"/> parameter contains a <see cref="Msg"/> with the response from the NATS 
         /// server.</returns>
         /// <seealso cref="IConnection.Request(string, byte[])"/>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         public Task<Msg> RequestAsync(string subject, byte[] data, int offset, int count, CancellationToken token)
         {
             return RequestAsyncImpl(subject, null, data, offset, count, Timeout.Infinite, token);
@@ -3855,6 +3925,10 @@ namespace NATS.Client
         /// <see cref="Task{TResult}.Result"/> parameter contains a <see cref="Msg"/> with the response from the NATS 
         /// server.</returns>
         /// <seealso cref="IConnection.Request(string, byte[])"/>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="data"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         public Task<Msg> RequestAsync(string subject, MsgHeader headers, byte[] data, int offset, int count, CancellationToken token)
         {
             return RequestAsyncImpl(subject, headers, data, offset, count, Timeout.Infinite, token);
@@ -3880,6 +3954,8 @@ namespace NATS.Client
         /// <exception cref="ArgumentNullException"><paramref name="message"/> is null.</exception>
         /// <exception cref="NATSBadSubscriptionException">The <paramref name="message"/> subject is <c>null</c>
         /// or entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException">Message data exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
@@ -3915,6 +3991,8 @@ namespace NATS.Client
         /// <exception cref="ArgumentNullException"><paramref name="message"/> is null.</exception>
         /// <exception cref="NATSBadSubscriptionException">The <paramref name="message"/> subject is <c>null</c>
         /// or entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException">Message data exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
@@ -3956,6 +4034,8 @@ namespace NATS.Client
         /// <exception cref="ArgumentNullException"><paramref name="message"/> is null.</exception>
         /// <exception cref="NATSBadSubscriptionException">The <paramref name="message"/> subject is <c>null</c>
         /// or entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException">Message data exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
@@ -3993,6 +4073,8 @@ namespace NATS.Client
         /// <exception cref="ArgumentNullException"><paramref name="message"/> is null.</exception>
         /// <exception cref="NATSBadSubscriptionException">The <paramref name="message"/> subject is <c>null</c>
         /// or entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException">Message data exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the 
         /// response.</exception>
