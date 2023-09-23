@@ -177,6 +177,7 @@ namespace NATS.Client.JetStream
         internal const string Streams = "streams";
         internal const string Subject = "subject";
         internal const string SubjectTransform = "subject_transform";
+        internal const string SubjectTransforms = "subject_transforms";
         internal const string Subjects = "subjects";
         internal const string SubjectsFilter = "subjects_filter";
         internal const string Success = "success";

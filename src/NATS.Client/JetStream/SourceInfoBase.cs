@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 
@@ -21,6 +22,8 @@ namespace NATS.Client.JetStream
         public string Name { get; }
         public ulong Lag { get; }
         public Duration Active { get; }
+        public External External { get; }
+        public IList<SubjectTransform> SubjectTransforms { get; }
         public Error Error { get; }
 
         internal SourceInfoBase(JSONNode sourceInfoBaseNode)
@@ -28,7 +31,9 @@ namespace NATS.Client.JetStream
             Name = sourceInfoBaseNode[ApiConstants.Name].Value;
             Lag = sourceInfoBaseNode[ApiConstants.Lag].AsUlong;
             Active = JsonUtils.AsDuration(sourceInfoBaseNode, ApiConstants.Active, Duration.Zero);
+            External = External.OptionalInstance(sourceInfoBaseNode[ApiConstants.External]);
             Error = Error.OptionalInstance(sourceInfoBaseNode[ApiConstants.Error]);
+            SubjectTransforms = SubjectTransform.OptionalListOf(sourceInfoBaseNode[ApiConstants.SubjectTransforms]);
         }
     }
 }

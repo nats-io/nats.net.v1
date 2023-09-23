@@ -314,16 +314,22 @@ namespace UnitTests.JetStream
 
                     Assert.Equal(5, sc.Replicas);
                     Assert.Equal("twnr", sc.TemplateOwner);
+                    
                     Assert.NotNull(sc.Mirror);
                     Assert.Equal("eman", sc.Mirror.Name);
                     Assert.Equal(736U, sc.Mirror.StartSeq);
                     Assert.Equal(zdt, sc.Mirror.StartTime);
                     Assert.Equal("mfsub", sc.Mirror.FilterSubject);
 
+                    Assert.NotNull(sc.Mirror.External);
+                    Assert.Equal("apithing", sc.Mirror.External.Api);
+                    Assert.Equal("dlvrsub", sc.Mirror.External.Deliver);
+
+                    ValidateSubjectTransforms(sc.Mirror.SubjectTransforms, 2, "m");
+
                     Assert.Equal(2, sc.Sources.Count);
-                    Assert.Collection(sc.Sources,
-                        item => ValidateSource(item, "s0", 737, "s0sub", "s0api", "s0dlvrsub", zdt),
-                        item => ValidateSource(item, "s1", 738, "s1sub", "s1api", "s1dlvrsub", zdt));
+                    ValidateSource(sc.Sources[0], 0, zdt);
+                    ValidateSource(sc.Sources[1], 1, zdt);
 
                     Assert.Single(sc.Metadata);
                     Assert.Equal("meta-bar", sc.Metadata["meta-foo"]);
@@ -331,9 +337,9 @@ namespace UnitTests.JetStream
                     
                     Assert.Equal(CompressionOption.S2, sc.CompressionOption);
 
-                    Assert.NotNull(sc.SubjectTransform);
-                    Assert.Equal("st.>", sc.SubjectTransform.Source);
-                    Assert.Equal("stdest.>", sc.SubjectTransform.Destination);
+                    IList<SubjectTransform> stList = new List<SubjectTransform>();
+                    stList.Add(sc.SubjectTransform);
+                    ValidateSubjectTransforms(stList, 1, "sc");
                     
                     Assert.NotNull(sc.ConsumerLimits);
                     Assert.Equal(Duration.OfSeconds(50), sc.ConsumerLimits.InactiveThreshold);
@@ -342,16 +348,30 @@ namespace UnitTests.JetStream
             }
         }
 
-        private void ValidateSource(Source source, string name, ulong seq, string filter, string api, string deliver, DateTime zdt)
+        internal static void ValidateSubjectTransforms(IList<SubjectTransform> subjectTransforms, int count, String name) {
+            Assert.NotNull(subjectTransforms);
+            Assert.Equal(count, subjectTransforms.Count);
+            for (int x = 0; x < count; x++) {
+                SubjectTransform st = subjectTransforms[x];
+                Assert.Equal(name + "_st_src" + x, st.Source);
+                Assert.Equal(name + "_st_dest" + x, st.Destination);
+            }
+        }
+
+        internal static void ValidateSource(Source source, ulong index, DateTime zdt)
         {
+            ulong seq = 737 + index;
+            string name = "s" + index;
             Assert.Equal(name, source.Name);
             Assert.Equal(seq, source.StartSeq);
             Assert.Equal(zdt, source.StartTime);
-            Assert.Equal(filter, source.FilterSubject);
+            Assert.Equal($"{name}sub", source.FilterSubject);
 
             Assert.NotNull(source.External);
-            Assert.Equal(api, source.External.Api);
-            Assert.Equal(deliver, source.External.Deliver);
+            Assert.Equal($"{name}api", source.External.Api);
+            Assert.Equal($"{name}dlvrsub", source.External.Deliver);
+
+            ValidateSubjectTransforms(source.SubjectTransforms, 2, name);
         }
 
         [Fact]

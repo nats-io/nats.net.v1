@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
 using NATS.Client.Internals.SimpleJSON;
 using static NATS.Client.Internals.JsonUtils;
 
@@ -34,6 +35,21 @@ namespace NATS.Client.JetStream
         internal static SubjectTransform OptionalInstance(JSONNode subjectTransformNode)
         {
             return subjectTransformNode.Count == 0 ? null : new SubjectTransform(subjectTransformNode);
+        }
+        
+        internal static IList<SubjectTransform> OptionalListOf(JSONNode subjectTransformListNode)
+        {
+            if (subjectTransformListNode == null)
+            {
+                return null;
+            }
+            
+            IList<SubjectTransform> list = new List<SubjectTransform>();
+            foreach (var subjectTransformNode in subjectTransformListNode.Children)
+            {
+                list.Add(new SubjectTransform(subjectTransformNode));
+            }
+            return list.Count == 0 ? null : list;
         }
 
         private SubjectTransform(JSONNode subjectTransformNode)
@@ -80,7 +96,7 @@ namespace NATS.Client.JetStream
             /// Set the Published subject matching filter.
             /// </summary>
             /// <param name="source">the source</param>
-            /// <returns></returns>
+            /// <returns>The SubjectTransformBuilder</returns>
             public SubjectTransformBuilder WithSource(string source) {
                 _source = source;
                 return this;
@@ -90,7 +106,7 @@ namespace NATS.Client.JetStream
             /// Set the SubjectTransform Subject template
             /// </summary>
             /// <param name="destination">the destination</param>
-            /// <returns></returns>
+            /// <returns>The SubjectTransformBuilder</returns>
             public SubjectTransformBuilder WithDestination(string destination) {
                 _destination = destination;
                 return this;
@@ -99,9 +115,27 @@ namespace NATS.Client.JetStream
             /// <summary>
             /// Build a SubjectTransform object
             /// </summary>
-            /// <returns>The SubjectTransform</returns>
+            /// <returns>The SubjectTransform object</returns>
             public SubjectTransform Build() {
                 return new SubjectTransform(_source, _destination);
+            }
+        }
+
+        private bool Equals(SubjectTransform other)
+        {
+            return Source == other.Source && Destination == other.Destination;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return ReferenceEquals(this, obj) || obj is SubjectTransform other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return ((Source != null ? Source.GetHashCode() : 0) * 397) ^ (Destination != null ? Destination.GetHashCode() : 0);
             }
         }
     }

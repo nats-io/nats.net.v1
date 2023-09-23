@@ -575,9 +575,12 @@ namespace NATS.Client.JetStream
             /// <param name="sources">the stream's sources</param>
             /// <returns>The StreamConfigurationBuilder</returns>
             public StreamConfigurationBuilder AddSources(params Source[] sources) {
-                if (sources != null) {
-                    foreach (Source source in sources) {
-                        if (source != null && !_sources.Contains(source)) {
+                if (sources != null) 
+                {
+                    foreach (Source source in sources) 
+                    {
+                        if (source != null && !_sources.Contains(source)) 
+                        {
                             _sources.Add(source);
                         }
                     }
@@ -591,9 +594,12 @@ namespace NATS.Client.JetStream
             /// <param name="sources">the stream's sources</param>
             /// <returns>The StreamConfigurationBuilder</returns>
             public StreamConfigurationBuilder AddSources(List<Source> sources) {
-                if (sources != null) {
-                    foreach (Source source in sources) {
-                        if (source != null && !_sources.Contains(source)) {
+                if (sources != null) 
+                {
+                    foreach (Source source in sources) 
+                    {
+                        if (source != null && !_sources.Contains(source)) 
+                        {
                             _sources.Add(source);
                         }
                     }
