@@ -45,29 +45,78 @@ namespace NATS.Client.Internals
             }
         }
         
-        internal static string ValidateSubject(string s, bool required)
+        /*
+            cannot contain spaces \r \n \t
+            cannot start or end with subject token delimiter .
+            some things don't allow it to end greater
+        */
+        public static string ValidateSubjectTerm(string subject, string label, bool required)
+        {
+            Tuple<bool, string> t = IsValidSubjectTerm(subject, label, required);
+            if (t.Item1)
+            {
+                return t.Item2;
+            }
+            throw new ArgumentException(t.Item2);
+        }
+
+        /*
+         * If is valid, tuple item1 is true and item2 is the subject
+         * If is not valid, tuple item1 is false and item2 is the error message
+         */
+        internal static Tuple<bool, string> IsValidSubjectTerm(string subject, string label, bool required) {
+            subject = EmptyAsNull(subject);
+            if (subject == null) {
+                if (required) {
+                    return new Tuple<bool, string>(false, $"{label} cannot be null or empty.");
+                }
+                return new Tuple<bool, string>(true, null);
+            }
+            if (subject.EndsWith(".")) {
+                return new Tuple<bool, string>(false, $"{label} cannot end with '.'");
+            }
+
+            string[] segments = subject.Split('.');
+            for (int seg = 0; seg < segments.Length; seg++) {
+                string segment = segments[seg];
+                int sl = segment.Length;
+                if (sl == 0) {
+                    if (seg == 0) {
+                        return new Tuple<bool, string>(false, $"{label} cannot start with '.'");
+                    }
+                    return new Tuple<bool, string>(false, $"{label} segment cannot be empty");
+                }
+                else {
+                    for (int m = 0; m < sl; m++) {
+                        char c = segment[m];
+                        switch (c) {
+                            case ' ':
+                            case '\r':
+                            case '\n':
+                            case '\t':
+                                return new Tuple<bool, string>(false, $"{label} cannot contain space, tab, carriage return or linefeed character");
+                            case '*':
+                            case '>':
+                                if (sl != 1) {
+                                    return new Tuple<bool, string>(false, $"{label} wildcard improperly placed.");
+                                }
+                                break;
+                        }
+                    }
+                }
+            }
+            return new Tuple<bool, string>(true, subject);
+        }
+
+        public static string ValidateSubject(string s, bool required)
         {
             return ValidateSubject(s, "Subject", required, false);
         }
         
         public static string ValidateSubject(string subject, string label, bool required, bool cantEndWithGt) {
-            if (EmptyAsNull(subject) == null) {
-                if (required) {
-                    throw new ArgumentException($"{label} cannot be null or empty.");
-                }
-                return null;
-            }
-            string[] segments = subject.Split('.');
-            for (int x = 0; x < segments.Length; x++) {
-                string segment = segments[x];
-                if (segment.Equals(">")) {
-                    if (cantEndWithGt || x != segments.Length - 1) { // if it can end with gt, gt must be last segment
-                        throw new ArgumentException(label + " cannot contain '>'");
-                    }
-                }
-                else if (!segment.Equals("*") && NotPrintable(segment)) {
-                    throw new ArgumentException(label + " must be printable characters only.");
-                }
+            subject = ValidateSubjectTerm(subject, label, required);
+            if (subject != null && cantEndWithGt && subject.EndsWith(".>")) {
+                throw new ArgumentException($"{label} last segment cannot be '>'");
             }
             return subject;
         }

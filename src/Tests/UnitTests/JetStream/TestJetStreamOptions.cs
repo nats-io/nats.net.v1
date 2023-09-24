@@ -103,7 +103,6 @@ namespace UnitTests.JetStream
             AssertInvalidPrefix(HasSpace);
             AssertInvalidPrefix(HasStar);
             AssertInvalidPrefix(HasGt);
-            AssertInvalidPrefix(HasLow);
             AssertInvalidPrefix(Has127);
 
             AssertInvalidPrefix(".");
@@ -145,7 +144,6 @@ namespace UnitTests.JetStream
             AssertInvalidDomain(HasSpace);
             AssertInvalidDomain(HasStar);
             AssertInvalidDomain(HasGt);
-            AssertInvalidDomain(HasLow);
             AssertInvalidDomain(Has127);
 
             AssertInvalidDomain(".");

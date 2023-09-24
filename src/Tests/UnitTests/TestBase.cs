@@ -54,8 +54,22 @@ namespace UnitTests
         // ----------------------------------------------------------------------------------------------------
         // unit test 
         // ----------------------------------------------------------------------------------------------------
+        public const string StarSegment       = "*.star.*.segment.*";
+        public const string GtLastSegment    = "gt.last.>";
+        public const string StartsWithDot    = ".starts-with-dot";
+        public const string EndsWithDot      = "ends-with-dot.";
+        public const string EndsWithDotSpace = "ends-with-space. ";
+        public const string EndsWithCr       = "ends-with-space.\r";
+        public const string EndsWithLf       = "ends-with-space.\n";
+        public const string EndsWithTab      = "ends-with-space.\t";
+        public const string StarNotSegment   = "star*not*segment";
+        public const string GtNotSegment     = "gt>not>segment";
+        public const string EmptySegment     = "blah..blah";
+
         public const string Plain = "plain";
         public const string HasSpace = "has space";
+        public const string StartsSpace = " startsspace";
+        public const string EndsSpace = "endsspace ";
         public const string HasPrintable = "has-print!able";
         public const string HasDot = "has.dot";
         public const string HasStar = "has*star";
@@ -63,11 +77,14 @@ namespace UnitTests
         public const string HasDash = "has-dash";
         public const string HasUnder = "has_under";
         public const string HasDollar = "has$dollar";
-        public const string HasLow = "has\tlower\rthan\nspace";
+        public const string HasCr = "has\rcr";
+        public const string HasLf = "has\nlf";
+        public const string HasTab = "has\ttab";
         public const string HasFwdSlash = "has/fwd/slash";
         public const string HasBackSlash = "has\\back\\slash";
         public const string HasEquals = "has=equals";
         public const string HasTic = "has`tic";
+        public static readonly string HasLow = "has" + (char)0 + "low";
         public static readonly string Has127 = "has" + (char)127 + "127";
 
         public static string ReadDataFile(string name)

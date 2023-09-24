@@ -367,7 +367,6 @@ namespace IntegrationTestsInternal
             Assert.Throws<ArgumentException>(() => Service.Builder().WithName(HasStar)); // invalid in the middle
             Assert.Throws<ArgumentException>(() => Service.Builder().WithName(HasGt)); // invalid in the middle
             Assert.Throws<ArgumentException>(() => Service.Builder().WithName(HasDollar));
-            Assert.Throws<ArgumentException>(() => Service.Builder().WithName(HasLow));
             Assert.Throws<ArgumentException>(() => Service.Builder().WithName(Has127));
             Assert.Throws<ArgumentException>(() => Service.Builder().WithName(HasFwdSlash));
             Assert.Throws<ArgumentException>(() => Service.Builder().WithName(HasBackSlash));
@@ -565,7 +564,6 @@ namespace IntegrationTestsInternal
             Assert.Throws<ArgumentException>(() => new Endpoint(HasStar)); // invalid in the middle
             Assert.Throws<ArgumentException>(() => new Endpoint(HasGt)); // invalid in the middle
             Assert.Throws<ArgumentException>(() => new Endpoint(HasDollar));
-            Assert.Throws<ArgumentException>(() => new Endpoint(HasLow));
             Assert.Throws<ArgumentException>(() => new Endpoint(Has127));
             Assert.Throws<ArgumentException>(() => new Endpoint(HasFwdSlash));
             Assert.Throws<ArgumentException>(() => new Endpoint(HasBackSlash));
@@ -574,7 +572,6 @@ namespace IntegrationTestsInternal
     
             // fewer subjects are bad
             Assert.Throws<ArgumentException>(() => new Endpoint(NAME, HasSpace));
-            Assert.Throws<ArgumentException>(() => new Endpoint(NAME, HasLow));
             Assert.Throws<ArgumentException>(() => new Endpoint(NAME, Has127));
             Assert.Throws<ArgumentException>(() => new Endpoint(NAME, "foo.>.bar")); // gt is not last segment
         }
@@ -653,7 +650,6 @@ namespace IntegrationTestsInternal
             Assert.Equal("foo.*", g1.Name);
     
             Assert.Throws<ArgumentException>(() => new Group(HasSpace));
-            Assert.Throws<ArgumentException>(() => new Group(HasLow));
             Assert.Throws<ArgumentException>(() => new Group(Has127));
             Assert.Throws<ArgumentException>(() => new Group("foo.>")); // gt is last segment
             Assert.Throws<ArgumentException>(() => new Group("foo.>.bar")); // gt is not last segment

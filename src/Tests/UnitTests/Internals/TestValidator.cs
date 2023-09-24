@@ -30,22 +30,29 @@ namespace UnitTests.Internals
         }
 
         [Fact]
-        public void TestValidateMessageSubjectRequired()
+        public void TestValidateSubject()
         {
-            AllowedRequired(ValidateSubject, Plain, HasPrintable, HasDot, HasStar, HasGt, HasDollar);
-            NotAllowedRequired(ValidateSubject, null, string.Empty, HasSpace, HasLow, Has127);
-            NotAllowedRequired(ValidateSubject, _utfOnlyStrings);
-            AllowedNotRequiredEmptyAsNull(ValidateSubject, null, string.Empty);
+            // subject is required
+            AllowedRequired(ValidateSubject, Plain, HasPrintable, HasDot, HasDollar, HasLow, Has127);
+            AllowedRequired(ValidateSubject, _utfOnlyStrings);
+            AllowedRequired(ValidateSubject, StarSegment, GtLastSegment);
+            NotAllowedRequired(ValidateSubject, null, string.Empty, HasSpace, HasCr, HasLf);
+            NotAllowedRequired(ValidateSubject, StartsWithDot, StarNotSegment, GtNotSegment, EmptySegment);
+            NotAllowedRequired(ValidateSubject, EndsWithDot, EndsWithDotSpace, EndsWithCr, EndsWithLf, EndsWithTab);
 
-            NotAllowedRequired(ValidateSubject, null, string.Empty, HasSpace, HasLow, Has127);
+
+            // subject not required, null and empty both mean not supplied
             AllowedNotRequiredEmptyAsNull(ValidateSubject, null, string.Empty);
+            NotAllowedNotRequired(ValidateSubject, HasSpace, HasCr, HasLf);
+            NotAllowedNotRequired(ValidateSubject, StartsWithDot, StarNotSegment, GtNotSegment, EmptySegment);
+            NotAllowedNotRequired(ValidateSubject, EndsWithDot, EndsWithDotSpace, EndsWithCr, EndsWithLf, EndsWithTab);
         }
 
         [Fact]
         public void TestValidateReplyTo()
         {
             AllowedRequired(ValidateReplyTo, Plain, HasPrintable, HasDot, HasDollar);
-            NotAllowedRequired(ValidateReplyTo, null, string.Empty, HasSpace, HasStar, HasGt, HasLow, Has127);
+            NotAllowedRequired(ValidateReplyTo, null, string.Empty, HasSpace, HasStar, HasGt, Has127);
             NotAllowedRequired(ValidateReplyTo, _utfOnlyStrings);
             AllowedNotRequiredEmptyAsNull(ValidateReplyTo, null, string.Empty);
         }
@@ -54,7 +61,7 @@ namespace UnitTests.Internals
         public void TestValidateQueueNameRequired()
         {
             AllowedRequired(ValidateQueueName, Plain, HasPrintable, HasDollar);
-            NotAllowedRequired(ValidateQueueName, null, string.Empty, HasSpace, HasDot, HasStar, HasGt, HasLow, Has127);
+            NotAllowedRequired(ValidateQueueName, null, string.Empty, HasSpace, HasDot, HasStar, HasGt, Has127);
             NotAllowedRequired(ValidateQueueName, _utfOnlyStrings);
             AllowedNotRequiredEmptyAsNull(ValidateQueueName, null, string.Empty);
         }
@@ -63,7 +70,7 @@ namespace UnitTests.Internals
         public void TestValidateStreamName()
         {
             AllowedRequired(ValidateStreamName, Plain, HasPrintable, HasDollar);
-            NotAllowedRequired(ValidateStreamName, null, string.Empty, HasSpace, HasDot, HasStar, HasGt, HasLow, Has127);
+            NotAllowedRequired(ValidateStreamName, null, string.Empty, HasSpace, HasDot, HasStar, HasGt, Has127);
             NotAllowedRequired(ValidateStreamName, _utfOnlyStrings);
             AllowedNotRequiredEmptyAsNull(ValidateStreamName, null, string.Empty);
         }
@@ -72,7 +79,7 @@ namespace UnitTests.Internals
         public void TestValidateDurable()
         {
             AllowedRequired(ValidateDurable, Plain, HasPrintable, HasDollar);
-            NotAllowedRequired(ValidateDurable, null, string.Empty, HasSpace, HasDot, HasStar, HasGt, HasLow, Has127);
+            NotAllowedRequired(ValidateDurable, null, string.Empty, HasSpace, HasDot, HasStar, HasGt, Has127);
             NotAllowedRequired(ValidateDurable, _utfOnlyStrings);
             AllowedNotRequiredEmptyAsNull(ValidateDurable, null, string.Empty);
         }
@@ -213,7 +220,6 @@ namespace UnitTests.Internals
             Assert.Throws<ArgumentException>(() => ValidateJetStreamPrefix(HasGt));
             Assert.Throws<ArgumentException>(() => ValidateJetStreamPrefix(HasDollar));
             Assert.Throws<ArgumentException>(() => ValidateJetStreamPrefix(HasSpace));
-            Assert.Throws<ArgumentException>(() => ValidateJetStreamPrefix(HasLow));
         }
         
         [Fact]
@@ -258,6 +264,14 @@ namespace UnitTests.Internals
             }
         }
 
+        private void NotAllowedRequired(Func<string, bool, string> test, params string[] strings)
+        {
+            foreach (string s in strings)
+            {
+                Assert.Throws<ArgumentException>(() => test.Invoke(s, true));
+            }
+        }
+
         private void AllowedNotRequiredEmptyAsNull(Func<string, bool, string> test, params string[] strings)
         {
             foreach (string s in strings) {
@@ -265,11 +279,11 @@ namespace UnitTests.Internals
             }
         }
 
-        private void NotAllowedRequired(Func<string, bool, string> test, params string[] strings)
+        private void NotAllowedNotRequired(Func<string, bool, string> test, params string[] strings)
         {
             foreach (string s in strings)
             {
-                Assert.Throws<ArgumentException>(() => test.Invoke(s, true));
+                Assert.Throws<ArgumentException>(() => test.Invoke(s, false));
             }
         }
 

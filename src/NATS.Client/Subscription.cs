@@ -688,7 +688,7 @@ namespace NATS.Client
 
         #region validation
 
-        static private readonly char[] invalidSubjectChars = { '\r', '\n', '\t', ' '};
+        private static readonly char[] invalidSubjectChars = { '\r', '\n', '\t', ' '};
 
         private static bool ContainsInvalidChars(string value)
         {
@@ -702,17 +702,7 @@ namespace NATS.Client
         /// <returns>true if valid, false otherwise.</returns>
         public static bool IsValidSubject(string subject)
         {
-            if (ContainsInvalidChars(subject))
-            {
-                return false;
-            }
-
-            // Avoid split for performance, in case this is ever called in the fastpath.
-            if (subject.StartsWith(".") || subject.EndsWith(".") || subject.Contains(".."))
-            {
-                return false;
-            }
-            return true;
+            return Validator.IsValidSubjectTerm(subject, "subject", true).Item1;
         }
 
         /// <summary>
@@ -735,7 +725,7 @@ namespace NATS.Client
         /// <returns>true is the queue group name is valid, false otherwise.</returns>
         public static bool IsValidQueueGroupName(string queueGroup)
         {
-            return ContainsInvalidChars(queueGroup) == false;
+            return Validator.IsValidSubjectTerm(queueGroup, "queueGroup", true).Item1;
         }
 
         #endregion

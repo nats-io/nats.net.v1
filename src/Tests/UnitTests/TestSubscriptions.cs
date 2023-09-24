@@ -13,13 +13,18 @@
 
 using NATS.Client;
 using Xunit;
+using static UnitTests.TestBase;
 
 namespace UnitTests
 {
     public class TestSubscriptions
     {
-        static readonly string[] invalidSubjects = { "foo bar", "foo..bar", ".foo", "bar.baz.", "baz\t.foo" };
-        static readonly string[] invalidQNames = { "foo group", "group\t1", "g1\r\n2" };
+        static readonly string[] invalid =
+        {
+            string.Empty, HasSpace, HasCr, HasLf, HasTab,
+            StartsWithDot, StarNotSegment, GtNotSegment, EmptySegment,
+            EndsWithDot, EndsWithDotSpace, EndsWithDot, EndsWithCr, EndsWithLf, EndsWithTab
+        };
 
         [Fact]
         public void TestSubscriptionValidationAPI()
@@ -27,12 +32,12 @@ namespace UnitTests
             Assert.True(Subscription.IsValidSubject("foo"));
             Assert.True(Subscription.IsValidSubject("foo.bar"));
 
-            foreach (string s in invalidSubjects)
+            foreach (string s in invalid)
             {
                 Assert.False(Subscription.IsValidSubject(s));
             }
 
-            foreach (string s in invalidQNames)
+            foreach (string s in invalid)
             {
                 Assert.False(Subscription.IsValidQueueGroupName(s));
             }
