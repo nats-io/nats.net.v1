@@ -2090,14 +2090,29 @@ namespace IntegrationTests
                     c.Publish("mptest", new byte[maxPayload]);
                 }
                 
-                Assert.Throws<NATSConnectionClosedException>(() =>
+                Assert.Throws<NATSMaxPayloadException>(() =>
                 {
+                    opts.ClientSideLimitChecks = true;
                     using (var c = Context.ConnectionFactory.CreateConnection(opts))
                     {
                         long maxPayload = c.ServerInfo.MaxPayload;
                         for (int x = 1; x < 10; x++)
                         {
-                            c.Publish("mptest", new byte[maxPayload + x]);
+                            c.Publish("mptest-ClientSideLimitChecks-true", new byte[maxPayload + x]);
+                            Thread.Sleep(100);
+                        }
+                    }
+                });
+                
+                Assert.Throws<NATSConnectionClosedException>(() =>
+                {
+                    opts.ClientSideLimitChecks = false;
+                    using (var c = Context.ConnectionFactory.CreateConnection(opts))
+                    {
+                        long maxPayload = c.ServerInfo.MaxPayload;
+                        for (int x = 1; x < 10; x++)
+                        {
+                            c.Publish("mptest-ClientSideLimitChecks-false", new byte[maxPayload + x]);
                             Thread.Sleep(100);
                         }
                     }

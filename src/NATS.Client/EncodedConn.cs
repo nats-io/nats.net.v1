@@ -180,6 +180,8 @@ namespace NATS.Client
         /// <param name="obj">The <see cref="Object"/> to serialize and publish to the connected NATS server.</param>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is 
         /// <c>null</c> or entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="obj"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSException"><para><see cref="OnSerialize"/> is <c>null</c>.</para>
         /// <para>-or-</para>
@@ -200,6 +202,8 @@ namespace NATS.Client
         /// <param name="obj">The <see cref="Object"/> to serialize and publish to the connected NATS server.</param>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is 
         /// <c>null</c> or entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="obj"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSException"><para><see cref="OnSerialize"/> is <c>null</c>.</para>
         /// <para>-or-</para>
@@ -220,6 +224,8 @@ namespace NATS.Client
         /// <param name="obj">The <see cref="Object"/> to serialize and publish to the connected NATS server.</param>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or
         /// entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="obj"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSException"><para><see cref="OnSerialize"/> is <c>null</c>.</para>
         /// <para>-or-</para>
@@ -241,6 +247,8 @@ namespace NATS.Client
         /// <param name="obj">The <see cref="Object"/> to serialize and publish to the connected NATS server.</param>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or
         /// entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="obj"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSException"><para><see cref="OnSerialize"/> is <c>null</c>.</para>
         /// <para>-or-</para>
@@ -392,6 +400,8 @@ namespace NATS.Client
         /// (<c>0</c>).</exception>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or
         /// entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="obj"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the 
         /// response.</exception>
@@ -423,6 +433,8 @@ namespace NATS.Client
         /// (<c>0</c>).</exception>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or
         /// entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="obj"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the 
         /// response.</exception>
@@ -449,6 +461,8 @@ namespace NATS.Client
         /// <returns>A <see cref="Object"/> with the deserialized response from the NATS server.</returns>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or 
         /// entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="obj"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>
@@ -476,6 +490,8 @@ namespace NATS.Client
         /// <returns>A <see cref="Object"/> with the deserialized response from the NATS server.</returns>
         /// <exception cref="NATSBadSubscriptionException"><paramref name="subject"/> is <c>null</c> or 
         /// entirely whitespace.</exception>
+        /// <exception cref="NATSMaxPayloadException"><paramref name="obj"/> exceeds the maximum payload size
+        /// supported by the NATS server.</exception>
         /// <exception cref="NATSConnectionClosedException">The <see cref="Connection"/> is closed.</exception>
         /// <exception cref="NATSTimeoutException">A timeout occurred while sending the request or receiving the
         /// response.</exception>

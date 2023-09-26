@@ -94,17 +94,6 @@ Check out the [ServiceExample](src/Samples/ServiceExample/ServiceExample.cs)
 
 ## Version Notes
 
-### Version 1.0.5 Max Payload Check
-
-As of version 1.0.5, there is no longer client side checking 
-1. that a message payload is less than the server configuration (Core and JetStream publishes)
-2. is less than the stream configuration (JetStream publishes)
-
-Please see unit test for examples of this behavior. 
-`TestMaxPayload` in [TestBasic](src/Tests/IntegrationTests/TestBasic.cs)
-and
-`TestMaxPayloadJs` in [TestJetStream](src/Tests/IntegrationTests/TestJetStream.cs)
-
 ### Version 1.0.1 Consumer Create
 
 This release by default will use a new JetStream consumer create API when interacting with nats-server version 2.9.0 or higher.
