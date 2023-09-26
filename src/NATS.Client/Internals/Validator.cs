@@ -653,11 +653,11 @@ namespace NATS.Client.Internals
 
         public static string EmptyAsNull(string s)
         {
-            return NullOrEmpty(s) ? null : s;
+            return string.IsNullOrWhiteSpace(s) ? null : s;
         }
 
         public static string EmptyOrNullAs(string s, string ifEmpty) {
-            return NullOrEmpty(s) ? ifEmpty : s;
+            return string.IsNullOrWhiteSpace(s) ? ifEmpty : s;
         }
 
         public static IList<TSource> EmptyAsNull<TSource>(IList<TSource> list)
