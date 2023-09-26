@@ -38,9 +38,28 @@ namespace NATS.Client.JetStream
         public JetStreamOptions JetStreamOptions { get; }
         public IConnection Conn { get; }
         public int Timeout { get; }
-        
-        protected bool ConsumerCreate290Available { get; }
-        protected bool MultipleSubjectFilter210Available { get; }
+
+        private bool? _consumerCreate290Available;
+        private bool? _multipleSubjectFilter210Available;
+
+        protected bool ConsumerCreate290Available()
+        {
+            if (!_consumerCreate290Available.HasValue)
+            {
+                _consumerCreate290Available = Conn.ServerInfo.IsSameOrNewerThanVersion("2.9.0") &&
+                                              !JetStreamOptions.IsOptOut290ConsumerCreate;
+            }
+            return _consumerCreate290Available.Value;
+        }
+
+        protected bool MultipleSubjectFilter210Available()
+        {
+            if (!_multipleSubjectFilter210Available.HasValue)
+            {
+                _multipleSubjectFilter210Available = Conn.ServerInfo.IsSameOrNewerThanVersion("2.9.99");
+            }
+            return _multipleSubjectFilter210Available.Value;
+        }
 
         protected JetStreamBase(IConnection connection, JetStreamOptions options)
         {
@@ -48,9 +67,7 @@ namespace NATS.Client.JetStream
             JetStreamOptions = options ?? JetStreamOptions.DefaultJsOptions;
             Prefix = JetStreamOptions.Prefix;
             Timeout = JetStreamOptions.RequestTimeout?.Millis ?? Conn.Opts.Timeout;
-
-            ConsumerCreate290Available = Conn.ServerInfo.IsSameOrNewerThanVersion("2.9.0") && !JetStreamOptions.IsOptOut290ConsumerCreate;
-            MultipleSubjectFilter210Available = Conn.ServerInfo.IsNewerVersionThan("2.9.99");
+            
         }
 
         internal static ServerInfo ServerInfoOrException(IConnection conn)
@@ -77,7 +94,7 @@ namespace NATS.Client.JetStream
         {
             // ConsumerConfiguration validates that name and durable are the same if both are supplied.
             string consumerName = Validator.EmptyAsNull(config.Name);
-            if (consumerName != null && !ConsumerCreate290Available)
+            if (consumerName != null && !ConsumerCreate290Available())
             {
                 throw ClientExDetail.JsConsumerCreate290NotAvailable.Instance();
             }
@@ -85,13 +102,13 @@ namespace NATS.Client.JetStream
             bool hasMultipleFilterSubjects = config.HasMultipleFilterSubjects;
             
             // seems strange that this could happen, but checking anyway...
-            if (hasMultipleFilterSubjects && !MultipleSubjectFilter210Available) {
+            if (hasMultipleFilterSubjects && !MultipleSubjectFilter210Available()) {
                 throw ClientExDetail.JsMultipleFilterSubjects210NotAvailable.Instance();
             }
 
             string durable = Validator.EmptyAsNull(config.Durable);
             string subj;
-            if (ConsumerCreate290Available && !hasMultipleFilterSubjects)
+            if (ConsumerCreate290Available() && !hasMultipleFilterSubjects)
             {
                 if (consumerName == null) 
                 {

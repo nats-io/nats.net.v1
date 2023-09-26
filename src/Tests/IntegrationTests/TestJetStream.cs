@@ -413,17 +413,21 @@ namespace IntegrationTests
             {
                 CreateDefaultTestStream(c);
 
-                Assert.Throws<ArgumentException>(
-                () => PushSubscribeOptions.Builder().WithStream(STREAM).WithBind(true).Build());
+                NATSJetStreamClientException e; 
+                    
+                e = Assert.Throws<NATSJetStreamClientException>(
+                    () => PushSubscribeOptions.Builder().WithStream(STREAM).WithBind(true).Build());
+                Assert.Contains(JsSoNameOrDurableRequiredForBind.Id, e.Message);
 
                 Assert.Throws<ArgumentException>(
-                () => PushSubscribeOptions.Builder().WithDurable(DURABLE).WithBind(true).Build());
+                    () => PushSubscribeOptions.Builder().WithDurable(DURABLE).WithBind(true).Build());
 
                 Assert.Throws<ArgumentException>(
-                () => PushSubscribeOptions.Builder().WithStream(string.Empty).WithBind(true).Build());
+                    () => PushSubscribeOptions.Builder().WithStream(string.Empty).WithBind(true).Build());
 
-                Assert.Throws<ArgumentException>(
-                () => PushSubscribeOptions.Builder().WithStream(STREAM).WithDurable(string.Empty).WithBind(true).Build());
+                e = Assert.Throws<NATSJetStreamClientException>(
+                    () => PushSubscribeOptions.Builder().WithStream(STREAM).WithDurable(string.Empty).WithBind(true).Build());
+                Assert.Contains(JsSoNameOrDurableRequiredForBind.Id, e.Message);
             });
         }
 
