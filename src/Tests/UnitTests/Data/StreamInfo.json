@@ -74,18 +74,42 @@
   "mirror": {
     "name": "mname",
     "lag": 16,
-    "active": 160000000000
+    "active": 160000000000,
+    "external": {
+      "api": "api16",
+      "deliver": "dlvr16"
+    },
+    "subject_transforms": [
+      {"src":"16_st_src0","dest":"16_st_dest0"},
+      {"src":"16_st_src1","dest":"16_st_dest1"}
+    ]
   },
   "sources": [
     {
       "name": "sname17",
       "lag": 17,
-      "active": 170000000000
+      "active": 170000000000,
+      "external": {
+        "api": "api17",
+        "deliver": "dlvr17"
+      },
+      "subject_transforms": [
+        {"src":"17_st_src0","dest":"17_st_dest0"},
+        {"src":"17_st_src1","dest":"17_st_dest1"}
+      ]
     },
     {
       "name": "sname18",
       "lag": 18,
-      "active": 180000000000
+      "active": 180000000000,
+      "external": {
+        "api": "api18",
+        "deliver": "dlvr18"
+      },
+      "subject_transforms": [
+        {"src":"18_st_src0","dest":"18_st_dest0"},
+        {"src":"18_st_src1","dest":"18_st_dest1"}
+      ]
     }
   ]
 }

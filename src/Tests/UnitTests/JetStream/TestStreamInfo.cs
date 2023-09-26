@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System.Collections.Generic;
+using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using Xunit;
 
@@ -110,15 +111,28 @@ namespace UnitTests.JetStream
             Assert.Equal("mname", si.MirrorInfo.Name);
             Assert.Equal(16u, si.MirrorInfo.Lag);
             Assert.Equal(160000000000, si.MirrorInfo.Active.Nanos);
+            Assert.Null(si.MirrorInfo.Error);
+            ValidateExternal(si.MirrorInfo.External, 16);
             
             // List<SourceInfo> SourceInfos
             Assert.Equal(2, si.SourceInfos.Count);
-            Assert.Equal("sname17", si.SourceInfos[0].Name);
-            Assert.Equal(17u, si.SourceInfos[0].Lag);
-            Assert.Equal(170000000000, si.SourceInfos[0].Active.Nanos);
-            Assert.Equal("sname18", si.SourceInfos[1].Name);
-            Assert.Equal(18u, si.SourceInfos[1].Lag);
-            Assert.Equal(180000000000, si.SourceInfos[1].Active.Nanos);
+            ValidateSourceInfo(si.SourceInfos[0], 17);
+            ValidateSourceInfo(si.SourceInfos[1], 18);
         }
+        
+        private static void ValidateSourceInfo(SourceInfo sourceInfo, ulong id) {
+            Assert.Equal("sname" + id, sourceInfo.Name);
+            Assert.Equal(id, sourceInfo.Lag);
+            Assert.Equal(Duration.OfNanos((long)id * 10000000000L), sourceInfo.Active);
+            ValidateExternal(sourceInfo.External, id);
+            TestStreamConfiguration.ValidateSubjectTransforms(sourceInfo.SubjectTransforms, 2, "" + id);
+        }
+
+        private static void ValidateExternal(External e, ulong id) {
+            Assert.NotNull(e);
+            Assert.Equal("api" + id, e.Api);
+            Assert.Equal("dlvr" + id, e.Deliver);
+        }
+
     }
 }
