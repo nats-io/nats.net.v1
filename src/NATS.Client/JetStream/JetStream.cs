@@ -465,7 +465,7 @@ namespace NATS.Client.JetStream
             }
             else
             {
-                bool handlerAutoAck = autoAck && serverCC.AckPolicy != AckPolicy.None;
+                bool handlerAutoAck = autoAck && settledCC.AckPolicy != AckPolicy.None;
                 EventHandler<MsgHandlerEventArgs> handler = (sender, args) =>
                 {
                     if (mm.Manage(args.Message) == ManageResult.Message)

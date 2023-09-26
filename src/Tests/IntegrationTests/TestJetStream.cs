@@ -583,7 +583,9 @@ namespace IntegrationTests
         {
             Context.RunInJsServer(c =>
             {
-                CreateDefaultTestStream(c);
+                string stream = Stream();
+                string subject = Subject();
+                CreateMemoryStream(c, stream, subject);
 
                 IJetStream js = c.CreateJetStreamContext();
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
@@ -592,37 +594,38 @@ namespace IntegrationTests
                 ConsumerConfiguration ccDurPush = ConsumerConfiguration.Builder()
                         .WithDurable(Durable(1))
                         .WithDeliverSubject(Deliver(1))
+                        .WithFilterSubject(subject)
                         .Build();
-                jsm.AddOrUpdateConsumer(STREAM, ccDurPush);
+                jsm.AddOrUpdateConsumer(stream, ccDurPush);
 
                 // create a durable pull subscriber - notice no deliver subject
                 ConsumerConfiguration ccDurPull = ConsumerConfiguration.Builder()
                         .WithDurable(Durable(2))
                         .Build();
-                jsm.AddOrUpdateConsumer(STREAM, ccDurPull);
+                jsm.AddOrUpdateConsumer(stream, ccDurPull);
 
                 // try to pull subscribe against a push durable
                 NATSJetStreamClientException e = Assert.Throws<NATSJetStreamClientException>(
-                        () => js.PullSubscribe(SUBJECT, PullSubscribeOptions.Builder().WithDurable(Durable(1)).Build()));
+                        () => js.PullSubscribe(subject, PullSubscribeOptions.Builder().WithDurable(Durable(1)).Build()));
                 Assert.Contains(JsSubConsumerAlreadyConfiguredAsPush.Id, e.Message);
 
                 // try to pull bind against a push durable
                 e = Assert.Throws<NATSJetStreamClientException>(
-                        () => js.PullSubscribe(SUBJECT, PullSubscribeOptions.BindTo(STREAM, Durable(1))));
+                        () => js.PullSubscribe(subject, PullSubscribeOptions.BindTo(stream, Durable(1))));
                 Assert.Contains(JsSubConsumerAlreadyConfiguredAsPush.Id, e.Message);
 
                 // try to push subscribe against a pull durable
                 e = Assert.Throws<NATSJetStreamClientException>(
-                        () => js.PushSubscribeSync(SUBJECT, PushSubscribeOptions.Builder().WithDurable(Durable(2)).Build()));
+                        () => js.PushSubscribeSync(subject, PushSubscribeOptions.Builder().WithDurable(Durable(2)).Build()));
                 Assert.Contains(JsSubConsumerAlreadyConfiguredAsPull.Id, e.Message);
 
                 // try to push bind against a pull durable
                 e = Assert.Throws<NATSJetStreamClientException>(
-                        () => js.PushSubscribeSync(SUBJECT, PushSubscribeOptions.BindTo(STREAM, Durable(2))));
+                        () => js.PushSubscribeSync(subject, PushSubscribeOptions.BindTo(stream, Durable(2))));
                 Assert.Contains(JsSubConsumerAlreadyConfiguredAsPull.Id, e.Message);
 
                 // this one is okay
-                js.PushSubscribeSync(SUBJECT, PushSubscribeOptions.Builder().WithDurable(Durable(1)).Build());
+                js.PushSubscribeSync(subject, PushSubscribeOptions.Builder().WithDurable(Durable(1)).Build());
             });
         }
 
@@ -750,63 +753,68 @@ namespace IntegrationTests
                 IJetStream js = c.CreateJetStreamContext();
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
 
-                CreateDefaultTestStream(jsm);
+                string stream = Stream(); 
+                string subject = Subject(); 
+                CreateMemoryStream(jsm, stream, subject);
 
                 // push
-                jsm.AddOrUpdateConsumer(STREAM, PushDurableBuilder().Build());
+                string uname = Durable();
+                string deliver = Deliver();
+                jsm.AddOrUpdateConsumer(stream, PushDurableBuilder(subject, uname, deliver).Build());
 
-                ChangeExPush(js, PushDurableBuilder().WithDeliverPolicy(DeliverPolicy.Last), "DeliverPolicy");
-                ChangeExPush(js, PushDurableBuilder().WithDeliverPolicy(DeliverPolicy.New), "DeliverPolicy");
-                ChangeExPush(js, PushDurableBuilder().WithAckPolicy(AckPolicy.None), "AckPolicy");
-                ChangeExPush(js, PushDurableBuilder().WithAckPolicy(AckPolicy.All), "AckPolicy");
-                ChangeExPush(js, PushDurableBuilder().WithReplayPolicy(ReplayPolicy.Original), "ReplayPolicy");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithDeliverPolicy(DeliverPolicy.Last), "DeliverPolicy");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithDeliverPolicy(DeliverPolicy.New), "DeliverPolicy");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithAckPolicy(AckPolicy.None), "AckPolicy");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithAckPolicy(AckPolicy.All), "AckPolicy");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithReplayPolicy(ReplayPolicy.Original), "ReplayPolicy");
 
-                ChangeExPush(js, PushDurableBuilder().WithFlowControl(10000), "FlowControl");
-                ChangeExPush(js, PushDurableBuilder().WithHeadersOnly(true), "HeadersOnly");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithFlowControl(10000), "FlowControl");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithHeadersOnly(true), "HeadersOnly");
 
-                ChangeExPush(js, PushDurableBuilder().WithStartTime(DateTime.UtcNow), "StartTime");
-                ChangeExPush(js, PushDurableBuilder().WithAckWait(Duration.OfMillis(1)), "AckWait");
-                ChangeExPush(js, PushDurableBuilder().WithDescription("x"), "Description");
-                ChangeExPush(js, PushDurableBuilder().WithSampleFrequency("x"), "SampleFrequency");
-                ChangeExPush(js, PushDurableBuilder().WithIdleHeartbeat(Duration.OfMillis(1000)), "IdleHeartbeat");
-                ChangeExPush(js, PushDurableBuilder().WithMaxExpires(Duration.OfMillis(1000)), "MaxExpires");
-                ChangeExPush(js, PushDurableBuilder().WithInactiveThreshold(Duration.OfMillis(1000)), "InactiveThreshold");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithStartTime(DateTime.UtcNow), "StartTime");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithAckWait(Duration.OfMillis(1)), "AckWait");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithDescription("x"), "Description");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithSampleFrequency("x"), "SampleFrequency");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithIdleHeartbeat(Duration.OfMillis(1000)), "IdleHeartbeat");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithMaxExpires(Duration.OfMillis(1000)), "MaxExpires");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithInactiveThreshold(Duration.OfMillis(1000)), "InactiveThreshold");
 
                 // value
-                ChangeExPush(js, PushDurableBuilder().WithMaxDeliver(1), "MaxDeliver");
-                ChangeExPush(js, PushDurableBuilder().WithMaxAckPending(0), "MaxAckPending");
-                ChangeExPush(js, PushDurableBuilder().WithAckWait(0), "AckWait");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithMaxDeliver(1), "MaxDeliver");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithMaxAckPending(0), "MaxAckPending");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithAckWait(0), "AckWait");
 
                 // value unsigned
-                ChangeExPush(js, PushDurableBuilder().WithStartSequence(1), "StartSequence");
-                ChangeExPush(js, PushDurableBuilder().WithRateLimitBps(1), "RateLimitBps");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithStartSequence(1), "StartSequence");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithRateLimitBps(1), "RateLimitBps");
 
                 // unset doesn't fail because the server provides a value equal to the unset
-                ChangeOkPush(js, PushDurableBuilder().WithMaxDeliver(-1));
+                ChangeOkPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithMaxDeliver(-1));
 
                 // unset doesn't fail because the server does not provide a value
-                ChangeOkPush(js, PushDurableBuilder().WithStartSequence(0));
-                ChangeOkPush(js, PushDurableBuilder().WithRateLimitBps(0));
+                ChangeOkPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithStartSequence(0));
+                ChangeOkPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithRateLimitBps(0));
 
                 // unset fail b/c the server does set a value that is not equal to the unset or the minimum
-                ChangeExPush(js, PushDurableBuilder().WithMaxAckPending(-1), "MaxAckPending");
-                ChangeExPush(js, PushDurableBuilder().WithMaxAckPending(0), "MaxAckPending");
-                ChangeExPush(js, PushDurableBuilder().WithAckWait(-1), "AckWait");
-                ChangeExPush(js, PushDurableBuilder().WithAckWait(0), "AckWait");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithMaxAckPending(-1), "MaxAckPending");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithMaxAckPending(0), "MaxAckPending");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithAckWait(-1), "AckWait");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithAckWait(0), "AckWait");
 
                 // pull
-                jsm.AddOrUpdateConsumer(STREAM, PullDurableBuilder().Build());
+                string lname = Durable();
+                jsm.AddOrUpdateConsumer(stream, PullDurableBuilder(subject, lname).Build());
 
                 // value
-                ChangeExPull(js, PullDurableBuilder().WithMaxPullWaiting(0), "MaxPullWaiting");
-                ChangeExPull(js, PullDurableBuilder().WithMaxBatch(0), "MaxBatch");
-                ChangeExPull(js, PullDurableBuilder().WithMaxBytes(0), "MaxBytes");
+                ChangeExPull(js, subject, PullDurableBuilder(subject, lname).WithMaxPullWaiting(0), "MaxPullWaiting");
+                ChangeExPull(js, subject, PullDurableBuilder(subject, lname).WithMaxBatch(0), "MaxBatch");
+                ChangeExPull(js, subject, PullDurableBuilder(subject, lname).WithMaxBytes(0), "MaxBytes");
 
                 // unsets fail b/c the server does set a value
-                ChangeExPull(js, PullDurableBuilder().WithMaxPullWaiting(-1), "MaxPullWaiting");
+                ChangeExPull(js, subject, PullDurableBuilder(subject, lname).WithMaxPullWaiting(-1), "MaxPullWaiting");
 
                 // unset
-                ChangeOkPull(js, PullDurableBuilder().WithMaxBatch(-1));
+                ChangeOkPull(js, subject, PullDurableBuilder(subject, lname).WithMaxBatch(-1));
 
                 if (c.ServerInfo.IsNewerVersionThan("2.9.99"))
                 {
@@ -817,39 +825,39 @@ namespace IntegrationTests
                     metadataA["b"] = "B";
 
                     // metadata server null versus new not null
-                    jsm.AddOrUpdateConsumer(STREAM, PushDurableBuilder().Build());
-                    ChangeExPush(js, PushDurableBuilder().WithMetadata(metadataA), "Metadata");
+                    jsm.AddOrUpdateConsumer(stream, PushDurableBuilder(subject, uname, deliver).Build());
+                    ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithMetadata(metadataA), "Metadata");
 
                     // metadata server not null versus new null
-                    jsm.AddOrUpdateConsumer(STREAM, PushDurableBuilder().WithMetadata(metadataA).Build());
-                    ChangeOkPush(js, PushDurableBuilder());
+                    jsm.AddOrUpdateConsumer(stream, PushDurableBuilder(subject, uname, deliver).WithMetadata(metadataA).Build());
+                    ChangeOkPush(js, subject, PushDurableBuilder(subject, uname, deliver));
 
                     // metadata server not null versus new not null but different
-                    ChangeExPush(js, PushDurableBuilder().WithMetadata(metadataB), "Metadata");
+                    ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithMetadata(metadataB), "Metadata");
 
                     // metadata server not null versus new not null and same
-                    ChangeOkPush(js, PushDurableBuilder().WithMetadata(metadataA));
+                    ChangeOkPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithMetadata(metadataA));
                 }                
             });
         }
 
-        private void ChangeOkPush(IJetStream js, ConsumerConfiguration.ConsumerConfigurationBuilder builder) {
-            js.PushSubscribeSync(SUBJECT, PushSubscribeOptions.Builder().WithConfiguration(builder.Build()).Build()).Unsubscribe();
+        private void ChangeOkPush(IJetStream js, string subject, ConsumerConfiguration.ConsumerConfigurationBuilder builder) {
+            js.PushSubscribeSync(subject, PushSubscribeOptions.Builder().WithConfiguration(builder.Build()).Build()).Unsubscribe();
         }
 
-        private void ChangeOkPull(IJetStream js, ConsumerConfiguration.ConsumerConfigurationBuilder builder) {
-            js.PullSubscribe(SUBJECT, PullSubscribeOptions.Builder().WithConfiguration(builder.Build()).Build()).Unsubscribe();
+        private void ChangeOkPull(IJetStream js, string subject, ConsumerConfiguration.ConsumerConfigurationBuilder builder) {
+            js.PullSubscribe(subject, PullSubscribeOptions.Builder().WithConfiguration(builder.Build()).Build()).Unsubscribe();
         }
 
-        private void ChangeExPush(IJetStream js, ConsumerConfiguration.ConsumerConfigurationBuilder builder, string changedField) {
+        private void ChangeExPush(IJetStream js, string subject, ConsumerConfiguration.ConsumerConfigurationBuilder builder, string changedField) {
             NATSJetStreamClientException e = Assert.Throws<NATSJetStreamClientException>(
-                () => js.PushSubscribeSync(SUBJECT, PushSubscribeOptions.Builder().WithConfiguration(builder.Build()).Build()));
+                () => js.PushSubscribeSync(subject, PushSubscribeOptions.Builder().WithConfiguration(builder.Build()).Build()));
             _ChangeEx(e, changedField);
         }
 
-        private void ChangeExPull(IJetStream js, ConsumerConfiguration.ConsumerConfigurationBuilder builder, string changedField) {
+        private void ChangeExPull(IJetStream js, string subject, ConsumerConfiguration.ConsumerConfigurationBuilder builder, string changedField) {
             NATSJetStreamClientException e = Assert.Throws<NATSJetStreamClientException>(
-                () => js.PullSubscribe(SUBJECT, PullSubscribeOptions.Builder().WithConfiguration(builder.Build()).Build()));
+                () => js.PullSubscribe(subject, PullSubscribeOptions.Builder().WithConfiguration(builder.Build()).Build()));
             _ChangeEx(e, changedField);
         }
 
@@ -860,12 +868,14 @@ namespace IntegrationTests
             Assert.Contains(changedField, msg);
         }
 
-        private ConsumerConfiguration.ConsumerConfigurationBuilder PushDurableBuilder() {
-            return ConsumerConfiguration.Builder().WithDurable(PUSH_DURABLE).WithDeliverSubject(DELIVER);
+        private ConsumerConfiguration.ConsumerConfigurationBuilder PushDurableBuilder(string subject, string durable, string deliver) {
+            return ConsumerConfiguration.Builder().WithDurable(durable)
+                .WithDeliverSubject(deliver)
+                .WithFilterSubject(subject);
         }
 
-        private ConsumerConfiguration.ConsumerConfigurationBuilder PullDurableBuilder() {
-            return ConsumerConfiguration.Builder().WithDurable(PULL_DURABLE);
+        private ConsumerConfiguration.ConsumerConfigurationBuilder PullDurableBuilder(string subject, string durable) {
+            return ConsumerConfiguration.Builder().WithDurable(durable).WithFilterSubject(subject);
         }
 
         [Fact]
