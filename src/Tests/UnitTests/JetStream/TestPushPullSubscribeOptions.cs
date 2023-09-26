@@ -22,7 +22,7 @@ namespace UnitTests.JetStream
 {
     public class TestSubscribeOptions : TestBase
     {
-        private static readonly string[] BadNames = {HasDot, HasGt, HasStar, HasFwdSlash, HasBackSlash};
+        private static readonly string[] BadNames = {HasDot, GtNotSegment, StarNotSegment, HasFwdSlash, HasBackSlash};
     
         [Fact]
         public void TestPushAffirmative()

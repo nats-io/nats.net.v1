@@ -29,11 +29,13 @@ namespace NATS.Client.JetStream
         public string Stream { get; }
         public bool Pull { get; }
         public bool Bind { get; }
+        public bool FastBind { get; }
         public bool Ordered { get; }
         internal int MessageAlarmTime { get; }
         public ConsumerConfiguration ConsumerConfiguration { get; }
         public long PendingMessageLimit { get; }
         public long PendingByteLimit { get; }
+        public string Name { get; }
         
         /// <summary>
         /// Gets the durable name
@@ -56,7 +58,8 @@ namespace NATS.Client.JetStream
             long pendingByteLimit = Defaults.SubPendingBytesLimit)
         {
             Pull = pull;
-            Bind = builder.Bind;
+            FastBind = builder.FastBind;
+            Bind = FastBind || builder.Bind;
             Ordered = builder.Ordered;
             MessageAlarmTime = builder.MessageAlarmTime;
 
@@ -65,14 +68,25 @@ namespace NATS.Client.JetStream
                 throw JsSoOrderedNotAllowedWithBind.Instance();
             }
             
-            Stream = ValidateStreamName(builder.Stream, builder.Bind);
-            
-            string durable = ValidateMustMatchIfBothSupplied(builder.Durable, builder.Cc?.Durable, JsSoDurableMismatch);
-            durable = ValidateDurable(durable, builder.Bind);
+            Stream = ValidateStreamName(builder.Stream, builder.Bind); // required when bind mode
 
-            string name = ValidateMustMatchIfBothSupplied(builder.Name, builder.Cc?.Name, JsSoNameMismatch);
+            // read the consumer names and do basic validation
+            // A1. validate name input
+            string temp = ValidateMustMatchIfBothSupplied(builder.Name, builder.Cc?.Name, JsSoNameMismatch);
+            // B1. Must be a valid consumer name if supplied
+            temp = ValidateConsumerName(temp, false);
             
-            ValidateMustMatchIfBothSupplied(name, durable, JsConsumerNameDurableMismatch);
+            // A2. validate durable input
+            string durable = ValidateMustMatchIfBothSupplied(builder.Durable, builder.Cc?.Durable, JsSoDurableMismatch);
+            // B2. Must be a valid consumer name if supplied
+            durable = ValidateDurable(durable, false);
+
+            // C. name must match durable if both supplied
+            Name = ValidateMustMatchIfBothSupplied(temp, durable, JsConsumerNameDurableMismatch);
+
+            if (Bind && Name == null) {
+                throw JsSoNameOrDurableRequiredForBind.Instance();
+            }
 
             deliverGroup = ValidateMustMatchIfBothSupplied(deliverGroup, builder.Cc?.DeliverGroup, JsSoDeliverGroupMismatch);
 
@@ -121,7 +135,7 @@ namespace NATS.Client.JetStream
                     .WithAckPolicy(AckPolicy.None)
                     .WithMaxDeliver(1)
                     .WithAckWait(Duration.OfHours(22))
-                    .WithName(name)
+                    .WithName(Name)
                     .WithMemStorage(true)
                     .WithNumReplicas(1);
 
@@ -138,7 +152,7 @@ namespace NATS.Client.JetStream
                     .WithDurable(durable)
                     .WithDeliverSubject(deliverSubject)
                     .WithDeliverGroup(deliverGroup)
-                    .WithName(name)
+                    .WithName(Name)
                     .Build();
             }
         }
@@ -147,6 +161,7 @@ namespace NATS.Client.JetStream
         {
             string Stream { get; }
             bool Bind { get; }
+            bool FastBind { get; }
             string Durable { get; }
             string Name { get; }
             ConsumerConfiguration Cc { get; }
@@ -158,6 +173,7 @@ namespace NATS.Client.JetStream
         {
             protected string _stream;
             protected bool _bind;
+            protected bool _fastBind;
             protected string _durable;
             protected string _name;
             protected ConsumerConfiguration _config;
@@ -166,6 +182,7 @@ namespace NATS.Client.JetStream
 
             public string Stream => _stream;
             public bool Bind => _bind;
+            public bool FastBind => _fastBind;
             public string Durable => _durable;
             public string Name => _name;
             public ConsumerConfiguration Cc => _config;
@@ -210,8 +227,13 @@ namespace NATS.Client.JetStream
             }
 
             /// <summary>
-            /// Set as a direct subscribe
+            /// Specify binding to an existing consumer via name.
+            /// The client validates regular (non-fast)
+            /// binds to ensure that provided consumer configuration
+            /// is consistent with the server version and that
+            /// consumer type (push versus pull) matches the subscription type.
             /// </summary>
+            /// <param name="isBind">the bind flag</param>
             /// <returns>The builder</returns>
             public TB WithBind(bool isBind)
             {

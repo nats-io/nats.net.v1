@@ -303,10 +303,10 @@ namespace UnitTests.JetStream
             AssertNotChange(Builder(orig).WithMaxBytes(null).Build(), orig);
             AssertChange(Builder(orig).WithMaxBytes(1).Build(), orig, "MaxBytes");
 
-            AssertNotChange(Builder(orig).WithFilterSubject("").Build(), orig);
+            AssertNotChange(Builder(orig).WithFilterSubject(string.Empty).Build(), orig);
             ccTest = Builder(orig).WithFilterSubject(Plain).Build();
             AssertNotChange(ccTest, ccTest);
-            AssertChange(ccTest, orig, "FilterSubject");
+            AssertChange(ccTest, orig, "FilterSubjects");
 
             AssertNotChange(Builder(orig).WithDescription("").Build(), orig);
             ccTest = Builder(orig).WithDescription(Plain).Build();

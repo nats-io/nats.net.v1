@@ -101,8 +101,8 @@ namespace UnitTests.JetStream
             AssertValidPrefix(HasTic);
 
             AssertInvalidPrefix(HasSpace);
-            AssertInvalidPrefix(HasStar);
-            AssertInvalidPrefix(HasGt);
+            AssertInvalidPrefix(StarNotSegment);
+            AssertInvalidPrefix(GtNotSegment);
             AssertInvalidPrefix(Has127);
 
             AssertInvalidPrefix(".");

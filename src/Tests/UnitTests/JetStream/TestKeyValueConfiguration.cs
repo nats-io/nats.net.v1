@@ -156,8 +156,8 @@ namespace UnitTests.JetStream
             Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithName(HasSpace));
             Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithName(HasPrintable));
             Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithName(HasDot));
-            Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithName(HasStar));
-            Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithName(HasGt));
+            Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithName(StarNotSegment));
+            Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithName(GtNotSegment));
             Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithName(HasDollar));
             Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder(Has127));
             Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder(HasFwdSlash));

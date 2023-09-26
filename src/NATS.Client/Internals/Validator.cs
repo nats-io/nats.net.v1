@@ -493,7 +493,7 @@ namespace NATS.Client.Internals
         // ----------------------------------------------------------------------------------------------------
         // Helpers
         // ----------------------------------------------------------------------------------------------------
-        
+        [Obsolete("This property is obsolete. use string.IsNullOrWhiteSpace(string) instead.", false)]
         public static bool NullOrEmpty(string s)
         {
             return string.IsNullOrWhiteSpace(s);
@@ -660,6 +660,21 @@ namespace NATS.Client.Internals
             return NullOrEmpty(s) ? ifEmpty : s;
         }
 
+        public static IList<TSource> EmptyAsNull<TSource>(IList<TSource> list)
+        {
+            return EmptyOrNull(list) ? null : list;
+        }
+
+        public static bool EmptyOrNull<TSource>(IList<TSource> list)
+        {
+            return list == null || list.Count == 0;
+        }
+
+        public static bool EmptyOrNull<TSource>(TSource[] list)
+        {
+            return list == null || list.Length == 0;
+        }
+        
         public static bool ZeroOrLtMinus1(long l)
         {
             return l == 0 || l < -1;
@@ -712,7 +727,7 @@ namespace NATS.Client.Internals
             return Regex.IsMatch(s, SemVerPattern);
         }
 
-        public static bool SequenceEqual<TSource>(IList<TSource> l1, IList<TSource> l2, bool nullSecondEqualsEmptyFirst = true)
+        public static bool SequenceEqual<T>(IList<T> l1, IList<T> l2, bool nullSecondEqualsEmptyFirst = true)
         {
             if (l1 == null)
             {
@@ -725,6 +740,26 @@ namespace NATS.Client.Internals
             }
             
             return l1.SequenceEqual(l2);
+        }
+
+        public static bool ListsAreEquivalent<T>(IList<T> l1, IList<T> l2)
+        {
+            if (l1 == null || l1.Count == 0)
+            {
+                return l2 == null || l2.Count == 0;
+            }
+
+            if (l2 == null || l1.Count != l2.Count)
+            {
+                return false;
+            }
+
+            foreach (T t in l1) {
+                if (!l2.Contains(t)) {
+                    return false;
+                }
+            }
+            return true;
         }
 
         public static bool DictionariesEqual(IDictionary<string, string> d1, IDictionary<string, string> d2)

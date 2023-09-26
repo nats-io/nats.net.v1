@@ -69,6 +69,7 @@ namespace NATS.Client.JetStream
         internal const string External = "external";
         internal const string Filter = "filter";
         internal const string FilterSubject = "filter_subject";
+        internal const string FilterSubjects = "filter_subjects";
         internal const string FirstSequence = "first_seq";
         internal const string FirstTs = "first_ts";
         internal const string FlowControl = "flow_control";

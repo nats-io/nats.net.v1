@@ -87,6 +87,11 @@ namespace UnitTests
         public static readonly string HasLow = "has" + (char)0 + "low";
         public static readonly string Has127 = "has" + (char)127 + "127";
 
+        
+        public static readonly string[] BadSubjectsOrQueues = new string[] {
+            HasSpace, HasCr, HasLf, HasTab, StartsSpace, EndsSpace, null, string.Empty
+        };
+
         public static string ReadDataFile(string name)
         {
             return File.ReadAllText(FileSpec(name));

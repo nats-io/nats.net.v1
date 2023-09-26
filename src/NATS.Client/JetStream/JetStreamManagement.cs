@@ -87,7 +87,7 @@ namespace NATS.Client.JetStream
         {
             Validator.ValidateStreamName(streamName, true);
             Validator.ValidateNotNull(config, nameof(config));
-            return AddOrUpdateConsumerInternal(streamName, config);
+            return CreateConsumerInternal(streamName, config);
         }
 
         public bool DeleteConsumer(string streamName, string consumer)

@@ -84,7 +84,7 @@ namespace NATS.Client.JetStream
                     .WithStartTime(DateTime.MinValue) // clear start time in case it was originally set
                     .Build();
 
-                Js.AddOrUpdateConsumerInternal(Stream, userCc);
+                Js.CreateConsumerInternal(Stream, userCc);
 
                 // 4. restart the manager.
                 Startup(Sub);

@@ -347,5 +347,86 @@ namespace IntegrationTestsInternal
                     new PullHeartbeatErrorSimulator(conn, so, false, latch);
             return latch;
         }
+
+        [Fact]
+        public void TestMultipleSubjectFilters() {
+            Context.RunInJsServer(AtLeast210, c => {
+                // Setup
+                IJetStream js = c.CreateJetStreamContext();
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+    
+                string subject1 = Subject();
+                string subject2 = Subject();
+                string stream = Stream();
+                CreateMemoryStream(jsm, stream, subject1, subject2);
+                JsPublish(js, subject1, 10);
+                JsPublish(js, subject2, 5);
+
+                StreamInfo si = jsm.GetStreamInfo(stream);
+                
+                // push ephemeral
+                ConsumerConfiguration cc = ConsumerConfiguration.Builder()
+                    .WithFilterSubjects(subject1, subject2).Build();
+                IJetStreamPushSyncSubscription pushSub = js.PushSubscribeSync(null, 
+                    PushSubscribeOptions.Builder().WithConfiguration(cc).Build());
+                ValidateMultipleSubjectFilterSub(pushSub, subject1);
+    
+                // pull ephemeral
+                IJetStreamPullSubscription pullSub = js.PullSubscribe(null, 
+                    PullSubscribeOptions.Builder().WithConfiguration(cc).Build());
+                pullSub.PullExpiresIn(15, 1000);
+                ValidateMultipleSubjectFilterSub(pullSub, subject1);
+    
+                // push named
+                string name = Name();
+                cc = ConsumerConfiguration.Builder()
+                    .WithFilterSubjects(subject1, subject2).WithName(name).WithDeliverSubject(Deliver()).Build();
+                jsm.AddOrUpdateConsumer(stream, cc);
+                pushSub = js.PushSubscribeSync(null, PushSubscribeOptions.Builder().WithConfiguration(cc).Build());
+                ValidateMultipleSubjectFilterSub(pushSub, subject1);
+    
+                name = Name();
+                cc = ConsumerConfiguration.Builder()
+                    .WithFilterSubjects(subject1, subject2).WithName(name).WithDeliverSubject(Deliver()).Build();
+                jsm.AddOrUpdateConsumer(stream, cc);
+                pushSub = js.PushSubscribeSync(null, PushSubscribeOptions.BindTo(stream, name));
+                ValidateMultipleSubjectFilterSub(pushSub, subject1);
+    
+                // pull named
+                name = Name();
+                cc = ConsumerConfiguration.Builder().WithFilterSubjects(subject1, subject2).WithName(name).Build();
+                jsm.AddOrUpdateConsumer(stream, cc);
+                pullSub = js.PullSubscribe(null, PullSubscribeOptions.Builder().WithConfiguration(cc).Build());
+                pullSub.PullExpiresIn(15, 1000);
+                ValidateMultipleSubjectFilterSub(pullSub, subject1);
+    
+                name = Name();
+                cc = ConsumerConfiguration.Builder().WithFilterSubjects(subject1, subject2).WithName(name).Build();
+                jsm.AddOrUpdateConsumer(stream, cc);
+                pullSub = js.PullSubscribe(null, PullSubscribeOptions.BindTo(stream, name));
+                pullSub.PullExpiresIn(15, 1000);
+                ValidateMultipleSubjectFilterSub(pullSub, subject1);
+            });
+        }
+    
+        private static void ValidateMultipleSubjectFilterSub(ISyncSubscription sub, string subject1) {
+            int count1 = 0;
+            int count2 = 0;
+            try
+            {
+                while (true) {
+                    Msg m = sub.NextMessage(1000);
+                    if (m.Subject.Equals(subject1)) {
+                        count1++;
+                    }
+                    else {
+                        count2++;
+                    }
+                }
+            }
+            catch (NATSTimeoutException) {}
+            Assert.Equal(10, count1);
+            Assert.Equal(5, count2);
+        }
     }
 }

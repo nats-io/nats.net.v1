@@ -31,6 +31,22 @@ namespace IntegrationTests
         {
             Context = context;
         }
+
+        public bool AtLeast290(IConnection c) {
+            return AtLeast290(c.ServerInfo);
+        }
+
+        public bool AtLeast290(ServerInfo si) {
+            return si.IsSameOrNewerThanVersion("2.9.0");
+        }
+
+        public bool AtLeast291(ServerInfo si) {
+            return si.IsSameOrNewerThanVersion("2.9.1");
+        }
+
+        public bool AtLeast210(ServerInfo si) {
+            return si.IsNewerVersionThan("2.9.99");
+        }
     }
 
     /// <summary>
@@ -461,6 +477,8 @@ namespace IntegrationTests
         public void RunInJsServer(Action<IConnection> test) => base.RunInJsServer(AutoServer(), null, null, test);
         public void RunInJsServer(Func<ServerInfo, bool> versionCheck, Action<IConnection> test) => base.RunInJsServer(AutoServer(), versionCheck, null, test);
         public void RunInJsServer(Action<Options> optionsModifier, Action<IConnection> test) => base.RunInJsServer(AutoServer(), optionsModifier, test);
+        public void RunInJsServer(Func<ServerInfo, bool> versionCheck, Action<Options> optionsModifier, Action<IConnection> test) => 
+            base.RunInJsServer(AutoServer(), versionCheck, optionsModifier, test);
     }
 
     public sealed class SkipPlatformsWithoutSignals : FactAttribute

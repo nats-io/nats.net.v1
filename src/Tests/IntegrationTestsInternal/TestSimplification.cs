@@ -28,16 +28,11 @@ namespace IntegrationTests
     public class TestSimplification : TestSuite<OneServerSuiteContext>
     {
         public TestSimplification(OneServerSuiteContext context) : base(context) {}
-
-        private bool RunTest(ServerInfo si)
-        {
-            return si.IsSameOrNewerThanVersion("2.9.1");
-        }
         
         [Fact]
         public void TestStreamContext()
         {
-            Context.RunInJsServer(si => RunTest(si), c => {
+            Context.RunInJsServer(AtLeast291, c => {
                 string stream = Stream(Nuid.NextGlobal());
                 string subject = Subject(Nuid.NextGlobal());
 
@@ -127,7 +122,7 @@ namespace IntegrationTests
 
         [Fact]
         public void TestFetch() {
-            Context.RunInJsServer(si => RunTest(si), c => {
+            Context.RunInJsServer(AtLeast291, c => {
                 string stream = Stream(Nuid.NextGlobal());
                 string subject = Subject(Nuid.NextGlobal());
 
@@ -237,7 +232,7 @@ namespace IntegrationTests
         [Fact]
         public void TestIterableConsumer()
         {
-            Context.RunInJsServer(si => RunTest(si), c => {
+            Context.RunInJsServer(AtLeast291, c => {
                 string streamName = Stream(Nuid.NextGlobal());
                 string subject = Subject(Nuid.NextGlobal());
                 string durable = Nuid.NextGlobal();
@@ -271,7 +266,7 @@ namespace IntegrationTests
         [Fact]
         public void TestOrderedIterableConsumerBasic() 
         {
-            Context.RunInJsServer(si => RunTest(si), c => {
+            Context.RunInJsServer(AtLeast291, c => {
                 string streamName = Stream(Nuid.NextGlobal());
                 string subject = Subject(Nuid.NextGlobal());
 
@@ -341,7 +336,7 @@ namespace IntegrationTests
         [Fact]
         public void TestConsumeWithHandler()
         {
-            Context.RunInJsServer(si => RunTest(si), c => {
+            Context.RunInJsServer(AtLeast291, c => {
                 string streamName = Stream(Nuid.NextGlobal());
                 string subject = Subject(Nuid.NextGlobal());
                 string durable = Nuid.NextGlobal();
@@ -376,7 +371,7 @@ namespace IntegrationTests
     
         [Fact]
         public void TestNext() {
-            Context.RunInJsServer(si => RunTest(si), c => {
+            Context.RunInJsServer(AtLeast291, c => {
                 string streamName = Stream(Nuid.NextGlobal());
                 string subject = Subject(Nuid.NextGlobal());
                 string durable = Nuid.NextGlobal();
@@ -412,7 +407,7 @@ namespace IntegrationTests
             string durable5 = Nuid.NextGlobal();
             string durable6 = Nuid.NextGlobal();
 
-            Context.RunInJsServer(si => RunTest(si), c => {
+            Context.RunInJsServer(AtLeast291, c => {
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
                 IJetStream js = c.CreateJetStreamContext();
     
@@ -600,7 +595,7 @@ namespace IntegrationTests
         
         [Fact]
         public void TestOrderedActives() {
-            Context.RunInJsServer(si => RunTest(si), c => {
+            Context.RunInJsServer(AtLeast291, c => {
                 string streamName = Stream(Nuid.NextGlobal());
                 string subject = Subject(Nuid.NextGlobal());
                 string durable = Nuid.NextGlobal();
@@ -678,7 +673,7 @@ namespace IntegrationTests
         
         [Fact]
         public void TestOrderedConsume() {
-            Context.RunInJsServer(si => RunTest(si), c => {
+            Context.RunInJsServer(AtLeast291, c => {
                 string streamName = Stream(Nuid.NextGlobal());
                 string subject = Subject(Nuid.NextGlobal());
 
@@ -726,7 +721,7 @@ namespace IntegrationTests
         
         [Fact]
         public void TestOrderedMultipleWays() {
-            Context.RunInJsServer(si => RunTest(si), c => {
+            Context.RunInJsServer(AtLeast291, c => {
                 string streamName = Stream(Nuid.NextGlobal());
                 string subject = Subject(Nuid.NextGlobal());
 

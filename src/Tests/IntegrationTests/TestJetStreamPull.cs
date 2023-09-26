@@ -19,6 +19,7 @@ using NATS.Client;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using Xunit;
+using Xunit.Abstractions;
 using static UnitTests.TestBase;
 using static IntegrationTests.JetStreamTestBase;
 using static NATS.Client.Internals.JetStreamConstants;
@@ -28,7 +29,15 @@ namespace IntegrationTests
 {
     public class TestJetStreamPull : TestSuite<AutoServerSuiteContext>
     {
-        public TestJetStreamPull(AutoServerSuiteContext context) : base(context) {}
+        private readonly ITestOutputHelper output;
+
+        public TestJetStreamPull(ITestOutputHelper output, AutoServerSuiteContext context) : base(context)
+        {
+            this.output = output;
+            Console.SetOut(new ConsoleWriter(output));
+        }
+
+        // public TestJetStreamPull(AutoServerSuiteContext context) : base(context) {}
 
         [Fact]
         public void TestFetch()
@@ -346,9 +355,9 @@ namespace IntegrationTests
             Context.RunInJsServer(c =>
             {
                 // create the stream.
-                string stream = Stream(Nuid.NextGlobal());
-                string subject = Subject(Nuid.NextGlobal());
-                string durable = Nuid.NextGlobal();
+                string stream = Stream();
+                string subject = Subject();
+                string durable = Durable();
                 CreateMemoryStream(c, stream, subject);
 
                 // Create our JetStream context.
@@ -739,23 +748,20 @@ namespace IntegrationTests
         [Fact]
         public void TestExceedsMaxRequestBytesNthMessage()
         {
-            bool skip = false;
             TestEventHandler handler = new TestEventHandler();
-            Context.RunInJsServer(handler.Modifier, c =>
+            Context.RunInJsServer(AtLeast291, handler.Modifier, c =>
             {
-                skip = VersionIsBefore(c, "2.9.1");
-                if (skip)
-                {
-                    return;
-                }
-
                 string stream = Stream(Nuid.NextGlobal());
                 string subject = Subject(Nuid.NextGlobal());
                 string durable = Nuid.NextGlobal();
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
                 CreateMemoryStream(jsm, stream, subject);
                 IJetStream js = c.CreateJetStreamContext();
-                jsm.AddOrUpdateConsumer(stream, Builder().WithDurable(durable).Build());
+                
+                jsm.AddOrUpdateConsumer(stream, Builder().WithDurable(durable)
+                    .WithAckPolicy(AckPolicy.None)
+                    .WithFilterSubject(subject)
+                    .Build());
                 PullSubscribeOptions so = PullSubscribeOptions.BindTo(stream, durable);
                 IJetStreamPullSubscription sub = js.PullSubscribe(subject, so);
                 
@@ -780,22 +786,16 @@ namespace IntegrationTests
         [Fact]
         public void TestExceedsMaxRequestBytesExactBytes()
         {
-            bool skip = false;
             TestEventHandler handler = new TestEventHandler();
-            Context.RunInJsServer(handler.Modifier, c =>
+            Context.RunInJsServer(AtLeast291, handler.Modifier, c =>
             {
-                skip = VersionIsBefore(c, "2.9.1");
-                if (skip)
-                {
-                    return;
-                }
                 string stream = Stream(Nuid.NextGlobal());
                 string subject = "subject-ExMaxRqBytesExactBytes";
                 string durable = Nuid.NextGlobal();
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
                 CreateMemoryStream(jsm, stream, subject);
                 IJetStream js = c.CreateJetStreamContext();
-                jsm.AddOrUpdateConsumer(stream, Builder().WithDurable(durable).Build());
+                jsm.AddOrUpdateConsumer(stream, Builder().WithDurable(durable).WithFilterSubject(subject).Build());
                 PullSubscribeOptions so = PullSubscribeOptions.BindTo(stream, durable);
                 IJetStreamPullSubscription sub = js.PullSubscribe(subject, so);
                 

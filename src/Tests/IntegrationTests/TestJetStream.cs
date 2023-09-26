@@ -89,13 +89,18 @@ namespace IntegrationTests
                 c.CreateJetStreamManagementContext(jso);
             });
         }
+    
+        private void UnsubscribeEnsureNotBound(ISubscription sub)
+        {
+            sub.Unsubscribe();
+            sub.Connection.Flush();
+            Thread.Sleep(50);
+        }
 
         [Fact]
         public void TestJetStreamSubscribe() {
             Context.RunInJsServer(c =>
             {
-                bool atLeast290 = c.ServerInfo.IsSameOrNewerThanVersion("2.9.0");
-                
                 IJetStream js = c.CreateJetStreamContext();
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
 
@@ -162,7 +167,7 @@ namespace IntegrationTests
                 js.PushSubscribeAsync("", Queue(102), (o, a) => { }, false, psoBind);
                 
                 // test 2.9.0
-                if (atLeast290) {
+                if (AtLeast290(c)) {
                     ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithName(Name(1)).Build();
                     pso = PushSubscribeOptions.Builder().WithConfiguration(cc).Build();
                     IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(SUBJECT, pso);
@@ -206,64 +211,102 @@ namespace IntegrationTests
                 }
             });
         }
-
-        private void UnsubscribeEnsureNotBound(ISubscription sub)
-        {
-            sub.Unsubscribe();
-            sub.Connection.Flush();
-            Thread.Sleep(50);
+    
+        [Fact]
+        public void TestJetStreamSubscribeLenientSubject() {
+            Context.RunInJsServer(c =>
+            {
+                CreateDefaultTestStream(c);
+                IJetStream js = c.CreateJetStreamContext();
+    
+                js.PushSubscribeSync(SUBJECT, (PushSubscribeOptions)null);
+                js.PushSubscribeSync(SUBJECT, null, (PushSubscribeOptions)null); // queue name is not required, just a weird way to call this api
+                js.PushSubscribeAsync(SUBJECT, (s, e) => {}, false, (PushSubscribeOptions)null);
+                js.PushSubscribeAsync(SUBJECT, null, (s, e) => {}, false, (PushSubscribeOptions)null); // queue name is not required, just a weird way to call this api
+    
+                PushSubscribeOptions pso = ConsumerConfiguration.Builder().WithFilterSubject(SUBJECT).BuildPushSubscribeOptions();
+                js.PushSubscribeSync(null, pso);
+                js.PushSubscribeSync(null, null, pso);
+                js.PushSubscribeAsync(null, (s, e) => {}, false, pso);
+                js.PushSubscribeAsync(null, null, (s, e) => {}, false, pso);
+    
+                PushSubscribeOptions psoF = ConsumerConfiguration.Builder().BuildPushSubscribeOptions();
+    
+                Assert.Throws<NATSJetStreamClientException>(() => js.PushSubscribeSync(null, psoF));
+                Assert.Throws<NATSJetStreamClientException>(() => js.PushSubscribeSync(null, psoF));
+                Assert.Throws<NATSJetStreamClientException>(() => js.PushSubscribeSync(null, null, psoF));
+                Assert.Throws<NATSJetStreamClientException>(() => js.PushSubscribeAsync(null, (s, e) => {}, false, psoF));
+                Assert.Throws<NATSJetStreamClientException>(() => js.PushSubscribeAsync(null, null, (s, e) => {}, false, psoF));
+    
+                Assert.Throws<NATSJetStreamClientException>(() => js.PushSubscribeSync(null, (PushSubscribeOptions)null));
+                Assert.Throws<NATSJetStreamClientException>(() => js.PushSubscribeSync(null, (PushSubscribeOptions)null));
+                Assert.Throws<NATSJetStreamClientException>(() => js.PushSubscribeSync(null, null, (PushSubscribeOptions)null));
+                Assert.Throws<NATSJetStreamClientException>(() => js.PushSubscribeAsync(null, (s, e) => {}, false, (PushSubscribeOptions)null));
+                Assert.Throws<NATSJetStreamClientException>(() => js.PushSubscribeAsync(null, null, (s, e) => {}, false, (PushSubscribeOptions)null));
+    
+                PullSubscribeOptions lso = ConsumerConfiguration.Builder().WithFilterSubject(SUBJECT).BuildPullSubscribeOptions();
+                js.PullSubscribe(null, lso);
+                js.PullSubscribeAsync(null, (s, e) => {}, lso);
+    
+                PullSubscribeOptions lsoF = ConsumerConfiguration.Builder().BuildPullSubscribeOptions();
+                Assert.Throws<NATSJetStreamClientException>(() => js.PullSubscribe(null, lsoF));
+                Assert.Throws<NATSJetStreamClientException>(() => js.PullSubscribeAsync(null, (s, e) => {}, lsoF));
+    
+                Assert.Throws<ArgumentNullException>(() => js.PullSubscribe(null, (PullSubscribeOptions)null));
+                Assert.Throws<ArgumentNullException>(() => js.PullSubscribeAsync(null, (s, e) => {}, (PullSubscribeOptions)null));
+            });
         }
-        
+
         [Fact]
         public void TestJetStreamSubscribeErrors() {
             Context.RunInJsServer(c =>
             {
                 IJetStream js = c.CreateJetStreamContext();
-
+    
                 // stream not found
                 PushSubscribeOptions psoInvalidStream = PushSubscribeOptions.Builder().WithStream(STREAM).Build();
                 Assert.Throws<NATSJetStreamException>(() => js.PushSubscribeSync(SUBJECT, psoInvalidStream));
 
-                void AssertThrowsForSubject(Func<object> testCode)
-                {
-                    ArgumentException ae = Assert.Throws<ArgumentException>(testCode);
-                    Assert.StartsWith("Subject", ae.Message);
-                }
-                
-                void AssertThrowsForQueue(Func<object> testCode)
-                {
-                    ArgumentException ae = Assert.Throws<ArgumentException>(testCode);
-                    Assert.StartsWith("Queue", ae.Message);
-                }
-                
-                void AssertThrowsForHandler(Func<object> testCode)
-                {
-                    ArgumentNullException ae = Assert.Throws<ArgumentNullException>(testCode);
-                    Assert.Equal("Handler", ae.ParamName);
-                }
+                Exception ex = null;
+                foreach (string bad in BadSubjectsOrQueues) {
+                    if (string.IsNullOrEmpty(bad))
+                    {
+                        ex = Assert.Throws<ArgumentException>(() => js.PushSubscribeSync(bad));
+                        Assert.StartsWith("Subject", ex.Message);
+                        NATSJetStreamClientException ce = Assert.Throws<NATSJetStreamClientException>(() =>
+                            js.PushSubscribeSync(bad, (PushSubscribeOptions)null));
+                        Assert.Contains(JsSubSubjectNeededToLookupStream.Id, ce.Message);
 
-                // subject
-                AssertThrowsForSubject(() => js.PushSubscribeSync(HasSpace));
-                AssertThrowsForSubject(() => js.PushSubscribeSync(null, (PushSubscribeOptions)null));
-                AssertThrowsForSubject(() => js.PushSubscribeSync(HasSpace, Plain));
-                AssertThrowsForSubject(() => js.PushSubscribeSync(null, Plain, null));
-                AssertThrowsForSubject(() => js.PushSubscribeAsync(HasSpace, null, false));
-                AssertThrowsForSubject(() => js.PushSubscribeAsync(HasSpace, null, false, null));
-                AssertThrowsForSubject(() => js.PushSubscribeAsync(HasSpace, Plain, null, false));
-                AssertThrowsForSubject(() => js.PushSubscribeAsync(HasSpace, Plain, null, false, null));
-                
-                // queue
-                AssertThrowsForQueue(() => js.PushSubscribeSync(Plain, HasSpace));
-                AssertThrowsForQueue(() => js.PushSubscribeSync(Plain, HasSpace, null));
-                AssertThrowsForQueue(() => js.PushSubscribeAsync(Plain, HasSpace, null, false));
-                AssertThrowsForQueue(() => js.PushSubscribeAsync(Plain, HasSpace, null, false, null));
-                
+                        Assert.StartsWith("Subject", ex.Message);
+                    }
+                    else
+                    {
+                        // subject
+                        ex = Assert.Throws<ArgumentException>(() => js.PushSubscribeSync(bad));
+                        Assert.StartsWith("Subject", ex.Message);
+                        ex = Assert.Throws<ArgumentException>(() =>
+                            js.PushSubscribeSync(bad, (PushSubscribeOptions)null));
+                        Assert.StartsWith("Subject", ex.Message);
+
+                        // queue
+                        if (!string.IsNullOrEmpty(bad))
+                        {
+                            ex = Assert.Throws<ArgumentException>(() => js.PushSubscribeSync(SUBJECT, bad, null));
+                            Assert.StartsWith("Queue", ex.Message);
+                            ex = Assert.Throws<ArgumentException>(() =>
+                                js.PushSubscribeAsync(SUBJECT, bad, (s, e) => { }, false, null));
+                            Assert.StartsWith("Queue", ex.Message);
+                        }
+                    }
+                }
+    
                 // handler
-                AssertThrowsForHandler(() => js.PushSubscribeAsync(Plain, null, false));
-                AssertThrowsForHandler(() => js.PushSubscribeAsync(Plain, null, false, null));
-                AssertThrowsForHandler(() => js.PushSubscribeAsync(Plain, Plain, null, false));
-                AssertThrowsForHandler(() => js.PushSubscribeAsync(Plain, Plain, null, false, null));
-
+                ex = Assert.Throws<ArgumentNullException>(() => js.PushSubscribeAsync(SUBJECT, null, false));
+                Assert.Contains("Handler", ex.Message);
+                ex = Assert.Throws<ArgumentNullException>(() => js.PushSubscribeAsync(SUBJECT, null, false, null));
+                Assert.Contains("Handler", ex.Message);
+                ex = Assert.Throws<ArgumentNullException>(() => js.PushSubscribeAsync(SUBJECT, QUEUE, null, false, null));
+                Assert.Contains("Handler", ex.Message);
             });
         }
 
@@ -308,7 +351,7 @@ namespace IntegrationTests
                 // subscribe to A
                 cc = ConsumerConfiguration.Builder().WithFilterSubject(subjectA).WithAckPolicy(AckPolicy.None).Build();
                 pso = PushSubscribeOptions.Builder().WithConfiguration(cc).Build();
-                sub = js.PushSubscribeSync(subjectWild, pso);
+                sub = js.PushSubscribeSync(subjectA, pso);
                 c.Flush(1000);
 
                 m = sub.NextMessage(1000);
@@ -322,7 +365,7 @@ namespace IntegrationTests
                 // subscribe to B
                 cc = ConsumerConfiguration.Builder().WithFilterSubject(subjectB).WithAckPolicy(AckPolicy.None).Build();
                 pso = PushSubscribeOptions.Builder().WithConfiguration(cc).Build();
-                sub = js.PushSubscribeSync(subjectWild, pso);
+                sub = js.PushSubscribeSync(subjectB, pso);
                 c.Flush(1000);
 
                 m = sub.NextMessage(1000);
@@ -462,83 +505,77 @@ namespace IntegrationTests
                 CreateMemoryStream(jsm, STREAM, SUBJECT);
 
                 // will work as SubscribeSubject equals Filter Subject
-                SubscribeOk(js, jsm, SUBJECT, SUBJECT);
-                SubscribeOk(js, jsm, ">", ">");
-                SubscribeOk(js, jsm, "*", "*");
-
-                // will work as SubscribeSubject != empty Filter Subject,
-                // b/c Stream has exactly 1 subject and is a match.
-                SubscribeOk(js, jsm, "", SUBJECT);
-
-                // will work as SubscribeSubject != Filter Subject of '>'
-                // b/c Stream has exactly 1 subject and is a match.
-                SubscribeOk(js, jsm, ">", SUBJECT);
+                FilterMatchSubscribeOk(js, jsm, SUBJECT, SUBJECT);
+                FilterMatchSubscribeOk(js, jsm, ">", ">");
+                FilterMatchSubscribeOk(js, jsm, "*", "*");
 
                 // will not work
-                SubscribeEx(js, jsm, "*", SUBJECT);
+                FilterMatchSubscribeEx(js, jsm, SUBJECT, "");
+                FilterMatchSubscribeEx(js, jsm, SUBJECT, ">");
+                FilterMatchSubscribeEx(js, jsm, SUBJECT, "*");
 
                 // multiple subjects no wildcards
                 jsm.DeleteStream(STREAM);
                 CreateMemoryStream(jsm, STREAM, SUBJECT, Subject(2));
 
                 // will work as SubscribeSubject equals Filter Subject
-                SubscribeOk(js, jsm, SUBJECT, SUBJECT);
-                SubscribeOk(js, jsm, ">", ">");
-                SubscribeOk(js, jsm, "*", "*");
+                FilterMatchSubscribeOk(js, jsm, SUBJECT, SUBJECT);
+                FilterMatchSubscribeOk(js, jsm, ">", ">");
+                FilterMatchSubscribeOk(js, jsm, "*", "*");
 
                 // will not work because stream has more than 1 subject
-                SubscribeEx(js, jsm, "", SUBJECT);
-                SubscribeEx(js, jsm, ">", SUBJECT);
-                SubscribeEx(js, jsm, "*", SUBJECT);
+                FilterMatchSubscribeEx(js, jsm, SUBJECT, "");
+                FilterMatchSubscribeEx(js, jsm, SUBJECT, ">");
+                FilterMatchSubscribeEx(js, jsm, SUBJECT, "*");
 
                 // multiple subjects via '>'
                 jsm.DeleteStream(STREAM);
                 CreateMemoryStream(jsm, STREAM, SUBJECT_GT);
 
                 // will work, exact matches
-                SubscribeOk(js, jsm, SubjectDot("1"), SubjectDot("1"));
-                SubscribeOk(js, jsm, ">", ">");
+                FilterMatchSubscribeOk(js, jsm, SubjectDot("1"), SubjectDot("1"));
+                FilterMatchSubscribeOk(js, jsm, ">", ">");
 
                 // will not work because mismatch / stream has more than 1 subject
-                SubscribeEx(js, jsm, "", SubjectDot("1"));
-                SubscribeEx(js, jsm, ">", SubjectDot("1"));
-                SubscribeEx(js, jsm, SUBJECT_GT, SubjectDot("1"));
+                FilterMatchSubscribeEx(js, jsm, SubjectDot("1"), "");
+                FilterMatchSubscribeEx(js, jsm, SubjectDot("1"), ">");
+                FilterMatchSubscribeEx(js, jsm, SubjectDot("1"), SUBJECT_GT);
 
                 // multiple subjects via '*'
                 jsm.DeleteStream(STREAM);
                 CreateMemoryStream(jsm, STREAM, SUBJECT_STAR);
 
                 // will work, exact matches
-                SubscribeOk(js, jsm, SubjectDot("1"), SubjectDot("1"));
-                SubscribeOk(js, jsm, ">", ">");
+                FilterMatchSubscribeOk(js, jsm, SubjectDot("1"), SubjectDot("1"));
+                FilterMatchSubscribeOk(js, jsm, ">", ">");
 
                 // will not work because mismatch / stream has more than 1 subject
-                SubscribeEx(js, jsm, "", SubjectDot("1"));
-                SubscribeEx(js, jsm, ">", SubjectDot("1"));
-                SubscribeEx(js, jsm, SUBJECT_STAR, SubjectDot("1"));
+                FilterMatchSubscribeEx(js, jsm, SubjectDot("1"), "");
+                FilterMatchSubscribeEx(js, jsm, SubjectDot("1"), ">");
+                FilterMatchSubscribeEx(js, jsm, SubjectDot("1"), SUBJECT_STAR);
             });
         }
 
-        private void SubscribeOk(IJetStream js, IJetStreamManagement jsm, string fs, string ss) 
+        private void FilterMatchSubscribeOk(IJetStream js, IJetStreamManagement jsm, string subscribeSubject, params string[] filterSubjects) 
         {
             int i = Rndm.Next(); // just want a unique number
-            SetupConsumer(jsm, i, fs);
-            js.PushSubscribeSync(ss, ConsumerConfiguration.Builder().WithDurable(Durable(i)).BuildPushSubscribeOptions()).Unsubscribe();
+            FilterMatchSetupConsumer(jsm, i, filterSubjects);
+            js.PushSubscribeSync(subscribeSubject, ConsumerConfiguration.Builder().WithDurable(Durable(i)).BuildPushSubscribeOptions()).Unsubscribe();
         }
 
-        private void SubscribeEx(IJetStream js, IJetStreamManagement jsm, string fs, string ss) 
+        private void FilterMatchSubscribeEx(IJetStream js, IJetStreamManagement jsm, string subscribeSubject, params string[] filterSubjects) 
         {
             int i = Rndm.Next(); // just want a unique number
-            SetupConsumer(jsm, i, fs);
+            FilterMatchSetupConsumer(jsm, i, filterSubjects);
             NATSJetStreamClientException e = Assert.Throws<NATSJetStreamClientException>(
-                () => js.PushSubscribeSync(ss, ConsumerConfiguration.Builder().WithDurable(Durable(i)).BuildPushSubscribeOptions()));
+                () => js.PushSubscribeSync(subscribeSubject, ConsumerConfiguration.Builder().WithDurable(Durable(i)).BuildPushSubscribeOptions()));
             Assert.Contains(JsSubSubjectDoesNotMatchFilter.Id, e.Message);
         }
 
-        private void SetupConsumer(IJetStreamManagement jsm, int i, string fs)
+        private void FilterMatchSetupConsumer(IJetStreamManagement jsm, int i, params string[] fs)
         {
             jsm.AddOrUpdateConsumer(STREAM,
-                ConsumerConfiguration.Builder().WithDeliverSubject(Deliver(i)).WithDurable(Durable(i)).WithFilterSubject(fs).Build());
+                ConsumerConfiguration.Builder().WithDeliverSubject(Deliver(i)).WithDurable(Durable(i)).WithFilterSubjects(fs).Build());
         }
 
         [Fact]
@@ -573,10 +610,6 @@ namespace IntegrationTests
                 e = Assert.Throws<NATSJetStreamClientException>(
                         () => js.PullSubscribe(SUBJECT, PullSubscribeOptions.BindTo(STREAM, Durable(1))));
                 Assert.Contains(JsSubConsumerAlreadyConfiguredAsPush.Id, e.Message);
-
-                // this one is okay
-                IJetStreamPullSubscription sub = js.PullSubscribe(SUBJECT, PullSubscribeOptions.Builder().WithDurable(Durable(2)).Build());
-                sub.Unsubscribe(); // so I can re-use the durable
 
                 // try to push subscribe against a pull durable
                 e = Assert.Throws<NATSJetStreamClientException>(
@@ -632,6 +665,7 @@ namespace IntegrationTests
                     .WithMaxAckPending(65000)
                     .WithMaxDeliver(5)
                     .WithReplayPolicy(ReplayPolicy.Instant)
+                    .WithFilterSubject(SUBJECT)
                     .Build();
                 jsm.AddOrUpdateConsumer(STREAM, cc);
 
@@ -649,6 +683,7 @@ namespace IntegrationTests
                     .WithMaxDeliver(43)
                     .WithRateLimitBps(44)
                     .WithMaxAckPending(45)
+                    .WithFilterSubject(SUBJECT)
                     .Build();
                 jsm.AddOrUpdateConsumer(STREAM, cc);
 
@@ -658,6 +693,7 @@ namespace IntegrationTests
                 cc = ConsumerConfiguration.Builder()
                     .WithDurable(Durable(22))
                     .WithMaxPullWaiting(46)
+                    .WithFilterSubject(SUBJECT)
                     .Build();
                 jsm.AddOrUpdateConsumer(STREAM, cc);
 
@@ -670,6 +706,7 @@ namespace IntegrationTests
                     .WithDeliverSubject(Deliver(3))
                     .WithDurable(Durable(3))
                     .WithStartTime(DateTime.UtcNow.AddHours(1))
+                    .WithFilterSubject(SUBJECT)
                     .Build();
                 jsm.AddOrUpdateConsumer(STREAM, cc);
 
@@ -683,6 +720,7 @@ namespace IntegrationTests
                     .WithFlowControl(1000)
                     .WithHeadersOnly(true)
                     .WithAckWait(2000)
+                    .WithFilterSubject(SUBJECT)
                     .Build();
                 jsm.AddOrUpdateConsumer(STREAM, cc);
 
@@ -696,6 +734,7 @@ namespace IntegrationTests
                     .WithDeliverPolicy(DeliverPolicy.Last)
                     .WithAckPolicy(AckPolicy.None)
                     .WithReplayPolicy(ReplayPolicy.Original)
+                    .WithFilterSubject(SUBJECT)
                     .Build();
                 jsm.AddOrUpdateConsumer(STREAM, cc);
 

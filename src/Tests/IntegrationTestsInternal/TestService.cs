@@ -570,10 +570,13 @@ namespace IntegrationTestsInternal
             Assert.Throws<ArgumentException>(() => new Endpoint(HasEquals));
             Assert.Throws<ArgumentException>(() => new Endpoint(HasTic));
     
-            // fewer subjects are bad
-            Assert.Throws<ArgumentException>(() => new Endpoint(NAME, HasSpace));
-            Assert.Throws<ArgumentException>(() => new Endpoint(NAME, Has127));
-            Assert.Throws<ArgumentException>(() => new Endpoint(NAME, "foo.>.bar")); // gt is not last segment
+            foreach (string bad in BadSubjectsOrQueues)
+            {
+                if (!string.IsNullOrEmpty(bad))
+                {
+                    Assert.Throws<ArgumentException>(() => new Endpoint(NAME, bad));
+                }
+            }
         }
     
         [Fact]
@@ -648,11 +651,11 @@ namespace IntegrationTestsInternal
     
             g1 = new Group("foo.*");
             Assert.Equal("foo.*", g1.Name);
-    
-            Assert.Throws<ArgumentException>(() => new Group(HasSpace));
-            Assert.Throws<ArgumentException>(() => new Group(Has127));
-            Assert.Throws<ArgumentException>(() => new Group("foo.>")); // gt is last segment
-            Assert.Throws<ArgumentException>(() => new Group("foo.>.bar")); // gt is not last segment
+
+            foreach (string bad in BadSubjectsOrQueues)
+            {
+                Assert.Throws<ArgumentException>(() => new Group(bad));
+            }
         }
         
         [Fact]
