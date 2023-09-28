@@ -742,7 +742,7 @@ namespace NATS.Client.Internals
             return l1.SequenceEqual(l2);
         }
 
-        // This functions tests filter subject equivalency
+        // This function tests filter subject equivalency
         // It does not care what order and also assumes that there are no duplicates.
         // From the server: consumer subject filters cannot overlap [10138]
         public static bool ConsumerFilterSubjectsAreEquivalent<T>(IList<T> l1, IList<T> l2)
