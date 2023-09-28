@@ -96,8 +96,12 @@ namespace NATS.Client.Internals
                             case '\t':
                                 return new Tuple<bool, string>(false, $"{label} cannot contain space, tab, carriage return or linefeed character");
                             case '*':
-                            case '>':
                                 if (sl != 1) {
+                                    return new Tuple<bool, string>(false, $"{label} wildcard improperly placed.");
+                                }
+                                break;
+                            case '>':
+                                if (sl != 1 || seg != segments.Length - 1) {
                                     return new Tuple<bool, string>(false, $"{label} wildcard improperly placed.");
                                 }
                                 break;
