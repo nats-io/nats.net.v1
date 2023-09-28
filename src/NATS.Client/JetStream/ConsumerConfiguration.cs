@@ -552,6 +552,7 @@ namespace NATS.Client.JetStream
 
             /// <summary>
             /// Sets the filter subject of the ConsumerConfiguration.
+            /// Replaces any other filter subjects set in the builder 
             /// </summary>
             /// <param name="filterSubject">the filter subject</param>
             /// <returns>The ConsumerConfigurationBuilder</returns>
@@ -570,6 +571,7 @@ namespace NATS.Client.JetStream
 
             /// <summary>
             /// Sets the filter subject of the ConsumerConfiguration.
+            /// Replaces any other filter subjects set in the builder 
             /// </summary>
             /// <param name="filterSubjects">one or more filter subjects</param>
             /// <returns>The ConsumerConfigurationBuilder</returns>
@@ -586,6 +588,7 @@ namespace NATS.Client.JetStream
 
             /// <summary>
             /// Sets the filter subject of the ConsumerConfiguration.
+            /// Replaces any other filter subjects set in the builder 
             /// </summary>
             /// <param name="filterSubjects">one or more filter subjects</param>
             /// <returns>The ConsumerConfigurationBuilder</returns>

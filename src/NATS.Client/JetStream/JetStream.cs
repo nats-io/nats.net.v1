@@ -346,7 +346,7 @@ namespace NATS.Client.JetStream
                             settledFilterSubjects = serverCC.FilterSubjects;
                         }
                     }
-                    else if (!ListsAreEquivalent(settledFilterSubjects, serverCC.FilterSubjects))
+                    else if (!ConsumerFilterSubjectsAreEquivalent(settledFilterSubjects, serverCC.FilterSubjects))
                     {
                         throw JsSubSubjectDoesNotMatchFilter.Instance();
                     }
