@@ -37,14 +37,14 @@ namespace UnitTests.Internals
             AllowedRequired(ValidateSubject, _utfOnlyStrings);
             AllowedRequired(ValidateSubject, StarSegment, GtLastSegment);
             NotAllowedRequired(ValidateSubject, null, string.Empty, HasSpace, HasCr, HasLf);
-            NotAllowedRequired(ValidateSubject, StartsWithDot, StarNotSegment, GtNotSegment, EmptySegment);
+            NotAllowedRequired(ValidateSubject, StartsWithDot, StarNotSegment, GtNotSegment, EmptySegment, GtNotLastSegment);
             NotAllowedRequired(ValidateSubject, EndsWithDot, EndsWithDotSpace, EndsWithCr, EndsWithLf, EndsWithTab);
 
 
             // subject not required, null and empty both mean not supplied
             AllowedNotRequiredEmptyAsNull(ValidateSubject, null, string.Empty);
             NotAllowedNotRequired(ValidateSubject, HasSpace, HasCr, HasLf);
-            NotAllowedNotRequired(ValidateSubject, StartsWithDot, StarNotSegment, GtNotSegment, EmptySegment);
+            NotAllowedNotRequired(ValidateSubject, StartsWithDot, StarNotSegment, GtNotSegment, EmptySegment, GtNotLastSegment);
             NotAllowedNotRequired(ValidateSubject, EndsWithDot, EndsWithDotSpace, EndsWithCr, EndsWithLf, EndsWithTab);
         }
 

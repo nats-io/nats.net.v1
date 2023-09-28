@@ -54,8 +54,9 @@ namespace UnitTests
         // ----------------------------------------------------------------------------------------------------
         // unit test 
         // ----------------------------------------------------------------------------------------------------
-        public const string StarSegment       = "*.star.*.segment.*";
+        public const string StarSegment      = "*.star.*.segment.*";
         public const string GtLastSegment    = "gt.last.>";
+        public const string GtNotLastSegment = "gt.>.notlast";
         public const string StartsWithDot    = ".starts-with-dot";
         public const string EndsWithDot      = "ends-with-dot.";
         public const string EndsWithDotSpace = "ends-with-space. ";
