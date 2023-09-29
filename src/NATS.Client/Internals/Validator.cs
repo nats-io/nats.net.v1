@@ -45,29 +45,82 @@ namespace NATS.Client.Internals
             }
         }
         
-        internal static string ValidateSubject(string s, bool required)
+        /*
+            cannot contain spaces \r \n \t
+            cannot start or end with subject token delimiter .
+            some things don't allow it to end greater
+        */
+        public static string ValidateSubjectTerm(string subject, string label, bool required)
+        {
+            Tuple<bool, string> t = IsValidSubjectTerm(subject, label, required);
+            if (t.Item1)
+            {
+                return t.Item2;
+            }
+            throw new ArgumentException(t.Item2);
+        }
+
+        /*
+         * If is valid, tuple item1 is true and item2 is the subject
+         * If is not valid, tuple item1 is false and item2 is the error message
+         */
+        internal static Tuple<bool, string> IsValidSubjectTerm(string subject, string label, bool required) {
+            subject = EmptyAsNull(subject);
+            if (subject == null) {
+                if (required) {
+                    return new Tuple<bool, string>(false, $"{label} cannot be null or empty.");
+                }
+                return new Tuple<bool, string>(true, null);
+            }
+            if (subject.EndsWith(".")) {
+                return new Tuple<bool, string>(false, $"{label} cannot end with '.'");
+            }
+
+            string[] segments = subject.Split('.');
+            for (int seg = 0; seg < segments.Length; seg++) {
+                string segment = segments[seg];
+                int sl = segment.Length;
+                if (sl == 0) {
+                    if (seg == 0) {
+                        return new Tuple<bool, string>(false, $"{label} cannot start with '.'");
+                    }
+                    return new Tuple<bool, string>(false, $"{label} segment cannot be empty");
+                }
+                else {
+                    for (int m = 0; m < sl; m++) {
+                        char c = segment[m];
+                        switch (c) {
+                            case ' ':
+                            case '\r':
+                            case '\n':
+                            case '\t':
+                                return new Tuple<bool, string>(false, $"{label} cannot contain space, tab, carriage return or linefeed character");
+                            case '*':
+                                if (sl != 1) {
+                                    return new Tuple<bool, string>(false, $"{label} wildcard improperly placed.");
+                                }
+                                break;
+                            case '>':
+                                if (sl != 1 || seg != segments.Length - 1) {
+                                    return new Tuple<bool, string>(false, $"{label} wildcard improperly placed.");
+                                }
+                                break;
+                        }
+                    }
+                }
+            }
+            return new Tuple<bool, string>(true, subject);
+        }
+
+        public static string ValidateSubject(string s, bool required)
         {
             return ValidateSubject(s, "Subject", required, false);
         }
         
         public static string ValidateSubject(string subject, string label, bool required, bool cantEndWithGt) {
-            if (EmptyAsNull(subject) == null) {
-                if (required) {
-                    throw new ArgumentException($"{label} cannot be null or empty.");
-                }
-                return null;
-            }
-            string[] segments = subject.Split('.');
-            for (int x = 0; x < segments.Length; x++) {
-                string segment = segments[x];
-                if (segment.Equals(">")) {
-                    if (cantEndWithGt || x != segments.Length - 1) { // if it can end with gt, gt must be last segment
-                        throw new ArgumentException(label + " cannot contain '>'");
-                    }
-                }
-                else if (!segment.Equals("*") && NotPrintable(segment)) {
-                    throw new ArgumentException(label + " must be printable characters only.");
-                }
+            subject = ValidateSubjectTerm(subject, label, required);
+            if (subject != null && cantEndWithGt && subject.EndsWith(".>")) {
+                throw new ArgumentException($"{label} last segment cannot be '>'");
             }
             return subject;
         }
@@ -444,7 +497,7 @@ namespace NATS.Client.Internals
         // ----------------------------------------------------------------------------------------------------
         // Helpers
         // ----------------------------------------------------------------------------------------------------
-        
+        [Obsolete("This property is obsolete. use string.IsNullOrWhiteSpace(string) instead.", false)]
         public static bool NullOrEmpty(string s)
         {
             return string.IsNullOrWhiteSpace(s);
@@ -604,13 +657,28 @@ namespace NATS.Client.Internals
 
         public static string EmptyAsNull(string s)
         {
-            return NullOrEmpty(s) ? null : s;
+            return string.IsNullOrWhiteSpace(s) ? null : s;
         }
 
         public static string EmptyOrNullAs(string s, string ifEmpty) {
-            return NullOrEmpty(s) ? ifEmpty : s;
+            return string.IsNullOrWhiteSpace(s) ? ifEmpty : s;
         }
 
+        public static IList<TSource> EmptyAsNull<TSource>(IList<TSource> list)
+        {
+            return EmptyOrNull(list) ? null : list;
+        }
+
+        public static bool EmptyOrNull<TSource>(IList<TSource> list)
+        {
+            return list == null || list.Count == 0;
+        }
+
+        public static bool EmptyOrNull<TSource>(TSource[] list)
+        {
+            return list == null || list.Length == 0;
+        }
+        
         public static bool ZeroOrLtMinus1(long l)
         {
             return l == 0 || l < -1;
@@ -663,7 +731,7 @@ namespace NATS.Client.Internals
             return Regex.IsMatch(s, SemVerPattern);
         }
 
-        public static bool SequenceEqual<TSource>(IList<TSource> l1, IList<TSource> l2, bool nullSecondEqualsEmptyFirst = true)
+        public static bool SequenceEqual<T>(IList<T> l1, IList<T> l2, bool nullSecondEqualsEmptyFirst = true)
         {
             if (l1 == null)
             {
@@ -676,6 +744,29 @@ namespace NATS.Client.Internals
             }
             
             return l1.SequenceEqual(l2);
+        }
+
+        // This function tests filter subject equivalency
+        // It does not care what order and also assumes that there are no duplicates.
+        // From the server: consumer subject filters cannot overlap [10138]
+        public static bool ConsumerFilterSubjectsAreEquivalent<T>(IList<T> l1, IList<T> l2)
+        {
+            if (l1 == null || l1.Count == 0)
+            {
+                return l2 == null || l2.Count == 0;
+            }
+
+            if (l2 == null || l1.Count != l2.Count)
+            {
+                return false;
+            }
+
+            foreach (T t in l1) {
+                if (!l2.Contains(t)) {
+                    return false;
+                }
+            }
+            return true;
         }
 
         public static bool DictionariesEqual(IDictionary<string, string> d1, IDictionary<string, string> d2)

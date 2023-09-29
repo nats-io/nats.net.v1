@@ -89,13 +89,18 @@ namespace IntegrationTests
                 c.CreateJetStreamManagementContext(jso);
             });
         }
+    
+        private void UnsubscribeEnsureNotBound(ISubscription sub)
+        {
+            sub.Unsubscribe();
+            sub.Connection.Flush();
+            Thread.Sleep(50);
+        }
 
         [Fact]
         public void TestJetStreamSubscribe() {
             Context.RunInJsServer(c =>
             {
-                bool atLeast290 = c.ServerInfo.IsSameOrNewerThanVersion("2.9.0");
-                
                 IJetStream js = c.CreateJetStreamContext();
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
 
@@ -162,7 +167,7 @@ namespace IntegrationTests
                 js.PushSubscribeAsync("", Queue(102), (o, a) => { }, false, psoBind);
                 
                 // test 2.9.0
-                if (atLeast290) {
+                if (AtLeast290(c)) {
                     ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithName(Name(1)).Build();
                     pso = PushSubscribeOptions.Builder().WithConfiguration(cc).Build();
                     IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(SUBJECT, pso);
@@ -206,64 +211,102 @@ namespace IntegrationTests
                 }
             });
         }
-
-        private void UnsubscribeEnsureNotBound(ISubscription sub)
-        {
-            sub.Unsubscribe();
-            sub.Connection.Flush();
-            Thread.Sleep(50);
+    
+        [Fact]
+        public void TestJetStreamSubscribeLenientSubject() {
+            Context.RunInJsServer(c =>
+            {
+                CreateDefaultTestStream(c);
+                IJetStream js = c.CreateJetStreamContext();
+    
+                js.PushSubscribeSync(SUBJECT, (PushSubscribeOptions)null);
+                js.PushSubscribeSync(SUBJECT, null, (PushSubscribeOptions)null); // queue name is not required, just a weird way to call this api
+                js.PushSubscribeAsync(SUBJECT, (s, e) => {}, false, (PushSubscribeOptions)null);
+                js.PushSubscribeAsync(SUBJECT, null, (s, e) => {}, false, (PushSubscribeOptions)null); // queue name is not required, just a weird way to call this api
+    
+                PushSubscribeOptions pso = ConsumerConfiguration.Builder().WithFilterSubject(SUBJECT).BuildPushSubscribeOptions();
+                js.PushSubscribeSync(null, pso);
+                js.PushSubscribeSync(null, null, pso);
+                js.PushSubscribeAsync(null, (s, e) => {}, false, pso);
+                js.PushSubscribeAsync(null, null, (s, e) => {}, false, pso);
+    
+                PushSubscribeOptions psoF = ConsumerConfiguration.Builder().BuildPushSubscribeOptions();
+    
+                Assert.Throws<NATSJetStreamClientException>(() => js.PushSubscribeSync(null, psoF));
+                Assert.Throws<NATSJetStreamClientException>(() => js.PushSubscribeSync(null, psoF));
+                Assert.Throws<NATSJetStreamClientException>(() => js.PushSubscribeSync(null, null, psoF));
+                Assert.Throws<NATSJetStreamClientException>(() => js.PushSubscribeAsync(null, (s, e) => {}, false, psoF));
+                Assert.Throws<NATSJetStreamClientException>(() => js.PushSubscribeAsync(null, null, (s, e) => {}, false, psoF));
+    
+                Assert.Throws<NATSJetStreamClientException>(() => js.PushSubscribeSync(null, (PushSubscribeOptions)null));
+                Assert.Throws<NATSJetStreamClientException>(() => js.PushSubscribeSync(null, (PushSubscribeOptions)null));
+                Assert.Throws<NATSJetStreamClientException>(() => js.PushSubscribeSync(null, null, (PushSubscribeOptions)null));
+                Assert.Throws<NATSJetStreamClientException>(() => js.PushSubscribeAsync(null, (s, e) => {}, false, (PushSubscribeOptions)null));
+                Assert.Throws<NATSJetStreamClientException>(() => js.PushSubscribeAsync(null, null, (s, e) => {}, false, (PushSubscribeOptions)null));
+    
+                PullSubscribeOptions lso = ConsumerConfiguration.Builder().WithFilterSubject(SUBJECT).BuildPullSubscribeOptions();
+                js.PullSubscribe(null, lso);
+                js.PullSubscribeAsync(null, (s, e) => {}, lso);
+    
+                PullSubscribeOptions lsoF = ConsumerConfiguration.Builder().BuildPullSubscribeOptions();
+                Assert.Throws<NATSJetStreamClientException>(() => js.PullSubscribe(null, lsoF));
+                Assert.Throws<NATSJetStreamClientException>(() => js.PullSubscribeAsync(null, (s, e) => {}, lsoF));
+    
+                Assert.Throws<ArgumentNullException>(() => js.PullSubscribe(null, (PullSubscribeOptions)null));
+                Assert.Throws<ArgumentNullException>(() => js.PullSubscribeAsync(null, (s, e) => {}, (PullSubscribeOptions)null));
+            });
         }
-        
+
         [Fact]
         public void TestJetStreamSubscribeErrors() {
             Context.RunInJsServer(c =>
             {
                 IJetStream js = c.CreateJetStreamContext();
-
+    
                 // stream not found
                 PushSubscribeOptions psoInvalidStream = PushSubscribeOptions.Builder().WithStream(STREAM).Build();
                 Assert.Throws<NATSJetStreamException>(() => js.PushSubscribeSync(SUBJECT, psoInvalidStream));
 
-                void AssertThrowsForSubject(Func<object> testCode)
-                {
-                    ArgumentException ae = Assert.Throws<ArgumentException>(testCode);
-                    Assert.StartsWith("Subject", ae.Message);
-                }
-                
-                void AssertThrowsForQueue(Func<object> testCode)
-                {
-                    ArgumentException ae = Assert.Throws<ArgumentException>(testCode);
-                    Assert.StartsWith("Queue", ae.Message);
-                }
-                
-                void AssertThrowsForHandler(Func<object> testCode)
-                {
-                    ArgumentNullException ae = Assert.Throws<ArgumentNullException>(testCode);
-                    Assert.Equal("Handler", ae.ParamName);
-                }
+                Exception ex = null;
+                foreach (string bad in BadSubjectsOrQueues) {
+                    if (string.IsNullOrEmpty(bad))
+                    {
+                        ex = Assert.Throws<ArgumentException>(() => js.PushSubscribeSync(bad));
+                        Assert.StartsWith("Subject", ex.Message);
+                        NATSJetStreamClientException ce = Assert.Throws<NATSJetStreamClientException>(() =>
+                            js.PushSubscribeSync(bad, (PushSubscribeOptions)null));
+                        Assert.Contains(JsSubSubjectNeededToLookupStream.Id, ce.Message);
 
-                // subject
-                AssertThrowsForSubject(() => js.PushSubscribeSync(HasSpace));
-                AssertThrowsForSubject(() => js.PushSubscribeSync(null, (PushSubscribeOptions)null));
-                AssertThrowsForSubject(() => js.PushSubscribeSync(HasSpace, Plain));
-                AssertThrowsForSubject(() => js.PushSubscribeSync(null, Plain, null));
-                AssertThrowsForSubject(() => js.PushSubscribeAsync(HasSpace, null, false));
-                AssertThrowsForSubject(() => js.PushSubscribeAsync(HasSpace, null, false, null));
-                AssertThrowsForSubject(() => js.PushSubscribeAsync(HasSpace, Plain, null, false));
-                AssertThrowsForSubject(() => js.PushSubscribeAsync(HasSpace, Plain, null, false, null));
-                
-                // queue
-                AssertThrowsForQueue(() => js.PushSubscribeSync(Plain, HasSpace));
-                AssertThrowsForQueue(() => js.PushSubscribeSync(Plain, HasSpace, null));
-                AssertThrowsForQueue(() => js.PushSubscribeAsync(Plain, HasSpace, null, false));
-                AssertThrowsForQueue(() => js.PushSubscribeAsync(Plain, HasSpace, null, false, null));
-                
+                        Assert.StartsWith("Subject", ex.Message);
+                    }
+                    else
+                    {
+                        // subject
+                        ex = Assert.Throws<ArgumentException>(() => js.PushSubscribeSync(bad));
+                        Assert.StartsWith("Subject", ex.Message);
+                        ex = Assert.Throws<ArgumentException>(() =>
+                            js.PushSubscribeSync(bad, (PushSubscribeOptions)null));
+                        Assert.StartsWith("Subject", ex.Message);
+
+                        // queue
+                        if (!string.IsNullOrEmpty(bad))
+                        {
+                            ex = Assert.Throws<ArgumentException>(() => js.PushSubscribeSync(SUBJECT, bad, null));
+                            Assert.StartsWith("Queue", ex.Message);
+                            ex = Assert.Throws<ArgumentException>(() =>
+                                js.PushSubscribeAsync(SUBJECT, bad, (s, e) => { }, false, null));
+                            Assert.StartsWith("Queue", ex.Message);
+                        }
+                    }
+                }
+    
                 // handler
-                AssertThrowsForHandler(() => js.PushSubscribeAsync(Plain, null, false));
-                AssertThrowsForHandler(() => js.PushSubscribeAsync(Plain, null, false, null));
-                AssertThrowsForHandler(() => js.PushSubscribeAsync(Plain, Plain, null, false));
-                AssertThrowsForHandler(() => js.PushSubscribeAsync(Plain, Plain, null, false, null));
-
+                ex = Assert.Throws<ArgumentNullException>(() => js.PushSubscribeAsync(SUBJECT, null, false));
+                Assert.Contains("Handler", ex.Message);
+                ex = Assert.Throws<ArgumentNullException>(() => js.PushSubscribeAsync(SUBJECT, null, false, null));
+                Assert.Contains("Handler", ex.Message);
+                ex = Assert.Throws<ArgumentNullException>(() => js.PushSubscribeAsync(SUBJECT, QUEUE, null, false, null));
+                Assert.Contains("Handler", ex.Message);
             });
         }
 
@@ -308,7 +351,7 @@ namespace IntegrationTests
                 // subscribe to A
                 cc = ConsumerConfiguration.Builder().WithFilterSubject(subjectA).WithAckPolicy(AckPolicy.None).Build();
                 pso = PushSubscribeOptions.Builder().WithConfiguration(cc).Build();
-                sub = js.PushSubscribeSync(subjectWild, pso);
+                sub = js.PushSubscribeSync(subjectA, pso);
                 c.Flush(1000);
 
                 m = sub.NextMessage(1000);
@@ -322,7 +365,7 @@ namespace IntegrationTests
                 // subscribe to B
                 cc = ConsumerConfiguration.Builder().WithFilterSubject(subjectB).WithAckPolicy(AckPolicy.None).Build();
                 pso = PushSubscribeOptions.Builder().WithConfiguration(cc).Build();
-                sub = js.PushSubscribeSync(subjectWild, pso);
+                sub = js.PushSubscribeSync(subjectB, pso);
                 c.Flush(1000);
 
                 m = sub.NextMessage(1000);
@@ -370,17 +413,21 @@ namespace IntegrationTests
             {
                 CreateDefaultTestStream(c);
 
-                Assert.Throws<ArgumentException>(
-                () => PushSubscribeOptions.Builder().WithStream(STREAM).WithBind(true).Build());
+                NATSJetStreamClientException e; 
+                    
+                e = Assert.Throws<NATSJetStreamClientException>(
+                    () => PushSubscribeOptions.Builder().WithStream(STREAM).WithBind(true).Build());
+                Assert.Contains(JsSoNameOrDurableRequiredForBind.Id, e.Message);
 
                 Assert.Throws<ArgumentException>(
-                () => PushSubscribeOptions.Builder().WithDurable(DURABLE).WithBind(true).Build());
+                    () => PushSubscribeOptions.Builder().WithDurable(DURABLE).WithBind(true).Build());
 
                 Assert.Throws<ArgumentException>(
-                () => PushSubscribeOptions.Builder().WithStream(string.Empty).WithBind(true).Build());
+                    () => PushSubscribeOptions.Builder().WithStream(string.Empty).WithBind(true).Build());
 
-                Assert.Throws<ArgumentException>(
-                () => PushSubscribeOptions.Builder().WithStream(STREAM).WithDurable(string.Empty).WithBind(true).Build());
+                e = Assert.Throws<NATSJetStreamClientException>(
+                    () => PushSubscribeOptions.Builder().WithStream(STREAM).WithDurable(string.Empty).WithBind(true).Build());
+                Assert.Contains(JsSoNameOrDurableRequiredForBind.Id, e.Message);
             });
         }
 
@@ -462,83 +509,77 @@ namespace IntegrationTests
                 CreateMemoryStream(jsm, STREAM, SUBJECT);
 
                 // will work as SubscribeSubject equals Filter Subject
-                SubscribeOk(js, jsm, SUBJECT, SUBJECT);
-                SubscribeOk(js, jsm, ">", ">");
-                SubscribeOk(js, jsm, "*", "*");
-
-                // will work as SubscribeSubject != empty Filter Subject,
-                // b/c Stream has exactly 1 subject and is a match.
-                SubscribeOk(js, jsm, "", SUBJECT);
-
-                // will work as SubscribeSubject != Filter Subject of '>'
-                // b/c Stream has exactly 1 subject and is a match.
-                SubscribeOk(js, jsm, ">", SUBJECT);
+                FilterMatchSubscribeOk(js, jsm, SUBJECT, SUBJECT);
+                FilterMatchSubscribeOk(js, jsm, ">", ">");
+                FilterMatchSubscribeOk(js, jsm, "*", "*");
 
                 // will not work
-                SubscribeEx(js, jsm, "*", SUBJECT);
+                FilterMatchSubscribeEx(js, jsm, SUBJECT, "");
+                FilterMatchSubscribeEx(js, jsm, SUBJECT, ">");
+                FilterMatchSubscribeEx(js, jsm, SUBJECT, "*");
 
                 // multiple subjects no wildcards
                 jsm.DeleteStream(STREAM);
                 CreateMemoryStream(jsm, STREAM, SUBJECT, Subject(2));
 
                 // will work as SubscribeSubject equals Filter Subject
-                SubscribeOk(js, jsm, SUBJECT, SUBJECT);
-                SubscribeOk(js, jsm, ">", ">");
-                SubscribeOk(js, jsm, "*", "*");
+                FilterMatchSubscribeOk(js, jsm, SUBJECT, SUBJECT);
+                FilterMatchSubscribeOk(js, jsm, ">", ">");
+                FilterMatchSubscribeOk(js, jsm, "*", "*");
 
                 // will not work because stream has more than 1 subject
-                SubscribeEx(js, jsm, "", SUBJECT);
-                SubscribeEx(js, jsm, ">", SUBJECT);
-                SubscribeEx(js, jsm, "*", SUBJECT);
+                FilterMatchSubscribeEx(js, jsm, SUBJECT, "");
+                FilterMatchSubscribeEx(js, jsm, SUBJECT, ">");
+                FilterMatchSubscribeEx(js, jsm, SUBJECT, "*");
 
                 // multiple subjects via '>'
                 jsm.DeleteStream(STREAM);
                 CreateMemoryStream(jsm, STREAM, SUBJECT_GT);
 
                 // will work, exact matches
-                SubscribeOk(js, jsm, SubjectDot("1"), SubjectDot("1"));
-                SubscribeOk(js, jsm, ">", ">");
+                FilterMatchSubscribeOk(js, jsm, SubjectDot("1"), SubjectDot("1"));
+                FilterMatchSubscribeOk(js, jsm, ">", ">");
 
                 // will not work because mismatch / stream has more than 1 subject
-                SubscribeEx(js, jsm, "", SubjectDot("1"));
-                SubscribeEx(js, jsm, ">", SubjectDot("1"));
-                SubscribeEx(js, jsm, SUBJECT_GT, SubjectDot("1"));
+                FilterMatchSubscribeEx(js, jsm, SubjectDot("1"), "");
+                FilterMatchSubscribeEx(js, jsm, SubjectDot("1"), ">");
+                FilterMatchSubscribeEx(js, jsm, SubjectDot("1"), SUBJECT_GT);
 
                 // multiple subjects via '*'
                 jsm.DeleteStream(STREAM);
                 CreateMemoryStream(jsm, STREAM, SUBJECT_STAR);
 
                 // will work, exact matches
-                SubscribeOk(js, jsm, SubjectDot("1"), SubjectDot("1"));
-                SubscribeOk(js, jsm, ">", ">");
+                FilterMatchSubscribeOk(js, jsm, SubjectDot("1"), SubjectDot("1"));
+                FilterMatchSubscribeOk(js, jsm, ">", ">");
 
                 // will not work because mismatch / stream has more than 1 subject
-                SubscribeEx(js, jsm, "", SubjectDot("1"));
-                SubscribeEx(js, jsm, ">", SubjectDot("1"));
-                SubscribeEx(js, jsm, SUBJECT_STAR, SubjectDot("1"));
+                FilterMatchSubscribeEx(js, jsm, SubjectDot("1"), "");
+                FilterMatchSubscribeEx(js, jsm, SubjectDot("1"), ">");
+                FilterMatchSubscribeEx(js, jsm, SubjectDot("1"), SUBJECT_STAR);
             });
         }
 
-        private void SubscribeOk(IJetStream js, IJetStreamManagement jsm, string fs, string ss) 
+        private void FilterMatchSubscribeOk(IJetStream js, IJetStreamManagement jsm, string subscribeSubject, params string[] filterSubjects) 
         {
             int i = Rndm.Next(); // just want a unique number
-            SetupConsumer(jsm, i, fs);
-            js.PushSubscribeSync(ss, ConsumerConfiguration.Builder().WithDurable(Durable(i)).BuildPushSubscribeOptions()).Unsubscribe();
+            FilterMatchSetupConsumer(jsm, i, filterSubjects);
+            js.PushSubscribeSync(subscribeSubject, ConsumerConfiguration.Builder().WithDurable(Durable(i)).BuildPushSubscribeOptions()).Unsubscribe();
         }
 
-        private void SubscribeEx(IJetStream js, IJetStreamManagement jsm, string fs, string ss) 
+        private void FilterMatchSubscribeEx(IJetStream js, IJetStreamManagement jsm, string subscribeSubject, params string[] filterSubjects) 
         {
             int i = Rndm.Next(); // just want a unique number
-            SetupConsumer(jsm, i, fs);
+            FilterMatchSetupConsumer(jsm, i, filterSubjects);
             NATSJetStreamClientException e = Assert.Throws<NATSJetStreamClientException>(
-                () => js.PushSubscribeSync(ss, ConsumerConfiguration.Builder().WithDurable(Durable(i)).BuildPushSubscribeOptions()));
+                () => js.PushSubscribeSync(subscribeSubject, ConsumerConfiguration.Builder().WithDurable(Durable(i)).BuildPushSubscribeOptions()));
             Assert.Contains(JsSubSubjectDoesNotMatchFilter.Id, e.Message);
         }
 
-        private void SetupConsumer(IJetStreamManagement jsm, int i, string fs)
+        private void FilterMatchSetupConsumer(IJetStreamManagement jsm, int i, params string[] fs)
         {
             jsm.AddOrUpdateConsumer(STREAM,
-                ConsumerConfiguration.Builder().WithDeliverSubject(Deliver(i)).WithDurable(Durable(i)).WithFilterSubject(fs).Build());
+                ConsumerConfiguration.Builder().WithDeliverSubject(Deliver(i)).WithDurable(Durable(i)).WithFilterSubjects(fs).Build());
         }
 
         [Fact]
@@ -546,7 +587,9 @@ namespace IntegrationTests
         {
             Context.RunInJsServer(c =>
             {
-                CreateDefaultTestStream(c);
+                string stream = Stream();
+                string subject = Subject();
+                CreateMemoryStream(c, stream, subject);
 
                 IJetStream js = c.CreateJetStreamContext();
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
@@ -555,41 +598,38 @@ namespace IntegrationTests
                 ConsumerConfiguration ccDurPush = ConsumerConfiguration.Builder()
                         .WithDurable(Durable(1))
                         .WithDeliverSubject(Deliver(1))
+                        .WithFilterSubject(subject)
                         .Build();
-                jsm.AddOrUpdateConsumer(STREAM, ccDurPush);
+                jsm.AddOrUpdateConsumer(stream, ccDurPush);
 
                 // create a durable pull subscriber - notice no deliver subject
                 ConsumerConfiguration ccDurPull = ConsumerConfiguration.Builder()
                         .WithDurable(Durable(2))
                         .Build();
-                jsm.AddOrUpdateConsumer(STREAM, ccDurPull);
+                jsm.AddOrUpdateConsumer(stream, ccDurPull);
 
                 // try to pull subscribe against a push durable
                 NATSJetStreamClientException e = Assert.Throws<NATSJetStreamClientException>(
-                        () => js.PullSubscribe(SUBJECT, PullSubscribeOptions.Builder().WithDurable(Durable(1)).Build()));
+                        () => js.PullSubscribe(subject, PullSubscribeOptions.Builder().WithDurable(Durable(1)).Build()));
                 Assert.Contains(JsSubConsumerAlreadyConfiguredAsPush.Id, e.Message);
 
                 // try to pull bind against a push durable
                 e = Assert.Throws<NATSJetStreamClientException>(
-                        () => js.PullSubscribe(SUBJECT, PullSubscribeOptions.BindTo(STREAM, Durable(1))));
+                        () => js.PullSubscribe(subject, PullSubscribeOptions.BindTo(stream, Durable(1))));
                 Assert.Contains(JsSubConsumerAlreadyConfiguredAsPush.Id, e.Message);
-
-                // this one is okay
-                IJetStreamPullSubscription sub = js.PullSubscribe(SUBJECT, PullSubscribeOptions.Builder().WithDurable(Durable(2)).Build());
-                sub.Unsubscribe(); // so I can re-use the durable
 
                 // try to push subscribe against a pull durable
                 e = Assert.Throws<NATSJetStreamClientException>(
-                        () => js.PushSubscribeSync(SUBJECT, PushSubscribeOptions.Builder().WithDurable(Durable(2)).Build()));
+                        () => js.PushSubscribeSync(subject, PushSubscribeOptions.Builder().WithDurable(Durable(2)).Build()));
                 Assert.Contains(JsSubConsumerAlreadyConfiguredAsPull.Id, e.Message);
 
                 // try to push bind against a pull durable
                 e = Assert.Throws<NATSJetStreamClientException>(
-                        () => js.PushSubscribeSync(SUBJECT, PushSubscribeOptions.BindTo(STREAM, Durable(2))));
+                        () => js.PushSubscribeSync(subject, PushSubscribeOptions.BindTo(stream, Durable(2))));
                 Assert.Contains(JsSubConsumerAlreadyConfiguredAsPull.Id, e.Message);
 
                 // this one is okay
-                js.PushSubscribeSync(SUBJECT, PushSubscribeOptions.Builder().WithDurable(Durable(1)).Build());
+                js.PushSubscribeSync(subject, PushSubscribeOptions.Builder().WithDurable(Durable(1)).Build());
             });
         }
 
@@ -632,6 +672,7 @@ namespace IntegrationTests
                     .WithMaxAckPending(65000)
                     .WithMaxDeliver(5)
                     .WithReplayPolicy(ReplayPolicy.Instant)
+                    .WithFilterSubject(SUBJECT)
                     .Build();
                 jsm.AddOrUpdateConsumer(STREAM, cc);
 
@@ -649,6 +690,7 @@ namespace IntegrationTests
                     .WithMaxDeliver(43)
                     .WithRateLimitBps(44)
                     .WithMaxAckPending(45)
+                    .WithFilterSubject(SUBJECT)
                     .Build();
                 jsm.AddOrUpdateConsumer(STREAM, cc);
 
@@ -658,6 +700,7 @@ namespace IntegrationTests
                 cc = ConsumerConfiguration.Builder()
                     .WithDurable(Durable(22))
                     .WithMaxPullWaiting(46)
+                    .WithFilterSubject(SUBJECT)
                     .Build();
                 jsm.AddOrUpdateConsumer(STREAM, cc);
 
@@ -670,6 +713,7 @@ namespace IntegrationTests
                     .WithDeliverSubject(Deliver(3))
                     .WithDurable(Durable(3))
                     .WithStartTime(DateTime.UtcNow.AddHours(1))
+                    .WithFilterSubject(SUBJECT)
                     .Build();
                 jsm.AddOrUpdateConsumer(STREAM, cc);
 
@@ -683,6 +727,7 @@ namespace IntegrationTests
                     .WithFlowControl(1000)
                     .WithHeadersOnly(true)
                     .WithAckWait(2000)
+                    .WithFilterSubject(SUBJECT)
                     .Build();
                 jsm.AddOrUpdateConsumer(STREAM, cc);
 
@@ -696,6 +741,7 @@ namespace IntegrationTests
                     .WithDeliverPolicy(DeliverPolicy.Last)
                     .WithAckPolicy(AckPolicy.None)
                     .WithReplayPolicy(ReplayPolicy.Original)
+                    .WithFilterSubject(SUBJECT)
                     .Build();
                 jsm.AddOrUpdateConsumer(STREAM, cc);
 
@@ -711,63 +757,68 @@ namespace IntegrationTests
                 IJetStream js = c.CreateJetStreamContext();
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
 
-                CreateDefaultTestStream(jsm);
+                string stream = Stream(); 
+                string subject = Subject(); 
+                CreateMemoryStream(jsm, stream, subject);
 
                 // push
-                jsm.AddOrUpdateConsumer(STREAM, PushDurableBuilder().Build());
+                string uname = Durable();
+                string deliver = Deliver();
+                jsm.AddOrUpdateConsumer(stream, PushDurableBuilder(subject, uname, deliver).Build());
 
-                ChangeExPush(js, PushDurableBuilder().WithDeliverPolicy(DeliverPolicy.Last), "DeliverPolicy");
-                ChangeExPush(js, PushDurableBuilder().WithDeliverPolicy(DeliverPolicy.New), "DeliverPolicy");
-                ChangeExPush(js, PushDurableBuilder().WithAckPolicy(AckPolicy.None), "AckPolicy");
-                ChangeExPush(js, PushDurableBuilder().WithAckPolicy(AckPolicy.All), "AckPolicy");
-                ChangeExPush(js, PushDurableBuilder().WithReplayPolicy(ReplayPolicy.Original), "ReplayPolicy");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithDeliverPolicy(DeliverPolicy.Last), "DeliverPolicy");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithDeliverPolicy(DeliverPolicy.New), "DeliverPolicy");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithAckPolicy(AckPolicy.None), "AckPolicy");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithAckPolicy(AckPolicy.All), "AckPolicy");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithReplayPolicy(ReplayPolicy.Original), "ReplayPolicy");
 
-                ChangeExPush(js, PushDurableBuilder().WithFlowControl(10000), "FlowControl");
-                ChangeExPush(js, PushDurableBuilder().WithHeadersOnly(true), "HeadersOnly");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithFlowControl(10000), "FlowControl");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithHeadersOnly(true), "HeadersOnly");
 
-                ChangeExPush(js, PushDurableBuilder().WithStartTime(DateTime.UtcNow), "StartTime");
-                ChangeExPush(js, PushDurableBuilder().WithAckWait(Duration.OfMillis(1)), "AckWait");
-                ChangeExPush(js, PushDurableBuilder().WithDescription("x"), "Description");
-                ChangeExPush(js, PushDurableBuilder().WithSampleFrequency("x"), "SampleFrequency");
-                ChangeExPush(js, PushDurableBuilder().WithIdleHeartbeat(Duration.OfMillis(1000)), "IdleHeartbeat");
-                ChangeExPush(js, PushDurableBuilder().WithMaxExpires(Duration.OfMillis(1000)), "MaxExpires");
-                ChangeExPush(js, PushDurableBuilder().WithInactiveThreshold(Duration.OfMillis(1000)), "InactiveThreshold");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithStartTime(DateTime.UtcNow), "StartTime");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithAckWait(Duration.OfMillis(1)), "AckWait");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithDescription("x"), "Description");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithSampleFrequency("x"), "SampleFrequency");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithIdleHeartbeat(Duration.OfMillis(1000)), "IdleHeartbeat");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithMaxExpires(Duration.OfMillis(1000)), "MaxExpires");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithInactiveThreshold(Duration.OfMillis(1000)), "InactiveThreshold");
 
                 // value
-                ChangeExPush(js, PushDurableBuilder().WithMaxDeliver(1), "MaxDeliver");
-                ChangeExPush(js, PushDurableBuilder().WithMaxAckPending(0), "MaxAckPending");
-                ChangeExPush(js, PushDurableBuilder().WithAckWait(0), "AckWait");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithMaxDeliver(1), "MaxDeliver");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithMaxAckPending(0), "MaxAckPending");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithAckWait(0), "AckWait");
 
                 // value unsigned
-                ChangeExPush(js, PushDurableBuilder().WithStartSequence(1), "StartSequence");
-                ChangeExPush(js, PushDurableBuilder().WithRateLimitBps(1), "RateLimitBps");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithStartSequence(1), "StartSequence");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithRateLimitBps(1), "RateLimitBps");
 
                 // unset doesn't fail because the server provides a value equal to the unset
-                ChangeOkPush(js, PushDurableBuilder().WithMaxDeliver(-1));
+                ChangeOkPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithMaxDeliver(-1));
 
                 // unset doesn't fail because the server does not provide a value
-                ChangeOkPush(js, PushDurableBuilder().WithStartSequence(0));
-                ChangeOkPush(js, PushDurableBuilder().WithRateLimitBps(0));
+                ChangeOkPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithStartSequence(0));
+                ChangeOkPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithRateLimitBps(0));
 
                 // unset fail b/c the server does set a value that is not equal to the unset or the minimum
-                ChangeExPush(js, PushDurableBuilder().WithMaxAckPending(-1), "MaxAckPending");
-                ChangeExPush(js, PushDurableBuilder().WithMaxAckPending(0), "MaxAckPending");
-                ChangeExPush(js, PushDurableBuilder().WithAckWait(-1), "AckWait");
-                ChangeExPush(js, PushDurableBuilder().WithAckWait(0), "AckWait");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithMaxAckPending(-1), "MaxAckPending");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithMaxAckPending(0), "MaxAckPending");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithAckWait(-1), "AckWait");
+                ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithAckWait(0), "AckWait");
 
                 // pull
-                jsm.AddOrUpdateConsumer(STREAM, PullDurableBuilder().Build());
+                string lname = Durable();
+                jsm.AddOrUpdateConsumer(stream, PullDurableBuilder(subject, lname).Build());
 
                 // value
-                ChangeExPull(js, PullDurableBuilder().WithMaxPullWaiting(0), "MaxPullWaiting");
-                ChangeExPull(js, PullDurableBuilder().WithMaxBatch(0), "MaxBatch");
-                ChangeExPull(js, PullDurableBuilder().WithMaxBytes(0), "MaxBytes");
+                ChangeExPull(js, subject, PullDurableBuilder(subject, lname).WithMaxPullWaiting(0), "MaxPullWaiting");
+                ChangeExPull(js, subject, PullDurableBuilder(subject, lname).WithMaxBatch(0), "MaxBatch");
+                ChangeExPull(js, subject, PullDurableBuilder(subject, lname).WithMaxBytes(0), "MaxBytes");
 
                 // unsets fail b/c the server does set a value
-                ChangeExPull(js, PullDurableBuilder().WithMaxPullWaiting(-1), "MaxPullWaiting");
+                ChangeExPull(js, subject, PullDurableBuilder(subject, lname).WithMaxPullWaiting(-1), "MaxPullWaiting");
 
                 // unset
-                ChangeOkPull(js, PullDurableBuilder().WithMaxBatch(-1));
+                ChangeOkPull(js, subject, PullDurableBuilder(subject, lname).WithMaxBatch(-1));
 
                 if (c.ServerInfo.IsNewerVersionThan("2.9.99"))
                 {
@@ -778,39 +829,39 @@ namespace IntegrationTests
                     metadataA["b"] = "B";
 
                     // metadata server null versus new not null
-                    jsm.AddOrUpdateConsumer(STREAM, PushDurableBuilder().Build());
-                    ChangeExPush(js, PushDurableBuilder().WithMetadata(metadataA), "Metadata");
+                    jsm.AddOrUpdateConsumer(stream, PushDurableBuilder(subject, uname, deliver).Build());
+                    ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithMetadata(metadataA), "Metadata");
 
                     // metadata server not null versus new null
-                    jsm.AddOrUpdateConsumer(STREAM, PushDurableBuilder().WithMetadata(metadataA).Build());
-                    ChangeOkPush(js, PushDurableBuilder());
+                    jsm.AddOrUpdateConsumer(stream, PushDurableBuilder(subject, uname, deliver).WithMetadata(metadataA).Build());
+                    ChangeOkPush(js, subject, PushDurableBuilder(subject, uname, deliver));
 
                     // metadata server not null versus new not null but different
-                    ChangeExPush(js, PushDurableBuilder().WithMetadata(metadataB), "Metadata");
+                    ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithMetadata(metadataB), "Metadata");
 
                     // metadata server not null versus new not null and same
-                    ChangeOkPush(js, PushDurableBuilder().WithMetadata(metadataA));
+                    ChangeOkPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithMetadata(metadataA));
                 }                
             });
         }
 
-        private void ChangeOkPush(IJetStream js, ConsumerConfiguration.ConsumerConfigurationBuilder builder) {
-            js.PushSubscribeSync(SUBJECT, PushSubscribeOptions.Builder().WithConfiguration(builder.Build()).Build()).Unsubscribe();
+        private void ChangeOkPush(IJetStream js, string subject, ConsumerConfiguration.ConsumerConfigurationBuilder builder) {
+            js.PushSubscribeSync(subject, PushSubscribeOptions.Builder().WithConfiguration(builder.Build()).Build()).Unsubscribe();
         }
 
-        private void ChangeOkPull(IJetStream js, ConsumerConfiguration.ConsumerConfigurationBuilder builder) {
-            js.PullSubscribe(SUBJECT, PullSubscribeOptions.Builder().WithConfiguration(builder.Build()).Build()).Unsubscribe();
+        private void ChangeOkPull(IJetStream js, string subject, ConsumerConfiguration.ConsumerConfigurationBuilder builder) {
+            js.PullSubscribe(subject, PullSubscribeOptions.Builder().WithConfiguration(builder.Build()).Build()).Unsubscribe();
         }
 
-        private void ChangeExPush(IJetStream js, ConsumerConfiguration.ConsumerConfigurationBuilder builder, string changedField) {
+        private void ChangeExPush(IJetStream js, string subject, ConsumerConfiguration.ConsumerConfigurationBuilder builder, string changedField) {
             NATSJetStreamClientException e = Assert.Throws<NATSJetStreamClientException>(
-                () => js.PushSubscribeSync(SUBJECT, PushSubscribeOptions.Builder().WithConfiguration(builder.Build()).Build()));
+                () => js.PushSubscribeSync(subject, PushSubscribeOptions.Builder().WithConfiguration(builder.Build()).Build()));
             _ChangeEx(e, changedField);
         }
 
-        private void ChangeExPull(IJetStream js, ConsumerConfiguration.ConsumerConfigurationBuilder builder, string changedField) {
+        private void ChangeExPull(IJetStream js, string subject, ConsumerConfiguration.ConsumerConfigurationBuilder builder, string changedField) {
             NATSJetStreamClientException e = Assert.Throws<NATSJetStreamClientException>(
-                () => js.PullSubscribe(SUBJECT, PullSubscribeOptions.Builder().WithConfiguration(builder.Build()).Build()));
+                () => js.PullSubscribe(subject, PullSubscribeOptions.Builder().WithConfiguration(builder.Build()).Build()));
             _ChangeEx(e, changedField);
         }
 
@@ -821,12 +872,14 @@ namespace IntegrationTests
             Assert.Contains(changedField, msg);
         }
 
-        private ConsumerConfiguration.ConsumerConfigurationBuilder PushDurableBuilder() {
-            return ConsumerConfiguration.Builder().WithDurable(PUSH_DURABLE).WithDeliverSubject(DELIVER);
+        private ConsumerConfiguration.ConsumerConfigurationBuilder PushDurableBuilder(string subject, string durable, string deliver) {
+            return ConsumerConfiguration.Builder().WithDurable(durable)
+                .WithDeliverSubject(deliver)
+                .WithFilterSubject(subject);
         }
 
-        private ConsumerConfiguration.ConsumerConfigurationBuilder PullDurableBuilder() {
-            return ConsumerConfiguration.Builder().WithDurable(PULL_DURABLE);
+        private ConsumerConfiguration.ConsumerConfigurationBuilder PullDurableBuilder(string subject, string durable) {
+            return ConsumerConfiguration.Builder().WithDurable(durable).WithFilterSubject(subject);
         }
 
         [Fact]

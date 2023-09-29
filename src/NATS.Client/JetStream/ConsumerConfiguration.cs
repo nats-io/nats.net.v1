@@ -65,7 +65,6 @@ namespace NATS.Client.JetStream
         public string Name { get; }
         public string DeliverSubject { get; }
         public string DeliverGroup { get; }
-        public string FilterSubject { get; }
         public string SampleFrequency { get; }
         public DateTime StartTime { get; }
         public Duration AckWait { get; }
@@ -75,8 +74,6 @@ namespace NATS.Client.JetStream
         public ulong StartSeq => GetOrUnset(_startSeq);
         public int MaxDeliver => GetOrUnset(_maxDeliver);
         
-        [Obsolete("This property is obsolete. Use RateLimitBps.", false)]
-        public long RateLimit => (long)GetOrUnset(_rateLimitBps);
         public ulong RateLimitBps => GetOrUnset(_rateLimitBps);
         public int MaxAckPending => GetOrUnset(_maxAckPending);
         public int MaxPullWaiting => GetOrUnset(_maxPullWaiting);
@@ -88,6 +85,17 @@ namespace NATS.Client.JetStream
         public bool MemStorage => _memStorage ?? false;
         public IList<Duration> Backoff => _backoff ?? new List<Duration>();
         public IDictionary<string, string> Metadata => _metadata ?? new Dictionary<string, string>();
+
+        internal IList<string> _filterSubjects;
+        public string FilterSubject =>
+            _filterSubjects == null || _filterSubjects.Count != 1 ? null : _filterSubjects[0];
+
+        public IList<string> FilterSubjects => _filterSubjects;
+
+        public bool HasMultipleFilterSubjects => _filterSubjects != null && FilterSubjects.Count > 1;
+
+        [Obsolete("This property is obsolete. Use RateLimitBps.", false)]
+        public long RateLimit => (long)GetOrUnset(_rateLimitBps);
 
         internal ConsumerConfiguration(string json) : this(JSON.Parse(json)) {}
 
@@ -102,7 +110,6 @@ namespace NATS.Client.JetStream
             Name = ccNode[ApiConstants.Name].Value;
             DeliverSubject = ccNode[ApiConstants.DeliverSubject].Value;
             DeliverGroup = ccNode[ApiConstants.DeliverGroup].Value;
-            FilterSubject = ccNode[ApiConstants.FilterSubject].Value;
             SampleFrequency = ccNode[ApiConstants.SampleFreq].Value;
             
             StartTime = AsDate(ccNode[ApiConstants.OptStartTime]);
@@ -125,6 +132,16 @@ namespace NATS.Client.JetStream
 
             _backoff = DurationList(ccNode, ApiConstants.Backoff, true);
             _metadata = StringStringDictionary(ccNode, ApiConstants.Metadata, true);
+            string tempFs = EmptyAsNull(ccNode[ApiConstants.FilterSubject].Value);
+            if (tempFs == null)
+            {
+                _filterSubjects = EmptyAsNull(StringList(ccNode, ApiConstants.FilterSubjects));
+            }
+            else
+            {
+                _filterSubjects = new List<string>();
+                _filterSubjects.Add(tempFs);
+            }
         }
 
         private ConsumerConfiguration(ConsumerConfigurationBuilder builder)
@@ -138,7 +155,6 @@ namespace NATS.Client.JetStream
             Name = builder._name;
             DeliverSubject = builder._deliverSubject;
             DeliverGroup = builder._deliverGroup;
-            FilterSubject = builder._filterSubject;
             SampleFrequency = builder._sampleFrequency;
 
             StartTime = builder._startTime;
@@ -161,6 +177,7 @@ namespace NATS.Client.JetStream
 
             _backoff = builder._backoff;
             _metadata = builder._metadata;
+            _filterSubjects = builder._filterSubjects;
         }
 
         public override JSONNode ToJsonNode()
@@ -178,7 +195,6 @@ namespace NATS.Client.JetStream
             AddField(o, ApiConstants.AckPolicy, AckPolicy.GetString());
             AddField(o, ApiConstants.AckWait, AckWait);
             AddField(o, ApiConstants.MaxDeliver, MaxDeliver);
-            AddField(o, ApiConstants.FilterSubject, FilterSubject);
             AddField(o, ApiConstants.ReplayPolicy, ReplayPolicy.GetString());
             AddField(o, ApiConstants.SampleFreq, SampleFrequency);
             AddField(o, ApiConstants.RateLimitBps, RateLimitBps);
@@ -195,6 +211,17 @@ namespace NATS.Client.JetStream
             AddField(o, ApiConstants.NumReplicas, NumReplicas);
             AddField(o, ApiConstants.MemStorage, MemStorage);
             AddField(o, ApiConstants.Metadata, Metadata);
+            if (_filterSubjects != null)
+            {
+                if (_filterSubjects.Count == 1)
+                {
+                    AddField(o, ApiConstants.FilterSubject, _filterSubjects[0]);
+                }
+                else
+                {
+                    AddField(o, ApiConstants.FilterSubjects, _filterSubjects);
+                }
+            }
             return o;
         }
 
@@ -226,7 +253,6 @@ namespace NATS.Client.JetStream
 
             RecordWouldBeChange(StartTime, server.StartTime, "StartTime", changes);
                    
-            RecordWouldBeChange(FilterSubject, server.FilterSubject, "FilterSubject", changes);
             RecordWouldBeChange(Description, server.Description, "Description", changes);
             RecordWouldBeChange(SampleFrequency, server.SampleFrequency, "SampleFrequency", changes);
             RecordWouldBeChange(DeliverSubject, server.DeliverSubject, "DeliverSubject", changes);
@@ -234,6 +260,7 @@ namespace NATS.Client.JetStream
 
             if (_backoff != null && !SequenceEqual(_backoff, server._backoff)) { changes.Add("Backoff"); }
             if (_metadata != null && !DictionariesEqual(_metadata, server._metadata)) { changes.Add("Metadata"); }
+            if (_filterSubjects != null && !SequenceEqual(_filterSubjects, server._filterSubjects)) { changes.Add("FilterSubjects"); }
 
             return changes;
         }
@@ -311,7 +338,6 @@ namespace NATS.Client.JetStream
             internal string _name;
             internal string _deliverSubject;
             internal string _deliverGroup;
-            internal string _filterSubject;
             internal string _sampleFrequency;
             
             internal DateTime _startTime; 
@@ -333,6 +359,7 @@ namespace NATS.Client.JetStream
             internal bool? _memStorage;
             internal IList<Duration> _backoff;
             internal Dictionary<string, string> _metadata;
+            internal IList<string> _filterSubjects;
 
             public ConsumerConfigurationBuilder() {}
 
@@ -349,7 +376,6 @@ namespace NATS.Client.JetStream
                 _name = cc.Name;
                 _deliverSubject = cc.DeliverSubject;
                 _deliverGroup = cc.DeliverGroup;
-                _filterSubject = cc.FilterSubject;
                 _sampleFrequency = cc.SampleFrequency;
 
                 _startTime = cc.StartTime;
@@ -382,6 +408,11 @@ namespace NATS.Client.JetStream
                     {
                         _metadata[key] = cc.Metadata[key];
                     }
+                }
+
+                if (cc.FilterSubjects != null)
+                {
+                    _filterSubjects = new List<string>(cc.FilterSubjects);
                 }
             }
 
@@ -521,12 +552,59 @@ namespace NATS.Client.JetStream
 
             /// <summary>
             /// Sets the filter subject of the ConsumerConfiguration.
+            /// Replaces any other filter subjects set in the builder 
             /// </summary>
             /// <param name="filterSubject">the filter subject</param>
             /// <returns>The ConsumerConfigurationBuilder</returns>
             public ConsumerConfigurationBuilder WithFilterSubject(string filterSubject)
             {
-                _filterSubject = EmptyAsNull(filterSubject);
+                if (string.IsNullOrWhiteSpace(filterSubject)) 
+                {
+                    this._filterSubjects = null;
+                }
+                else {
+                    this._filterSubjects = new List<string>();
+                    this._filterSubjects.Add(filterSubject);
+                }
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the filter subject of the ConsumerConfiguration.
+            /// Replaces any other filter subjects set in the builder 
+            /// </summary>
+            /// <param name="filterSubjects">one or more filter subjects</param>
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder WithFilterSubjects(params string[] filterSubjects)
+            {
+                if (filterSubjects == null)
+                {
+                    this._filterSubjects = null;
+                    return this;
+                }
+
+                return WithFilterSubjects(new List<string>(filterSubjects));
+            }
+
+            /// <summary>
+            /// Sets the filter subject of the ConsumerConfiguration.
+            /// Replaces any other filter subjects set in the builder 
+            /// </summary>
+            /// <param name="filterSubjects">one or more filter subjects</param>
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder WithFilterSubjects(IList<string> filterSubjects)
+            {
+                this._filterSubjects = new List<string>();
+                if (filterSubjects != null) {
+                    foreach (string fs in filterSubjects) {
+                        if (!string.IsNullOrWhiteSpace(fs)) {
+                            this._filterSubjects.Add(fs);
+                        }
+                    }
+                }
+                if (this._filterSubjects.Count == 0) {
+                    this._filterSubjects = null;
+                }
                 return this;
             }
 

@@ -688,7 +688,7 @@ namespace IntegrationTests
             }
             Assert.Equal(Durable(id), ci.ConsumerConfiguration.Durable);
             if (fs == null) {
-                Assert.Empty(ci.ConsumerConfiguration.FilterSubject);
+                Assert.Null(ci.ConsumerConfiguration.FilterSubject);
             }
             if (deliver) {
                 Assert.Equal(Deliver(id), ci.ConsumerConfiguration.DeliverSubject);

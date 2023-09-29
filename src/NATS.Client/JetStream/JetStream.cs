@@ -164,26 +164,33 @@ namespace NATS.Client.JetStream
             (conn, js, stream, so, cc, queueMode, syncMode) =>
                 new PullOrderedMessageManager(conn, js, stream, so, cc, syncMode);
         
-        Subscription CreateSubscription(string subject, string queueName,
-            EventHandler<MsgHandlerEventArgs> userHandler, bool autoAck,
-            PushSubscribeOptions pushSubscribeOptions, 
-            PullSubscribeOptions pullSubscribeOptions)
+        internal Subscription CreateSubscription(string userSubscribeSubject, 
+            PushSubscribeOptions pushSubscribeOptions,
+            PullSubscribeOptions pullSubscribeOptions, 
+            string queueName,
+            EventHandler<MsgHandlerEventArgs> userHandler, 
+            bool autoAck)
         {
-            // 1. Prepare for all the validation
+            // Parameter notes. For those relating to the callers, you can see all the callers further down in this source file.
+            //    - pull subscribe callers guarantee that pullSubscribeOptions is not null
+            //    - qgroup is always null with pull callers
+            //    - callers only ever provide one of the subscribe options
+
+            // 1. Initial prep and validation
             bool isPullMode = pullSubscribeOptions != null;
 
             SubscribeOptions so;
             string stream;
-            string qgroup;
             ConsumerConfiguration userCC;
+            string settledDeliverGroup = null; // push might set this
 
-            if (isPullMode) {
+            if (isPullMode) 
+            {
                 so = pullSubscribeOptions; // options must have already been checked to be non-null
                 stream = pullSubscribeOptions.Stream;
 
                 userCC = so.ConsumerConfiguration;
 
-                qgroup = null; // just to make compiler happy both paths set variable
                 ValidateNotSupplied(userCC.DeliverGroup, JsSubPullCantHaveDeliverGroup);
                 ValidateNotSupplied(userCC.DeliverSubject, JsSubPullCantHaveDeliverSubject);
             }
@@ -207,28 +214,61 @@ namespace NATS.Client.JetStream
                 }
 
                 // figure out the queue name
-                qgroup = ValidateMustMatchIfBothSupplied(userCC.DeliverGroup, queueName, JsSubQueueDeliverGroupMismatch);
-                if (so.Ordered && qgroup != null) {
+                settledDeliverGroup = ValidateMustMatchIfBothSupplied(userCC.DeliverGroup, queueName, JsSubQueueDeliverGroupMismatch);
+                if (so.Ordered && settledDeliverGroup != null) {
                     throw JsSubOrderedNotAllowOnQueues.Instance();
                 }
             }
             
-            // 2A. Flow Control / heartbeat not always valid
+            // 1B. Flow Control / heartbeat not always valid
             if (userCC.FlowControl || userCC.IdleHeartbeat != null && userCC.IdleHeartbeat.Millis > 0) {
                 if (isPullMode) {
                     throw JsSubFcHbNotValidPull.Instance();
                 }
-                if (qgroup != null) {
+                if (settledDeliverGroup != null) {
                     throw JsSubFcHbNotValidQueue.Instance();
                 }
             }
 
-            // 2B. Did they tell me what stream? No? look it up.
-            if (string.IsNullOrWhiteSpace(stream)) {
-                stream = LookupStreamBySubject(subject);
-                if (stream == null) {
+            // 2. figure out user provided subjects and prepare the settledFilterSubjects
+            userSubscribeSubject = EmptyAsNull(userSubscribeSubject);
+            IList<string> settledFilterSubjects = new List<string>();
+            if (userCC.FilterSubjects == null)  // empty filterSubjects gives null 
+            {
+                // userCC.filterSubjects empty, populate settledFilterSubjects w/userSubscribeSubject if possible
+                if (userSubscribeSubject != null) {
+                    settledFilterSubjects.Add(userSubscribeSubject);
+                }
+            }
+            else {
+                // userCC.filterSubjects not empty, validate them
+                foreach (string fs in userCC.FilterSubjects)
+                {
+                    settledFilterSubjects.Add(fs);
+                }
+                // If userSubscribeSubject is provided it must be one of the filter subjects.
+                if (userSubscribeSubject != null && !settledFilterSubjects.Contains(userSubscribeSubject)) {
+                    throw JsSubSubjectDoesNotMatchFilter.Instance();
+                }
+            }
+
+            // 3. Did they tell me what stream? No? look it up.
+            string settledStream;
+            if (string.IsNullOrWhiteSpace(stream)) 
+            {
+                if (settledFilterSubjects.Count == 0) 
+                {
+                    throw JsSubSubjectNeededToLookupStream.Instance();
+                }
+                settledStream = LookupStreamBySubject(settledFilterSubjects[0]);
+                if (settledStream == null) 
+                {
                     throw JsSubNoMatchingStreamForSubject.Instance();
                 }
+            }
+            else
+            {
+                settledStream = stream;
             }
 
             ConsumerConfiguration serverCC = null;
@@ -239,10 +279,11 @@ namespace NATS.Client.JetStream
             }
             string inboxDeliver = userCC.DeliverSubject;
             
-            // 3. Does this consumer already exist?
-            if (consumerName != null) 
+            // 4. Does this consumer already exist? FastBind bypasses the lookup;
+            //    the dev better know what they are doing...
+            if (!so.FastBind && consumerName != null) 
             {
-                ConsumerInfo serverInfo = LookupConsumerInfo(stream, consumerName);
+                ConsumerInfo serverInfo = LookupConsumerInfo(settledStream, consumerName);
 
                 if (serverInfo != null) { // the consumer for that durable already exists
                     serverCC = serverInfo.ConsumerConfiguration;
@@ -255,6 +296,7 @@ namespace NATS.Client.JetStream
                         throw JsSubExistingConsumerCannotBeModified.Instance($"[{string.Join(",", changes)}]");
                     }
 
+                    // deliver subject must be null/empty for pull, defined for push
                     if (isPullMode) 
                     {
                         if (!string.IsNullOrWhiteSpace(serverCC.DeliverSubject)) 
@@ -270,7 +312,7 @@ namespace NATS.Client.JetStream
                     if (string.IsNullOrWhiteSpace(serverCC.DeliverGroup)) 
                     {
                         // lookedUp was null/empty, means existing consumer is not a queue consumer
-                        if (qgroup == null) 
+                        if (settledDeliverGroup == null) 
                         {
                             // ok fine, no queue requested and the existing consumer is also not a queue consumer
                             // we must check if the consumer is in use though
@@ -284,21 +326,27 @@ namespace NATS.Client.JetStream
                             throw JsSubExistingConsumerNotQueue.Instance();
                         }
                     }
-                    else if (qgroup == null) 
+                    else if (settledDeliverGroup == null) 
                     {
                         throw JsSubExistingConsumerIsQueue.Instance();
                     }
-                    else if (!serverCC.DeliverGroup.Equals(qgroup)) 
+                    else if (!serverCC.DeliverGroup.Equals(settledDeliverGroup)) 
                     {
                         throw JsSubExistingQueueDoesNotMatchRequestedQueue.Instance();
                     }
 
-                    // durable already exists, make sure the filter subject matches
-                    if (string.IsNullOrWhiteSpace(subject))
+                    // consumer already exists, make sure the filter subject matches
+                    // subscribeSubject, if supplied came from the user directly
+                    // or in the userCC or might not have been in either place
+                    if (settledFilterSubjects.Count == 0)
                     {
-                        subject = userCC.FilterSubject;
+                        // still also might be null, which the server treats as >
+                        if (serverCC.FilterSubjects != null)
+                        {
+                            settledFilterSubjects = serverCC.FilterSubjects;
+                        }
                     }
-                    else if (!IsFilterMatch(subject, serverCC.FilterSubject, stream))
+                    else if (!ConsumerFilterSubjectsAreEquivalent(settledFilterSubjects, serverCC.FilterSubjects))
                     {
                         throw JsSubSubjectDoesNotMatchFilter.Instance();
                     }
@@ -310,42 +358,51 @@ namespace NATS.Client.JetStream
                 }
             }
 
-            // 4. If pull or no deliver subject (inbox) provided or found, make an inbox.
+            // 5. If pull or no deliver subject (inbox) provided or found, make an inbox.
+            string settledInboxDeliver;
             if (isPullMode)
             {
-                inboxDeliver = Conn.NewInbox() + ".*";
+                settledInboxDeliver = Conn.NewInbox() + ".*";
             }
             else if (string.IsNullOrWhiteSpace(inboxDeliver)) {
-                inboxDeliver = Conn.NewInbox();
+                settledInboxDeliver = Conn.NewInbox();
+            }
+            else
+            {
+                settledInboxDeliver = inboxDeliver;
             }
 
 
-            // 5. If consumer does not exist, create and settle on the config. Name will have to wait
+            // 6. If consumer does not exist, create and settle on the config. Name will have to wait
             //    If the consumer exists, I know what the settled info is
-            if (serverCC == null) {
+            ConsumerConfiguration settledCC;
+            string settledConsumerName;
+            if (so.FastBind || serverCC != null)
+            {
+                settledCC = serverCC;
+                settledConsumerName = so.Name;
+            }
+            else 
+            {
                 ConsumerConfiguration.ConsumerConfigurationBuilder ccBuilder = ConsumerConfiguration.Builder(userCC);
 
                 // Pull mode doesn't maintain a deliver subject. It's actually an error if we send it.
                 if (!isPullMode) {
-                    ccBuilder.WithDeliverSubject(inboxDeliver);
+                    ccBuilder.WithDeliverSubject(settledInboxDeliver);
                 }
 
-                if (string.IsNullOrWhiteSpace(userCC.FilterSubject))
-                {
-                    ccBuilder.WithFilterSubject(subject);
-                }
+                // userCC.filterSubjects might have originally been empty
+                // but there might have been a userSubscribeSubject,
+                // so this makes sure it's resolved either way
+                ccBuilder.WithFilterSubjects(settledFilterSubjects);
 
-                if (string.IsNullOrWhiteSpace(userCC.DeliverGroup) && !string.IsNullOrWhiteSpace(qgroup))
-                {
-                    ccBuilder.WithDeliverGroup(qgroup);
-                }
+                ccBuilder.WithDeliverGroup(settledDeliverGroup);
 
-                // createOrUpdateConsumer can fail for security reasons, maybe other reasons?
-                serverCC = ccBuilder.Build();
-                consumerName = null;
+                settledCC = ccBuilder.Build();
+                settledConsumerName = null; // the server will give us a name
             }
 
-            // 6. create the subscription
+            // 7. create the subscription
             bool syncMode = userHandler == null;
             MessageManager mm;
             Connection.CreateSyncSubscriptionDelegate syncSubDelegate = null;
@@ -353,19 +410,21 @@ namespace NATS.Client.JetStream
             if (isPullMode)
             {
                 MessageManagerFactory mmFactory = so.Ordered ? _pullOrderedMessageManagerFactory : _pullMessageManagerFactory;
-                mm = mmFactory((Connection)Conn, this, stream, so, serverCC, qgroup != null, syncMode);
+                mm = mmFactory((Connection)Conn, this, settledStream, so, settledCC, false, syncMode);
                 if (syncMode)
                 {
                     syncSubDelegate = (dConn, dSubject, dQueue) =>
                     {
-                        return new JetStreamPullSubscription(dConn, dSubject, this, stream, consumerName, inboxDeliver, mm);
+                        return new JetStreamPullSubscription(dConn, dSubject, this, 
+                            settledStream, settledConsumerName, settledInboxDeliver, mm);
                     };
                 }
                 else
                 {
                     asyncSubDelegate = (dConn, dSubject, dQueue) =>
                     {
-                        JetStreamPullAsyncSubscription asub = new JetStreamPullAsyncSubscription(dConn, dSubject, this, stream, consumerName, inboxDeliver, mm);
+                        JetStreamPullAsyncSubscription asub = new JetStreamPullAsyncSubscription(dConn, dSubject, this, 
+                            settledStream, settledConsumerName, settledInboxDeliver, mm);
                         asub.SetPendingLimits(so.PendingMessageLimit, so.PendingByteLimit);
                         return asub;
                     };
@@ -374,12 +433,14 @@ namespace NATS.Client.JetStream
             else
             {
                 MessageManagerFactory mmFactory = so.Ordered ? _pushOrderedMessageManagerFactory : _pushMessageManagerFactory;
-                mm = mmFactory((Connection)Conn, this, stream, so, serverCC, qgroup != null, syncMode);
+                mm = mmFactory((Connection)Conn, this, settledStream, so, settledCC, settledDeliverGroup != null, syncMode);
                 if (syncMode)
                 {
                     syncSubDelegate = (dConn, dSubject, dQueue) =>
                     {
-                        JetStreamPushSyncSubscription ssub = new JetStreamPushSyncSubscription(dConn, dSubject, dQueue, this, stream, consumerName, inboxDeliver, mm);
+                        JetStreamPushSyncSubscription ssub = 
+                            new JetStreamPushSyncSubscription(dConn, dSubject, dQueue, this, 
+                                settledStream, settledConsumerName, settledInboxDeliver, mm);
                         ssub.SetPendingLimits(so.PendingMessageLimit, so.PendingByteLimit);
                         return ssub;
                     };
@@ -388,7 +449,9 @@ namespace NATS.Client.JetStream
                 {
                     asyncSubDelegate = (dConn, dSubject, dQueue) =>
                     {
-                        JetStreamPushAsyncSubscription asub = new JetStreamPushAsyncSubscription(dConn, dSubject, dQueue, this, stream, consumerName, inboxDeliver, mm);
+                        JetStreamPushAsyncSubscription asub = 
+                            new JetStreamPushAsyncSubscription(dConn, dSubject, dQueue, this, 
+                                settledStream, settledConsumerName, settledInboxDeliver, mm);
                         asub.SetPendingLimits(so.PendingMessageLimit, so.PendingByteLimit);
                         return asub;
                     };
@@ -398,11 +461,11 @@ namespace NATS.Client.JetStream
             Subscription sub;
             if (syncSubDelegate != null)
             {
-                sub = ((Connection)Conn).subscribeSync(inboxDeliver, queueName, syncSubDelegate); 
+                sub = ((Connection)Conn).subscribeSync(settledInboxDeliver, settledDeliverGroup, syncSubDelegate); 
             }
             else
             {
-                bool handlerAutoAck = autoAck && serverCC.AckPolicy != AckPolicy.None;
+                bool handlerAutoAck = autoAck && settledCC.AckPolicy != AckPolicy.None;
                 EventHandler<MsgHandlerEventArgs> handler = (sender, args) =>
                 {
                     if (mm.Manage(args.Message) == ManageResult.Message)
@@ -414,15 +477,15 @@ namespace NATS.Client.JetStream
                         }
                     }
                 };
-                sub = ((Connection)Conn).subscribeAsync(inboxDeliver, queueName, handler, asyncSubDelegate);
+                sub = ((Connection)Conn).subscribeAsync(settledInboxDeliver, settledDeliverGroup, handler, asyncSubDelegate);
             }
 
-            // 7. The consumer might need to be created, do it here
-            if (consumerName == null)
+            // 8. The consumer might need to be created, do it here
+            if (settledConsumerName == null)
             {
                 try
                 {
-                    ConsumerInfo ci = AddOrUpdateConsumerInternal(stream, serverCC);
+                    ConsumerInfo ci = CreateConsumerInternal(settledStream, settledCC);
                     if (sub is JetStreamAbstractSyncSubscription syncSub)
                     {
                         syncSub.UpdateConsumer(ci.Name);
@@ -489,77 +552,75 @@ namespace NATS.Client.JetStream
 
         public IJetStreamPullSubscription PullSubscribe(string subject, PullSubscribeOptions options)
         {
+            subject = ValidateSubject(subject, false);
             ValidateNotNull(options, "Pull Subscribe Options");
-            ValidateSubject(subject, IsSubjectRequired(options));
-            return (IJetStreamPullSubscription) CreateSubscription(subject, null, null, false, null, options);
+            return (IJetStreamPullSubscription) CreateSubscription(subject, null, options, null, null, false);
         }
 
         public IJetStreamPullAsyncSubscription PullSubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler, PullSubscribeOptions options)
         {
-            ValidateSubject(subject, IsSubjectRequired(options));
+            subject = ValidateSubject(subject, false);
             ValidateNotNull(handler, "Handler");
             ValidateNotNull(options, "Pull Subscribe Options");
-            return (IJetStreamPullAsyncSubscription) CreateSubscription(subject, null, handler, false, null, options);
+            return (IJetStreamPullAsyncSubscription) CreateSubscription(subject, null, options, null, handler, false);
         }
 
         public IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler, bool autoAck)
         {
-            ValidateSubject(subject, true);
+            subject = ValidateSubject(subject, true);
             ValidateNotNull(handler, "Handler");
-            return (IJetStreamPushAsyncSubscription) CreateSubscription(subject, null, handler, autoAck, null, null);
+            return (IJetStreamPushAsyncSubscription) CreateSubscription(subject, null, null, null, handler, autoAck);
         }
 
         public IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler, bool autoAck)
         {
-            ValidateSubject(subject, true);
+            subject = ValidateSubject(subject, true);
             queue = EmptyAsNull(ValidateQueueName(queue, false));
             ValidateNotNull(handler, "Handler");
-            return (IJetStreamPushAsyncSubscription) CreateSubscription(subject, queue, handler, autoAck, null, null);
+            return (IJetStreamPushAsyncSubscription) CreateSubscription(subject, null, null, queue, handler, autoAck);
         }
 
         public IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler, bool autoAck, PushSubscribeOptions options)
         {
-            ValidateSubject(subject, IsSubjectRequired(options));
+            subject = ValidateSubject(subject, false);
             ValidateNotNull(handler, "Handler");
-            return (IJetStreamPushAsyncSubscription) CreateSubscription(subject, null, handler, autoAck, options, null);
+            return (IJetStreamPushAsyncSubscription) CreateSubscription(subject, options, null, null, handler, autoAck);
         }
 
         public IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler, bool autoAck, PushSubscribeOptions options)
         {
-            ValidateSubject(subject, IsSubjectRequired(options));
+            subject = ValidateSubject(subject, false);
             queue = EmptyAsNull(ValidateQueueName(queue, false));
             ValidateNotNull(handler, "Handler");
-            return (IJetStreamPushAsyncSubscription) CreateSubscription(subject, queue, handler, autoAck, options, null);
+            return (IJetStreamPushAsyncSubscription) CreateSubscription(subject, options, null, queue, handler, autoAck);
         }
 
         public IJetStreamPushSyncSubscription PushSubscribeSync(string subject)
         {
-            ValidateSubject(subject, true);
-            return (IJetStreamPushSyncSubscription) CreateSubscription(subject, null, null, false, null, null);
+            subject = ValidateSubject(subject, true);
+            return (IJetStreamPushSyncSubscription) CreateSubscription(subject, null, null, null, null, false);
         }
 
         public IJetStreamPushSyncSubscription PushSubscribeSync(string subject, PushSubscribeOptions options)
         {
-            ValidateSubject(subject, IsSubjectRequired(options));
-            return (IJetStreamPushSyncSubscription) CreateSubscription(subject, null, null, false, options, null);
+            subject = ValidateSubject(subject, false);
+            return (IJetStreamPushSyncSubscription) CreateSubscription(subject, options, null, null, null, false);
         }
 
         public IJetStreamPushSyncSubscription PushSubscribeSync(string subject, string queue)
         {
-            ValidateSubject(subject, true);
+            subject = ValidateSubject(subject, true);
             queue = EmptyAsNull(ValidateQueueName(queue, false));
-            return (IJetStreamPushSyncSubscription) CreateSubscription(subject, queue, null, false, null, null);
+            return (IJetStreamPushSyncSubscription) CreateSubscription(subject, null, null, queue, null, false);
         }
 
         public IJetStreamPushSyncSubscription PushSubscribeSync(string subject, string queue, PushSubscribeOptions options)
         {
-            ValidateSubject(subject, IsSubjectRequired(options));
+            subject = ValidateSubject(subject, false);
             queue = EmptyAsNull(ValidateQueueName(queue, false));
-            return (IJetStreamPushSyncSubscription) CreateSubscription(subject, queue, null, false, options, null);
+            return (IJetStreamPushSyncSubscription) CreateSubscription(subject, options, null, queue, null, false);
         }
 
-        private bool IsSubjectRequired(SubscribeOptions options) => options == null || !options.Bind;
-        
         public IStreamContext GetStreamContext(string streamName)
         {
             Validator.ValidateStreamName(streamName, true);

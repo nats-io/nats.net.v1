@@ -298,10 +298,9 @@ namespace UnitTests.JetStream
             Assert.Throws<ArgumentException>(() => ObjectStoreConfiguration.Builder().WithName(HasSpace));
             Assert.Throws<ArgumentException>(() => ObjectStoreConfiguration.Builder().WithName(HasPrintable));
             Assert.Throws<ArgumentException>(() => ObjectStoreConfiguration.Builder().WithName(HasDot));
-            Assert.Throws<ArgumentException>(() => ObjectStoreConfiguration.Builder().WithName(HasStar));
-            Assert.Throws<ArgumentException>(() => ObjectStoreConfiguration.Builder().WithName(HasGt));
+            Assert.Throws<ArgumentException>(() => ObjectStoreConfiguration.Builder().WithName(StarNotSegment));
+            Assert.Throws<ArgumentException>(() => ObjectStoreConfiguration.Builder().WithName(GtNotSegment));
             Assert.Throws<ArgumentException>(() => ObjectStoreConfiguration.Builder().WithName(HasDollar));
-            Assert.Throws<ArgumentException>(() => ObjectStoreConfiguration.Builder().WithName(HasLow));
             Assert.Throws<ArgumentException>(() => ObjectStoreConfiguration.Builder(Has127));
             Assert.Throws<ArgumentException>(() => ObjectStoreConfiguration.Builder(HasFwdSlash));
             Assert.Throws<ArgumentException>(() => ObjectStoreConfiguration.Builder(HasBackSlash));

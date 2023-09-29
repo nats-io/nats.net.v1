@@ -39,12 +39,35 @@ namespace NATS.Client.JetStream
         public IConnection Conn { get; }
         public int Timeout { get; }
 
+        private bool? _consumerCreate290Available;
+        private bool? _multipleSubjectFilter210Available;
+
+        protected bool ConsumerCreate290Available()
+        {
+            if (!_consumerCreate290Available.HasValue)
+            {
+                _consumerCreate290Available = Conn.ServerInfo.IsSameOrNewerThanVersion("2.9.0") &&
+                                              !JetStreamOptions.IsOptOut290ConsumerCreate;
+            }
+            return _consumerCreate290Available.Value;
+        }
+
+        protected bool MultipleSubjectFilter210Available()
+        {
+            if (!_multipleSubjectFilter210Available.HasValue)
+            {
+                _multipleSubjectFilter210Available = Conn.ServerInfo.IsSameOrNewerThanVersion("2.9.99");
+            }
+            return _multipleSubjectFilter210Available.Value;
+        }
+
         protected JetStreamBase(IConnection connection, JetStreamOptions options)
         {
             Conn = connection;
             JetStreamOptions = options ?? JetStreamOptions.DefaultJsOptions;
             Prefix = JetStreamOptions.Prefix;
             Timeout = JetStreamOptions.RequestTimeout?.Millis ?? Conn.Opts.Timeout;
+            
         }
 
         internal static ServerInfo ServerInfoOrException(IConnection conn)
@@ -67,27 +90,33 @@ namespace NATS.Client.JetStream
             return new ConsumerInfo(m, true);
         }
 
-        internal ConsumerInfo AddOrUpdateConsumerInternal(string streamName, ConsumerConfiguration config)
+        internal ConsumerInfo CreateConsumerInternal(string streamName, ConsumerConfiguration config)
         {
-            bool consumerCreate290Available = ServerInfoOrException(Conn).IsSameOrNewerThanVersion("2.9.0") && !JetStreamOptions.IsOptOut290ConsumerCreate;
-
             // ConsumerConfiguration validates that name and durable are the same if both are supplied.
             string consumerName = Validator.EmptyAsNull(config.Name);
-            if (consumerName != null && !consumerCreate290Available)
+            if (consumerName != null && !ConsumerCreate290Available())
             {
                 throw ClientExDetail.JsConsumerCreate290NotAvailable.Instance();
             }
-            string durable = Validator.EmptyAsNull(config.Durable);
 
+            bool hasMultipleFilterSubjects = config.HasMultipleFilterSubjects;
+            
+            // seems strange that this could happen, but checking anyway...
+            if (hasMultipleFilterSubjects && !MultipleSubjectFilter210Available()) {
+                throw ClientExDetail.JsMultipleFilterSubjects210NotAvailable.Instance();
+            }
+
+            string durable = Validator.EmptyAsNull(config.Durable);
             string subj;
-            if (consumerCreate290Available)
+            if (ConsumerCreate290Available() && !hasMultipleFilterSubjects)
             {
                 if (consumerName == null) 
                 {
                     // if both consumerName and durable are null, generate a name
-                    consumerName = durable == null ? GenerateConsumerName() : durable;
+                    consumerName = durable ?? GenerateConsumerName();
                 }
-                string fs = Validator.EmptyAsNull(config.FilterSubject);
+
+                string fs = config.FilterSubject;  // we've already determined not multiple so this gives us 1 or null
                 if (fs == null || fs.Equals(">"))
                 {
                     subj = string.Format(JetStreamConstants.JsapiConsumerCreateV290, streamName, consumerName);

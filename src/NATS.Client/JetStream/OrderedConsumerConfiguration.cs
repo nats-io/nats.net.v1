@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using NATS.Client.Internals;
 
 namespace NATS.Client.JetStream
@@ -20,12 +21,17 @@ namespace NATS.Client.JetStream
     {
         public const string DefaultFilterSubject = ">";
         
-        public string FilterSubject { get; private set; }
         public DeliverPolicy? DeliverPolicy { get; private set; }
         public ulong StartSequence { get; private set; }
         public DateTime StartTime { get; private set; }
         public ReplayPolicy? ReplayPolicy { get; private set; }
         public bool? HeadersOnly { get; private set; }
+
+        public string FilterSubject => FilterSubjects.Count == 1 ? FilterSubjects[0] : null;
+
+        public IList<string> FilterSubjects { get; }
+
+        public bool HasMultipleFilterSubjects => FilterSubjects != null && FilterSubjects.Count > 1;
 
         /// <summary>
         /// OrderedConsumerConfiguration creation works like a builder.
@@ -35,7 +41,8 @@ namespace NATS.Client.JetStream
         public OrderedConsumerConfiguration()
         {
             StartSequence = ConsumerConfiguration.UlongUnset;
-            FilterSubject = DefaultFilterSubject;
+            FilterSubjects = new List<string>();
+            FilterSubjects.Add(DefaultFilterSubject);
         }
         
         /// <summary>
@@ -44,9 +51,52 @@ namespace NATS.Client.JetStream
         /// <param name="filterSubject">the filter subject</param>
         /// <returns>Builder</returns>
         public OrderedConsumerConfiguration WithFilterSubject(string filterSubject) {
-            FilterSubject = Validator.EmptyOrNullAs(filterSubject, DefaultFilterSubject);
+            FilterSubjects.Clear();
+            if (string.IsNullOrEmpty(filterSubject))
+            {
+                FilterSubjects.Add(DefaultFilterSubject);
+            }
+            else
+            {
+                FilterSubjects.Add(filterSubject);
+            }
             return this;
         }
+
+        /// <summary>
+        /// Sets the filter subject of the OrderedConsumerConfiguration.
+        /// </summary>
+        /// <param name="filterSubjects">one or more filter subjects</param>
+        /// <returns>The ConsumerConfigurationBuilder</returns>
+        public OrderedConsumerConfiguration WithFilterSubjects(params string[] filterSubjects)
+        {
+            return Validator.EmptyOrNull(filterSubjects) 
+                ? WithFilterSubject(null) 
+                : WithFilterSubjects(new List<string>(filterSubjects));
+        }
+        
+        
+        /// <summary>
+        /// Sets the filter subject of the OrderedConsumerConfiguration.
+        /// </summary>
+        /// <param name="filterSubjects">one or more filter subjects</param>
+        /// <returns>The ConsumerConfigurationBuilder</returns>
+        public OrderedConsumerConfiguration WithFilterSubjects(IList<string> filterSubjects)
+        {
+            FilterSubjects.Clear();
+            if (filterSubjects != null) {
+                foreach (string fs in filterSubjects) {
+                    if (!string.IsNullOrWhiteSpace(fs)) {
+                        FilterSubjects.Add(fs);
+                    }
+                }
+            }
+            if (FilterSubjects.Count == 0) {
+                FilterSubjects.Add(DefaultFilterSubject);
+            }
+            return this;
+        }
+
 
         /// <summary>
         /// Sets the delivery policy of the OrderedConsumerConfiguration.

@@ -244,6 +244,8 @@ namespace NATS.Client
         public static readonly ClientExDetail JsSubOrderedNotAllowOnQueues = new ClientExDetail(Sub, 90018, "Ordered consumer not allowed on queues.");
         public static readonly ClientExDetail JsSubPushCantHaveMaxBatch = new ClientExDetail(Sub, 90019, "Push subscriptions cannot supply max batch.");
         public static readonly ClientExDetail JsSubPushCantHaveMaxBytes = new ClientExDetail(Sub, 90020, "Push subscriptions cannot supply max bytes.");
+        public static readonly ClientExDetail JsSubSubjectNeededToLookupStream = new ClientExDetail(Sub, 90022, "Subject needed to lookup stream. Provide either a subscribe subject or a ConsumerConfiguration filter subject.");
+
         /* Not used in this client. */ // public static readonly ClientExDetail JsSubPushAsyncCantSetPending = new ClientExDetail(Sub, 90021, "Pending limits must be set directly on the dispatcher.");
 
         public static readonly ClientExDetail JsSoDurableMismatch = new ClientExDetail(So, 90101, "Builder durable must match the consumer configuration durable if both are provided.");
@@ -258,6 +260,7 @@ namespace NATS.Client
         public static readonly ClientExDetail JsSoNameMismatch = new ClientExDetail(So, 90110, "Builder name must match the consumer configuration name if both are provided.");
         public static readonly ClientExDetail JsSoOrderedMemStorageNotSuppliedOrTrue = new ClientExDetail(So, 90111, "Mem Storage must be true if supplied.");
         public static readonly ClientExDetail JsSoOrderedReplicasNotSuppliedOrOne = new ClientExDetail(So, 90112, "Replicas must be 1 if supplied.");
+        public static readonly ClientExDetail JsSoNameOrDurableRequiredForBind = new ClientExDetail(So, 90113, "Name or Durable required for Bind.");
 
         public static readonly ClientExDetail OsObjectNotFound = new ClientExDetail(Os, 90201, "The object was not found.");
         public static readonly ClientExDetail OsObjectIsDeleted = new ClientExDetail(Os, 90202, "The object is deleted.");
@@ -271,7 +274,8 @@ namespace NATS.Client
 
         public static readonly ClientExDetail JsConsumerCreate290NotAvailable = new ClientExDetail(Con, 90301, "Name field not valid when v2.9.0 consumer create api is not available.");
         public static readonly ClientExDetail JsConsumerNameDurableMismatch = new ClientExDetail(Con, 90302, "Name must match durable if both are supplied.");
-        
+        public static readonly ClientExDetail JsMultipleFilterSubjects210NotAvailable = new ClientExDetail(Con, 90303, "Multiple filter subjects not available until server version 2.10.0.");
+
         private const string Sub = "SUB";
         private const string So = "SO";
         private const string Os = "OS";
