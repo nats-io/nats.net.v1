@@ -4,7 +4,7 @@
 
 A [C# .NET](https://msdn.microsoft.com/en-us/vstudio/aa496123.aspx) client for the [NATS messaging system](https://nats.io) multi targetting `.NET4.6+` and `.NETStandard1.6`.
 
-This NATS Maintainer supported client parallels the [NATS GO Client](https://github.com/nats-io/nats).
+**Current Release**: 1.10.1 &nbsp; **Current Head**: 1.10.1
 
 [![License Apache 2.0](https://img.shields.io/badge/License-Apache2-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![API Documentation](https://img.shields.io/badge/doc-Doxygen-brightgreen.svg?style=flat)](http://nats-io.github.io/nats.net)
@@ -67,11 +67,26 @@ Doxygen is required to be installed and in the PATH.  Version 1.8 is known to wo
 
 [Current API Documentation](http://nats-io.github.io/nats.net)
 
-## BETA / Experimental News
+## Version Notes
 
-### Simplification
+### Version 1.1.0 Support for Server 2.10
 
-There is a new simplified api that makes working with streams and consumers well, simpler!
+The 1.1.0 release has support for Server 2.10 features including:
+
+* Stream and Consumer info timestamps 
+* Stream Configuration 
+  * Compression Option
+  * Subject Transform 
+  * Consumer Limits
+  * First Sequence
+* Multiple Filter Subjects
+* Subject Validation
+
+### Version 1.0.8 Simplification and Service Framework
+
+#### Simplification
+
+There is a new simplified api that makes working with streams and consumers well, simpler! Simplification is released as of 1.0.8
 
 Check out the examples:
 
@@ -82,9 +97,9 @@ Check out the examples:
 * [MessageConsumerExample](src/Samples/SimplificationMessageConsumer/MessageConsumerExample.cs)
 * [NextExample](src/Samples/SimplificationNext/NextExample.cs)
 
-### Service Framework
+#### Service Framework
 
-The service API allows you to easily build NATS services The services API is currently in beta functionality.
+The service API allows you to easily build NATS services. The Service Framework is released as of 1.0.8
 
 The Services Framework introduces a higher-level API for implementing services with NATS. NATS has always been a strong technology on which to build services, as they are easy to write, are location and DNS independent and can be scaled up or down by simply adding or removing instances of the service.
 
@@ -92,7 +107,6 @@ The Services Framework further streamlines their development by providing observ
 
 Check out the [ServiceExample](src/Samples/ServiceExample/ServiceExample.cs)
 
-## Version Notes
 
 ### Version 1.0.1 Consumer Create
 
