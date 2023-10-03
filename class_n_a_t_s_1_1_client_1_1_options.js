@@ -25,6 +25,7 @@ var class_n_a_t_s_1_1_client_1_1_options =
     [ "UnhandledStatusEventHandler", "class_n_a_t_s_1_1_client_1_1_options.html#a944e38f10bebad03333fa0ba919cee26", null ],
     [ "AllowReconnect", "class_n_a_t_s_1_1_client_1_1_options.html#aca0e26d763c9b7920eeb2506bfffc59b", null ],
     [ "CheckCertificateRevocation", "class_n_a_t_s_1_1_client_1_1_options.html#a7a36d716e8bafde1d44a78768309197c", null ],
+    [ "ClientSideLimitChecks", "class_n_a_t_s_1_1_client_1_1_options.html#a20f9738bf6f3f6faa4ae6a19412d22ec", null ],
     [ "CustomInboxPrefix", "class_n_a_t_s_1_1_client_1_1_options.html#a38491b4af261554939ef6d8d5a5219f5", null ],
     [ "IgnoreDiscoveredServers", "class_n_a_t_s_1_1_client_1_1_options.html#aa18b66845de58217f29ae6bdce4daea0", null ],
     [ "MaxPingsOut", "class_n_a_t_s_1_1_client_1_1_options.html#af72a56c42d59f70432c80f8526edda6e", null ],

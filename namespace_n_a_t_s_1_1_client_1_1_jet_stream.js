@@ -2,6 +2,7 @@ var namespace_n_a_t_s_1_1_client_1_1_jet_stream =
 [
     [ "BaseConsumeOptions", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_base_consume_options.html", null ],
     [ "ConsumeOptions", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_consume_options.html", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_consume_options" ],
+    [ "ConsumerLimits", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_consumer_limits.html", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_consumer_limits" ],
     [ "External", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_external.html", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_external" ],
     [ "FetchConsumeOptions", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_fetch_consume_options.html", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_fetch_consume_options" ],
     [ "IBaseConsumerContext", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_base_consumer_context.html", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_base_consumer_context" ],
@@ -24,5 +25,7 @@ var namespace_n_a_t_s_1_1_client_1_1_jet_stream =
     [ "PullRequestOptions", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_pull_request_options.html", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_pull_request_options" ],
     [ "Republish", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_republish.html", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_republish" ],
     [ "Source", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_source.html", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_source" ],
+    [ "SourceBase", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_source_base.html", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_source_base" ],
+    [ "SubjectTransform", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_subject_transform.html", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_subject_transform" ],
     [ "SubscribeOptions", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_subscribe_options.html", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_subscribe_options" ]
 ];

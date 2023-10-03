@@ -13,6 +13,8 @@ var hierarchy =
         [ "NATS.Client.UnhandledStatusEventArgs", "class_n_a_t_s_1_1_client_1_1_unhandled_status_event_args.html", null ]
       ] ]
     ] ],
+    [ "NATS.Client.JetStream.ConsumerLimits", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_consumer_limits.html", null ],
+    [ "NATS.Client.JetStream.ConsumerLimits.ConsumerLimitsBuilder", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_consumer_limits_1_1_consumer_limits_builder.html", null ],
     [ "NATS.Client.DefaultUserJWTHandler", "class_n_a_t_s_1_1_client_1_1_default_user_j_w_t_handler.html", null ],
     [ "NATS.Client.Service.Discovery", "class_n_a_t_s_1_1_client_1_1_service_1_1_discovery.html", null ],
     [ "NATS.Client.EncodedMessageEventArgs", "class_n_a_t_s_1_1_client_1_1_encoded_message_event_args.html", null ],
@@ -71,7 +73,6 @@ var hierarchy =
     ] ],
     [ "NATS.Client.KeyValue.KeyValueConfiguration.KeyValueConfigurationBuilder", "class_n_a_t_s_1_1_client_1_1_key_value_1_1_key_value_configuration_1_1_key_value_configuration_builder.html", null ],
     [ "NATS.Client.JetStream.MetaData", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_meta_data.html", null ],
-    [ "NATS.Client.JetStream.Mirror", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_mirror.html", null ],
     [ "NATS.Client.JetStream.Mirror.MirrorBuilder", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_mirror_1_1_mirror_builder.html", null ],
     [ "NATS.Client.Msg", "class_n_a_t_s_1_1_client_1_1_msg.html", null ],
     [ "NATS.Client.MsgHandlerEventArgs", "class_n_a_t_s_1_1_client_1_1_msg_handler_event_args.html", null ],
@@ -135,8 +136,13 @@ var hierarchy =
       [ "NATS.Client.Service.PingResponse", "class_n_a_t_s_1_1_client_1_1_service_1_1_ping_response.html", null ],
       [ "NATS.Client.Service.StatsResponse", "class_n_a_t_s_1_1_client_1_1_service_1_1_stats_response.html", null ]
     ] ],
-    [ "NATS.Client.JetStream.Source", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_source.html", null ],
+    [ "NATS.Client.JetStream.SourceBase", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_source_base.html", [
+      [ "NATS.Client.JetStream.Mirror", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_mirror.html", null ],
+      [ "NATS.Client.JetStream.Source", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_source.html", null ]
+    ] ],
     [ "NATS.Client.JetStream.Source.SourceBuilder", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_source_1_1_source_builder.html", null ],
+    [ "NATS.Client.JetStream.SubjectTransform", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_subject_transform.html", null ],
+    [ "NATS.Client.JetStream.SubjectTransform.SubjectTransformBuilder", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_subject_transform_1_1_subject_transform_builder.html", null ],
     [ "NATS.Client.JetStream.SubscribeOptions", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_subscribe_options.html", null ],
     [ "NATS.Client.Connection.TCPConnection", "class_n_a_t_s_1_1_client_1_1_connection_1_1_t_c_p_connection.html", null ],
     [ "NATS.Client.UserJWTEventArgs", "class_n_a_t_s_1_1_client_1_1_user_j_w_t_event_args.html", null ],

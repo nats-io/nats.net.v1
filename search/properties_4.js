@@ -6,5 +6,5 @@ var searchData=
   ['errorcode_3',['ErrorCode',['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_n_a_t_s_jet_stream_exception.html#a4330b65167a407b8893b969cd847f94e',1,'NATS::Client::JetStream::NATSJetStreamException']]],
   ['errordescription_4',['ErrorDescription',['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_n_a_t_s_jet_stream_exception.html#a995b2b6212e3fb56b8e53ec8035dd235',1,'NATS::Client::JetStream::NATSJetStreamException']]],
   ['expiresin_5',['ExpiresIn',['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_pull_request_options.html#a5c7eecc0de6d04ce77c462c2d1d46c2b',1,'NATS::Client::JetStream::PullRequestOptions']]],
-  ['external_6',['External',['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_mirror.html#a823e6b384a6f01c7dfce4e08ccce79ba',1,'NATS.Client.JetStream.Mirror.External()'],['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_source.html#a3a227977859fcd657e2e40b534c648f8',1,'NATS.Client.JetStream.Source.External()']]]
+  ['external_6',['External',['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_source_base.html#a4ff60dfe387e57e94619bf2526bbc283',1,'NATS::Client::JetStream::SourceBase']]]
 ];

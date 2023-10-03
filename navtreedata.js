@@ -57,11 +57,11 @@ var NAVTREEINDEX =
 [
 "annotated.html",
 "class_n_a_t_s_1_1_client_1_1_encoded_connection.html#aa0c4fa99a5826292e5551f76b81edff2",
-"class_n_a_t_s_1_1_client_1_1_msg.html#a1e876a9a2084d9dfff10e2a4e6925177",
-"class_n_a_t_s_1_1_client_1_1_options.html#aece501bf249fe525470dc4e0aa5a05d5",
-"class_n_a_t_s_1_1_client_1_1_statistics.html#ac2ef96188900a4921e5a4f1f8980ca32",
-"interface_n_a_t_s_1_1_client_1_1_i_connection.html#a774d24513a5077e76706ac5baf57e574",
-"interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream.html#a14ac4a882aa154273b536c9710c5ca3f"
+"class_n_a_t_s_1_1_client_1_1_msg.html#a3fa22de2c784dee5a5e71e81ab3ba179",
+"class_n_a_t_s_1_1_client_1_1_options.html#af72a56c42d59f70432c80f8526edda6e",
+"class_n_a_t_s_1_1_client_1_1_status_event_args.html",
+"interface_n_a_t_s_1_1_client_1_1_i_connection.html#a8bccbc575b9550dd6ef9788866b4e47d",
+"interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream.html#a258b115e3d14ef44b8b6bb04e19ac85a"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

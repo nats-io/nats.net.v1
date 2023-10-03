@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">1.0.8</span>
+   &#160;<span id="projectnumber">1.1.0</span>
    </div>
    <div id="projectbrief">The NATS.io .NET C# Client</div>
   </td>
@@ -88,13 +88,19 @@ $(document).ready(function(){initNavTree('class_n_a_t_s_1_1_client_1_1_jet_strea
 <a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
-<a href="#properties">Properties</a> &#124;
 <a href="class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_mirror-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">NATS.Client.JetStream.Mirror Class Reference</div></div>
 </div><!--header-->
 <div class="contents">
-
-<p>Inherits NATS.Client.JetStream.JsonSerializable.</p>
+<div class="dynheader">
+Inheritance diagram for NATS.Client.JetStream.Mirror:</div>
+<div class="dyncontent">
+ <div class="center">
+  <img src="class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_mirror.png" usemap="#NATS.Client.JetStream.Mirror_map" alt=""/>
+  <map id="NATS.Client.JetStream.Mirror_map" name="NATS.Client.JetStream.Mirror_map">
+<area href="class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_source_base.html" title="Information about an upstream stream source or a mirror" alt="NATS.Client.JetStream.SourceBase" shape="rect" coords="0,0,214,24"/>
+  </map>
+</div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
@@ -103,8 +109,8 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:afe917ffb3f30af32a293c48b020c8a80"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_mirror.html#afe917ffb3f30af32a293c48b020c8a80">Mirror</a> (string name, ulong startSeq, DateTime startTime, string filterSubject, <a class="el" href="class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_external.html">External</a> external)</td></tr>
-<tr class="separator:afe917ffb3f30af32a293c48b020c8a80"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad07f65881436049304e1a8130085fc39"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_mirror.html#ad07f65881436049304e1a8130085fc39">Mirror</a> (string name, ulong startSeq, DateTime startTime, string filterSubject, <a class="el" href="class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_external.html">External</a> external, IList&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_subject_transform.html">SubjectTransform</a> &gt; subjectTransforms=null)</td></tr>
+<tr class="separator:ad07f65881436049304e1a8130085fc39"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
@@ -113,29 +119,33 @@ Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a94797c2933426ae60a52f5ee087b049f"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_mirror_1_1_mirror_builder.html">MirrorBuilder</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_mirror.html#a94797c2933426ae60a52f5ee087b049f">Builder</a> (<a class="el" href="class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_mirror.html">Mirror</a> mirror)</td></tr>
 <tr class="separator:a94797c2933426ae60a52f5ee087b049f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="properties" name="properties"></a>
-Properties</h2></td></tr>
-<tr class="memitem:ac94f33a904bce3b568194eb5aa503f5c"><td class="memItemLeft" align="right" valign="top"><a id="ac94f33a904bce3b568194eb5aa503f5c" name="ac94f33a904bce3b568194eb5aa503f5c"></a>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="inherited" name="inherited"></a>
+Additional Inherited Members</h2></td></tr>
+<tr class="inherit_header properties_class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_source_base"><td colspan="2" onclick="javascript:toggleInherit('properties_class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_source_base')"><img src="closed.png" alt="-"/>&#160;Properties inherited from <a class="el" href="class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_source_base.html">NATS.Client.JetStream.SourceBase</a></td></tr>
+<tr class="memitem:a929769f392d04d340669f5ab4789e67c inherit properties_class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_source_base"><td class="memItemLeft" align="right" valign="top"><a id="a929769f392d04d340669f5ab4789e67c" name="a929769f392d04d340669f5ab4789e67c"></a>
 string&#160;</td><td class="memItemRight" valign="bottom"><b>Name</b><code> [get]</code></td></tr>
-<tr class="separator:ac94f33a904bce3b568194eb5aa503f5c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a11be8b584bc746348ef7b3345d095e23"><td class="memItemLeft" align="right" valign="top"><a id="a11be8b584bc746348ef7b3345d095e23" name="a11be8b584bc746348ef7b3345d095e23"></a>
+<tr class="separator:a929769f392d04d340669f5ab4789e67c inherit properties_class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_source_base"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac087c24343a18d4cd0ecf36f0767ed61 inherit properties_class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_source_base"><td class="memItemLeft" align="right" valign="top"><a id="ac087c24343a18d4cd0ecf36f0767ed61" name="ac087c24343a18d4cd0ecf36f0767ed61"></a>
 ulong&#160;</td><td class="memItemRight" valign="bottom"><b>StartSeq</b><code> [get]</code></td></tr>
-<tr class="separator:a11be8b584bc746348ef7b3345d095e23"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a79e8fd88b67d065dac4dd580385d41ca"><td class="memItemLeft" align="right" valign="top"><a id="a79e8fd88b67d065dac4dd580385d41ca" name="a79e8fd88b67d065dac4dd580385d41ca"></a>
+<tr class="separator:ac087c24343a18d4cd0ecf36f0767ed61 inherit properties_class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_source_base"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a89bd55014c9974064a6a8fb1c5ad7231 inherit properties_class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_source_base"><td class="memItemLeft" align="right" valign="top"><a id="a89bd55014c9974064a6a8fb1c5ad7231" name="a89bd55014c9974064a6a8fb1c5ad7231"></a>
 DateTime&#160;</td><td class="memItemRight" valign="bottom"><b>StartTime</b><code> [get]</code></td></tr>
-<tr class="separator:a79e8fd88b67d065dac4dd580385d41ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a75023be06f3a3be1cf0574be1fe3323e"><td class="memItemLeft" align="right" valign="top"><a id="a75023be06f3a3be1cf0574be1fe3323e" name="a75023be06f3a3be1cf0574be1fe3323e"></a>
+<tr class="separator:a89bd55014c9974064a6a8fb1c5ad7231 inherit properties_class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_source_base"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac866b8f3ff5ec9a0bf47fb19072f0db2 inherit properties_class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_source_base"><td class="memItemLeft" align="right" valign="top"><a id="ac866b8f3ff5ec9a0bf47fb19072f0db2" name="ac866b8f3ff5ec9a0bf47fb19072f0db2"></a>
 string&#160;</td><td class="memItemRight" valign="bottom"><b>FilterSubject</b><code> [get]</code></td></tr>
-<tr class="separator:a75023be06f3a3be1cf0574be1fe3323e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a823e6b384a6f01c7dfce4e08ccce79ba"><td class="memItemLeft" align="right" valign="top"><a id="a823e6b384a6f01c7dfce4e08ccce79ba" name="a823e6b384a6f01c7dfce4e08ccce79ba"></a>
+<tr class="separator:ac866b8f3ff5ec9a0bf47fb19072f0db2 inherit properties_class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_source_base"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4ff60dfe387e57e94619bf2526bbc283 inherit properties_class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_source_base"><td class="memItemLeft" align="right" valign="top"><a id="a4ff60dfe387e57e94619bf2526bbc283" name="a4ff60dfe387e57e94619bf2526bbc283"></a>
 <a class="el" href="class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_external.html">External</a>&#160;</td><td class="memItemRight" valign="bottom"><b>External</b><code> [get]</code></td></tr>
-<tr class="separator:a823e6b384a6f01c7dfce4e08ccce79ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a4ff60dfe387e57e94619bf2526bbc283 inherit properties_class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_source_base"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af2057de15666b0546b20ad2c175aaf06 inherit properties_class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_source_base"><td class="memItemLeft" align="right" valign="top"><a id="af2057de15666b0546b20ad2c175aaf06" name="af2057de15666b0546b20ad2c175aaf06"></a>
+IList&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_subject_transform.html">SubjectTransform</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>SubjectTransforms</b><code> [get]</code></td></tr>
+<tr class="separator:af2057de15666b0546b20ad2c175aaf06 inherit properties_class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_source_base"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p >Information about a mirror. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="afe917ffb3f30af32a293c48b020c8a80" name="afe917ffb3f30af32a293c48b020c8a80"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afe917ffb3f30af32a293c48b020c8a80">&#9670;&nbsp;</a></span>Mirror()</h2>
+<a id="ad07f65881436049304e1a8130085fc39" name="ad07f65881436049304e1a8130085fc39"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad07f65881436049304e1a8130085fc39">&#9670;&nbsp;</a></span>Mirror()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -168,7 +178,13 @@ string&#160;</td><td class="memItemRight" valign="bottom"><b>FilterSubject</b><c
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_external.html">External</a>&#160;</td>
-          <td class="paramname"><em>external</em>&#160;</td>
+          <td class="paramname"><em>external</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">IList&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_subject_transform.html">SubjectTransform</a> &gt;&#160;</td>
+          <td class="paramname"><em>subjectTransforms</em> = <code>null</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -186,6 +202,7 @@ string&#160;</td><td class="memItemRight" valign="bottom"><b>FilterSubject</b><c
     <tr><td class="paramname">startTime</td><td>the start time</td></tr>
     <tr><td class="paramname">filterSubject</td><td>the filter subject</td></tr>
     <tr><td class="paramname">external</td><td>the external reference</td></tr>
+    <tr><td class="paramname">subjectTransforms</td><td>the subject transforms, defaults to none</td></tr>
   </table>
   </dd>
 </dl>

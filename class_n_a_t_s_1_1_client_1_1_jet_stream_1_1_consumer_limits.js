@@ -1,0 +1,4 @@
+var class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_consumer_limits =
+[
+    [ "ConsumerLimitsBuilder", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_consumer_limits_1_1_consumer_limits_builder.html", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_consumer_limits_1_1_consumer_limits_builder" ]
+];

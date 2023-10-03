@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">1.0.8</span>
+   &#160;<span id="projectnumber">1.1.0</span>
    </div>
    <div id="projectbrief">The NATS.io .NET C# Client</div>
   </td>
@@ -97,6 +97,8 @@ $(document).ready(function(){initNavTree('class_n_a_t_s_1_1_client_1_1_jet_strea
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:ad71b44778e5d77e898fde395e4546e71"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_pull_subscribe_options_1_1_pull_subscribe_options_subscribe_options_builder.html">PullSubscribeOptionsSubscribeOptionsBuilder</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_pull_subscribe_options_1_1_pull_subscribe_options_subscribe_options_builder.html#ad71b44778e5d77e898fde395e4546e71">WithFastBind</a> (bool isFastBind)</td></tr>
+<tr class="separator:ad71b44778e5d77e898fde395e4546e71"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad41466365c87ebe40787021811f227b7"><td class="memItemLeft" align="right" valign="top">override PullSubscribeOptions&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_pull_subscribe_options_1_1_pull_subscribe_options_subscribe_options_builder.html#ad41466365c87ebe40787021811f227b7">Build</a> ()</td></tr>
 <tr class="separator:ad41466365c87ebe40787021811f227b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -120,6 +122,33 @@ Public Member Functions</h2></td></tr>
 
 <p>Builds the PullSubscribeOptions </p>
 <dl class="section return"><dt>Returns</dt><dd>The PullSubscribeOptions object.</dd></dl>
+
+</div>
+</div>
+<a id="ad71b44778e5d77e898fde395e4546e71" name="ad71b44778e5d77e898fde395e4546e71"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad71b44778e5d77e898fde395e4546e71">&#9670;&nbsp;</a></span>WithFastBind()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_pull_subscribe_options_1_1_pull_subscribe_options_subscribe_options_builder.html">PullSubscribeOptionsSubscribeOptionsBuilder</a> NATS.Client.JetStream.PullSubscribeOptions.PullSubscribeOptionsSubscribeOptionsBuilder.WithFastBind </td>
+          <td>(</td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>isFastBind</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Specify binding to an existing consumer via name. The client does not validate that the provided consumer configuration is consistent with the server version or that consumer type (push versus pull) matches the subscription type. An inconsistent consumer configuration for instance can result in receiving messages from unexpected subjects. A consumer type mismatch will result in an error from the server. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">isFastBind</td><td>whether to fast bind or not</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The builder</dd></dl>
 
 </div>
 </div>
