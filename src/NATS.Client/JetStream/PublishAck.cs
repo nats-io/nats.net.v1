@@ -11,6 +11,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using NATS.Client.Internals.SimpleJSON;
+
 namespace NATS.Client.JetStream
 {
     public sealed class PublishAck : ApiResponse
@@ -36,18 +38,20 @@ namespace NATS.Client.JetStream
             Stream = JsonNode[ApiConstants.Stream].Value;
             if (Stream.Length == 0)
             {
-                // TODO is this the correct exception?
                 throw new NATSException("Invalid JetStream ack.");
             }
-            Domain = JsonNode[ApiConstants.Domain].Value;
 
-            Seq = JsonNode[ApiConstants.Seq].AsUlong;
-            if (Seq == 0)
+            JSONNode possible = JsonNode[ApiConstants.Seq];
+            if (possible.IsNumber)
             {
-                // TODO is this the correct exception?
+                Seq = possible.AsUlong;
+            }
+            else
+            {
                 throw new NATSException("Invalid JetStream ack.");
             }
 
+            Domain = JsonNode[ApiConstants.Domain].Value;
             Duplicate = JsonNode[ApiConstants.Duplicate].AsBool;
         }
 
