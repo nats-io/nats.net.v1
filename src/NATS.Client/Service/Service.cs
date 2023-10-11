@@ -62,17 +62,15 @@ namespace NATS.Client.Service
 
             // set up the service contexts
             // ! also while we are here, we need to collect the endpoints for the SchemaResponse
-            IList<Endpoint> infoEndpoints = new List<Endpoint>();
             serviceContexts = new Dictionary<string, EndpointContext>();
             foreach (ServiceEndpoint se in b.ServiceEndpoints.Values)
             {
-                serviceContexts[se.Name] = new EndpointContext(conn, true, se);
-                infoEndpoints.Add(se.Endpoint);
+                serviceContexts[se.Name] = new EndpointContext(conn, false, se);
             }
 
             // build static responses
             PingResponse = new PingResponse(id, b.Name, b.Version, b.Metadata);
-            InfoResponse = new InfoResponse(id, b.Name, b.Version, b.Metadata, b.Description, infoEndpoints);
+            InfoResponse = new InfoResponse(id, b.Name, b.Version, b.Metadata, b.Description, b.ServiceEndpoints.Values);
 
             discoveryContexts = new List<EndpointContext>();
             AddDiscoveryContexts(SrvPing, PingResponse);
@@ -89,7 +87,7 @@ namespace NATS.Client.Service
 
             foreach (Endpoint endpoint in endpoints) {
                 discoveryContexts.Add(
-                    new EndpointContext(conn, false,
+                    new EndpointContext(conn, true,
                         new ServiceEndpoint(endpoint, handler)));
             }
         }
@@ -108,7 +106,7 @@ namespace NATS.Client.Service
 
         private Endpoint InternalEndpoint(string discoveryName, string optionalServiceNameSegment, string optionalServiceIdSegment) {
             string subject = ToDiscoverySubject(discoveryName, optionalServiceNameSegment, optionalServiceIdSegment);
-            return new Endpoint(subject, subject, null, false);
+            return new Endpoint(subject, subject, null, null, false);
         }
  
         internal static string ToDiscoverySubject(string discoverySubject, string serviceName, string serviceId)

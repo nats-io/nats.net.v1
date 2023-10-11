@@ -22,8 +22,6 @@ namespace NATS.Client.Service
     /// </summary>
     internal class EndpointContext
     {
-        private const string QGroup = "q";
-
         private readonly IConnection conn;
         private ServiceEndpoint se;
         private readonly bool recordStats;
@@ -36,12 +34,12 @@ namespace NATS.Client.Service
         private readonly InterlockedLong numErrors;
         private readonly InterlockedLong processingTime;
 
-        internal EndpointContext(IConnection conn, bool recordStats, ServiceEndpoint se)
+        internal EndpointContext(IConnection conn, bool internalEndpoint, ServiceEndpoint se)
         {
             this.conn = conn;
             this.se = se;
-            this.recordStats = recordStats;
-            qGroup = recordStats ? QGroup : null;
+            this.recordStats = !internalEndpoint;
+            qGroup = internalEndpoint ? null : se.QueueGroup;
 
             numRequests = new InterlockedLong();
             numErrors = new InterlockedLong();
@@ -95,6 +93,7 @@ namespace NATS.Client.Service
             return new EndpointStats(
                 se.Endpoint.Name,
                 se.Subject,
+                se.QueueGroup,
                 numRequests.Read(),
                 numErrors.Read(),
                 processingTime.Read(),

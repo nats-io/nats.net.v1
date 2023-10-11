@@ -32,11 +32,19 @@ namespace NATS.Client.Service
         /// <value>List of endpoints</value>
         public IList<Endpoint> Endpoints { get; }
 
-        public InfoResponse(string id, string name, string version, IDictionary<string, string> metadata, string description, IList<Endpoint> endpoints)
+        public InfoResponse(string id, string name, string version, IDictionary<string, string> metadata, string description, ICollection<ServiceEndpoint> serviceEndpoints)
             : base(ResponseType, id, name, version, metadata)
         {
             Description = description;
-            Endpoints = endpoints;
+            Endpoints = new List<Endpoint>();
+            foreach (ServiceEndpoint se in serviceEndpoints) {
+                Endpoints.Add(new Endpoint(
+                    se.Name,
+                    se.Subject,
+                    se.QueueGroup,
+                    se.Metadata
+                ));
+            }
         }
 
         internal InfoResponse(string json) : this(JSON.Parse(json)) {}

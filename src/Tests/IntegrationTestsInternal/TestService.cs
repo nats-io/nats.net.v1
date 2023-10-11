@@ -42,6 +42,8 @@ namespace IntegrationTestsInternal
         const string SortEndpointDescendingName = "SortEndpointDescending";
         const string SortEndpointAscendingSubject = "ascending";
         const string SortEndpointDescendingSubject = "descending";
+        const string CustomQGroup = "customQ";
+
 
         [Fact]
         public void TestServiceWorkflow()
@@ -56,6 +58,7 @@ namespace IntegrationTestsInternal
                     Endpoint endEcho = Endpoint.Builder()
                         .WithName(EchoEndpointName)
                         .WithSubject(EchoEndpointSubject)
+                        .WithQueueGroup(CustomQGroup)
                         .Build();
 
                     Endpoint endSortA = Endpoint.Builder()
@@ -397,7 +400,7 @@ namespace IntegrationTestsInternal
         [Fact]
         public void TestHandlerException()
         {
-            Context.RunInJsServer(c =>
+            Context.RunInServer(c =>
             {
                 ServiceEndpoint exServiceEndpoint = ServiceEndpoint.Builder()
                     .WithEndpointName("exEndpoint")
@@ -427,7 +430,7 @@ namespace IntegrationTestsInternal
         [Fact]
         public void TestServiceMessage()
         {
-            Context.RunInJsServer(nc =>
+            Context.RunInServer(nc =>
             {
                 InterlockedInt which = new InterlockedInt();
                 ServiceEndpoint se = ServiceEndpoint.Builder()
@@ -584,9 +587,10 @@ namespace IntegrationTestsInternal
         {
             DateTime zdt = DateTime.UtcNow;
     
-            EndpointStats er = new EndpointStats("name", "subject", 0, 0, 0, null, null, zdt);
+            EndpointStats er = new EndpointStats("name", "subject", "queue", 0, 0, 0, null, null, zdt);
             Assert.Equal("name", er.Name);
             Assert.Equal("subject", er.Subject);
+            Assert.Equal("queue", er.QueueGroup);
             Assert.Null(er.LastError);
             Assert.Null(er.Data);
             Assert.Equal(0, er.NumRequests);
@@ -596,9 +600,10 @@ namespace IntegrationTestsInternal
             Assert.Equal(zdt, er.Started);
 
             JSONNode data = new JSONString("data");
-            er = new EndpointStats("name", "subject", 2, 4, 10, "lastError", data, zdt);
+            er = new EndpointStats("name", "subject", "queue", 2, 4, 10, "lastError", data, zdt);
             Assert.Equal("name", er.Name);
             Assert.Equal("subject", er.Subject);
+            Assert.Equal("queue", er.QueueGroup);
             Assert.Equal("lastError", er.LastError);
             Assert.Equal("\"data\"", er.Data.ToString());
             Assert.Equal(2, er.NumRequests);
@@ -611,6 +616,7 @@ namespace IntegrationTestsInternal
             Assert.StartsWith("{", j);
             Assert.Contains("\"name\":\"name\"", j);
             Assert.Contains("\"subject\":\"subject\"", j);
+            Assert.Contains("\"queue_group\":\"queue\"", j);
             Assert.Contains("\"last_error\":\"lastError\"", j);
             Assert.Contains("\"data\":\"data\"", j);
             Assert.Contains("\"num_requests\":2", j);
@@ -749,6 +755,41 @@ namespace IntegrationTestsInternal
             iae = Assert.Throws<ArgumentException>(
                 () => ServiceEndpoint.Builder().WithEndpoint(e1).Build());
             Assert.Contains("Handler", iae.Message);
+            
+            
+            se = ServiceEndpoint.Builder()
+                .WithEndpointName("directName")
+                .WithEndpointQueueGroup("directQ")
+                .WithHandler(smh)
+            .Build();
+
+            Assert.Equal("directName", se.Name);
+            Assert.Equal("directName", se.Subject);
+            Assert.Equal("directQ", se.QueueGroup);
+
+            se = ServiceEndpoint.Builder()
+                .WithEndpointName("directName")
+                .WithEndpointSubject("directSubject")
+                .WithEndpointQueueGroup("directQ")
+                .WithHandler(smh)
+            .Build();
+
+            Assert.Equal("directName", se.Name);
+            Assert.Equal("directSubject", se.Subject);
+            Assert.Equal("directQ", se.QueueGroup);
+
+            Group g = new Group("directG");
+            se = ServiceEndpoint.Builder()
+                .WithGroup(g)
+                .WithEndpointName("directName")
+                .WithEndpointSubject("directSubject")
+                .WithEndpointQueueGroup("directQ")
+                .WithHandler(smh)
+            .Build();
+
+            Assert.Equal("directName", se.Name);
+            Assert.Equal("directG.directSubject", se.Subject);
+            Assert.Equal("directQ", se.QueueGroup);
         }
 
         [Fact]
@@ -793,9 +834,10 @@ namespace IntegrationTestsInternal
     
             IDictionary<string, string> endMeta = new Dictionary<string, string>();
             endMeta["foo"] = "bar";
-            Endpoint end1 = new Endpoint("endfoo", endMeta);
-            IList<Endpoint> endList = new List<Endpoint>();
-            endList.Add(end1);
+            Endpoint ep = new Endpoint("endfoo", endMeta);
+            ServiceEndpoint se = new ServiceEndpoint(ep, (sender, args) => { });
+            IList<ServiceEndpoint> endList = new List<ServiceEndpoint>();
+            endList.Add(se);
             InfoResponse ir1 = new InfoResponse("id", "name", "0.0.0", metadata, "desc", endList);
             InfoResponse ir2 = new InfoResponse(ir1.ToJsonString());
             ValidateApiInOutInfoResponse(ir1);
@@ -810,8 +852,8 @@ namespace IntegrationTestsInternal
 
             IList<EndpointStats> statsList = new List<EndpointStats>();
             JSONNode[] data = new JSONNode[]{SupplyData(), SupplyData()};
-            statsList.Add(new EndpointStats("endName0", "endSubject0", 1000, 0, 10000, "lastError0", data[0], endStarteds[0]));
-            statsList.Add(new EndpointStats("endName1", "endSubject1", 2000, 10, 10000, "lastError1", data[1], endStarteds[1]));
+            statsList.Add(new EndpointStats("endName0", "endSubject0", "endQueue0", 1000, 0, 10000, "lastError0", data[0], endStarteds[0]));
+            statsList.Add(new EndpointStats("endName1", "endSubject1", "endQueue1", 2000, 10, 10000, "lastError1", data[1], endStarteds[1]));
     
             StatsResponse stat1 = new StatsResponse(pr1, serviceStarted, statsList);
             StatsResponse stat2 = new StatsResponse(stat1.ToJsonString());
@@ -828,6 +870,7 @@ namespace IntegrationTestsInternal
                 EndpointStats e = stat.EndpointStatsList[x];
                 Assert.Equal("endName" + x, e.Name);
                 Assert.Equal("endSubject" + x, e.Subject);
+                Assert.Equal("endQueue" + x, e.QueueGroup);
                 long nr = x * 1000 + 1000;
                 long errs = x * 10;
                 long avg = 10000 / nr;
