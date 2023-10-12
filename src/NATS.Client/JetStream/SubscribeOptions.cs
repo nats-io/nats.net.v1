@@ -72,17 +72,17 @@ namespace NATS.Client.JetStream
 
             // read the consumer names and do basic validation
             // A1. validate name input
-            string temp = ValidateMustMatchIfBothSupplied(builder.Name, builder.Cc?.Name, JsSoNameMismatch);
+            string ccName = ValidateMustMatchIfBothSupplied(builder.Name, builder.Cc?.Name, JsSoNameMismatch);
             // B1. Must be a valid consumer name if supplied
-            temp = ValidateConsumerName(temp, false);
+            ccName = ValidateConsumerName(ccName, false);
             
             // A2. validate durable input
-            string durable = ValidateMustMatchIfBothSupplied(builder.Durable, builder.Cc?.Durable, JsSoDurableMismatch);
+            string ccDurable = ValidateMustMatchIfBothSupplied(builder.Durable, builder.Cc?.Durable, JsSoDurableMismatch);
             // B2. Must be a valid consumer name if supplied
-            durable = ValidateDurable(durable, false);
+            ccDurable = ValidateDurable(ccDurable, false);
 
             // C. name must match durable if both supplied
-            Name = ValidateMustMatchIfBothSupplied(temp, durable, JsConsumerNameDurableMismatch);
+            Name = ValidateMustMatchIfBothSupplied(ccName, ccDurable, JsConsumerNameDurableMismatch);
 
             if (Bind && Name == null) {
                 throw JsSoNameOrDurableRequiredForBind.Instance();
@@ -98,7 +98,7 @@ namespace NATS.Client.JetStream
             if (Ordered)
             {
                 ValidateNotSupplied(deliverGroup, JsSoOrderedNotAllowedWithDeliverGroup);
-                ValidateNotSupplied(durable, JsSoOrderedNotAllowedWithDurable);
+                ValidateNotSupplied(ccDurable, JsSoOrderedNotAllowedWithDurable);
                 ValidateNotSupplied(deliverSubject, JsSoOrderedNotAllowedWithDeliverSubject);
                 bool? ms = builder.Cc?._memStorage;
                 if (ms != null && !ms.Value)
@@ -135,7 +135,7 @@ namespace NATS.Client.JetStream
                     .WithAckPolicy(AckPolicy.None)
                     .WithMaxDeliver(1)
                     .WithAckWait(Duration.OfHours(22))
-                    .WithName(Name)
+                    .WithName(ccName)
                     .WithMemStorage(true)
                     .WithNumReplicas(1);
 
@@ -149,10 +149,10 @@ namespace NATS.Client.JetStream
             else
             {
                 ConsumerConfiguration = Builder(builder.Cc)
-                    .WithDurable(durable)
+                    .WithName(ccName)
+                    .WithDurable(ccDurable)
                     .WithDeliverSubject(deliverSubject)
                     .WithDeliverGroup(deliverGroup)
-                    .WithName(Name)
                     .Build();
             }
         }
