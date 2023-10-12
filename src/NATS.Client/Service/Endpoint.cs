@@ -67,7 +67,7 @@ namespace NATS.Client.Service
         /// <param name="subject">the subject</param>
         /// <param name="queueGroup">the queue group</param>
         /// <param name="metadata">the metadata</param>
-        public Endpoint(string name, string subject, string queueGroup, IDictionary<string, string> metadata) : this(name, subject, null, metadata, true) {}
+        public Endpoint(string name, string subject, string queueGroup, IDictionary<string, string> metadata) : this(name, subject, queueGroup, metadata, true) {}
 
         // internal use constructors
         internal Endpoint(string name, string subject, string queueGroup, IDictionary<string, string> metadata, bool validate) {
