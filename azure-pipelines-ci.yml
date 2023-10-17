@@ -9,13 +9,13 @@ trigger:
   batch: true
   branches:
     include:
-    - master
+    - main
 
 pr:
   autoCancel: true
   branches:
     include:
-    - master
+    - main
 
 pool:
   vmImage: windows-2019
