@@ -45,7 +45,7 @@ namespace NATS.Client.JetStream
             if (fromDirect)
             {
                 Headers = msg.Header;
-                Subject = msg.Header[JetStreamConstants.NatsSubject];
+                Subject = msg.Header.GetLast(JetStreamConstants.NatsSubject);
                 Data = msg.Data;
                 Sequence = ulong.Parse(msg.Header[JetStreamConstants.NatsSequence]);
                 Time = JsonUtils.AsDate(msg.Header[JetStreamConstants.NatsTimestamp]);

@@ -250,6 +250,30 @@ namespace NATS.Client
         }
 
         /// <summary>
+        /// Gets the first value for the specific key.
+        /// Will be null if the key is not found
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public string GetFirst(string name)
+        {
+            string[] all = nvc.GetValues(name);
+            return all == null ? null: all[0];
+        }
+
+        /// <summary>
+        /// Gets the last value for the specific key.
+        /// Will be null if the key is not found
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public string GetLast(string name)
+        {
+            string[] all = nvc.GetValues(name);
+            return all == null ? null: all[all.Length-1];
+        }
+
+        /// <summary>
         /// Returns an enumerator that iterates through the message header
         /// keys.
         /// </summary>
