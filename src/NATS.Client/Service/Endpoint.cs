@@ -15,6 +15,8 @@ namespace NATS.Client.Service
     /// </summary>
     public class Endpoint : JsonSerializable
     {
+        const string DefaultQueueGroup = "q";
+
         private IDictionary<string, string> _metadata;
 
         /// <value>The name of the Endpoint</value>
@@ -22,6 +24,9 @@ namespace NATS.Client.Service
         
         /// <value>The subject of the Endpoint</value>
         public string Subject { get; }
+        
+        /// <value>The queue group of the Endpoint</value>
+        public string QueueGroup { get; }
 
         /// <value>A copy of the metadata of the Endpoint</value>
         public IDictionary<string, string> Metadata =>
@@ -31,21 +36,21 @@ namespace NATS.Client.Service
         /// Directly construct an Endpoint with a name, which becomes the subject
         /// </summary>
         /// <param name="name">the name</param>
-        public Endpoint(string name) : this(name, null, null, true) {}
+        public Endpoint(string name) : this(name, null, null, null, true) {}
 
         /// <summary>
         /// Directly construct an Endpoint with a name, which becomes the subject, and metadata
         /// </summary>
         /// <param name="name">the name</param>
         /// <param name="metadata">the metadata</param>
-        public Endpoint(string name, IDictionary<string, string> metadata) : this(name, null, metadata, true) {}
+        public Endpoint(string name, IDictionary<string, string> metadata) : this(name, null, null, metadata, true) {}
 
         /// <summary>
         /// Directly construct an Endpoint with a name and a subject
         /// </summary>
         /// <param name="name">the name</param>
         /// <param name="subject">the subject</param>
-        public Endpoint(string name, string subject) : this(name, subject, null, true) {}
+        public Endpoint(string name, string subject) : this(name, subject, null, null, true) {}
 
         /// <summary>
         /// Directly construct an Endpoint with a name, the subject, and metadata
@@ -53,17 +58,32 @@ namespace NATS.Client.Service
         /// <param name="name">the name</param>
         /// <param name="subject">the subject</param>
         /// <param name="metadata">the metadata</param>
-        public Endpoint(string name, string subject, IDictionary<string, string> metadata) : this(name, subject, metadata, true) {}
+        public Endpoint(string name, string subject, IDictionary<string, string> metadata) : this(name, subject, null, metadata, true) {}
+
+        /// <summary>
+        /// Directly construct an Endpoint with a name, the subject, and metadata
+        /// </summary>
+        /// <param name="name">the name</param>
+        /// <param name="subject">the subject</param>
+        /// <param name="queueGroup">the queue group</param>
+        /// <param name="metadata">the metadata</param>
+        public Endpoint(string name, string subject, string queueGroup, IDictionary<string, string> metadata) : this(name, subject, queueGroup, metadata, true) {}
 
         // internal use constructors
-        internal Endpoint(string name, string subject, IDictionary<string, string> metadata, bool validate) {
+        internal Endpoint(string name, string subject, string queueGroup, IDictionary<string, string> metadata, bool validate) {
             if (validate) {
                 Name = Validator.ValidateIsRestrictedTerm(name, "Endpoint Name", true);
                 if (subject == null) {
                     Subject = Name;
                 }
                 else {
-                    Subject = Validator.ValidateSubject(subject, "Endpoint Subject", false, false);
+                    Subject = Validator.ValidateSubjectTerm(subject, "Endpoint Subject", false);
+                }
+                if (queueGroup == null) {
+                    QueueGroup = DefaultQueueGroup;
+                }
+                else {
+                    QueueGroup = Validator.ValidateSubjectTerm(queueGroup, "Endpoint Queue Group", true);
                 }
             }
             else {
@@ -85,11 +105,12 @@ namespace NATS.Client.Service
         {
             Name = node[ApiConstants.Name];
             Subject = node[ApiConstants.Subject];
+            QueueGroup = node[ApiConstants.QueueGroup];
             _metadata = JsonUtils.StringStringDictionary(node, ApiConstants.Metadata, true);
         }
 
         private Endpoint(EndpointBuilder b) 
-            : this(b._name, b._subject, b._metadata, true) {}
+            : this(b._name, b._subject, b._queueGroup, b._metadata, true) {}
 
         /// <summary>
         /// Build a service using a fluent builder. Use Service.Builder() to get an instance or <c>new ServiceBuilder()</c>
@@ -99,6 +120,7 @@ namespace NATS.Client.Service
             JSONObject jso = new JSONObject();
             JsonUtils.AddField(jso, ApiConstants.Name, Name);
             JsonUtils.AddField(jso, ApiConstants.Subject, Subject);
+            JsonUtils.AddField(jso, ApiConstants.QueueGroup, QueueGroup);
             JsonUtils.AddField(jso, ApiConstants.Metadata, _metadata);
             return jso;
         }
@@ -116,6 +138,7 @@ namespace NATS.Client.Service
         {
             internal string _name;
             internal string _subject;
+            internal string _queueGroup = DefaultQueueGroup;
             internal IDictionary<string, string> _metadata;
 
             /// <summary>
@@ -145,6 +168,16 @@ namespace NATS.Client.Service
             /// <returns></returns>
             public EndpointBuilder WithSubject(string subject) {
                 _subject = subject;
+                return this;
+            }
+
+            /// <summary>
+            /// Set the queue group for the Endpoint, replacing any queue group already set.
+            /// </summary>
+            /// <param name="queueGroup">the queue group</param>
+            /// <returns></returns>
+            public EndpointBuilder WithQueueGroup(string queueGroup) {
+                _queueGroup = queueGroup ?? DefaultQueueGroup;
                 return this;
             }
 
@@ -182,7 +215,7 @@ namespace NATS.Client.Service
 
         protected bool Equals(Endpoint other)
         {
-            return Name == other.Name && Subject == other.Subject && Equals(_metadata, other._metadata);
+            return Name == other.Name && Subject == other.Subject && QueueGroup == other.QueueGroup && Equals(_metadata, other._metadata);
         }
 
         public override bool Equals(object obj)
@@ -197,9 +230,10 @@ namespace NATS.Client.Service
         {
             unchecked
             {
-                var hashCode = (Name != null ? Name.GetHashCode() : 0);
+                int hashCode = (_metadata != null ? _metadata.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Name != null ? Name.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (Subject != null ? Subject.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_metadata != null ? _metadata.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (QueueGroup != null ? QueueGroup.GetHashCode() : 0);
                 return hashCode;
             }
         }

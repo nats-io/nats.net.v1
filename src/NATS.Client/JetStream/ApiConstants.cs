@@ -150,6 +150,7 @@ namespace NATS.Client.JetStream
         internal const string Proto = "proto";
         internal const string Purged = "purged";
         internal const string PushBound = "push_bound";
+        internal const string QueueGroup = "queue_group";
         internal const string RateLimitBps = "rate_limit_bps";
         internal const string ReplayPolicy = "replay_policy";
         internal const string Replica = "replica";

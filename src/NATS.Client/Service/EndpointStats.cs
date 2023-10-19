@@ -29,6 +29,7 @@ namespace NATS.Client.Service
     /// "endpoints": [{
     ///     "name": "SortEndpointAscending",
     ///     "subject": "sort.ascending",
+    ///     "queue_group": "q",
     ///     "num_requests": 1,
     ///     "processing_time": 538900,
     ///     "average_processing_time": 538900,
@@ -39,6 +40,7 @@ namespace NATS.Client.Service
     /// {
     ///     "name": "SortEndpointDescending",
     ///     "subject": "sort.descending",
+    ///     "queue_group": "q",
     ///     "num_requests": 1,
     ///     "processing_time": 88400,
     ///     "average_processing_time": 88400,
@@ -49,6 +51,7 @@ namespace NATS.Client.Service
     /// {
     ///     "name": "EchoEndpoint",
     ///     "subject": "echo",
+    ///     "queue_group": "q",
     ///     "num_requests": 5,
     ///     "processing_time": 1931600,
     ///     "average_processing_time": 386320,
@@ -67,6 +70,9 @@ namespace NATS.Client.Service
         
         /// <value>Get the subject of the Endpoint</value>
         public string Subject { get; }
+        
+        /// <value>Get the queue group for the Endpoint</value>
+        public string QueueGroup { get; }
             
         /// <value>The number of requests received by the endpoint</value>
         public long NumRequests { get; } 
@@ -92,9 +98,10 @@ namespace NATS.Client.Service
         /// <value>Get the time the endpoint was started (or restarted)</value>
         public DateTime Started { get; }
 
-        internal EndpointStats(string name, string subject, long numRequests, long numErrors, long processingTime, string lastError, JSONNode data, DateTime started) {
+        internal EndpointStats(string name, string subject, string queueGroup, long numRequests, long numErrors, long processingTime, string lastError, JSONNode data, DateTime started) {
             Name = name;
             Subject = subject;
+            QueueGroup = queueGroup;
             NumRequests = numRequests;
             NumErrors = numErrors;
             ProcessingTime = processingTime;
@@ -104,22 +111,11 @@ namespace NATS.Client.Service
             Started = started;
         }
 
-        internal EndpointStats(string name, string subject) {
-            Name = name;
-            Subject = subject;
-            NumRequests = 0;
-            NumErrors = 0;
-            ProcessingTime = 0;
-            AverageProcessingTime = 0;
-            LastError = null;
-            Data = null;
-            Started = DateTime.MinValue;
-        }
-
         internal EndpointStats(JSONNode node)
         {
             Name = node[ApiConstants.Name];
             Subject = node[ApiConstants.Subject];
+            QueueGroup = node[ApiConstants.QueueGroup];
             NumRequests = JsonUtils.AsLongOrZero(node, ApiConstants.NumRequests);
             NumErrors = JsonUtils.AsLongOrZero(node, ApiConstants.NumErrors);
             ProcessingTime = JsonUtils.AsLongOrZero(node, ApiConstants.ProcessingTime);
@@ -147,6 +143,7 @@ namespace NATS.Client.Service
             JSONObject jso = new JSONObject();
             JsonUtils.AddField(jso, ApiConstants.Name, Name);
             JsonUtils.AddField(jso, ApiConstants.Subject, Subject);
+            JsonUtils.AddField(jso, ApiConstants.QueueGroup, QueueGroup);
             JsonUtils.AddFieldWhenGtZero(jso, ApiConstants.NumRequests, NumRequests);
             JsonUtils.AddFieldWhenGtZero(jso, ApiConstants.NumErrors, NumErrors);
             JsonUtils.AddFieldWhenGtZero(jso, ApiConstants.ProcessingTime, ProcessingTime);
@@ -161,17 +158,18 @@ namespace NATS.Client.Service
         {
             return JsonUtils.ToKey(GetType()) + ToJsonString();
         }
-        
+
         protected bool Equals(EndpointStats other)
         {
             return Name == other.Name 
                    && Subject == other.Subject 
+                   && QueueGroup == other.QueueGroup 
                    && NumRequests == other.NumRequests 
                    && NumErrors == other.NumErrors 
                    && ProcessingTime == other.ProcessingTime 
                    && AverageProcessingTime == other.AverageProcessingTime 
                    && LastError == other.LastError 
-                   && Data == other.Data 
+                   && DataAsJson == other.DataAsJson
                    && Started.Equals(other.Started);
         }
 
@@ -187,14 +185,15 @@ namespace NATS.Client.Service
         {
             unchecked
             {
-                var hashCode = (Name != null ? Name.GetHashCode() : 0);
+                int hashCode = (Name != null ? Name.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (Subject != null ? Subject.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (QueueGroup != null ? QueueGroup.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ NumRequests.GetHashCode();
                 hashCode = (hashCode * 397) ^ NumErrors.GetHashCode();
                 hashCode = (hashCode * 397) ^ ProcessingTime.GetHashCode();
                 hashCode = (hashCode * 397) ^ AverageProcessingTime.GetHashCode();
                 hashCode = (hashCode * 397) ^ (LastError != null ? LastError.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (Data != null ? Data.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (DataAsJson != null ? DataAsJson.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ Started.GetHashCode();
                 return hashCode;
             }

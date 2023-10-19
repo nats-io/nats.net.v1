@@ -49,6 +49,9 @@ namespace NATS.Client.Service
         /// <value>The subject of the ServiceEndpoint which takes into account the group path and the <see cref="Endpoint"/> subject</value>
         public string Subject => Group == null ? Endpoint.Subject : $"{Group.Subject}.{Endpoint.Subject}";
 
+        /// <value>The queue group for the ServiceEndpoint</value>
+        public string QueueGroup => Endpoint.QueueGroup;
+
         /// <value>A copy of the metadata of the <see cref="Endpoint"/></value>
         public IDictionary<string, string> Metadata => Endpoint.Metadata == null ? null : new Dictionary<string, string>(Endpoint.Metadata);
         
@@ -124,6 +127,16 @@ namespace NATS.Client.Service
             /// <returns>the ServiceEndpointBuilder</returns>
             public ServiceEndpointBuilder WithEndpointSubject(string subject) {
                 EndpointBuilder.WithSubject(subject);
+                return this;
+            }
+
+            /// <summary>
+            /// Set the queue group for the <see cref="Endpoint"/> for this ServiceEndpoint replacing any queue group already set.
+            /// </summary>
+            /// <param name="queueGroup"></param>
+            /// <returns>the ServiceEndpointBuilder</returns>
+            public ServiceEndpointBuilder WithEndpointQueueGroup(string queueGroup) {
+                EndpointBuilder.WithQueueGroup(queueGroup);
                 return this;
             }
 
