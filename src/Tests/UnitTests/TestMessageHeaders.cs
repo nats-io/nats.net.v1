@@ -222,15 +222,21 @@ namespace UnitTests
         public void TestHeaderMultiValues()
         {
             var mh = new MsgHeader();
+            Assert.Null(mh.GetValues("foo"));
+            Assert.Null(mh.GetFirst("foo"));
+            Assert.Null(mh.GetLast("foo"));
+            
             mh.Add("foo", "bar");
             mh.Add("foo", "baz,comma");
 
             // Test the GetValues API, don't make assumptions about order.
-            string []values = mh.GetValues("foo");
+            string[] values = mh.GetValues("foo");
             Assert.True(values.Length == 2);
             List<string> results = new List<string>(values);
             Assert.Contains("bar", results);
             Assert.Contains("baz,comma", results);
+            Assert.Equal(values[0], mh.GetFirst("foo"));
+            Assert.Equal(values[1], mh.GetLast("foo"));
 
             byte[] bytes = mh.ToByteArray();
             var hsr = new HeaderStatusReader(bytes, bytes.Length);

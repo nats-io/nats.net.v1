@@ -17,6 +17,7 @@ using System.Text;
 using NATS.Client;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
+using NATS.Client.KeyValue;
 using Xunit;
 using static IntegrationTests.JetStreamTestBase;
 using static UnitTests.TestBase;
@@ -1068,6 +1069,53 @@ namespace IntegrationTests
             Assert.Equal(seq > 0 && nextBySubject == null, mgr.IsSequenceOnly);
             Assert.Equal(lastBySubject != null, mgr.IsLastBySubject);
             Assert.Equal(nextBySubject != null, mgr.IsNextBySubject);
+        }
+
+        [Fact]
+        public void TestDirectMessageRepublishedSubject()
+        {
+            Context.RunInJsServer(c =>
+            {
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                String streamBucketName = "sb-" + Variant(null);
+                String subject = Subject();
+                String streamSubject = subject + ".>";
+                String publishSubject1 = subject + ".one";
+                String publishSubject2 = subject + ".two";
+                String publishSubject3 = subject + ".three";
+                String republishDest = "$KV." + streamBucketName + ".>";
+
+                StreamConfiguration sc = StreamConfiguration.Builder()
+                    .WithName(streamBucketName)
+                    .WithStorageType(StorageType.Memory)
+                    .WithSubjects(streamSubject)
+                    .WithRepublish(Republish.Builder().WithSource(">").WithDestination(republishDest).Build())
+                    .Build();
+                jsm.AddStream(sc);
+
+                KeyValueConfiguration kvc = KeyValueConfiguration.Builder().WithName(streamBucketName).Build();
+                c.CreateKeyValueManagementContext().Create(kvc);
+                IKeyValue kv = c.CreateKeyValueContext(streamBucketName);
+
+                c.Publish(publishSubject1, Encoding.UTF8.GetBytes("uno"));
+                c.CreateJetStreamContext().Publish(publishSubject2, Encoding.UTF8.GetBytes("dos"));
+                kv.Put(publishSubject3, "tres");
+
+                KeyValueEntry kve1 = kv.Get(publishSubject1);
+                Assert.Equal(streamBucketName, kve1.Bucket);
+                Assert.Equal(publishSubject1, kve1.Key);
+                Assert.Equal("uno", kve1.ValueAsString());
+
+                KeyValueEntry kve2 = kv.Get(publishSubject2);
+                Assert.Equal(streamBucketName, kve2.Bucket);
+                Assert.Equal(publishSubject2, kve2.Key);
+                Assert.Equal("dos", kve2.ValueAsString());
+
+                KeyValueEntry kve3 = kv.Get(publishSubject3);
+                Assert.Equal(streamBucketName, kve3.Bucket);
+                Assert.Equal(publishSubject3, kve3.Key);
+                Assert.Equal("tres", kve3.ValueAsString());            
+            });
         }
     }
 }
