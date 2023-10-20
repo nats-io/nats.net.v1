@@ -6,14 +6,14 @@ namespace NATSExamples
     /// <summary>
     /// This is just scaffolding to be able to run any of the miscellaneous examples
     /// </summary>
-    abstract class Miscellany
+    class Miscellany
     {
-        public static void Main(string[] args)
+        static void Main(string[] args)
         {
             // Set the args manually to run the code you want.
-            args = new[] { "SimplificationMigration" };
+            // args = new[] { "ClientCompatibility" };
             
-            if (args.Length == 1)
+            if (args.Length > 0)
             {
                 switch (args[0])
                 {
@@ -40,11 +40,15 @@ namespace NATSExamples
                     case "SimplificationMigration":
                         SimplificationMigration.SimplificationMigrationMain();
                         return;
+                    
+                    case "ClientCompatibility":
+                        ClientCompatibility.ClientCompatibility.ClientCompatibilityMain(args.Length > 1 ? args[1] : null);
+                        return;
                 }
             }
             
             Console.WriteLine(
-                "Usage: Miscellany <program>\n"
+                "Usage: Miscellany <program> <args...>\n"
                 + "\nAvailable programs:"
                 + "\n   PubSub"
                 + "\n   RequestReply"
@@ -52,6 +56,7 @@ namespace NATSExamples
                 + "\n   ScatterGather"
                 + "\n   ServiceCrossClientValidator" 
                 + "\n   SimplificationMigration" 
+                + "\n   ClientCompatibility" 
             );
         }
     }

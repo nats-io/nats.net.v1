@@ -13,4 +13,9 @@
         <ProjectReference Include="..\JetStreamExampleUtils\JetStreamExampleUtils.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <Folder Include="NatsByExample\" />
+        <Folder Include="ClientCompatibility\" />
+    </ItemGroup>
+
 </Project>
