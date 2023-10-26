@@ -15,7 +15,6 @@ using System;
 
 namespace NATS.Client
 {
-    // TODO After connect adr is complete
     internal interface IServerProvider
     {
         /// <summary>
@@ -39,7 +38,7 @@ namespace NATS.Client
         public const int DefaultPort = 4222;
         public const int NoPortSpecified = -1;
         
-        public Uri Url { get; }
+        public Uri Url { get; private set; }
         public bool IsImplicit { get; }
         public bool Secure { get; }
         public DateTime LastAttempt { get; private set; }
@@ -59,14 +58,18 @@ namespace NATS.Client
             {
                 Secure = urlString.Contains("tls://");
             }
-
-            var uri = new Uri(urlString);
-
-            Url = uri.Port == NoPortSpecified ? new UriBuilder(uri) {Port = DefaultPort}.Uri : uri;
+            
+            SetUrl(urlString);
             
             LastAttempt = DateTime.Now;
         }
 
+        internal void SetUrl(String urlString)
+        {
+            var uri = new Uri(urlString);
+            Url = uri.Port == NoPortSpecified ? new UriBuilder(uri) {Port = DefaultPort}.Uri : uri;
+        }
+        
         public Srv(string urlString, bool isUrlImplicit) : this(urlString)
         {
             IsImplicit = isUrlImplicit;
@@ -75,6 +78,11 @@ namespace NATS.Client
         public void UpdateLastAttempt() => LastAttempt = DateTime.Now;
 
         public TimeSpan TimeSinceLastAttempt => (DateTime.Now - LastAttempt);
+
+        public override string ToString()
+        {
+            return $"Url: {Url}, IsImplicit: {IsImplicit}, Secure: {Secure}, DidConnect: {DidConnect}, Reconnects: {Reconnects}";
+        }
     }
 }
 

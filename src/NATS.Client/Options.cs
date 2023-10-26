@@ -729,7 +729,6 @@ namespace NATS.Client
         /// </summary>
         public bool ClientSideLimitChecks { get => clientSideLimitChecks; set => clientSideLimitChecks = value; }
 
-        // TODO After connect adr is complete
         internal IServerProvider ServerProvider { get => serverProvider; set => serverProvider = value; }
         
         private void appendEventHandler(StringBuilder sb, string name, Delegate eh)

@@ -32,7 +32,7 @@ namespace NATS.Client
         /// <para>-or-</para>
         /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
         /// details.</para></exception>
-        IConnection CreateConnection(string url);
+        IConnection CreateConnection(string url, bool reconnectOnConnect = false);
 
         /// <summary>
         /// Attempt to connect to the NATS server referenced by <paramref name="url"/> with NATS 2.0 credentials.
@@ -50,7 +50,7 @@ namespace NATS.Client
         /// <para>-or-</para>
         /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
         /// details.</para></exception>
-        IConnection CreateConnection(string url, string credentialsPath);
+        IConnection CreateConnection(string url, string credentialsPath, bool reconnectOnConnect = false);
 
         /// <summary>
         /// Attempt to connect to the NATS server referenced by <paramref name="url"/> with NATS 2.0 credentials.
@@ -69,7 +69,7 @@ namespace NATS.Client
         /// <para>-or-</para>
         /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
         /// details.</para></exception>
-        IConnection CreateConnection(string url, string jwt, string privateNkey);
+        IConnection CreateConnection(string url, string jwt, string privateNkey, bool reconnectOnConnect = false);
 
         /// <summary>
         /// Create a connection to the NATs server using the default options.
@@ -81,7 +81,7 @@ namespace NATS.Client
         /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
         /// details.</para></exception>
         /// <seealso cref="ConnectionFactory.GetDefaultOptions"/>
-        IConnection CreateConnection();
+        IConnection CreateConnection(bool reconnectOnConnect = false);
 
         /// <summary>
         /// Create a connection to a NATS Server defined by the given options.
@@ -93,7 +93,7 @@ namespace NATS.Client
         /// <para>-or-</para>
         /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
         /// details.</para></exception>
-        IConnection CreateConnection(Options opts);
+        IConnection CreateConnection(Options opts, bool reconnectOnConnect = false);
 
         /// <summary>
         /// Attempt to connect to the NATS server using TLS referenced by <paramref name="url"/>.
@@ -110,7 +110,7 @@ namespace NATS.Client
         /// <para>-or-</para>
         /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
         /// details.</para></exception>
-        IConnection CreateSecureConnection(string url);
+        IConnection CreateSecureConnection(string url, bool reconnectOnConnect = false);
 
         /// <summary>
         /// Attempt to connect to the NATS server, with an encoded connection, using the default options.
@@ -122,7 +122,7 @@ namespace NATS.Client
         /// <para>-or-</para>
         /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
         /// details.</para></exception>
-        IEncodedConnection CreateEncodedConnection();
+        IEncodedConnection CreateEncodedConnection(bool reconnectOnConnect = false);
 
         /// <summary>
         /// Attempt to connect to the NATS server, with an encoded connection, referenced by <paramref name="url"/>.
@@ -139,7 +139,7 @@ namespace NATS.Client
         /// <para>-or-</para>
         /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
         /// details.</para></exception>
-        IEncodedConnection CreateEncodedConnection(string url);
+        IEncodedConnection CreateEncodedConnection(string url, bool reconnectOnConnect = false);
 
         /// <summary>
         /// Attempt to connect to the NATS server, with an encoded connection, using the given options.
@@ -151,6 +151,6 @@ namespace NATS.Client
         /// <para>-or-</para>
         /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
         /// details.</para></exception>
-        IEncodedConnection CreateEncodedConnection(Options opts);
+        IEncodedConnection CreateEncodedConnection(Options opts, bool reconnectOnConnect = false);
     }
 }

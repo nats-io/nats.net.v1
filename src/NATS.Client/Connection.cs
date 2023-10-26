@@ -1188,8 +1188,10 @@ namespace NATS.Client
                     }
                     catch (NATSConnectionException ex)
                     {
-                        if (!ex.IsAuthorizationViolationError() && !ex.IsAuthenticationExpiredError())
+                        if (!ex.IsAuthenticationOrAuthorizationError())
+                        {
                             throw;
+                        }
 
                         ScheduleErrorEvent(s, ex);
 
@@ -1222,7 +1224,7 @@ namespace NATS.Client
                 opts.AsyncErrorEventHandlerOrDefault(sender, new ErrEventArgs(this, subscription, ex.Message)));
         }
 
-        internal void connect()
+        internal void connect(bool reconnectOnConnect)
         {
             Exception exToThrow = null;
 
@@ -1234,11 +1236,22 @@ namespace NATS.Client
             {
                 if (status != ConnState.CONNECTED)
                 {
-                    if (exToThrow is NATSException)
-                        throw exToThrow;
-                    if (exToThrow != null)
-                        throw new NATSConnectionException("Failed to connect", exToThrow);
-                    throw new NATSNoServersException("Unable to connect to a server.");
+                    if (reconnectOnConnect)
+                    {
+                        doReconnect();
+                    }
+                    else
+                    {
+                        if (exToThrow is NATSException)
+                        {
+                            throw exToThrow;
+                        }
+                        if (exToThrow != null)
+                        {
+                            throw new NATSConnectionException("Failed to connect", exToThrow);
+                        }
+                        throw new NATSNoServersException("Unable to connect to a server.");
+                    }
                 }
             }
         }

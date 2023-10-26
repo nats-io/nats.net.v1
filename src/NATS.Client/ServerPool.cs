@@ -17,19 +17,20 @@ using System.Linq;
 
 namespace NATS.Client
 {
-    internal sealed class ServerPool : IServerProvider
+    internal class ServerPool : IServerProvider
     {
-        private readonly object poolLock = new object();
-        private readonly LinkedList<Srv> sList = new LinkedList<Srv>();
-        private Srv currentServer;
-        private readonly Random rand = new Random(DateTime.Now.Millisecond);
-        private bool randomize = true;
-        private bool ignoreDiscoveredServers = true;
+        protected readonly object poolLock = new object();
+        protected readonly LinkedList<Srv> sList = new LinkedList<Srv>();
+        protected Srv currentServer;
+        protected readonly Random rand = new Random(DateTime.Now.Millisecond);
+        protected bool randomize = true;
+        protected bool ignoreDiscoveredServers = true;
+        protected SrvEqualityComparer duplicateSrvCheck = new SrvEqualityComparer();
 
         // Used to find duplicates in the server pool.
         // Loopback is equivalent to localhost, and
         // a URL match is equivalent.
-        private class SrvEqualityComparer : IEqualityComparer<Srv>
+        internal class SrvEqualityComparer : IEqualityComparer<Srv>
         {
             private bool IsLocal(Uri url)
             {
@@ -65,13 +66,11 @@ namespace NATS.Client
             }
         }
 
-        private SrvEqualityComparer duplicateSrvCheck = new SrvEqualityComparer();
-
         // Create the server pool using the options given.
         // We will place a Url option first, followed by any
         // Server Options. We will randomize the server pool unless
         // the NoRandomize flag is set.
-        public void Setup(Options opts)
+        public virtual void Setup(Options opts)
         {
             randomize = !opts.NoRandomize;
             ignoreDiscoveredServers = opts.IgnoreDiscoveredServers;
@@ -93,7 +92,7 @@ namespace NATS.Client
         }
 
         // Used for initially connecting to a server.
-        public void ConnectToAServer(Predicate<Srv> connectToServer)
+        public virtual void ConnectToAServer(Predicate<Srv> connectToServer)
         {
             Srv s;
 
@@ -114,7 +113,7 @@ namespace NATS.Client
 
         // Created for "threadsafe" access.  It allows the list to grow while
         // being added to.
-        private Srv this[int index]
+        protected virtual Srv this[int index]
         {
             get
             {
@@ -129,7 +128,7 @@ namespace NATS.Client
         }
 
         // Sets the currently selected server
-        public void SetCurrentServer(Srv value)
+        public virtual void SetCurrentServer(Srv value)
         {
             lock (poolLock)
             {
@@ -143,25 +142,23 @@ namespace NATS.Client
         // Pop the current server and put onto the end of the list. 
         // Select head of list as long as number of reconnect attempts
         // under MaxReconnect.
-        public Srv SelectNextServer(int maxReconnect)
+        public virtual Srv SelectNextServer(int maxReconnect)
         {
             lock (poolLock)
             {
                 Srv s = currentServer;
-                if (s == null)
-                    return null;
-
-                int num = sList.Count;
-
+                
                 // remove the current server.
-                sList.Remove(s);
-
-                if (maxReconnect == Options.ReconnectForever || 
-                   (maxReconnect > 0 && s.Reconnects < maxReconnect))
+                if (s != null)
                 {
-                    // if we haven't surpassed max reconnects, add it
-                    // to try again.
-                    sList.AddLast(s);
+                    sList.Remove(s);
+                    if (maxReconnect == Options.ReconnectForever || 
+                        (maxReconnect > 0 && s.Reconnects < maxReconnect))
+                    {
+                        // if we haven't surpassed max reconnects, add it
+                        // to try again.
+                        sList.AddLast(s);
+                    }
                 }
 
                 currentServer = IsEmpty() ? null : sList.First();
@@ -171,7 +168,7 @@ namespace NATS.Client
         }
 
         // returns a copy of the list to ensure threadsafety.
-        public string[] GetServerList(bool implicitOnly)
+        public virtual string[] GetServerList(bool implicitOnly)
         {
             List<Srv> list;
 
@@ -200,14 +197,14 @@ namespace NATS.Client
 
         // returns true if it modified the pool, false if
         // the url already exists.
-        private bool Add(string s, bool isImplicit)
+        protected virtual bool Add(string s, bool isImplicit)
         {
             return Add(new Srv(s, isImplicit));
         }
 
         // returns true if it modified the pool, false if
         // the url already exists.
-        private bool Add(Srv s)
+        protected virtual bool Add(Srv s)
         {
             lock (poolLock)
             {
@@ -241,7 +238,7 @@ namespace NATS.Client
         //
         // Prune out implicit servers no longer needed.  
         // The Add is idempotent, so just add the entire list.
-        public bool AcceptDiscoveredServers(string[] discoveredUrls)
+        public virtual bool AcceptDiscoveredServers(string[] discoveredUrls)
         {
             if (ignoreDiscoveredServers || discoveredUrls == null
                                         || discoveredUrls.Length == 0)
@@ -318,7 +315,7 @@ namespace NATS.Client
             }
         }
 
-        private void Shuffle()
+        protected virtual void Shuffle()
         {
             lock (poolLock)
             {
@@ -333,7 +330,7 @@ namespace NATS.Client
             }
         }
 
-        private bool IsEmpty()
+        protected virtual bool IsEmpty()
         {
             return sList.Count == 0;
         }
@@ -341,7 +338,7 @@ namespace NATS.Client
         // It'd be possible to use the sList enumerator here and
         // implement the IEnumerable interface, but keep it simple
         // for thread safety.
-        public Srv First()
+        public virtual Srv First()
         {
             lock (poolLock)
             {
@@ -352,7 +349,7 @@ namespace NATS.Client
             }
         }
 
-        public bool HasSecureServer()
+        public virtual bool HasSecureServer()
         {
             lock (poolLock)
             {

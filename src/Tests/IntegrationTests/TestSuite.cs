@@ -72,6 +72,7 @@ namespace IntegrationTests
         public const int AsyncAwaitDeadlocksSuite = 11518; //1pc
         public const int ConnectionIpV6Suite = 11519; //1pc
         public const int KvSuite = 11520; //3pc
+        public const int ConnectionBehaviorSuite = 11523; //2pc
 
         public static InterlockedInt AutoPort = new InterlockedInt(11550);
     }
@@ -304,6 +305,15 @@ namespace IntegrationTests
         public readonly TestServerInfo Server3 = new TestServerInfo(SeedPort + 2);
     }
 
+    public class ConnectionBehaviorSuite : SuiteContext
+    {
+        private const int SeedPort = TestSeedPorts.AuthorizationSuite;
+
+        public readonly TestServerInfo Server1 = new TestServerInfo(SeedPort);
+        public readonly TestServerInfo Server2 = new TestServerInfo(SeedPort + 1);
+    }
+    
+    
     public class ConnectionSuiteContext : SuiteContext
     {
         private const int SeedPort = TestSeedPorts.ConnectionSuite;

@@ -42,9 +42,9 @@ namespace NATS.Client
         /// <para>-or-</para>
         /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
         /// details.</para></exception>
-        public IConnection CreateConnection(string url)
+        public IConnection CreateConnection(string url, bool reconnectOnConnect = false)
         {
-            return CreateConnection(GetDefaultOptions(url));
+            return CreateConnection(GetDefaultOptions(url), reconnectOnConnect);
         }
         
         /// <summary>
@@ -63,14 +63,14 @@ namespace NATS.Client
         /// <para>-or-</para>
         /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
         /// details.</para></exception>
-        public IConnection CreateConnection(string url, string credentialsPath)
+        public IConnection CreateConnection(string url, string credentialsPath, bool reconnectOnConnect = false)
         {
             if (string.IsNullOrWhiteSpace(credentialsPath))
                 throw new ArgumentException("Invalid credentials path", nameof(credentialsPath));
 
             Options opts = GetDefaultOptions(url);
             opts.SetUserCredentials(credentialsPath);
-            return CreateConnection(opts);
+            return CreateConnection(opts, reconnectOnConnect);
         }
 
         /// <summary>
@@ -90,7 +90,7 @@ namespace NATS.Client
         /// <para>-or-</para>
         /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
         /// details.</para></exception>
-        public IConnection CreateConnection(string url, string jwt, string privateNkey)
+        public IConnection CreateConnection(string url, string jwt, string privateNkey, bool reconnectOnConnect = false)
         {
             if (string.IsNullOrWhiteSpace(jwt))
                 throw new ArgumentException("Invalid jwt path", nameof(jwt));
@@ -99,7 +99,7 @@ namespace NATS.Client
 
             Options opts = GetDefaultOptions(url);
             opts.SetUserCredentials(jwt, privateNkey);
-            return CreateConnection(opts);
+            return CreateConnection(opts, reconnectOnConnect);
         }
 
         /// <summary>
@@ -133,11 +133,11 @@ namespace NATS.Client
         /// <para>-or-</para>
         /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
         /// details.</para></exception>
-        public IConnection CreateSecureConnection(string url)
+        public IConnection CreateSecureConnection(string url, bool reconnectOnConnect = false)
         {
             Options opts = GetDefaultOptions(url);
             opts.Secure = true;
-            return CreateConnection(opts);
+            return CreateConnection(opts, reconnectOnConnect);
         }
 
         /// <summary>
@@ -150,9 +150,9 @@ namespace NATS.Client
         /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
         /// details.</para></exception>
         /// <seealso cref="GetDefaultOptions"/>
-        public IConnection CreateConnection()
+        public IConnection CreateConnection(bool reconnectOnConnect = false)
         {
-            return CreateConnection(GetDefaultOptions());
+            return CreateConnection(GetDefaultOptions(), reconnectOnConnect);
         }
 
         /// <summary>
@@ -165,12 +165,12 @@ namespace NATS.Client
         /// <para>-or-</para>
         /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
         /// details.</para></exception>
-        public IConnection CreateConnection(Options opts)
+        public IConnection CreateConnection(Options opts, bool reconnectOnConnect = false)
         {
             Connection nc = new Connection(opts);
             try
             {
-                nc.connect();
+                nc.connect(reconnectOnConnect);
             }
             catch (Exception)
             {
@@ -190,9 +190,9 @@ namespace NATS.Client
         /// <para>-or-</para>
         /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
         /// details.</para></exception>
-        public IEncodedConnection CreateEncodedConnection()
+        public IEncodedConnection CreateEncodedConnection(bool reconnectOnConnect = false)
         {
-            return CreateEncodedConnection(GetDefaultOptions());
+            return CreateEncodedConnection(GetDefaultOptions(), reconnectOnConnect);
         }
 
         /// <summary>
@@ -210,9 +210,9 @@ namespace NATS.Client
         /// <para>-or-</para>
         /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
         /// details.</para></exception>
-        public IEncodedConnection CreateEncodedConnection(string url)
+        public IEncodedConnection CreateEncodedConnection(string url, bool reconnectOnConnect = false)
         {
-            return CreateEncodedConnection(GetDefaultOptions(url));
+            return CreateEncodedConnection(GetDefaultOptions(url), reconnectOnConnect);
         }
 
         /// <summary>
@@ -225,12 +225,12 @@ namespace NATS.Client
         /// <para>-or-</para>
         /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
         /// details.</para></exception>
-        public IEncodedConnection CreateEncodedConnection(Options opts)
+        public IEncodedConnection CreateEncodedConnection(Options opts, bool reconnectOnConnect = false)
         {
             EncodedConnection nc = new EncodedConnection(opts);
             try
             {
-                nc.connect();
+                nc.connect(reconnectOnConnect);
             }
             catch (Exception)
             {

@@ -12,13 +12,13 @@
 // limitations under the License.
 
 using System;
-using System.Threading;
-using System.Reflection;
+using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Threading;
 using NATS.Client;
-using UnitTests;
+using NATS.Client.Internals;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace IntegrationTests
 {
@@ -27,9 +27,7 @@ namespace IntegrationTests
     /// </summary>
     public class TestAuthorization : TestSuite<AuthorizationSuiteContext>
     {
-        public TestAuthorization(AuthorizationSuiteContext context) : base(context)
-        {
-        }
+        public TestAuthorization(AuthorizationSuiteContext context) : base(context) {}
 
         int hitDisconnect;
 
@@ -65,9 +63,16 @@ namespace IntegrationTests
 
         private void ConnectShouldSucceed(string url)
         {
-            using (var c = Context.ConnectionFactory.CreateConnection(url))
+            try
             {
-                c.Close();
+                using (var c = Context.ConnectionFactory.CreateConnection(url))
+                {
+                    c.Close();
+                }
+            }
+            catch (Exception e)
+            {
+                Assert.False(true, $"Exception not expected {e.Message}");
             }
         }
 
@@ -238,6 +243,46 @@ namespace IntegrationTests
                 });
 
                 Assert.Equal("'Authorization Violation'", ex.Message, StringComparer.OrdinalIgnoreCase);
+            }
+        }
+        
+        [Fact]
+        public void TestRealUserAuthenticationExpired()
+        {
+            string accountSeed = "SAAPXJRFMUYDUH3NOZKE7BS2ZDO2P4ND7G6W743MTNA3KCSFPX3HNN6AX4";
+            string accountId = "ACPWDUYSZRRF7XAEZKUAGPUH6RPICWEHSTFELYKTOWUVZ4R2XMP4QJJX";
+            string userSeed = "SUAJ44FQWKEWGRSIPRFCIGDTVYSMUMRRHB4CPFXXRG5GODO5XY7S2L45ZA";
+
+            NkeyPair accountPair = Nkeys.FromSeed(accountSeed);
+            NkeyPair userPair = Nkeys.FromSeed(userSeed);
+            string publicUserKey = userPair.EncodedPublicKey;
+            
+            long expires = 2500;
+            int wait = 5000;
+            Duration expiration = Duration.OfMillis(expires);
+            String jwt = JwtUtils.IssueUserJWT(accountPair, accountId, publicUserKey, "jnatsTestUser", expiration);
+
+            string cred = string.Format(JwtUtils.NatsUserJwtFormat, jwt, userPair.EncodedSeed);
+            string credsFile = Path.GetTempFileName();
+            File.WriteAllText(credsFile, cred);
+
+            CountdownEvent userAuthenticationExpired = new CountdownEvent(1);
+
+            using (NATSServer.CreateWithConfig(Context.Server3.Port, "operatorJnatsTest.conf"))
+            {
+                var opts = Context.GetTestOptionsWithDefaultTimeout(Context.Server3.Port);
+                opts.SetUserCredentials(credsFile);
+                opts.DisconnectedEventHandler += (sender, e) =>
+                {
+                    if (e.Error.ToString().Contains("user authentication expired"))
+                    {
+                        userAuthenticationExpired.Signal();
+                    }
+                };
+
+                IConnection c = Context.ConnectionFactory.CreateConnection(opts);
+                userAuthenticationExpired.Wait(wait);
+                Assert.True(userAuthenticationExpired.IsSet);
             }
         }
 

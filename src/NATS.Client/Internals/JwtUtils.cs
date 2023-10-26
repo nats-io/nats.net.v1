@@ -46,8 +46,8 @@ namespace NATS.Client.Internals
             "------END NATS USER JWT------\n" +
             "\n" +
             "************************* IMPORTANT *************************\n" +
-            "    NKEY Seed printed below can be used to sign and prove identity.\n" +
-            "    NKEYs are sensitive and should be treated as secrets.\n" +
+            "NKEY Seed printed below can be used to sign and prove identity.\n" +
+            "NKEYs are sensitive and should be treated as secrets.\n" +
             "\n" +
             "-----BEGIN USER NKEY SEED-----\n" +
             "{1}\n" +
@@ -173,8 +173,7 @@ namespace NATS.Client.Internals
 
             string claimName = string.IsNullOrWhiteSpace(name) ? publicUserKey : name;
 
-            return issueJWT(signingKey, publicUserKey, claimName, expiration, issuedAt, accSigningKeyPub, audience,
-                nats);
+            return issueJWT(signingKey, publicUserKey, claimName, expiration, issuedAt, accSigningKeyPub, audience, nats);
         }
 
         /// <summary>
