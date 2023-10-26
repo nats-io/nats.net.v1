@@ -11,7 +11,7 @@ namespace NATSExamples
         static void Main(string[] args)
         {
             // Set the args manually to run the code you want.
-            // args = new[] { "ClientCompatibility" };
+            // args = new[] { "IntroToMicroFramework" };
             
             if (args.Length > 0)
             {
@@ -28,7 +28,11 @@ namespace NATSExamples
                     case "KvIntro":
                         NatsByExample.KvIntro.KvIntroMain();
                         return;
-                    
+                                        
+                    case "IntroToMicroFramework":
+                        NatsByExample.IntroToMicroFramework.IntroToMicroFrameworkMain();
+                        return;
+
                     case "ScatterGather":
                         ScatterGather.ScatterGatherMain();
                         return;
@@ -53,6 +57,7 @@ namespace NATSExamples
                 + "\n   PubSub"
                 + "\n   RequestReply"
                 + "\n   KvIntro"
+                + "\n   IntroToMicroFramework"
                 + "\n   ScatterGather"
                 + "\n   ServiceCrossClientValidator" 
                 + "\n   SimplificationMigration" 
