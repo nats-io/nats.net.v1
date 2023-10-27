@@ -12,13 +12,12 @@
 // limitations under the License.
 
 using System;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
-using NATS.Client;
-using System.Reflection;
-using System.IO;
 using System.Linq;
+using System.Net.Security;
+using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
+using NATS.Client;
 using Xunit;
 
 namespace IntegrationTests
@@ -152,15 +151,17 @@ namespace IntegrationTests
             }
         }
 
-        private void TestTLSSecureConnect(bool setSecure)
+        private void TestTLSSecureConnect(bool setSecure, bool tlsFirst)
         {
-            using (NATSServer srv = NATSServer.CreateWithConfig(Context.Server1.Port, "tls.conf"))
+            string conf = tlsFirst ? "tls_first.conf" : "tls.conf";
+            using (NATSServer srv = NATSServer.CreateWithConfig(Context.Server1.Port, conf))
             {
                 // we can't call create secure connection w/ the certs setup as they are
                 // so we'll override the validation callback
                 Options opts = Context.GetTestOptions(Context.Server1.Port);
                 opts.Secure = setSecure;
                 opts.TLSRemoteCertificationValidationCallback = verifyServerCert;
+                opts.TlsFirst = tlsFirst;
 
                 using (IConnection c = Context.ConnectionFactory.CreateConnection(opts))
                 {
@@ -177,13 +178,25 @@ namespace IntegrationTests
         [Fact]
         public void TestTlsSuccessSecureConnect()
         {
-            TestTLSSecureConnect(true);
+            TestTLSSecureConnect(true, false);
         }
 
         [Fact]
         public void TestTlsSuccessSecureConnectFromServerInfo()
         {
-            TestTLSSecureConnect(false);
+            TestTLSSecureConnect(false, false);
+        }
+
+        [Fact]
+        public void TestTlsFirstDontSetSecure()
+        {
+            TestTLSSecureConnect(false, true);
+        }
+
+        [Fact]
+        public void TestTlsFirstYesSetSecure()
+        {
+            TestTLSSecureConnect(true, true);
         }
 
         [Fact]

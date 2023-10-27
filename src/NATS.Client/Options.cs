@@ -36,6 +36,7 @@ namespace NATS.Client
         bool allowReconnect = true;
         bool noEcho = false;
         bool ignoreDiscoveredServers = false;
+        bool tlsFirst = false;
         private bool clientSideLimitChecks = true;
         IServerProvider serverProvider = null;
         int maxReconnect  = Defaults.MaxReconnect;
@@ -286,6 +287,7 @@ namespace NATS.Client
             noRandomize = o.noRandomize;
             noEcho = o.noEcho;
             ignoreDiscoveredServers = o.ignoreDiscoveredServers;
+            tlsFirst = o.tlsFirst;
             clientSideLimitChecks = o.clientSideLimitChecks;
             serverProvider = o.serverProvider;
             pedantic = o.pedantic;
@@ -458,7 +460,7 @@ namespace NATS.Client
         /// </summary>
         public bool Secure
         {
-            get { return secure; }
+            get { return tlsFirst || secure; }
             set { secure = value; }
         }
 
@@ -723,6 +725,11 @@ namespace NATS.Client
         /// Whether or not to ignore discovered servers when considering for connect/reconnect
         /// </summary>
         public bool IgnoreDiscoveredServers { get => ignoreDiscoveredServers; set => ignoreDiscoveredServers = value; }
+        
+        /// <summary>
+        /// Whether or not to to do Tls Handshake First. Valid against servers 2.10.3 and later
+        /// </summary>
+        public bool TlsFirst { get => tlsFirst; set => tlsFirst = value; }
 
         /// <summary>
         /// Whether or not to make client side limit checks, currently only core publish/request max payload
@@ -855,6 +862,7 @@ namespace NATS.Client
             sb.AppendFormat("NoRandomize={0};", NoRandomize);
             sb.AppendFormat("NoEcho={0};", NoEcho);
             sb.AppendFormat("IgnoreDiscoveredServers={0};", ignoreDiscoveredServers);
+            sb.AppendFormat("TlsFirst={0};", tlsFirst);
             sb.AppendFormat("clientSideLimitChecks={0};", clientSideLimitChecks);
             sb.AppendFormat("ServerProvider={0};", serverProvider == null ? "Default" : "Provided");
             sb.AppendFormat("Pedantic={0};", Pedantic);
