@@ -740,7 +740,7 @@ namespace IntegrationTests
         public void TestExceedsMaxRequestBytesNthMessage()
         {
             TestEventHandler handler = new TestEventHandler();
-            Context.RunInJsServer(AtLeast291, handler.Modifier, c =>
+            Context.RunInJsServer(AtLeast2_9_1, handler.Modifier, c =>
             {
                 string stream = Stream(Nuid.NextGlobal());
                 string subject = Subject(Nuid.NextGlobal());
@@ -778,7 +778,7 @@ namespace IntegrationTests
         public void TestExceedsMaxRequestBytesExactBytes()
         {
             TestEventHandler handler = new TestEventHandler();
-            Context.RunInJsServer(AtLeast291, handler.Modifier, c =>
+            Context.RunInJsServer(AtLeast2_9_1, handler.Modifier, c =>
             {
                 string stream = Stream(Nuid.NextGlobal());
                 string subject = "subject-ExMaxRqBytesExactBytes";

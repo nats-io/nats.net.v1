@@ -198,13 +198,19 @@ namespace IntegrationTests
         [Fact]
         public void TestTlsFirstDontSetSecure()
         {
-            TestTLSSecureConnect(false, true, "tlsHandshakeFirst.conf", new TestServerInfo(TestSeedPorts.AutoPort.Increment()));
+            if (AtLeast2_10_3(Context.EnsureRunServerInfo()))
+            {
+                TestTLSSecureConnect(false, true, "tls_first.conf", new TestServerInfo(TestSeedPorts.AutoPort.Increment()));
+            }
         }
 
         [Fact]
         public void TestTlsFirstYesSetSecure()
         {
-            TestTLSSecureConnect(true, true, "tlsHandshakeFirst.conf", new TestServerInfo(TestSeedPorts.AutoPort.Increment()));
+            if (AtLeast2_10_3(Context.EnsureRunServerInfo()))
+            {
+                TestTLSSecureConnect(true, true, "tls_first.conf", new TestServerInfo(TestSeedPorts.AutoPort.Increment()));
+            }
         }
 
         [Fact]

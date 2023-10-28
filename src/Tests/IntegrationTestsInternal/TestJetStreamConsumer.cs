@@ -350,7 +350,7 @@ namespace IntegrationTestsInternal
 
         [Fact]
         public void TestMultipleSubjectFilters() {
-            Context.RunInJsServer(AtLeast210, c => {
+            Context.RunInJsServer(AtLeast2_10, c => {
                 // Setup
                 IJetStream js = c.CreateJetStreamContext();
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();

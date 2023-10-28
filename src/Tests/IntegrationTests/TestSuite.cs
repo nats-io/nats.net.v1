@@ -32,20 +32,24 @@ namespace IntegrationTests
             Context = context;
         }
 
-        public bool AtLeast290(IConnection c) {
-            return AtLeast290(c.ServerInfo);
+        public bool AtLeast2_9_0(IConnection c) {
+            return AtLeast2_9_0(c.ServerInfo);
         }
 
-        public bool AtLeast290(ServerInfo si) {
+        public bool AtLeast2_9_0(ServerInfo si) {
             return si.IsSameOrNewerThanVersion("2.9.0");
         }
 
-        public bool AtLeast291(ServerInfo si) {
+        public bool AtLeast2_9_1(ServerInfo si) {
             return si.IsSameOrNewerThanVersion("2.9.1");
         }
 
-        public bool AtLeast210(ServerInfo si) {
+        public bool AtLeast2_10(ServerInfo si) {
             return si.IsNewerVersionThan("2.9.99");
+        }
+
+        public bool AtLeast2_10_3(ServerInfo si) {
+            return si.IsSameOrNewerThanVersion("2.10.3");
         }
     }
 
@@ -125,6 +129,7 @@ namespace IntegrationTests
             {
                 using (var c = OpenConnection(testServerInfo.Port))
                 {
+                    InitRunServerInfo(c);
                     test(c);
                 }
             }
@@ -146,12 +151,27 @@ namespace IntegrationTests
             RunInJsServer(testServerInfo, null, optionsModifier, test);
         }
 
-        private static ServerInfo runServerInfo;
+        public static ServerInfo RunServerInfo { get; private set; }
+
+        public ServerInfo EnsureRunServerInfo() {
+            if (RunServerInfo == null) {
+                RunInServer(new TestServerInfo(TestSeedPorts.AutoPort.Increment()), c => {});
+            }
+            return RunServerInfo;
+        }
+
+        public void InitRunServerInfo(IConnection c)
+        {
+            if (RunServerInfo == null)
+            {
+                RunServerInfo = c.ServerInfo;
+            }
+        }
 
         public void RunInJsServer(TestServerInfo testServerInfo, Func<ServerInfo, bool> versionCheck, Action<Options> optionsModifier, Action<IConnection> test)
         {
-            if (versionCheck != null && runServerInfo != null) {
-                if (!versionCheck(runServerInfo)) {
+            if (versionCheck != null && RunServerInfo != null) {
+                if (!versionCheck(RunServerInfo)) {
                     return;
                 }
                 versionCheck = null; // since we've already determined it should run, null this out so we don't check below
@@ -164,10 +184,10 @@ namespace IntegrationTests
 
                 using (var c = OpenConnection(testServerInfo.Port, runOptionsModifier))
                 {
+                    InitRunServerInfo(c);
                     if (versionCheck != null)
                     {
-                        runServerInfo = c.ServerInfo;
-                        if (!versionCheck(runServerInfo)) {
+                        if (!versionCheck(RunServerInfo)) {
                             return;
                         }
                     }

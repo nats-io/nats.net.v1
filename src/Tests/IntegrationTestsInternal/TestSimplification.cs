@@ -32,7 +32,7 @@ namespace IntegrationTests
         [Fact]
         public void TestStreamContext()
         {
-            Context.RunInJsServer(AtLeast291, c => {
+            Context.RunInJsServer(AtLeast2_9_1, c => {
                 string stream = Stream(Nuid.NextGlobal());
                 string subject = Subject(Nuid.NextGlobal());
 
@@ -122,7 +122,7 @@ namespace IntegrationTests
 
         [Fact]
         public void TestFetch() {
-            Context.RunInJsServer(AtLeast291, c => {
+            Context.RunInJsServer(AtLeast2_9_1, c => {
                 string stream = Stream(Nuid.NextGlobal());
                 string subject = Subject(Nuid.NextGlobal());
 
@@ -232,7 +232,7 @@ namespace IntegrationTests
         [Fact]
         public void TestIterableConsumer()
         {
-            Context.RunInJsServer(AtLeast291, c => {
+            Context.RunInJsServer(AtLeast2_9_1, c => {
                 string streamName = Stream(Nuid.NextGlobal());
                 string subject = Subject(Nuid.NextGlobal());
                 string durable = Nuid.NextGlobal();
@@ -266,7 +266,7 @@ namespace IntegrationTests
         [Fact]
         public void TestOrderedIterableConsumerBasic() 
         {
-            Context.RunInJsServer(AtLeast291, c => {
+            Context.RunInJsServer(AtLeast2_9_1, c => {
                 string streamName = Stream(Nuid.NextGlobal());
                 string subject = Subject(Nuid.NextGlobal());
 
@@ -336,7 +336,7 @@ namespace IntegrationTests
         [Fact]
         public void TestConsumeWithHandler()
         {
-            Context.RunInJsServer(AtLeast291, c => {
+            Context.RunInJsServer(AtLeast2_9_1, c => {
                 string streamName = Stream(Nuid.NextGlobal());
                 string subject = Subject(Nuid.NextGlobal());
                 string durable = Nuid.NextGlobal();
@@ -371,7 +371,7 @@ namespace IntegrationTests
     
         [Fact]
         public void TestNext() {
-            Context.RunInJsServer(AtLeast291, c => {
+            Context.RunInJsServer(AtLeast2_9_1, c => {
                 string streamName = Stream(Nuid.NextGlobal());
                 string subject = Subject(Nuid.NextGlobal());
                 string durable = Nuid.NextGlobal();
@@ -407,7 +407,7 @@ namespace IntegrationTests
             string durable5 = Nuid.NextGlobal();
             string durable6 = Nuid.NextGlobal();
 
-            Context.RunInJsServer(AtLeast291, c => {
+            Context.RunInJsServer(AtLeast2_9_1, c => {
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
                 IJetStream js = c.CreateJetStreamContext();
     
@@ -595,7 +595,7 @@ namespace IntegrationTests
         
         [Fact]
         public void TestOrderedActives() {
-            Context.RunInJsServer(AtLeast291, c => {
+            Context.RunInJsServer(AtLeast2_9_1, c => {
                 string streamName = Stream(Nuid.NextGlobal());
                 string subject = Subject(Nuid.NextGlobal());
                 string durable = Nuid.NextGlobal();
@@ -673,7 +673,7 @@ namespace IntegrationTests
         
         [Fact]
         public void TestOrderedConsume() {
-            Context.RunInJsServer(AtLeast291, c => {
+            Context.RunInJsServer(AtLeast2_9_1, c => {
                 string streamName = Stream(Nuid.NextGlobal());
                 string subject = Subject(Nuid.NextGlobal());
 
@@ -721,7 +721,7 @@ namespace IntegrationTests
         
         [Fact]
         public void TestOrderedMultipleWays() {
-            Context.RunInJsServer(AtLeast291, c => {
+            Context.RunInJsServer(AtLeast2_9_1, c => {
                 string streamName = Stream(Nuid.NextGlobal());
                 string subject = Subject(Nuid.NextGlobal());
 
