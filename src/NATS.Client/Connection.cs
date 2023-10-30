@@ -1134,7 +1134,15 @@ namespace NATS.Client
             try
             {
                 conn.ReceiveTimeout = opts.Timeout;
-                processExpectedInfo(s);
+                if (!opts.TlsFirst)
+                {
+                    processExpectedInfo();
+                }
+                checkForSecure(s);
+                if (opts.TlsFirst)
+                {
+                    processExpectedInfo();
+                }
                 sendConnect();
             }
             catch (IOException ex)
@@ -1188,8 +1196,10 @@ namespace NATS.Client
                     }
                     catch (NATSConnectionException ex)
                     {
-                        if (!ex.IsAuthorizationViolationError() && !ex.IsAuthenticationExpiredError())
+                        if (!ex.IsAuthenticationOrAuthorizationError())
+                        {
                             throw;
+                        }
 
                         ScheduleErrorEvent(s, ex);
 
@@ -1222,7 +1232,7 @@ namespace NATS.Client
                 opts.AsyncErrorEventHandlerOrDefault(sender, new ErrEventArgs(this, subscription, ex.Message)));
         }
 
-        internal void connect()
+        internal void connect(bool reconnectOnConnect)
         {
             Exception exToThrow = null;
 
@@ -1234,11 +1244,22 @@ namespace NATS.Client
             {
                 if (status != ConnState.CONNECTED)
                 {
-                    if (exToThrow is NATSException)
-                        throw exToThrow;
-                    if (exToThrow != null)
-                        throw new NATSConnectionException("Failed to connect", exToThrow);
-                    throw new NATSNoServersException("Unable to connect to a server.");
+                    if (reconnectOnConnect)
+                    {
+                        doReconnect();
+                    }
+                    else
+                    {
+                        if (exToThrow is NATSException)
+                        {
+                            throw exToThrow;
+                        }
+                        if (exToThrow != null)
+                        {
+                            throw new NATSConnectionException("Failed to connect", exToThrow);
+                        }
+                        throw new NATSNoServersException("Unable to connect to a server.");
+                    }
                 }
             }
         }
@@ -1248,17 +1269,20 @@ namespace NATS.Client
         // only be called after the INIT protocol has been received.
         private void checkForSecure(Srv s)
         {
-            // Check to see if we need to engage TLS
-            // Check for mismatch in setups
-            if (Opts.Secure && !info.TlsRequired)
+            if (!Opts.TlsFirst)
             {
-                throw new NATSSecureConnWantedException();
-            }
-            else if (info.TlsRequired && !Opts.Secure)
-            {
-                // If the server asks us to be secure, give it
-                // a shot.
-                Opts.Secure = true;
+                // Check to see if we need to engage TLS
+                // Check for mismatch in setups
+                if (Opts.Secure && !info.TlsRequired)
+                {
+                    throw new NATSSecureConnWantedException();
+                }
+                else if (info.TlsRequired && !Opts.Secure)
+                {
+                    // If the server asks us to be secure, give it
+                    // a shot.
+                    Opts.Secure = true;
+                }
             }
 
             // Need to rewrap with bufio if options tell us we need
@@ -1272,10 +1296,9 @@ namespace NATS.Client
         // processExpectedInfo will look for the expected first INFO message
         // sent when a connection is established. The lock should be held entering.
         // Caller must lock.
-        private void processExpectedInfo(Srv s)
+        private void processExpectedInfo()
         {
             Control c;
-
             try
             {
                 conn.SendTimeout = 2;
@@ -1298,7 +1321,6 @@ namespace NATS.Client
 
             // do not notify listeners of server changes when we process the first INFO message
             processInfo(c.args, false);
-            checkForSecure(s);
         }
 
         internal void SendUnsub(long sid, int max)

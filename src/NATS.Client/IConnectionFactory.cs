@@ -26,13 +26,14 @@ namespace NATS.Client
         /// </remarks>
         /// <param name="url">A string containing the URL (or URLs) to the NATS Server. See the Remarks
         /// section for more information.</param>
+        /// <param name="reconnectOnConnect">if true, the connection will treat the initial connection as any other and attempt reconnects on failure</param>
         /// <returns>An <see cref="IConnection"/> object connected to the NATS server.</returns>
         /// <exception cref="NATSNoServersException">No connection to a NATS Server could be established.</exception>
         /// <exception cref="NATSConnectionException"><para>A timeout occurred connecting to a NATS Server.</para>
         /// <para>-or-</para>
         /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
         /// details.</para></exception>
-        IConnection CreateConnection(string url);
+        IConnection CreateConnection(string url, bool reconnectOnConnect = false);
 
         /// <summary>
         /// Attempt to connect to the NATS server referenced by <paramref name="url"/> with NATS 2.0 credentials.
@@ -44,13 +45,14 @@ namespace NATS.Client
         /// <param name="url">A string containing the URL (or URLs) to the NATS Server. See the Remarks
         /// section for more information.</param>
         /// <param name="credentialsPath">The full path to a chained credentials file.</param>
+        /// <param name="reconnectOnConnect">if true, the connection will treat the initial connection as any other and attempt reconnects on failure</param>
         /// <returns>An <see cref="IConnection"/> object connected to the NATS server.</returns>
         /// <exception cref="NATSNoServersException">No connection to a NATS Server could be established.</exception>
         /// <exception cref="NATSConnectionException"><para>A timeout occurred connecting to a NATS Server.</para>
         /// <para>-or-</para>
         /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
         /// details.</para></exception>
-        IConnection CreateConnection(string url, string credentialsPath);
+        IConnection CreateConnection(string url, string credentialsPath, bool reconnectOnConnect = false);
 
         /// <summary>
         /// Attempt to connect to the NATS server referenced by <paramref name="url"/> with NATS 2.0 credentials.
@@ -63,17 +65,19 @@ namespace NATS.Client
         /// section for more information.</param>
         /// <param name="jwt">The path to a user's public JWT credentials.</param>
         /// <param name="privateNkey">The path to a file for user user's private Nkey seed.</param>
+        /// <param name="reconnectOnConnect">if true, the connection will treat the initial connection as any other and attempt reconnects on failure</param>
         /// <returns>An <see cref="IConnection"/> object connected to the NATS server.</returns>
         /// <exception cref="NATSNoServersException">No connection to a NATS Server could be established.</exception>
         /// <exception cref="NATSConnectionException"><para>A timeout occurred connecting to a NATS Server.</para>
         /// <para>-or-</para>
         /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
         /// details.</para></exception>
-        IConnection CreateConnection(string url, string jwt, string privateNkey);
+        IConnection CreateConnection(string url, string jwt, string privateNkey, bool reconnectOnConnect = false);
 
         /// <summary>
         /// Create a connection to the NATs server using the default options.
         /// </summary>
+        /// <param name="reconnectOnConnect">if true, the connection will treat the initial connection as any other and attempt reconnects on failure</param>
         /// <returns>An <see cref="IConnection"/> object connected to the NATS server.</returns>
         /// <exception cref="NATSNoServersException">No connection to a NATS Server could be established.</exception>
         /// <exception cref="NATSConnectionException"><para>A timeout occurred connecting to a NATS Server.</para>
@@ -81,19 +85,20 @@ namespace NATS.Client
         /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
         /// details.</para></exception>
         /// <seealso cref="ConnectionFactory.GetDefaultOptions"/>
-        IConnection CreateConnection();
+        IConnection CreateConnection(bool reconnectOnConnect = false);
 
         /// <summary>
         /// Create a connection to a NATS Server defined by the given options.
         /// </summary>
         /// <param name="opts">The NATS client options to use for this connection.</param>
+        /// <param name="reconnectOnConnect">if true, the connection will treat the initial connection as any other and attempt reconnects on failure</param>
         /// <returns>An <see cref="IConnection"/> object connected to the NATS server.</returns>
         /// <exception cref="NATSNoServersException">No connection to a NATS Server could be established.</exception>
         /// <exception cref="NATSConnectionException"><para>A timeout occurred connecting to a NATS Server.</para>
         /// <para>-or-</para>
         /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
         /// details.</para></exception>
-        IConnection CreateConnection(Options opts);
+        IConnection CreateConnection(Options opts, bool reconnectOnConnect = false);
 
         /// <summary>
         /// Attempt to connect to the NATS server using TLS referenced by <paramref name="url"/>.
@@ -103,6 +108,7 @@ namespace NATS.Client
         /// Comma seperated arrays are also supported, e.g. urlA, urlB.</para>
         /// </remarks>
         /// <param name="url">A string containing the URL (or URLs) to the NATS Server. See the Remarks
+        /// <param name="reconnectOnConnect">if true, the connection will treat the initial connection as any other and attempt reconnects on failure</param>
         /// section for more information.</param>
         /// <returns>An <see cref="IConnection"/> object connected to the NATS server.</returns>
         /// <exception cref="NATSNoServersException">No connection to a NATS Server could be established.</exception>
@@ -110,11 +116,12 @@ namespace NATS.Client
         /// <para>-or-</para>
         /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
         /// details.</para></exception>
-        IConnection CreateSecureConnection(string url);
+        IConnection CreateSecureConnection(string url, bool reconnectOnConnect = false);
 
         /// <summary>
         /// Attempt to connect to the NATS server, with an encoded connection, using the default options.
         /// </summary>
+        /// <param name="reconnectOnConnect">if true, the connection will treat the initial connection as any other and attempt reconnects on failure</param>
         /// <returns>An <see cref="IEncodedConnection"/> object connected to the NATS server.</returns>
         /// <seealso cref="ConnectionFactory.GetDefaultOptions"/>
         /// <exception cref="NATSNoServersException">No connection to a NATS Server could be established.</exception>
@@ -122,7 +129,7 @@ namespace NATS.Client
         /// <para>-or-</para>
         /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
         /// details.</para></exception>
-        IEncodedConnection CreateEncodedConnection();
+        IEncodedConnection CreateEncodedConnection(bool reconnectOnConnect = false);
 
         /// <summary>
         /// Attempt to connect to the NATS server, with an encoded connection, referenced by <paramref name="url"/>.
@@ -133,24 +140,26 @@ namespace NATS.Client
         /// </remarks>
         /// <param name="url">A string containing the URL (or URLs) to the NATS Server. See the Remarks
         /// section for more information.</param>
+        /// <param name="reconnectOnConnect">if true, the connection will treat the initial connection as any other and attempt reconnects on failure</param>
         /// <returns>An <see cref="IEncodedConnection"/> object connected to the NATS server.</returns>
         /// <exception cref="NATSNoServersException">No connection to a NATS Server could be established.</exception>
         /// <exception cref="NATSConnectionException"><para>A timeout occurred connecting to a NATS Server.</para>
         /// <para>-or-</para>
         /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
         /// details.</para></exception>
-        IEncodedConnection CreateEncodedConnection(string url);
+        IEncodedConnection CreateEncodedConnection(string url, bool reconnectOnConnect = false);
 
         /// <summary>
         /// Attempt to connect to the NATS server, with an encoded connection, using the given options.
         /// </summary>
         /// <param name="opts">The NATS client options to use for this connection.</param>
+        /// <param name="reconnectOnConnect">if true, the connection will treat the initial connection as any other and attempt reconnects on failure</param>
         /// <returns>An <see cref="IEncodedConnection"/> object connected to the NATS server.</returns>
         /// <exception cref="NATSNoServersException">No connection to a NATS Server could be established.</exception>
         /// <exception cref="NATSConnectionException"><para>A timeout occurred connecting to a NATS Server.</para>
         /// <para>-or-</para>
         /// <para>An exception was encountered while connecting to a NATS Server. See <see cref="Exception.InnerException"/> for more
         /// details.</para></exception>
-        IEncodedConnection CreateEncodedConnection(Options opts);
+        IEncodedConnection CreateEncodedConnection(Options opts, bool reconnectOnConnect = false);
     }
 }

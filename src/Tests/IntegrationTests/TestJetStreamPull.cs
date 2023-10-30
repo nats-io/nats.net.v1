@@ -19,7 +19,6 @@ using NATS.Client;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using Xunit;
-using Xunit.Abstractions;
 using static UnitTests.TestBase;
 using static IntegrationTests.JetStreamTestBase;
 using static NATS.Client.Internals.JetStreamConstants;
@@ -29,15 +28,7 @@ namespace IntegrationTests
 {
     public class TestJetStreamPull : TestSuite<AutoServerSuiteContext>
     {
-        private readonly ITestOutputHelper output;
-
-        public TestJetStreamPull(ITestOutputHelper output, AutoServerSuiteContext context) : base(context)
-        {
-            this.output = output;
-            Console.SetOut(new ConsoleWriter(output));
-        }
-
-        // public TestJetStreamPull(AutoServerSuiteContext context) : base(context) {}
+        public TestJetStreamPull(AutoServerSuiteContext context) : base(context) {}
 
         [Fact]
         public void TestFetch()
@@ -749,7 +740,7 @@ namespace IntegrationTests
         public void TestExceedsMaxRequestBytesNthMessage()
         {
             TestEventHandler handler = new TestEventHandler();
-            Context.RunInJsServer(AtLeast291, handler.Modifier, c =>
+            Context.RunInJsServer(AtLeast2_9_1, handler.Modifier, c =>
             {
                 string stream = Stream(Nuid.NextGlobal());
                 string subject = Subject(Nuid.NextGlobal());
@@ -787,7 +778,7 @@ namespace IntegrationTests
         public void TestExceedsMaxRequestBytesExactBytes()
         {
             TestEventHandler handler = new TestEventHandler();
-            Context.RunInJsServer(AtLeast291, handler.Modifier, c =>
+            Context.RunInJsServer(AtLeast2_9_1, handler.Modifier, c =>
             {
                 string stream = Stream(Nuid.NextGlobal());
                 string subject = "subject-ExMaxRqBytesExactBytes";

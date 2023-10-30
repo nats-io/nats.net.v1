@@ -12,14 +12,15 @@
 // limitations under the License.
 
 using System;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
-using NATS.Client;
-using System.Reflection;
-using System.IO;
 using System.Linq;
+using System.Net.Security;
+using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
+using NATS.Client;
+using UnitTests;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IntegrationTests
 {
@@ -28,7 +29,14 @@ namespace IntegrationTests
     /// </summary>
     public class TestTls : TestSuite<TlsSuiteContext>
     {
-        public TestTls(TlsSuiteContext context) : base(context) { }
+        // public TestTls(TlsSuiteContext context) : base(context) { }
+        private readonly ITestOutputHelper output;
+
+        public TestTls(ITestOutputHelper output, TlsSuiteContext context) : base(context)
+        {
+            this.output = output;
+            Console.SetOut(new TestBase.ConsoleWriter(output));
+        }
 
         // A hack to avoid issues with our test self signed cert.
         // We don't want to require the runner of the test to install the 
@@ -152,15 +160,16 @@ namespace IntegrationTests
             }
         }
 
-        private void TestTLSSecureConnect(bool setSecure)
+        private void TestTLSSecureConnect(bool setSecure, bool tlsFirst, string conf, TestServerInfo tsi)
         {
-            using (NATSServer srv = NATSServer.CreateWithConfig(Context.Server1.Port, "tls.conf"))
+            using (NATSServer srv = NATSServer.CreateWithConfig(tsi.Port, conf))
             {
                 // we can't call create secure connection w/ the certs setup as they are
                 // so we'll override the validation callback
-                Options opts = Context.GetTestOptions(Context.Server1.Port);
+                Options opts = Context.GetTestOptions(tsi.Port);
                 opts.Secure = setSecure;
                 opts.TLSRemoteCertificationValidationCallback = verifyServerCert;
+                opts.TlsFirst = tlsFirst;
 
                 using (IConnection c = Context.ConnectionFactory.CreateConnection(opts))
                 {
@@ -177,13 +186,31 @@ namespace IntegrationTests
         [Fact]
         public void TestTlsSuccessSecureConnect()
         {
-            TestTLSSecureConnect(true);
+            TestTLSSecureConnect(true, false, "tls.conf", Context.Server1);
         }
 
         [Fact]
         public void TestTlsSuccessSecureConnectFromServerInfo()
         {
-            TestTLSSecureConnect(false);
+            TestTLSSecureConnect(false, false, "tls.conf", Context.Server1);
+        }
+
+        [Fact]
+        public void TestTlsFirstDontSetSecure()
+        {
+            if (AtLeast2_10_3(Context.EnsureRunServerInfo()))
+            {
+                TestTLSSecureConnect(false, true, "tls_first.conf", new TestServerInfo(TestSeedPorts.AutoPort.Increment()));
+            }
+        }
+
+        [Fact]
+        public void TestTlsFirstYesSetSecure()
+        {
+            if (AtLeast2_10_3(Context.EnsureRunServerInfo()))
+            {
+                TestTLSSecureConnect(true, true, "tls_first.conf", new TestServerInfo(TestSeedPorts.AutoPort.Increment()));
+            }
         }
 
         [Fact]

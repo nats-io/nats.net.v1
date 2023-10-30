@@ -33,15 +33,14 @@ namespace NATS.Client
     {
         public NATSConnectionException(string err) : base(err) { }
         public NATSConnectionException(string err, Exception innerEx) : base(err, innerEx) { }
-    }
 
-    internal static class NATSConnectionExceptionExtensions
-    {
-        internal static bool IsAuthorizationViolationError(this NATSConnectionException ex)
-            => ex?.Message.Equals("'authorization violation'", StringComparison.OrdinalIgnoreCase) == true;
-        
-        internal static bool IsAuthenticationExpiredError(this NATSConnectionException ex)
-            => ex?.Message.Equals("'authentication expired'", StringComparison.OrdinalIgnoreCase) == true;
+        public bool IsAuthenticationOrAuthorizationError()
+        {
+            string lowerMessage = Message.ToLower();
+            return lowerMessage.Contains("user authentication")
+                   || lowerMessage.Contains("authorization violation")
+                   || lowerMessage.Contains("authentication expired");
+        }
     }
 
     /// <summary>

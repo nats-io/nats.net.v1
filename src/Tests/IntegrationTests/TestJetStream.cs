@@ -167,7 +167,7 @@ namespace IntegrationTests
                 js.PushSubscribeAsync("", Queue(102), (o, a) => { }, false, psoBind);
                 
                 // test 2.9.0
-                if (AtLeast290(c)) {
+                if (AtLeast2_9_0(c)) {
                     ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithName(Name(1)).Build();
                     pso = PushSubscribeOptions.Builder().WithConfiguration(cc).Build();
                     IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(SUBJECT, pso);
