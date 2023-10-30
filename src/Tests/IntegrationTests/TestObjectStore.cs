@@ -489,6 +489,22 @@ namespace IntegrationTests
         }
 
         [Fact]
+        public void TestCompression() {
+            string bucketName = Bucket(Nuid.NextGlobal());
+
+            Context.RunInJsServer(AtLeast2_10, nc =>
+            {
+                IObjectStoreManagement osm = nc.CreateObjectStoreManagementContext();
+
+                ObjectStoreStatus oss = osm.Create(ObjectStoreConfiguration.Builder(bucketName)
+                    .WithStorageType(StorageType.Memory)
+                    .WithCompression(true)
+                    .Build());
+                Assert.True(oss.IsCompressed);
+            });
+        }
+
+        [Fact]
         public void TestWatch() {
             TestObjectStoreWatcher fullB4Watcher = new TestObjectStoreWatcher("fullB4Watcher", true);
             TestObjectStoreWatcher delB4Watcher = new TestObjectStoreWatcher("delB4Watcher", true, IgnoreDelete);

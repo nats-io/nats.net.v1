@@ -19,6 +19,9 @@ namespace NATS.Client.ObjectStore
 {
     public class ObjectStoreConfiguration
     {
+        internal static readonly CompressionOption JsCompressionYes = CompressionOption.S2;
+        internal static readonly CompressionOption JsCompressionNo = CompressionOption.None;
+
         internal StreamConfiguration BackingConfig { get; }
         
         /// <summary>
@@ -63,6 +66,11 @@ namespace NATS.Client.ObjectStore
         /// Placement directives to consider when placing replicas of this stream
         /// </summary>
         public Placement Placement => BackingConfig.Placement;
+
+        /// <summary>
+        /// Compression setting
+        /// </summary>
+        public bool IsCompressed => BackingConfig.CompressionOption != JsCompressionNo;
 
         /// <summary>
         /// Creates a builder for the ObjectStoreConfiguration. 
@@ -202,6 +210,17 @@ namespace NATS.Client.ObjectStore
             }
 
             /// <summary>
+            /// Set whether to have compression.
+            /// </summary>
+            /// <param name="compression">true to use the default compression algorithm of the Object Store backing.</param>
+            /// <returns>The ObjectStoreConfigurationBuilder</returns>
+            public ObjectStoreConfigurationBuilder WithCompression(bool compression)
+            {
+                scBuilder.WithCompressionOption(compression ? JsCompressionYes : JsCompressionNo);
+                return this;
+            }
+
+            /// <summary>
             /// Builds the ObjectStoreConfiguration
             /// </summary>
             /// <returns>the ObjectStoreConfiguration</returns>
@@ -220,7 +239,7 @@ namespace NATS.Client.ObjectStore
 
         public override string ToString()
         {
-            return $"BucketName: {BucketName}, Description: {Description}, MaxBucketSize: {MaxBucketSize}, Ttl: {Ttl}, StorageType: {StorageType}, Replicas: {Replicas} Placement: {Placement}";
+            return $"BucketName: {BucketName}, Description: {Description}, MaxBucketSize: {MaxBucketSize}, Ttl: {Ttl}, StorageType: {StorageType}, Replicas: {Replicas} Placement: {Placement}, IsCompressed: {IsCompressed}";
         }
     }
 }

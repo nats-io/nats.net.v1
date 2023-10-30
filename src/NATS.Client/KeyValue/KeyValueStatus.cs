@@ -94,6 +94,11 @@ namespace NATS.Client.KeyValue
         public Republish Republish => Config.Republish;
 
         /// <summary>
+        /// Compression setting
+        /// </summary>
+        public bool IsCompressed => Config.IsCompressed;
+
+        /// <summary>
         /// The name of the type of backing store, currently only "JetStream"
         /// </summary>
         public string BackingStore => "JetStream";

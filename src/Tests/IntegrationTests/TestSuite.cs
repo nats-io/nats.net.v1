@@ -75,8 +75,8 @@ namespace IntegrationTests
         public const int RxSuite = 11517; //1pc
         public const int AsyncAwaitDeadlocksSuite = 11518; //1pc
         public const int ConnectionIpV6Suite = 11519; //1pc
-        public const int KvSuite = 11520; //3pc
-        public const int ConnectionBehaviorSuite = 11523; //2pc
+        public const int KvSuite = 11520; //4pc
+        public const int ConnectionBehaviorSuite = 11524; //2pc
 
         public static InterlockedInt AutoPort = new InterlockedInt(11550);
     }
@@ -477,9 +477,11 @@ namespace IntegrationTests
         public readonly TestServerInfo Server1 = new TestServerInfo(SeedPort);
         public readonly TestServerInfo Server2 = new TestServerInfo(SeedPort + 1);
         public readonly TestServerInfo Server3 = new TestServerInfo(SeedPort + 2);
+        public readonly TestServerInfo Server4 = new TestServerInfo(SeedPort + 3);
 
-        public void RunInJsServer(Action<IConnection> test) => base.RunInJsServer(Server1, test);
-        public void RunInServer(Action<IConnection> test) => base.RunInServer(Server1, test);
+        public void RunInJsServer(Action<IConnection> test) => base.RunInJsServer(Server4, test);
+        public void RunInJsServer(Func<ServerInfo, bool> versionCheck, Action<IConnection> test) => base.RunInJsServer(Server4, versionCheck, null, test);
+        public void RunInServer(Action<IConnection> test) => base.RunInServer(Server4, test);
         public void RunInJsHubLeaf(Action<IConnection, IConnection> test) => 
             base.RunInJsHubLeaf(Server1, Server2, Server3, test);
     }

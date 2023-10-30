@@ -40,6 +40,7 @@ namespace UnitTests.JetStream
                 .WithPlacement(p)
                 .WithRepublish(r)
                 .WithAllowDirect(true)
+                .WithCompression(true)
                 .Build();
             Validate(kvc);
 
@@ -70,6 +71,7 @@ namespace UnitTests.JetStream
             Assert.Equal("src", kvc.Republish.Source);
             Assert.Equal("dest", kvc.Republish.Destination);
             Assert.True(kvc.Republish.HeadersOnly);
+            Assert.True(kvc.IsCompressed);
         }
 
         [Fact]
