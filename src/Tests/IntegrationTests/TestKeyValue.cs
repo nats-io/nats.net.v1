@@ -78,6 +78,7 @@ namespace IntegrationTests
                 Assert.Equal(1, kvc.Replicas);
                 Assert.Equal(0U, status.EntryCount);
                 Assert.Equal("JetStream", status.BackingStore);
+                Assert.False(status.IsCompressed);
 
                 // get the kv context for the specific bucket
                 IKeyValue kv = c.CreateKeyValueContext(BUCKET);
@@ -1142,6 +1143,23 @@ namespace IntegrationTests
                 else {
                     Assert.True(dp == DiscardPolicy.New || dp == DiscardPolicy.Old);
                 }
+            });
+        }
+
+        [Fact]
+        public void TestCompression()
+        {
+            Context.RunInJsServer(AtLeast2_10, c =>
+            {
+                IKeyValueManagement kvm = c.CreateKeyValueManagementContext();
+                
+                // create bucket
+                KeyValueStatus status = kvm.Create(KeyValueConfiguration.Builder()
+                    .WithName(Bucket(1))
+                    .WithCompression(true)
+                    .WithStorageType(StorageType.Memory)
+                    .Build());
+                Assert.True(status.IsCompressed);
             });
         }
 

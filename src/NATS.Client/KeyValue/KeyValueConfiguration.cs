@@ -21,6 +21,9 @@ namespace NATS.Client.KeyValue
 {
     public class KeyValueConfiguration
     {
+        internal static readonly CompressionOption JsCompressionYes = CompressionOption.S2;
+        internal static readonly CompressionOption JsCompressionNo = CompressionOption.None;
+
         internal StreamConfiguration BackingConfig { get; }
         
         /// <summary>
@@ -85,7 +88,12 @@ namespace NATS.Client.KeyValue
         /// Allow Direct setting
         /// </summary>
         public bool AllowDirect => BackingConfig.AllowDirect;
-            
+
+        /// <summary>
+        /// Compression setting
+        /// </summary>
+        public bool IsCompressed => BackingConfig.CompressionOption != JsCompressionNo;
+        
         /// <summary>
         /// Creates a builder for the KeyValueConfiguration. 
         /// </summary>
@@ -344,6 +352,17 @@ namespace NATS.Client.KeyValue
             }
 
             /// <summary>
+            /// Set whether to have compression.
+            /// </summary>
+            /// <param name="compression">true to use the default compression algorithm of the KV backing store.</param>
+            /// <returns>The KeyValueConfigurationBuilder</returns>
+            public KeyValueConfigurationBuilder WithCompression(bool compression)
+            {
+                scBuilder.WithCompressionOption(compression ? JsCompressionYes : JsCompressionNo);
+                return this;
+            }
+
+            /// <summary>
             /// Builds the KeyValueConfiguration
             /// </summary>
             /// <returns>the KeyValueConfiguration</returns>
@@ -391,7 +410,7 @@ namespace NATS.Client.KeyValue
 
         public override string ToString()
         {
-            return $"BucketName: {BucketName}, Description: {Description}, MaxHistoryPerKey: {MaxHistoryPerKey}, MaxBucketSize: {MaxBucketSize}, MaxValueSize: {MaxValueSize}, Ttl: {Ttl}, StorageType: {StorageType}, Replicas: {Replicas} Placement: {Placement}, Republish: {Republish}";
+            return $"BucketName: {BucketName}, Description: {Description}, MaxHistoryPerKey: {MaxHistoryPerKey}, MaxBucketSize: {MaxBucketSize}, MaxValueSize: {MaxValueSize}, Ttl: {Ttl}, StorageType: {StorageType}, Replicas: {Replicas} Placement: {Placement}, Republish: {Republish}, IsCompressed: {IsCompressed}";
         }
     }
 }
