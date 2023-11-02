@@ -17,6 +17,7 @@ using System.Text;
 using System.Threading;
 using NATS.Client;
 using NATS.Client.Internals;
+using NATS.Client.Internals.SimpleJSON;
 using NATS.Client.JetStream;
 using Xunit;
 using static UnitTests.TestBase;
@@ -706,13 +707,27 @@ namespace IntegrationTests
             });
         }
 
+        class BadPullRequestOptions : PullRequestOptions
+        {
+            public BadPullRequestOptions() : 
+                base(PullRequestOptions.Builder(1).WithNoWait().WithIdleHeartbeat(1)) {}
+            
+            public override JSONNode ToJsonNode()
+            {
+                JSONObject jso = new JSONObject {[ApiConstants.Batch] = 1};
+                jso[ApiConstants.NoWait] = true;
+                jso[ApiConstants.IdleHeartbeat] = Duration.OfMillis(1).Nanos;
+                return jso;
+            }
+        }
+
         [Fact]
         public void TestBadRequest()
         {
             TestConflictStatus(BadRequest, TypeError, null, (jsm, js, stream, subject) => {
                 PullSubscribeOptions so = Builder().BuildPullSubscribeOptions();
                 IJetStreamPullSubscription sub = js.PullSubscribe(subject, so);
-                sub.Pull(PullRequestOptions.Builder(1).WithNoWait().WithIdleHeartbeat(1).Build());
+                sub.Pull(new BadPullRequestOptions());
                 return sub;
             });
         }

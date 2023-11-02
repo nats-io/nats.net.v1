@@ -20,7 +20,7 @@ namespace NATS.Client.JetStream
     /// <summary>
     /// The PullRequestOptions class specifies the options for pull requests
     /// </summary>
-    public sealed class PullRequestOptions : JsonSerializable
+    public class PullRequestOptions : JsonSerializable
     {
         /// <summary>
         /// The size of the batch
@@ -47,7 +47,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         public Duration IdleHeartbeat { get; }
 
-        private PullRequestOptions(PullRequestOptionsBuilder pro)
+        protected PullRequestOptions(PullRequestOptionsBuilder pro)
         {
             BatchSize = pro._batchSize;
             MaxBytes = pro._maxBytes;
