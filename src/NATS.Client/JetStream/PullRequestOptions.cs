@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 
@@ -193,6 +194,18 @@ namespace NATS.Client.JetStream
             public PullRequestOptions Build() 
             {
                 Validator.ValidateGtZero(_batchSize, "Pull batch size");
+                if (_idleHeartbeat != null) {
+                    long idleNanosTemp = _idleHeartbeat.Nanos * 2;
+                    if (idleNanosTemp > 0) {
+                        if (_expiresIn == null) {
+                            throw new ArgumentException("Idle Heartbeat not allowed without expiration.");
+                        }
+                        long expiresNanos = _expiresIn.Nanos;
+                        if (idleNanosTemp > expiresNanos) {
+                            throw new ArgumentException("Idle Heartbeat cannot be more than half the expiration.");
+                        }
+                    }
+                }                
                 return new PullRequestOptions(this);
             }
         }
