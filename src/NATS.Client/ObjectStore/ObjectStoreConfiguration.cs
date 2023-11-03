@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using static NATS.Client.JetStream.StreamConfiguration;
@@ -70,7 +71,12 @@ namespace NATS.Client.ObjectStore
         /// <summary>
         /// Compression setting
         /// </summary>
-        public bool IsCompressed => BackingConfig.CompressionOption != JsCompressionNo;
+        public bool IsCompressed => BackingConfig.CompressionOption == JsCompressionYes;
+
+        /// <summary>
+        ///  Metadata
+        /// </summary>
+        public IDictionary<string, string> Metadata => BackingConfig.Metadata;
 
         /// <summary>
         /// Creates a builder for the ObjectStoreConfiguration. 
@@ -217,6 +223,17 @@ namespace NATS.Client.ObjectStore
             public ObjectStoreConfigurationBuilder WithCompression(bool compression)
             {
                 scBuilder.WithCompressionOption(compression ? JsCompressionYes : JsCompressionNo);
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the metadata for the configuration 
+            /// </summary>
+            /// <param name="metadata">the metadata dictionary</param>
+            /// <returns>The ObjectStoreConfigurationBuilder</returns>
+            public ObjectStoreConfigurationBuilder WithMetadata(IDictionary<string, string> metadata)
+            {
+                scBuilder.WithMetadata(metadata);
                 return this;
             }
 

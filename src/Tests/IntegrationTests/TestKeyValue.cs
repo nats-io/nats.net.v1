@@ -52,11 +52,15 @@ namespace IntegrationTests
                 IKeyValueManagement kvm = c.CreateKeyValueManagementContext();
                 c.CreateKeyValueManagementContext(KeyValueOptions.Builder(DefaultJsOptions).Build()); // coverage
 
+                IDictionary<string, string> metadata = new Dictionary<string, string>();
+                metadata["foo"] = "bar";
+
                 // create the bucket
                 KeyValueConfiguration kvc = KeyValueConfiguration.Builder()
                     .WithName(BUCKET)
                     .WithMaxHistoryPerKey(3)
                     .WithStorageType(StorageType.Memory)
+                    .WithMetadata(metadata)
                     .Build();
 
                 KeyValueStatus status = kvm.Create(kvc);
@@ -79,6 +83,10 @@ namespace IntegrationTests
                 Assert.Equal(0U, status.EntryCount);
                 Assert.Equal("JetStream", status.BackingStore);
                 Assert.False(status.IsCompressed);
+                Assert.Equal(1, kvc.Metadata.Count);
+                Assert.Equal("bar", kvc.Metadata["foo"]);
+                Assert.Equal(1, status.Metadata.Count);
+                Assert.Equal("bar", status.Metadata["foo"]);
 
                 // get the kv context for the specific bucket
                 IKeyValue kv = c.CreateKeyValueContext(BUCKET);

@@ -702,7 +702,7 @@ namespace NATS.Client.JetStream
             /// Sets the metadata for the configuration 
             /// </summary>
             /// <param name="metadata">the metadata dictionary</param>
-            /// <returns>The ConsumerConfigurationBuilder</returns>
+            /// <returns>The StreamConfigurationBuilder</returns>
             public StreamConfigurationBuilder WithMetadata(IDictionary<string, string> metadata) {
                 _metadata.Clear();
                 if (metadata != null)

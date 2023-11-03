@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 
@@ -77,6 +78,11 @@ namespace NATS.Client.ObjectStore
         /// Compression setting
         /// </summary>
         public bool IsCompressed => Config.IsCompressed;
+
+        /// <summary>
+        ///  Metadata
+        /// </summary>
+        public IDictionary<string, string> Metadata => Config.Metadata;
 
         /// <summary>
         /// The name of the type of backing store, currently only "JetStream"
