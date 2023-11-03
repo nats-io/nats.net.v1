@@ -17,6 +17,7 @@ using System.Text;
 using System.Threading;
 using NATS.Client;
 using NATS.Client.Internals;
+using NATS.Client.Internals.SimpleJSON;
 using NATS.Client.JetStream;
 using Xunit;
 using static UnitTests.TestBase;
@@ -536,6 +537,9 @@ namespace IntegrationTests
         {
             Assert.Throws<ArgumentException>(() => PullRequestOptions.Builder(0).Build());
             Assert.Throws<ArgumentException>(() => PullRequestOptions.Builder(-1).Build());
+            Assert.Throws<ArgumentException>(() => PullRequestOptions.Builder(1).WithIdleHeartbeat(1).Build());
+            Assert.Throws<ArgumentException>(() => PullRequestOptions.Builder(1).WithNoWait().WithIdleHeartbeat(1).Build());
+            Assert.Throws<ArgumentException>(() => PullRequestOptions.Builder(1).WithExpiresIn(30000).WithIdleHeartbeat(15001).Build());
 
             PullRequestOptions pro = PullRequestOptions.Builder(11).Build();
             Assert.Equal(11, pro.BatchSize);
@@ -547,24 +551,24 @@ namespace IntegrationTests
             pro = PullRequestOptions.Builder(31)
                 .WithMaxBytes(32)
                 .WithExpiresIn(33)
-                .WithIdleHeartbeat(34)
+                .WithIdleHeartbeat(16)
                 .WithNoWait()
                 .Build();
             Assert.Equal(31, pro.BatchSize);
             Assert.Equal(32, pro.MaxBytes);
             Assert.Equal(33, pro.ExpiresIn.Millis);
-            Assert.Equal(34, pro.IdleHeartbeat.Millis);
+            Assert.Equal(16, pro.IdleHeartbeat.Millis);
             Assert.True(pro.NoWait);
 
             pro = PullRequestOptions.Builder(41)
                 .WithExpiresIn(Duration.OfMillis(43))
-                .WithIdleHeartbeat(Duration.OfMillis(44))
+                .WithIdleHeartbeat(Duration.OfMillis(21))
                 .WithNoWait(false) // just coverage of this method
                 .Build();
             Assert.Equal(41, pro.BatchSize);
             Assert.Equal(0, pro.MaxBytes);
             Assert.Equal(43, pro.ExpiresIn.Millis);
-            Assert.Equal(44, pro.IdleHeartbeat.Millis);
+            Assert.Equal(21, pro.IdleHeartbeat.Millis);
             Assert.False(pro.NoWait);
         }
 
@@ -703,13 +707,27 @@ namespace IntegrationTests
             });
         }
 
+        class BadPullRequestOptions : PullRequestOptions
+        {
+            public BadPullRequestOptions() : 
+                base(PullRequestOptions.Builder(1).WithNoWait().WithIdleHeartbeat(1)) {}
+            
+            public override JSONNode ToJsonNode()
+            {
+                JSONObject jso = new JSONObject {[ApiConstants.Batch] = 1};
+                jso[ApiConstants.NoWait] = true;
+                jso[ApiConstants.IdleHeartbeat] = Duration.OfMillis(1).Nanos;
+                return jso;
+            }
+        }
+
         [Fact]
         public void TestBadRequest()
         {
             TestConflictStatus(BadRequest, TypeError, null, (jsm, js, stream, subject) => {
                 PullSubscribeOptions so = Builder().BuildPullSubscribeOptions();
                 IJetStreamPullSubscription sub = js.PullSubscribe(subject, so);
-                sub.Pull(PullRequestOptions.Builder(1).WithNoWait().WithIdleHeartbeat(1).Build());
+                sub.Pull(new BadPullRequestOptions());
                 return sub;
             });
         }
