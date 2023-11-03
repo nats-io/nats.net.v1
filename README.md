@@ -14,6 +14,8 @@ A [C# .NET](https://msdn.microsoft.com/en-us/vstudio/aa496123.aspx) client for t
 ## Getting started
 The easiest and recommended way to start using NATS in your .NET projects, is to use the [NuGet package]((https://www.nuget.org/packages/NATS.Client)). For examples on how to use the client, see below or in any of the included sample projects.
 
+**Check out [NATS by example](https://natsbyexample.com) - An evolving collection of runnable, cross-client reference examples for NATS.**
+
 ## Get up and running with the source code
 First, download the source code:
 
