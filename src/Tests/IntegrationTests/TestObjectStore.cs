@@ -46,11 +46,15 @@ namespace IntegrationTests
                 IObjectStoreManagement osm = nc.CreateObjectStoreManagementContext();
                 nc.CreateObjectStoreManagementContext(ObjectStoreOptions.Builder(DefaultJsOptions).Build()); // coverage
 
+                IDictionary<string, string> metadata = new Dictionary<string, string>();
+                metadata["foo"] = "bar";
+
                 // create the bucket
                 ObjectStoreConfiguration osc = ObjectStoreConfiguration.Builder(bucketName)
                     .WithDescription(Plain)
                     .WithTtl(Duration.OfHours(24))
                     .WithStorageType(StorageType.Memory)
+                    .WithMetadata(metadata)
                     .Build();
 
                 ObjectStoreStatus status = osm.Create(osc);
@@ -177,6 +181,8 @@ namespace IntegrationTests
             Assert.NotNull(status.Config); // coverage
             Assert.NotNull(status.BackingStreamInfo); // coverage
             Assert.Equal("JetStream", status.BackingStore);
+            Assert.Equal(1, status.Metadata.Count);
+            Assert.Equal("bar", status.Metadata["foo"]);
         }
 
         private MemoryStream ValidateGet(string bucketName, IObjectStore os, long len, long chunks, int chunkSize) {
