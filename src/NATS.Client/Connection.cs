@@ -1177,7 +1177,7 @@ namespace NATS.Client
             {
                 exToThrow = null;
 
-                NATSConnectionException natsAuthEx = null;
+                String lastAuthExMessage = null;
 
                 for(var i = 0; i < 6; i++) //Precaution to not end up in server returning ExTypeA, ExTypeB, ExTypeA etc.
                 {
@@ -1196,16 +1196,18 @@ namespace NATS.Client
                     }
                     catch (NATSConnectionException ex)
                     {
-                        if (!ex.IsAuthenticationOrAuthorizationError())
+                        string message = ex.Message.ToLower();
+                        if (!NATSException.IsAuthenticationOrAuthorizationError(message, true))
                         {
                             throw;
                         }
 
                         ScheduleErrorEvent(s, ex);
 
-                        if (natsAuthEx == null || !natsAuthEx.Message.Equals(ex.Message, StringComparison.OrdinalIgnoreCase))
+                        // avoiding double the same
+                        if (lastAuthExMessage == null || !lastAuthExMessage.Equals(message))
                         {
-                            natsAuthEx = ex;
+                            lastAuthExMessage = message;
                             continue;
                         }
 
@@ -2448,9 +2450,6 @@ namespace NATS.Client
         // sets the connection's lastError.
         internal void processErr(MemoryStream errorStream)
         {
-            bool invokeDelegates = false;
-            Exception ex = null;
-
             string s = getNormalizedError(errorStream);
 
             if (IC.STALE_CONNECTION.Equals(s))
@@ -2466,7 +2465,9 @@ namespace NATS.Client
             }
             else
             {
-                ex = new NATSException("Error from processErr(): " + s);
+                NATSException ex = new NATSException("Error from processErr(): " + s);
+                bool invokeDelegates = false;
+                
                 lock (mu)
                 {
                     lastEx = ex;
@@ -2478,6 +2479,11 @@ namespace NATS.Client
                 }
 
                 close(ConnState.CLOSED, invokeDelegates, ex);
+
+                if (NATSException.IsAuthenticationOrAuthorizationError(s))
+                {
+                    processReconnect();
+                }
             }
         }
 
