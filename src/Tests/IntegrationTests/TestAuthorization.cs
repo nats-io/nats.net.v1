@@ -18,7 +18,9 @@ using System.Reflection;
 using System.Threading;
 using NATS.Client;
 using NATS.Client.Internals;
+using UnitTests;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IntegrationTests
 {
@@ -27,7 +29,15 @@ namespace IntegrationTests
     /// </summary>
     public class TestAuthorization : TestSuite<AuthorizationSuiteContext>
     {
-        public TestAuthorization(AuthorizationSuiteContext context) : base(context) {}
+        private readonly ITestOutputHelper output;
+
+        public TestAuthorization(ITestOutputHelper output, AuthorizationSuiteContext context) : base(context)
+        {
+            this.output = output;
+            Console.SetOut(new TestBase.ConsoleWriter(output));
+        }
+
+        // public TestAuthorization(AuthorizationSuiteContext context) : base(context) {}
 
         int hitDisconnect;
 
@@ -261,23 +271,34 @@ namespace IntegrationTests
             string credsFile = Path.GetTempFileName();
             File.WriteAllText(credsFile, cred);
 
-            CountdownEvent userAuthenticationExpired = new CountdownEvent(1);
+            CountdownEvent userAuthenticationExpiredCde = new CountdownEvent(1);
+            CountdownEvent reconnectCde = new CountdownEvent(1);
 
             using (NATSServer.CreateWithConfig(Context.Server3.Port, "operatorJnatsTest.conf"))
             {
                 var opts = Context.GetTestOptionsWithDefaultTimeout(Context.Server3.Port);
                 opts.SetUserCredentials(credsFile);
+                opts.MaxReconnect = 1;
                 opts.DisconnectedEventHandler += (sender, e) =>
                 {
                     if (e.Error.ToString().Contains("user authentication expired"))
                     {
-                        userAuthenticationExpired.Signal();
+                        userAuthenticationExpiredCde.Signal();
+                    }
+                };
+                opts.ReconnectedEventHandler += (sender, e) =>
+                {
+                    if (userAuthenticationExpiredCde.IsSet)
+                    {
+                        reconnectCde.Signal();
                     }
                 };
 
-                IConnection c = Context.ConnectionFactory.CreateConnection(opts);
-                userAuthenticationExpired.Wait(wait);
-                Assert.True(userAuthenticationExpired.IsSet);
+                IConnection c = Context.ConnectionFactory.CreateConnection(opts, true);
+                userAuthenticationExpiredCde.Wait(wait);
+                Assert.True(userAuthenticationExpiredCde.IsSet);
+                reconnectCde.Wait(wait);
+                Assert.True(reconnectCde.IsSet);
             }
         }
 

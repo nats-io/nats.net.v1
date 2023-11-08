@@ -24,6 +24,14 @@ namespace NATS.Client
         public NATSException() : base() { }
         public NATSException(string err) : base (err) {}
         public NATSException(string err, Exception innerEx) : base(err, innerEx) { }
+
+        public static bool IsAuthenticationOrAuthorizationError(string message, bool alreadyLowered = false)
+        {
+            string lowerMessage = alreadyLowered ? message : message.ToLower();
+            return lowerMessage.Contains("user authentication")
+                   || lowerMessage.Contains("authorization violation")
+                   || lowerMessage.Contains("authentication expired");
+        }
     }
 
     /// <summary>
@@ -33,14 +41,6 @@ namespace NATS.Client
     {
         public NATSConnectionException(string err) : base(err) { }
         public NATSConnectionException(string err, Exception innerEx) : base(err, innerEx) { }
-
-        public bool IsAuthenticationOrAuthorizationError()
-        {
-            string lowerMessage = Message.ToLower();
-            return lowerMessage.Contains("user authentication")
-                   || lowerMessage.Contains("authorization violation")
-                   || lowerMessage.Contains("authentication expired");
-        }
     }
 
     /// <summary>
