@@ -557,9 +557,9 @@ namespace NATS.Client
         /// Gets or sets the size of the subscriber channel, or number
         /// of messages the subscriber will buffer internally.
         /// </summary>
+        [Obsolete("Please use the PendingMessageLimit property instead")]
         public int SubChannelLength
         {
-            //Property may be obsoleted.
             get { return (int)PendingMessageLimit; }
             set { PendingMessageLimit = value; }
         }
@@ -916,7 +916,6 @@ namespace NATS.Client
                 }
                 sb.Append("};");
             }
-            sb.AppendFormat("SubChannelLength={0};", SubChannelLength);
             sb.AppendFormat($"{nameof(PendingMessageLimit)}={PendingMessageLimit};");
             sb.AppendFormat($"{nameof(PendingBytesLimit)}={PendingBytesLimit};");
             sb.AppendFormat("Timeout={0}", Timeout);

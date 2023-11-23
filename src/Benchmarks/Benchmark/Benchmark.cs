@@ -197,7 +197,7 @@ namespace Benchmark
             Options o = ConnectionFactory.GetDefaultOptions();
             
             o.Url = url;
-            o.SubChannelLength = 10000000;
+            o.PendingMessageLimit = 10000000;
             if (creds != null)
             {
                 o.SetUserCredentials(creds);
