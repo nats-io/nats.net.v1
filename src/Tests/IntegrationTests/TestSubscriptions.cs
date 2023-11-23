@@ -158,10 +158,10 @@ namespace IntegrationTests
         }
 
         [Fact]
-        public void TestSlowSubscriber()
+        public void TestSlowSubscriber_MessageLimit()
         {
             Options opts = Context.GetTestOptions(Context.Server1.Port);
-            opts.SubChannelLength = 10;
+            opts.PendingMessageLimit = 10;
 
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
             {
@@ -171,9 +171,47 @@ namespace IntegrationTests
                     {
                         Assert.ThrowsAny<Exception>(() =>
                         {
-                            for (int i = 0; i < (opts.SubChannelLength + 100); i++)
+                            for (int i = 0; i < (opts.PendingMessageLimit + 100); i++)
                             {
                                 c.Publish("foo", null);
+                            }
+
+                            try
+                            {
+                                c.Flush();
+                            }
+                            catch (Exception)
+                            {
+                                // ignore
+                            }
+
+                            s.NextMessage();
+                        });
+                    }
+                }
+            }
+        }
+
+        [Fact]
+        public void TestSlowSubscriber_BytesLimit()
+        {
+            Options opts = Context.GetTestOptions(Context.Server1.Port);
+            opts.PendingBytesLimit = 100;
+
+            using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
+            {
+                using (IConnection c = Context.ConnectionFactory.CreateConnection(opts))
+                {
+                    using (ISyncSubscription s = c.SubscribeSync("foo"))
+                    {
+                        Assert.ThrowsAny<Exception>(() =>
+                        {
+                            var message = new System.Text.UTF8Encoding(false).GetBytes("abcdefghij"); //10 bytes
+                            var messageSize = message.Length;
+
+                            for (int i = 0; i < opts.PendingBytesLimit + 100; i += messageSize) //100 bytes more than our limit
+                            {
+                                c.Publish("foo", message); //10 bytes in payload
                             }
 
                             try
@@ -257,7 +295,7 @@ namespace IntegrationTests
             IAsyncSubscription s;
 
             Options opts = Context.GetTestOptions(Context.Server1.Port);
-            opts.SubChannelLength = 10;
+            opts.PendingMessageLimit = 10;
 
             bool handledError = false;
 
@@ -305,7 +343,7 @@ namespace IntegrationTests
                         lock (testLock)
                         {
 
-                            for (int i = 0; i < (opts.SubChannelLength + 100); i++)
+                            for (int i = 0; i < (opts.PendingMessageLimit + 100); i++)
                             {
                                 c.Publish("foo", null);
                             }
@@ -962,7 +1000,7 @@ namespace IntegrationTests
 
             var opts = Context.GetTestOptions(Context.Server1.Port);
             opts.SubscriberDeliveryTaskCount = 1;
-            opts.SubChannelLength = 10;
+            opts.PendingMessageLimit = 10;
 
             opts.AsyncErrorEventHandler = (obj, args) => { errorEv.Set(); };
 
@@ -977,7 +1015,7 @@ namespace IntegrationTests
                         cbEv.WaitOne();
                     }))
                     {
-                        for (int i = 0; i < opts.SubChannelLength * 3; i++)
+                        for (int i = 0; i < opts.PendingMessageLimit * 3; i++)
                         {
                             c.Publish("foo", null);
                         }

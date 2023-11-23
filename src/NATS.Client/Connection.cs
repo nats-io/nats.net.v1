@@ -4215,7 +4215,7 @@ namespace NATS.Client
                     createAsyncSubscriptionDelegate = (lConn, lSubject, lQueue) =>
                     {
                         AsyncSubscription asub = new AsyncSubscription(lConn, lSubject, lQueue);
-                        asub.SetPendingLimits(opts.subChanLen, SubPendingBytesLimit);
+                        asub.SetPendingLimits(opts.PendingMessageLimit, opts.PendingBytesLimit);
                         return asub;
                     };
                 }
@@ -4261,7 +4261,7 @@ namespace NATS.Client
                     syncSubDelegate = (lConn, lSubject, lQueue) =>
                     {
                         SyncSubscription ssub = new SyncSubscription(this, subject, queue);
-                        ssub.SetPendingLimits(opts.subChanLen, SubPendingBytesLimit);
+                        ssub.SetPendingLimits(opts.PendingMessageLimit, opts.PendingBytesLimit);
                         return ssub;
                     };
                 }

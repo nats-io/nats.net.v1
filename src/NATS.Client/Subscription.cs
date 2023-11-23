@@ -57,7 +57,7 @@ namespace NATS.Client
         internal long pendingMessagesMax = 0;
         internal long pendingBytesMax = 0;
         internal long pendingMessagesLimit; // getting this from the options
-        internal long pendingBytesLimit = Defaults.SubPendingBytesLimit;
+        internal long pendingBytesLimit; // getting this from the options
         internal long dropped = 0;
 
         // Subject that represents this subscription. This can be different
@@ -87,7 +87,8 @@ namespace NATS.Client
             this.subject = subject;
             this.queue = queue;
 
-            pendingMessagesLimit = conn.Opts.subChanLen;
+            pendingMessagesLimit = conn.Opts.PendingMessageLimit;
+            pendingBytesLimit = conn.Opts.PendingBytesLimit;
             
             sid = SidGenerator.Next();
 
