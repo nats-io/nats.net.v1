@@ -246,7 +246,8 @@ namespace NATS.Client
 
         internal int maxPingsOut = MaxPingOut;
 
-        internal int subChanLen = (int)SubPendingMsgsLimit;
+        private long pendingMessageLimit = SubPendingMsgsLimit;
+        private long pendingBytesLimit = SubPendingBytesLimit;
         internal int subscriberDeliveryTaskCount = 0;
 
         // Must be greater than 0.
@@ -316,7 +317,8 @@ namespace NATS.Client
                 Array.Copy(o.servers, servers, o.servers.Length);
             }
 
-            subChanLen = o.subChanLen;
+            pendingMessageLimit = o.pendingMessageLimit;
+            pendingBytesLimit = o.pendingBytesLimit;
             timeout = o.timeout;
             TLSRemoteCertificationValidationCallback = o.TLSRemoteCertificationValidationCallback;
 
@@ -555,10 +557,31 @@ namespace NATS.Client
         /// Gets or sets the size of the subscriber channel, or number
         /// of messages the subscriber will buffer internally.
         /// </summary>
+        [Obsolete("Please use the PendingMessageLimit property instead")]
         public int SubChannelLength
         {
-            get { return subChanLen; }
-            set { subChanLen = value; }
+            get { return (int)PendingMessageLimit; }
+            set { PendingMessageLimit = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the size of the subscriber channel, or number
+        /// of messages the subscriber will buffer internally.
+        /// </summary>
+        public long PendingMessageLimit
+        {
+            get { return pendingMessageLimit; }
+            set { pendingMessageLimit = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum pending bytes limit for the subscription, 
+        /// or number of bytes the subscriber will buffer internally.
+        /// </summary>
+        public long PendingBytesLimit
+        {
+            get { return pendingBytesLimit; }
+            set { pendingBytesLimit = value; }
         }
 
         /// <summary>
@@ -893,7 +916,8 @@ namespace NATS.Client
                 }
                 sb.Append("};");
             }
-            sb.AppendFormat("SubChannelLength={0};", SubChannelLength);
+            sb.AppendFormat($"{nameof(PendingMessageLimit)}={PendingMessageLimit};");
+            sb.AppendFormat($"{nameof(PendingBytesLimit)}={PendingBytesLimit};");
             sb.AppendFormat("Timeout={0}", Timeout);
             sb.Append("}");
 

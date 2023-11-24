@@ -359,7 +359,7 @@ namespace IntegrationTests
                 o.ReconnectWait = 500;
                 o.NoRandomize = true;
                 o.Servers = new[] { Context.Server2.Url, Context.Server1.Url };
-                o.SubChannelLength = 1;
+                o.PendingMessageLimit= 1;
 
                 using (IConnection
                     nc = Context.ConnectionFactory.CreateConnection(o),
