@@ -1,6 +1,6 @@
 ![NATS](https://raw.githubusercontent.com/nats-io/nats.net/main/documentation/large-logo.png)
 
-# NATS - .NET C# Client
+# NATS - .NET V1 C# Client
 
 A [C# .NET](https://msdn.microsoft.com/en-us/vstudio/aa496123.aspx) client for the [NATS messaging system](https://nats.io) multi targetting `.NET4.6+` and `.NETStandard1.6`.
 
@@ -10,6 +10,17 @@ A [C# .NET](https://msdn.microsoft.com/en-us/vstudio/aa496123.aspx) client for t
 [![API Documentation](https://img.shields.io/badge/doc-Doxygen-brightgreen.svg?style=flat)](http://nats-io.github.io/nats.net)
 [![Build Status](https://dev.azure.com/NATS-CI/NATS-CI/_apis/build/status/nats-io.nats.net-CI?branchName=main)](https://dev.azure.com/NATS-CI/NATS-CI/_build/latest?definitionId=2&branchName=main)
 [![NuGet](https://img.shields.io/nuget/v/NATS.Client.svg?cacheSeconds=3600)](https://www.nuget.org/packages/NATS.Client)
+
+## .NET V2 C# Client
+
+Are you greenfielding a new project with the latest C# or just wanting the latest .NET support? 
+NATS.Net V2 is now GA.
+
+NATS.Net V2
+* Only supports Async I/O (async/await)
+* Target current .NET LTS releases (currently .NET 6.0 & .NET 8.0)
+
+Checkout https://github.com/nats-io/nats.net.v2
 
 ## Getting started
 The easiest and recommended way to start using NATS in your .NET projects, is to use the [NuGet package]((https://www.nuget.org/packages/NATS.Client)). For examples on how to use the client, see below or in any of the included sample projects.
@@ -73,7 +84,7 @@ Doxygen is required to be installed and in the PATH.  Version 1.8 is known to wo
 
 ### Version 1.1.0 Support for Server 2.10
 
-The 1.1.0 release has support for Server 2.10 features including:
+The 1.1.0 release has support for Server 2.10 features and client validation improvements including:
 
 * Stream and Consumer info timestamps 
 * Stream Configuration 
@@ -83,6 +94,46 @@ The 1.1.0 release has support for Server 2.10 features including:
   * First Sequence
 * Multiple Filter Subjects
 * Subject Validation
+
+#### Multiple Filter Subjects
+
+A new feature is the ability to have multiple filter subjects for any single JetStream consumer.
+```c#
+ConsumerConfiguration cc = ConsumerConfiguration.Builder()
+    ...
+    .WithFilterSubjects("subject1", "subject2")
+    .Build();
+```
+
+#### Subject and Queue Name Validation
+
+For subjects, up until now, the client has been very strict when validating subject names for consumer subject filters and subscriptions.
+It only allowed printable ascii characters except for `*`, `>`, `.`, `\\` and `/`. This restriction has been changed to the following:
+* cannot contain spaces \r \n \t
+* cannot start or end with subject token delimiter .
+* cannot have empty segments
+
+This means that UTF characters are now allowed in subjects in this client.
+
+For queue names, there has been inconsistent validation, if any. Queue names now require the same validation as subjects.
+**Important** We realize this may affect existing applications, but need to require consistency across clients.
+
+**Subscribe Subject Validation**
+
+Additionally, for subjects used in subscribe api, applications may start throwing an exception:
+
+```text
+90011 Subject does not match consumer configuration filter
+```
+Let's say you have a stream with subject `foo.>` And you are subscribing to `foo.a`.
+When you don't supply a filter subject on a consumer, it becomes `>`, which means all subjects.
+
+So this is a problem, because you think you are subscribing to `foo.a` but in reality, without this check,
+you will be getting all messages `foo.>` subjects, not just `foo.a`
+
+Validating the subscribe subject against the filter subject is needed to prevent this.
+Unfortunately, this makes existing code throw the `90011` exception.
+
 
 #### Note regarding Subject Validation
 
