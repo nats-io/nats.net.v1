@@ -134,23 +134,6 @@ you will be getting all messages `foo.>` subjects, not just `foo.a`
 Validating the subscribe subject against the filter subject is needed to prevent this.
 Unfortunately, this makes existing code throw the `90011` exception.
 
-
-#### Note regarding Subject Validation
-
-With the upgrade to 1.1.1, applications may start throwing exceptions when subscribing to streams: 
-
-```text
-90011 Subject does not match consumer configuration filter
-```
-
-Let's say you have a stream subject `foo.>` And you are subscribing to `foo.a`. 
-When you don't supply a filter subject on a consumer, it becomes `>`, which means all subjects.
-
-So this is a problem, because you think you are subscribing to `foo.a` but in reality, without this check, 
-you will be getting all messages subjects you do not want. 
-Validating the subscribe subject against the filter subject is needed to prevent this.
-Unfortunately, this makes existing code throw the `90011` exception.
-
 ### Version 1.0.8 Simplification and Service Framework
 
 #### Simplification
