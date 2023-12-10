@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System.IO;
+using NATS.Client.Internals;
 
 namespace NATS.Client
 {
@@ -143,6 +144,7 @@ namespace NATS.Client
         /// <param name="args">Arguments</param>
         public void DefaultUserJWTEventHandler(object sender, UserJWTEventArgs args)
         {
+            Dbg.dbg("[9U] DefaultUserJWTEventHandler", jwtFile);
             args.JWT = LoadUserFromFile(jwtFile);
         }
 
@@ -166,6 +168,7 @@ namespace NATS.Client
         /// <param name="args"></param>
         public void DefaultUserSignatureHandler(object sender, UserSignatureEventArgs args)
         {
+            Dbg.dbg("[9S] DefaultUserSignatureHandler", jwtFile);
             SignNonceFromFile(credsFile, args);
         }
     }

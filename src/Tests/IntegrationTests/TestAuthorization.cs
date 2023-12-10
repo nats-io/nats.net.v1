@@ -250,55 +250,90 @@ namespace IntegrationTests
                 Assert.Equal("'Authorization Violation'", ex.Message, StringComparer.OrdinalIgnoreCase);
             }
         }
+
+        const string accountSeed = "SAAPXJRFMUYDUH3NOZKE7BS2ZDO2P4ND7G6W743MTNA3KCSFPX3HNN6AX4";
+        const string accountId = "ACPWDUYSZRRF7XAEZKUAGPUH6RPICWEHSTFELYKTOWUVZ4R2XMP4QJJX";
+        const string userSeed = "SUAJ44FQWKEWGRSIPRFCIGDTVYSMUMRRHB4CPFXXRG5GODO5XY7S2L45ZA";
+
+        readonly static NkeyPair accountPair = Nkeys.FromSeed(accountSeed);
+        readonly static NkeyPair userPair = Nkeys.FromSeed(userSeed);
+        readonly static string publicUserKey = userPair.EncodedPublicKey;
         
         [Fact]
-        public void TestRealUserAuthenticationExpired()
+        public void TestRealUserAuthenticationExpires()
         {
-            string accountSeed = "SAAPXJRFMUYDUH3NOZKE7BS2ZDO2P4ND7G6W743MTNA3KCSFPX3HNN6AX4";
-            string accountId = "ACPWDUYSZRRF7XAEZKUAGPUH6RPICWEHSTFELYKTOWUVZ4R2XMP4QJJX";
-            string userSeed = "SUAJ44FQWKEWGRSIPRFCIGDTVYSMUMRRHB4CPFXXRG5GODO5XY7S2L45ZA";
-
-            NkeyPair accountPair = Nkeys.FromSeed(accountSeed);
-            NkeyPair userPair = Nkeys.FromSeed(userSeed);
-            string publicUserKey = userPair.EncodedPublicKey;
-            
-            long expires = 2500;
-            int wait = 5000;
-            Duration expiration = Duration.OfMillis(expires);
+            Duration expiration = Duration.OfMillis(-3000);
             String jwt = JwtUtils.IssueUserJWT(accountPair, accountId, publicUserKey, "jnatsTestUser", expiration);
-
             string cred = string.Format(JwtUtils.NatsUserJwtFormat, jwt, userPair.EncodedSeed);
-            string credsFile = Path.GetTempFileName();
-            File.WriteAllText(credsFile, cred);
+            string credsFile1 = Path.GetTempFileName();
+            File.WriteAllText(credsFile1, cred);
 
-            CountdownEvent userAuthenticationExpiredCde = new CountdownEvent(1);
-            CountdownEvent reconnectCde = new CountdownEvent(1);
+            expiration = Duration.OfMillis(1_000_000);
+            jwt = JwtUtils.IssueUserJWT(accountPair, accountId, publicUserKey, "jnatsTestUser", expiration);
+            cred = string.Format(JwtUtils.NatsUserJwtFormat, jwt, userPair.EncodedSeed);
+            string credsFile2 = Path.GetTempFileName();
+            File.WriteAllText(credsFile2, cred);
+
+            CountdownEvent userAuthenticationExpiredCde1 = new CountdownEvent(1);
+            CountdownEvent reconnectCde1 = new CountdownEvent(1);
 
             using (NATSServer.CreateWithConfig(Context.Server3.Port, "operatorJnatsTest.conf"))
             {
                 var opts = Context.GetTestOptionsWithDefaultTimeout(Context.Server3.Port);
-                opts.SetUserCredentials(credsFile);
-                opts.MaxReconnect = 1;
+                opts.MaxReconnect = -1;
+                // opts.ReconnectDelayHandler = (object o, ReconnectDelayEventArgs args) =>
+                // {
+                    // Dbg.dbg("ReconnectDelayHandler IN");
+                    // Thread.Sleep(1000);
+                    // Dbg.dbg("ReconnectDelayHandler out");
+                // };
+                opts.SetUserCredentials(credsFile1);
                 opts.DisconnectedEventHandler += (sender, e) =>
                 {
+                    Dbg.dbg("TEST DisconnectedEventHandler 1");
                     if (e.Error.ToString().Contains("user authentication expired"))
                     {
-                        userAuthenticationExpiredCde.Signal();
+                        userAuthenticationExpiredCde1.Signal();
                     }
                 };
                 opts.ReconnectedEventHandler += (sender, e) =>
                 {
-                    if (userAuthenticationExpiredCde.IsSet)
+                    Dbg.dbg("TEST ReconnectedEventHandler 1");
+                    if (userAuthenticationExpiredCde1.IsSet)
                     {
-                        reconnectCde.Signal();
+                        reconnectCde1.Signal();
                     }
                 };
 
+                int wait = 7000;
+                long now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                 IConnection c = Context.ConnectionFactory.CreateConnection(opts, true);
-                userAuthenticationExpiredCde.Wait(wait);
-                Assert.True(userAuthenticationExpiredCde.IsSet);
-                reconnectCde.Wait(wait);
-                Assert.True(reconnectCde.IsSet);
+                Dbg.dbg("TEST IConnection A", c.State);
+                Dbg.dbg("TEST IConnection A", c.ServerInfo.ToString());
+                userAuthenticationExpiredCde1.Wait(wait);
+                Assert.True(userAuthenticationExpiredCde1.IsSet);
+                reconnectCde1.Wait(wait);
+                Assert.True(reconnectCde1.IsSet);
+
+                CountdownEvent reconnectCde2 = new CountdownEvent(1);
+                c.Opts.SetUserCredentials(credsFile2); // so reconnect will stay connected
+                c.Opts.DisconnectedEventHandler = (sender, e) =>
+                {
+                    Dbg.dbg("TEST DisconnectedEventHandler 2");
+                };
+                c.Opts.ReconnectedEventHandler = (sender, e) =>
+                {
+                    Dbg.dbg("TEST ReconnectedEventHandler 2");
+                    reconnectCde2.Signal();
+                };
+
+                Dbg.dbg("TEST IConnection B", c.State);
+                Dbg.dbg("TEST IConnection B", c.ServerInfo == null ? "NO SI" : c.ServerInfo.ToString());
+                reconnectCde2.Wait(wait);
+                Assert.True(reconnectCde2.IsSet);
+
+                Dbg.dbg("TEST IConnection C", c.State);
+                Dbg.dbg("TEST IConnection C", c.ServerInfo == null ? "NO SI" : c.ServerInfo.ToString());
             }
         }
 

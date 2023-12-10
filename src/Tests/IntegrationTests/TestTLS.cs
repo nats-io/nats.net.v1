@@ -177,7 +177,7 @@ namespace IntegrationTests
                     {
                         c.Publish("foo", null);
                         c.Flush();
-                        Msg m = s.NextMessage();
+                        Assert.NotNull(s.NextMessage(1000));
                     }
                 }
             }

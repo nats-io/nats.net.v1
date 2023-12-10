@@ -1172,6 +1172,8 @@ namespace NATS.Client
 
         internal bool connect(Srv s, out Exception exToThrow)
         {
+            Dbg.dbg("[2] connect(.,.)");
+
             url = s.Url;
             try
             {
@@ -1181,36 +1183,47 @@ namespace NATS.Client
 
                 for(var i = 0; i < 6; i++) //Precaution to not end up in server returning ExTypeA, ExTypeB, ExTypeA etc.
                 {
+                    Dbg.dbg("[2] connect(.,.)", "!loop " + i);
                     try
                     {
                         lock (mu)
                         {
                             if (!createConn(s, out exToThrow))
+                            {
+                                Dbg.dbg("[2] connect(.,.)", "!createConn ? " + exToThrow);
                                 return false;
+                            }
 
                             processConnectInit(s);
                             exToThrow = null;
 
+                            Dbg.dbg("[2] connect(.,.)", "connected???");
                             return true;
                         }
                     }
                     catch (NATSConnectionException ex)
                     {
                         string message = ex.Message.ToLower();
+                        Dbg.dbg("[2] connect(.,.)", "message'" + message + "'");
+                        
                         if (!NATSException.IsAuthenticationOrAuthorizationError(message, true))
                         {
+                            Dbg.dbg("[2] connect(.,.)", "NOT IsAuthenticationOrAuthorizationError");
                             throw;
                         }
 
+                        Dbg.dbg("[2] connect(.,.)", "ScheduleErrorEvent");
                         ScheduleErrorEvent(s, ex);
 
                         // avoiding double the same
                         if (lastAuthExMessage == null || !lastAuthExMessage.Equals(message))
                         {
                             lastAuthExMessage = message;
+                            Dbg.dbg("[2] connect(.,.)", "avoiding double the same");
                             continue;
                         }
 
+                        Dbg.dbg("[2] connect(.,.)", "throw");
                         throw;
                     }
                 }
@@ -1240,6 +1253,7 @@ namespace NATS.Client
 
             setupServerPool();
 
+            Dbg.dbg("[1] connect(...)", "reconnectOnConnect:" + reconnectOnConnect);
             srvProvider.ConnectToAServer(srv => connect(srv, out exToThrow));
 
             lock (mu)
@@ -1252,6 +1266,7 @@ namespace NATS.Client
                     }
                     else
                     {
+                        Dbg.dbg("[1] connect(...)", "exToThrow" + exToThrow);
                         if (exToThrow is NATSException)
                         {
                             throw exToThrow;
@@ -1415,6 +1430,7 @@ namespace NATS.Client
 
             if (userJWT != null || nkey != null)
             {
+                Dbg.dbg("[8] JWT", "\n" + userJWT + "\n" + opts.UserJWTEventHandler.GetHashCode() + " " + opts.UserSignatureEventHandler.GetHashCode());
                 if (opts.UserSignatureEventHandler == null)
                 {
                     if (userJWT == null) {
@@ -1636,6 +1652,7 @@ namespace NATS.Client
         // go client
         private void doReconnect()
         {
+            Dbg.dbg("[6] doReconnect()");
             // We want to make sure we have the other watchers shutdown properly
             // here before we proceed past this point
             waitForExits();
@@ -1656,6 +1673,7 @@ namespace NATS.Client
                 var errorForHandler = lastEx;
                 lastEx = null;
 
+                Dbg.dbg("[6] doReconnect()", "schedule Disconnnect message");
                 scheduleConnEvent(Opts.DisconnectedEventHandlerOrDefault, errorForHandler);
 
                 Srv cur;
@@ -1706,14 +1724,19 @@ namespace NATS.Client
 
                     try
                     {
+                        Dbg.dbg("[6] doReconnect()", "try to create a new connection");
                         // try to create a new connection
-                        if(!createConn(cur, out lastEx))
+                        if (!createConn(cur, out lastEx))
+                        {
+                            Dbg.dbg("[6] doReconnect()", "try !createConn: " + lastEx.Message);
                             continue;
+                        }
                     }
-                    catch (Exception)
+                    catch (Exception e)
                     {
                         // not yet connected, retry and hold
                         // the lock.
+                        Dbg.dbg("[6] doReconnect()", "try Exception: " + e.Message);
                         lastEx = null;
                         continue;
                     }
@@ -1721,10 +1744,12 @@ namespace NATS.Client
                     // process our connect logic
                     try
                     {
+                        Dbg.dbg("[6] doReconnect()", "processConnectInit");
                         processConnectInit(cur);
                     }
                     catch (Exception e)
                     {
+                        Dbg.dbg("[6] doReconnect()", "processConnectInit Exception: " + e);
                         lastEx = e;
                         status = ConnState.RECONNECTING;
                         continue;
