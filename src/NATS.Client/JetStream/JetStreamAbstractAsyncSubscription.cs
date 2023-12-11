@@ -36,7 +36,7 @@ namespace NATS.Client.JetStream
             MessageManager.Startup((IJetStreamSubscription)this);
         }
 
-        internal virtual void UpdateConsumer(string consumer)
+        internal virtual void SetConsumerName(string consumer)
         {
             _consumer = consumer;
         }

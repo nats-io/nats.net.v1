@@ -57,7 +57,7 @@ namespace NATS.Client.JetStream
                     }
                 };
             }                
-            InitSub(subscriptionMaker.Subscribe(mh));
+            InitSub(subscriptionMaker.Subscribe(mh, null)); // TODO THIS IS TEMPORARY
             pullImpl.Pull(PullRequestOptions.Builder(bm)
                 .WithMaxBytes(bb)
                 .WithExpiresIn(consumeOptions.ExpiresInMillis)

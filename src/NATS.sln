@@ -119,7 +119,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimplificationQueue", "Samp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TLSReverseProxyExample", "Samples\TLSReverseProxyExample\TLSReverseProxyExample.csproj", "{98C52074-7693-48D4-B0A9-48920EEEDA24}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApp", "Samples\TestApp\TestApp.csproj", "{649DEBB2-E0AC-47ED-AA39-B119F512C204}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChaosTestApp", "Samples\ChaosTestApp\ChaosTestApp.csproj", "{649DEBB2-E0AC-47ED-AA39-B119F512C204}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

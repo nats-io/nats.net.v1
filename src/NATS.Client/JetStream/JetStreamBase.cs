@@ -70,6 +70,16 @@ namespace NATS.Client.JetStream
             
         }
 
+        protected JetStreamBase(JetStreamBase jetStreamBase)
+        {
+            Conn = jetStreamBase.Conn;
+            JetStreamOptions = jetStreamBase.JetStreamOptions;
+            Prefix = jetStreamBase.Prefix;
+            Timeout = jetStreamBase.Timeout;
+            _consumerCreate290Available = jetStreamBase._consumerCreate290Available;
+            _multipleSubjectFilter210Available = jetStreamBase._multipleSubjectFilter210Available;
+        }
+
         internal static ServerInfo ServerInfoOrException(IConnection conn)
         {
             ServerInfo si = conn.ServerInfo;
@@ -145,17 +155,22 @@ namespace NATS.Client.JetStream
             return Nuid.NextGlobalSequence();
         }
         
-        internal ConsumerConfiguration NextOrderedConsumerConfiguration(
+        internal ConsumerConfiguration ConsumerConfigurationForOrdered(
             ConsumerConfiguration originalCc,
             ulong lastStreamSeq,
-            string newDeliverSubject)
+            string newDeliverSubject, string consumerName)
         {
-            return ConsumerConfiguration.Builder(originalCc)
+            ConsumerConfiguration.ConsumerConfigurationBuilder builder = ConsumerConfiguration.Builder(originalCc)
                 .WithDeliverPolicy(DeliverPolicy.ByStartSequence)
                 .WithDeliverSubject(newDeliverSubject)
                 .WithStartSequence(Math.Max(1, lastStreamSeq + 1))
-                .WithStartTime(DateTime.MinValue) // clear start time in case it was originally set
-                .Build();
+                .WithStartTime(DateTime.MinValue); // clear start time in case it was originally set
+            
+            if (consumerName != null && ConsumerCreate290Available()) {
+                builder.WithName(consumerName);
+            }
+
+            return builder.Build();
         }
 
         internal StreamInfo GetStreamInfoInternal(string streamName, StreamInfoOptions options)

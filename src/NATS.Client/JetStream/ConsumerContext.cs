@@ -19,7 +19,7 @@ using static NATS.Client.JetStream.ConsumeOptions;
 namespace NATS.Client.JetStream
 {
     internal interface SimplifiedSubscriptionMaker {
-        IJetStreamSubscription Subscribe(EventHandler<MsgHandlerEventArgs> handler = null);
+        IJetStreamSubscription Subscribe(EventHandler<MsgHandlerEventArgs> handler , PullMessageManager optionalPmm);
     }
 
     internal class OrderedPullSubscribeOptionsBuilder : PullSubscribeOptions.PullSubscribeOptionsSubscribeOptionsBuilder
@@ -77,8 +77,8 @@ namespace NATS.Client.JetStream
             unorderedBindPso = null;
 
         }
-        
-        public IJetStreamSubscription Subscribe(EventHandler<MsgHandlerEventArgs> handler = null) {
+
+        public IJetStreamSubscription Subscribe(EventHandler<MsgHandlerEventArgs> messageHandler, PullMessageManager optionalPmm) {
             PullSubscribeOptions pso;
             if (ordered) {
                 if (lastConsumer != null) {
@@ -86,17 +86,18 @@ namespace NATS.Client.JetStream
                 }
                 ConsumerConfiguration cc = lastConsumer == null
                     ? originalOrderedCc
-                    : streamCtx.js.NextOrderedConsumerConfiguration(originalOrderedCc, highestSeq, null);
+                    : streamCtx.js.ConsumerConfigurationForOrdered(originalOrderedCc, highestSeq, null, null);
                 pso = new OrderedPullSubscribeOptionsBuilder(streamCtx.StreamName, cc).Build();
             }
             else {
                 pso = unorderedBindPso;
             }
 
-            if (handler == null) {
+            if (messageHandler == null) {
+                return (IJetStreamPullSubscription) streamCtx.js.CreateSubscription(subscribeSubject, null, pso, null, null, false, optionalPmm);
                 return (JetStreamPullSubscription)streamCtx.js.PullSubscribe(subscribeSubject, pso);
             }
-            return (JetStreamPullAsyncSubscription)streamCtx.js.PullSubscribeAsync(subscribeSubject, handler, pso);
+            return (JetStreamPullAsyncSubscription)streamCtx.js.PullSubscribeAsync(subscribeSubject, messageHandler, pso);
         }
     
         private void CheckState() {
@@ -143,7 +144,7 @@ namespace NATS.Client.JetStream
             {
                 try
                 {
-                    JetStreamPullSubscription sub = (JetStreamPullSubscription)Subscribe();
+                    JetStreamPullSubscription sub = (JetStreamPullSubscription)Subscribe(null, null);
                     con.InitSub(sub);
                     con.pullImpl.Pull(PullRequestOptions.Builder(1)
                         .WithExpiresIn(maxWaitMillis - JetStreamPullSubscription.ExpireAdjustment)

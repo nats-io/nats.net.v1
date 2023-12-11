@@ -86,7 +86,7 @@ namespace NATS.Client.JetStream
 
         protected override bool BeforeChannelAddCheck(Msg msg)
         {
-            MessageReceived(); // record message time. Used for heartbeat tracking
+            UpdateLastMessageReceived(); // record message time. Used for heartbeat tracking
 
             MsgStatus status = msg.Status;
 

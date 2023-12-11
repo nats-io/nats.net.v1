@@ -18,8 +18,8 @@ namespace NATSExamples
             // + " --r3"
             + " --publish"
             + " --pubjitter 30"
-            + " --simple ordered,100,5000"
-            + " --simple durable 100 5000" // space or commas work, the parser figures it out
+            // + " --simple ordered,100,5000"
+            // + " --simple durable 100 5000" // space or commas work, the parser figures it out
             // + " --fetch durable,100,5000"
             + " --push ordered"
             + " --push durable"
@@ -27,10 +27,13 @@ namespace NATSExamples
 
         static void Main(string[] args)
         {
-            CommandLine cmd = new CommandLine(ManualArgs);
+            args = ManualArgs; // comment out for real command line
+            
+            CommandLine cmd = new CommandLine(args);
             Monitor monitor;
             try
             {
+                Output.Start(cmd);
                 Output.ControlMessage("APP", cmd.ToString().Replace(" --", "    \n--"));
                 CountdownEvent waiter = new CountdownEvent(1);
 

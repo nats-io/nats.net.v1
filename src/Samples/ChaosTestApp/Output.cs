@@ -7,10 +7,27 @@ namespace NATSExamples
     {
         public static readonly object AppendLock = new object();
 
-        public static bool ShowWork = false;
-        public static bool ShowControl = true;
-        public static bool ShowDebug = false;
-        
+        static bool started = false;
+        static bool ShowConsole = true;
+        static bool ShowWork = false;
+        static bool ShowDebug = false;
+        static string controlConsoleAreaLabel = null;
+
+        public static void Start(CommandLine cmd)
+        {
+            if (started)
+            {
+                return;
+            }
+
+            started = true;
+            ShowWork = cmd.Work;
+            ShowDebug = cmd.Debug;
+            if (ShowConsole && (ShowWork || ShowDebug)) {
+                controlConsoleAreaLabel = "CTRL";
+            }
+
+        }
         public static void Work(String label, String s) {
             if (ShowWork) {
                 Append("WORK", label, s);
@@ -18,9 +35,7 @@ namespace NATSExamples
         }
 
         public static void ControlMessage(String label, String s) {
-            if (ShowControl) {
-                Append("CTRL", label, s);
-            }
+            Append(controlConsoleAreaLabel, label, s);
         }
 
         public static void Debug(String label, String s)
@@ -34,11 +49,12 @@ namespace NATSExamples
         public static void Append(string area, string label, string s) {
             lock (AppendLock)
             {
-                string alabel = " | " + area + " | " + label; 
+                Console.Write(Time());
+                string llabel = label == null ? "" : " | " + label; 
+                Console.Write(area == null ? llabel : " | " + area + llabel);
+
                 if (s.Contains("\n"))
                 {
-                    String timeLabel = Time() + alabel;
-                    Console.Write(timeLabel);
                     if (!s.StartsWith("\n"))
                     {
                         Console.Write(" | ");
@@ -47,8 +63,6 @@ namespace NATSExamples
                 }
                 else
                 {
-                    Console.Write(Time());
-                    Console.Write(alabel);
                     Console.Write(" | ");
                     Console.Write(s);
                 }
@@ -59,7 +73,7 @@ namespace NATSExamples
 
         public static string Time()
         {
-            return $"{DateTimeOffset.Now.ToUnixTimeMilliseconds()}".Substring(7);
+            return $"{DateTimeOffset.Now.ToUnixTimeMilliseconds()}".Substring(6);
         }
         
         public static String FN = "\n  ";

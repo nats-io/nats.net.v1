@@ -69,7 +69,7 @@ namespace NATS.Client.JetStream
             // does nothing - only implemented for pulls, but in base class since instance is always referenced as MessageManager, not subclass
         }
 
-        protected void MessageReceived()
+        protected void UpdateLastMessageReceived()
         {
             lock (StateChangeLock)
             {
@@ -96,7 +96,6 @@ namespace NATS.Client.JetStream
         {
             Conn.Opts.HeartbeatAlarmEventHandlerOrDefault.Invoke(this, 
                 new HeartbeatAlarmEventArgs(Conn, (Subscription)Sub, LastStreamSeq, LastConsumerSeq));
-            
         }
 
         protected void ConfigureIdleHeartbeat(Duration configIdleHeartbeat, int configMessageAlarmTime)
@@ -139,6 +138,7 @@ namespace NATS.Client.JetStream
                         }
                     },
                     null, AlarmPeriodSetting, AlarmPeriodSetting);
+                UpdateLastMessageReceived();
             }
         }
 

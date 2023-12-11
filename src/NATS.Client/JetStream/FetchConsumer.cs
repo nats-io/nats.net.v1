@@ -35,7 +35,7 @@ namespace NATS.Client.JetStream
                 .WithExpiresIn(fetchConsumeOptions.ExpiresInMillis)
                 .WithIdleHeartbeat(fetchConsumeOptions.IdleHeartbeat)
                 .Build();
-            InitSub(subscriptionMaker.Subscribe());
+            InitSub(subscriptionMaker.Subscribe(null, null)); // TODO THIS IS TEMPORARY
             pullSubject = ((JetStreamPullSubscription)sub).pullImpl.Pull(pro, false, null);
         }
 

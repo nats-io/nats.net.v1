@@ -36,7 +36,7 @@ namespace NATS.Client.JetStream
         public long PendingMessageLimit { get; }
         public long PendingByteLimit { get; }
         public string Name { get; }
-        
+
         /// <summary>
         /// Gets the durable name
         /// </summary>
@@ -157,6 +157,20 @@ namespace NATS.Client.JetStream
             }
         }
         
+        public override string ToString()
+        {
+            return GetType().Name + "{" +
+                   "name='" + Name + '\'' +
+                   ", stream='" + Stream + '\'' +
+                   ", pull='" + Pull + '\'' +
+                   ", bind=" + Bind +
+                   ", fastBind=" + FastBind +
+                   ", ordered=" + Ordered +
+                   ", messageAlarmTime=" + MessageAlarmTime +
+                   ", " + ConsumerConfiguration.ToJsonNode().ToString() +
+                   '}';
+        }
+
         public interface ISubscribeOptionsBuilder
         {
             string Stream { get; }

@@ -61,7 +61,7 @@ namespace NATS.Client.JetStream
         {
             if (Hb)
             {
-                MessageReceived(); // only need to track when heartbeats are expected
+                UpdateLastMessageReceived(); // only need to track when heartbeats are expected
                 if (msg.HasStatus)
                 {
                     // only fc heartbeats get queued

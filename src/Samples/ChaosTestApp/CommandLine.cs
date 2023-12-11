@@ -15,6 +15,8 @@ namespace NATSExamples
         public readonly bool create;
         public readonly bool R3;
         public readonly bool Publish;
+        public readonly bool Debug;
+        public readonly bool Work;
         public readonly IList<CommandLineConsumer> CommandLineConsumers;
 
         private void Usage()
@@ -81,6 +83,8 @@ namespace NATSExamples
             bool _create = false;
             bool _r3 = false;
             bool _publish = false;
+            bool _debug = false;
+            bool _work = false;
             IList<CommandLineConsumer> _commandLineConsumers = new List<CommandLineConsumer>();
 
             if (args != null && args.Length > 0)
@@ -120,6 +124,12 @@ namespace NATSExamples
                                 break;
                             case "--publish":
                                 _publish = true;
+                                break;
+                            case "--debug":
+                                _debug = true;
+                                break;
+                            case "--work":
+                                _work = true;
                                 break;
                             case "--simple":
                             case "--fetch":
@@ -170,6 +180,8 @@ namespace NATSExamples
                 create = _create;
                 R3 =_r3;
                 Publish = _publish;
+                Debug = _debug;
+                Work = _work;
                 PubJitter = _pubJitter;
                 CommandLineConsumers = _commandLineConsumers;
 
@@ -184,7 +196,7 @@ namespace NATSExamples
 
         public override string ToString()
         {
-            StringBuilder sb = new StringBuilder("App Config ");
+            StringBuilder sb = new StringBuilder("Chaos Test App Config ");
             append(sb, "servers", string.Join(",", Servers), true);
             append(sb, "stream", Stream, true);
             append(sb, "subject", Subject, true);
@@ -198,10 +210,10 @@ namespace NATSExamples
             }
             return sb.ToString().Trim();
         }
-        
-        public Options MakeOptions(string label, Action connectEventAction = null)
+
+        public Options MakeOptions(string label, Action connectChangeEventAction = null)
         {
-            Action cea = connectEventAction == null ? () => {} : connectEventAction;
+            Action ccea = connectChangeEventAction == null ? () => {} : connectChangeEventAction;
             
             Options opts = ConnectionFactory.GetDefaultOptions();
             opts.Url = Servers;
@@ -212,19 +224,44 @@ namespace NATSExamples
             };
             opts.ReconnectedEventHandler = (obj, a) =>
             {
-                cea.Invoke();
+                ccea.Invoke();
                 Output.ControlMessage(label, $"Reconnected to {a.Conn.ConnectedUrl}");
             };
             opts.DisconnectedEventHandler = (obj, a) =>
             {
-                cea.Invoke();
+                ccea.Invoke();
                 Output.ControlMessage(label, "Disconnected.");
             };
             opts.ClosedEventHandler = (obj, a) =>
             {
-                cea.Invoke();
+                ccea.Invoke();
                 Output.ControlMessage(label, "Connection closed.");
             };
+            opts.ServerDiscoveredEventHandler = (obj, a) =>
+            {
+                Output.ControlMessage(label, "Server Discovered");
+            };
+            opts.LameDuckModeEventHandler = (obj, a) =>
+            {
+                Output.ControlMessage(label, "Lame Duck Mode");
+            };
+            opts.HeartbeatAlarmEventHandler = (obj, a) =>
+            {
+                Output.ControlMessage(label, "Heartbeat Alarm");
+            };
+            opts.UnhandledStatusEventHandler = (obj, a) =>
+            {
+                Output.ControlMessage(label, "Unhandled Status");
+            };
+            opts.PullStatusErrorEventHandler = (obj, a) =>
+            {
+                Output.ControlMessage(label, "Pull Status Error");
+            };
+            opts.FlowControlProcessedEventHandler = (obj, a) =>
+            {
+                Output.ControlMessage(label, "Flow Control Processed");
+            };
+            opts.PullStatusWarningEventHandler = (obj, a) => { };
 
             return opts;
         }

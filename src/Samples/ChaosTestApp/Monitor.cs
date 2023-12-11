@@ -85,7 +85,6 @@ namespace NATSExamples
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine(e);
                         ControlMessage(Label, e.Message);
                         reportFull.Set(true);
                     }

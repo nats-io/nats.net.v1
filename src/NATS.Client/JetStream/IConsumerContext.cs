@@ -19,12 +19,6 @@ namespace NATS.Client.JetStream
     public interface IConsumerContext : IBaseConsumerContext
     {
         /// <summary>
-        /// Gets the consumer name that was used to create the context.
-        /// </summary>
-        /// <returns>the consumer name</returns>
-        string ConsumerName { get; }
-
-        /// <summary>
         /// Gets information about the consumer behind this subscription.
         /// </summary>
         /// <returns>consumer information</returns>

@@ -24,6 +24,8 @@ namespace NATS.Client.JetStream
     {
         protected internal JetStream(IConnection connection, JetStreamOptions options) : base(connection, options) {}
 
+        protected internal JetStream(JetStreamBase jetStreamBase) : base(jetStreamBase) {}
+
         private MsgHeader MergePublishOptions(MsgHeader headers, PublishOptions opts)
         {
             // never touch the user's original headers
@@ -169,7 +171,8 @@ namespace NATS.Client.JetStream
             PullSubscribeOptions pullSubscribeOptions, 
             string queueName,
             EventHandler<MsgHandlerEventArgs> userHandler, 
-            bool autoAck)
+            bool autoAck,
+            PullMessageManager pmmInstance)
         {
             // Parameter notes. For those relating to the callers, you can see all the callers further down in this source file.
             //    - pull subscribe callers guarantee that pullSubscribeOptions is not null
@@ -409,8 +412,15 @@ namespace NATS.Client.JetStream
             Connection.CreateAsyncSubscriptionDelegate asyncSubDelegate = null;
             if (isPullMode)
             {
-                MessageManagerFactory mmFactory = so.Ordered ? _pullOrderedMessageManagerFactory : _pullMessageManagerFactory;
-                mm = mmFactory((Connection)Conn, this, settledStream, so, settledCC, false, syncMode);
+                if (pmmInstance == null)
+                {
+                    MessageManagerFactory mmFactory = so.Ordered ? _pullOrderedMessageManagerFactory : _pullMessageManagerFactory;
+                    mm = mmFactory((Connection)Conn, this, settledStream, so, settledCC, false, syncMode);
+                }
+                else
+                {
+                    mm = pmmInstance;
+                }
                 if (syncMode)
                 {
                     syncSubDelegate = (dConn, dSubject, dQueue) =>
@@ -488,11 +498,11 @@ namespace NATS.Client.JetStream
                     ConsumerInfo ci = CreateConsumerInternal(settledStream, settledCC);
                     if (sub is JetStreamAbstractSyncSubscription syncSub)
                     {
-                        syncSub.UpdateConsumer(ci.Name);
+                        syncSub.SetConsumerName(ci.Name);
                     }
                     else if (sub is JetStreamAbstractAsyncSubscription asyncSub)
                     {
-                        asyncSub.UpdateConsumer(ci.Name);
+                        asyncSub.SetConsumerName(ci.Name);
                     }
                 }
                 catch
@@ -554,7 +564,7 @@ namespace NATS.Client.JetStream
         {
             subject = ValidateSubject(subject, false);
             ValidateNotNull(options, "Pull Subscribe Options");
-            return (IJetStreamPullSubscription) CreateSubscription(subject, null, options, null, null, false);
+            return (IJetStreamPullSubscription) CreateSubscription(subject, null, options, null, null, false, null);
         }
 
         public IJetStreamPullAsyncSubscription PullSubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler, PullSubscribeOptions options)
@@ -562,14 +572,14 @@ namespace NATS.Client.JetStream
             subject = ValidateSubject(subject, false);
             ValidateNotNull(handler, "Handler");
             ValidateNotNull(options, "Pull Subscribe Options");
-            return (IJetStreamPullAsyncSubscription) CreateSubscription(subject, null, options, null, handler, false);
+            return (IJetStreamPullAsyncSubscription) CreateSubscription(subject, null, options, null, handler, false, null);
         }
 
         public IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler, bool autoAck)
         {
             subject = ValidateSubject(subject, true);
             ValidateNotNull(handler, "Handler");
-            return (IJetStreamPushAsyncSubscription) CreateSubscription(subject, null, null, null, handler, autoAck);
+            return (IJetStreamPushAsyncSubscription) CreateSubscription(subject, null, null, null, handler, autoAck, null);
         }
 
         public IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler, bool autoAck)
@@ -577,14 +587,14 @@ namespace NATS.Client.JetStream
             subject = ValidateSubject(subject, true);
             queue = EmptyAsNull(ValidateQueueName(queue, false));
             ValidateNotNull(handler, "Handler");
-            return (IJetStreamPushAsyncSubscription) CreateSubscription(subject, null, null, queue, handler, autoAck);
+            return (IJetStreamPushAsyncSubscription) CreateSubscription(subject, null, null, queue, handler, autoAck, null);
         }
 
         public IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, EventHandler<MsgHandlerEventArgs> handler, bool autoAck, PushSubscribeOptions options)
         {
             subject = ValidateSubject(subject, false);
             ValidateNotNull(handler, "Handler");
-            return (IJetStreamPushAsyncSubscription) CreateSubscription(subject, options, null, null, handler, autoAck);
+            return (IJetStreamPushAsyncSubscription) CreateSubscription(subject, options, null, null, handler, autoAck, null);
         }
 
         public IJetStreamPushAsyncSubscription PushSubscribeAsync(string subject, string queue, EventHandler<MsgHandlerEventArgs> handler, bool autoAck, PushSubscribeOptions options)
@@ -592,33 +602,33 @@ namespace NATS.Client.JetStream
             subject = ValidateSubject(subject, false);
             queue = EmptyAsNull(ValidateQueueName(queue, false));
             ValidateNotNull(handler, "Handler");
-            return (IJetStreamPushAsyncSubscription) CreateSubscription(subject, options, null, queue, handler, autoAck);
+            return (IJetStreamPushAsyncSubscription) CreateSubscription(subject, options, null, queue, handler, autoAck, null);
         }
 
         public IJetStreamPushSyncSubscription PushSubscribeSync(string subject)
         {
             subject = ValidateSubject(subject, true);
-            return (IJetStreamPushSyncSubscription) CreateSubscription(subject, null, null, null, null, false);
+            return (IJetStreamPushSyncSubscription) CreateSubscription(subject, null, null, null, null, false, null);
         }
 
         public IJetStreamPushSyncSubscription PushSubscribeSync(string subject, PushSubscribeOptions options)
         {
             subject = ValidateSubject(subject, false);
-            return (IJetStreamPushSyncSubscription) CreateSubscription(subject, options, null, null, null, false);
+            return (IJetStreamPushSyncSubscription) CreateSubscription(subject, options, null, null, null, false, null);
         }
 
         public IJetStreamPushSyncSubscription PushSubscribeSync(string subject, string queue)
         {
             subject = ValidateSubject(subject, true);
             queue = EmptyAsNull(ValidateQueueName(queue, false));
-            return (IJetStreamPushSyncSubscription) CreateSubscription(subject, null, null, queue, null, false);
+            return (IJetStreamPushSyncSubscription) CreateSubscription(subject, null, null, queue, null, false, null);
         }
 
         public IJetStreamPushSyncSubscription PushSubscribeSync(string subject, string queue, PushSubscribeOptions options)
         {
             subject = ValidateSubject(subject, false);
             queue = EmptyAsNull(ValidateQueueName(queue, false));
-            return (IJetStreamPushSyncSubscription) CreateSubscription(subject, options, null, queue, null, false);
+            return (IJetStreamPushSyncSubscription) CreateSubscription(subject, options, null, queue, null, false, null);
         }
 
         public IStreamContext GetStreamContext(string streamName)

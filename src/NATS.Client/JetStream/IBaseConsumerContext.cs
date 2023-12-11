@@ -8,6 +8,12 @@ namespace NATS.Client.JetStream
     public interface IBaseConsumerContext
     {
         /// <summary>
+        /// Gets the consumer name that was used to create the context.
+        /// </summary>
+        /// <returns>the consumer name</returns>
+        string ConsumerName { get; }
+
+        /// <summary>
         /// Read the next message with optional provided max wait
         /// </summary>
         /// <param name="maxWaitMillis">optional max wait value in milliseconds. Defaults to {@value BaseConsumeOptions#DEFAULT_EXPIRES_IN_MS}</param>
