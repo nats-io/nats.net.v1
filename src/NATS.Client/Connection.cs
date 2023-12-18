@@ -400,6 +400,12 @@ namespace NATS.Client
                         client = null;
                         throw new NATSConnectionException("timeout");
                     }
+                    if (HasBoundTargetPort(client, s))
+                    {
+                        close(client);
+                        client = null;
+                        throw new NATSConnectionException("wrong port bound");
+                    }
 
                     client.NoDelay = false;
 
@@ -411,6 +417,41 @@ namespace NATS.Client
                     // save off the hostname
                     hostName = s.Url.Host;
                 }
+            }
+
+            private bool HasBoundTargetPort(TcpClient client, Srv s)
+            {
+                if(!(client.Client.LocalEndPoint is IPEndPoint ipEndpoint && ipEndpoint.Port == s.Url.Port))
+                {
+                    return false;
+                }
+
+#if NETSTANDARD1_6
+                //netstandard1.6 doesn't know the System.Net.Dns class. Shortcut it to avoid problems
+                return true;
+#else
+                try
+                { 
+                    // get host IP addresses
+                    IPAddress[] hostIPs = Dns.GetHostAddresses(s.Url.Host);
+                    // get local IP addresses
+                    IPAddress[] localIPs = Dns.GetHostAddresses(Dns.GetHostName());
+
+                    // test if any host IP equals to any local IP or to localhost
+                    foreach (IPAddress hostIP in hostIPs)
+                    {
+                        // is localhost
+                        if (IPAddress.IsLoopback(hostIP)) return true;
+                        // is local address
+                        foreach (IPAddress localIP in localIPs)
+                        {
+                            if (hostIP.Equals(localIP)) return true;
+                        }
+                    }
+                }
+                catch { }
+                return false;
+#endif
             }
 
             private static bool remoteCertificateValidation(
