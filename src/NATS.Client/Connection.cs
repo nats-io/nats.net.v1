@@ -1172,8 +1172,7 @@ namespace NATS.Client
 
         internal bool connect(Srv s, out Exception exToThrow)
         {
-            Dbg.dbg("[2] connect(.,.)");
-
+            bool authAuthError = false;
             url = s.Url;
             try
             {
@@ -1183,47 +1182,37 @@ namespace NATS.Client
 
                 for(var i = 0; i < 6; i++) //Precaution to not end up in server returning ExTypeA, ExTypeB, ExTypeA etc.
                 {
-                    Dbg.dbg("[2] connect(.,.)", "!loop " + i);
                     try
                     {
                         lock (mu)
                         {
                             if (!createConn(s, out exToThrow))
-                            {
-                                Dbg.dbg("[2] connect(.,.)", "!createConn ? " + exToThrow);
                                 return false;
-                            }
 
                             processConnectInit(s);
                             exToThrow = null;
 
-                            Dbg.dbg("[2] connect(.,.)", "connected???");
                             return true;
                         }
                     }
                     catch (NATSConnectionException ex)
                     {
                         string message = ex.Message.ToLower();
-                        Dbg.dbg("[2] connect(.,.)", "message'" + message + "'");
-                        
                         if (!NATSException.IsAuthenticationOrAuthorizationError(message, true))
                         {
-                            Dbg.dbg("[2] connect(.,.)", "NOT IsAuthenticationOrAuthorizationError");
+                            authAuthError = true;
                             throw;
                         }
 
-                        Dbg.dbg("[2] connect(.,.)", "ScheduleErrorEvent");
                         ScheduleErrorEvent(s, ex);
 
                         // avoiding double the same
                         if (lastAuthExMessage == null || !lastAuthExMessage.Equals(message))
                         {
                             lastAuthExMessage = message;
-                            Dbg.dbg("[2] connect(.,.)", "avoiding double the same");
                             continue;
                         }
 
-                        Dbg.dbg("[2] connect(.,.)", "throw");
                         throw;
                     }
                 }
@@ -1231,7 +1220,7 @@ namespace NATS.Client
             catch (Exception ex)
             {
                 exToThrow = ex;
-                close(ConnState.DISCONNECTED, false, ex);
+                close(ConnState.DISCONNECTED, false, ex, authAuthError);
                 lock (mu)
                 {
                     url = null;
@@ -1253,7 +1242,6 @@ namespace NATS.Client
 
             setupServerPool();
 
-            Dbg.dbg("[1] connect(...)", "reconnectOnConnect:" + reconnectOnConnect);
             srvProvider.ConnectToAServer(srv => connect(srv, out exToThrow));
 
             lock (mu)
@@ -1266,7 +1254,6 @@ namespace NATS.Client
                     }
                     else
                     {
-                        Dbg.dbg("[1] connect(...)", "exToThrow" + exToThrow);
                         if (exToThrow is NATSException)
                         {
                             throw exToThrow;
@@ -1430,7 +1417,6 @@ namespace NATS.Client
 
             if (userJWT != null || nkey != null)
             {
-                Dbg.dbg("[8] JWT", "\n" + userJWT + "\n" + opts.UserJWTEventHandler.GetHashCode() + " " + opts.UserSignatureEventHandler.GetHashCode());
                 if (opts.UserSignatureEventHandler == null)
                 {
                     if (userJWT == null) {
@@ -1652,7 +1638,6 @@ namespace NATS.Client
         // go client
         private void doReconnect()
         {
-            Dbg.dbg("[6] doReconnect()");
             // We want to make sure we have the other watchers shutdown properly
             // here before we proceed past this point
             waitForExits();
@@ -1673,7 +1658,6 @@ namespace NATS.Client
                 var errorForHandler = lastEx;
                 lastEx = null;
 
-                Dbg.dbg("[6] doReconnect()", "schedule Disconnnect message");
                 scheduleConnEvent(Opts.DisconnectedEventHandlerOrDefault, errorForHandler);
 
                 Srv cur;
@@ -1724,19 +1708,14 @@ namespace NATS.Client
 
                     try
                     {
-                        Dbg.dbg("[6] doReconnect()", "try to create a new connection");
                         // try to create a new connection
-                        if (!createConn(cur, out lastEx))
-                        {
-                            Dbg.dbg("[6] doReconnect()", "try !createConn: " + lastEx.Message);
+                        if(!createConn(cur, out lastEx))
                             continue;
-                        }
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         // not yet connected, retry and hold
                         // the lock.
-                        Dbg.dbg("[6] doReconnect()", "try Exception: " + e.Message);
                         lastEx = null;
                         continue;
                     }
@@ -1744,12 +1723,10 @@ namespace NATS.Client
                     // process our connect logic
                     try
                     {
-                        Dbg.dbg("[6] doReconnect()", "processConnectInit");
                         processConnectInit(cur);
                     }
                     catch (Exception e)
                     {
-                        Dbg.dbg("[6] doReconnect()", "processConnectInit Exception: " + e);
                         lastEx = e;
                         status = ConnState.RECONNECTING;
                         continue;
@@ -2475,13 +2452,13 @@ namespace NATS.Client
         // sets the connection's lastError.
         internal void processErr(MemoryStream errorStream)
         {
-            string s = getNormalizedError(errorStream);
+            string normalizedErrorText = getNormalizedError(errorStream);
 
-            if (IC.STALE_CONNECTION.Equals(s))
+            if (IC.STALE_CONNECTION.Equals(normalizedErrorText))
             {
                 processOpError(new NATSStaleConnectionException());
             }
-            else if (IC.AUTH_TIMEOUT.Equals(s))
+            else if (IC.AUTH_TIMEOUT.Equals(normalizedErrorText))
             {
                 // Protect against a timing issue where an authoriztion error
                 // is handled before the connection close from the server.
@@ -2490,7 +2467,7 @@ namespace NATS.Client
             }
             else
             {
-                NATSException ex = new NATSException("Error from processErr(): " + s);
+                NATSException ex = new NATSException("Error from processErr(): " + normalizedErrorText);
                 bool invokeDelegates = false;
                 
                 lock (mu)
@@ -2503,9 +2480,10 @@ namespace NATS.Client
                     }
                 }
 
-                close(ConnState.CLOSED, invokeDelegates, ex);
+                bool authAuthError = NATSException.IsAuthenticationOrAuthorizationError(normalizedErrorText);
+                close(ConnState.CLOSED, invokeDelegates, ex, authAuthError);
 
-                if (NATSException.IsAuthenticationOrAuthorizationError(s))
+                if (authAuthError)
                 {
                     processReconnect();
                 }
@@ -4726,7 +4704,7 @@ namespace NATS.Client
         // desired status. Also controls whether user defined callbacks
         // will be triggered. The lock should not be held entering this
         // function. This function will handle the locking manually.
-        private void close(ConnState closeState, bool invokeDelegates, Exception error = null)
+        private void close(ConnState closeState, bool invokeDelegates, Exception error, bool authAuthError)
         {
             lock (mu)
             {
@@ -4755,14 +4733,16 @@ namespace NATS.Client
 
                 stopPingTimer();
 
-                // Close sync subscriber channels and release any
-                // pending NextMsg() calls.
-                foreach (Subscription s in subs.Values)
+                if (!authAuthError)
                 {
-                    s.close();
+                    // Close sync subscriber channels and release any
+                    // pending NextMsg() calls.
+                    foreach (Subscription s in subs.Values)
+                    {
+                        s.close();
+                    }
+                    subs.Clear();
                 }
-
-                subs.Clear();
 
                 // perform appropriate callback is needed for a
                 // disconnect;
@@ -4833,7 +4813,7 @@ namespace NATS.Client
         /// <seealso cref="State"/>
         public void Close()
         {
-            close(ConnState.CLOSED, true, lastEx);
+            close(ConnState.CLOSED, true, lastEx, false);
             callbackScheduler.ScheduleStop();
             disableSubChannelPooling();
         }
