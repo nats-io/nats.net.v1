@@ -1172,6 +1172,7 @@ namespace NATS.Client
 
         internal bool connect(Srv s, out Exception exToThrow)
         {
+            bool authAuthError = false;
             url = s.Url;
             try
             {
@@ -1199,6 +1200,7 @@ namespace NATS.Client
                         string message = ex.Message.ToLower();
                         if (!NATSException.IsAuthenticationOrAuthorizationError(message, true))
                         {
+                            authAuthError = true;
                             throw;
                         }
 
@@ -1218,7 +1220,7 @@ namespace NATS.Client
             catch (Exception ex)
             {
                 exToThrow = ex;
-                close(ConnState.DISCONNECTED, false, ex);
+                close(ConnState.DISCONNECTED, false, ex, authAuthError);
                 lock (mu)
                 {
                     url = null;
@@ -2450,13 +2452,13 @@ namespace NATS.Client
         // sets the connection's lastError.
         internal void processErr(MemoryStream errorStream)
         {
-            string s = getNormalizedError(errorStream);
+            string normalizedErrorText = getNormalizedError(errorStream);
 
-            if (IC.STALE_CONNECTION.Equals(s))
+            if (IC.STALE_CONNECTION.Equals(normalizedErrorText))
             {
                 processOpError(new NATSStaleConnectionException());
             }
-            else if (IC.AUTH_TIMEOUT.Equals(s))
+            else if (IC.AUTH_TIMEOUT.Equals(normalizedErrorText))
             {
                 // Protect against a timing issue where an authoriztion error
                 // is handled before the connection close from the server.
@@ -2465,7 +2467,7 @@ namespace NATS.Client
             }
             else
             {
-                NATSException ex = new NATSException("Error from processErr(): " + s);
+                NATSException ex = new NATSException("Error from processErr(): " + normalizedErrorText);
                 bool invokeDelegates = false;
                 
                 lock (mu)
@@ -2478,9 +2480,10 @@ namespace NATS.Client
                     }
                 }
 
-                close(ConnState.CLOSED, invokeDelegates, ex);
+                bool authAuthError = NATSException.IsAuthenticationOrAuthorizationError(normalizedErrorText);
+                close(ConnState.CLOSED, invokeDelegates, ex, authAuthError);
 
-                if (NATSException.IsAuthenticationOrAuthorizationError(s))
+                if (authAuthError)
                 {
                     processReconnect();
                 }
@@ -4701,7 +4704,7 @@ namespace NATS.Client
         // desired status. Also controls whether user defined callbacks
         // will be triggered. The lock should not be held entering this
         // function. This function will handle the locking manually.
-        private void close(ConnState closeState, bool invokeDelegates, Exception error = null)
+        private void close(ConnState closeState, bool invokeDelegates, Exception error, bool authAuthError)
         {
             lock (mu)
             {
@@ -4730,14 +4733,16 @@ namespace NATS.Client
 
                 stopPingTimer();
 
-                // Close sync subscriber channels and release any
-                // pending NextMsg() calls.
-                foreach (Subscription s in subs.Values)
+                if (!authAuthError)
                 {
-                    s.close();
+                    // Close sync subscriber channels and release any
+                    // pending NextMsg() calls.
+                    foreach (Subscription s in subs.Values)
+                    {
+                        s.close();
+                    }
+                    subs.Clear();
                 }
-
-                subs.Clear();
 
                 // perform appropriate callback is needed for a
                 // disconnect;
@@ -4808,7 +4813,7 @@ namespace NATS.Client
         /// <seealso cref="State"/>
         public void Close()
         {
-            close(ConnState.CLOSED, true, lastEx);
+            close(ConnState.CLOSED, true, lastEx, false);
             callbackScheduler.ScheduleStop();
             disableSubChannelPooling();
         }
