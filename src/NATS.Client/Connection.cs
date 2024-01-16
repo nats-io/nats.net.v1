@@ -1250,6 +1250,7 @@ namespace NATS.Client
                 {
                     if (reconnectOnConnect)
                     {
+                        status = ConnState.DISCONNECTED; // should be CLOSED, but reconnect works when disconnected
                         doReconnect();
                     }
                     else
