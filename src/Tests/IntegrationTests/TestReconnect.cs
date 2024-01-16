@@ -12,12 +12,12 @@
 // limitations under the License.
 
 using System;
-using NATS.Client;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Diagnostics;
-using System.Collections.Generic;
+using NATS.Client;
 using Xunit;
 
 namespace IntegrationTests
@@ -643,6 +643,37 @@ namespace IntegrationTests
             var opts = Context.GetTestOptions(Context.Server1.Port);
             Assert.True(opts.ReconnectJitter == Defaults.ReconnectJitter);
             Assert.True(opts.ReconnectJitterTLS == Defaults.ReconnectJitterTLS);
+        }
+        
+        
+        [Fact]
+        public void TestMaxReconnectOnConnect()
+        {
+            Options opts = Context.GetTestOptions(Context.Server1.Port);
+            opts.AllowReconnect = true;
+            opts.MaxReconnect = 60;
+
+            CountdownEvent latch = new CountdownEvent(1);
+            IConnection connection = null;
+            Thread t = new Thread(() =>
+            {
+                Assert.Null(connection);
+                Thread.Sleep(2000);
+                Assert.Null(connection);
+                
+                using (NATSServer s1 = NATSServer.Create(Context.Server1.Port))
+                {
+                    latch.Wait(2000);
+                    Assert.NotNull(connection);
+                    Assert.Equal(ConnState.CONNECTED, connection.State);
+                }
+            });
+            t.Start();
+
+            connection = Context.ConnectionFactory.CreateConnection(opts, true);
+            latch.Signal();
+
+            t.Join(5000);
         }
     }
 
