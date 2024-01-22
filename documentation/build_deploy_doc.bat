@@ -21,7 +21,7 @@ cd nats.net-gh-pages
 git switch gh-pages
 
 : Step 5. delete everything that is in there
-rd search /S /Q
+rd search /S /Q`
 del *.* /Q
 
 : Step 6. Move the generated docs by copying then removing the original
@@ -30,5 +30,5 @@ rd ..\nats.net\documentation\NATS.Client /S /Q
 
 : Step 7. git add, commit and push
 git add -A
-git commit -m "Docs for 1.1.1"
+git commit -m "Docs for 1.1.3"
 git push origin gh-pages
