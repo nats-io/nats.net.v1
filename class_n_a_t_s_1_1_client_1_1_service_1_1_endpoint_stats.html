@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">1.1.0</span>
+   &#160;<span id="projectnumber">1.1.2</span>
    </div>
    <div id="projectbrief">The NATS.io .NET C# Client</div>
   </td>
@@ -101,6 +101,9 @@ string&#160;</td><td class="memItemRight" valign="bottom"><b>Name</b><code> [get
 <tr class="memitem:a32685dd3b5071c9b597107276d23c563"><td class="memItemLeft" align="right" valign="top"><a id="a32685dd3b5071c9b597107276d23c563" name="a32685dd3b5071c9b597107276d23c563"></a>
 string&#160;</td><td class="memItemRight" valign="bottom"><b>Subject</b><code> [get]</code></td></tr>
 <tr class="separator:a32685dd3b5071c9b597107276d23c563"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2c7585f20d7e1ccae4718a11e78cb911"><td class="memItemLeft" align="right" valign="top"><a id="a2c7585f20d7e1ccae4718a11e78cb911" name="a2c7585f20d7e1ccae4718a11e78cb911"></a>
+string&#160;</td><td class="memItemRight" valign="bottom"><b>QueueGroup</b><code> [get]</code></td></tr>
+<tr class="separator:a2c7585f20d7e1ccae4718a11e78cb911"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a990300d9f52aa60ebd408008dd4c7596"><td class="memItemLeft" align="right" valign="top"><a id="a990300d9f52aa60ebd408008dd4c7596" name="a990300d9f52aa60ebd408008dd4c7596"></a>
 long&#160;</td><td class="memItemRight" valign="bottom"><b>NumRequests</b><code> [get]</code></td></tr>
 <tr class="separator:a990300d9f52aa60ebd408008dd4c7596"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -128,7 +131,7 @@ DateTime&#160;</td><td class="memItemRight" valign="bottom"><b>Started</b><code>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p >Endpoints stats contains various stats and custom data for an endpoint. </p>
-<p ><code> { "id": "ZP1oVevzLGu4CBORMXKKke", "name": "Service1", "version": "0.0.1", "endpoints": [{ "name": "SortEndpointAscending", "subject": "sort.ascending", "num_requests": 1, "processing_time": 538900, "average_processing_time": 538900, "started": "2023-08-15T13:51:41.318000000Z" } </code> <code> { "name": "SortEndpointDescending", "subject": "sort.descending", "num_requests": 1, "processing_time": 88400, "average_processing_time": 88400, "started": "2023-08-15T13:51:41.318000000Z" } </code> <code> { "name": "EchoEndpoint", "subject": "echo", "num_requests": 5, "processing_time": 1931600, "average_processing_time": 386320, "data": { "idata": 2, "sdata": "s-996409223" }, "started": "2023-08-15T13:51:41.318000000Z" } </code> </p>
+<p ><code> { "id": "ZP1oVevzLGu4CBORMXKKke", "name": "Service1", "version": "0.0.1", "endpoints": [{ "name": "SortEndpointAscending", "subject": "sort.ascending", "queue_group": "q", "num_requests": 1, "processing_time": 538900, "average_processing_time": 538900, "started": "2023-08-15T13:51:41.318000000Z" } </code> <code> { "name": "SortEndpointDescending", "subject": "sort.descending", "queue_group": "q", "num_requests": 1, "processing_time": 88400, "average_processing_time": 88400, "started": "2023-08-15T13:51:41.318000000Z" } </code> <code> { "name": "EchoEndpoint", "subject": "echo", "queue_group": "q", "num_requests": 5, "processing_time": 1931600, "average_processing_time": 386320, "data": { "idata": 2, "sdata": "s-996409223" }, "started": "2023-08-15T13:51:41.318000000Z" } </code> </p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>
 <li>EndpointStats.cs</li>
 </ul>

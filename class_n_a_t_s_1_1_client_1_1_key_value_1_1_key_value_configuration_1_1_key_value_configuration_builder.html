@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">1.1.0</span>
+   &#160;<span id="projectnumber">1.1.2</span>
    </div>
    <div id="projectbrief">The NATS.io .NET C# Client</div>
   </td>
@@ -134,6 +134,10 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:aaf923c305cf9bfe53c8c8cc52099a6d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab5b970d7c39bde85c1d578103f67788a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_n_a_t_s_1_1_client_1_1_key_value_1_1_key_value_configuration_1_1_key_value_configuration_builder.html">KeyValueConfigurationBuilder</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_key_value_1_1_key_value_configuration_1_1_key_value_configuration_builder.html#ab5b970d7c39bde85c1d578103f67788a">WithAllowDirect</a> (bool allowDirect)</td></tr>
 <tr class="separator:ab5b970d7c39bde85c1d578103f67788a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae0e9fd61ec774d551434a867d1d4af19"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_n_a_t_s_1_1_client_1_1_key_value_1_1_key_value_configuration_1_1_key_value_configuration_builder.html">KeyValueConfigurationBuilder</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_key_value_1_1_key_value_configuration_1_1_key_value_configuration_builder.html#ae0e9fd61ec774d551434a867d1d4af19">WithCompression</a> (bool compression)</td></tr>
+<tr class="separator:ae0e9fd61ec774d551434a867d1d4af19"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3afb7fb759c2c18f32fef140ecb0920f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_n_a_t_s_1_1_client_1_1_key_value_1_1_key_value_configuration_1_1_key_value_configuration_builder.html">KeyValueConfigurationBuilder</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_key_value_1_1_key_value_configuration_1_1_key_value_configuration_builder.html#a3afb7fb759c2c18f32fef140ecb0920f">WithMetadata</a> (IDictionary&lt; string, string &gt; metadata)</td></tr>
+<tr class="separator:a3afb7fb759c2c18f32fef140ecb0920f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afb43041f9d7e7fdbb8336c478ed1e963"><td class="memItemLeft" align="right" valign="top">KeyValueConfiguration&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_key_value_1_1_key_value_configuration_1_1_key_value_configuration_builder.html#afb43041f9d7e7fdbb8336c478ed1e963">Build</a> ()</td></tr>
 <tr class="separator:afb43041f9d7e7fdbb8336c478ed1e963"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -321,6 +325,33 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="ae0e9fd61ec774d551434a867d1d4af19" name="ae0e9fd61ec774d551434a867d1d4af19"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae0e9fd61ec774d551434a867d1d4af19">&#9670;&nbsp;</a></span>WithCompression()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_key_value_1_1_key_value_configuration_1_1_key_value_configuration_builder.html">KeyValueConfigurationBuilder</a> NATS.Client.KeyValue.KeyValueConfiguration.KeyValueConfigurationBuilder.WithCompression </td>
+          <td>(</td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>compression</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set whether to have compression. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">compression</td><td>true to use the default compression algorithm of the KV backing store.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The <a class="el" href="class_n_a_t_s_1_1_client_1_1_key_value_1_1_key_value_configuration_1_1_key_value_configuration_builder.html" title="KeyValueConfiguration is created using a Builder. The builder supports chaining and will create a def...">KeyValueConfigurationBuilder</a></dd></dl>
+
+</div>
+</div>
 <a id="a77e46f3e5aafd3fda224ea9deb433197" name="a77e46f3e5aafd3fda224ea9deb433197"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a77e46f3e5aafd3fda224ea9deb433197">&#9670;&nbsp;</a></span>WithDescription()</h2>
 
@@ -426,6 +457,33 @@ Public Member Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd></dd></dl>
+
+</div>
+</div>
+<a id="a3afb7fb759c2c18f32fef140ecb0920f" name="a3afb7fb759c2c18f32fef140ecb0920f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3afb7fb759c2c18f32fef140ecb0920f">&#9670;&nbsp;</a></span>WithMetadata()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_key_value_1_1_key_value_configuration_1_1_key_value_configuration_builder.html">KeyValueConfigurationBuilder</a> NATS.Client.KeyValue.KeyValueConfiguration.KeyValueConfigurationBuilder.WithMetadata </td>
+          <td>(</td>
+          <td class="paramtype">IDictionary&lt; string, string &gt;&#160;</td>
+          <td class="paramname"><em>metadata</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Sets the metadata for the configuration </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">metadata</td><td>the metadata dictionary</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The <a class="el" href="class_n_a_t_s_1_1_client_1_1_key_value_1_1_key_value_configuration_1_1_key_value_configuration_builder.html" title="KeyValueConfiguration is created using a Builder. The builder supports chaining and will create a def...">KeyValueConfigurationBuilder</a></dd></dl>
 
 </div>
 </div>

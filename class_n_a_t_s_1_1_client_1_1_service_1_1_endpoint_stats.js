@@ -8,6 +8,7 @@ var class_n_a_t_s_1_1_client_1_1_service_1_1_endpoint_stats =
     [ "NumErrors", "class_n_a_t_s_1_1_client_1_1_service_1_1_endpoint_stats.html#a4266520dff261462e19dfc3c798a4887", null ],
     [ "NumRequests", "class_n_a_t_s_1_1_client_1_1_service_1_1_endpoint_stats.html#a990300d9f52aa60ebd408008dd4c7596", null ],
     [ "ProcessingTime", "class_n_a_t_s_1_1_client_1_1_service_1_1_endpoint_stats.html#a2602263036835ddbae0d4f7b9e098a2e", null ],
+    [ "QueueGroup", "class_n_a_t_s_1_1_client_1_1_service_1_1_endpoint_stats.html#a2c7585f20d7e1ccae4718a11e78cb911", null ],
     [ "Started", "class_n_a_t_s_1_1_client_1_1_service_1_1_endpoint_stats.html#ab284fe67a8de174133b09811b799bbea", null ],
     [ "Subject", "class_n_a_t_s_1_1_client_1_1_service_1_1_endpoint_stats.html#a32685dd3b5071c9b597107276d23c563", null ]
 ];

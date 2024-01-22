@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">1.1.0</span>
+   &#160;<span id="projectnumber">1.1.2</span>
    </div>
    <div id="projectbrief">The NATS.io .NET C# Client</div>
   </td>
@@ -111,6 +111,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a95639a0b742851ba89d1b0136b186031"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7d6ba1cb7a61bf74b41e4e95f9c53ea4"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_service_1_1_endpoint.html#a7d6ba1cb7a61bf74b41e4e95f9c53ea4">Endpoint</a> (string name, string subject, IDictionary&lt; string, string &gt; metadata)</td></tr>
 <tr class="separator:a7d6ba1cb7a61bf74b41e4e95f9c53ea4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1cfd01d3972c1bdd6d0a6cd420e9f51d"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_service_1_1_endpoint.html#a1cfd01d3972c1bdd6d0a6cd420e9f51d">Endpoint</a> (string name, string subject, string queueGroup, IDictionary&lt; string, string &gt; metadata)</td></tr>
+<tr class="separator:a1cfd01d3972c1bdd6d0a6cd420e9f51d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aec9213a1d6475ed30896171ff2a68b78"><td class="memItemLeft" align="right" valign="top"><a id="aec9213a1d6475ed30896171ff2a68b78" name="aec9213a1d6475ed30896171ff2a68b78"></a>
 override JSONNode&#160;</td><td class="memItemRight" valign="bottom"><b>ToJsonNode</b> ()</td></tr>
 <tr class="separator:aec9213a1d6475ed30896171ff2a68b78"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -128,6 +130,9 @@ string&#160;</td><td class="memItemRight" valign="bottom"><b>Name</b><code> [get
 <tr class="memitem:aafdf38a86c659ba9947023ffc9347040"><td class="memItemLeft" align="right" valign="top"><a id="aafdf38a86c659ba9947023ffc9347040" name="aafdf38a86c659ba9947023ffc9347040"></a>
 string&#160;</td><td class="memItemRight" valign="bottom"><b>Subject</b><code> [get]</code></td></tr>
 <tr class="separator:aafdf38a86c659ba9947023ffc9347040"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0aaa6693a7b55d88ca6a13b0770e875e"><td class="memItemLeft" align="right" valign="top"><a id="a0aaa6693a7b55d88ca6a13b0770e875e" name="a0aaa6693a7b55d88ca6a13b0770e875e"></a>
+string&#160;</td><td class="memItemRight" valign="bottom"><b>QueueGroup</b><code> [get]</code></td></tr>
+<tr class="separator:a0aaa6693a7b55d88ca6a13b0770e875e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a895d1773c27024cf11a5477874d8462d"><td class="memItemLeft" align="right" valign="top"><a id="a895d1773c27024cf11a5477874d8462d" name="a895d1773c27024cf11a5477874d8462d"></a>
 IDictionary&lt; string, string &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>Metadata</b><code> [get]</code></td></tr>
 <tr class="separator:a895d1773c27024cf11a5477874d8462d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -139,7 +144,7 @@ IDictionary&lt; string, string &gt;&#160;</td><td class="memItemRight" valign="b
 <p >To create an <a class="el" href="class_n_a_t_s_1_1_client_1_1_service_1_1_endpoint.html" title="Endpoint encapsulates the name, subject and metadata for a ServiceEndpoint.">Endpoint</a>, either use a direct constructor or use the <a class="el" href="class_n_a_t_s_1_1_client_1_1_service_1_1_endpoint.html" title="Endpoint encapsulates the name, subject and metadata for a ServiceEndpoint.">Endpoint</a> builder via the static method <code>builder()</code> or <code>new <a class="el" href="class_n_a_t_s_1_1_client_1_1_service_1_1_endpoint.html#aa2d44d31eff552f51fda0af7edb88076" title="Get an instance of an Endpoint builder.">Endpoint.Builder()</a> to get an instance.</code> </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="ada2cb0c2abd878d985c764d40871be61" name="ada2cb0c2abd878d985c764d40871be61"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ada2cb0c2abd878d985c764d40871be61">&#9670;&nbsp;</a></span>Endpoint() <span class="overload">[1/4]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#ada2cb0c2abd878d985c764d40871be61">&#9670;&nbsp;</a></span>Endpoint() <span class="overload">[1/5]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -165,7 +170,7 @@ IDictionary&lt; string, string &gt;&#160;</td><td class="memItemRight" valign="b
 </div>
 </div>
 <a id="aa36c4fa3ef4e5c2253f795427adb8dee" name="aa36c4fa3ef4e5c2253f795427adb8dee"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa36c4fa3ef4e5c2253f795427adb8dee">&#9670;&nbsp;</a></span>Endpoint() <span class="overload">[2/4]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#aa36c4fa3ef4e5c2253f795427adb8dee">&#9670;&nbsp;</a></span>Endpoint() <span class="overload">[2/5]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -202,7 +207,7 @@ IDictionary&lt; string, string &gt;&#160;</td><td class="memItemRight" valign="b
 </div>
 </div>
 <a id="a95639a0b742851ba89d1b0136b186031" name="a95639a0b742851ba89d1b0136b186031"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a95639a0b742851ba89d1b0136b186031">&#9670;&nbsp;</a></span>Endpoint() <span class="overload">[3/4]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a95639a0b742851ba89d1b0136b186031">&#9670;&nbsp;</a></span>Endpoint() <span class="overload">[3/5]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -239,7 +244,7 @@ IDictionary&lt; string, string &gt;&#160;</td><td class="memItemRight" valign="b
 </div>
 </div>
 <a id="a7d6ba1cb7a61bf74b41e4e95f9c53ea4" name="a7d6ba1cb7a61bf74b41e4e95f9c53ea4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7d6ba1cb7a61bf74b41e4e95f9c53ea4">&#9670;&nbsp;</a></span>Endpoint() <span class="overload">[4/4]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a7d6ba1cb7a61bf74b41e4e95f9c53ea4">&#9670;&nbsp;</a></span>Endpoint() <span class="overload">[4/5]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -275,6 +280,57 @@ IDictionary&lt; string, string &gt;&#160;</td><td class="memItemRight" valign="b
   <table class="params">
     <tr><td class="paramname">name</td><td>the name</td></tr>
     <tr><td class="paramname">subject</td><td>the subject</td></tr>
+    <tr><td class="paramname">metadata</td><td>the metadata</td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a1cfd01d3972c1bdd6d0a6cd420e9f51d" name="a1cfd01d3972c1bdd6d0a6cd420e9f51d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1cfd01d3972c1bdd6d0a6cd420e9f51d">&#9670;&nbsp;</a></span>Endpoint() <span class="overload">[5/5]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">NATS.Client.Service.Endpoint.Endpoint </td>
+          <td>(</td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>subject</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>queueGroup</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">IDictionary&lt; string, string &gt;&#160;</td>
+          <td class="paramname"><em>metadata</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Directly construct an <a class="el" href="class_n_a_t_s_1_1_client_1_1_service_1_1_endpoint.html" title="Endpoint encapsulates the name, subject and metadata for a ServiceEndpoint.">Endpoint</a> with a name, the subject, and metadata </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">name</td><td>the name</td></tr>
+    <tr><td class="paramname">subject</td><td>the subject</td></tr>
+    <tr><td class="paramname">queueGroup</td><td>the queue group</td></tr>
     <tr><td class="paramname">metadata</td><td>the metadata</td></tr>
   </table>
   </dd>

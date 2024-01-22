@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">1.1.0</span>
+   &#160;<span id="projectnumber">1.1.2</span>
    </div>
    <div id="projectbrief">The NATS.io .NET C# Client</div>
   </td>
@@ -101,6 +101,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a0d9b41a029324121caa666de460a507f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8606fd35a4671644dc2ae52aa0d28da3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_n_a_t_s_1_1_client_1_1_service_1_1_service_endpoint_1_1_service_endpoint_builder.html">ServiceEndpointBuilder</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_service_1_1_service_endpoint_1_1_service_endpoint_builder.html#a8606fd35a4671644dc2ae52aa0d28da3">WithEndpointSubject</a> (string subject)</td></tr>
 <tr class="separator:a8606fd35a4671644dc2ae52aa0d28da3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a11a772b91a58b7006ce129f11540af32"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_n_a_t_s_1_1_client_1_1_service_1_1_service_endpoint_1_1_service_endpoint_builder.html">ServiceEndpointBuilder</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_service_1_1_service_endpoint_1_1_service_endpoint_builder.html#a11a772b91a58b7006ce129f11540af32">WithEndpointQueueGroup</a> (string queueGroup)</td></tr>
+<tr class="separator:a11a772b91a58b7006ce129f11540af32"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac6ccb1276e685d824144e59d0d917c6d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_n_a_t_s_1_1_client_1_1_service_1_1_service_endpoint_1_1_service_endpoint_builder.html">ServiceEndpointBuilder</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_service_1_1_service_endpoint_1_1_service_endpoint_builder.html#ac6ccb1276e685d824144e59d0d917c6d">WithEndpointMetadata</a> (IDictionary&lt; string, string &gt; metadata)</td></tr>
 <tr class="separator:ac6ccb1276e685d824144e59d0d917c6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5b07a1e8ec5085a1ac10ab858bcd5516"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_n_a_t_s_1_1_client_1_1_service_1_1_service_endpoint_1_1_service_endpoint_builder.html">ServiceEndpointBuilder</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_service_1_1_service_endpoint_1_1_service_endpoint_builder.html#a5b07a1e8ec5085a1ac10ab858bcd5516">WithHandler</a> (EventHandler&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_service_1_1_service_msg_handler_event_args.html">ServiceMsgHandlerEventArgs</a> &gt; handler)</td></tr>
@@ -207,6 +209,33 @@ Public Member Functions</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">name</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the <a class="el" href="class_n_a_t_s_1_1_client_1_1_service_1_1_service_endpoint_1_1_service_endpoint_builder.html" title="Build a ServiceEndpoint using a fluent builder.">ServiceEndpointBuilder</a></dd></dl>
+
+</div>
+</div>
+<a id="a11a772b91a58b7006ce129f11540af32" name="a11a772b91a58b7006ce129f11540af32"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a11a772b91a58b7006ce129f11540af32">&#9670;&nbsp;</a></span>WithEndpointQueueGroup()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_service_1_1_service_endpoint_1_1_service_endpoint_builder.html">ServiceEndpointBuilder</a> NATS.Client.Service.ServiceEndpoint.ServiceEndpointBuilder.WithEndpointQueueGroup </td>
+          <td>(</td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>queueGroup</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set the queue group for the <a class="el" href="class_n_a_t_s_1_1_client_1_1_service_1_1_endpoint.html" title="Endpoint encapsulates the name, subject and metadata for a ServiceEndpoint.">Endpoint</a> for this <a class="el" href="class_n_a_t_s_1_1_client_1_1_service_1_1_service_endpoint.html" title="The ServiceEndpoint represents the working Endpoint It allows the endpoint to be grouped....">ServiceEndpoint</a> replacing any queue group already set. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">queueGroup</td><td></td></tr>
   </table>
   </dd>
 </dl>

@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">1.1.0</span>
+   &#160;<span id="projectnumber">1.1.2</span>
    </div>
    <div id="projectbrief">The NATS.io .NET C# Client</div>
   </td>
@@ -113,6 +113,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>Clear</b> ()</td></tr
 <tr class="separator:a59a710236b63439cd93bc1df345b7ff9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa7b87ac70a063475119067437881bd1d"><td class="memItemLeft" align="right" valign="top">string[]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_msg_header.html#aa7b87ac70a063475119067437881bd1d">GetValues</a> (string name)</td></tr>
 <tr class="separator:aa7b87ac70a063475119067437881bd1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a775b0a4e37a98406d536729abc879ac4"><td class="memItemLeft" align="right" valign="top">string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_msg_header.html#a775b0a4e37a98406d536729abc879ac4">GetFirst</a> (string name)</td></tr>
+<tr class="separator:a775b0a4e37a98406d536729abc879ac4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7ada2e90b65573e035ac59fd5a1b3fa9"><td class="memItemLeft" align="right" valign="top">string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_msg_header.html#a7ada2e90b65573e035ac59fd5a1b3fa9">GetLast</a> (string name)</td></tr>
+<tr class="separator:a7ada2e90b65573e035ac59fd5a1b3fa9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a896d7750f0e9fc759f32921f6f3702bd"><td class="memItemLeft" align="right" valign="top">IEnumerator&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_msg_header.html#a896d7750f0e9fc759f32921f6f3702bd">GetEnumerator</a> ()</td></tr>
 <tr class="separator:a896d7750f0e9fc759f32921f6f3702bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -227,6 +231,60 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>Count</b><code> [get]<
 </div><div class="memdoc">
 
 <p>Returns an enumerator that iterates through the message header keys. </p>
+<dl class="section return"><dt>Returns</dt><dd></dd></dl>
+
+</div>
+</div>
+<a id="a775b0a4e37a98406d536729abc879ac4" name="a775b0a4e37a98406d536729abc879ac4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a775b0a4e37a98406d536729abc879ac4">&#9670;&nbsp;</a></span>GetFirst()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">string NATS.Client.MsgHeader.GetFirst </td>
+          <td>(</td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>name</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Gets the first value for the specific key. Will be null if the key is not found </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">name</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd></dd></dl>
+
+</div>
+</div>
+<a id="a7ada2e90b65573e035ac59fd5a1b3fa9" name="a7ada2e90b65573e035ac59fd5a1b3fa9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7ada2e90b65573e035ac59fd5a1b3fa9">&#9670;&nbsp;</a></span>GetLast()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">string NATS.Client.MsgHeader.GetLast </td>
+          <td>(</td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>name</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Gets the last value for the specific key. Will be null if the key is not found </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">name</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
 <dl class="section return"><dt>Returns</dt><dd></dd></dl>
 
 </div>

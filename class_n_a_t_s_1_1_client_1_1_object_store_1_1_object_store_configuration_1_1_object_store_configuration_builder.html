@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">1.1.0</span>
+   &#160;<span id="projectnumber">1.1.2</span>
    </div>
    <div id="projectbrief">The NATS.io .NET C# Client</div>
   </td>
@@ -114,6 +114,10 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:aafa5def532fb4e695d7f7f0240bf4552"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7139b9d205f89900ee34551aaedca54f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_n_a_t_s_1_1_client_1_1_object_store_1_1_object_store_configuration_1_1_object_store_configuration_builder.html">ObjectStoreConfigurationBuilder</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_object_store_1_1_object_store_configuration_1_1_object_store_configuration_builder.html#a7139b9d205f89900ee34551aaedca54f">WithPlacement</a> (<a class="el" href="class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_placement.html">Placement</a> placement)</td></tr>
 <tr class="separator:a7139b9d205f89900ee34551aaedca54f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6b981c938077640107d4fc03d0863e8f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_n_a_t_s_1_1_client_1_1_object_store_1_1_object_store_configuration_1_1_object_store_configuration_builder.html">ObjectStoreConfigurationBuilder</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_object_store_1_1_object_store_configuration_1_1_object_store_configuration_builder.html#a6b981c938077640107d4fc03d0863e8f">WithCompression</a> (bool compression)</td></tr>
+<tr class="separator:a6b981c938077640107d4fc03d0863e8f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad69923704bbb73a738b857bdc87ca37d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_n_a_t_s_1_1_client_1_1_object_store_1_1_object_store_configuration_1_1_object_store_configuration_builder.html">ObjectStoreConfigurationBuilder</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_object_store_1_1_object_store_configuration_1_1_object_store_configuration_builder.html#ad69923704bbb73a738b857bdc87ca37d">WithMetadata</a> (IDictionary&lt; string, string &gt; metadata)</td></tr>
+<tr class="separator:ad69923704bbb73a738b857bdc87ca37d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4b4a225a9e3249f8e3ffc0ec394be81e"><td class="memItemLeft" align="right" valign="top">ObjectStoreConfiguration&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_object_store_1_1_object_store_configuration_1_1_object_store_configuration_builder.html#a4b4a225a9e3249f8e3ffc0ec394be81e">Build</a> ()</td></tr>
 <tr class="separator:a4b4a225a9e3249f8e3ffc0ec394be81e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -193,6 +197,33 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="a6b981c938077640107d4fc03d0863e8f" name="a6b981c938077640107d4fc03d0863e8f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6b981c938077640107d4fc03d0863e8f">&#9670;&nbsp;</a></span>WithCompression()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_object_store_1_1_object_store_configuration_1_1_object_store_configuration_builder.html">ObjectStoreConfigurationBuilder</a> NATS.Client.ObjectStore.ObjectStoreConfiguration.ObjectStoreConfigurationBuilder.WithCompression </td>
+          <td>(</td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>compression</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set whether to have compression. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">compression</td><td>true to use the default compression algorithm of the Object Store backing.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The <a class="el" href="class_n_a_t_s_1_1_client_1_1_object_store_1_1_object_store_configuration_1_1_object_store_configuration_builder.html" title="ObjectStoreConfiguration is created using a Builder. The builder supports chaining and will create a ...">ObjectStoreConfigurationBuilder</a></dd></dl>
+
+</div>
+</div>
 <a id="a45affc36559a799c7ca83f39c8b1e9cc" name="a45affc36559a799c7ca83f39c8b1e9cc"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a45affc36559a799c7ca83f39c8b1e9cc">&#9670;&nbsp;</a></span>WithDescription()</h2>
 
@@ -244,6 +275,33 @@ Public Member Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd></dd></dl>
+
+</div>
+</div>
+<a id="ad69923704bbb73a738b857bdc87ca37d" name="ad69923704bbb73a738b857bdc87ca37d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad69923704bbb73a738b857bdc87ca37d">&#9670;&nbsp;</a></span>WithMetadata()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_object_store_1_1_object_store_configuration_1_1_object_store_configuration_builder.html">ObjectStoreConfigurationBuilder</a> NATS.Client.ObjectStore.ObjectStoreConfiguration.ObjectStoreConfigurationBuilder.WithMetadata </td>
+          <td>(</td>
+          <td class="paramtype">IDictionary&lt; string, string &gt;&#160;</td>
+          <td class="paramname"><em>metadata</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Sets the metadata for the configuration </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">metadata</td><td>the metadata dictionary</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The <a class="el" href="class_n_a_t_s_1_1_client_1_1_object_store_1_1_object_store_configuration_1_1_object_store_configuration_builder.html" title="ObjectStoreConfiguration is created using a Builder. The builder supports chaining and will create a ...">ObjectStoreConfigurationBuilder</a></dd></dl>
 
 </div>
 </div>
