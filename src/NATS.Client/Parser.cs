@@ -13,6 +13,7 @@
 
 using System;
 using System.IO;
+using System.Text;
      
 namespace NATS.Client
 {
@@ -91,7 +92,7 @@ namespace NATS.Client
 
         private void parseError(byte[] buffer, int position)
         {
-            throw new NATSException(string.Format("Parse Error [{0}], {1}", state, buffer));
+            throw new NATSException(string.Format("Parse Error at position {0} [{1}] {2}", position, state, Encoding.UTF8.GetString(buffer)));
         }
 
         internal void parse(byte[] buffer, int len)
