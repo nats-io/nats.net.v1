@@ -33,8 +33,8 @@ namespace NATS.Client.JetStream
         /// <summary>30_000</summary>
         public const int DefaultExpiresInMillis = 30000;
         
-        /// <summary>1000</summary>
-        public const int MinExpiresMills = 1000;
+        /// <summary>100</summary>
+        public const int MinExpiresMills = 100;
         
         /// <summary>30_000</summary>
         public const int MaxHearbeatMillis = 30000;
