@@ -11,7 +11,8 @@ namespace NATSExamples
 {
     public class Monitor
     {
-        const string Label = "MONITOR";
+        const string MonitorLabel = "MONITOR";
+        
         const int ReportFrequency = 5000;
         const int ShortReports = 50;
 
@@ -29,7 +30,7 @@ namespace NATSExamples
 
         public void Run()
         {
-            Options opts = cmd.MakeOptions(Label, () => { reportFull.Set(true); });
+            Options opts = cmd.MakeOptions(() => MonitorLabel, () => { reportFull.Set(true); });
             long started = DateTimeOffset.Now.ToUnixTimeMilliseconds();
             int shortReportsOwed = 0;
             using (IConnection conn = new ConnectionFactory().CreateConnection(opts))
@@ -40,52 +41,52 @@ namespace NATSExamples
                     Thread.Sleep(ReportFrequency);
                     try
                     {
-                    StringBuilder conReport = new StringBuilder();
-                    if (reportFull.IsTrue()) {
-                        StreamInfo si = jsm.GetStreamInfo(cmd.Stream);
-                        Output.Debug(Label, "si.Config " + si.Config);
-                        Output.Debug(Label, "si.ClusterInfo " + si.ClusterInfo);
-                        String message = "Stream\n" + Formatted(si.Config)
-                                                    + "\n" + Formatted(si.ClusterInfo);
-                        Output.ControlMessage(Label, message);
-                        reportFull.Set(false);
-                        if (consumers != null) {
-                            foreach (ConnectableConsumer con in consumers) {
-                                con.refreshInfo();
+                        StringBuilder conReport = new StringBuilder();
+                        if (reportFull.IsTrue()) {
+                            StreamInfo si = jsm.GetStreamInfo(cmd.Stream);
+                            Output.Debug(MonitorLabel, "si.Config " + si.Config);
+                            Output.Debug(MonitorLabel, "si.ClusterInfo " + si.ClusterInfo);
+                            String message = "Stream\n" + Formatted(si.Config)
+                                                        + "\n" + Formatted(si.ClusterInfo);
+                            Output.ControlMessage(MonitorLabel, message);
+                            reportFull.Set(false);
+                            if (consumers != null) {
+                                foreach (ConnectableConsumer con in consumers) {
+                                    con.refreshInfo();
+                                }
                             }
                         }
-                    }
-                    if (shortReportsOwed < 1) {
-                        shortReportsOwed = ShortReports;
-                        if (consumers != null) {
-                            foreach (ConnectableConsumer con in consumers) {
-                                conReport.Append("\n").Append(con.Label).Append(" | Last Sequence: ").Append(con.LastReceivedSequence);
+                        if (shortReportsOwed < 1) {
+                            shortReportsOwed = ShortReports;
+                            if (consumers != null) {
+                                foreach (ConnectableConsumer con in consumers) {
+                                    conReport.Append("\n").Append(con.Label).Append(" | Last Sequence: ").Append(con.LastReceivedSequence);
+                                }
                             }
                         }
-                    }
-                    else {
-                        shortReportsOwed--;
-                        if (consumers != null) {
-                            foreach (ConnectableConsumer con in consumers) {
-                                conReport.Append(" | ")
-                                    .Append(con.Name)
-                                    .Append(": ")
-                                    .Append(con.LastReceivedSequence);
+                        else {
+                            shortReportsOwed--;
+                            if (consumers != null) {
+                                foreach (ConnectableConsumer con in consumers) {
+                                    conReport.Append(" | ")
+                                        .Append(con.Name)
+                                        .Append(": ")
+                                        .Append(con.LastReceivedSequence);
+                                }
                             }
                         }
-                    }
 
-                    String pubReport = "";
-                    if (publisher != null) {
-                        pubReport = "| Publisher: " + publisher.LastSeqno() +
-                            (publisher.IsInErrorState() ? " (Paused)" : " (Running)");
-                    }
-                    ControlMessage(Label, "Uptime: " + uptime(started) + pubReport + conReport);
+                        String pubReport = "";
+                        if (publisher != null) {
+                            pubReport = " | Publisher: " + publisher.LastSeqno() +
+                                        (publisher.IsInErrorState() ? " (Paused)" : " (Running)");
+                        }
+                        ControlMessage(MonitorLabel, "Uptime: " + uptime(started) + pubReport + conReport);
 
                     }
                     catch (Exception e)
                     {
-                        ControlMessage(Label, e.Message);
+                        ControlMessage(MonitorLabel, e.Message + "\n" + e.StackTrace);
                         reportFull.Set(true);
                     }
                 }

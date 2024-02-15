@@ -21,7 +21,7 @@ namespace NATSExamples
 
         public override void refreshInfo()
         {
-            UpdateNameAndLabel(sub.Consumer);
+            UpdateLabel(sub.Consumer);
         }
     }
 }

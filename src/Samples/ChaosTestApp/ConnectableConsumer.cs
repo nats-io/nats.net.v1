@@ -15,12 +15,12 @@ namespace NATSExamples
         protected readonly EventHandler<MsgHandlerEventArgs> Handler;
 
         protected readonly CommandLine Cmd;
-        protected String Initials;
-        public String Name { get; protected set; }
-        public String DurableName { get; protected set; }
-        public String Label { get; protected set; }
+        protected string Initials;
+        public string Name { get; protected set; }
+        public string DurableName { get; protected set; }
+        public string Label { get; protected set; }
 
-        public ConnectableConsumer(CommandLine cmd, String initials, ConsumerKind consumerKind)
+        public ConnectableConsumer(CommandLine cmd, string initials, ConsumerKind consumerKind)
         {
             Cmd = cmd;
             lastReceivedSequence = new InterlockedLong(0);
@@ -28,43 +28,52 @@ namespace NATSExamples
             
             switch (consumerKind) {
                 case ConsumerKind.Durable:
-                    DurableName = initials + "-dur-" + new Nuid().GetNextSequence();
+                    DurableName = initials + "-dur-" + ConsumerName();
                     Name = DurableName;
                     break;
                 case ConsumerKind.Ephemeral:
                     DurableName = null;
-                    Name = initials + "-eph-" + new Nuid().GetNextSequence();
+                    Name = initials + "-eph-" + ConsumerName();
                     break;
                 case ConsumerKind.Ordered:
                     DurableName = null;
-                    Name = initials + "-ord-" + new Nuid().GetNextSequence();
+                    Name = initials + "-ord-" + ConsumerName();
                     break;
             }
             Initials = initials;
-            UpdateNameAndLabel(Name);
+            Label = Name + " (" + Enums.ToString(ConsumerKind) + ")"; 
 
-            Conn = new ConnectionFactory().CreateConnection(cmd.MakeOptions(Label));
+            Conn = new ConnectionFactory().CreateConnection(cmd.MakeOptions(() => Label));
             Js = Conn.CreateJetStreamContext();
 
             Handler = (s, e) =>
             {
                 Msg m = e.Message;
-                m.Ack();
-                long seq = (long)m.MetaData.StreamSequence;
-                lastReceivedSequence.Set(seq);
-                Output.Work(Label, "Last Received Seq: " + seq);
+                OnMessage(m);
             };
         }
- 
+
+        private static string ConsumerName()
+        {
+            return "" + new Nuid().GetNextSequence();
+        }
+
+        protected void OnMessage(Msg m)
+        {
+            m.Ack();
+            long seq = (long)m.MetaData.StreamSequence;
+            long lastSeq = lastReceivedSequence.Read();
+            lastReceivedSequence.Set(seq);
+            Output.WorkMessage(Label, "Last Received Seq: " + seq + "(" + lastSeq + ")");
+        }
+
         public abstract void refreshInfo();
 
-        protected void UpdateNameAndLabel(String updatedName) {
-            Name = updatedName;
-            if (updatedName == null)
+        protected void UpdateLabel(string conName) {
+            if (!Name.Contains(conName))
             {
-                Label = Enums.ToString(ConsumerKind);
-            }
-            else {
+                int at = Name.LastIndexOf("-");
+                Name = Name.Substring(0, at + 1) + conName;
                 Label = Name + " (" + Enums.ToString(ConsumerKind) + ")";
             }
         }

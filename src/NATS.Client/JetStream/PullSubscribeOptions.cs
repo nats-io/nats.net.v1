@@ -21,14 +21,31 @@ namespace NATS.Client.JetStream
         private PullSubscribeOptions(ISubscribeOptionsBuilder builder) : base(builder, true, null, null) {}
 
         /// <summary>
-        /// Create PushSubscribeOptions where you are binding to
+        /// Create PullSubscribeOptions where you are binding to
         /// a specific stream, specific durable and are using bind mode
         /// </summary>
         /// <param name="stream">the stream name to bind to</param>
         /// <param name="name">the consumer name, commonly the durable name</param>
-        /// <returns>the PushSubscribeOptions</returns>
+        /// <returns>the PullSubscribeOptions</returns>
         public static PullSubscribeOptions BindTo(string stream, string name) {
-            return Builder().WithStream(stream).WithDurable(name).WithBind(true).Build();
+            return Builder().WithStream(stream).WithName(name).WithBind(true).Build();
+        }
+
+        /// <summary>
+        /// Create PullSubscribeOptions where you are fast-binding to
+        /// a specific stream and consumer by name.
+        /// The client does not validate that the provided consumer configuration
+        /// is consistent with the server version or that
+        /// consumer type (push versus pull) matches the subscription type.
+        /// An inconsistent consumer configuration for instance can result in
+        /// receiving messages from unexpected subjects.
+        /// A consumer type mismatch will result in an error from the server.
+        /// </summary>
+        /// <param name="stream">the stream name to bind to</param>
+        /// <param name="name">the consumer name, commonly the durable name</param>
+        /// <returns>the PushSubscribeOptions</returns>
+        public static PullSubscribeOptions FastBind(string stream, string name) {
+            return Builder().WithStream(stream).WithName(name).WithFastBind(true).Build();
         }
 
         /// <summary>

@@ -20,7 +20,8 @@ namespace NATS.Client.JetStream
         protected ulong ExpectedExternalConsumerSeq;
         protected long? TargetSid;
 
-        public OrderedMessageManager(Connection conn, 
+        public OrderedMessageManager(
+            Connection conn, 
             JetStream js, 
             string stream,
             SubscribeOptions so,
@@ -29,6 +30,7 @@ namespace NATS.Client.JetStream
             bool syncMode) : base(conn, js, stream, so, originalCc, queueMode, syncMode)
         {
             ExpectedExternalConsumerSeq = 1; // always starts at 1
+            TargetSid = null;
         }
 
         public override void Startup(IJetStreamSubscription sub)
@@ -89,7 +91,7 @@ namespace NATS.Client.JetStream
 
                 // 3. make a new consumer using the same deliver subject but
                 //    with a new starting point
-                ConsumerConfiguration userCc = Js.ConsumerConfigurationForOrdered(OriginalCc, LastStreamSeq, newDeliverSubject, actualConsumerName);
+                ConsumerConfiguration userCc = Js.ConsumerConfigurationForOrdered(OriginalCc, LastStreamSeq, newDeliverSubject, actualConsumerName, null);
                 ConsumerInfo ci = Js.CreateConsumerInternal(Stream, userCc);
                 if (Sub is JetStreamAbstractSyncSubscription syncSub)
                 {

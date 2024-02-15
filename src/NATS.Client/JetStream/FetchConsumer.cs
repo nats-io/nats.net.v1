@@ -11,38 +11,48 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Diagnostics;
+using System;
 
 namespace NATS.Client.JetStream
 {
     /// <summary>
     /// Implementation of IFetchConsumer
     /// </summary>
-    internal class FetchConsumer : MessageConsumerBase, IFetchConsumer
+    internal class FetchConsumer : MessageConsumerBase, IFetchConsumer, IPullManagerObserver
     {
-        private readonly int maxWaitMillis;
+        private readonly long maxWaitTicks;
         private readonly string pullSubject;
-        private Stopwatch sw;
+        private long startTicks;
 
         internal FetchConsumer(SimplifiedSubscriptionMaker subscriptionMaker,
             ConsumerInfo cachedConsumerInfo,
             FetchConsumeOptions fetchConsumeOptions) 
             : base(cachedConsumerInfo)  
         {
-            maxWaitMillis = fetchConsumeOptions.ExpiresInMillis;
+            long expiresInMillis = fetchConsumeOptions.ExpiresInMillis;
+            maxWaitTicks = expiresInMillis * TimeSpan.TicksPerMillisecond;
+
+            long inactiveThreshold = expiresInMillis * 110 / 100; // ten % longer than the wait
             PullRequestOptions pro = PullRequestOptions.Builder(fetchConsumeOptions.MaxMessages)
                 .WithMaxBytes(fetchConsumeOptions.MaxBytes)
                 .WithExpiresIn(fetchConsumeOptions.ExpiresInMillis)
                 .WithIdleHeartbeat(fetchConsumeOptions.IdleHeartbeat)
                 .Build();
-            InitSub(subscriptionMaker.Subscribe(null, null)); // TODO THIS IS TEMPORARY
+            InitSub(subscriptionMaker.Subscribe(null, null, inactiveThreshold));
             pullSubject = ((JetStreamPullSubscription)sub).pullImpl.Pull(pro, false, null);
+            startTicks = -1;
+        }
+
+        public void PendingUpdated() {}
+
+        public void HeartbeatError()
+        {
+            Stopped = true;
+            Finished = true;
         }
 
         public Msg NextMessage()
         {
-            bool timeoutSetFinished = false;
-
             try
             {
                 if (Finished)
@@ -55,7 +65,6 @@ namespace NATS.Client.JetStream
                 // no waiting necessary
                 if (pmm.NoMorePending())
                 {
-                    timeoutSetFinished = true;
                     Msg m = ((JetStreamPullSubscription)sub)._nextUnmanagedNoWait(pullSubject);
                     if (m == null) {
                         // if there are no messages in the internal cache AND there are no more pending,
@@ -69,15 +78,11 @@ namespace NATS.Client.JetStream
                 // by not starting the timer until the first call, it gives a little buffer around
                 // the next message to account for latency of incoming messages
                 int timeLeftMillis;
-                if (sw == null)
+                if (startTicks == -1)
                 {
-                    sw = Stopwatch.StartNew();
-                    timeLeftMillis = maxWaitMillis;
+                    startTicks = DateTime.Now.Ticks;
                 }
-                else
-                {
-                    timeLeftMillis = maxWaitMillis - (int)sw.ElapsedMilliseconds;
-                }
+                timeLeftMillis = (int)(maxWaitTicks - (DateTime.Now.Ticks - startTicks)) / (int)TimeSpan.TicksPerMillisecond;
 
                 // if the timer has run out, don't allow waiting
                 // this might happen once, but it should already be noMorePending
@@ -90,10 +95,7 @@ namespace NATS.Client.JetStream
             }
             catch (NATSTimeoutException)
             {
-                if (timeoutSetFinished)
-                {
-                    Finished = true;
-                }
+                Finished = true;
                 return null;
             }
         }

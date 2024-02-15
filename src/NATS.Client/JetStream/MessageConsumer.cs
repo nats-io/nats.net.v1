@@ -21,30 +21,46 @@ namespace NATS.Client.JetStream
     /// </summary>
     internal class MessageConsumer : MessageConsumerBase, IPullManagerObserver
     {
-        private readonly PullRequestOptions rePullPro;
+        private readonly BaseConsumeOptions opts;
         private readonly int thresholdMessages;
         private readonly long thresholdBytes;
+        private readonly SimplifiedSubscriptionMaker subscriptionMaker;
+        private readonly EventHandler<MsgHandlerEventArgs> userMessageHandler;
 
         internal MessageConsumer(SimplifiedSubscriptionMaker subscriptionMaker,
-            BaseConsumeOptions consumeOptions,
             ConsumerInfo cachedConsumerInfo,
+            BaseConsumeOptions opts,
             EventHandler<MsgHandlerEventArgs> userMessageHandler) 
-            : base(cachedConsumerInfo) 
+            : base(cachedConsumerInfo)
         {
-            int bm = consumeOptions.Messages;
-            long bb = consumeOptions.Bytes;
+            this.subscriptionMaker = subscriptionMaker;
+            this.opts = opts;
+            this.userMessageHandler = userMessageHandler;
 
-            int rePullMessages = Math.Max(1, bm * consumeOptions.ThresholdPercent / 100);
-            long rePullBytes = bb == 0 ? 0 : Math.Max(1, bb * consumeOptions.ThresholdPercent / 100);
-            rePullPro = PullRequestOptions.Builder(rePullMessages)
-                .WithMaxBytes(rePullBytes)
-                .WithExpiresIn(consumeOptions.ExpiresInMillis)
-                .WithIdleHeartbeat(consumeOptions.IdleHeartbeat)
-                .Build();
-
+            int bm = opts.Messages;
+            long bb = opts.Bytes;
+            int rePullMessages = Math.Max(1, bm * opts.ThresholdPercent / 100);
+            long rePullBytes = bb == 0 ? 0 : Math.Max(1, bb * opts.ThresholdPercent / 100);
             thresholdMessages = bm - rePullMessages;
             thresholdBytes = bb == 0 ? int.MinValue : bb - rePullBytes;
 
+            DoSub();
+        }
+
+        public void HeartbeatError() {
+            try {
+                // just close the current sub and make another one.
+                // this could go on endlessly
+                Dispose();
+                DoSub();
+            }
+            catch (Exception e) {
+                SetupHbAlarmToTrigger();
+            }
+        }
+
+        void DoSub()
+        {
             EventHandler<MsgHandlerEventArgs> mh = null;
             if (userMessageHandler != null)
             {
@@ -56,21 +72,43 @@ namespace NATS.Client.JetStream
                         Finished = true;
                     }
                 };
-            }                
-            InitSub(subscriptionMaker.Subscribe(mh, null)); // TODO THIS IS TEMPORARY
-            pullImpl.Pull(PullRequestOptions.Builder(bm)
-                .WithMaxBytes(bb)
-                .WithExpiresIn(consumeOptions.ExpiresInMillis)
-                .WithIdleHeartbeat(consumeOptions.IdleHeartbeat)
-                .Build(), false, this);
+
+                try
+                {
+                    base.InitSub(subscriptionMaker.Subscribe(mh, pmm, null));
+                    Repull();
+                    Stopped = false;
+                    Finished = false;
+                }
+                catch (Exception)
+                {
+                    SetupHbAlarmToTrigger();
+                }
+            }
+        }
+
+        private void SetupHbAlarmToTrigger() {
+            pmm.ResetTracking();
+            pmm.InitOrResetHeartbeatTimer();
         }
 
         public void PendingUpdated()
         {
             if (!Stopped && (pmm.pendingMessages <= thresholdMessages || (pmm.trackingBytes && pmm.pendingBytes <= thresholdBytes)))
             {
-                pullImpl.Pull(rePullPro, false, this);
+                Repull();
             }
+        }
+
+        private void Repull() {
+            int rePullMessages = Math.Max(1, opts.Messages - pmm.pendingMessages);
+            long rePullBytes = opts.Bytes == 0 ? 0 : opts.Bytes - pmm.pendingBytes;
+            PullRequestOptions pro = PullRequestOptions.Builder(rePullMessages)
+                .WithMaxBytes(rePullBytes)
+                .WithExpiresIn(opts.ExpiresInMillis)
+                .WithIdleHeartbeat(opts.IdleHeartbeat)
+                .Build();
+            pullImpl.Pull(pro, false, this);
         }
     }
 }

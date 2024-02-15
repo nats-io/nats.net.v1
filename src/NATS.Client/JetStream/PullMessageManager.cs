@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using NATS.Client.Internals;
 
 namespace NATS.Client.JetStream
@@ -25,9 +26,7 @@ namespace NATS.Client.JetStream
 
         public PullMessageManager(Connection conn, SubscribeOptions so, bool syncMode) : base(conn, so, syncMode)
         {
-            trackingBytes = false;
-            pendingMessages = 0;
-            pendingBytes = 0;
+            ResetTracking();
         }
 
         public override void Startup(IJetStreamSubscription sub)
@@ -52,37 +51,58 @@ namespace NATS.Client.JetStream
                 }
                 else
                 {
-                    ShutdownHeartbeatTimer();
+                    ShutdownHeartbeatTimer(); // just in case the pull was changed from hb to non-hb
                 }
+            }
+        }
+        
+        internal override void HandleHeartbeatError()
+        {
+            base.HandleHeartbeatError();
+            ResetTracking();
+            if (pullManagerObserver != null)
+            {
+                pullManagerObserver.HeartbeatError();
             }
         }
 
-        private void TrackPending(int m, long b)
+        private void TrackIncoming(int m, long b)
         {
             lock (StateChangeLock)
             {
-                pendingMessages -= m;
-                bool zero = pendingMessages < 1;
-                if (trackingBytes)
+                // message time used for heartbeat tracking
+                UpdateLastMessageReceived();
+
+                if (m != Int32.MinValue)
                 {
-                    pendingBytes -= b;
-                    zero |= pendingBytes < 1;
-                }
-                if (zero)
-                {
-                    pendingMessages = 0;
-                    pendingBytes = 0L;
-                    trackingBytes = false;
-                    if (Hb)
+                    pendingMessages -= m;
+                    bool zero = pendingMessages < 1;
+                    if (trackingBytes)
                     {
-                        ShutdownHeartbeatTimer();
+                        pendingBytes -= b;
+                        zero |= pendingBytes < 1;
                     }
-                }
-                if (pullManagerObserver != null) {
-                    pullManagerObserver.PendingUpdated();
+
+                    if (zero)
+                    {
+                        ResetTracking();
+                    }
+
+                    if (pullManagerObserver != null)
+                    {
+                        pullManagerObserver.PendingUpdated();
+                    }
                 }
             }
         }
+        
+        internal void ResetTracking() {
+            pendingMessages = 0;
+            pendingBytes = 0;
+            trackingBytes = false;
+            UpdateLastMessageReceived();
+        }
+
 
         protected override bool BeforeChannelAddCheck(Msg msg)
         {
@@ -93,7 +113,7 @@ namespace NATS.Client.JetStream
             // normal js message
             if (!msg.HasStatus) 
             {
-                TrackPending(1, msg.ConsumeByteCount);
+                TrackIncoming(1, msg.ConsumeByteCount);
                 return true;
             }
             
@@ -103,17 +123,19 @@ namespace NATS.Client.JetStream
             }
 
             string s = msg.Header[JetStreamConstants.NatsPendingMessages];
-            int m;
+            int m = int.MinValue;
+            long b = long.MaxValue;
             if (s != null && int.TryParse(s, out m))
             {
-                long b;
                 s = msg.Header[JetStreamConstants.NatsPendingBytes];
-                if (s != null && long.TryParse(s, out b))
+                if (s == null || !long.TryParse(s, out b))
                 {
-                    TrackPending(m, b);
+                    // at this point s should not be null and should parse fine
+                    // but if it doesn't, don't fail; make sure don't track m/b
+                    m = int.MinValue;
                 }
             }
-
+            TrackIncoming(m, b);
             return true;
         }
 

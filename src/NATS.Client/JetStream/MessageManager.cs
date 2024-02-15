@@ -32,7 +32,7 @@ namespace NATS.Client.JetStream
 
         internal ulong LastStreamSeq;
         internal ulong LastConsumerSeq;
-        internal long LastMsgReceived;
+        internal InterlockedLong LastMsgReceived;
 
         protected bool Hb;
         protected int IdleHeartbeatSetting;
@@ -52,7 +52,7 @@ namespace NATS.Client.JetStream
             IdleHeartbeatSetting = 0;
             AlarmPeriodSetting = 0;
 
-            LastMsgReceived = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            LastMsgReceived = new InterlockedLong(DateTimeOffset.Now.ToUnixTimeMilliseconds());
         }
 
         public virtual void Startup(IJetStreamSubscription sub)
@@ -71,10 +71,7 @@ namespace NATS.Client.JetStream
 
         protected void UpdateLastMessageReceived()
         {
-            lock (StateChangeLock)
-            {
-                LastMsgReceived = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-            }
+            LastMsgReceived.Set(DateTimeOffset.Now.ToUnixTimeMilliseconds());
         }
 
         protected virtual bool BeforeChannelAddCheck(Msg msg)
@@ -124,14 +121,14 @@ namespace NATS.Client.JetStream
             }
         }
 
-        protected void InitOrResetHeartbeatTimer()
+        internal void InitOrResetHeartbeatTimer()
         {
             lock (StateChangeLock)
             {
                 ShutdownHeartbeatTimer();
                 heartbeatTimer = new Timer(state =>
                     {
-                        long sinceLast = DateTimeOffset.Now.ToUnixTimeMilliseconds() - LastMsgReceived;
+                        long sinceLast = DateTimeOffset.Now.ToUnixTimeMilliseconds() - LastMsgReceived.Read();
                         if (sinceLast > AlarmPeriodSetting)
                         {
                             HandleHeartbeatError();

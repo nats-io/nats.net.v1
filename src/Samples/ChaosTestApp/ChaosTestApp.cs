@@ -8,19 +8,21 @@ namespace NATSExamples
 {
     public static class App
     {
+        const string AppLabel = "APP";
+
         public static String[] ManualArgs = (
             // "--servers nats://192.168.50.99:4222"
             "--servers nats://localhost:4222"
-            + " --stream app-stream"
-            + " --subject app-subject"
+            + " --stream chaos-stream"
+            + " --subject chaos-subject"
 //            + " --runtime 3600 // 1 hour in seconds
             + " --create"
             // + " --r3"
             + " --publish"
             + " --pubjitter 30"
-            // + " --simple ordered,100,5000"
-            // + " --simple durable 100 5000" // space or commas work, the parser figures it out
-            // + " --fetch durable,100,5000"
+            + " --simple ordered 100 5000"
+            + " --simple durable 100 5000" // space or commas work, the parser figures it out
+            + " --fetch durable,100,5000"
             + " --push ordered"
             + " --push durable"
         ).Split(' ');
@@ -34,7 +36,7 @@ namespace NATSExamples
             try
             {
                 Output.Start(cmd);
-                Output.ControlMessage("APP", cmd.ToString().Replace(" --", "    \n--"));
+                Output.ControlMessage(AppLabel, cmd.ToString().Replace(" --", "    \n--"));
                 CountdownEvent waiter = new CountdownEvent(1);
 
                 Publisher publisher = null;
@@ -59,18 +61,18 @@ namespace NATSExamples
                         ConnectableConsumer con;
                         switch (clc.consumerType) {
                             case ConsumerType.Push:
-                            con = new PushConsumer(cmd, clc.consumerKind);
-                            break;
+                                con = new PushConsumer(cmd, clc.consumerKind);
+                                break;
                             case ConsumerType.Simple:
-                            con = new SimpleConsumer(cmd, clc.consumerKind, clc.batchSize, clc.expiresIn);
-                            break;
+                                con = new SimpleConsumer(cmd, clc.consumerKind, clc.batchSize, clc.expiresIn);
+                                break;
                             case ConsumerType.Fetch:
-                            // con = new SimpleFetchConsumer(cmd, clc.consumerKind, clc.batchSize, clc.expiresIn);
-                            // break;
+                                con = new SimpleFetchConsumer(cmd, clc.consumerKind, clc.batchSize, clc.expiresIn);
+                                break;
                             default:
                                 throw new ArgumentException("Unsupported consumer type: " + clc.consumerType);
                         }
-                        Output.ControlMessage("APP", con.Label);
+                        Output.ControlMessage(AppLabel, con.Label);
                         cons.Add(con);
                     }
                 }
@@ -113,10 +115,10 @@ namespace NATSExamples
                     .WithReplicas(cmd.R3 ? 3 : 1)
                     .Build();
                 StreamInfo si = jsm.AddStream(sc);
-                Output.ControlMessage("APP", "Create Stream\n" + si.Config.ToJsonNode().ToString());
+                Output.ControlMessage(AppLabel, "Create Stream\n" + si.Config.ToJsonNode().ToString());
             }
             catch (Exception e) {
-                Output.ControlMessage("FATAL", "Failed creating stream: '" + cmd.Stream + "' " + e);
+                Output.FatalMessage(AppLabel, "Failed creating stream: '" + cmd.Stream + "' " + e);
                 Environment.Exit(-1);
             }
         }

@@ -211,7 +211,7 @@ namespace NATSExamples
             return sb.ToString().Trim();
         }
 
-        public Options MakeOptions(string label, Action connectChangeEventAction = null)
+        public Options MakeOptions(Func<string> labelFunc, Action connectChangeEventAction = null)
         {
             Action ccea = connectChangeEventAction == null ? () => {} : connectChangeEventAction;
             
@@ -220,46 +220,46 @@ namespace NATSExamples
             opts.MaxReconnect = -1;
             opts.AsyncErrorEventHandler = (obj, a) =>
             {
-                Output.ControlMessage(label, $"Error: {a.Error}");
+                Output.ControlMessage(labelFunc.Invoke(), $"Error: {a.Error}");
             };
             opts.ReconnectedEventHandler = (obj, a) =>
             {
                 ccea.Invoke();
-                Output.ControlMessage(label, $"Reconnected to {a.Conn.ConnectedUrl}");
+                Output.ControlMessage(labelFunc.Invoke(), $"Reconnected to {a.Conn.ConnectedUrl}");
             };
             opts.DisconnectedEventHandler = (obj, a) =>
             {
                 ccea.Invoke();
-                Output.ControlMessage(label, "Disconnected.");
+                Output.ControlMessage(labelFunc.Invoke(), "Disconnected.");
             };
             opts.ClosedEventHandler = (obj, a) =>
             {
                 ccea.Invoke();
-                Output.ControlMessage(label, "Connection closed.");
+                Output.ControlMessage(labelFunc.Invoke(), "Connection closed.");
             };
             opts.ServerDiscoveredEventHandler = (obj, a) =>
             {
-                Output.ControlMessage(label, "Server Discovered");
+                Output.ControlMessage(labelFunc.Invoke(), "Server Discovered");
             };
             opts.LameDuckModeEventHandler = (obj, a) =>
             {
-                Output.ControlMessage(label, "Lame Duck Mode");
+                Output.ControlMessage(labelFunc.Invoke(), "Lame Duck Mode");
             };
             opts.HeartbeatAlarmEventHandler = (obj, a) =>
             {
-                Output.ControlMessage(label, "Heartbeat Alarm");
+                Output.ControlMessage(labelFunc.Invoke(), "Heartbeat Alarm");
             };
             opts.UnhandledStatusEventHandler = (obj, a) =>
             {
-                Output.ControlMessage(label, "Unhandled Status");
+                Output.ControlMessage(labelFunc.Invoke(), "Unhandled Status");
             };
             opts.PullStatusErrorEventHandler = (obj, a) =>
             {
-                Output.ControlMessage(label, "Pull Status Error");
+                Output.ControlMessage(labelFunc.Invoke(), "Pull Status Error");
             };
             opts.FlowControlProcessedEventHandler = (obj, a) =>
             {
-                Output.ControlMessage(label, "Flow Control Processed");
+                Output.ControlMessage(labelFunc.Invoke(), "Flow Control Processed");
             };
             opts.PullStatusWarningEventHandler = (obj, a) => { };
 

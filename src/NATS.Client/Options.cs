@@ -16,7 +16,6 @@ using System.Net.Security;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using NATS.Client.Internals;
 using static NATS.Client.Defaults;
 
 namespace NATS.Client
@@ -185,7 +184,6 @@ namespace NATS.Client
             var handler = new DefaultUserJWTHandler(credentialsPath, credentialsPath);
             UserJWTEventHandler = handler.DefaultUserJWTEventHandler;
             UserSignatureEventHandler = handler.DefaultUserSignatureHandler;
-            Dbg.dbg("[7] SetUserCredentials", credentialsPath + " | " + handler.GetHashCode() + " | " + UserJWTEventHandler.GetHashCode() + " " + UserSignatureEventHandler.GetHashCode());
         }
 
         /// <summary>

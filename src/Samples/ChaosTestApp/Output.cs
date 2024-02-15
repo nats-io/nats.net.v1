@@ -28,7 +28,7 @@ namespace NATSExamples
             }
 
         }
-        public static void Work(String label, String s) {
+        public static void WorkMessage(String label, String s) {
             if (ShowWork) {
                 Append("WORK", label, s);
             }
@@ -38,10 +38,20 @@ namespace NATSExamples
             Append(controlConsoleAreaLabel, label, s);
         }
 
+        public static void ErrorMessage(String label, String s)
+        {
+            Append("ERROR", label, s);
+        }
+
+        public static void FatalMessage(String label, String s)
+        {
+            Append("FATAL", label, s);
+        }
+
         public static void Debug(String label, String s)
         {
             if (ShowDebug) {
-                Append("DBUG", label, s);
+                Append("DEBUG", label, s);
             }
         }
 

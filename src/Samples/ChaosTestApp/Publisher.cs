@@ -8,7 +8,7 @@ namespace NATSExamples
 {
     public class Publisher
     {
-        const string Label = "PUBLISHER";
+        const string PublisherLabel = "PUBLISHER";
 
         readonly CommandLine cmd;
         private readonly int pubDelay;
@@ -35,14 +35,14 @@ namespace NATSExamples
             bool first = true;
             long started = DateTimeOffset.Now.ToUnixTimeMilliseconds();
             int shortReportsOwed = 0;
-            using (IConnection conn = new ConnectionFactory().CreateConnection(cmd.MakeOptions(Label)))
+            using (IConnection conn = new ConnectionFactory().CreateConnection(cmd.MakeOptions(() => PublisherLabel)))
             {
                 IJetStream js = conn.CreateJetStreamContext();
                 while (true)
                 {
                     if (first)
                     {
-                        Output.ControlMessage(Label, "Starting Publish");
+                        Output.ControlMessage(PublisherLabel, "Starting Publish");
                         first = false;
                     }
                     
@@ -52,7 +52,7 @@ namespace NATSExamples
                         Interlocked.Exchange(ref lastPa, pa);
                         if (errorRun.Read() > 0)
                         {
-                            Output.ControlMessage(Label, "Restarting Publish");
+                            Output.ControlMessage(PublisherLabel, "Restarting Publish");
                         }
                         errorRun.Set(0);
                     }
@@ -60,7 +60,7 @@ namespace NATSExamples
                     {
                         if (errorRun.Increment() == 1)
                         {
-                            Output.ControlMessage(Label, e.Message);
+                            Output.ControlMessage(PublisherLabel, e.Message);
                         }
                     }
 

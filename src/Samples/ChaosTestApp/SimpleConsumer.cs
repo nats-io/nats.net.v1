@@ -29,19 +29,12 @@ namespace NATSExamples
                 cc = sc.CreateOrUpdateConsumer(NewCreateConsumer().Build());
                 mc = cc.Consume(Handler, co);
             }
-            Output.ControlMessage(Label, getconsumername());
-        }
-
-        private string getconsumername()
-        {
-            ConsumerInfo ci = (occ != null) ? null : mc.GetConsumerInformation();
-            return ci == null ? "ordered" : ci.Name;
+            Output.ControlMessage(Label, mc.GetConsumerName());
         }
 
         public override void refreshInfo()
         {
-            // todo this should just be GetConsumerName once make visible up the for ordered
-            UpdateNameAndLabel(getconsumername());
+            UpdateLabel(mc.GetConsumerName());
         }
     }
 }

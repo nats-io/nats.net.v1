@@ -13,8 +13,6 @@
 
 using System;
 using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Threading;
 using NATS.Client;
 using NATS.Client.Internals;
@@ -281,16 +279,9 @@ namespace IntegrationTests
             {
                 var opts = Context.GetTestOptionsWithDefaultTimeout(Context.Server3.Port);
                 opts.MaxReconnect = -1;
-                // opts.ReconnectDelayHandler = (object o, ReconnectDelayEventArgs args) =>
-                // {
-                    // Dbg.dbg("ReconnectDelayHandler IN");
-                    // Thread.Sleep(1000);
-                    // Dbg.dbg("ReconnectDelayHandler out");
-                // };
                 opts.SetUserCredentials(credsFile1);
                 opts.DisconnectedEventHandler += (sender, e) =>
                 {
-                    Dbg.dbg("TEST DisconnectedEventHandler 1");
                     if (e.Error.ToString().Contains("user authentication expired"))
                     {
                         userAuthenticationExpiredCde1.Signal();
@@ -298,7 +289,6 @@ namespace IntegrationTests
                 };
                 opts.ReconnectedEventHandler += (sender, e) =>
                 {
-                    Dbg.dbg("TEST ReconnectedEventHandler 1");
                     if (userAuthenticationExpiredCde1.IsSet)
                     {
                         reconnectCde1.Signal();
@@ -308,8 +298,6 @@ namespace IntegrationTests
                 int wait = 7000;
                 long now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                 IConnection c = Context.ConnectionFactory.CreateConnection(opts, true);
-                Dbg.dbg("TEST IConnection A", c.State);
-                Dbg.dbg("TEST IConnection A", c.ServerInfo.ToString());
                 userAuthenticationExpiredCde1.Wait(wait);
                 Assert.True(userAuthenticationExpiredCde1.IsSet);
                 reconnectCde1.Wait(wait);
@@ -317,23 +305,13 @@ namespace IntegrationTests
 
                 CountdownEvent reconnectCde2 = new CountdownEvent(1);
                 c.Opts.SetUserCredentials(credsFile2); // so reconnect will stay connected
-                c.Opts.DisconnectedEventHandler = (sender, e) =>
-                {
-                    Dbg.dbg("TEST DisconnectedEventHandler 2");
-                };
                 c.Opts.ReconnectedEventHandler = (sender, e) =>
                 {
-                    Dbg.dbg("TEST ReconnectedEventHandler 2");
                     reconnectCde2.Signal();
                 };
 
-                Dbg.dbg("TEST IConnection B", c.State);
-                Dbg.dbg("TEST IConnection B", c.ServerInfo == null ? "NO SI" : c.ServerInfo.ToString());
                 reconnectCde2.Wait(wait);
                 Assert.True(reconnectCde2.IsSet);
-
-                Dbg.dbg("TEST IConnection C", c.State);
-                Dbg.dbg("TEST IConnection C", c.ServerInfo == null ? "NO SI" : c.ServerInfo.ToString());
             }
         }
 
