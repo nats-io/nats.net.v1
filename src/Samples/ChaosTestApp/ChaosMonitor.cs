@@ -5,23 +5,23 @@ using System.Threading;
 using NATS.Client;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
-using static NATSExamples.Output;
+using static NATSExamples.ChaosOutput;
 
 namespace NATSExamples
 {
-    public class Monitor
+    public class ChaosMonitor
     {
         const string MonitorLabel = "MONITOR";
         
         const int ReportFrequency = 5000;
         const int ShortReports = 50;
 
-        readonly CommandLine cmd;
+        readonly ChaosCommandLine cmd;
         readonly ChaosPublisher publisher;
-        readonly IList<ConnectableConsumer> consumers;
+        readonly IList<ChaosConnectableConsumer> consumers;
         readonly InterlockedBoolean reportFull;
 
-        public Monitor(CommandLine cmd, ChaosPublisher publisher, IList<ConnectableConsumer> consumers) {
+        public ChaosMonitor(ChaosCommandLine cmd, ChaosPublisher publisher, IList<ChaosConnectableConsumer> consumers) {
             this.cmd = cmd;
             this.publisher = publisher;
             this.consumers = consumers;
@@ -44,14 +44,14 @@ namespace NATSExamples
                         StringBuilder conReport = new StringBuilder();
                         if (reportFull.IsTrue()) {
                             StreamInfo si = jsm.GetStreamInfo(cmd.Stream);
-                            Output.Debug(MonitorLabel, "si.Config " + si.Config);
-                            Output.Debug(MonitorLabel, "si.ClusterInfo " + si.ClusterInfo);
+                            ChaosOutput.Debug(MonitorLabel, "si.Config " + si.Config);
+                            ChaosOutput.Debug(MonitorLabel, "si.ClusterInfo " + si.ClusterInfo);
                             String message = "Stream\n" + Formatted(si.Config)
                                                         + "\n" + Formatted(si.ClusterInfo);
-                            Output.ControlMessage(MonitorLabel, message);
+                            ChaosOutput.ControlMessage(MonitorLabel, message);
                             reportFull.Set(false);
                             if (consumers != null) {
-                                foreach (ConnectableConsumer con in consumers) {
+                                foreach (ChaosConnectableConsumer con in consumers) {
                                     con.refreshInfo();
                                 }
                             }
@@ -59,7 +59,7 @@ namespace NATSExamples
                         if (shortReportsOwed < 1) {
                             shortReportsOwed = ShortReports;
                             if (consumers != null) {
-                                foreach (ConnectableConsumer con in consumers) {
+                                foreach (ChaosConnectableConsumer con in consumers) {
                                     conReport.Append("\n").Append(con.Label).Append(" | Last Sequence: ").Append(con.LastReceivedSequence);
                                 }
                             }
@@ -67,7 +67,7 @@ namespace NATSExamples
                         else {
                             shortReportsOwed--;
                             if (consumers != null) {
-                                foreach (ConnectableConsumer con in consumers) {
+                                foreach (ChaosConnectableConsumer con in consumers) {
                                     conReport.Append(" | ")
                                         .Append(con.Name)
                                         .Append(": ")

@@ -3,7 +3,7 @@ using NATS.Client.Internals.SimpleJSON;
 
 namespace NATSExamples
 {
-    public static class Output
+    public static class ChaosOutput
     {
         public static readonly object AppendLock = new object();
 
@@ -13,7 +13,7 @@ namespace NATSExamples
         static bool ShowDebug = false;
         static string controlConsoleAreaLabel = null;
 
-        public static void Start(CommandLine cmd)
+        public static void Start(ChaosCommandLine cmd)
         {
             if (started)
             {

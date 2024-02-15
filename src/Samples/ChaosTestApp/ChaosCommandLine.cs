@@ -5,7 +5,7 @@ using NATS.Client;
 
 namespace NATSExamples
 {
-    public class CommandLine
+    public class ChaosCommandLine
     {
         public readonly string Servers;
         public readonly string Stream;
@@ -17,7 +17,7 @@ namespace NATSExamples
         public readonly bool Publish;
         public readonly bool Debug;
         public readonly bool Work;
-        public readonly IList<CommandLineConsumer> CommandLineConsumers;
+        public readonly IList<ChaosCommandLineConsumer> CommandLineConsumers;
 
         private void Usage()
         {
@@ -73,7 +73,7 @@ namespace NATSExamples
             return v;
         }
 
-        public CommandLine(string[] args)
+        public ChaosCommandLine(string[] args)
         {
             string _servers = "";
             string _stream = "app-stream";
@@ -85,7 +85,7 @@ namespace NATSExamples
             bool _publish = false;
             bool _debug = false;
             bool _work = false;
-            IList<CommandLineConsumer> _commandLineConsumers = new List<CommandLineConsumer>();
+            IList<ChaosCommandLineConsumer> _commandLineConsumers = new List<ChaosCommandLineConsumer>();
 
             if (args != null && args.Length > 0)
             {
@@ -137,7 +137,7 @@ namespace NATSExamples
                                 if (temp.Contains(","))
                                 {
                                     String[] split = temp.Split(',');
-                                    _commandLineConsumers.Add(new CommandLineConsumer(
+                                    _commandLineConsumers.Add(new ChaosCommandLineConsumer(
                                         arg.Substring(2),
                                         split[0],
                                         AsNumber("batchSize", split[1], -1),
@@ -146,7 +146,7 @@ namespace NATSExamples
                                 }
                                 else
                                 {
-                                    _commandLineConsumers.Add(new CommandLineConsumer(
+                                    _commandLineConsumers.Add(new ChaosCommandLineConsumer(
                                         arg.Substring(2),
                                         temp,
                                         AsNumber("batchSize", args[++x], -1),
@@ -156,7 +156,7 @@ namespace NATSExamples
 
                                 break;
                             case "--push":
-                                _commandLineConsumers.Add(new CommandLineConsumer(args[++x]));
+                                _commandLineConsumers.Add(new ChaosCommandLineConsumer(args[++x]));
                                 break;
                             default:
                                 throw new ArgumentException("Unknown argument: " + arg);
@@ -205,7 +205,7 @@ namespace NATSExamples
             append(sb, "R3", R3, R3);
             append(sb, "publish", Publish, Publish);
             append(sb, "pubjitter", PubJitter, Publish);
-            foreach (CommandLineConsumer cc in CommandLineConsumers) {
+            foreach (ChaosCommandLineConsumer cc in CommandLineConsumers) {
                 append(sb, "consumer", cc, true);
             }
             return sb.ToString().Trim();
@@ -220,46 +220,46 @@ namespace NATSExamples
             opts.MaxReconnect = -1;
             opts.AsyncErrorEventHandler = (obj, a) =>
             {
-                Output.ControlMessage(labelFunc.Invoke(), $"Error: {a.Error}");
+                ChaosOutput.ControlMessage(labelFunc.Invoke(), $"Error: {a.Error}");
             };
             opts.ReconnectedEventHandler = (obj, a) =>
             {
                 ccea.Invoke();
-                Output.ControlMessage(labelFunc.Invoke(), $"Reconnected to {a.Conn.ConnectedUrl}");
+                ChaosOutput.ControlMessage(labelFunc.Invoke(), $"Reconnected to {a.Conn.ConnectedUrl}");
             };
             opts.DisconnectedEventHandler = (obj, a) =>
             {
                 ccea.Invoke();
-                Output.ControlMessage(labelFunc.Invoke(), "Disconnected.");
+                ChaosOutput.ControlMessage(labelFunc.Invoke(), "Disconnected.");
             };
             opts.ClosedEventHandler = (obj, a) =>
             {
                 ccea.Invoke();
-                Output.ControlMessage(labelFunc.Invoke(), "Connection closed.");
+                ChaosOutput.ControlMessage(labelFunc.Invoke(), "Connection closed.");
             };
             opts.ServerDiscoveredEventHandler = (obj, a) =>
             {
-                Output.ControlMessage(labelFunc.Invoke(), "Server Discovered");
+                ChaosOutput.ControlMessage(labelFunc.Invoke(), "Server Discovered");
             };
             opts.LameDuckModeEventHandler = (obj, a) =>
             {
-                Output.ControlMessage(labelFunc.Invoke(), "Lame Duck Mode");
+                ChaosOutput.ControlMessage(labelFunc.Invoke(), "Lame Duck Mode");
             };
             opts.HeartbeatAlarmEventHandler = (obj, a) =>
             {
-                Output.ControlMessage(labelFunc.Invoke(), "Heartbeat Alarm");
+                ChaosOutput.ControlMessage(labelFunc.Invoke(), "Heartbeat Alarm");
             };
             opts.UnhandledStatusEventHandler = (obj, a) =>
             {
-                Output.ControlMessage(labelFunc.Invoke(), "Unhandled Status");
+                ChaosOutput.ControlMessage(labelFunc.Invoke(), "Unhandled Status");
             };
             opts.PullStatusErrorEventHandler = (obj, a) =>
             {
-                Output.ControlMessage(labelFunc.Invoke(), "Pull Status Error");
+                ChaosOutput.ControlMessage(labelFunc.Invoke(), "Pull Status Error");
             };
             opts.FlowControlProcessedEventHandler = (obj, a) =>
             {
-                Output.ControlMessage(labelFunc.Invoke(), "Flow Control Processed");
+                ChaosOutput.ControlMessage(labelFunc.Invoke(), "Flow Control Processed");
             };
             opts.PullStatusWarningEventHandler = (obj, a) => { };
 

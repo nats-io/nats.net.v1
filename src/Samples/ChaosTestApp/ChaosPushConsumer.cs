@@ -2,18 +2,18 @@
 
 namespace NATSExamples
 {
-    public class PushConsumer : ConnectableConsumer
+    public class ChaosPushConsumer : ChaosConnectableConsumer
     {
         readonly IJetStreamPushAsyncSubscription sub;
         
-        public PushConsumer(CommandLine cmd, ConsumerKind consumerKind) : base(cmd, "pu", consumerKind)
+        public ChaosPushConsumer(ChaosCommandLine cmd, ChaosConsumerKind consumerKind) : base(cmd, "pu", consumerKind)
         {
             PushSubscribeOptions pso = PushSubscribeOptions.Builder()
                 .WithStream(cmd.Stream)
                 .WithConfiguration(NewCreateConsumer()
                     .WithIdleHeartbeat(1000)
                     .Build())
-                .WithOrdered(consumerKind == ConsumerKind.Ordered)
+                .WithOrdered(consumerKind == ChaosConsumerKind.Ordered)
                 .Build();
 
             sub = Js.PushSubscribeAsync(cmd.Subject, Handler, false, pso);

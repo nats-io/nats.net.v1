@@ -5,43 +5,43 @@ using NATS.Client.JetStream;
 
 namespace NATSExamples
 {
-    public abstract class ConnectableConsumer
+    public abstract class ChaosConnectableConsumer
     {
         protected readonly IConnection Conn;
         protected readonly IJetStream Js;
         public InterlockedLong lastReceivedSequence;
         public ulong LastReceivedSequence => (ulong)lastReceivedSequence.Read(); 
-        protected readonly ConsumerKind ConsumerKind;
+        protected readonly ChaosConsumerKind ConsumerKind;
         protected readonly EventHandler<MsgHandlerEventArgs> Handler;
 
-        protected readonly CommandLine Cmd;
+        protected readonly ChaosCommandLine Cmd;
         protected string Initials;
         public string Name { get; protected set; }
         public string DurableName { get; protected set; }
         public string Label { get; protected set; }
 
-        public ConnectableConsumer(CommandLine cmd, string initials, ConsumerKind consumerKind)
+        public ChaosConnectableConsumer(ChaosCommandLine cmd, string initials, ChaosConsumerKind consumerKind)
         {
             Cmd = cmd;
             lastReceivedSequence = new InterlockedLong(0);
             ConsumerKind = consumerKind;
             
             switch (consumerKind) {
-                case ConsumerKind.Durable:
+                case ChaosConsumerKind.Durable:
                     DurableName = initials + "-dur-" + ConsumerName();
                     Name = DurableName;
                     break;
-                case ConsumerKind.Ephemeral:
+                case ChaosConsumerKind.Ephemeral:
                     DurableName = null;
                     Name = initials + "-eph-" + ConsumerName();
                     break;
-                case ConsumerKind.Ordered:
+                case ChaosConsumerKind.Ordered:
                     DurableName = null;
                     Name = initials + "-ord-" + ConsumerName();
                     break;
             }
             Initials = initials;
-            Label = Name + " (" + Enums.ToString(ConsumerKind) + ")"; 
+            Label = Name + " (" + ChaosEnums.ToString(ConsumerKind) + ")"; 
 
             Conn = new ConnectionFactory().CreateConnection(cmd.MakeOptions(() => Label));
             Js = Conn.CreateJetStreamContext();
@@ -64,7 +64,7 @@ namespace NATSExamples
             long seq = (long)m.MetaData.StreamSequence;
             long lastSeq = lastReceivedSequence.Read();
             lastReceivedSequence.Set(seq);
-            Output.WorkMessage(Label, "Last Received Seq: " + seq + "(" + lastSeq + ")");
+            ChaosOutput.WorkMessage(Label, "Last Received Seq: " + seq + "(" + lastSeq + ")");
         }
 
         public abstract void refreshInfo();
@@ -74,7 +74,7 @@ namespace NATSExamples
             {
                 int at = Name.LastIndexOf("-");
                 Name = Name.Substring(0, at + 1) + conName;
-                Label = Name + " (" + Enums.ToString(ConsumerKind) + ")";
+                Label = Name + " (" + ChaosEnums.ToString(ConsumerKind) + ")";
             }
         }
  
@@ -84,7 +84,7 @@ namespace NATSExamples
 
         protected ConsumerConfiguration.ConsumerConfigurationBuilder recreateConsumer(ulong last) {
             return ConsumerConfiguration.Builder()
-                .WithName(ConsumerKind == ConsumerKind.Ordered ? null : Name)
+                .WithName(ConsumerKind == ChaosConsumerKind.Ordered ? null : Name)
                 .WithDurable(DurableName)
                 .WithDeliverPolicy(last == 0 ? DeliverPolicy.All : DeliverPolicy.ByStartSequence)
                 .WithStartSequence(last == 0 ? 0 : last + 1)

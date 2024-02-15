@@ -5,7 +5,7 @@ using NATS.Client.JetStream;
 
 namespace NATSExamples
 {
-    public class SimpleFetchConsumer : ConnectableConsumer
+    public class ChaosSimpleFetchConsumer : ChaosConnectableConsumer
     {
         readonly IStreamContext sc;
         readonly IConsumerContext cc;
@@ -15,9 +15,9 @@ namespace NATSExamples
 
         IFetchConsumer fc;
         
-        public SimpleFetchConsumer(CommandLine cmd, ConsumerKind consumerKind, int batchSize, int expiresIn) : base(cmd, "fc", consumerKind)
+        public ChaosSimpleFetchConsumer(ChaosCommandLine cmd, ChaosConsumerKind consumerKind, int batchSize, int expiresIn) : base(cmd, "fc", consumerKind)
         {
-            if (consumerKind == ConsumerKind.Ordered) {
+            if (consumerKind == ChaosConsumerKind.Ordered) {
                 throw new ArgumentException("Ordered Consumer not supported for App Simple Fetch");
             }
 
@@ -27,7 +27,7 @@ namespace NATSExamples
             sc = Conn.GetStreamContext(cmd.Stream);
 
             cc = sc.CreateOrUpdateConsumer(NewCreateConsumer().Build());
-            Output.ControlMessage(Label, cc.ConsumerName);
+            ChaosOutput.ControlMessage(Label, cc.ConsumerName);
             t = new Thread(() => run());
             t.Start();
         }
@@ -35,7 +35,7 @@ namespace NATSExamples
         public void run()
         {
             FetchConsumeOptions fco = FetchConsumeOptions.Builder().WithMaxMessages(batchSize).WithExpiresIn(expiresIn).Build();
-            Output.ControlMessage(Label, ToString(fco));
+            ChaosOutput.ControlMessage(Label, ToString(fco));
             
             while (true)
             {
@@ -58,7 +58,7 @@ namespace NATSExamples
                 }
 
                 // simulating some work to be done between fetches
-                Output.WorkMessage(Label, "Fetch Batch Completed, Last Received Seq: " + lastReceivedSequence.Read());
+                ChaosOutput.WorkMessage(Label, "Fetch Batch Completed, Last Received Seq: " + lastReceivedSequence.Read());
                 Thread.Sleep(10);
             }
         }

@@ -2,14 +2,14 @@
 
 namespace NATSExamples
 {
-    public class SimpleConsumer : ConnectableConsumer
+    public class ChaosSimpleConsumer : ChaosConnectableConsumer
     {
         readonly IStreamContext sc;
         readonly IConsumerContext cc;
         readonly IOrderedConsumerContext occ;
         readonly IMessageConsumer mc;
         
-        public SimpleConsumer(CommandLine cmd, ConsumerKind consumerKind, int batchSize, int expiresIn) : base(cmd, "sc", consumerKind)
+        public ChaosSimpleConsumer(ChaosCommandLine cmd, ChaosConsumerKind consumerKind, int batchSize, int expiresIn) : base(cmd, "sc", consumerKind)
         {
             sc = Conn.GetStreamContext(cmd.Stream);
 
@@ -18,7 +18,7 @@ namespace NATSExamples
                 .WithExpiresIn(expiresIn)
                 .Build();
 
-            if (consumerKind == ConsumerKind.Ordered) {
+            if (consumerKind == ChaosConsumerKind.Ordered) {
                 OrderedConsumerConfiguration ocConfig = new OrderedConsumerConfiguration().WithFilterSubjects(cmd.Subject);
                 cc = null;
                 occ = sc.CreateOrderedConsumer(ocConfig);
@@ -29,7 +29,7 @@ namespace NATSExamples
                 cc = sc.CreateOrUpdateConsumer(NewCreateConsumer().Build());
                 mc = cc.Consume(Handler, co);
             }
-            Output.ControlMessage(Label, mc.GetConsumerName());
+            ChaosOutput.ControlMessage(Label, mc.GetConsumerName());
         }
 
         public override void refreshInfo()

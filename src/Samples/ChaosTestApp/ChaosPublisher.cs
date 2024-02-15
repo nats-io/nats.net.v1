@@ -10,12 +10,12 @@ namespace NATSExamples
     {
         const string PublisherLabel = "PUBLISHER";
 
-        readonly CommandLine cmd;
+        readonly ChaosCommandLine cmd;
         private readonly int pubDelay;
         private PublishAck lastPa; 
         readonly InterlockedLong errorRun = new InterlockedLong(0);
 
-        public ChaosPublisher(CommandLine cmd, int pubDelay) {
+        public ChaosPublisher(ChaosCommandLine cmd, int pubDelay) {
             this.cmd = cmd;
             this.pubDelay = pubDelay;
         }
@@ -42,7 +42,7 @@ namespace NATSExamples
                 {
                     if (first)
                     {
-                        Output.ControlMessage(PublisherLabel, "Starting Publish");
+                        ChaosOutput.ControlMessage(PublisherLabel, "Starting Publish");
                         first = false;
                     }
                     
@@ -52,7 +52,7 @@ namespace NATSExamples
                         Interlocked.Exchange(ref lastPa, pa);
                         if (errorRun.Read() > 0)
                         {
-                            Output.ControlMessage(PublisherLabel, "Restarting Publish");
+                            ChaosOutput.ControlMessage(PublisherLabel, "Restarting Publish");
                         }
                         errorRun.Set(0);
                     }
@@ -60,7 +60,7 @@ namespace NATSExamples
                     {
                         if (errorRun.Increment() == 1)
                         {
-                            Output.ControlMessage(PublisherLabel, e.Message);
+                            ChaosOutput.ControlMessage(PublisherLabel, e.Message);
                         }
                     }
 

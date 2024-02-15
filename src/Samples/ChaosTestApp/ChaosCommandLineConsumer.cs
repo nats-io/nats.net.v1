@@ -2,23 +2,23 @@
 
 namespace NATSExamples
 {
-    public class CommandLineConsumer
+    public class ChaosCommandLineConsumer
     {
-        public readonly ConsumerType consumerType;
-        public readonly ConsumerKind consumerKind;
+        public readonly ChaosConsumerType consumerType;
+        public readonly ChaosConsumerKind consumerKind;
         public readonly int batchSize;
         public readonly int expiresIn;
 
-        public CommandLineConsumer(String consumerKind) {
-            this.consumerType = ConsumerType.Push;
-            this.consumerKind = Enums.ConsumerKindInstance(consumerKind);
+        public ChaosCommandLineConsumer(String consumerKind) {
+            this.consumerType = ChaosConsumerType.Push;
+            this.consumerKind = ChaosEnums.ConsumerKindInstance(consumerKind);
             batchSize = 0;
             expiresIn = 0;
         }
 
-        public CommandLineConsumer(String consumerType, String consumerKind, int batchSize, int expiresIn) {
-            this.consumerType = Enums.ConsumerTypeInstance(consumerType);
-            this.consumerKind = Enums.ConsumerKindInstance(consumerKind);
+        public ChaosCommandLineConsumer(String consumerType, String consumerKind, int batchSize, int expiresIn) {
+            this.consumerType = ChaosEnums.ConsumerTypeInstance(consumerType);
+            this.consumerKind = ChaosEnums.ConsumerKindInstance(consumerKind);
             if (batchSize < 1) {
                 throw new ArgumentException("Invalid Batch Size:" + batchSize);
             }
@@ -31,7 +31,7 @@ namespace NATSExamples
 
         public override string ToString()
         {
-            if (consumerType == ConsumerType.Simple) {
+            if (consumerType == ChaosConsumerType.Simple) {
                 return consumerType.ToString().ToLower() +
                        " " + consumerKind.ToString().ToLower() +
                        " " + batchSize +
