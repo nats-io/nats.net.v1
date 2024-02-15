@@ -39,7 +39,7 @@ namespace NATSExamples
                 Output.ControlMessage(AppLabel, cmd.ToString().Replace(" --", "    \n--"));
                 CountdownEvent waiter = new CountdownEvent(1);
 
-                Publisher publisher = null;
+                ChaosPublisher publisher = null;
                 IList<ConnectableConsumer> cons = null;
 
                 if (cmd.create) {
@@ -78,7 +78,7 @@ namespace NATSExamples
                 }
 
                 if (cmd.Publish) {
-                    publisher = new Publisher(cmd, cmd.PubJitter);
+                    publisher = new ChaosPublisher(cmd, cmd.PubJitter);
                     Thread pubThread = new Thread(publisher.Run);
                     pubThread.Start();
                 }

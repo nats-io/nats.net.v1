@@ -6,7 +6,7 @@ using NATS.Client.JetStream;
 
 namespace NATSExamples
 {
-    public class Publisher
+    public class ChaosPublisher
     {
         const string PublisherLabel = "PUBLISHER";
 
@@ -15,7 +15,7 @@ namespace NATSExamples
         private PublishAck lastPa; 
         readonly InterlockedLong errorRun = new InterlockedLong(0);
 
-        public Publisher(CommandLine cmd, int pubDelay) {
+        public ChaosPublisher(CommandLine cmd, int pubDelay) {
             this.cmd = cmd;
             this.pubDelay = pubDelay;
         }

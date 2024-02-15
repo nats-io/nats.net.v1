@@ -17,11 +17,11 @@ namespace NATSExamples
         const int ShortReports = 50;
 
         readonly CommandLine cmd;
-        readonly Publisher publisher;
+        readonly ChaosPublisher publisher;
         readonly IList<ConnectableConsumer> consumers;
         readonly InterlockedBoolean reportFull;
 
-        public Monitor(CommandLine cmd, Publisher publisher, IList<ConnectableConsumer> consumers) {
+        public Monitor(CommandLine cmd, ChaosPublisher publisher, IList<ConnectableConsumer> consumers) {
             this.cmd = cmd;
             this.publisher = publisher;
             this.consumers = consumers;
