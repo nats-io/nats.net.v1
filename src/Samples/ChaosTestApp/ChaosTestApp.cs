@@ -103,10 +103,7 @@ namespace NATSExamples
         }
          
         public static void CreateOrReplaceStream(ChaosCommandLine cmd, IJetStreamManagement jsm) {
-            try {
-                jsm.DeleteStream(cmd.Stream);
-            }
-            catch (Exception ignore) {}
+            try { jsm.DeleteStream(cmd.Stream); } catch (Exception) {}
             try {
                 StreamConfiguration sc = StreamConfiguration.Builder()
                     .WithName(cmd.Stream)

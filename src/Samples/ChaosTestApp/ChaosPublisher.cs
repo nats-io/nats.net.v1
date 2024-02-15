@@ -34,7 +34,6 @@ namespace NATSExamples
             Random r = new Random();
             bool first = true;
             long started = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-            int shortReportsOwed = 0;
             using (IConnection conn = new ConnectionFactory().CreateConnection(cmd.MakeOptions(() => PublisherLabel)))
             {
                 IJetStream js = conn.CreateJetStreamContext();
