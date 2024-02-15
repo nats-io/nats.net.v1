@@ -54,7 +54,7 @@ namespace NATS.Client.JetStream
                 Dispose();
                 DoSub();
             }
-            catch (Exception e) {
+            catch (Exception) {
                 SetupHbAlarmToTrigger();
             }
         }

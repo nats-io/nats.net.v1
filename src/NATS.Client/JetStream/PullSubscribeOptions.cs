@@ -44,7 +44,7 @@ namespace NATS.Client.JetStream
         /// <param name="stream">the stream name to bind to</param>
         /// <param name="name">the consumer name, commonly the durable name</param>
         /// <returns>the PushSubscribeOptions</returns>
-        public static PullSubscribeOptions FastBind(string stream, string name) {
+        public static PullSubscribeOptions FastBindTo(string stream, string name) {
             return Builder().WithStream(stream).WithName(name).WithFastBind(true).Build();
         }
 

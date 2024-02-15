@@ -56,7 +56,7 @@ namespace NATS.Client.JetStream
             originalOrderedCc = null;
             subscribeSubject = null;
             ConsumerName = ci.Name;
-            unorderedBindPso = PullSubscribeOptions.FastBind(streamCtx.StreamName, ci.Name);
+            unorderedBindPso = PullSubscribeOptions.FastBindTo(streamCtx.StreamName, ci.Name);
             cachedConsumerInfo = ci;
         }
         

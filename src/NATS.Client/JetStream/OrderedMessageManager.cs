@@ -61,7 +61,7 @@ namespace NATS.Client.JetStream
             return ManageStatus(msg);
         }
                 
-        internal virtual void HandleHeartbeatError()
+        internal override void HandleHeartbeatError()
         {
             base.HandleHeartbeatError();
             HandleErrorCondition();
@@ -81,7 +81,7 @@ namespace NATS.Client.JetStream
                 try {
                     jsm.DeleteConsumer(Stream, actualConsumerName);
                 }
-                catch (Exception ignore) {}
+                catch (Exception) { /* ignored */ }
 
                 // 2. re-subscribe. This means kill the sub then make a new one
                 //    New sub needs a new deliver subject
