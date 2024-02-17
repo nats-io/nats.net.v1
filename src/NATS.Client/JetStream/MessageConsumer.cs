@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System;
+using NATS.Client.Internals;
 
 namespace NATS.Client.JetStream
 {
@@ -72,18 +73,18 @@ namespace NATS.Client.JetStream
                         Finished = true;
                     }
                 };
+            }
 
-                try
-                {
-                    base.InitSub(subscriptionMaker.Subscribe(mh, pmm, null));
-                    Repull();
-                    Stopped = false;
-                    Finished = false;
-                }
-                catch (Exception)
-                {
-                    SetupHbAlarmToTrigger();
-                }
+            try
+            {
+                base.InitSub(subscriptionMaker.Subscribe(mh, pmm, null));
+                Repull();
+                Stopped = false;
+                Finished = false;
+            }
+            catch (Exception)
+            {
+                SetupHbAlarmToTrigger();
             }
         }
 

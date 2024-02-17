@@ -172,6 +172,10 @@ namespace NATS.Client.JetStream
             {
                 return ((JetStreamPullSubscription)mcb.sub).NextMessage(maxWaitMillis);
             }
+            catch (NATSTimeoutException)
+            {
+                return null;
+            }
             finally
             {
                 try

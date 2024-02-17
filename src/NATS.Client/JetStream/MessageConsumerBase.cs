@@ -54,8 +54,7 @@ namespace NATS.Client.JetStream
                 _finished.Set(value);
             }
         }
-
-
+        
         internal MessageConsumerBase(ConsumerInfo cachedConsumerInfo)
         {
             this.cachedConsumerInfo = cachedConsumerInfo;
