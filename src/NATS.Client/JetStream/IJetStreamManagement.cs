@@ -196,7 +196,6 @@ namespace NATS.Client.JetStream
         /// <returns>True if the message was deleted.</returns>
         bool DeleteMessage(string streamName, ulong sequence, bool erase);
         
-
         /// <summary>
         /// Gets a context for publishing and subscribing to subjects
         /// backed by Jetstream streams and consumers, using the same connection and JetStreamOptions as the management.

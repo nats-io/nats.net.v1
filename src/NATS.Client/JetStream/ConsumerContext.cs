@@ -19,7 +19,7 @@ using static NATS.Client.JetStream.ConsumeOptions;
 namespace NATS.Client.JetStream
 {
     internal interface SimplifiedSubscriptionMaker {
-        IJetStreamSubscription Subscribe(EventHandler<MsgHandlerEventArgs> handler , PullMessageManager optionalPmm, long? optionalInactiveThreshold);
+        IJetStreamSubscription Subscribe(EventHandler<MsgHandlerEventArgs> handler, PullMessageManager optionalPmm, long? optionalInactiveThreshold);
     }
 
     internal class OrderedPullSubscribeOptionsBuilder : PullSubscribeOptions.PullSubscribeOptionsSubscribeOptionsBuilder
@@ -86,7 +86,7 @@ namespace NATS.Client.JetStream
                 }
                 ConsumerConfiguration cc = lastConsumer == null
                     ? originalOrderedCc
-                    : streamCtx.js.ConsumerConfigurationForOrdered(originalOrderedCc, highestSeq, null, null, null);
+                    : streamCtx.js.ConsumerConfigurationForOrdered(originalOrderedCc, highestSeq, null, null, optionalInactiveThreshold);
                 pso = new OrderedPullSubscribeOptionsBuilder(streamCtx.StreamName, cc).Build();
             }
             else {
@@ -168,6 +168,8 @@ namespace NATS.Client.JetStream
                 }
             }
 
+            // intentionally outside of lock because I don't want to 
+            // hold it while fetching the next  message
             try
             {
                 return ((JetStreamPullSubscription)mcb.sub).NextMessage(maxWaitMillis);

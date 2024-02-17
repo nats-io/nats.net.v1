@@ -170,7 +170,6 @@ namespace NATS.Client.JetStream
             {
                 builder.WithDeliverPolicy(DeliverPolicy.ByStartSequence)
                     .WithStartSequence(Math.Max(1, lastStreamSeq + 1));
-
             }
             
             if (consumerName != null && ConsumerCreate290Available()) {
