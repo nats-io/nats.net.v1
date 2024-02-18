@@ -153,13 +153,26 @@ namespace NATS.Client.KeyValue
         {
             Validator.ValidateKvKeyWildcardAllowedRequired(key);
             Validator.ValidateNotNull(watcher, "Watcher is required");
-            return new KeyValueWatchSubscription(this, key, watcher, watchOptions);
+            return new KeyValueWatchSubscription(this, key, watcher, ConsumerConfiguration.UlongUnset, watchOptions);
+        }
+        
+        public KeyValueWatchSubscription Watch(string key, IKeyValueWatcher watcher, ulong fromRevision, params KeyValueWatchOption[] watchOptions)
+        {
+            Validator.ValidateKvKeyWildcardAllowedRequired(key);
+            Validator.ValidateNotNull(watcher, "Watcher is required");
+            return new KeyValueWatchSubscription(this, key, watcher, fromRevision, watchOptions);
         }
 
         public KeyValueWatchSubscription WatchAll(IKeyValueWatcher watcher, params KeyValueWatchOption[] watchOptions)
         {
             Validator.ValidateNotNull(watcher, "Watcher is required");
-            return new KeyValueWatchSubscription(this, ">", watcher, watchOptions);
+            return new KeyValueWatchSubscription(this, ">", watcher, ConsumerConfiguration.UlongUnset, watchOptions);
+        }
+
+        public KeyValueWatchSubscription WatchAll(IKeyValueWatcher watcher, ulong fromRevision, params KeyValueWatchOption[] watchOptions)
+        {
+            Validator.ValidateNotNull(watcher, "Watcher is required");
+            return new KeyValueWatchSubscription(this, ">", watcher, fromRevision, watchOptions);
         }
 
         private PublishAck _write(string key, byte[] data, MsgHeader h) {

@@ -22,7 +22,7 @@ namespace NATS.Client.KeyValue
         IgnoreDelete,
         
         /// <summary>
-        /// Only get meta data, skip value when retrieving data from the server.
+        /// Only get metadata, skip value when retrieving data from the server.
         /// </summary>
         MetaOnly,
         
