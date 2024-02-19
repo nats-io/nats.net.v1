@@ -20,7 +20,8 @@ namespace NATS.Client.JetStream
         protected ulong ExpectedExternalConsumerSeq;
         protected long? TargetSid;
 
-        public OrderedMessageManager(Connection conn, 
+        public OrderedMessageManager(
+            Connection conn, 
             JetStream js, 
             string stream,
             SubscribeOptions so,
@@ -29,6 +30,7 @@ namespace NATS.Client.JetStream
             bool syncMode) : base(conn, js, stream, so, originalCc, queueMode, syncMode)
         {
             ExpectedExternalConsumerSeq = 1; // always starts at 1
+            TargetSid = null;
         }
 
         public override void Startup(IJetStreamSubscription sub)
@@ -58,7 +60,13 @@ namespace NATS.Client.JetStream
             
             return ManageStatus(msg);
         }
-        
+                
+        internal override void HandleHeartbeatError()
+        {
+            base.HandleHeartbeatError();
+            HandleErrorCondition();
+        }
+
         private void HandleErrorCondition()
         {
             try
@@ -66,8 +74,14 @@ namespace NATS.Client.JetStream
                 TargetSid = null;
                 ExpectedExternalConsumerSeq = 1; // consumer always starts with consumer sequence 1
 
-                // 1. shutdown the managers, for instance stops heartbeat timers
-                Shutdown();
+                // 1. delete the consumer by name so we can recreate it with a different delivery policy
+                //    b/c we cannot edit a push consumer's delivery policy
+                IJetStreamManagement jsm = Conn.CreateJetStreamManagementContext(Js.JetStreamOptions);
+                String actualConsumerName = Sub.Consumer;
+                try {
+                    jsm.DeleteConsumer(Stream, actualConsumerName);
+                }
+                catch (Exception) { /* ignored */ }
 
                 // 2. re-subscribe. This means kill the sub then make a new one
                 //    New sub needs a new deliver subject
@@ -77,26 +91,25 @@ namespace NATS.Client.JetStream
 
                 // 3. make a new consumer using the same deliver subject but
                 //    with a new starting point
-                ConsumerConfiguration userCc = ConsumerConfiguration.Builder(OriginalCc)
-                    .WithDeliverPolicy(DeliverPolicy.ByStartSequence)
-                    .WithDeliverSubject(newDeliverSubject)
-                    .WithStartSequence(LastStreamSeq + 1)
-                    .WithStartTime(DateTime.MinValue) // clear start time in case it was originally set
-                    .Build();
-
-                Js.CreateConsumerInternal(Stream, userCc);
+                ConsumerConfiguration userCc = Js.ConsumerConfigurationForOrdered(OriginalCc, LastStreamSeq, newDeliverSubject, actualConsumerName, null);
+                ConsumerInfo ci = Js.CreateConsumerInternal(Stream, userCc);
+                if (Sub is JetStreamAbstractSyncSubscription syncSub)
+                {
+                    syncSub.SetConsumerName(ci.Name);
+                }
+                else if (Sub is JetStreamAbstractAsyncSubscription asyncSub)
+                {
+                    asyncSub.SetConsumerName(ci.Name);
+                }
 
                 // 4. restart the manager.
                 Startup(Sub);
             }
             catch (Exception e)
             {
-                NATSException n = new NATSException("Ordered subscription fatal error: " + e.Message); 
-                ((Connection)Js.Conn).ScheduleErrorEvent(this, n, (Subscription)Sub);
-                if (SyncMode)
-                {
-                    throw n;
-                }
+                NATSException ne = e is NATSException ? (NATSException)e : new NATSException("Ordered Subscription Error", e);
+                ((Connection)Js.Conn).ScheduleErrorEvent(this, ne);
+                InitOrResetHeartbeatTimer();
             }
         }
     }

@@ -8,7 +8,9 @@ namespace NATS.Client.JetStream
     internal class OrderedConsumerContext : IOrderedConsumerContext
     {
         private ConsumerContext impl;
-        
+
+        public string ConsumerName => impl.ConsumerName;
+
         internal OrderedConsumerContext(StreamContext streamContext, OrderedConsumerConfiguration config) {
             impl = new ConsumerContext(streamContext, config);
         }

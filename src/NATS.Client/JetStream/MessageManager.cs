@@ -32,7 +32,7 @@ namespace NATS.Client.JetStream
 
         internal ulong LastStreamSeq;
         internal ulong LastConsumerSeq;
-        internal long LastMsgReceived;
+        internal InterlockedLong LastMsgReceived;
 
         protected bool Hb;
         protected int IdleHeartbeatSetting;
@@ -52,7 +52,7 @@ namespace NATS.Client.JetStream
             IdleHeartbeatSetting = 0;
             AlarmPeriodSetting = 0;
 
-            LastMsgReceived = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            LastMsgReceived = new InterlockedLong(DateTimeOffset.Now.ToUnixTimeMilliseconds());
         }
 
         public virtual void Startup(IJetStreamSubscription sub)
@@ -69,12 +69,9 @@ namespace NATS.Client.JetStream
             // does nothing - only implemented for pulls, but in base class since instance is always referenced as MessageManager, not subclass
         }
 
-        protected void MessageReceived()
+        protected void UpdateLastMessageReceived()
         {
-            lock (StateChangeLock)
-            {
-                LastMsgReceived = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-            }
+            LastMsgReceived.Set(DateTimeOffset.Now.ToUnixTimeMilliseconds());
         }
 
         protected virtual bool BeforeChannelAddCheck(Msg msg)
@@ -96,7 +93,6 @@ namespace NATS.Client.JetStream
         {
             Conn.Opts.HeartbeatAlarmEventHandlerOrDefault.Invoke(this, 
                 new HeartbeatAlarmEventArgs(Conn, (Subscription)Sub, LastStreamSeq, LastConsumerSeq));
-            
         }
 
         protected void ConfigureIdleHeartbeat(Duration configIdleHeartbeat, int configMessageAlarmTime)
@@ -125,20 +121,21 @@ namespace NATS.Client.JetStream
             }
         }
 
-        protected void InitOrResetHeartbeatTimer()
+        internal void InitOrResetHeartbeatTimer()
         {
             lock (StateChangeLock)
             {
                 ShutdownHeartbeatTimer();
                 heartbeatTimer = new Timer(state =>
                     {
-                        long sinceLast = DateTimeOffset.Now.ToUnixTimeMilliseconds() - LastMsgReceived;
+                        long sinceLast = DateTimeOffset.Now.ToUnixTimeMilliseconds() - LastMsgReceived.Read();
                         if (sinceLast > AlarmPeriodSetting)
                         {
                             HandleHeartbeatError();
                         }
                     },
                     null, AlarmPeriodSetting, AlarmPeriodSetting);
+                UpdateLastMessageReceived();
             }
         }
 

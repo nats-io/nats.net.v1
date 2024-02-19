@@ -196,6 +196,7 @@ namespace NATS.Client.Internals
         public const string ExceededMaxRequestMaxBytes = "Exceeded MaxRequestMaxBytes"; // 409
 
         public const string BatchCompleted             = "Batch Completed"; // 409 informational
+        public const string ServerShutdown             = "Server Shutdown"; // 409 informational with headers
  
         [Obsolete("This property is obsolete. Use LastConsumerHeader instead.", false)]
         public const string LastConsumerHdr = "Nats-Last-Consumer";

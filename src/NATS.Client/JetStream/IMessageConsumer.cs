@@ -21,6 +21,13 @@ namespace NATS.Client.JetStream
     public interface IMessageConsumer : IDisposable
     {
         /// <summary>
+        /// Gets the consumer name associated with the subscription.
+        /// Some simplified consumer types do not support this, so it might be null.
+        /// </summary>
+        /// <returns>the consumer name</returns>
+        String GetConsumerName();
+
+        /// <summary>
         /// Gets information about the consumer behind this subscription.
         /// </summary>
         /// <returns>consumer information</returns>

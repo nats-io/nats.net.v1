@@ -19,6 +19,8 @@ namespace NATS.Client.JetStream
 {
     public class JetStreamManagement : JetStreamBase, IJetStreamManagement
     {
+        private IJetStream js; // this is lazy init'ed
+
         internal JetStreamManagement(IConnection connection, JetStreamOptions options) : base(connection, options) {}
         
         public AccountStatistics GetAccountStatistics()
@@ -213,6 +215,15 @@ namespace NATS.Client.JetStream
             byte[] mdr = new MessageDeleteRequest(sequence, erase).Serialize();
             Msg m = RequestResponseRequired(subj, mdr, Timeout);
             return new SuccessApiResponse(m, true).Success;
+        }
+
+        public IJetStream GetJetStreamContext()
+        {
+            if (js == null)
+            {
+                js = new JetStream(this);
+            }
+            return js;
         }
     }
 }

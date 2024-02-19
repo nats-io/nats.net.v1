@@ -19,6 +19,7 @@ using NATS.Client;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using Xunit;
+using Xunit.Abstractions;
 using static IntegrationTests.JetStreamTestBase;
 using static NATS.Client.JetStream.BaseConsumeOptions;
 using static UnitTests.TestBase;
@@ -28,7 +29,7 @@ namespace IntegrationTests
     public class TestSimplification : TestSuite<OneServerSuiteContext>
     {
         public TestSimplification(OneServerSuiteContext context) : base(context) {}
-        
+
         [Fact]
         public void TestStreamContext()
         {
@@ -434,10 +435,8 @@ namespace IntegrationTests
     
                 closeConsumer(cctx1.Iterate(), durable1, true);
                 closeConsumer(cctx2.Iterate(ConsumeOptions.DefaultConsumeOptions), durable2, true);
-                
                 closeConsumer(cctx3.Consume((s, e) => {}), durable3, true);
                 closeConsumer(cctx4.Consume((s, e) => {}, ConsumeOptions.DefaultConsumeOptions), durable4, true);
-                
                 closeConsumer(cctx5.FetchMessages(1), durable5, false);
                 closeConsumer(cctx6.FetchBytes(1000), durable6, false);
             });
@@ -558,9 +557,9 @@ namespace IntegrationTests
             }
         }
 
-        class OrderedPullNextTestDropSimulator : PullOrderedMessageManager
+        class PullOrderedNextTestDropSimulator : PullOrderedMessageManager
         {
-            public OrderedPullNextTestDropSimulator(
+            public PullOrderedNextTestDropSimulator(
                 Connection conn, JetStream js, string stream, SubscribeOptions so, ConsumerConfiguration cc,
                 bool queueMode, bool syncMode)
                 : base(conn, js, stream, so, cc, syncMode) {}
@@ -594,7 +593,7 @@ namespace IntegrationTests
         public static ulong[] ExpectedConSeqNums = {1, 1, 2, 3, 1, 2};
         
         [Fact]
-        public void TestOrderedActives() {
+        public void TestOrderedBehaviorNext() {
             Context.RunInJsServer(AtLeast2_9_1, c => {
                 string streamName = Stream(Nuid.NextGlobal());
                 string subject = Subject(Nuid.NextGlobal());
@@ -612,63 +611,120 @@ namespace IntegrationTests
                 // Get this in place before subscriptions are made
                 ((JetStream)js)._pullOrderedMessageManagerFactory = 
                     (conn, lJs, stream, so, cc, queueMode, syncMode) => 
-                        new OrderedPullNextTestDropSimulator(conn, lJs, stream, so, cc, queueMode, syncMode);
-                testOrderedActiveNext(sc, occ);
-    
-                // Get this in place before subscriptions are made
-                ((JetStream)js)._pullOrderedMessageManagerFactory = 
-                    (conn, lJs, stream, so, cc, queueMode, syncMode) => 
-                        new OrderedPullTestDropSimulator(conn, lJs, stream, so, cc, queueMode, syncMode);
-                testOrderedActiveFetch(sc, occ);
-                testOrderedActiveIterable(sc, occ);
-            });
-        }
-
-        private static void testOrderedActiveNext(IStreamContext sc, OrderedConsumerConfiguration occ) {
-            IOrderedConsumerContext ctx = sc.CreateOrderedConsumer(occ);
-            // Loop through the messages to make sure I get stream sequence 1 to 6
-            ulong expectedStreamSeq = 1;
-            while (expectedStreamSeq <= 6) {
-                Msg m = ctx.Next(1000);
-                if (m != null) {
-                    Assert.Equal(expectedStreamSeq, m.MetaData.StreamSequence);
-                    Assert.Equal(1U, m.MetaData.ConsumerSequence);
-                    ++expectedStreamSeq;
-                }
-            }
-        }
-
-        private static void testOrderedActiveFetch(IStreamContext sc, OrderedConsumerConfiguration occ) {
-            IOrderedConsumerContext ctx = sc.CreateOrderedConsumer(occ);
-            using (IFetchConsumer fcon = ctx.FetchMessages(6)) {
+                        new PullOrderedNextTestDropSimulator(conn, lJs, stream, so, cc, queueMode, syncMode);
+                IOrderedConsumerContext ctx = sc.CreateOrderedConsumer(occ);
                 // Loop through the messages to make sure I get stream sequence 1 to 6
                 ulong expectedStreamSeq = 1;
                 while (expectedStreamSeq <= 6) {
-                    Msg m = fcon.NextMessage();
+                    Msg m = ctx.Next(1000);
                     if (m != null) {
                         Assert.Equal(expectedStreamSeq, m.MetaData.StreamSequence);
-                        Assert.Equal(ExpectedConSeqNums[expectedStreamSeq-1], m.MetaData.ConsumerSequence);
+                        Assert.Equal(1U, m.MetaData.ConsumerSequence);
                         ++expectedStreamSeq;
                     }
                 }
+            });
+        }
+
+        class PullOrderedTestDropSimulator : PullOrderedMessageManager
+        {
+            public PullOrderedTestDropSimulator(
+                Connection conn, JetStream js, string stream, SubscribeOptions so, ConsumerConfiguration cc,
+                bool queueMode, bool syncMode)
+                : base(conn, js, stream, so, cc, syncMode) {}
+
+            protected override bool BeforeChannelAddCheck(Msg msg)
+            {
+                if (msg != null && msg.IsJetStream
+                                && msg.MetaData.StreamSequence == 2
+                                && msg.MetaData.ConsumerSequence == 2)
+                {
+                    return false;
+                }
+
+                return base.BeforeChannelAddCheck(msg);
             }
         }
+        
+        [Fact]
+        public void TestOrderedBehaviorFetch() {
+            Context.RunInJsServer(AtLeast2_9_1, c => {
+                string streamName = Stream(Nuid.NextGlobal());
+                string subject = Subject(Nuid.NextGlobal());
+                string durable = Nuid.NextGlobal();
+
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                IJetStream js = c.CreateJetStreamContext();
+                CreateMemoryStream(jsm, streamName, subject);
+
+                IStreamContext sc = js.GetStreamContext(streamName);
     
-        private static void testOrderedActiveIterable(IStreamContext sc, OrderedConsumerConfiguration occ) {
-            IOrderedConsumerContext ctx = sc.CreateOrderedConsumer(occ);
-            using (IIterableConsumer icon = ctx.Iterate()) {
-                // Loop through the messages to make sure I get stream sequence 1 to 6
+                JsPublish(js, subject, 101, 5);
+    
+                OrderedConsumerConfiguration occ = new OrderedConsumerConfiguration().WithFilterSubject(subject);
+                // Get this in place before subscriptions are made
+                ((JetStream)js)._pullOrderedMessageManagerFactory = 
+                    (conn, lJs, stream, so, cc, queueMode, syncMode) => 
+                        new PullOrderedTestDropSimulator(conn, lJs, stream, so, cc, queueMode, syncMode);
+                IOrderedConsumerContext ctx = sc.CreateOrderedConsumer(occ);
                 ulong expectedStreamSeq = 1;
-                while (expectedStreamSeq <= 6)
-                {
-                    Msg m = icon.NextMessage(1000);
-                    if (m != null) {
-                        Assert.Equal(expectedStreamSeq, m.MetaData.StreamSequence);
-                        Assert.Equal(ExpectedConSeqNums[expectedStreamSeq-1], m.MetaData.ConsumerSequence);
-                        ++expectedStreamSeq;
+                FetchConsumeOptions fco = FetchConsumeOptions.Builder().WithMaxMessages(6).WithExpiresIn(1000).Build();
+                using (IFetchConsumer fcon = ctx.Fetch(fco)) {
+                    Msg m = fcon.NextMessage();
+                    while (m != null) {
+                        Assert.Equal(expectedStreamSeq++, m.MetaData.StreamSequence);
+                        m = fcon.NextMessage();
+                    }
+                    // we know this because the simulator is designed to fail the first time at the second message
+                    Assert.Equal(2U, expectedStreamSeq);
+                    // fetch failure will stop the consumer, but make sure it's done b/c with ordered
+                    // I can't have more than one consuming at a time.
+                    while (!fcon.Finished) {
+                        Thread.Sleep(1);
                     }
                 }
-            }
+                // this should finish without error
+                using (IFetchConsumer fcon = ctx.Fetch(fco)) {
+                    Msg m = fcon.NextMessage();
+                    while (expectedStreamSeq <= 5) {
+                        Assert.Equal(expectedStreamSeq++, m.MetaData.StreamSequence);
+                        m = fcon.NextMessage();
+                    }
+                }
+            });
+        }
+    
+        [Fact]
+        public void TestOrderedBehaviorIterable() {
+            Context.RunInJsServer(AtLeast2_9_1, c => {
+                string streamName = Stream(Nuid.NextGlobal());
+                string subject = Subject(Nuid.NextGlobal());
+                string durable = Nuid.NextGlobal();
+
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                IJetStream js = c.CreateJetStreamContext();
+                CreateMemoryStream(jsm, streamName, subject);
+
+                IStreamContext sc = js.GetStreamContext(streamName);
+    
+                JsPublish(js, subject, 101, 5);
+    
+                OrderedConsumerConfiguration occ = new OrderedConsumerConfiguration().WithFilterSubject(subject);
+                // Get this in place before subscriptions are made
+                ((JetStream)js)._pullOrderedMessageManagerFactory = 
+                    (conn, lJs, stream, so, cc, queueMode, syncMode) => 
+                        new PullOrderedTestDropSimulator(conn, lJs, stream, so, cc, queueMode, syncMode);
+                IOrderedConsumerContext ctx = sc.CreateOrderedConsumer(occ);
+                ulong expectedStreamSeq = 1;
+                using (IIterableConsumer icon = ctx.Iterate())
+                {
+                    Msg m = icon.NextMessage(1000);
+                    while (m != null) {
+                        Assert.Equal(expectedStreamSeq++, m.MetaData.StreamSequence);
+                        m = icon.NextMessage(1000);
+                    }
+                }
+            });
         }
         
         [Fact]
@@ -715,6 +771,50 @@ namespace IntegrationTests
                         Assert.Equal(ExpectedConSeqNums[idx], csFlags[idx]);
                         ++expectedStreamSeq;
                     }
+                }
+            });
+        }
+        
+        [Fact]
+        public void TestOrderedConsumeMultipleSubjects() {
+            Context.RunInJsServer(AtLeast2_9_1, c => {
+                string streamName = Stream(Nuid.NextGlobal());
+                string subject0 = Subject(Nuid.NextGlobal());
+                string subject1 = Subject(Nuid.NextGlobal());
+
+                IJetStream js = c.CreateJetStreamContext();
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                CreateMemoryStream(jsm, streamName, subject0, subject1);
+
+                JsPublish(js, subject0, 10);
+                JsPublish(js, subject1, 5);
+
+                IStreamContext sc = js.GetStreamContext(streamName);
+    
+                OrderedConsumerConfiguration occ = new OrderedConsumerConfiguration().WithFilterSubjects(subject0, subject1);
+                IOrderedConsumerContext occtx = sc.CreateOrderedConsumer(occ);
+
+                int count0 = 0;
+                int count1 = 0;
+                using (IFetchConsumer fc = occtx.Fetch(FetchConsumeOptions.Builder().WithMaxMessages(20).WithExpiresIn(2000).Build()))
+                {
+                    Msg msg = fc.NextMessage();
+                    while (msg != null)
+                    {
+                        if (msg.Subject.Equals(subject0))
+                        {
+                            count0++;
+                        }
+                        else
+                        {
+                            count1++;
+                        }
+                        msg.Ack();
+                        msg = fc.NextMessage();
+                    }
+                    
+                    Assert.Equal(10, count0);
+                    Assert.Equal(5, count1);
                 }
             });
         }

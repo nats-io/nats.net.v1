@@ -54,8 +54,7 @@ namespace NATS.Client.JetStream
                 _finished.Set(value);
             }
         }
-
-
+        
         internal MessageConsumerBase(ConsumerInfo cachedConsumerInfo)
         {
             this.cachedConsumerInfo = cachedConsumerInfo;
@@ -77,9 +76,10 @@ namespace NATS.Client.JetStream
                 pullImpl = asyncSub.pullImpl;
             }
         }
-        
-        internal bool NoMorePending() {
-            return pmm.pendingMessages < 1 || (pmm.trackingBytes && pmm.pendingBytes < 1);
+
+        public string GetConsumerName()
+        {
+            return sub.Consumer;
         }
 
         public ConsumerInfo GetConsumerInformation()

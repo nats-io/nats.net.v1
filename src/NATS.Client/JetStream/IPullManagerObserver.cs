@@ -16,5 +16,6 @@ namespace NATS.Client.JetStream
     public interface IPullManagerObserver
     {
         void PendingUpdated();
+        void HeartbeatError();
     }
 }

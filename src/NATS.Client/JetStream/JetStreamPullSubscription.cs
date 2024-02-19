@@ -29,9 +29,9 @@ namespace NATS.Client.JetStream
             pullImpl = new JetStreamPullApiImpl(conn, js, messageManager, stream, subject, consumer);
         }
 
-        internal override void UpdateConsumer(string consumer)
+        internal override void SetConsumerName(string consumer)
         {
-            base.UpdateConsumer(consumer);
+            base.SetConsumerName(consumer);
             pullImpl.UpdateConsumer(consumer);
         }
         

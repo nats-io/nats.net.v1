@@ -195,5 +195,12 @@ namespace NATS.Client.JetStream
         /// <param name="erase">Whether to erase the message (overwriting with garbage) or only mark it as erased.</param>
         /// <returns>True if the message was deleted.</returns>
         bool DeleteMessage(string streamName, ulong sequence, bool erase);
+        
+        /// <summary>
+        /// Gets a context for publishing and subscribing to subjects
+        /// backed by Jetstream streams and consumers, using the same connection and JetStreamOptions as the management.
+        /// </summary>
+        /// <returns>The JetStream Context</returns>
+        IJetStream GetJetStreamContext();
     }
 }

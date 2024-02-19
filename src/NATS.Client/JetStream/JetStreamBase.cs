@@ -70,6 +70,16 @@ namespace NATS.Client.JetStream
             
         }
 
+        protected JetStreamBase(JetStreamBase jetStreamBase)
+        {
+            Conn = jetStreamBase.Conn;
+            JetStreamOptions = jetStreamBase.JetStreamOptions;
+            Prefix = jetStreamBase.Prefix;
+            Timeout = jetStreamBase.Timeout;
+            _consumerCreate290Available = jetStreamBase._consumerCreate290Available;
+            _multipleSubjectFilter210Available = jetStreamBase._multipleSubjectFilter210Available;
+        }
+
         internal static ServerInfo ServerInfoOrException(IConnection conn)
         {
             ServerInfo si = conn.ServerInfo;
@@ -145,17 +155,33 @@ namespace NATS.Client.JetStream
             return Nuid.NextGlobalSequence();
         }
         
-        internal ConsumerConfiguration NextOrderedConsumerConfiguration(
+        internal ConsumerConfiguration ConsumerConfigurationForOrdered(
             ConsumerConfiguration originalCc,
             ulong lastStreamSeq,
-            string newDeliverSubject)
+            string newDeliverSubject, 
+            string consumerName,
+            long? inactiveThreshold)
         {
-            return ConsumerConfiguration.Builder(originalCc)
-                .WithDeliverPolicy(DeliverPolicy.ByStartSequence)
+            ConsumerConfiguration.ConsumerConfigurationBuilder builder = ConsumerConfiguration.Builder(originalCc)
                 .WithDeliverSubject(newDeliverSubject)
-                .WithStartSequence(Math.Max(1, lastStreamSeq + 1))
-                .WithStartTime(DateTime.MinValue) // clear start time in case it was originally set
-                .Build();
+                .WithStartTime(DateTime.MinValue); // clear start time in case it was originally set
+
+            if (lastStreamSeq > 0)
+            {
+                builder.WithDeliverPolicy(DeliverPolicy.ByStartSequence)
+                    .WithStartSequence(Math.Max(1, lastStreamSeq + 1));
+            }
+            
+            if (consumerName != null && ConsumerCreate290Available()) {
+                builder.WithName(consumerName);
+            }
+
+            if (inactiveThreshold.HasValue)
+            {
+                builder.WithInactiveThreshold(inactiveThreshold.Value);
+            }
+            
+            return builder.Build();
         }
 
         internal StreamInfo GetStreamInfoInternal(string streamName, StreamInfoOptions options)

@@ -122,5 +122,36 @@ namespace NATS.Client.Internals
         {
             return Nanos.ToString();
         }
+
+        public string ToDescription() {
+            if (Nanos == 0) {
+                return "DUR0";
+            }
+
+            long millis = Nanos / NanosPerMilli;
+            if (millis < 1000)
+            {
+                return "DUR" + millis + "ms";
+            }
+
+            long seconds = millis / 1000;
+            millis = millis - (seconds * 1000);
+            long minutes = seconds / 60;
+            seconds = seconds - (minutes * 60);
+            long hours = minutes / 60;
+            minutes = minutes - (hours * 60);
+
+            if (hours > 0)
+            {
+                return $"DUR{hours}h{minutes}m{seconds}s{millis}ms";
+            }
+            
+            if (minutes > 0)
+            {
+                return $"DUR{minutes}m{seconds}s{millis}ms";
+            }
+
+            return $"DUR{seconds}s{millis}ms";
+        }
     }
 }
