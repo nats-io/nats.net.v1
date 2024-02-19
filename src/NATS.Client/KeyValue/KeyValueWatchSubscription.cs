@@ -24,7 +24,7 @@ namespace NATS.Client.KeyValue
         private readonly object subLock;
 
         public KeyValueWatchSubscription(KeyValue kv, string keyPattern,
-            IKeyValueWatcher watcher, params KeyValueWatchOption[] watchOptions)
+            IKeyValueWatcher watcher, ulong fromRevision, params KeyValueWatchOption[] watchOptions)
         {
             subLock = new object();
             string subscribeSubject = kv.ReadSubject(keyPattern);
@@ -44,14 +44,23 @@ namespace NATS.Client.KeyValue
                 }
             }
 
-            if (deliverPolicy == DeliverPolicy.New || kv._getLast(subscribeSubject) == null) 
+            if (fromRevision > 0)
             {
-                endOfDataSent = new InterlockedBoolean(true);
-                watcher.EndOfData();
+                deliverPolicy = DeliverPolicy.ByStartSequence;
+                endOfDataSent = new InterlockedBoolean();
             }
             else
             {
-                endOfDataSent = new InterlockedBoolean(false);
+                fromRevision = ConsumerConfiguration.UlongUnset; // easier on the builder since we aren't starting at a fromRevision
+                if (deliverPolicy == DeliverPolicy.New || kv._getLast(subscribeSubject) == null) 
+                {
+                    endOfDataSent = new InterlockedBoolean(true);
+                    watcher.EndOfData();
+                }
+                else
+                {
+                    endOfDataSent = new InterlockedBoolean();
+                }
             }
             
             PushSubscribeOptions pso = PushSubscribeOptions.Builder()
@@ -61,12 +70,13 @@ namespace NATS.Client.KeyValue
                     ConsumerConfiguration.Builder()
                         .WithAckPolicy(AckPolicy.None)
                         .WithDeliverPolicy(deliverPolicy)
+                        .WithStartSequence(fromRevision)
                         .WithHeadersOnly(headersOnly)
                         .WithFilterSubject(subscribeSubject)
                         .Build())
                 .Build();
 
-            EventHandler<MsgHandlerEventArgs> handler = (sender, args) =>
+            void Handler(object sender, MsgHandlerEventArgs args)
             {
                 KeyValueEntry kve = new KeyValueEntry(args.Message);
                 if (includeDeletes || kve.Operation.Equals(KeyValueOperation.Put))
@@ -79,9 +89,9 @@ namespace NATS.Client.KeyValue
                     endOfDataSent.Set(true);
                     watcher.EndOfData();
                 }
-            };
+            }
 
-            sub = kv.js.PushSubscribeAsync(subscribeSubject, handler, false, pso);
+            sub = kv.js.PushSubscribeAsync(subscribeSubject, Handler, false, pso);
             if (endOfDataSent.IsFalse())
             {
                 ulong pending = sub.GetConsumerInformation().CalculatedPending;

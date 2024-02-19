@@ -738,20 +738,24 @@ namespace IntegrationTests
             string key1 = "key.1";
             string key2 = "key.2";
             
-            Object[] key1AllExpecteds = new Object[] {
+            object[] key1AllExpecteds = {
                 "a", "aa", KeyValueOperation.Delete, "aaa", KeyValueOperation.Delete, KeyValueOperation.Purge
             };
+            
+            object[] key1FromRevisionExpecteds  = {
+                "aa", KeyValueOperation.Delete, "aaa"
+            };
 
-            Object[] noExpecteds = new Object[0];
-            Object[] purgeOnlyExpecteds = { KeyValueOperation.Purge };
+            object[] noExpecteds = Array.Empty<object>();
+            object[] purgeOnlyExpecteds = { KeyValueOperation.Purge };
 
-            Object[] key2AllExpecteds = {
+            object[] key2AllExpecteds = {
                 "z", "zz", KeyValueOperation.Delete, "zzz"
             };
 
-            Object[] key2AfterExpecteds = { "zzz" };
+            object[] key2AfterExpecteds = { "zzz" };
 
-            Object[] allExpecteds = new object[] {
+            object[] allExpecteds = {
                 "a", "aa", "z", "zz",
                 KeyValueOperation.Delete, KeyValueOperation.Delete,
                 "aaa", "zzz",
@@ -759,7 +763,13 @@ namespace IntegrationTests
                 null
             };
 
-            Object[] allPutsExpecteds = {
+            object[] allFromRevisionExpecteds  = {
+                "aa", "z", "zz",
+                KeyValueOperation.Delete, KeyValueOperation.Delete,
+                "aaa", "zzz"
+            };
+
+            object[] allPutsExpecteds = {
                 "a", "aa", "z", "zz", "aaa", "zzz", null
             };
             
@@ -768,14 +778,23 @@ namespace IntegrationTests
                 // get the kv management context
                 IKeyValueManagement kvm = c.CreateKeyValueManagementContext();
 
-                // create the bucket
+                string bucket1 = Bucket(1); 
+                string bucket2 = Bucket(2); 
+                // create the buckets
                 kvm.Create(KeyValueConfiguration.Builder()
-                    .WithName(BUCKET)
+                    .WithName(bucket1)
                     .WithMaxHistoryPerKey(10)
                     .WithStorageType(StorageType.Memory)
                     .Build());
 
-                IKeyValue kv = c.CreateKeyValueContext(BUCKET);
+                kvm.Create(KeyValueConfiguration.Builder()
+                    .WithName(bucket2)
+                    .WithMaxHistoryPerKey(10)
+                    .WithStorageType(StorageType.Memory)
+                    .Build());
+
+                IKeyValue kv = c.CreateKeyValueContext(bucket1);
+                IKeyValue kv2 = c.CreateKeyValueContext(bucket2);
 
                 TestKeyValueWatcher key1FullWatcher = new TestKeyValueWatcher(true);
                 TestKeyValueWatcher key1MetaWatcher = new TestKeyValueWatcher(true, KeyValueWatchOption.MetaOnly);
@@ -819,7 +838,16 @@ namespace IntegrationTests
                 kv.Delete(key1);
                 kv.Purge(key1);
                 kv.Put(keyNull, (byte[])null);
-                
+
+                kv2.Put(key1, "a");
+                kv2.Put(key1, "aa");
+                kv2.Put(key2, "z");
+                kv2.Put(key2, "zz");
+                kv2.Delete(key1);
+                kv2.Delete(key2);
+                kv2.Put(key1, "aaa");
+                kv2.Put(key2, "zzz");
+
                 Thread.Sleep(100); // give time for all the data to be setup
 
                 TestKeyValueWatcher key1AfterWatcher = new TestKeyValueWatcher(false, KeyValueWatchOption.MetaOnly);
@@ -830,6 +858,9 @@ namespace IntegrationTests
                 TestKeyValueWatcher key2AfterStartNewWatcher = new TestKeyValueWatcher(false, KeyValueWatchOption.MetaOnly, KeyValueWatchOption.UpdatesOnly);
                 TestKeyValueWatcher key2AfterStartFirstWatcher = new TestKeyValueWatcher(false, KeyValueWatchOption.MetaOnly, KeyValueWatchOption.IncludeHistory);
 
+                TestKeyValueWatcher key1FromRevisionAfterWatcher = new TestKeyValueWatcher(false);
+                TestKeyValueWatcher allFromRevisionAfterWatcher = new TestKeyValueWatcher(false);
+
                 subs.Add(kv.Watch(key1, key1AfterWatcher, key1AfterWatcher.WatchOptions));
                 subs.Add(kv.Watch(key1, key1AfterIgDelWatcher, key1AfterIgDelWatcher.WatchOptions));
                 subs.Add(kv.Watch(key1, key1AfterStartNewWatcher, key1AfterStartNewWatcher.WatchOptions));
@@ -837,6 +868,9 @@ namespace IntegrationTests
                 subs.Add(kv.Watch(key2, key2AfterWatcher, key2AfterWatcher.WatchOptions));
                 subs.Add(kv.Watch(key2, key2AfterStartNewWatcher, key2AfterStartNewWatcher.WatchOptions));
                 subs.Add(kv.Watch(key2, key2AfterStartFirstWatcher, key2AfterStartFirstWatcher.WatchOptions));
+
+                subs.Add(kv2.Watch(key1, key1FromRevisionAfterWatcher, 2, key1FromRevisionAfterWatcher.WatchOptions));
+                subs.Add(kv2.WatchAll(allFromRevisionAfterWatcher, 2, allFromRevisionAfterWatcher.WatchOptions));
 
                 Thread.Sleep(2000); // give time for the watches to get messages
 
@@ -876,6 +910,9 @@ namespace IntegrationTests
                 ValidateWatcher(key2AfterExpecteds, key2AfterWatcher);
                 ValidateWatcher(noExpecteds, key2AfterStartNewWatcher);
                 ValidateWatcher(key2AllExpecteds, key2AfterStartFirstWatcher);
+
+                ValidateWatcher(key1FromRevisionExpecteds, key1FromRevisionAfterWatcher);
+                ValidateWatcher(allFromRevisionExpecteds, allFromRevisionAfterWatcher);
             });
         }
 
@@ -899,7 +936,7 @@ namespace IntegrationTests
                 Assert.True(lastRevision < kve.Revision);
                 lastRevision = kve.Revision;
 
-                Object expected = expectedKves[aix++];
+                object expected = expectedKves[aix++];
                 if (expected == null) {
                     Assert.Equal(KeyValueOperation.Put, kve.Operation);
                     Assert.True(kve.Value == null || kve.Value.Length == 0);
@@ -1024,7 +1061,7 @@ namespace IntegrationTests
                     AssertKvAccountKeys(kv_connA_bucketI.Keys(), Key(21), Key(22));
                     AssertKvAccountKeys(kv_connI_bucketI.Keys(), Key(21), Key(22));
                 
-                    Object[] expecteds = {
+                    object[] expecteds = {
                         Data(0), Data(1), KeyValueOperation.Delete, KeyValueOperation.Purge, Data(2),
                         Data(0), Data(1), KeyValueOperation.Delete, KeyValueOperation.Purge, Data(2)
                     };
@@ -1074,7 +1111,7 @@ namespace IntegrationTests
             AssertKveAccountGet(kvUserA, kvUserI, key, Data(2));
         }
 
-        private void AssertKveAccountHistory(IList<KeyValueEntry> history, params Object[] expecteds) {
+        private void AssertKveAccountHistory(IList<KeyValueEntry> history, params object[] expecteds) {
             Assert.Equal(expecteds.Length, history.Count);
             for (int x = 0; x < expecteds.Length; x++) {
                 if (expecteds[x] is string expected) {
@@ -1243,7 +1280,7 @@ namespace IntegrationTests
             {
                 Thread.Sleep(200); // give the messages time to propagate
             }
-            ValidateWatcher(new Object[]{"bb0", "aaa" + num, KeyValueOperation.Delete}, mWatcher);
+            ValidateWatcher(new object[]{"bb0", "aaa" + num, KeyValueOperation.Delete}, mWatcher);
 
             // Does the origin data match?
             if (okv != null) {
@@ -1252,7 +1289,7 @@ namespace IntegrationTests
                 {
                     Thread.Sleep(200); // give the messages time to propagate
                 }
-                ValidateWatcher(new Object[]{"bb0", "aaa" + num, KeyValueOperation.Delete}, oWatcher);
+                ValidateWatcher(new object[]{"bb0", "aaa" + num, KeyValueOperation.Delete}, oWatcher);
             }
         }
         
@@ -1299,7 +1336,7 @@ namespace IntegrationTests
         }
     }
 
-    class TestKeyValueWatcher : IKeyValueWatcher 
+    class TestKeyValueWatcher : IKeyValueWatcher
     {
         public IList<KeyValueEntry> Entries = new List<KeyValueEntry>();
         public KeyValueWatchOption[] WatchOptions;
