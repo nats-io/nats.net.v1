@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">1.1.2</span>
+   &#160;<span id="projectnumber">1.1.3</span>
    </div>
    <div id="projectbrief">The NATS.io .NET C# Client</div>
   </td>
@@ -142,6 +142,8 @@ AccountStatistics&#160;</td><td class="memItemRight" valign="bottom"><b>GetAccou
 <tr class="separator:ad79499879e746332fa4d3df6695f0df7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a619f09d3627094d0b5c094a6cb57c4d2"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#a619f09d3627094d0b5c094a6cb57c4d2">DeleteMessage</a> (string streamName, ulong sequence, bool erase)</td></tr>
 <tr class="separator:a619f09d3627094d0b5c094a6cb57c4d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a50e13af65e2a47180261a14723598307"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream.html">IJetStream</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#a50e13af65e2a47180261a14723598307">GetJetStreamContext</a> ()</td></tr>
+<tr class="separator:a50e13af65e2a47180261a14723598307"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p >This is the <a class="el" href="namespace_n_a_t_s_1_1_client_1_1_jet_stream.html">JetStream</a> management API to programatically create, delete, and update various <a class="el" href="namespace_n_a_t_s_1_1_client_1_1_jet_stream.html">JetStream</a> objects. </p>
@@ -486,6 +488,26 @@ AccountStatistics&#160;</td><td class="memItemRight" valign="bottom"><b>GetAccou
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Message information.</dd></dl>
+
+</div>
+</div>
+<a id="a50e13af65e2a47180261a14723598307" name="a50e13af65e2a47180261a14723598307"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a50e13af65e2a47180261a14723598307">&#9670;&nbsp;</a></span>GetJetStreamContext()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream.html">IJetStream</a> NATS.Client.JetStream.IJetStreamManagement.GetJetStreamContext </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Gets a context for publishing and subscribing to subjects backed by Jetstream streams and consumers, using the same connection and JetStreamOptions as the management. </p>
+<dl class="section return"><dt>Returns</dt><dd>The <a class="el" href="namespace_n_a_t_s_1_1_client_1_1_jet_stream.html">JetStream</a> Context</dd></dl>
 
 </div>
 </div>

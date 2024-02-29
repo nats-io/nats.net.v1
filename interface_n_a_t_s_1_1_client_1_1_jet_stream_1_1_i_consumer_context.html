@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">1.1.2</span>
+   &#160;<span id="projectnumber">1.1.3</span>
    </div>
    <div id="projectbrief">The NATS.io .NET C# Client</div>
   </td>
@@ -86,7 +86,6 @@ $(document).ready(function(){initNavTree('interface_n_a_t_s_1_1_client_1_1_jet_s
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#properties">Properties</a> &#124;
 <a href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_consumer_context-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">NATS.Client.JetStream.IConsumerContext Interface Reference</div></div>
 </div><!--header-->
@@ -121,10 +120,11 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:abdc7d40d0ed659613b3064d86ae6f5a2 inherit pub_methods_interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_base_consumer_context"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_message_consumer.html">IMessageConsumer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_base_consumer_context.html#abdc7d40d0ed659613b3064d86ae6f5a2">Consume</a> (EventHandler&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg_handler_event_args.html">MsgHandlerEventArgs</a> &gt; handler, <a class="el" href="class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_consume_options.html">ConsumeOptions</a> consumeOptions=null)</td></tr>
 <tr class="separator:abdc7d40d0ed659613b3064d86ae6f5a2 inherit pub_methods_interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_base_consumer_context"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="properties" name="properties"></a>
-Properties</h2></td></tr>
-<tr class="memitem:a6ceb37d6a5c1482d06eb21c745162790"><td class="memItemLeft" align="right" valign="top">string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_consumer_context.html#a6ceb37d6a5c1482d06eb21c745162790">ConsumerName</a><code> [get]</code></td></tr>
-<tr class="separator:a6ceb37d6a5c1482d06eb21c745162790"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="inherited" name="inherited"></a>
+Additional Inherited Members</h2></td></tr>
+<tr class="inherit_header properties_interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_base_consumer_context"><td colspan="2" onclick="javascript:toggleInherit('properties_interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_base_consumer_context')"><img src="closed.png" alt="-"/>&#160;Properties inherited from <a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_base_consumer_context.html">NATS.Client.JetStream.IBaseConsumerContext</a></td></tr>
+<tr class="memitem:abecdc096a48f1d86a1fef776819f83b2 inherit properties_interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_base_consumer_context"><td class="memItemLeft" align="right" valign="top">string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_base_consumer_context.html#abecdc096a48f1d86a1fef776819f83b2">ConsumerName</a><code> [get]</code></td></tr>
+<tr class="separator:abecdc096a48f1d86a1fef776819f83b2 inherit properties_interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_base_consumer_context"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p >The Consumer Context provides a convenient interface around a defined <a class="el" href="namespace_n_a_t_s_1_1_client_1_1_jet_stream.html">JetStream</a> Consumer </p>
@@ -166,32 +166,6 @@ Properties</h2></td></tr>
 
 <p>Gets information about the consumer behind this subscription. </p>
 <dl class="section return"><dt>Returns</dt><dd>consumer information</dd></dl>
-
-</div>
-</div>
-<h2 class="groupheader">Property Documentation</h2>
-<a id="a6ceb37d6a5c1482d06eb21c745162790" name="a6ceb37d6a5c1482d06eb21c745162790"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6ceb37d6a5c1482d06eb21c745162790">&#9670;&nbsp;</a></span>ConsumerName</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">string NATS.Client.JetStream.IConsumerContext.ConsumerName</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">get</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Gets the consumer name that was used to create the context. </p>
-<dl class="section return"><dt>Returns</dt><dd>the consumer name</dd></dl>
 
 </div>
 </div>

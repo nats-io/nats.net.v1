@@ -12,7 +12,7 @@ var searchData=
   ['connection_9',['Connection',['../interface_n_a_t_s_1_1_client_1_1_i_subscription.html#a2e56e23d07a9d3f57fb2c79e649d8e67',1,'NATS.Client.ISubscription.Connection()'],['../class_n_a_t_s_1_1_client_1_1_subscription.html#a1ef95ede1a3c959f88d5cc65ac75dfa6',1,'NATS.Client.Subscription.Connection()']]],
   ['consumebytecount_10',['ConsumeByteCount',['../class_n_a_t_s_1_1_client_1_1_msg.html#a167c0c54ecd44a456a2ef55f721dcbf2',1,'NATS::Client::Msg']]],
   ['consumer_11',['Consumer',['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_meta_data.html#ab0e226903e460c8392f300bd0b60ba80',1,'NATS::Client::JetStream::MetaData']]],
-  ['consumername_12',['ConsumerName',['../interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_consumer_context.html#a6ceb37d6a5c1482d06eb21c745162790',1,'NATS::Client::JetStream::IConsumerContext']]],
+  ['consumername_12',['ConsumerName',['../interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_base_consumer_context.html#abecdc096a48f1d86a1fef776819f83b2',1,'NATS::Client::JetStream::IBaseConsumerContext']]],
   ['consumersequence_13',['ConsumerSequence',['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_meta_data.html#a4909b3635f8064202a1f6fc6ed2657d2',1,'NATS::Client::JetStream::MetaData']]],
   ['count_14',['Count',['../class_n_a_t_s_1_1_client_1_1_msg_header.html#a41f3b6bcc24ecb36d60619f674cad01f',1,'NATS::Client::MsgHeader']]],
   ['credsfile_15',['CredsFile',['../class_n_a_t_s_1_1_client_1_1_default_user_j_w_t_handler.html#ab5a38c86be52043de71ffc00c670436c',1,'NATS::Client::DefaultUserJWTHandler']]],

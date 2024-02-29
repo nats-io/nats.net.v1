@@ -11,6 +11,7 @@ var interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management =
     [ "GetConsumerNames", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#a8b0914b298717ccb54d9855bca02f2fc", null ],
     [ "GetConsumers", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#a1744ba1ad00bf06df5d99ab8089f7a7a", null ],
     [ "GetFirstMessage", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#aa5c6779cadafd6595734a259fc26eb41", null ],
+    [ "GetJetStreamContext", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#a50e13af65e2a47180261a14723598307", null ],
     [ "GetLastMessage", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#ac7d16eac2ca9b1967bcbb868b9a8b605", null ],
     [ "GetMessage", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#a0ddee4601539aff955307c67a2e5b1e0", null ],
     [ "GetNextMessage", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#ab02adff469d6764f289ca9e28b91e46a", null ],

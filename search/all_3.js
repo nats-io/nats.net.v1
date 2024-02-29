@@ -28,7 +28,7 @@ var searchData=
   ['consumer_25',['Consumer',['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_meta_data.html#ab0e226903e460c8392f300bd0b60ba80',1,'NATS::Client::JetStream::MetaData']]],
   ['consumerlimits_26',['ConsumerLimits',['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_consumer_limits.html',1,'NATS::Client::JetStream']]],
   ['consumerlimitsbuilder_27',['ConsumerLimitsBuilder',['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_consumer_limits_1_1_consumer_limits_builder.html',1,'NATS::Client::JetStream::ConsumerLimits']]],
-  ['consumername_28',['ConsumerName',['../interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_consumer_context.html#a6ceb37d6a5c1482d06eb21c745162790',1,'NATS::Client::JetStream::IConsumerContext']]],
+  ['consumername_28',['ConsumerName',['../interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_base_consumer_context.html#abecdc096a48f1d86a1fef776819f83b2',1,'NATS::Client::JetStream::IBaseConsumerContext']]],
   ['consumersequence_29',['ConsumerSequence',['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_meta_data.html#a4909b3635f8064202a1f6fc6ed2657d2',1,'NATS::Client::JetStream::MetaData']]],
   ['count_30',['Count',['../class_n_a_t_s_1_1_client_1_1_msg_header.html#a41f3b6bcc24ecb36d60619f674cad01f',1,'NATS::Client::MsgHeader']]],
   ['createaccountseed_31',['CreateAccountSeed',['../class_n_a_t_s_1_1_client_1_1_nkeys.html#adffccbd8f9aa48f61afa7e8e7d7b1394',1,'NATS::Client::Nkeys']]],
