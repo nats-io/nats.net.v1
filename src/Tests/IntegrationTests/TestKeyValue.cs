@@ -55,9 +55,11 @@ namespace IntegrationTests
                 IDictionary<string, string> metadata = new Dictionary<string, string>();
                 metadata["foo"] = "bar";
 
+                string bucket = Bucket();
+                
                 // create the bucket
                 KeyValueConfiguration kvc = KeyValueConfiguration.Builder()
-                    .WithName(BUCKET)
+                    .WithName(bucket)
                     .WithMaxHistoryPerKey(3)
                     .WithStorageType(StorageType.Memory)
                     .WithMetadata(metadata)
@@ -66,8 +68,8 @@ namespace IntegrationTests
                 KeyValueStatus status = kvm.Create(kvc);
 
                 kvc = status.Config;
-                Assert.Equal(BUCKET, status.BucketName);
-                Assert.Equal(BUCKET, kvc.BucketName);
+                Assert.Equal(bucket, status.BucketName);
+                Assert.Equal(bucket, kvc.BucketName);
                 Assert.Equal(3, status.MaxHistoryPerKey);
                 Assert.Equal(3, kvc.MaxHistoryPerKey);
                 Assert.Equal(-1, status.MaxBucketSize);
@@ -89,7 +91,7 @@ namespace IntegrationTests
                 Assert.Equal("bar", status.Metadata["foo"]);
 
                 // get the kv context for the specific bucket
-                IKeyValue kv = c.CreateKeyValueContext(BUCKET);
+                IKeyValue kv = c.CreateKeyValueContext(bucket);
 
                 // Put some keys. Each key is put in a subject in the bucket (stream)
                 // The put returns the sequence number in the bucket (stream)
@@ -123,13 +125,13 @@ namespace IntegrationTests
 
                 // entry gives detail about latest entry of the key
                 byteHistory.Add(
-                    AssertEntry(BUCKET, byteKey, KeyValueOperation.Put, 1, byteValue1, utcNow, kv.Get(byteKey)));
+                    AssertEntry(bucket, byteKey, KeyValueOperation.Put, 1, byteValue1, utcNow, kv.Get(byteKey)));
 
                 stringHistory.Add(
-                    AssertEntry(BUCKET, stringKey, KeyValueOperation.Put, 2, stringValue1, utcNow, kv.Get(stringKey)));
+                    AssertEntry(bucket, stringKey, KeyValueOperation.Put, 2, stringValue1, utcNow, kv.Get(stringKey)));
 
                 longHistory.Add(
-                    AssertEntry(BUCKET, longKey, KeyValueOperation.Put, 3, "1", utcNow, kv.Get(longKey)));
+                    AssertEntry(bucket, longKey, KeyValueOperation.Put, 3, "1", utcNow, kv.Get(longKey)));
 
                 // history gives detail about the key
                 AssertHistory(byteHistory, kv.History(byteKey));
@@ -137,7 +139,7 @@ namespace IntegrationTests
                 AssertHistory(longHistory, kv.History(longKey));
 
                 // let's check the bucket info
-                status = kvm.GetStatus(BUCKET);
+                status = kvm.GetStatus(bucket);
                 AssertState(status, 3, 3); 
                     
                 // delete a key. Its entry will still exist, but it's value is null
@@ -147,7 +149,7 @@ namespace IntegrationTests
                 AssertHistory(byteHistory, kv.History(byteKey));
 
                 // let's check the bucket info
-                status = kvm.GetStatus(BUCKET);
+                status = kvm.GetStatus(bucket);
                 AssertState(status, 4, 4);
                 
                 // if the key does not exist (no history) there is no entry
@@ -166,19 +168,19 @@ namespace IntegrationTests
 
                 // entry and history after update
                 byteHistory.Add(
-                    AssertEntry(BUCKET, byteKey, KeyValueOperation.Put, 5, byteValue2, utcNow, kv.Get(byteKey)));
+                    AssertEntry(bucket, byteKey, KeyValueOperation.Put, 5, byteValue2, utcNow, kv.Get(byteKey)));
                 AssertHistory(byteHistory, kv.History(byteKey));
 
                 stringHistory.Add(
-                    AssertEntry(BUCKET, stringKey, KeyValueOperation.Put, 6, stringValue2, utcNow, kv.Get(stringKey)));
+                    AssertEntry(bucket, stringKey, KeyValueOperation.Put, 6, stringValue2, utcNow, kv.Get(stringKey)));
                 AssertHistory(stringHistory, kv.History(stringKey));
 
                 longHistory.Add(
-                    AssertEntry(BUCKET, longKey, KeyValueOperation.Put, 7, "2", utcNow, kv.Get(longKey)));
+                    AssertEntry(bucket, longKey, KeyValueOperation.Put, 7, "2", utcNow, kv.Get(longKey)));
                 AssertHistory(longHistory, kv.History(longKey));
 
                 // let's check the bucket info
-                status = kvm.GetStatus(BUCKET);
+                status = kvm.GetStatus(bucket);
                 AssertState(status, 7, 7);
                 
                 // make sure it only keeps the correct amount of history
@@ -187,10 +189,10 @@ namespace IntegrationTests
                 Assert.Equal(3, lvalue);
 
                 longHistory.Add(
-                    AssertEntry(BUCKET, longKey, KeyValueOperation.Put, 8, "3", utcNow, kv.Get(longKey)));
+                    AssertEntry(bucket, longKey, KeyValueOperation.Put, 8, "3", utcNow, kv.Get(longKey)));
                 AssertHistory(longHistory, kv.History(longKey));
 
-                status = kvm.GetStatus(BUCKET);
+                status = kvm.GetStatus(bucket);
                 AssertState(status, 8, 8);
                 
                 // this would be the 4th entry for the longKey
@@ -202,11 +204,11 @@ namespace IntegrationTests
                 // history only retains 3 records
                 longHistory.RemoveAt(0);
                 longHistory.Add(
-                    AssertEntry(BUCKET, longKey, KeyValueOperation.Put, 9, "4", utcNow, kv.Get(longKey)));
+                    AssertEntry(bucket, longKey, KeyValueOperation.Put, 9, "4", utcNow, kv.Get(longKey)));
                 AssertHistory(longHistory, kv.History(longKey));
 
                 // record count does not increase
-                status = kvm.GetStatus(BUCKET);
+                status = kvm.GetStatus(bucket);
                 AssertState(status, 8, 9);
                 
                 // should have exactly these 3 keys
@@ -219,7 +221,7 @@ namespace IntegrationTests
                 longHistory.Add(KeyValueOperation.Purge);
                 AssertHistory(longHistory, kv.History(longKey));
 
-                status = kvm.GetStatus(BUCKET);
+                status = kvm.GetStatus(bucket);
                 AssertState(status, 6, 10); 
 
                 // only 2 keys now
@@ -231,7 +233,7 @@ namespace IntegrationTests
                 byteHistory.Add(KeyValueOperation.Purge);
                 AssertHistory(byteHistory, kv.History(byteKey));
 
-                status = kvm.GetStatus(BUCKET);
+                status = kvm.GetStatus(bucket);
                 AssertState(status, 4, 11);
                 
                 // only 1 key now
@@ -243,7 +245,7 @@ namespace IntegrationTests
                 stringHistory.Add(KeyValueOperation.Purge);
                 AssertHistory(stringHistory, kv.History(stringKey));
 
-                status = kvm.GetStatus(BUCKET);
+                status = kvm.GetStatus(bucket);
                 AssertState(status, 3, 12);
                 
                 // no more keys left
@@ -252,7 +254,7 @@ namespace IntegrationTests
                 // clear things
                 KeyValuePurgeOptions kvpo = KeyValuePurgeOptions.Builder().WithDeleteMarkersNoThreshold().Build();
                 kv.PurgeDeletes(kvpo);
-                status = kvm.GetStatus(BUCKET);
+                status = kvm.GetStatus(bucket);
                 AssertState(status, 0, 12);
                 
                 longHistory.Clear();
@@ -264,34 +266,34 @@ namespace IntegrationTests
                 // put some more
                 Assert.Equal(13U, kv.Put(longKey, 110));
                 longHistory.Add(
-                    AssertEntry(BUCKET, longKey, KeyValueOperation.Put, 13, "110", utcNow, kv.Get(longKey)));
+                    AssertEntry(bucket, longKey, KeyValueOperation.Put, 13, "110", utcNow, kv.Get(longKey)));
 
                 Assert.Equal(14U, kv.Put(longKey, 111));
                 longHistory.Add(
-                    AssertEntry(BUCKET, longKey, KeyValueOperation.Put, 14, "111", utcNow, kv.Get(longKey)));
+                    AssertEntry(bucket, longKey, KeyValueOperation.Put, 14, "111", utcNow, kv.Get(longKey)));
 
                 Assert.Equal(15U, kv.Put(longKey, 112));
                 longHistory.Add(
-                    AssertEntry(BUCKET, longKey, KeyValueOperation.Put, 15, "112", utcNow, kv.Get(longKey)));
+                    AssertEntry(bucket, longKey, KeyValueOperation.Put, 15, "112", utcNow, kv.Get(longKey)));
 
                 Assert.Equal(16U, kv.Put(stringKey, stringValue1));
                 stringHistory.Add(
-                    AssertEntry(BUCKET, stringKey, KeyValueOperation.Put, 16, stringValue1, utcNow, kv.Get(stringKey)));
+                    AssertEntry(bucket, stringKey, KeyValueOperation.Put, 16, stringValue1, utcNow, kv.Get(stringKey)));
 
                 Assert.Equal(17U, kv.Put(stringKey, stringValue2));
                 stringHistory.Add(
-                    AssertEntry(BUCKET, stringKey, KeyValueOperation.Put, 17, stringValue2, utcNow, kv.Get(stringKey)));
+                    AssertEntry(bucket, stringKey, KeyValueOperation.Put, 17, stringValue2, utcNow, kv.Get(stringKey)));
 
                 AssertHistory(longHistory, kv.History(longKey));
                 AssertHistory(stringHistory, kv.History(stringKey));
 
-                status = kvm.GetStatus(BUCKET);
+                status = kvm.GetStatus(bucket);
                 AssertState(status, 5, 17);
                 
                 // delete the bucket
-                kvm.Delete(BUCKET);
-                Assert.Throws<NATSJetStreamException>(() => kvm.Delete(BUCKET));
-                Assert.Throws<NATSJetStreamException>(() => kvm.GetStatus(BUCKET));
+                kvm.Delete(bucket);
+                Assert.Throws<NATSJetStreamException>(() => kvm.Delete(bucket));
+                Assert.Throws<NATSJetStreamException>(() => kvm.GetStatus(bucket));
 
                 Assert.Equal(0, kvm.GetBucketNames().Count);
             });
@@ -310,31 +312,35 @@ namespace IntegrationTests
                 // get the kv management context
                 IKeyValueManagement kvm = c.CreateKeyValueManagementContext();
 
+                string bucket = Bucket();
+
                 // create the bucket
                 kvm.Create(KeyValueConfiguration.Builder()
-                    .WithName(BUCKET)
+                    .WithName(bucket)
                     .WithMaxHistoryPerKey(2)
                     .WithStorageType(StorageType.Memory)
                     .Build());
 
-                IKeyValue kv = c.CreateKeyValueContext(BUCKET);
-                ulong seq1 = kv.Put(KEY, "A");
-                ulong seq2 = kv.Put(KEY, "B");
-                ulong seq3 = kv.Put(KEY, "C");
+                string key = Key();
+                
+                IKeyValue kv = c.CreateKeyValueContext(bucket);
+                ulong seq1 = kv.Put(key, "A");
+                ulong seq2 = kv.Put(key, "B");
+                ulong seq3 = kv.Put(key, "C");
 
-                KeyValueEntry kve = kv.Get(KEY);
+                KeyValueEntry kve = kv.Get(key);
                 Assert.NotNull(kve);
                 Assert.Equal("C", kve.ValueAsString());
 
-                kve = kv.Get(KEY, seq3);
+                kve = kv.Get(key, seq3);
                 Assert.NotNull(kve);
                 Assert.Equal("C", kve.ValueAsString());
 
-                kve = kv.Get(KEY, seq2);
+                kve = kv.Get(key, seq2);
                 Assert.NotNull(kve);
                 Assert.Equal("B", kve.ValueAsString());
 
-                kve = kv.Get(KEY, seq1);
+                kve = kv.Get(key, seq1);
                 Assert.Null(kve);
 
                 kve = kv.Get("notkey", seq3);
@@ -349,13 +355,15 @@ namespace IntegrationTests
                 // get the kv management context
                 IKeyValueManagement kvm = c.CreateKeyValueManagementContext();
 
+                string bucket = Bucket();
+
                 // create the bucket
                 kvm.Create(KeyValueConfiguration.Builder()
-                    .WithName(BUCKET)
+                    .WithName(bucket)
                     .WithStorageType(StorageType.Memory)
                     .Build());
 
-                IKeyValue kv = c.CreateKeyValueContext(BUCKET);
+                IKeyValue kv = c.CreateKeyValueContext(bucket);
 
                 for (int x = 1; x <= 10; x++)
                 {
@@ -393,17 +401,22 @@ namespace IntegrationTests
                 // get the kv management context
                 IKeyValueManagement kvm = c.CreateKeyValueManagementContext();
 
+                string bucket1 = Bucket();
+                string bucket2 = Bucket();
+                
                 // default maxHistoryPerKey is 1
                 kvm.Create(KeyValueConfiguration.Builder()
-                    .WithName(Bucket(1))
+                    .WithName(bucket1)
                     .WithStorageType(StorageType.Memory)
                     .Build());
 
-                IKeyValue kv = c.CreateKeyValueContext(Bucket(1));
-                kv.Put(KEY, 1);
-                kv.Put(KEY, 2);
+                string key = Key();
 
-                IList<KeyValueEntry> history = kv.History(KEY);
+                IKeyValue kv = c.CreateKeyValueContext(bucket1);
+                kv.Put(key, 1);
+                kv.Put(key, 2);
+
+                IList<KeyValueEntry> history = kv.History(key);
                 Assert.Equal(1, history.Count);
                 long l = 0;
                 history[0].TryGetLongValue(out l);
@@ -416,11 +429,11 @@ namespace IntegrationTests
                     .Build());
                 
                 kv = c.CreateKeyValueContext(Bucket(2));
-                kv.Put(KEY, 1);
-                kv.Put(KEY, 2);
-                kv.Put(KEY, 3);
+                kv.Put(key, 1);
+                kv.Put(key, 2);
+                kv.Put(key, 3);
                 
-                history = kv.History(KEY);
+                history = kv.History(key);
                 Assert.Equal(2, history.Count);
                 l = 0;
                 history[0].TryGetLongValue(out l);
@@ -437,28 +450,90 @@ namespace IntegrationTests
                 // get the kv management context
                 IKeyValueManagement kvm = c.CreateKeyValueManagementContext();
 
+                string bucket = Bucket();
+                string key = Key();
+                
                 // create the bucket
                 kvm.Create(KeyValueConfiguration.Builder()
-                    .WithName(BUCKET)
+                    .WithName(bucket)
                     .WithStorageType(StorageType.Memory)
                     .WithMaxHistoryPerKey(64)
                     .Build());
 
-                IKeyValue kv = c.CreateKeyValueContext(BUCKET);
-                kv.Put(KEY, "a");
-                kv.Put(KEY, "b");
-                kv.Put(KEY, "c");
+                IKeyValue kv = c.CreateKeyValueContext(bucket);
+                kv.Put(key, "a");
+                kv.Put(key, "b");
+                kv.Put(key, "c");
 
-                IList<KeyValueEntry> list = kv.History(KEY);
+                IList<KeyValueEntry> list = kv.History(key);
                 Assert.Equal(3, list.Count);
                 
-                kv.Delete(KEY);
-                list = kv.History(KEY);
+                kv.Delete(key);
+                list = kv.History(key);
                 Assert.Equal(4, list.Count);
                 
-                kv.Purge(KEY);
-                list = kv.History(KEY);
+                kv.Purge(key);
+                list = kv.History(key);
                 Assert.Equal(1, list.Count);
+            });
+        }
+        
+        [Fact]
+        public void TestAtomicDeletePurge() {
+            Context.RunInJsServer(c =>
+            {
+                // get the kv management context
+                IKeyValueManagement kvm = c.CreateKeyValueManagementContext();
+
+                string bucket = Bucket();
+                
+                // create the bucket
+                kvm.Create(KeyValueConfiguration.Builder()
+                    .WithName(bucket)
+                    .WithStorageType(StorageType.Memory)
+                    .WithMaxHistoryPerKey(64)
+                    .Build());
+
+                string key = Key();
+
+                IKeyValue kv = c.CreateKeyValueContext(bucket);
+                kv.Put(key, "a");
+                kv.Put(key, "b");
+                kv.Put(key, "c");
+
+                Assert.Equal(3U, kv.Get(key).Revision);
+                
+                // Delete wrong revision rejected
+                Assert.Throws<NATSJetStreamException>(() => kv.Delete(key, 1));
+
+                // Correct revision writes tombstone and bumps revision
+                kv.Delete(key, 3);
+                
+                IList<object> history = new List<object>();
+                history.Add(kv.Get(key, 1U));
+                history.Add(kv.Get(key, 2U));
+                history.Add(kv.Get(key, 3U));
+                history.Add(KeyValueOperation.Delete);
+                AssertHistory(history, kv.History(key));
+                
+                // Wrong revision rejected again
+                Assert.Throws<NATSJetStreamException>(() => kv.Delete(key, 3));
+                
+                // Delete is idempotent: two consecutive tombstones
+                kv.Delete(key, 4);
+                
+                history.Add(KeyValueOperation.Delete);
+                AssertHistory(history, kv.History(key));
+
+                // Purge wrong revision rejected
+                Assert.Throws<NATSJetStreamException>(() => kv.Purge(key, 1));
+                
+                kv.Purge(key, 5);
+
+                history.Clear();
+                history.Add(KeyValueOperation.Purge);
+                AssertHistory(history, kv.History(key));
+
             });
         }
         
@@ -469,14 +544,16 @@ namespace IntegrationTests
                 // get the kv management context
                 IKeyValueManagement kvm = c.CreateKeyValueManagementContext();
 
-                Assert.Throws<NATSJetStreamException>(() => kvm.GetStatus(BUCKET));
+                string bucket = Bucket();
 
+                Assert.Throws<NATSJetStreamException>(() => kvm.GetStatus(bucket));
+                
                 KeyValueStatus kvs = kvm.Create(KeyValueConfiguration.Builder()
-                    .WithName(BUCKET)
+                    .WithName(bucket)
                     .WithStorageType(StorageType.Memory)
                     .Build());
 
-                Assert.Equal(BUCKET, kvs.BucketName);
+                Assert.Equal(bucket, kvs.BucketName);
                 Assert.Empty(kvs.Description);
                 Assert.Equal(1, kvs.MaxHistoryPerKey);
                 Assert.Equal(-1, kvs.MaxBucketSize);
@@ -487,11 +564,13 @@ namespace IntegrationTests
                 Assert.Equal(0U, kvs.EntryCount);
                 Assert.Equal("JetStream", kvs.BackingStore);
 
-                IKeyValue kv = c.CreateKeyValueContext(BUCKET);
-                kv.Put(KEY, 1);
-                kv.Put(KEY, 2);
+                string key = Key();
+                
+                IKeyValue kv = c.CreateKeyValueContext(bucket);
+                kv.Put(key, 1);
+                kv.Put(key, 2);
 
-                IList<KeyValueEntry> history = kv.History(KEY);
+                IList<KeyValueEntry> history = kv.History(key);
                 Assert.Equal(1, history.Count);
                 long lvalue = 0;
                 Assert.True(history[0].TryGetLongValue(out lvalue));
@@ -507,7 +586,7 @@ namespace IntegrationTests
 
                 kvs = kvm.Update(kvc);
 
-                Assert.Equal(BUCKET, kvs.BucketName);
+                Assert.Equal(bucket, kvs.BucketName);
                 Assert.Equal(Plain, kvs.Description);
                 Assert.Equal(3, kvs.MaxHistoryPerKey);
                 Assert.Equal(10_000, kvs.MaxBucketSize);
@@ -518,7 +597,7 @@ namespace IntegrationTests
                 Assert.Equal(1U, kvs.EntryCount);
                 Assert.Equal("JetStream", kvs.BackingStore);
 
-                history = kv.History(KEY);
+                history = kv.History(key);
                 Assert.Equal(1, history.Count);
                 lvalue = 0;
                 Assert.True(history[0].TryGetLongValue(out lvalue));
@@ -538,14 +617,16 @@ namespace IntegrationTests
                 // get the kv management context
                 IKeyValueManagement kvm = c.CreateKeyValueManagementContext();
 
+                string bucket = Bucket();
+                
                 // create the bucket
                 kvm.Create(KeyValueConfiguration.Builder()
-                    .WithName(BUCKET)
+                    .WithName(bucket)
                     .WithStorageType(StorageType.Memory)
                     .WithMaxHistoryPerKey(64)
                     .Build());
 
-                IKeyValue kv = c.CreateKeyValueContext(BUCKET);
+                IKeyValue kv = c.CreateKeyValueContext(bucket);
                 kv.Put(Key(1), "a");
                 kv.Delete(Key(1));
                 kv.Put(Key(2), "b");
@@ -554,21 +635,21 @@ namespace IntegrationTests
                 kv.Purge(Key(4));
 
                 IJetStream js = c.CreateJetStreamContext();
-                assertPurgeDeleteEntries(js, new []{"a", null, "b", "c", null});
+                assertPurgeDeleteEntries(js, new []{"a", null, "b", "c", null}, bucket);
 
                 // default purge deletes uses the default threshold of 30 minutes
                 // so no markers will be deleted
                 kv.PurgeDeletes();
-                assertPurgeDeleteEntries(js, new []{null, "b", "c", null});
+                assertPurgeDeleteEntries(js, new []{null, "b", "c", null}, bucket);
 
                 // no threshold causes all to be removed
                 kv.PurgeDeletes(KeyValuePurgeOptions.Builder().WithDeleteMarkersNoThreshold().Build());
-                assertPurgeDeleteEntries(js, new[]{"b", "c"});
+                assertPurgeDeleteEntries(js, new[]{"b", "c"}, bucket);
             });
         }
 
-        private void assertPurgeDeleteEntries(IJetStream js, string[] expected) {
-            IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(KeyValueUtil.ToStreamSubject(BUCKET));
+        private void assertPurgeDeleteEntries(IJetStream js, string[] expected, string bucket) {
+            IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(KeyValueUtil.ToStreamSubject(bucket));
 
             foreach (string s in expected) {
                 Msg m = sub.NextMessage(1000);
@@ -593,46 +674,50 @@ namespace IntegrationTests
                 // get the kv management context
                 IKeyValueManagement kvm = c.CreateKeyValueManagementContext();
 
+                string bucket = Bucket();
+
                 kvm.Create(KeyValueConfiguration.Builder()
-                    .WithName(BUCKET)
+                    .WithName(bucket)
                     .WithStorageType(StorageType.Memory)
                     .WithMaxHistoryPerKey(64)
                     .Build());
 
-                IKeyValue kv = c.CreateKeyValueContext(BUCKET);
+                IKeyValue kv = c.CreateKeyValueContext(bucket);
 
+                string key = Key();
+                
                 // 1. allowed to create something that does not exist
-                ulong rev1 = kv.Create(KEY, Encoding.UTF8.GetBytes("a"));
+                ulong rev1 = kv.Create(key, Encoding.UTF8.GetBytes("a"));
 
                 // 2. allowed to update with proper revision
-                kv.Update(KEY, Encoding.UTF8.GetBytes("ab"), rev1);
+                kv.Update(key, Encoding.UTF8.GetBytes("ab"), rev1);
 
                 // 3. not allowed to update with wrong revision
-                Assert.Throws<NATSJetStreamException>(() => kv.Update(KEY, Encoding.UTF8.GetBytes("zzz"), rev1));
+                Assert.Throws<NATSJetStreamException>(() => kv.Update(key, Encoding.UTF8.GetBytes("zzz"), rev1));
 
                 // 4. not allowed to create a key that exists
-                Assert.Throws<NATSJetStreamException>(() => kv.Create(KEY, Encoding.UTF8.GetBytes("zzz")));
+                Assert.Throws<NATSJetStreamException>(() => kv.Create(key, Encoding.UTF8.GetBytes("zzz")));
 
                 // 5. not allowed to update a key that does not exist
-                Assert.Throws<NATSJetStreamException>(() => kv.Update(KEY, Encoding.UTF8.GetBytes("zzz"), 1));
+                Assert.Throws<NATSJetStreamException>(() => kv.Update(key, Encoding.UTF8.GetBytes("zzz"), 1));
 
                 // 6. allowed to create a key that is deleted
-                kv.Delete(KEY);
-                kv.Create(KEY, Encoding.UTF8.GetBytes("abc"));
+                kv.Delete(key);
+                kv.Create(key, Encoding.UTF8.GetBytes("abc"));
 
                 // 7. allowed to update a key that is deleted, as long as you have it's revision
-                kv.Delete(KEY);
-                IList<KeyValueEntry> hist = kv.History(KEY);
-                kv.Update(KEY, Encoding.UTF8.GetBytes("abcd"), hist[hist.Count-1].Revision);
+                kv.Delete(key);
+                IList<KeyValueEntry> hist = kv.History(key);
+                kv.Update(key, Encoding.UTF8.GetBytes("abcd"), hist[hist.Count-1].Revision);
 
                 // 8. allowed to create a key that is purged
-                kv.Purge(KEY);
-                kv.Create(KEY, Encoding.UTF8.GetBytes("abcde"));
+                kv.Purge(key);
+                kv.Create(key, Encoding.UTF8.GetBytes("abcde"));
 
                 // 9. allowed to update a key that is deleted, as long as you have it's revision
-                kv.Purge(KEY);
-                hist = kv.History(KEY);
-                kv.Update(KEY, Encoding.UTF8.GetBytes("abcdef"), hist[hist.Count-1].Revision);
+                kv.Purge(key);
+                hist = kv.History(key);
+                kv.Update(key, Encoding.UTF8.GetBytes("abcdef"), hist[hist.Count-1].Revision);
             });
         }
 
@@ -643,15 +728,18 @@ namespace IntegrationTests
                 // get the kv management context
                 IKeyValueManagement kvm = c.CreateKeyValueManagementContext();
 
+                string bucket1 = Bucket();
+                string bucket2 = Bucket();
+                
                 // create bucket 1
                 kvm.Create(KeyValueConfiguration.Builder()
-                    .WithName(Bucket(1))
+                    .WithName(bucket1)
                     .WithStorageType(StorageType.Memory)
                     .Build());
 
                 // create bucket 2
                 kvm.Create(KeyValueConfiguration.Builder()
-                    .WithName(Bucket(2))
+                    .WithName(bucket2)
                     .WithStorageType(StorageType.Memory)
                     .Build());
 
@@ -665,13 +753,13 @@ namespace IntegrationTests
                     buckets.Add(status.BucketName);
                 }
                 Assert.Equal(2, buckets.Count);
-                Assert.True(buckets.Contains(Bucket(1)));
-                Assert.True(buckets.Contains(Bucket(2)));
+                Assert.True(buckets.Contains(bucket1));
+                Assert.True(buckets.Contains(bucket2));
 
                 buckets = kvm.GetBucketNames();
                 Assert.Equal(2, buckets.Count);
-                Assert.True(buckets.Contains(Bucket(1)));
-                Assert.True(buckets.Contains(Bucket(2)));
+                Assert.True(buckets.Contains(bucket1));
+                Assert.True(buckets.Contains(bucket2));
             });
         }
 
@@ -684,7 +772,7 @@ namespace IntegrationTests
         }
 
         private void AssertHistory(IList<object> manualHistory, IList<KeyValueEntry> apiHistory) {
-            Assert.Equal(apiHistory.Count, manualHistory.Count);
+            Assert.Equal(manualHistory.Count, apiHistory.Count);
             for (int x = 0; x < apiHistory.Count; x++)
             {
                 object o = manualHistory[x];
@@ -778,8 +866,9 @@ namespace IntegrationTests
                 // get the kv management context
                 IKeyValueManagement kvm = c.CreateKeyValueManagementContext();
 
-                string bucket1 = Bucket(1); 
-                string bucket2 = Bucket(2); 
+                string bucket1 = Bucket(); 
+                string bucket2 = Bucket();
+                
                 // create the buckets
                 kvm.Create(KeyValueConfiguration.Builder()
                     .WithName(bucket1)
@@ -1174,10 +1263,10 @@ namespace IntegrationTests
             Context.RunInJsServer(c =>
             {
                 IKeyValueManagement kvm = c.CreateKeyValueManagementContext();
-                
+
                 // create bucket
                 KeyValueStatus status = kvm.Create(KeyValueConfiguration.Builder()
-                    .WithName(Bucket(1))
+                    .WithName(Bucket())
                     .WithStorageType(StorageType.Memory)
                     .Build());
 
@@ -1200,7 +1289,7 @@ namespace IntegrationTests
                 
                 // create bucket
                 KeyValueStatus status = kvm.Create(KeyValueConfiguration.Builder()
-                    .WithName(Bucket(1))
+                    .WithName(Bucket())
                     .WithCompression(true)
                     .WithStorageType(StorageType.Memory)
                     .Build());

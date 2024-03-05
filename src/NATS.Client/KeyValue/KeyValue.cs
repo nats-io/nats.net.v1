@@ -145,9 +145,33 @@ namespace NATS.Client.KeyValue
             return _write(key, value, h).Seq;
         }
 
-        public void Delete(string key) => _write(key, null, DeleteHeaders);
+        public void Delete(string key)
+        {
+            Validator.ValidateKvKeyWildcardAllowedRequired(key);
+            _write(key, null, DeleteHeaders);
+        }
+        
+        public void Delete(string key, ulong expectedRevision)
+        {
+            Validator.ValidateKvKeyWildcardAllowedRequired(key);
+            MsgHeader h = DeleteHeaders;
+            h[JetStreamConstants.ExpLastSubjectSeqHeader] = expectedRevision.ToString();
+            _write(key, null, h);
+        }
 
-        public void Purge(string key) => _write(key, null, PurgeHeaders);
+        public void Purge(string key)        
+        {
+            Validator.ValidateKvKeyWildcardAllowedRequired(key);
+            _write(key, null, PurgeHeaders);
+        }
+        
+        public void Purge(string key, ulong expectedRevision)
+        {
+            Validator.ValidateKvKeyWildcardAllowedRequired(key);
+            MsgHeader h = PurgeHeaders;
+            h[JetStreamConstants.ExpLastSubjectSeqHeader] = expectedRevision.ToString();
+            _write(key, null, h);
+        }
         
         public KeyValueWatchSubscription Watch(string key, IKeyValueWatcher watcher, params KeyValueWatchOption[] watchOptions)
         {

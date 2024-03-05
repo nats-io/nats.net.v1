@@ -88,10 +88,24 @@ namespace NATS.Client.KeyValue
         void Delete(string key);
 
         /// <summary>
+        /// Soft deletes the key by placing a delete marker iff the key exists and its last revision matches the expected.
+        /// </summary>
+        /// <param name="key">the key</param>
+        /// <param name="expectedRevision">the expected last revision</param>
+        void Delete(string key, ulong expectedRevision);
+        
+        /// <summary>
         /// Purge all values/history from the specific key. 
         /// </summary>
         /// <param name="key">the key</param>
         void Purge(string key);
+        
+        /// <summary>
+        /// Purge all values/history from the specific key iff the key exists and its last revision matches the expected. 
+        /// </summary>
+        /// <param name="key">the key</param>
+        /// <param name="expectedRevision">the expected last revision</param>
+        void Purge(string key, ulong expectedRevision);
 
         /// <summary>
         /// Watch updates for a specific key
