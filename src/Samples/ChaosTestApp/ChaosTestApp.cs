@@ -33,11 +33,11 @@ namespace NATSExamples
             // + " --r3"
             + " --publish"
             + " --pubjitter 30"
-            + " --simple ordered 100 5000"
-            + " --simple durable 100 5000" // space or commas work, the parser figures it out
-            + " --fetch durable,100,5000"
-            + " --push ordered"
-            + " --push durable"
+            // + " --simple ordered 100 5000"
+            // + " --simple durable 100 5000" // space or commas work, the parser figures it out
+            + " --iterate durable,100,5000"
+            // + " --push ordered"
+            // + " --push durable"
         ).Split(' ');
 
         static void Main(string[] args)
@@ -81,6 +81,9 @@ namespace NATSExamples
                                 break;
                             case ChaosConsumerType.Fetch:
                                 con = new ChaosSimpleFetchConsumer(cmd, clc.consumerKind, clc.batchSize, clc.expiresIn);
+                                break;
+                            case ChaosConsumerType.Iterate:
+                                con = new ChaosSimpleIterateConsumer(cmd, clc.consumerKind);
                                 break;
                             default:
                                 throw new ArgumentException("Unsupported consumer type: " + clc.consumerType);

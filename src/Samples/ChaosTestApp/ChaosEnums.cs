@@ -17,7 +17,7 @@ namespace NATSExamples
 {
     public enum ChaosConsumerType
     {
-        Simple, Fetch, Push
+        Simple, Fetch, Iterate, Push
     }
     
     public enum ChaosConsumerKind
@@ -30,9 +30,10 @@ namespace NATSExamples
         public static string ToString(ChaosConsumerType consumerType)
         {
             switch (consumerType) {
-                case ChaosConsumerType.Simple: return "Simple";
-                case ChaosConsumerType.Fetch: return "Fetch";
-                case ChaosConsumerType.Push:  return "Push";
+                case ChaosConsumerType.Simple:  return "Simple";
+                case ChaosConsumerType.Fetch:   return "Fetch";
+                case ChaosConsumerType.Iterate: return "Iterate";
+                case ChaosConsumerType.Push:    return "Push";
             }
 
             return null;
@@ -54,6 +55,7 @@ namespace NATSExamples
             string lower = text.ToLower();
             if (lower.Equals("simple")) return ChaosConsumerType.Simple;
             if (lower.Equals("fetch")) return ChaosConsumerType.Fetch;
+            if (lower.Equals("iterate")) return ChaosConsumerType.Iterate;
             if (lower.Equals("push")) return ChaosConsumerType.Push;
             throw new ArgumentException("Invalid ConsumerType: " + text);
         }
