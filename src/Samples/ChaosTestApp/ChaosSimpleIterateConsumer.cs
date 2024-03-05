@@ -22,8 +22,6 @@ namespace NATSExamples
     {
         readonly IStreamContext sc;
         readonly IConsumerContext cc;
-        readonly int batchSize;
-        readonly int expiresIn;
         readonly Thread t;
 
         IIterableConsumer ic;
@@ -33,9 +31,6 @@ namespace NATSExamples
             if (consumerKind == ChaosConsumerKind.Ordered) {
                 throw new ArgumentException("Ordered Consumer not supported for Chaos Simple Iterate");
             }
-
-            this.batchSize = batchSize;
-            this.expiresIn = expiresIn;
 
             sc = Conn.GetStreamContext(cmd.Stream);
 
