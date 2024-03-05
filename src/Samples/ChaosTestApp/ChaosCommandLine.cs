@@ -145,6 +145,7 @@ namespace NATSExamples
                                 _work = true;
                                 break;
                             case "--simple":
+                            case "--iterate":
                             case "--fetch":
                                 String temp = args[++x];
                                 if (temp.Contains(","))
@@ -166,7 +167,6 @@ namespace NATSExamples
                                         AsNumber("expiresInMs", args[++x], -1)
                                     ));
                                 }
-
                                 break;
                             case "--push":
                                 _commandLineConsumers.Add(new ChaosCommandLineConsumer(args[++x]));

@@ -18,7 +18,7 @@ using NATS.Client.JetStream;
 
 namespace NATSExamples
 {
-    public class ChaosSimpleFetchConsumer : ChaosConnectableConsumer
+    public class ChaosSimpleIterateConsumer : ChaosConnectableConsumer
     {
         readonly IStreamContext sc;
         readonly IConsumerContext cc;
@@ -26,12 +26,12 @@ namespace NATSExamples
         readonly int expiresIn;
         readonly Thread t;
 
-        IFetchConsumer fc;
+        IIterableConsumer ic;
         
-        public ChaosSimpleFetchConsumer(ChaosCommandLine cmd, ChaosConsumerKind consumerKind, int batchSize, int expiresIn) : base(cmd, "fc", consumerKind)
+        public ChaosSimpleIterateConsumer(ChaosCommandLine cmd, ChaosConsumerKind consumerKind) : base(cmd, "it", consumerKind)
         {
             if (consumerKind == ChaosConsumerKind.Ordered) {
-                throw new ArgumentException("Ordered Consumer not supported for Chaos Simple Fetch");
+                throw new ArgumentException("Ordered Consumer not supported for Chaos Simple Iterate");
             }
 
             this.batchSize = batchSize;
@@ -47,49 +47,39 @@ namespace NATSExamples
 
         public void run()
         {
-            FetchConsumeOptions fco = FetchConsumeOptions.Builder().WithMaxMessages(batchSize).WithExpiresIn(expiresIn).Build();
-            ChaosOutput.ControlMessage(Label, ToString(fco));
+            ChaosOutput.ControlMessage(Label, "Iterate");
             
             while (true)
             {
                 try
                 {
-                    using (IFetchConsumer disposableFc = cc.Fetch(fco))
+                    using (IIterableConsumer disposableIc = cc.Iterate())
                     {
-                        fc = disposableFc;
-                        Msg m = fc.NextMessage();
-                        while (m != null)
+                        ic = disposableIc;
+                        Msg m = ic.NextMessage(1000);
+                        if (m == null)
+                        {
+                            Thread.Sleep(10);
+                        }
+                        else
                         {
                             OnMessage(m);
-                            m = fc.NextMessage();
                         }
                     }
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
                     // if there was an error, just try again
+                    ChaosOutput.ControlMessage(Label, e.Message);
                 }
-
-                // simulating some work to be done between fetches
-                ChaosOutput.WorkMessage(Label, "Fetch Batch Completed, Last Received Seq: " + lastReceivedSequence.Read());
-                Thread.Sleep(10);
             }
         }
 
         public override void refreshInfo()
         {
-            if (fc != null) {
+            if (ic != null) {
                 UpdateLabel(cc.ConsumerName);
             }
-        }
-        
-        public static String ToString(FetchConsumeOptions fco) {
-            return "FetchConsumeOptions" +
-                   "\nMax Messages: " + fco.MaxMessages +
-                   "\nMax Bytes: " + fco.MaxBytes +
-                   "\nExpires In: " + fco.ExpiresInMillis +
-                   "\nIdleHeartbeat: " + fco.IdleHeartbeat +
-                   "\nThreshold Percent: " + fco.ThresholdPercent;
         }
     }
 }
