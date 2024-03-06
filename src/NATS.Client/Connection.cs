@@ -364,7 +364,6 @@ namespace NATS.Client
 
             string hostName = null;
 
-            private int round = 0;
             public virtual void open(Srv s, Options options)
             {
                 this.options = options;
@@ -384,8 +383,6 @@ namespace NATS.Client
                         sslStream = null;
                     }
 
-                    ++round;
-                    Console.WriteLine("open start R:" + round + " " + s.Url);
                     client = new TcpClient(Socket.OSSupportsIPv6 ? AddressFamily.InterNetworkV6 : AddressFamily.InterNetwork);
                     if (Socket.OSSupportsIPv6)
                         client.Client.DualMode = true;
@@ -842,7 +839,6 @@ namespace NATS.Client
             pickServer();
         }
 
-        private int cc = 0;
         // createConn will connect to the server and wrap the appropriate
         // bufio structures. It will do the right thing when an existing
         // connection is in place.
@@ -851,8 +847,6 @@ namespace NATS.Client
             ex = null;
             try
             {
-                ++cc;
-                Console.WriteLine("CC:" + cc);
                 conn.open(s, opts);
 
                 if (pending != null && bw != null)
@@ -872,8 +866,6 @@ namespace NATS.Client
             }
             catch (Exception e)
             {
-                Console.WriteLine("CC EX:" + cc);
-                // Console.WriteLine("CC EX:" + cc + " | " + e);
                 ex = e;
                 return false;
             }
