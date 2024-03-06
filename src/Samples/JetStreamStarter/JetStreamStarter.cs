@@ -12,6 +12,8 @@
 // limitations under the License.
 
 using System;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 using NATS.Client;
 using NATS.Client.Internals;
 
@@ -21,33 +23,30 @@ namespace NATSExamples
     {
         static void Main(string[] args)
         {
-            Options opts = ConnectionFactory.GetDefaultOptions();
-            
-            opts.Name = "the-client";
-            opts.Url = "nats://localhost:4222";
-            
-            opts.AsyncErrorEventHandler = (obj, a) =>
+            Options opts = Dbg.GetDefaultOptions();
+            // opts.Timeout = 5000;
+            opts.Servers = new [] {"tls://localhost:9222", "tls://localhost:4222"};
+            // opts.Servers = new [] {"tls://localhost:4222", "tls://localhost:9222"};
+            opts.NoRandomize = true;
+            opts.TlsFirst = true;
+            opts.Secure = true;
+            opts.TLSRemoteCertificationValidationCallback = (sender, certificate, chain, errors) =>
             {
-                Console.WriteLine($"Error: {a.Error}");
+                Dbg.dbg("TLSRemoteCertificationValidationCallback");
+                return true;
             };
-            opts.ReconnectedEventHandler = (obj, a) =>
-            {
-                Console.WriteLine($"Reconnected to {a.Conn.ConnectedUrl}");
-            };
-            opts.DisconnectedEventHandler = (obj, a) =>
-            {
-                Console.WriteLine("Disconnected.");
-            };
-            opts.ClosedEventHandler = (obj, a) =>
-            {
-                Console.WriteLine("Connection closed.");
-            };
-           
-            Console.WriteLine($"Connecting to '{opts.Url}'");
 
-            using (IConnection c = new ConnectionFactory().CreateConnection(opts))
+            try
             {
-                Console.WriteLine("Connected.");
+                Dbg.dbg("B4");
+                using (IConnection c = new ConnectionFactory().CreateConnection(opts, true))
+                {
+                    Dbg.dbg("ServerInfo", c.ServerInfo);
+                }
+            }
+            catch (Exception e)
+            {
+                Dbg.dbg("EX", e);
             }
         }
     }

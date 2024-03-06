@@ -364,6 +364,7 @@ namespace NATS.Client
 
             string hostName = null;
 
+            private int round = 0;
             public virtual void open(Srv s, Options options)
             {
                 this.options = options;
@@ -383,24 +384,35 @@ namespace NATS.Client
                         sslStream = null;
                     }
 
+                    ++round;
+                    Console.WriteLine("open start R:" + round + " " + s.Url);
                     client = new TcpClient(Socket.OSSupportsIPv6 ? AddressFamily.InterNetworkV6 : AddressFamily.InterNetwork);
                     if (Socket.OSSupportsIPv6)
                         client.Client.DualMode = true;
 
                     var task = client.ConnectAsync(s.Url.Host, s.Url.Port);
-                    // avoid raising TaskScheduler.UnobservedTaskException if the timeout occurs first
-                    task.ContinueWith(t =>
+                    NATSConnectionException nce = null;
+                    try
                     {
-                        GC.KeepAlive(t.Exception);
-                        close(client);
-                    }, TaskContinuationOptions.OnlyOnFaulted);
-                    if (!task.Wait(TimeSpan.FromMilliseconds(options.Timeout)))
-                    {
-                        close(client);
-                        client = null;
-                        throw new NATSConnectionException("timeout");
+                        if (!task.Wait(TimeSpan.FromMilliseconds(options.Timeout)))
+                        {
+                            nce = new NATSConnectionException("timeout");
+                        }
                     }
-
+                    catch (Exception e)
+                    {
+                        nce = new NATSConnectionException(e.Message);
+                    }
+                    finally
+                    {
+                        if (nce != null)
+                        {
+                            close(client);
+                            client = null;
+                            throw nce;
+                        }
+                    }
+                    
                     client.NoDelay = false;
 
                     client.ReceiveBufferSize = defaultBufSize * 2;
@@ -830,6 +842,7 @@ namespace NATS.Client
             pickServer();
         }
 
+        private int cc = 0;
         // createConn will connect to the server and wrap the appropriate
         // bufio structures. It will do the right thing when an existing
         // connection is in place.
@@ -838,6 +851,8 @@ namespace NATS.Client
             ex = null;
             try
             {
+                ++cc;
+                Console.WriteLine("CC:" + cc);
                 conn.open(s, opts);
 
                 if (pending != null && bw != null)
@@ -857,6 +872,8 @@ namespace NATS.Client
             }
             catch (Exception e)
             {
+                Console.WriteLine("CC EX:" + cc);
+                // Console.WriteLine("CC EX:" + cc + " | " + e);
                 ex = e;
                 return false;
             }
