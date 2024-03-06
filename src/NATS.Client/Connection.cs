@@ -400,16 +400,14 @@ namespace NATS.Client
                     {
                         nce = new NATSConnectionException(e.Message);
                     }
-                    finally
+
+                    if (nce != null)
                     {
-                        if (nce != null)
-                        {
-                            close(client);
-                            client = null;
-                            throw nce;
-                        }
+                        close(client);
+                        client = null;
+                        throw nce;
                     }
-                    
+
                     client.NoDelay = false;
 
                     client.ReceiveBufferSize = defaultBufSize * 2;
