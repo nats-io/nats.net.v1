@@ -53,21 +53,5 @@ namespace NATSExamples
                 Console.WriteLine("Connected.");
             }
         }
-
-        private static void Reproduce(Options opts)
-        {
-            try
-            {
-                Dbg.dbg("B4");
-                using (IConnection c = new ConnectionFactory().CreateConnection(opts, true))
-                {
-                    Dbg.dbg("ServerInfo", c.ServerInfo);
-                }
-            }
-            catch (Exception e)
-            {
-                Dbg.dbg("EX", e);
-            }
-        }
     }
 }
