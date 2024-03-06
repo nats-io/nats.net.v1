@@ -20,7 +20,7 @@ using NATS.Client.KeyValue;
 
 namespace NATSExamples
 {
-    internal static class JetStreamStarterDefault
+    internal static class JetStreamStarter
     {
         static void Mainx(string[] args)
         {
