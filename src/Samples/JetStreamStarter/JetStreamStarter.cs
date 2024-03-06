@@ -22,7 +22,7 @@ namespace NATSExamples
 {
     internal static class JetStreamStarter
     {
-        static void Mainx(string[] args)
+        static void Main(string[] args)
         {
             Options opts = ConnectionFactory.GetDefaultOptions();
             
@@ -46,7 +46,7 @@ namespace NATSExamples
                 Console.WriteLine("Connection closed.");
             };
             
-            Console.WriteLine($"Connecting to '{opts.Servers[0]}'");
+            Console.WriteLine($"Connecting to '{opts.Url}'");
 
             using (IConnection c = new ConnectionFactory().CreateConnection(opts))
             {
