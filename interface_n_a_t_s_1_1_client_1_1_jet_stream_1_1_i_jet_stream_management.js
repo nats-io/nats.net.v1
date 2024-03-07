@@ -21,7 +21,9 @@ var interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management =
     [ "GetStreamNames", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#ae5e180fe48c85ad706498d02b5c037e9", null ],
     [ "GetStreams", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#a0c21e82734c0545803952aa3a124b175", null ],
     [ "GetStreams", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#a3f3ec5cdb0e6442aa8d0b6cf0c961a2c", null ],
+    [ "PauseConsumer", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#a1d0538e51f4c27dfe0d88c3141e64534", null ],
     [ "PurgeStream", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#aea32e85e5bd25f461d2320f80906f9ce", null ],
     [ "PurgeStream", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#aa52f66ba76144a66463b705aa63c060e", null ],
+    [ "ResumeConsumer", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#a34c9e837237c979a82255a7a3acb2974", null ],
     [ "UpdateStream", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#a40de8a074ad7f267a327bddf46a1cdd6", null ]
 ];

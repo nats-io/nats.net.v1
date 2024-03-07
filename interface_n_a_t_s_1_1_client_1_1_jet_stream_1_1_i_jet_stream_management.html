@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">1.1.3</span>
+   &#160;<span id="projectnumber">1.1.4</span>
    </div>
    <div id="projectbrief">The NATS.io .NET C# Client</div>
   </td>
@@ -116,6 +116,10 @@ AccountStatistics&#160;</td><td class="memItemRight" valign="bottom"><b>GetAccou
 <tr class="separator:a45cc3a8533a0840a9ed690347f2eba56"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a02e7c0197b637d6f31d08652222dad37"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#a02e7c0197b637d6f31d08652222dad37">DeleteConsumer</a> (string streamName, string consumer)</td></tr>
 <tr class="separator:a02e7c0197b637d6f31d08652222dad37"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1d0538e51f4c27dfe0d88c3141e64534"><td class="memItemLeft" align="right" valign="top">ConsumerPauseResponse&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#a1d0538e51f4c27dfe0d88c3141e64534">PauseConsumer</a> (string streamName, string consumer, DateTime pauseUntil)</td></tr>
+<tr class="separator:a1d0538e51f4c27dfe0d88c3141e64534"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a34c9e837237c979a82255a7a3acb2974"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#a34c9e837237c979a82255a7a3acb2974">ResumeConsumer</a> (string streamName, string consumer)</td></tr>
+<tr class="separator:a34c9e837237c979a82255a7a3acb2974"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac9bcc99932389d408f5832e47c874325"><td class="memItemLeft" align="right" valign="top">ConsumerInfo&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#ac9bcc99932389d408f5832e47c874325">GetConsumerInfo</a> (string streamName, string consumer)</td></tr>
 <tr class="separator:ac9bcc99932389d408f5832e47c874325"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8b0914b298717ccb54d9855bca02f2fc"><td class="memItemLeft" align="right" valign="top">IList&lt; string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#a8b0914b298717ccb54d9855bca02f2fc">GetConsumerNames</a> (string streamName)</td></tr>
@@ -785,6 +789,51 @@ AccountStatistics&#160;</td><td class="memItemRight" valign="bottom"><b>GetAccou
 
 </div>
 </div>
+<a id="a1d0538e51f4c27dfe0d88c3141e64534" name="a1d0538e51f4c27dfe0d88c3141e64534"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1d0538e51f4c27dfe0d88c3141e64534">&#9670;&nbsp;</a></span>PauseConsumer()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">ConsumerPauseResponse NATS.Client.JetStream.IJetStreamManagement.PauseConsumer </td>
+          <td>(</td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>streamName</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>consumer</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">DateTime&#160;</td>
+          <td class="paramname"><em>pauseUntil</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Pauses a consumer. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">streamName</td><td>The name of the stream the consumer is attached to.</td></tr>
+    <tr><td class="paramname">consumer</td><td>The name of the consumer.</td></tr>
+    <tr><td class="paramname">pauseUntil</td><td>Consumer is paused until this time.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>ConsumerPauseResponse.</dd></dl>
+
+</div>
+</div>
 <a id="aea32e85e5bd25f461d2320f80906f9ce" name="aea32e85e5bd25f461d2320f80906f9ce"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aea32e85e5bd25f461d2320f80906f9ce">&#9670;&nbsp;</a></span>PurgeStream() <span class="overload">[1/2]</span></h2>
 
@@ -847,6 +896,44 @@ AccountStatistics&#160;</td><td class="memItemRight" valign="bottom"><b>GetAccou
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>The result of the purge.</dd></dl>
+
+</div>
+</div>
+<a id="a34c9e837237c979a82255a7a3acb2974" name="a34c9e837237c979a82255a7a3acb2974"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a34c9e837237c979a82255a7a3acb2974">&#9670;&nbsp;</a></span>ResumeConsumer()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool NATS.Client.JetStream.IJetStreamManagement.ResumeConsumer </td>
+          <td>(</td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>streamName</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>consumer</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Resumes a consumer. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">streamName</td><td>The name of the stream the consumer is attached to.</td></tr>
+    <tr><td class="paramname">consumer</td><td>The name of the consumer.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>True if the resume succeeded.</dd></dl>
 
 </div>
 </div>
