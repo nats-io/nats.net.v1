@@ -51,6 +51,10 @@ namespace IntegrationTests
         public bool AtLeast2_10_3(ServerInfo si) {
             return si.IsSameOrNewerThanVersion("2.10.3");
         }
+
+        public bool AtLeast2_11(ServerInfo si) {
+            return si.IsNewerVersionThan("2.10.99");
+        }
     }
 
     /// <summary>

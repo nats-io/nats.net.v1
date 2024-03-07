@@ -1117,5 +1117,83 @@ namespace IntegrationTests
                 Assert.Equal("tres", kve3.ValueAsString());            
             });
         }
+
+        [Fact]
+        public void TestPauseConsumer()
+        {
+            Context.RunInJsServer(AtLeast2_11, c =>
+            {
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                string stream = Stream();
+                string subject = Subject();
+                string con = Name();
+                CreateMemoryStream(c, stream, subject);
+
+                IList<ConsumerInfo> list = jsm.GetConsumers(stream);
+                Assert.Empty(list);
+
+                // Add a consumer with pause
+                DateTime pauseUntil = DateTime.Now.Add(TimeSpan.FromMinutes(2));
+                ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithPauseUntil(pauseUntil).Build();
+
+                ConsumerInfo ci = jsm.AddOrUpdateConsumer(stream, cc);
+                Assert.True(ci.Paused);
+                Assert.True(ci.PauseRemaining.Millis > 60000);
+                Assert.Equal(pauseUntil.ToUniversalTime(), ci.ConsumerConfiguration.PauseUntil.Value);
+
+                // Add a consumer
+                string name = Name();
+                cc = ConsumerConfiguration.Builder().WithName(name).Build();
+                ci = jsm.AddOrUpdateConsumer(stream, cc);
+                Assert.NotNull(name);
+                Assert.False(ci.Paused);
+                Assert.Null(ci.PauseRemaining);
+
+                // Pause
+                ConsumerPauseResponse cpre = jsm.PauseConsumer(stream, name, pauseUntil);
+                Assert.True(cpre.Paused);
+                Assert.True(cpre.PauseRemaining.Millis > 60000);
+                Assert.Equal(pauseUntil.ToUniversalTime(), cpre.PauseUntil.Value);
+                
+                ci = jsm.GetConsumerInfo(stream, name);
+                Assert.True(ci.Paused);
+                Assert.True(ci.PauseRemaining.Millis > 60000);
+                Assert.Equal(pauseUntil.ToUniversalTime(), ci.ConsumerConfiguration.PauseUntil.Value);
+
+                // Resume
+                Assert.True(jsm.ResumeConsumer(stream, name));
+                ci = jsm.GetConsumerInfo(stream, name);
+                Assert.False(ci.Paused);
+                Assert.Null(ci.PauseRemaining);
+                Assert.False(ci.ConsumerConfiguration.PauseUntil.HasValue);
+                
+                // Pause again
+                cpre = jsm.PauseConsumer(stream, name, pauseUntil);
+                Assert.True(cpre.Paused);
+                Assert.True(cpre.PauseRemaining.Millis > 60000);
+                Assert.Equal(pauseUntil.ToUniversalTime(), cpre.PauseUntil.Value);
+
+                ci = jsm.GetConsumerInfo(stream, name);
+                Assert.True(ci.Paused);
+                Assert.True(ci.PauseRemaining.Millis > 60000);
+                Assert.Equal(pauseUntil.ToUniversalTime(), ci.ConsumerConfiguration.PauseUntil.Value);
+
+                // Resume via pause with no date
+                cpre = jsm.PauseConsumer(stream, name, DateTime.MinValue);
+                Assert.False(cpre.Paused);
+                Assert.Null(cpre.PauseRemaining);
+                Assert.False(cpre.PauseUntil.HasValue);
+
+                ci = jsm.GetConsumerInfo(stream, name);
+                Assert.False(ci.Paused);
+                Assert.Null(cpre.PauseRemaining);
+                Assert.False(cpre.PauseUntil.HasValue);
+                
+                Assert.Throws<NATSJetStreamException>(() => jsm.PauseConsumer(Stream(), name, pauseUntil));
+                Assert.Throws<NATSJetStreamException>(() => jsm.PauseConsumer(stream, Name(), pauseUntil));
+                Assert.Throws<NATSJetStreamException>(() => jsm.ResumeConsumer(Stream(), name));
+                Assert.Throws<NATSJetStreamException>(() => jsm.ResumeConsumer(stream, Name()));
+            });
+        }
     }
 }

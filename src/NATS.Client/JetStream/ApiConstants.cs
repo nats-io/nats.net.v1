@@ -143,6 +143,9 @@ namespace NATS.Client.JetStream
         public const string Options = "options";
         public const string OptStartSeq = "opt_start_seq";
         public const string OptStartTime = "opt_start_time";
+        public const string Paused = "paused";
+        public const string PauseRemaining = "pause_remaining";
+        public const string PauseUntil = "pause_until";
         public const string Placement = "placement";
         public const string ProcessingTime = "processing_time";
         public const string Republish = "republish";

@@ -151,11 +151,33 @@ namespace NATS.Client.Internals
                 return DateTime.MinValue;
             }
         }
+        
+        public static DateTime? AsOptionalDate(JSONNode node)
+        {
+            try
+            {
+                if (node.IsNull)
+                {
+                    return null;
+                }
+                return DateTime.Parse(node.Value).ToUniversalTime();
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
 
         public static string ToString(DateTime dt)
         {
             // Assume MinValue is Unset
             return dt.Equals(DateTime.MinValue) ? null : UnsafeToString(dt);
+        }
+
+        public static string ToString(DateTime? dt)
+        {
+            // Assume MinValue is Unset
+            return !dt.HasValue || dt.Equals(DateTime.MinValue) ? null : UnsafeToString(dt.Value);
         }
         
         public static string UnsafeToString(DateTime dt)

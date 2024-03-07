@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 
 namespace NATS.Client.JetStream
@@ -96,6 +97,23 @@ namespace NATS.Client.JetStream
         /// <param name="consumer">The name of the consumer.</param>
         /// <returns>True if the consumer was deleted.</returns>
         bool DeleteConsumer(string streamName, string consumer);
+
+        /// <summary>
+        /// Pauses a consumer.
+        /// </summary>
+        /// <param name="streamName">The name of the stream the consumer is attached to.</param>
+        /// <param name="consumer">The name of the consumer.</param>
+        /// <param name="pauseUntil">Consumer is paused until this time.</param>
+        /// <returns>ConsumerPauseResponse.</returns>
+        ConsumerPauseResponse PauseConsumer(string streamName, string consumer, DateTime pauseUntil);
+
+        /// <summary>
+        /// Resumes a consumer.
+        /// </summary>
+        /// <param name="streamName">The name of the stream the consumer is attached to.</param>
+        /// <param name="consumer">The name of the consumer.</param>
+        /// <returns>True if the resume succeeded.</returns>
+        bool ResumeConsumer(string streamName, string consumer);
 
         /// <summary>
         /// Gets information for an existing consumer.

@@ -67,6 +67,7 @@ namespace NATS.Client.JetStream
         public string DeliverGroup { get; }
         public string SampleFrequency { get; }
         public DateTime StartTime { get; }
+        public DateTime? PauseUntil { get; }
         public Duration AckWait { get; }
         public Duration IdleHeartbeat { get; }
         public Duration MaxExpires { get; }
@@ -113,6 +114,7 @@ namespace NATS.Client.JetStream
             SampleFrequency = ccNode[ApiConstants.SampleFreq].Value;
             
             StartTime = AsDate(ccNode[ApiConstants.OptStartTime]);
+            PauseUntil = AsOptionalDate(ccNode[ApiConstants.PauseUntil]);
             AckWait = AsDuration(ccNode, ApiConstants.AckWait, null);
             IdleHeartbeat = AsDuration(ccNode, ApiConstants.IdleHeartbeat, null);
             MaxExpires = AsDuration(ccNode, ApiConstants.MaxExpires, null);
@@ -158,6 +160,7 @@ namespace NATS.Client.JetStream
             SampleFrequency = builder._sampleFrequency;
 
             StartTime = builder._startTime;
+            PauseUntil = builder._pauseUntil;
             AckWait = builder._ackWait;
             IdleHeartbeat = builder._idleHeartbeat;
             MaxExpires = builder._maxExpires;
@@ -192,6 +195,7 @@ namespace NATS.Client.JetStream
             AddField(o, ApiConstants.DeliverGroup, DeliverGroup);
             AddField(o, ApiConstants.OptStartSeq, StartSeq);
             AddField(o, ApiConstants.OptStartTime, JsonUtils.ToString(StartTime));
+            AddField(o, ApiConstants.PauseUntil, JsonUtils.ToString(PauseUntil));
             AddField(o, ApiConstants.AckPolicy, AckPolicy.GetString());
             AddField(o, ApiConstants.AckWait, AckWait);
             AddField(o, ApiConstants.MaxDeliver, MaxDeliver);
@@ -252,6 +256,7 @@ namespace NATS.Client.JetStream
             if (InactiveThreshold != null && !InactiveThreshold.Equals(server.InactiveThreshold)) { changes.Add("InactiveThreshold"); }
 
             RecordWouldBeChange(StartTime, server.StartTime, "StartTime", changes);
+            RecordWouldBeChange(PauseUntil, server.PauseUntil, "PauseUntil", changes);
                    
             RecordWouldBeChange(Description, server.Description, "Description", changes);
             RecordWouldBeChange(SampleFrequency, server.SampleFrequency, "SampleFrequency", changes);
@@ -274,6 +279,11 @@ namespace NATS.Client.JetStream
         private void RecordWouldBeChange(DateTime request, DateTime server, string field, IList<string> changes)
         {
             if (request != DateTime.MinValue && !request.Equals(server)) { changes.Add(field); }
+        }
+
+        private void RecordWouldBeChange(DateTime? request, DateTime? server, string field, IList<string> changes)
+        {
+            RecordWouldBeChange(request.GetValueOrDefault(DateTime.MinValue), server.GetValueOrDefault(DateTime.MinValue), field, changes);
         }
         
         internal static int GetOrUnset(int? val)
@@ -341,6 +351,7 @@ namespace NATS.Client.JetStream
             internal string _sampleFrequency;
             
             internal DateTime _startTime; 
+            internal DateTime? _pauseUntil; 
             internal Duration _ackWait;
             internal Duration _idleHeartbeat;
             internal Duration _maxExpires;
@@ -379,6 +390,7 @@ namespace NATS.Client.JetStream
                 _sampleFrequency = cc.SampleFrequency;
 
                 _startTime = cc.StartTime;
+                _pauseUntil = cc.PauseUntil;
                 _ackWait = cc.AckWait;
                 _idleHeartbeat = cc.IdleHeartbeat;
                 _maxExpires = cc.MaxExpires;
@@ -503,6 +515,17 @@ namespace NATS.Client.JetStream
             public ConsumerConfigurationBuilder WithStartTime(DateTime startTime)
             {
                 _startTime = startTime;
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the time to pause the consumer until
+            /// </summary>
+            /// <param name="pauseUntil">the time to pause the consumer until</param>
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder WithPauseUntil(DateTime? pauseUntil)
+            {
+                _pauseUntil = pauseUntil;
                 return this;
             }
 
