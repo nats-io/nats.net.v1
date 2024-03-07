@@ -514,7 +514,7 @@ namespace NATS.Client.JetStream
             }
 
             /// <summary>
-            /// Sets the start time of the ConsumerConfiguration.
+            /// Sets the time to pause the consumer until
             /// </summary>
             /// <param name="pauseUntil">the time to pause the consumer until</param>
             /// <returns>The ConsumerConfigurationBuilder</returns>
