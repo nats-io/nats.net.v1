@@ -68,7 +68,7 @@ namespace NATS.Client.JetStream
             PushBound = ciNode[ApiConstants.PushBound].AsBool;
             Timestamp = AsDate(ciNode[ApiConstants.Timestamp]);
             Paused = ciNode[ApiConstants.Paused].AsBool;
-            PauseRemaining = JsonUtils.AsDuration(ciNode, ApiConstants.PauseRemaining, Duration.Zero);
+            PauseRemaining = Paused ? JsonUtils.AsDuration(ciNode, ApiConstants.PauseRemaining, Duration.Zero) : null;
         }
 
         public override string ToString()

@@ -67,7 +67,7 @@ namespace NATS.Client.JetStream
         public string DeliverGroup { get; }
         public string SampleFrequency { get; }
         public DateTime StartTime { get; }
-        public DateTime PauseUntil { get; }
+        public DateTime? PauseUntil { get; }
         public Duration AckWait { get; }
         public Duration IdleHeartbeat { get; }
         public Duration MaxExpires { get; }
@@ -114,7 +114,7 @@ namespace NATS.Client.JetStream
             SampleFrequency = ccNode[ApiConstants.SampleFreq].Value;
             
             StartTime = AsDate(ccNode[ApiConstants.OptStartTime]);
-            PauseUntil = AsDate(ccNode[ApiConstants.PauseUntil]);
+            PauseUntil = AsOptionalDate(ccNode[ApiConstants.PauseUntil]);
             AckWait = AsDuration(ccNode, ApiConstants.AckWait, null);
             IdleHeartbeat = AsDuration(ccNode, ApiConstants.IdleHeartbeat, null);
             MaxExpires = AsDuration(ccNode, ApiConstants.MaxExpires, null);
@@ -280,6 +280,11 @@ namespace NATS.Client.JetStream
         {
             if (request != DateTime.MinValue && !request.Equals(server)) { changes.Add(field); }
         }
+
+        private void RecordWouldBeChange(DateTime? request, DateTime? server, string field, IList<string> changes)
+        {
+            RecordWouldBeChange(request.GetValueOrDefault(DateTime.MinValue), server.GetValueOrDefault(DateTime.MinValue), field, changes);
+        }
         
         internal static int GetOrUnset(int? val)
         {
@@ -346,7 +351,7 @@ namespace NATS.Client.JetStream
             internal string _sampleFrequency;
             
             internal DateTime _startTime; 
-            internal DateTime _pauseUntil; 
+            internal DateTime? _pauseUntil; 
             internal Duration _ackWait;
             internal Duration _idleHeartbeat;
             internal Duration _maxExpires;
@@ -518,7 +523,7 @@ namespace NATS.Client.JetStream
             /// </summary>
             /// <param name="pauseUntil">the time to pause the consumer until</param>
             /// <returns>The ConsumerConfigurationBuilder</returns>
-            public ConsumerConfigurationBuilder WithPauseUntil(DateTime pauseUntil)
+            public ConsumerConfigurationBuilder WithPauseUntil(DateTime? pauseUntil)
             {
                 _pauseUntil = pauseUntil;
                 return this;

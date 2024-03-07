@@ -144,12 +144,27 @@ namespace NATS.Client.Internals
         {
             try
             {
-                DateTime dt = DateTime.Parse(node.Value).ToUniversalTime();
-                return dt.Year == 1 ? DateTime.MinValue : dt; // b/c server sends a value that doesn't quite parse to DateTime.MinValue
+                return DateTime.Parse(node.Value).ToUniversalTime();
             }
             catch (Exception)
             {
                 return DateTime.MinValue;
+            }
+        }
+        
+        public static DateTime? AsOptionalDate(JSONNode node)
+        {
+            try
+            {
+                if (node.IsNull)
+                {
+                    return null;
+                }
+                return DateTime.Parse(node.Value).ToUniversalTime();
+            }
+            catch (Exception)
+            {
+                return null;
             }
         }
 
@@ -157,6 +172,12 @@ namespace NATS.Client.Internals
         {
             // Assume MinValue is Unset
             return dt.Equals(DateTime.MinValue) ? null : UnsafeToString(dt);
+        }
+
+        public static string ToString(DateTime? dt)
+        {
+            // Assume MinValue is Unset
+            return !dt.HasValue || dt.Equals(DateTime.MinValue) ? null : UnsafeToString(dt.Value);
         }
         
         public static string UnsafeToString(DateTime dt)

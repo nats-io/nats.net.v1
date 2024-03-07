@@ -20,7 +20,7 @@ namespace NATS.Client.JetStream
     public sealed class ConsumerPauseResponse : ApiResponse
     {
         public bool Paused { get; private set; }
-        public DateTime PauseUntil { get; private set; }
+        public DateTime? PauseUntil { get; private set; }
         public Duration PauseRemaining { get; private set; }
         
         internal ConsumerPauseResponse(Msg msg, bool throwOnError) : base(msg, throwOnError)
@@ -36,8 +36,16 @@ namespace NATS.Client.JetStream
         private void Init()
         {
             Paused = JsonNode[ApiConstants.Paused].AsBool;
-            PauseUntil = AsDate(JsonNode[ApiConstants.PauseUntil]);
-            PauseRemaining = JsonUtils.AsDuration(JsonNode, ApiConstants.PauseRemaining, Duration.Zero);
+            if (Paused)
+            {
+                PauseUntil = AsDate(JsonNode[ApiConstants.PauseUntil]);
+                PauseRemaining = JsonUtils.AsDuration(JsonNode, ApiConstants.PauseRemaining, Duration.Zero);
+            }
+            else
+            {
+                PauseUntil = null;
+                PauseRemaining = null;
+            }
         }
     }
 }

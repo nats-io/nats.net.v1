@@ -1139,7 +1139,7 @@ namespace IntegrationTests
                 ConsumerInfo ci = jsm.AddOrUpdateConsumer(stream, cc);
                 Assert.True(ci.Paused);
                 Assert.True(ci.PauseRemaining.Millis > 60000);
-                Assert.Equal(pauseUntil.ToUniversalTime(), ci.ConsumerConfiguration.PauseUntil.ToUniversalTime());
+                Assert.Equal(pauseUntil.ToUniversalTime(), ci.ConsumerConfiguration.PauseUntil.Value);
 
                 // Add a consumer
                 string name = Name();
@@ -1147,46 +1147,47 @@ namespace IntegrationTests
                 ci = jsm.AddOrUpdateConsumer(stream, cc);
                 Assert.NotNull(name);
                 Assert.False(ci.Paused);
+                Assert.Null(ci.PauseRemaining);
 
                 // Pause
                 ConsumerPauseResponse cpre = jsm.PauseConsumer(stream, name, pauseUntil);
                 Assert.True(cpre.Paused);
                 Assert.True(cpre.PauseRemaining.Millis > 60000);
-                Assert.Equal(pauseUntil.ToUniversalTime(), cpre.PauseUntil.ToUniversalTime());
+                Assert.Equal(pauseUntil.ToUniversalTime(), cpre.PauseUntil.Value);
                 
                 ci = jsm.GetConsumerInfo(stream, name);
                 Assert.True(ci.Paused);
                 Assert.True(ci.PauseRemaining.Millis > 60000);
-                Assert.Equal(pauseUntil.ToUniversalTime(), ci.ConsumerConfiguration.PauseUntil.ToUniversalTime());
+                Assert.Equal(pauseUntil.ToUniversalTime(), ci.ConsumerConfiguration.PauseUntil.Value);
 
                 // Resume
                 Assert.True(jsm.ResumeConsumer(stream, name));
                 ci = jsm.GetConsumerInfo(stream, name);
                 Assert.False(ci.Paused);
-                Assert.Equal(Duration.Zero, ci.PauseRemaining);
-                Assert.Equal(DateTime.MinValue, ci.ConsumerConfiguration.PauseUntil);
+                Assert.Null(ci.PauseRemaining);
+                Assert.False(ci.ConsumerConfiguration.PauseUntil.HasValue);
                 
                 // Pause again
                 cpre = jsm.PauseConsumer(stream, name, pauseUntil);
                 Assert.True(cpre.Paused);
                 Assert.True(cpre.PauseRemaining.Millis > 60000);
-                Assert.Equal(pauseUntil.ToUniversalTime(), cpre.PauseUntil.ToUniversalTime());
+                Assert.Equal(pauseUntil.ToUniversalTime(), cpre.PauseUntil.Value);
 
                 ci = jsm.GetConsumerInfo(stream, name);
                 Assert.True(ci.Paused);
                 Assert.True(ci.PauseRemaining.Millis > 60000);
-                Assert.Equal(pauseUntil.ToUniversalTime(), ci.ConsumerConfiguration.PauseUntil.ToUniversalTime());
+                Assert.Equal(pauseUntil.ToUniversalTime(), ci.ConsumerConfiguration.PauseUntil.Value);
 
                 // Resume via pause with no date
                 cpre = jsm.PauseConsumer(stream, name, DateTime.MinValue);
                 Assert.False(cpre.Paused);
-                Assert.Equal(Duration.Zero, cpre.PauseRemaining);
-                Assert.Equal(DateTime.MinValue.ToUniversalTime(), cpre.PauseUntil.ToUniversalTime());
+                Assert.Null(cpre.PauseRemaining);
+                Assert.False(cpre.PauseUntil.HasValue);
 
                 ci = jsm.GetConsumerInfo(stream, name);
                 Assert.False(ci.Paused);
-                Assert.Equal(Duration.Zero, ci.PauseRemaining);
-                Assert.Equal(DateTime.MinValue, ci.ConsumerConfiguration.PauseUntil);
+                Assert.Null(cpre.PauseRemaining);
+                Assert.False(cpre.PauseUntil.HasValue);
                 
                 Assert.Throws<NATSJetStreamException>(() => jsm.PauseConsumer(Stream(), name, pauseUntil));
                 Assert.Throws<NATSJetStreamException>(() => jsm.PauseConsumer(stream, Name(), pauseUntil));
