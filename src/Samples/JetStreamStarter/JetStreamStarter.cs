@@ -12,8 +12,11 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
 using NATS.Client;
 using NATS.Client.Internals;
+using NATS.Client.JetStream;
+using NATS.Client.KeyValue;
 
 namespace NATSExamples
 {
@@ -42,7 +45,7 @@ namespace NATSExamples
             {
                 Console.WriteLine("Connection closed.");
             };
-           
+            
             Console.WriteLine($"Connecting to '{opts.Url}'");
 
             using (IConnection c = new ConnectionFactory().CreateConnection(opts))

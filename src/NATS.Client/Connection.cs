@@ -388,17 +388,24 @@ namespace NATS.Client
                         client.Client.DualMode = true;
 
                     var task = client.ConnectAsync(s.Url.Host, s.Url.Port);
-                    // avoid raising TaskScheduler.UnobservedTaskException if the timeout occurs first
-                    task.ContinueWith(t =>
+                    NATSConnectionException nce = null;
+                    try
                     {
-                        GC.KeepAlive(t.Exception);
-                        close(client);
-                    }, TaskContinuationOptions.OnlyOnFaulted);
-                    if (!task.Wait(TimeSpan.FromMilliseconds(options.Timeout)))
+                        if (!task.Wait(TimeSpan.FromMilliseconds(options.Timeout)))
+                        {
+                            nce = new NATSConnectionException("timeout");
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        nce = new NATSConnectionException(e.Message);
+                    }
+
+                    if (nce != null)
                     {
                         close(client);
                         client = null;
-                        throw new NATSConnectionException("timeout");
+                        throw nce;
                     }
 
                     client.NoDelay = false;
