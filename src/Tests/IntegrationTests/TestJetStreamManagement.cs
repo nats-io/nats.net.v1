@@ -1117,5 +1117,82 @@ namespace IntegrationTests
                 Assert.Equal("tres", kve3.ValueAsString());            
             });
         }
+
+        [Fact]
+        public void TestPauseConsumer()
+        {
+            Context.RunInJsServer(AtLeast2_11, c =>
+            {
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                string stream = Stream();
+                string subject = Subject();
+                string con = Name();
+                CreateMemoryStream(c, stream, subject);
+
+                IList<ConsumerInfo> list = jsm.GetConsumers(stream);
+                Assert.Empty(list);
+
+                // Add a consumer with pause
+                DateTime pauseUntil = DateTime.Now.Add(TimeSpan.FromMinutes(2));
+                ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithPauseUntil(pauseUntil).Build();
+
+                ConsumerInfo ci = jsm.AddOrUpdateConsumer(stream, cc);
+                Assert.True(ci.Paused);
+                Assert.True(ci.PauseRemaining.Millis > 60000);
+                Assert.Equal(pauseUntil.ToUniversalTime(), ci.ConsumerConfiguration.PauseUntil.ToUniversalTime());
+
+                // Add a consumer
+                string name = Name();
+                cc = ConsumerConfiguration.Builder().WithName(name).Build();
+                ci = jsm.AddOrUpdateConsumer(stream, cc);
+                Assert.NotNull(name);
+                Assert.False(ci.Paused);
+
+                // Pause
+                ConsumerPauseResponse cpre = jsm.PauseConsumer(stream, name, pauseUntil);
+                Assert.True(cpre.Paused);
+                Assert.True(cpre.PauseRemaining.Millis > 60000);
+                Assert.Equal(pauseUntil.ToUniversalTime(), cpre.PauseUntil.ToUniversalTime());
+                
+                ci = jsm.GetConsumerInfo(stream, name);
+                Assert.True(ci.Paused);
+                Assert.True(ci.PauseRemaining.Millis > 60000);
+                Assert.Equal(pauseUntil.ToUniversalTime(), ci.ConsumerConfiguration.PauseUntil.ToUniversalTime());
+
+                // Resume
+                Assert.True(jsm.ResumeConsumer(stream, name));
+                ci = jsm.GetConsumerInfo(stream, name);
+                Assert.False(ci.Paused);
+                Assert.Equal(Duration.Zero, ci.PauseRemaining);
+                Assert.Equal(DateTime.MinValue, ci.ConsumerConfiguration.PauseUntil);
+                
+                // Pause again
+                cpre = jsm.PauseConsumer(stream, name, pauseUntil);
+                Assert.True(cpre.Paused);
+                Assert.True(cpre.PauseRemaining.Millis > 60000);
+                Assert.Equal(pauseUntil.ToUniversalTime(), cpre.PauseUntil.ToUniversalTime());
+
+                ci = jsm.GetConsumerInfo(stream, name);
+                Assert.True(ci.Paused);
+                Assert.True(ci.PauseRemaining.Millis > 60000);
+                Assert.Equal(pauseUntil.ToUniversalTime(), ci.ConsumerConfiguration.PauseUntil.ToUniversalTime());
+
+                // Resume via pause with no date
+                cpre = jsm.PauseConsumer(stream, name, DateTime.MinValue);
+                Assert.False(cpre.Paused);
+                Assert.Equal(Duration.Zero, cpre.PauseRemaining);
+                Assert.Equal(DateTime.MinValue.ToUniversalTime(), cpre.PauseUntil.ToUniversalTime());
+
+                ci = jsm.GetConsumerInfo(stream, name);
+                Assert.False(ci.Paused);
+                Assert.Equal(Duration.Zero, ci.PauseRemaining);
+                Assert.Equal(DateTime.MinValue, ci.ConsumerConfiguration.PauseUntil);
+                
+                Assert.Throws<NATSJetStreamException>(() => jsm.PauseConsumer(Stream(), name, pauseUntil));
+                Assert.Throws<NATSJetStreamException>(() => jsm.PauseConsumer(stream, Name(), pauseUntil));
+                Assert.Throws<NATSJetStreamException>(() => jsm.ResumeConsumer(Stream(), name));
+                Assert.Throws<NATSJetStreamException>(() => jsm.ResumeConsumer(stream, Name()));
+            });
+        }
     }
 }

@@ -75,6 +75,11 @@ namespace NATS.Client.Internals
         public const string JsapiConsumerDelete = "CONSUMER.DELETE.{0}.{1}";
 
         /// <summary>
+        /// JSAPI_CONSUMER_PAUSE is used to delete consumers.
+        /// </summary>
+        public const string JsapiConsumerPause = "CONSUMER.PAUSE.{0}.{1}";
+
+        /// <summary>
         /// JSAPI_CONSUMER_NAMES is used to return a list of consumer names
         /// </summary>
         public const string JsapiConsumerNames = "CONSUMER.NAMES.{0}";

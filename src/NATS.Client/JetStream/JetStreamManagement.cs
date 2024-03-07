@@ -101,6 +101,26 @@ namespace NATS.Client.JetStream
             return new SuccessApiResponse(m, true).Success;
         }
 
+        public ConsumerPauseResponse PauseConsumer(string streamName, string consumer, DateTime pauseUntil)
+        {
+            Validator.ValidateStreamName(streamName, true);
+            Validator.ValidateNotNull(consumer, nameof(consumer));
+            string subj = string.Format(JetStreamConstants.JsapiConsumerPause, streamName, consumer);
+            ConsumerPauseRequest cprq = new ConsumerPauseRequest(pauseUntil);
+            Msg m = RequestResponseRequired(subj, cprq.Serialize(), Timeout);
+            return new ConsumerPauseResponse(m, true);
+        }
+
+        public bool ResumeConsumer(string streamName, string consumer)
+        {
+            Validator.ValidateStreamName(streamName, true);
+            Validator.ValidateNotNull(consumer, nameof(consumer));
+            string subj = string.Format(JetStreamConstants.JsapiConsumerPause, streamName, consumer);
+            Msg m = RequestResponseRequired(subj, null, Timeout);
+            ConsumerPauseResponse cpre = new ConsumerPauseResponse(m, true);
+            return !cpre.Paused;
+        }
+
         public ConsumerInfo GetConsumerInfo(string streamName, string consumer)
         {
             Validator.ValidateStreamName(streamName, true);

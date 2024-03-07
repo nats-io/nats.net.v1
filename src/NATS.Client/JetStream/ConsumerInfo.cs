@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System;
+using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 using static NATS.Client.Internals.JsonUtils;
 
@@ -33,7 +34,9 @@ namespace NATS.Client.JetStream
         public bool PushBound { get; private set; }
         public ulong CalculatedPending => NumPending + Delivered.ConsumerSeq;
         public DateTime Timestamp { get; private set; }
-
+        public bool Paused { get; private set; }
+        public Duration PauseRemaining { get; private set; }
+        
         internal ConsumerInfo(Msg msg, bool throwOnError) : base(msg, throwOnError)
         {
             Init(JsonNode);
@@ -64,6 +67,8 @@ namespace NATS.Client.JetStream
             ClusterInfo = ClusterInfo.OptionalInstance(ciNode[ApiConstants.Cluster]);
             PushBound = ciNode[ApiConstants.PushBound].AsBool;
             Timestamp = AsDate(ciNode[ApiConstants.Timestamp]);
+            Paused = ciNode[ApiConstants.Paused].AsBool;
+            PauseRemaining = JsonUtils.AsDuration(ciNode, ApiConstants.PauseRemaining, Duration.Zero);
         }
 
         public override string ToString()
@@ -80,6 +85,8 @@ namespace NATS.Client.JetStream
                    ", Timestamp=" + Timestamp +
                    ", Delivered=" + Delivered +
                    ", AckFloor=" + AckFloor +
+                   ", Paused=" + Paused +
+                   ", PauseRemaining=" + PauseRemaining +
                    ", " + ObjectString("ClusterInfo", ClusterInfo) +
                    ", " + "ConsumerConfiguration" + ConsumerConfiguration.ToJsonString() +
                    '}';

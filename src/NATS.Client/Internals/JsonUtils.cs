@@ -144,7 +144,8 @@ namespace NATS.Client.Internals
         {
             try
             {
-                return DateTime.Parse(node.Value).ToUniversalTime();
+                DateTime dt = DateTime.Parse(node.Value).ToUniversalTime();
+                return dt.Year == 1 ? DateTime.MinValue : dt; // b/c server sends a value that doesn't quite parse to DateTime.MinValue
             }
             catch (Exception)
             {
