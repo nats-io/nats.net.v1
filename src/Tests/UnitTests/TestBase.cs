@@ -144,7 +144,7 @@ namespace UnitTests
         public const string KEY = "key";
         public const string DATA = "data";
         
-        public static String Variant(object variant) {
+        public static String Variant(object variant = null) {
             return variant == null ? Nuid.NextGlobalSequence() : variant.ToString();
         }
 

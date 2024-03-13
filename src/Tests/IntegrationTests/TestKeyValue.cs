@@ -1423,6 +1423,64 @@ namespace IntegrationTests
                 watch.Unsubscribe();
             });
         }
+
+        [Fact]
+        public void TestKeyValueTransform() {
+            Context.RunInJsServer(c =>
+            {
+                // get the kv management context
+                IKeyValueManagement kvm = c.CreateKeyValueManagementContext();
+
+                string kvName1 = Variant();
+                string kvName2 = kvName1 + "-mir";
+                string mirrorSegment = "MirrorMe";
+                string dontMirrorSegment = "DontMirrorMe";
+                string generic = "foo";
+                
+                KeyValueStatus status = kvm.Create(KeyValueConfiguration.Builder()
+                    .WithName(kvName1)
+                    .WithStorageType(StorageType.Memory)
+                    .Build());
+
+                SubjectTransform transform = SubjectTransform.Builder()
+                    .WithSource("$KV." + kvName1 + "." + mirrorSegment + ".*")
+                    .WithDestination("$KV." + kvName2 + "." + mirrorSegment + ".{{wildcard(1)}}")
+                    .Build();
+
+                Mirror mirr = Mirror.Builder()
+                    .WithName(kvName1)
+                    .WithSubjectTransforms(transform)
+                    .Build();
+
+                status = kvm.Create(KeyValueConfiguration.Builder()
+                    .WithName(kvName2)
+                    .WithMirror(mirr)
+                    .WithStorageType(StorageType.Memory)
+                    .Build());
+
+                IKeyValue kv1 = c.CreateKeyValueContext(kvName1);
+
+                String key1 = mirrorSegment + "." + generic;
+                String key2 = dontMirrorSegment + "." + generic;
+                kv1.Put(key1, Encoding.UTF8.GetBytes(mirrorSegment));
+                kv1.Put(key2, Encoding.UTF8.GetBytes(dontMirrorSegment));
+
+                Thread.Sleep(1000); // transforming takes some amount of time, otherwise the kv2.getKeys() fails
+                IList<string> keys = kv1.Keys();
+                Assert.True(keys.Contains(key1));
+                Assert.True(keys.Contains(key2));
+
+                Assert.NotNull(kv1.Get(key1));
+                Assert.NotNull(kv1.Get(key2));
+
+                IKeyValue kv2 = c.CreateKeyValueContext(kvName2);
+                keys = kv2.Keys();
+                Assert.True(keys.Contains(key1));
+                Assert.False(keys.Contains(key2));
+                Assert.NotNull(kv2.Get(key1));
+                Assert.Null(kv2.Get(key2));
+            });
+        }
     }
 
     class TestKeyValueWatcher : IKeyValueWatcher
