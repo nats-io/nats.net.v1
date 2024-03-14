@@ -77,6 +77,7 @@ namespace NATS.Client.JetStream
  
         internal void VisitSubject(string subject, DeliverPolicy deliverPolicy, bool headersOnly, bool ordered, Action<Msg> action) {
             PushSubscribeOptions pso = PushSubscribeOptions.Builder()
+                .WithStream(StreamName)
                 .WithOrdered(ordered)
                 .WithConfiguration(
                     ConsumerConfiguration.Builder()
@@ -85,7 +86,7 @@ namespace NATS.Client.JetStream
                         .WithHeadersOnly(headersOnly)
                         .Build())
                 .Build();
-            
+
             IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(subject, pso);
             try
             {
