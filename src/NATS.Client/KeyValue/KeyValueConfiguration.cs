@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
@@ -345,14 +346,15 @@ namespace NATS.Client.KeyValue
             }
 
             /// <summary>
+            /// This method is deactivated. Allow Direct is Required default on KV
             /// Set whether to allow direct message access.
-            /// This is an optimization for Key Value since
+            /// This is an optimization for Key Value
             /// but is not available on all account / jwt configuration.
             /// </summary>
             /// <param name="allowDirect">true to allow direct headers.</param>
             /// <returns>The KeyValueConfigurationBuilder</returns>
+            [Obsolete("This method is deactivated. Allow Direct is Required default on KV")]
             public KeyValueConfigurationBuilder WithAllowDirect(bool allowDirect) {
-                scBuilder.WithAllowDirect(allowDirect);
                 return this;
             }
 
@@ -386,6 +388,7 @@ namespace NATS.Client.KeyValue
                 _name = Validator.Required(_name, "name");
                 scBuilder.WithName(ToStreamName(_name))
                     .WithAllowRollup(true)
+                    .WithAllowDirect(true)
                     .WithDiscardPolicy(DiscardPolicy.New)
                     .WithDenyDelete(true);
                 
