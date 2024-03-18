@@ -47,10 +47,10 @@ namespace NATS.Client.JetStream
                 Headers = msg.Header;
                 Subject = msg.Header.GetLast(JetStreamConstants.NatsSubject);
                 Data = msg.Data;
-                Sequence = ulong.Parse(msg.Header[JetStreamConstants.NatsSequence]);
-                Time = JsonUtils.AsDate(msg.Header[JetStreamConstants.NatsTimestamp]);
-                Stream = msg.Header[JetStreamConstants.NatsStream];
-                string temp = msg.Header[JetStreamConstants.NatsLastSequence];
+                Sequence = ulong.Parse(msg.Header.GetLast(JetStreamConstants.NatsSequence));
+                Time = JsonUtils.AsDate(msg.Header.GetLast(JetStreamConstants.NatsTimestamp));
+                Stream = msg.Header.GetLast(JetStreamConstants.NatsStream);
+                string temp = msg.Header.GetLast(JetStreamConstants.NatsLastSequence);
                 if (temp != null)
                 {
                     LastSequence = ulong.Parse(temp);
