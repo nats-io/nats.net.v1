@@ -47,15 +47,7 @@ namespace NATS.Client.JetStream
                 Headers = msg.Header;
                 Subject = msg.Header.GetLast(JetStreamConstants.NatsSubject);
                 Data = msg.Data;
-                try
-                {
-                    Sequence = ulong.Parse(msg.Header[JetStreamConstants.NatsSequence]);
-                }
-                catch (FormatException)
-                {
-                    throw new NATSException($"Message Info Sequence is Invalid or Missing '{msg.Header[JetStreamConstants.NatsSequence]}'");
-                }
-
+                Sequence = ulong.Parse(msg.Header[JetStreamConstants.NatsSequence]);
                 Time = JsonUtils.AsDate(msg.Header[JetStreamConstants.NatsTimestamp]);
                 Stream = msg.Header[JetStreamConstants.NatsStream];
                 string temp = msg.Header[JetStreamConstants.NatsLastSequence];
