@@ -353,7 +353,6 @@ namespace NATS.Client.KeyValue
             /// </summary>
             /// <param name="allowDirect">true to allow direct headers.</param>
             /// <returns>The KeyValueConfigurationBuilder</returns>
-            [Obsolete("This method is deactivated. Allow Direct is Required default on KV")]
             public KeyValueConfigurationBuilder WithAllowDirect(bool allowDirect) {
                 return this;
             }
