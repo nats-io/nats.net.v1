@@ -213,22 +213,22 @@ namespace NATS.Client
         // to the channel.
         internal bool addMessage(Msg msg)
         {
-            // Subscription internal stats
-	        pendingMessages++;
-	        if (pendingMessages > pendingMessagesMax)
-            {
-		        pendingMessagesMax = pendingMessages;
-            }
-	
-	        pendingBytes += msg.Data.Length;
-	        if (pendingBytes > pendingBytesMax)
-            {
-		        pendingBytesMax = pendingBytes;
-            }
-	
             // BeforeChannelAddCheck returns true if the message is allowed to be queued
             if (BeforeChannelAddCheck.Invoke(msg))
             {
+                // Subscription internal stats
+                pendingMessages++;
+                if (pendingMessages > pendingMessagesMax)
+                {
+                    pendingMessagesMax = pendingMessages;
+                }
+	
+                pendingBytes += msg.Data.Length;
+                if (pendingBytes > pendingBytesMax)
+                {
+                    pendingBytesMax = pendingBytes;
+                }
+
                 // Check for a Slow Consumer
                 if ((pendingMessagesLimit > 0 && pendingMessages > pendingMessagesLimit)
                     || (pendingBytesLimit > 0 && pendingBytes > pendingBytesLimit))
