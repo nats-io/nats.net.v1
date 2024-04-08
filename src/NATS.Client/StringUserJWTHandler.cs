@@ -73,9 +73,8 @@ namespace NATS.Client
         /// Utility method to signs the UserSignatureEventArgs server nonce from 
         /// a private credentials file.
         /// </summary>
-        /// <param name="credsFile">A file with the private Nkey</param>
         /// <param name="args">Arguments</param>
-        public void SignNonceFromFile(UserSignatureEventArgs args)
+        public void SignNonce(UserSignatureEventArgs args)
         {
             // you have to load this every time b/c signing actually wipes data
             args.SignedNonce = _loadNkeyPair(NkeySeed).Sign(args.ServerNonce);
@@ -88,7 +87,7 @@ namespace NATS.Client
         /// <param name="args"></param>
         public void DefaultUserSignatureHandler(object sender, UserSignatureEventArgs args)
         {
-            SignNonceFromFile(args);
+            SignNonce(args);
         }
     }
 }
