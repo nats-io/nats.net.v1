@@ -36,14 +36,13 @@ namespace NATS.Client
         /// </summary>
         /// <param name="credentialsText">The text containing the "-----BEGIN NATS USER JWT-----" block
         /// and the text containing the "-----BEGIN USER NKEY SEED-----" block</param>
-        /// May be the same as the jwt file if they are chained.</param>
         public StringUserJWTHandler(string credentialsText) : this(credentialsText, credentialsText) {}
         
         /// <summary>
         /// Creates a static user jwt handler.
         /// </summary>
         /// <param name="userJwt">The text containing the "-----BEGIN NATS USER JWT-----" block</param>
-        /// <param name="nkeySeed">The text containing the "-----BEGIN USER NKEY SEED-----" block or the seed begining with "SU"</param>
+        /// <param name="nkeySeed">The text containing the "-----BEGIN USER NKEY SEED-----" block or the seed begining with "SU".
         /// May be the same as the jwt file if they are chained.</param>
         public StringUserJWTHandler(string userJwt, string nkeySeed)
         {
