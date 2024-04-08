@@ -105,19 +105,42 @@ namespace NATS.Client
             return CreateConnection(opts, reconnectOnConnect);
         }
         
-        // public IConnection G(string url, string credentials, bool reconnectOnConnect = false)
-        // {
-            // Options opts = GetDefaultOptions(url);
-            // opts.SetUserCredentials(jwt, privateNkey);
-            // return CreateConnection(opts, reconnectOnConnect);
-        // }
-        
-        // public IConnection CreateConnectionWithCredentials(string url, string userJwt, string nkeySeed, bool reconnectOnConnect = false)
-        // {
-            // Options opts = GetDefaultOptions(url);
-            // opts.SetUserCredentials(jwt, privateNkey);
-            // return CreateConnection(opts, reconnectOnConnect);
-        // }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="credentialsText">The text containing the "-----BEGIN NATS USER JWT-----" block
+        /// and the text containing the "-----BEGIN USER NKEY SEED-----" block</param>
+        /// <param name="reconnectOnConnect"></param>
+        /// <returns></returns>
+        public IConnection CreateConnectionWithCredentials(string url, string credentialsText, bool reconnectOnConnect = false)
+        {
+            Options opts = GetDefaultOptions(url);
+            opts.SetUserCredentialsFromString(credentialsText);
+            return CreateConnection(opts, reconnectOnConnect);
+        }
+
+        /// <summary>
+        /// Attempt to connect to the NATS server referenced by <paramref name="url"/>
+        /// with NATS 2.0 credentials provided directly via strings.
+        /// </summary>
+        /// <remarks>
+        /// <para><paramref name="url"/>
+        /// Comma seperated arrays are also supported, e.g. <c>&quot;urlA, urlB&quot;</c>.</para>
+        /// </remarks>
+        /// <param name="url">A string containing the URL (or URLs) to the NATS Server. See the Remarks
+        /// section for more information.</param>
+        /// <param name="userJwtText">The text containing the "-----BEGIN NATS USER JWT-----" block</param>
+        /// <param name="nkeySeedText">The text containing the "-----BEGIN USER NKEY SEED-----" block or the seed begining with "SU".
+        /// May be the same as the jwt string if they are chained.</param>
+        /// <param name="reconnectOnConnect"></param>
+        /// <returns></returns>
+        public IConnection CreateConnectionWithCredentials(string url, string userJwtText, string nkeySeedText, bool reconnectOnConnect = false)
+        {
+            Options opts = GetDefaultOptions(url);
+            opts.SetUserCredentialsFromStrings(userJwtText, nkeySeedText);
+            return CreateConnection(opts, reconnectOnConnect);
+        }
 
         /// <summary>
         /// Retrieves the default set of client options.

@@ -43,7 +43,7 @@ namespace NATS.Client
         /// </summary>
         /// <param name="userJwt">The text containing the "-----BEGIN NATS USER JWT-----" block</param>
         /// <param name="nkeySeed">The text containing the "-----BEGIN USER NKEY SEED-----" block or the seed begining with "SU".
-        /// May be the same as the jwt file if they are chained.</param>
+        /// May be the same as the jwt string if they are chained.</param>
         public StringUserJWTHandler(string userJwt, string nkeySeed)
         {
             UserJwt = _loadUser(userJwt);

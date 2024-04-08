@@ -173,6 +173,11 @@ namespace NATS.Client
             UserSignatureEventHandler = handler.DefaultUserSignatureHandler;
         }
 
+        /// <summary>
+        /// Sets user credentials from text instead of a file using the NATS 2.0 security scheme.
+        /// </summary>
+        /// <param name="credentialsText">The text containing the "-----BEGIN NATS USER JWT-----" block
+        /// and the text containing the "-----BEGIN USER NKEY SEED-----" block</param>
         public void SetUserCredentialsFromString(string credentialsText)
         {
             var handler = new StringUserJWTHandler(credentialsText, credentialsText);
@@ -180,6 +185,12 @@ namespace NATS.Client
             UserSignatureEventHandler = handler.DefaultUserSignatureHandler;
         }
 
+        /// <summary>
+        /// Sets user credentials from text instead of a file using the NATS 2.0 security scheme.
+        /// </summary>
+        /// <param name="userJwtText">The text containing the "-----BEGIN NATS USER JWT-----" block</param>
+        /// <param name="nkeySeedText">The text containing the "-----BEGIN USER NKEY SEED-----" block or the seed begining with "SU".
+        /// May be the same as the jwt string if they are chained.</param>
         public void SetUserCredentialsFromStrings(string userJwtText, string nkeySeedText)
         {
             var handler = new StringUserJWTHandler(userJwtText, nkeySeedText);
