@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System.IO;
+using System.Security;
 
 namespace NATS.Client
 {
@@ -22,7 +23,7 @@ namespace NATS.Client
     /// not normally used directly, but is provided to extend or use for
     /// utility methods to read a private seed or user JWT.
     /// </summary>
-    public class DefaultUserJWTHandler
+    public class DefaultUserJWTHandler : BaseUserJWTHandler
     {
         private string jwtFile;
         private string credsFile;
@@ -56,33 +57,19 @@ namespace NATS.Client
         /// <returns>The encoded JWT</returns>
         public static string LoadUserFromFile(string path)
         {
-            string text = null;
-            string line = null;
-            StringReader reader = null;
-            try
+            string text = File.ReadAllText(path).Trim();
+            if (string.IsNullOrEmpty(text))
             {
-                text = File.ReadAllText(path).Trim();
-                if (string.IsNullOrEmpty(text)) throw new NATSException("Credentials file is empty");
-
-                reader = new StringReader(text);
-                for (line = reader.ReadLine(); line != null; line = reader.ReadLine())
-                {
-                    if (line.Contains("-----BEGIN NATS USER JWT-----"))
-                    {
-                        return reader.ReadLine();
-                    }
-                    Nkeys.Wipe(line);
-                }
+                throw new NATSException("Credentials file is empty");
+            }
+            string user = _loadUser(text);
+            if (user == null)
+            {
                 throw new NATSException("Credentials file does not contain a JWT");
             }
-            finally
-            {
-                Nkeys.Wipe(text);
-                Nkeys.Wipe(line);
-                reader?.Dispose();
-            }
+            return user.ToString();
         }
-
+        
         /// <summary>
         /// Generates a NATS Ed25519 keypair, used to sign server nonces, from a 
         /// private credentials file.
@@ -91,47 +78,23 @@ namespace NATS.Client
         /// <returns>A NATS Ed25519 KeyPair</returns>
         public static NkeyPair LoadNkeyPairFromSeedFile(string path)
         {
-            NkeyPair kp = null;
-            string text = null;
-            string line = null;
-            string seed = null;
             StringReader reader = null;
-
             try
             {
-                text = File.ReadAllText(path).Trim();
-                if (string.IsNullOrEmpty(text)) throw new NATSException("Credentials file is empty");
-
-                // if it's a nk file, it only has the nkey
-                if (text.StartsWith("SU"))
+                string text = File.ReadAllText(path).Trim();
+                if (string.IsNullOrEmpty(text))
                 {
-                    kp = Nkeys.FromSeed(text);
-                    return kp;
+                    throw new NATSException("Credentials file is empty");
                 }
-
-                // otherwise assume it's a creds file.
-                reader = new StringReader(text);
-                for (line = reader.ReadLine(); line != null; line = reader.ReadLine())
-                {
-                    if (line.Contains("-----BEGIN USER NKEY SEED-----"))
-                    {
-                        seed = reader.ReadLine();
-                        kp = Nkeys.FromSeed(seed);
-                        Nkeys.Wipe(seed);
-                    }
-                    Nkeys.Wipe(line);
-                }
-
+                NkeyPair kp = _loadNkeyPair(text);
                 if (kp == null)
+                {
                     throw new NATSException("Seed not found in credentials file.");
-                else
-                    return kp;
+                }
+                return kp;
             }
             finally
             {
-                Nkeys.Wipe(line);
-                Nkeys.Wipe(text);
-                Nkeys.Wipe(seed);
                 reader?.Dispose();
             }
         }

@@ -14,6 +14,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using NATS.Client;
@@ -737,14 +738,37 @@ namespace IntegrationTests
         [Fact]
         public void Test20Security()
         {
+            var opts = Context.GetTestOptionsWithDefaultTimeout(Context.Server1.Port);
+            // opts.SetUserCredentials("./config/certs/test.creds");
+            // _testCredsSecurity(opts);
+
+            string path = Directory.GetCurrentDirectory();
+            string credentialsText = File.ReadAllText("./config/certs/test.creds"); 
+            string userJwt = File.ReadAllText("./config/certs/test.creds.user-block.txt"); 
+            string nkeySeedBlock = File.ReadAllText("./config/certs/test.creds.nkey-seed-block.txt"); 
+            string nkeySeedOnly = File.ReadAllText("./config/certs/test.creds.nkey-seed-only.txt");
+
+            opts = Context.GetTestOptionsWithDefaultTimeout(Context.Server1.Port);
+            opts.SetUserCredentialsFromString(credentialsText);
+            _testCredsSecurity(opts);
+            
+            opts = Context.GetTestOptionsWithDefaultTimeout(Context.Server1.Port);
+            opts.SetUserCredentialsFromStrings(userJwt, nkeySeedBlock);
+            _testCredsSecurity(opts);
+            
+            opts = Context.GetTestOptionsWithDefaultTimeout(Context.Server1.Port);
+            opts.SetUserCredentialsFromStrings(userJwt, nkeySeedOnly);
+            _testCredsSecurity(opts);
+        }
+
+        private void _testCredsSecurity(Options opts)
+        {
             AutoResetEvent ev = new AutoResetEvent(false);
+            opts.ReconnectedEventHandler += (obj, args) => {
+                ev.Set();
+            };
             using (var s1 = NATSServer.CreateWithConfig(Context.Server1.Port, "operator.conf"))
             {
-                var opts = Context.GetTestOptionsWithDefaultTimeout(Context.Server1.Port);
-                opts.ReconnectedEventHandler += (obj, args) => {
-                    ev.Set();
-                };
-                opts.SetUserCredentials("./config/certs/test.creds");
                 using (Context.ConnectionFactory.CreateConnection(opts))
                 {
                     s1.Shutdown();
@@ -753,7 +777,7 @@ namespace IntegrationTests
                     using (NATSServer.CreateWithConfig(Context.Server1.Port, "operator.conf"))
                     {
                         // wait for reconnect.
-                        Assert.True(ev.WaitOne(60000));
+                        Assert.True(ev.WaitOne(30000));
                     }
                 }
             }

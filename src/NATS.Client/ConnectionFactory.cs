@@ -104,6 +104,20 @@ namespace NATS.Client
             opts.SetUserCredentials(jwt, privateNkey);
             return CreateConnection(opts, reconnectOnConnect);
         }
+        
+        // public IConnection G(string url, string credentials, bool reconnectOnConnect = false)
+        // {
+            // Options opts = GetDefaultOptions(url);
+            // opts.SetUserCredentials(jwt, privateNkey);
+            // return CreateConnection(opts, reconnectOnConnect);
+        // }
+        
+        // public IConnection CreateConnectionWithCredentials(string url, string userJwt, string nkeySeed, bool reconnectOnConnect = false)
+        // {
+            // Options opts = GetDefaultOptions(url);
+            // opts.SetUserCredentials(jwt, privateNkey);
+            // return CreateConnection(opts, reconnectOnConnect);
+        // }
 
         /// <summary>
         /// Retrieves the default set of client options.

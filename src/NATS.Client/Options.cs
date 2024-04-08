@@ -173,6 +173,20 @@ namespace NATS.Client
             UserSignatureEventHandler = handler.DefaultUserSignatureHandler;
         }
 
+        public void SetUserCredentialsFromString(string credentialsText)
+        {
+            var handler = new StringUserJWTHandler(credentialsText, credentialsText);
+            UserJWTEventHandler = handler.DefaultUserJWTEventHandler;
+            UserSignatureEventHandler = handler.DefaultUserSignatureHandler;
+        }
+
+        public void SetUserCredentialsFromStrings(string userJwtText, string nkeySeedText)
+        {
+            var handler = new StringUserJWTHandler(userJwtText, nkeySeedText);
+            UserJWTEventHandler = handler.DefaultUserJWTEventHandler;
+            UserSignatureEventHandler = handler.DefaultUserSignatureHandler;
+        }
+
         /// <summary>
         /// Sets user credentials using the NATS 2.0 security scheme.
         /// </summary>
