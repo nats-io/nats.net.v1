@@ -27,6 +27,8 @@ namespace NATS.Client.JetStream
 
     public enum CompressionOption { None, S2 }
 
+    public enum ConsumerCreateRequestAction { Create, Update, CreateOrUpdate }
+
     public static class ApiEnums
     {
         public static string GetString(this AckPolicy ackPolicy)
@@ -101,6 +103,17 @@ namespace NATS.Client.JetStream
             {
                 case CompressionOption.None: return "none";
                 case CompressionOption.S2:   return "s2";
+            }
+            return null;
+        }
+
+        public static string GetString(this ConsumerCreateRequestAction action)
+        {
+            switch (action)
+            {
+                case ConsumerCreateRequestAction.Create:         return "create";
+                case ConsumerCreateRequestAction.Update:         return "update";
+                case ConsumerCreateRequestAction.CreateOrUpdate: return null;
             }
             return null;
         }

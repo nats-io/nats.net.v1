@@ -91,6 +91,22 @@ namespace NATS.Client.JetStream
         ConsumerInfo AddOrUpdateConsumer(string streamName, ConsumerConfiguration config);
 
         /// <summary>
+        /// Creates a consumer. Must not already exist.
+        /// </summary>
+        /// <param name="streamName">The name of the stream the consumer is attached to.</param>
+        /// <param name="config">The consumer configuration to use.</param>
+        /// <returns></returns>
+        ConsumerInfo CreateConsumer(string streamName, ConsumerConfiguration config);
+
+        /// <summary>
+        /// Updates an existing consumer. Must already exist.
+        /// </summary>
+        /// <param name="streamName">The name of the stream the consumer is attached to.</param>
+        /// <param name="config">The consumer configuration to use.</param>
+        /// <returns></returns>
+        ConsumerInfo UpdateConsumer(string streamName, ConsumerConfiguration config);
+
+        /// <summary>
         /// Deletes a consumer.
         /// </summary>
         /// <param name="streamName">The name of the stream the consumer is attached to.</param>

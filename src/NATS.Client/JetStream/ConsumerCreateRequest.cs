@@ -1,4 +1,4 @@
-// Copyright 2021 The NATS Authors
+// Copyright 2021-2024 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at:
@@ -11,28 +11,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client.JetStream
 {
+
     public sealed class ConsumerCreateRequest : JsonSerializable
     {
         public string StreamName { get; }
         public ConsumerConfiguration Config { get; }
+        public ConsumerCreateRequestAction Action { get; }
 
-        internal ConsumerCreateRequest(string streamName, ConsumerConfiguration config)
+        internal ConsumerCreateRequest(string streamName, ConsumerConfiguration config, ConsumerCreateRequestAction action)
         {
             StreamName = streamName;
             Config = config;
+            Action = action;
         }
         
         public override JSONNode ToJsonNode()
         {
-            return new JSONObject
-            {
-                [ApiConstants.StreamName] = StreamName,
-                [ApiConstants.Config] = Config.ToJsonNode()
-            };
+            JSONObject o = new JSONObject();
+            JsonUtils.AddField(o, ApiConstants.StreamName, StreamName);
+            JsonUtils.AddField(o, ApiConstants.Config, Config);
+            JsonUtils.AddField(o, ApiConstants.Action, Action.GetString());
+            return o;
         }
     }
 }

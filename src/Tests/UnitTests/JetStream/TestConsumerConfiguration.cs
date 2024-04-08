@@ -60,7 +60,7 @@ namespace UnitTests.JetStream
 
             AssertAsBuilt(c, dt);
 
-            ConsumerCreateRequest ccr = new ConsumerCreateRequest("stream", c);
+            ConsumerCreateRequest ccr = new ConsumerCreateRequest("stream", c, ConsumerCreateRequestAction.CreateOrUpdate);
             Assert.Equal("stream", ccr.StreamName);
             Assert.NotNull(ccr.Config);
 

@@ -89,7 +89,21 @@ namespace NATS.Client.JetStream
         {
             Validator.ValidateStreamName(streamName, true);
             Validator.ValidateNotNull(config, nameof(config));
-            return CreateConsumerInternal(streamName, config);
+            return CreateConsumerInternal(streamName, config, ConsumerCreateRequestAction.CreateOrUpdate);
+        }
+
+        public ConsumerInfo CreateConsumer(string streamName, ConsumerConfiguration config)
+        {
+            Validator.ValidateStreamName(streamName, true);
+            Validator.ValidateNotNull(config, nameof(config));
+            return CreateConsumerInternal(streamName, config, ConsumerCreateRequestAction.Create);
+        }
+
+        public ConsumerInfo UpdateConsumer(string streamName, ConsumerConfiguration config)
+        {
+            Validator.ValidateStreamName(streamName, true);
+            Validator.ValidateNotNull(config, nameof(config));
+            return CreateConsumerInternal(streamName, config, ConsumerCreateRequestAction.Update);
         }
 
         public bool DeleteConsumer(string streamName, string consumer)
