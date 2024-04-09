@@ -67,7 +67,7 @@ namespace NATS.Client
             {
                 throw new NATSException("Credentials file does not contain a JWT");
             }
-            return user.ToString();
+            return user;
         }
         
         /// <summary>
