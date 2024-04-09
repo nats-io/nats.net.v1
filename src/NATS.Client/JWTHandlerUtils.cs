@@ -23,14 +23,14 @@ namespace NATS.Client
     /// not normally used directly, but is provided to extend or use for
     /// utility methods to read a private seed or user JWT.
     /// </summary>
-    public class BaseUserJWTHandler
+    public class JWTHandlerUtils
     {
-        protected static string _loadUser(string text)
+        public static string LoadUser(string text)
         {
             StringReader reader = null;
             try
             {
-                reader = new StringReader(text.ToString());
+                reader = new StringReader(text);
                 for (string line = reader.ReadLine(); line != null; line = reader.ReadLine())
                 {
                     if (line.Contains("-----BEGIN NATS USER JWT-----"))
@@ -47,21 +47,19 @@ namespace NATS.Client
             }
         }
         
-        protected static NkeyPair _loadNkeyPair(string secure)
+        public static NkeyPair LoadNkeyPair(string nkeySeed)
         {
             StringReader reader = null;
             try
             {
-                string text = secure.ToString();
-                
                 // if it's a nk file, it only has the nkey
-                if (text.StartsWith("SU"))
+                if (nkeySeed.StartsWith("SU"))
                 {
-                    return Nkeys.FromSeed(text);
+                    return Nkeys.FromSeed(nkeySeed);
                 }
 
                 // otherwise assume it's a creds file.
-                reader = new StringReader(text);
+                reader = new StringReader(nkeySeed);
                 for (string line = reader.ReadLine(); line != null; line = reader.ReadLine())
                 {
                     if (line.Contains("-----BEGIN USER NKEY SEED-----"))

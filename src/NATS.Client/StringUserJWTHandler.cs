@@ -19,7 +19,7 @@ namespace NATS.Client
     /// <summary>
     /// TODO
     /// </summary>
-    public class StringUserJWTHandler : BaseUserJWTHandler
+    public class StringUserJWTHandler
     {
         /// <summary>
         /// Gets the JWT file.
@@ -46,17 +46,17 @@ namespace NATS.Client
         /// May be the same as the jwt string if they are chained.</param>
         public StringUserJWTHandler(string userJwt, string nkeySeed)
         {
-            UserJwt = _loadUser(userJwt);
+            UserJwt = JWTHandlerUtils.LoadUser(userJwt);
             if (UserJwt == null)
             {
                 throw new NATSException("Credentials do not contain a JWT");
             }
 
-            NkeySeed = nkeySeed;
-            if (_loadNkeyPair(nkeySeed) == null)
+            if (JWTHandlerUtils.LoadNkeyPair(nkeySeed) == null)
             {
                 throw new NATSException("Seed not found.");
             }
+            NkeySeed = nkeySeed;
         }
 
         /// <summary>
@@ -77,7 +77,7 @@ namespace NATS.Client
         public void SignNonce(UserSignatureEventArgs args)
         {
             // you have to load this every time b/c signing actually wipes data
-            args.SignedNonce = _loadNkeyPair(NkeySeed).Sign(args.ServerNonce);
+            args.SignedNonce = JWTHandlerUtils.LoadNkeyPair(NkeySeed).Sign(args.ServerNonce);
         }
 
         /// <summary>

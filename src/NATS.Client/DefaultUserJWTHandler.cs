@@ -23,7 +23,7 @@ namespace NATS.Client
     /// not normally used directly, but is provided to extend or use for
     /// utility methods to read a private seed or user JWT.
     /// </summary>
-    public class DefaultUserJWTHandler : BaseUserJWTHandler
+    public class DefaultUserJWTHandler
     {
         private string jwtFile;
         private string credsFile;
@@ -62,7 +62,7 @@ namespace NATS.Client
             {
                 throw new NATSException("Credentials file is empty");
             }
-            string user = _loadUser(text);
+            string user = JWTHandlerUtils.LoadUser(text);
             if (user == null)
             {
                 throw new NATSException("Credentials file does not contain a JWT");
@@ -86,7 +86,7 @@ namespace NATS.Client
                 {
                     throw new NATSException("Credentials file is empty");
                 }
-                NkeyPair kp = _loadNkeyPair(text);
+                NkeyPair kp = JWTHandlerUtils.LoadNkeyPair(text);
                 if (kp == null)
                 {
                     throw new NATSException("Seed not found in credentials file.");
