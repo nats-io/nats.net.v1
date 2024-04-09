@@ -495,7 +495,7 @@ namespace NATS.Client.JetStream
             {
                 try
                 {
-                    ConsumerInfo ci = CreateConsumerInternal(settledStream, settledCC);
+                    ConsumerInfo ci = CreateConsumerInternal(settledStream, settledCC, ConsumerCreateRequestAction.CreateOrUpdate);
                     if (sub is JetStreamAbstractSyncSubscription syncSub)
                     {
                         syncSub.SetConsumerName(ci.Name);

@@ -18,6 +18,7 @@ namespace NATS.Client.JetStream
         public const string AckFloor = "ack_floor";
         public const string AckPolicy = "ack_policy";
         public const string AckWait = "ack_wait";
+        public const string Action = "action";
         public const string Active = "active";
         public const string AllowRollupHdrs = "allow_rollup_hdrs";
         public const string AllowDirect = "allow_direct";
