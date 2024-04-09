@@ -16,13 +16,6 @@ using System.Security;
 
 namespace NATS.Client
 {
-    /// <summary>
-    /// This class is contains the default handlers for the
-    /// <see cref="Options.UserJWTEventHandler"/> and the 
-    /// <see cref="Options.UserSignatureEventHandler"/>.  This class is
-    /// not normally used directly, but is provided to extend or use for
-    /// utility methods to read a private seed or user JWT.
-    /// </summary>
     public class JWTHandlerUtils
     {
         public static string LoadUser(string text)
