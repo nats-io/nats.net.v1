@@ -283,9 +283,10 @@ namespace NATS.Client
         /// <param name="src">string to wipe</param>
         public static void Wipe(string src)
         {
-            // best effort to wipe.
-            if (src != null && src.Length > 0)
-                src.Remove(0);
+            // This code commented out b/c string.remove does not touch the original string.
+            // There is not way to really wipe the contents of a string.
+            // if (src != null && src.Length > 0)
+                // src.Remove(0);
         }
 
         internal static byte[] DecodeSeed(byte[] raw)
