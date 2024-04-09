@@ -106,7 +106,8 @@ namespace NATS.Client
         }
         
         /// <summary>
-        /// 
+        /// Attempt to connect to the NATS server referenced by <paramref name="url"/>
+        /// with NATS 2.0 the user jwt and nkey seed credentials provided directly in the string.
         /// </summary>
         /// <param name="url"></param>
         /// <param name="credentialsText">The text containing the "-----BEGIN NATS USER JWT-----" block
@@ -122,7 +123,7 @@ namespace NATS.Client
 
         /// <summary>
         /// Attempt to connect to the NATS server referenced by <paramref name="url"/>
-        /// with NATS 2.0 credentials provided directly via strings.
+        /// with NATS 2.0 the user jwt and nkey seed credentials provided directly via strings.
         /// </summary>
         /// <remarks>
         /// <para><paramref name="url"/>
