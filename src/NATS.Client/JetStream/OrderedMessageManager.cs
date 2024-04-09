@@ -92,7 +92,7 @@ namespace NATS.Client.JetStream
                 // 3. make a new consumer using the same deliver subject but
                 //    with a new starting point
                 ConsumerConfiguration userCc = Js.ConsumerConfigurationForOrdered(OriginalCc, LastStreamSeq, newDeliverSubject, actualConsumerName, null);
-                ConsumerInfo ci = Js.CreateConsumerInternal(Stream, userCc);
+                ConsumerInfo ci = Js.CreateConsumerInternal(Stream, userCc, ConsumerCreateRequestAction.Create);
                 if (Sub is JetStreamAbstractSyncSubscription syncSub)
                 {
                     syncSub.SetConsumerName(ci.Name);

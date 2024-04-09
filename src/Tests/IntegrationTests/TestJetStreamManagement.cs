@@ -1195,5 +1195,132 @@ namespace IntegrationTests
                 Assert.Throws<NATSJetStreamException>(() => jsm.ResumeConsumer(stream, Name()));
             });
         }
+        
+        [Fact]
+        public void TestCreateConsumerUpdateConsumer()
+        {
+            Context.RunInJsServer(AtLeast2_9_0, c =>
+            {
+                string streamPrefix = Variant();
+                IJetStreamManagement jsmNew = c.CreateJetStreamManagementContext();
+                IJetStreamManagement jsmPre290 = c.CreateJetStreamManagementContext(
+                    JetStreamOptions.Builder().WithOptOut290ConsumerCreate(true).Build());
+                
+                // --------------------------------------------------------
+                // New without filter
+                // --------------------------------------------------------
+                string stream1 = streamPrefix + "-new";
+                string name = Name();
+                string subject = Name();
+                CreateMemoryStream(jsmNew, stream1, subject + ".*");
+                
+                ConsumerConfiguration cc11 = ConsumerConfiguration.Builder().WithName(name).Build();
+
+                // update no good when not exist
+                NATSJetStreamException e = Assert.Throws<NATSJetStreamException>(() => jsmNew.UpdateConsumer(stream1, cc11));
+                Assert.Equal(10149, e.ApiErrorCode);
+
+                // initial create ok
+                ConsumerInfo ci = jsmNew.CreateConsumer(stream1, cc11);
+                Assert.Equal(name, ci.Name);
+                Assert.Null(ci.ConsumerConfiguration.FilterSubject);
+
+                // any other create no good
+                e = Assert.Throws<NATSJetStreamException>(() => jsmNew.CreateConsumer(stream1, cc11));
+                Assert.Equal(10148, e.ApiErrorCode);
+
+                // update ok when exists
+                ConsumerConfiguration cc12 = ConsumerConfiguration.Builder().WithName(name).WithDescription(Variant()).Build();
+                ci = jsmNew.UpdateConsumer(stream1, cc12);
+                Assert.Equal(name, ci.Name);
+                Assert.Null(ci.ConsumerConfiguration.FilterSubject);
+
+                // --------------------------------------------------------
+                // New with filter subject
+                // --------------------------------------------------------
+                String stream2 = streamPrefix + "-new-fs";
+                name = Name();
+                subject = Name();
+                String fs1 = subject + ".A";
+                String fs2 = subject + ".B";
+                CreateMemoryStream(jsmNew, stream2, subject + ".*");
+
+                ConsumerConfiguration cc21 = ConsumerConfiguration.Builder().WithName(name).WithFilterSubject(fs1).Build();
+
+                // update no good when not exist
+                e = Assert.Throws<NATSJetStreamException>(() => jsmNew.UpdateConsumer(stream2, cc21));
+                Assert.Equal(10149, e.ApiErrorCode);
+
+                // initial create ok
+                ci = jsmNew.CreateConsumer(stream2, cc21);
+                Assert.Equal(name, ci.Name);
+                Assert.Equal(fs1, ci.ConsumerConfiguration.FilterSubject);
+
+                // any other create no good
+                e = Assert.Throws<NATSJetStreamException>(() => jsmNew.CreateConsumer(stream2, cc21));
+                Assert.Equal(10148, e.ApiErrorCode);
+
+                // update ok when exists
+                ConsumerConfiguration cc22 = ConsumerConfiguration.Builder().WithName(name).WithFilterSubjects(fs2).Build();
+                ci = jsmNew.UpdateConsumer(stream2, cc22);
+                Assert.Equal(name, ci.Name);
+                Assert.Equal(fs2, ci.ConsumerConfiguration.FilterSubject);
+
+                // --------------------------------------------------------
+                // Pre 290 durable pathway
+                // --------------------------------------------------------
+                String stream3 = streamPrefix + "-old-durable";
+                name = Name();
+                subject = Name();
+                fs1 = subject + ".A";
+                fs2 = subject + ".B";
+                String fs3 = subject + ".C";
+                CreateMemoryStream(jsmPre290, stream3, subject + ".*");
+
+                ConsumerConfiguration cc31 = ConsumerConfiguration.Builder().WithDurable(name).WithFilterSubject(fs1).Build();
+
+                // update no good when not exist
+                e = Assert.Throws<NATSJetStreamException>(() => jsmPre290.UpdateConsumer(stream3, cc31));
+                Assert.Equal(10149, e.ApiErrorCode);
+
+                // initial create ok
+                ci = jsmPre290.CreateConsumer(stream3, cc31);
+                Assert.Equal(name, ci.Name);
+                Assert.Equal(fs1, ci.ConsumerConfiguration.FilterSubject);
+
+                // opt out of 209, create on existing ok
+                // This is not exactly the same behavior as with the new consumer create api, but it's what the server does
+                jsmPre290.CreateConsumer(stream3, cc31);
+
+                ConsumerConfiguration cc32 = ConsumerConfiguration.Builder().WithDurable(name).WithFilterSubject(fs2).Build();
+                e = Assert.Throws<NATSJetStreamException>(() => jsmPre290.CreateConsumer(stream3, cc32));
+                Assert.Equal(10148, e.ApiErrorCode);
+
+                // update ok when exists
+                ConsumerConfiguration cc33 = ConsumerConfiguration.Builder().WithDurable(name).WithFilterSubjects(fs3).Build();
+                ci = jsmPre290.UpdateConsumer(stream3, cc33);
+                Assert.Equal(name, ci.Name);
+                Assert.Equal(fs3, ci.ConsumerConfiguration.FilterSubject);
+
+                // --------------------------------------------------------
+                // Pre 290 ephemeral pathway
+                // --------------------------------------------------------
+                subject = Name();
+
+                String stream4 = streamPrefix + "-old-ephemeral";
+                fs1 = subject + ".A";
+                CreateMemoryStream(jsmPre290, stream4, subject + ".*");
+
+                ConsumerConfiguration cc4 = ConsumerConfiguration.Builder().WithFilterSubject(fs1).Build();
+
+                // update no good when not exist
+                e = Assert.Throws<NATSJetStreamException>(() => jsmPre290.UpdateConsumer(stream4, cc4));
+                Assert.Equal(10149, e.ApiErrorCode);
+
+                // initial create ok
+                ci = jsmPre290.CreateConsumer(stream4, cc4);
+                Assert.Equal(fs1, ci.ConsumerConfiguration.FilterSubject);
+            });
+        }
     }
 }

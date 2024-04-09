@@ -100,7 +100,7 @@ namespace NATS.Client.JetStream
             return new ConsumerInfo(m, true);
         }
 
-        internal ConsumerInfo CreateConsumerInternal(string streamName, ConsumerConfiguration config)
+        internal ConsumerInfo CreateConsumerInternal(string streamName, ConsumerConfiguration config, ConsumerCreateRequestAction ccrAction)
         {
             // ConsumerConfiguration validates that name and durable are the same if both are supplied.
             string consumerName = Validator.EmptyAsNull(config.Name);
@@ -145,7 +145,7 @@ namespace NATS.Client.JetStream
                 subj = string.Format(JetStreamConstants.JsapiDurableCreate, streamName, durable);
             }
 
-            var ccr = new ConsumerCreateRequest(streamName, config);
+            var ccr = new ConsumerCreateRequest(streamName, config, ccrAction);
             var m = RequestResponseRequired(subj, ccr.Serialize(), Timeout);
             return new ConsumerInfo(m, true);
         }
