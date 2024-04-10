@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
 
@@ -23,11 +24,15 @@ namespace NATS.Client.KeyValue
         private readonly InterlockedBoolean endOfDataSent;
         private readonly object subLock;
 
-        public KeyValueWatchSubscription(KeyValue kv, string keyPattern,
+        public KeyValueWatchSubscription(KeyValue kv, IList<string> keyPatterns,
             IKeyValueWatcher watcher, ulong fromRevision, params KeyValueWatchOption[] watchOptions)
         {
             subLock = new object();
-            string subscribeSubject = kv.ReadSubject(keyPattern);
+            IList<string> subscribeSubjects = new List<string>();
+            foreach (string keyPattern in keyPatterns)
+            {
+                subscribeSubjects.Add(kv.ReadSubject(keyPattern));
+            }
             
             // figure out the result options
             bool headersOnly = false;
@@ -52,7 +57,7 @@ namespace NATS.Client.KeyValue
             else
             {
                 fromRevision = ConsumerConfiguration.UlongUnset; // easier on the builder since we aren't starting at a fromRevision
-                if (deliverPolicy == DeliverPolicy.New || kv._getLast(subscribeSubject) == null) 
+                if (deliverPolicy == DeliverPolicy.New) 
                 {
                     endOfDataSent = new InterlockedBoolean(true);
                     watcher.EndOfData();
@@ -72,7 +77,7 @@ namespace NATS.Client.KeyValue
                         .WithDeliverPolicy(deliverPolicy)
                         .WithStartSequence(fromRevision)
                         .WithHeadersOnly(headersOnly)
-                        .WithFilterSubject(subscribeSubject)
+                        .WithFilterSubjects(subscribeSubjects)
                         .Build())
                 .Build();
 
@@ -91,7 +96,7 @@ namespace NATS.Client.KeyValue
                 }
             }
 
-            sub = kv.js.PushSubscribeAsync(subscribeSubject, Handler, false, pso);
+            sub = kv.js.PushSubscribeAsync(null, Handler, false, pso);
             if (endOfDataSent.IsFalse())
             {
                 ulong pending = sub.GetConsumerInformation().CalculatedPending;
