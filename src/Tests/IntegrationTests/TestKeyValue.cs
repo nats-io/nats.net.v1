@@ -921,10 +921,14 @@ namespace IntegrationTests
                 subs.Add(kv.Watch("key.*", starMetaWatcher, starMetaWatcher.WatchOptions));
                 subs.Add(kv.Watch("key.>", gtFullWatcher, gtFullWatcher.WatchOptions));
                 subs.Add(kv.Watch("key.>", gtMetaWatcher, gtMetaWatcher.WatchOptions));
-                subs.Add(kv.Watch(allKeys, multipleFullWatcher, multipleFullWatcher.WatchOptions));
-                subs.Add(kv.Watch(allKeys, multipleMetaWatcher, multipleMetaWatcher.WatchOptions));
-                subs.Add(kv.Watch(string.Join(",", allKeys), multipleFullWatcher2, multipleFullWatcher2.WatchOptions));
-                subs.Add(kv.Watch(string.Join(",", allKeys), multipleMetaWatcher2, multipleMetaWatcher2.WatchOptions));
+
+                if (AtLeast2_10(c.ServerInfo))
+                {
+                    subs.Add(kv.Watch(allKeys, multipleFullWatcher, multipleFullWatcher.WatchOptions));
+                    subs.Add(kv.Watch(allKeys, multipleMetaWatcher, multipleMetaWatcher.WatchOptions));
+                    subs.Add(kv.Watch(string.Join(",", allKeys), multipleFullWatcher2, multipleFullWatcher2.WatchOptions));
+                    subs.Add(kv.Watch(string.Join(",", allKeys), multipleMetaWatcher2, multipleMetaWatcher2.WatchOptions));
+                }
 
                 kv.Put(key1, "a");
                 kv.Put(key1, "aa");
