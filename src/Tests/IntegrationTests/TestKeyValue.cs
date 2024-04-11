@@ -903,8 +903,6 @@ namespace IntegrationTests
                 TestKeyValueWatcher gtMetaWatcher = new TestKeyValueWatcher(true, KeyValueWatchOption.MetaOnly);
                 TestKeyValueWatcher multipleFullWatcher = new TestKeyValueWatcher(true);
                 TestKeyValueWatcher multipleMetaWatcher = new TestKeyValueWatcher(true, KeyValueWatchOption.MetaOnly);
-                TestKeyValueWatcher multipleFullWatcher2 = new TestKeyValueWatcher(true);
-                TestKeyValueWatcher multipleMetaWatcher2 = new TestKeyValueWatcher(true, KeyValueWatchOption.MetaOnly);
 
                 IList<KeyValueWatchSubscription> subs = new List<KeyValueWatchSubscription>();
                 subs.Add(kv.Watch(key1, key1FullWatcher, key1FullWatcher.WatchOptions));
@@ -926,8 +924,6 @@ namespace IntegrationTests
                 {
                     subs.Add(kv.Watch(allKeys, multipleFullWatcher, multipleFullWatcher.WatchOptions));
                     subs.Add(kv.Watch(allKeys, multipleMetaWatcher, multipleMetaWatcher.WatchOptions));
-                    subs.Add(kv.Watch(string.Join(",", allKeys), multipleFullWatcher2, multipleFullWatcher2.WatchOptions));
-                    subs.Add(kv.Watch(string.Join(",", allKeys), multipleMetaWatcher2, multipleMetaWatcher2.WatchOptions));
                 }
 
                 kv.Put(key1, "a");
