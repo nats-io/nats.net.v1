@@ -158,7 +158,16 @@ namespace NATS.Client.Internals
             });
         }
 
-        public static string ValidateKvKeyWildcardAllowedRequired(string s) {
+        public static IList<String> ValidateKvKeysWildcardAllowedRequired(IList<String> keys) {
+            Required(keys, "Key");
+            foreach (string key in keys) {
+                ValidateWildcardKvKey(key, "Key", true);
+            }
+            return keys;
+        }
+
+        public static string ValidateKvKeyWildcardAllowedRequired(string s)
+        {
             return ValidateWildcardKvKey(s, "Key", true);
         }
 

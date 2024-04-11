@@ -108,7 +108,7 @@ namespace NATS.Client.KeyValue
         void Purge(string key, ulong expectedRevision);
 
         /// <summary>
-        /// Watch updates for a specific key
+        /// Watch updates for a specific key.
         /// </summary>
         /// <param name="key">the key</param>
         /// <param name="watcher">the watcher</param>
@@ -117,7 +117,7 @@ namespace NATS.Client.KeyValue
         KeyValueWatchSubscription Watch(string key, IKeyValueWatcher watcher, params KeyValueWatchOption[] watchOptions);
 
         /// <summary>
-        /// Watch updates for a specific key, starting from a specific revision
+        /// Watch updates for a specific key, starting from a specific revision.
         /// </summary>
         /// <param name="key">the key</param>
         /// <param name="watcher">the watcher</param>
@@ -125,6 +125,25 @@ namespace NATS.Client.KeyValue
         /// <param name="watchOptions">the watch options to apply. If multiple conflicting options are supplied, the last options wins.</param>
         /// <returns></returns>
         KeyValueWatchSubscription Watch(string key, IKeyValueWatcher watcher, ulong fromRevision, params KeyValueWatchOption[] watchOptions);
+
+        /// <summary>
+        /// Watch updates for a specific keys.
+        /// </summary>
+        /// <param name="keys">the keys</param>
+        /// <param name="watcher">the watcher</param>
+        /// <param name="watchOptions">the watch options to apply. If multiple conflicting options are supplied, the last options wins.</param>
+        /// <returns></returns>
+        KeyValueWatchSubscription Watch(IList<string> keys, IKeyValueWatcher watcher, params KeyValueWatchOption[] watchOptions);
+
+        /// <summary>
+        /// Watch updates for a specific keys, starting from a specific revision.
+        /// </summary>
+        /// <param name="keys">the keys</param>
+        /// <param name="watcher">the watcher</param>
+        /// <param name="fromRevision">the revision to start from</param>
+        /// <param name="watchOptions">the watch options to apply. If multiple conflicting options are supplied, the last options wins.</param>
+        /// <returns></returns>
+        KeyValueWatchSubscription Watch(IList<string> keys, IKeyValueWatcher watcher, ulong fromRevision, params KeyValueWatchOption[] watchOptions);
 
         /// <summary>
         /// Watch updates for all keys
