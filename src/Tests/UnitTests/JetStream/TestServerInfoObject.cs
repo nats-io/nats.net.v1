@@ -35,6 +35,7 @@ namespace UnitTests.JetStream
             Assert.Equal(7777, info.Port);
             Assert.True(info.AuthRequired);
             Assert.True(info.TlsRequired);
+            Assert.True(info.TlsAvailable);
             Assert.True(info.HeadersSupported);
             Assert.Equal(100_000_000_000L, info.MaxPayload);
             Assert.Equal(1, info.ProtocolVersion);

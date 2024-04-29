@@ -25,4 +25,16 @@
         <ProjectReference Include="..\IntegrationTests\IntegrationTests.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Update="config\certs\server-cert.pem">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="config\tls.conf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="config\tls_first.conf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
 </Project>

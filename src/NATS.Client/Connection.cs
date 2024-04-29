@@ -133,7 +133,7 @@ namespace NATS.Client
         bool   flusherKicked = false;
         bool   flusherDone     = false;
 
-        private ServerInfo     info = null;
+        private ServerInfo     serverInfo = null;
 
         private Dictionary<Int64, Subscription> subs = 
             new Dictionary<Int64, Subscription>();
@@ -1035,7 +1035,7 @@ namespace NATS.Client
                 string clientIp;
                 lock (mu)
                 {
-                    clientIp = info.ClientIp;
+                    clientIp = serverInfo.ClientIp;
                 }
                 
                 return !string.IsNullOrEmpty(clientIp) ? IPAddress.Parse(clientIp) : null;
@@ -1055,7 +1055,7 @@ namespace NATS.Client
             {
                 lock (mu)
                 {
-                    return info.ClientId;
+                    return serverInfo.ClientId;
                 }
             }
         }
@@ -1073,7 +1073,7 @@ namespace NATS.Client
                     if (status != ConnState.CONNECTED)
                         return IC._EMPTY_;
 
-                    return this.info.ServerId;
+                    return this.serverInfo.ServerId;
                 }
             }
         }
@@ -1088,7 +1088,7 @@ namespace NATS.Client
             {
                 lock (mu)
                 {
-                    return status == ConnState.CONNECTED ? info : null;
+                    return status == ConnState.CONNECTED ? serverInfo : null;
                 }
             }
         }
@@ -1281,25 +1281,31 @@ namespace NATS.Client
         // only be called after the INIT protocol has been received.
         private void checkForSecure(Srv s)
         {
-            if (!Opts.TlsFirst)
+            bool makeTlsConn = false;
+            if (Opts.TlsFirst)
             {
-                // Check to see if we need to engage TLS
-                // Check for mismatch in setups
-                if (Opts.Secure && !info.TlsRequired)
+                makeTlsConn = true;
+            }
+            else
+            {
+                if (Opts.Secure || s.Secure)
                 {
-                    throw new NATSSecureConnWantedException();
+                    // Check to see if the client wants tls but the server doesn't
+                    if (!serverInfo.TlsRequired && !serverInfo.TlsAvailable)
+                    {
+                        throw new NATSSecureConnWantedException();
+                    }
+                    makeTlsConn = true;
                 }
-                else if (info.TlsRequired && !Opts.Secure)
+                else if (serverInfo.TlsRequired)
                 {
-                    // If the server asks us to be secure, give it
-                    // a shot.
-                    Opts.Secure = true;
+                    // on some clients we error if the client isn't secure but the server is
+                    // but in this client, we just try it. It will essentially fail slow instead of fast
+                    makeTlsConn = true;
                 }
             }
 
-            // Need to rewrap with bufio if options tell us we need
-            // a secure connection or the tls url scheme was specified.
-            if (Opts.Secure || s.Secure)
+            if (makeTlsConn)
             {
                 makeTLSConn();
             }
@@ -1433,7 +1439,7 @@ namespace NATS.Client
                     throw new NATSConnectionException("User signature event handle has not been been defined.");
                 }
 
-                var args = new UserSignatureEventArgs(Encoding.ASCII.GetBytes(this.info.Nonce));
+                var args = new UserSignatureEventArgs(Encoding.ASCII.GetBytes(this.serverInfo.Nonce));
                 try
                 {
                     opts.UserSignatureEventHandler(this, args);
@@ -2416,21 +2422,22 @@ namespace NATS.Client
         // processInfo is used to parse the info messages sent
         // from the server.
         // Caller must lock.
-        internal void processInfo(string json, bool notify)
+        // made virtual for unit testing
+        internal virtual void processInfo(string json, bool notify)
         {
             if (json == null || IC._EMPTY_.Equals(json))
             {
                 return;
             }
 
-            info = new ServerInfo(json);
-            var serverAdded = srvProvider.AcceptDiscoveredServers(info.ConnectURLs);
+            serverInfo = new ServerInfo(json);
+            var serverAdded = srvProvider.AcceptDiscoveredServers(serverInfo.ConnectURLs);
             if (notify && serverAdded)
             {
                 scheduleConnEvent(opts.ServerDiscoveredEventHandlerOrDefault);
             }
 
-            if (notify && info.LameDuckMode)
+            if (notify && serverInfo.LameDuckMode)
             {
                 scheduleConnEvent(opts.LameDuckModeEventHandlerOrDefault);
             }
@@ -2633,7 +2640,7 @@ namespace NATS.Client
             byte[] headers = null;
             if (inHeaders != null)
             {
-                if (!info.HeadersSupported)
+                if (!serverInfo.HeadersSupported)
                 {
                     throw new NATSNotSupportedException("Headers are not supported by the server.");
                 }
@@ -2649,7 +2656,7 @@ namespace NATS.Client
                     throw new NATSConnectionDrainingException();
 
                 // Proactively reject payloads over the threshold set by server.
-                if (opts.ClientSideLimitChecks && count > info.MaxPayload && info.MaxPayload > 0)
+                if (opts.ClientSideLimitChecks && count > serverInfo.MaxPayload && serverInfo.MaxPayload > 0)
                 {
                     throw new NATSMaxPayloadException();
                 }
@@ -5172,7 +5179,7 @@ namespace NATS.Client
             {
                 lock (mu)
                 {
-                    return info.MaxPayload;
+                    return serverInfo.MaxPayload;
                 }
             }
         }
@@ -5187,7 +5194,7 @@ namespace NATS.Client
             StringBuilder sb = new StringBuilder();
             sb.Append("{");
             sb.AppendFormat("url={0};", url);
-            sb.AppendFormat("info={0};", info);
+            sb.AppendFormat("info={0};", serverInfo);
             sb.AppendFormat("status={0};", status);
             sb.Append("Subscriptions={");
             foreach (Subscription s in subs.Values)

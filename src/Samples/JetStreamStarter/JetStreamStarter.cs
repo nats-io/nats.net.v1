@@ -20,6 +20,22 @@ using NATS.Client.KeyValue;
 
 namespace NATSExamples
 {
+    class Virt
+    {
+        internal virtual void foo()
+        {
+            Console.WriteLine("Virt Foo");
+        }
+    }
+
+    class VirtEx : Virt
+    {
+        internal override void foo()
+        {
+            Console.WriteLine("VirtEx Foo");
+            base.foo();
+        }
+    }
     internal static class JetStreamStarter
     {
         static void Main(string[] args)

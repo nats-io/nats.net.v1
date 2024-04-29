@@ -30,6 +30,7 @@ namespace NATS.Client.JetStream
         public bool HeadersSupported { get; }
         public bool AuthRequired { get; }
         public bool TlsRequired { get; }
+        public bool TlsAvailable { get; }
         public long MaxPayload { get; }
         public string[] ConnectURLs { get; }
         public int ProtocolVersion { get; }
@@ -54,7 +55,8 @@ namespace NATS.Client.JetStream
             HeadersSupported = siNode[ApiConstants.Headers].AsBool;
             AuthRequired = siNode[ApiConstants.AuthRequired].AsBool;
             Nonce = siNode[ApiConstants.Nonce].Value;
-            TlsRequired = siNode[ApiConstants.Tls].AsBool;
+            TlsRequired = siNode[ApiConstants.TlsRequired].AsBool;
+            TlsAvailable = siNode[ApiConstants.TlsAvailable].AsBool;
             LameDuckMode = siNode[ApiConstants.LameDuckMode].AsBool;
             JetStreamAvailable = siNode[ApiConstants.Jetstream].AsBool;
             Port = siNode[ApiConstants.Port].AsInt;

@@ -193,6 +193,8 @@ namespace NATS.Client.JetStream
         public const string Time = "time";
         public const string Timestamp = "ts";
         public const string Tls = "tls_required";
+        public const string TlsRequired = Tls;
+        public const string TlsAvailable = "tls_available";
         public const string Total = "total";
         public const string Type = "type";
         public const string Version = "version";

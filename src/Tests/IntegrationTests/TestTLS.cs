@@ -29,14 +29,7 @@ namespace IntegrationTests
     /// </summary>
     public class TestTls : TestSuite<TlsSuiteContext>
     {
-        // public TestTls(TlsSuiteContext context) : base(context) { }
-        private readonly ITestOutputHelper output;
-
-        public TestTls(ITestOutputHelper output, TlsSuiteContext context) : base(context)
-        {
-            this.output = output;
-            Console.SetOut(new TestBase.ConsoleWriter(output));
-        }
+        public TestTls(TlsSuiteContext context) : base(context) { }
 
         // A hack to avoid issues with our test self signed cert.
         // We don't want to require the runner of the test to install the 
@@ -58,14 +51,10 @@ namespace IntegrationTests
 
             // UNSAFE hack for testing purposes.
 #if NET46
-            var isOK = serverCert.GetRawCertDataString().Equals(certificate.GetRawCertDataString());
+            return serverCert.GetRawCertDataString().Equals(certificate.GetRawCertDataString());
 #else
-            var isOK = serverCert.Issuer.Equals(certificate.Issuer);
+            return serverCert.Issuer.Equals(certificate.Issuer);
 #endif
-            if (isOK)
-                return true;
-
-            return false;
         }
 
         [Fact]
@@ -148,6 +137,7 @@ namespace IntegrationTests
             using (NATSServer srv = NATSServer.CreateWithConfig(Context.Server1.Port, "tls_user.conf"))
             {
                 Options opts = Context.GetTestOptions(Context.Server1.Port);
+                opts.Timeout = 10000;
                 opts.Secure = true;
                 opts.Url = $"nats://username:BADDPASSOWRD@localhost:{Context.Server1.Port}";
                 opts.TLSRemoteCertificationValidationCallback = verifyServerCert;
