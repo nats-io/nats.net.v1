@@ -5324,18 +5324,13 @@ namespace NATS.Client
         /// </summary>
         internal static string ReadUntilNewline(this Stream stream)
         {
-            StringBuilder sb = new StringBuilder();
+            var buffer = new byte[MaxControlLineSize];
             int byteValue;
             bool foundCR = false;
             var read = 0;
 
             while ((byteValue = stream.ReadByte()) != -1)
             {
-                if (++read > MaxControlLineSize)
-                {
-                    throw new NATSProtocolException("Control line maximum size exceeded.");
-                }
-                
                 if (byteValue == '\r')
                 {
                     foundCR = true;
@@ -5348,14 +5343,19 @@ namespace NATS.Client
                 {
                     if (foundCR)
                     {
-                        sb.Append('\r');
+                        buffer[read - 2] = (byte)'\r';
                         foundCR = false;
                     }
-                    sb.Append((char)byteValue);
+                    buffer[read] = (byte)byteValue;
+                }
+                
+                if (++read >= MaxControlLineSize)
+                {
+                    throw new NATSProtocolException("Control line maximum size exceeded.");
                 }
             }
 
-            return sb.ToString();
+            return Encoding.UTF8.GetString(buffer, 0, read - 1);
         }
     }
 }
