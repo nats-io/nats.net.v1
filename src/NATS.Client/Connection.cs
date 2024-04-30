@@ -5325,12 +5325,24 @@ namespace NATS.Client
         internal static string ReadUntilNewline(this Stream stream)
         {
             var buffer = new byte[MaxControlLineSize];
+            var maxAllowedSize = MaxControlLineSize * 1024;
             int byteValue;
             bool foundCR = false;
             var read = 0;
 
             while ((byteValue = stream.ReadByte()) != -1)
             {
+                if (read == buffer.Length)
+                {
+                    // Check if next resize exceeds the maximum allowed size
+                    // to protect against malicious or misconfigured servers.
+                    if (buffer.Length >= maxAllowedSize)
+                    {
+                        throw new NATSProtocolException("Control line maximum size exceeded.");
+                    }
+                    Array.Resize(ref buffer, Math.Min(buffer.Length * 2, maxAllowedSize));
+                }
+                
                 if (byteValue == '\r')
                 {
                     foundCR = true;
@@ -5346,16 +5358,11 @@ namespace NATS.Client
                         buffer[read - 1] = (byte)'\r';
                         foundCR = false;
                     }
-                    buffer[read] = (byte)byteValue;
-                }
-                
-                if (++read >= MaxControlLineSize)
-                {
-                    throw new NATSProtocolException("Control line maximum size exceeded.");
+                    buffer[read++] = (byte)byteValue;
                 }
             }
 
-            return Encoding.UTF8.GetString(buffer, 0, read - 1);
+            return Encoding.UTF8.GetString(buffer, 0, read - (foundCR ? 0 : 1));
         }
     }
 }
