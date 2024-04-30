@@ -5343,7 +5343,7 @@ namespace NATS.Client
                 {
                     if (foundCR)
                     {
-                        buffer[read - 2] = (byte)'\r';
+                        buffer[read - 1] = (byte)'\r';
                         foundCR = false;
                     }
                     buffer[read] = (byte)byteValue;
