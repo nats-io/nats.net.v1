@@ -5324,8 +5324,8 @@ namespace NATS.Client
         /// </summary>
         internal static string ReadUntilNewline(this Stream stream)
         {
+            const int maxAllowedSize = MaxControlLineSize * 1024;
             var buffer = new byte[MaxControlLineSize];
-            var maxAllowedSize = MaxControlLineSize * 1024;
             int byteValue;
             bool foundCR = false;
             var read = 0;
