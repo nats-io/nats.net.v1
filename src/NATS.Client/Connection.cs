@@ -1480,12 +1480,12 @@ namespace NATS.Client
             string result = null;
             try
             {
-                result = br.ReadUntilNewline();
+                result = br.ReadUntilCrlf();
 
                 // If opts.verbose is set, handle +OK.
                 if (opts.Verbose && IC.okProtoNoCRLF.Equals(result))
                 {
-                    result = br.ReadUntilNewline();
+                    result = br.ReadUntilCrlf();
                 }
             }
             catch (Exception ex)
@@ -1518,7 +1518,7 @@ namespace NATS.Client
 
         private Control readOp()
         {
-            return new Control(br.ReadUntilNewline());
+            return new Control(br.ReadUntilCrlf());
         }
 
         private void processDisconnect()
@@ -5322,7 +5322,7 @@ namespace NATS.Client
         /// The performance of this reading approach is relatively low, so it should only
         /// be used in scenarios with low traffic, such as reading the server INFO.
         /// </summary>
-        internal static string ReadUntilNewline(this Stream stream)
+        internal static string ReadUntilCrlf(this Stream stream)
         {
             const int maxAllowedSize = MaxControlLineSize * 16;
             var buffer = new byte[MaxControlLineSize];
@@ -5362,7 +5362,12 @@ namespace NATS.Client
                 }
             }
 
-            return Encoding.UTF8.GetString(buffer, 0, read - (foundCR ? 0 : 1));
+            if (!foundCR)
+            {
+                throw new NATSProtocolException("Control line does not end with CRLF.");
+            }
+            
+            return Encoding.UTF8.GetString(buffer, 0, read - 1);
         }
     }
 }
