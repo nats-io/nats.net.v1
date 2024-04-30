@@ -1484,28 +1484,19 @@ namespace NATS.Client
             }
 
             string result = null;
-            StreamReader sr = null;
             try
             {
-                // TODO:  Make this reader (or future equivalent) unbounded.
-                // we need the underlying stream, so leave it open.
-                sr = new StreamReader(br, Encoding.UTF8, false, MaxControlLineSize, true);
-                result = sr.ReadLine();
+                result = br.ReadUntilCrlf();
 
                 // If opts.verbose is set, handle +OK.
                 if (opts.Verbose && IC.okProtoNoCRLF.Equals(result))
                 {
-                    result = sr.ReadLine();
+                    result = br.ReadUntilCrlf();
                 }
             }
             catch (Exception ex)
             {
                 throw new NATSConnectionException("Connect read error", ex);
-            }
-            finally
-            {
-                if (sr != null)
-                    sr.Dispose();
             }
 
             if (IC.pongProtoNoCRLF.Equals(result))
@@ -1533,16 +1524,7 @@ namespace NATS.Client
 
         private Control readOp()
         {
-            // This is only used when creating a connection, so simplify
-            // life and just create a stream reader to read the incoming
-            // info string.  If this becomes part of the fastpath, read
-            // the string directly using the buffered reader.
-            //
-            // Keep the underlying stream open.
-            using (StreamReader sr = new StreamReader(br, Encoding.ASCII, false, MaxControlLineSize, true))
-            {
-                return new Control(sr.ReadLine());
-            }
+            return new Control(br.ReadUntilCrlf());
         }
 
         private void processDisconnect()
@@ -5334,4 +5316,65 @@ namespace NATS.Client
 
         #endregion
     } // class Conn
+    
+    internal static class StreamExtensions
+    {
+        /// <summary>
+        /// Consumes the stream one byte at a time until a newline is found.
+        /// This approach is used to avoid over-reading or under-reading the stream,
+        /// as it will be accessed in the reader loop as well.
+        /// Using StreamReader instead of this method can cause issues when a line
+        /// is delivered in chunks, especially over global connections, which is more
+        /// likely to occur.
+        /// The performance of this reading approach is relatively low, so it should only
+        /// be used in scenarios with low traffic, such as reading the server INFO.
+        /// </summary>
+        internal static string ReadUntilCrlf(this Stream stream)
+        {
+            const int maxAllowedSize = MaxControlLineSize * 16;
+            var buffer = new byte[MaxControlLineSize];
+            int byteValue;
+            bool foundCR = false;
+            var read = 0;
+
+            while ((byteValue = stream.ReadByte()) != -1)
+            {
+                if (read == buffer.Length)
+                {
+                    // Check if next resize exceeds the maximum allowed size
+                    // to protect against malicious or misconfigured servers.
+                    if (buffer.Length >= maxAllowedSize)
+                    {
+                        throw new NATSProtocolException("Control line maximum size exceeded.");
+                    }
+                    Array.Resize(ref buffer, Math.Min(buffer.Length * 2, maxAllowedSize));
+                }
+                
+                if (byteValue == '\r')
+                {
+                    foundCR = true;
+                }
+                else if (byteValue == '\n' && foundCR)
+                {
+                    break;
+                }
+                else
+                {
+                    if (foundCR)
+                    {
+                        buffer[read - 1] = (byte)'\r';
+                        foundCR = false;
+                    }
+                    buffer[read++] = (byte)byteValue;
+                }
+            }
+
+            if (!foundCR)
+            {
+                throw new NATSProtocolException("Control line does not end with CRLF.");
+            }
+            
+            return Encoding.UTF8.GetString(buffer, 0, read);
+        }
+    }
 }
