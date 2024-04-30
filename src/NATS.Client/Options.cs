@@ -49,6 +49,104 @@ namespace NATS.Client
 
         internal X509Certificate2Collection certificates = null;
 
+        private bool Equals(Options other)
+        {
+            return url == other.url 
+                   && Equals(servers, other.servers)
+                   && noRandomize == other.noRandomize 
+                   && name == other.name
+                   && verbose == other.verbose
+                   && pedantic == other.pedantic 
+                   && useOldRequestStyle == other.useOldRequestStyle 
+                   && secure == other.secure 
+                   && allowReconnect == other.allowReconnect 
+                   && noEcho == other.noEcho 
+                   && ignoreDiscoveredServers == other.ignoreDiscoveredServers 
+                   && tlsFirst == other.tlsFirst 
+                   && clientSideLimitChecks == other.clientSideLimitChecks 
+                   && maxReconnect == other.maxReconnect 
+                   && reconnectWait == other.reconnectWait 
+                   && pingInterval == other.pingInterval 
+                   && timeout == other.timeout 
+                   && reconnectJitter == other.reconnectJitter 
+                   && reconnectJitterTLS == other.reconnectJitterTLS 
+                   && Equals(certificates, other.certificates)
+                   && maxPingsOut == other.maxPingsOut 
+                   && pendingMessageLimit == other.pendingMessageLimit 
+                   && pendingBytesLimit == other.pendingBytesLimit 
+                   && subscriberDeliveryTaskCount == other.subscriberDeliveryTaskCount 
+                   && subscriptionBatchSize == other.subscriptionBatchSize 
+                   && reconnectBufSize == other.reconnectBufSize 
+                   && user == other.user 
+                   && password == other.password 
+                   && token == other.token 
+                   && nkey == other.nkey 
+                   && customInboxPrefix == other.customInboxPrefix 
+                   && CheckCertificateRevocation == other.CheckCertificateRevocation;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return ReferenceEquals(this, obj) || obj is Options other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hashCode = (url != null ? url.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (servers != null ? servers.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ noRandomize.GetHashCode();
+                hashCode = (hashCode * 397) ^ (name != null ? name.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ verbose.GetHashCode();
+                hashCode = (hashCode * 397) ^ pedantic.GetHashCode();
+                hashCode = (hashCode * 397) ^ useOldRequestStyle.GetHashCode();
+                hashCode = (hashCode * 397) ^ secure.GetHashCode();
+                hashCode = (hashCode * 397) ^ allowReconnect.GetHashCode();
+                hashCode = (hashCode * 397) ^ noEcho.GetHashCode();
+                hashCode = (hashCode * 397) ^ ignoreDiscoveredServers.GetHashCode();
+                hashCode = (hashCode * 397) ^ tlsFirst.GetHashCode();
+                hashCode = (hashCode * 397) ^ clientSideLimitChecks.GetHashCode();
+                hashCode = (hashCode * 397) ^ (serverProvider != null ? serverProvider.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ maxReconnect;
+                hashCode = (hashCode * 397) ^ reconnectWait;
+                hashCode = (hashCode * 397) ^ pingInterval;
+                hashCode = (hashCode * 397) ^ timeout;
+                hashCode = (hashCode * 397) ^ reconnectJitter;
+                hashCode = (hashCode * 397) ^ reconnectJitterTLS;
+                hashCode = (hashCode * 397) ^ (tcpConnection != null ? tcpConnection.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (certificates != null ? certificates.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (ClosedEventHandler != null ? ClosedEventHandler.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (ServerDiscoveredEventHandler != null ? ServerDiscoveredEventHandler.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (DisconnectedEventHandler != null ? DisconnectedEventHandler.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (ReconnectedEventHandler != null ? ReconnectedEventHandler.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (AsyncErrorEventHandler != null ? AsyncErrorEventHandler.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (LameDuckModeEventHandler != null ? LameDuckModeEventHandler.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (ReconnectDelayHandler != null ? ReconnectDelayHandler.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (HeartbeatAlarmEventHandler != null ? HeartbeatAlarmEventHandler.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (UnhandledStatusEventHandler != null ? UnhandledStatusEventHandler.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (PullStatusWarningEventHandler != null ? PullStatusWarningEventHandler.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (PullStatusErrorEventHandler != null ? PullStatusErrorEventHandler.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (FlowControlProcessedEventHandler != null ? FlowControlProcessedEventHandler.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (UserJWTEventHandler != null ? UserJWTEventHandler.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (UserSignatureEventHandler != null ? UserSignatureEventHandler.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ maxPingsOut;
+                hashCode = (hashCode * 397) ^ pendingMessageLimit.GetHashCode();
+                hashCode = (hashCode * 397) ^ pendingBytesLimit.GetHashCode();
+                hashCode = (hashCode * 397) ^ subscriberDeliveryTaskCount;
+                hashCode = (hashCode * 397) ^ subscriptionBatchSize;
+                hashCode = (hashCode * 397) ^ reconnectBufSize;
+                hashCode = (hashCode * 397) ^ (user != null ? user.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (password != null ? password.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (token != null ? token.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (nkey != null ? nkey.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (customInboxPrefix != null ? customInboxPrefix.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (TLSRemoteCertificationValidationCallback != null ? TLSRemoteCertificationValidationCallback.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ CheckCertificateRevocation.GetHashCode();
+                return hashCode;
+            }
+        }
+
         /// <summary>
         /// Represents the method that will handle an event raised 
         /// when a connection is closed.
