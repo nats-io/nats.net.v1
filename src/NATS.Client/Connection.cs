@@ -5367,7 +5367,7 @@ namespace NATS.Client
                 throw new NATSProtocolException("Control line does not end with CRLF.");
             }
             
-            return Encoding.UTF8.GetString(buffer, 0, read - 1);
+            return Encoding.UTF8.GetString(buffer, 0, read);
         }
     }
 }
