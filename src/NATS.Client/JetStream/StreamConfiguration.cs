@@ -154,7 +154,10 @@ namespace NATS.Client.JetStream
             AddField(o, ApiConstants.NoAck, NoAck);
             AddField(o, ApiConstants.TemplateOwner, TemplateOwner);
             AddField(o, ApiConstants.DuplicateWindow, DuplicateWindow.Nanos);
-            AddField(o, ApiConstants.Placement, Placement?.ToJsonNode());
+            if (Placement != null && Placement.HasData())
+            {
+                AddField(o, ApiConstants.Placement, Placement.ToJsonNode());
+            }
             AddField(o, ApiConstants.Republish, Republish?.ToJsonNode());
             AddField(o, ApiConstants.SubjectTransform, SubjectTransform?.ToJsonNode());
             AddField(o, ApiConstants.ConsumerLimits, ConsumerLimits?.ToJsonNode());

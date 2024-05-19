@@ -22,10 +22,19 @@ namespace NATS.Client.JetStream
     /// </summary>
     public sealed class Placement : JsonSerializable
     {
+        private string cluster;
+        
         /// <summary>
         /// The desired cluster name to place the stream
         /// </summary>
-        public string Cluster { get; }
+        public string Cluster
+        {
+            get => cluster;
+            private set 
+            {
+                cluster = string.IsNullOrEmpty(value) ? null : value;
+            }
+        }
         
         /// <summary>
         /// Tags required on servers hosting this stream
@@ -57,18 +66,49 @@ namespace NATS.Client.JetStream
         /// </summary>
         /// <param name="cluster">The cluster name</param>
         /// <param name="tags">The list of tags. May be null or empty</param>
-        public Placement(string cluster, List<string> tags) : this(cluster)
+        public Placement(string cluster, List<string> tags)
         {
+            Cluster = cluster;
             Tags = tags == null || tags.Count == 0 ? null : tags;
         }
 
+        /// <summary>
+        /// Construct the Placement object
+        /// </summary>
+        /// <param name="cluster">The cluster name</param>
+        /// <param name="tags">The list of tags. May be null or empty</param>
+        public Placement(string cluster, IList<string> tags)
+        {
+            Cluster = cluster;
+            Tags = tags == null || tags.Count == 0 ? null : new List<string>(tags);
+        }
+
+        /// <summary>
+        /// Construct the Placement object
+        /// </summary>
+        /// <param name="tags">The list of tags. May be null or empty</param>
+        public Placement(IList<string> tags)
+        {
+            Tags = tags == null || tags.Count == 0 ? null : new List<string>(tags);
+        }
+
+        public bool HasData()
+        {
+            return cluster != null || Tags != null;
+        }
+        
         public override JSONNode ToJsonNode()
         {
-            return new JSONObject
+            JSONObject o = new JSONObject();
+            if (cluster != null)
             {
-                [ApiConstants.Cluster] = Cluster,
-                [ApiConstants.Tags] = JsonUtils.ToArray(Tags),
-            };
+                o[ApiConstants.Cluster] = cluster;
+            }
+            if (Tags != null)
+            {
+                o[ApiConstants.Tags] = JsonUtils.ToArray(Tags);
+            }
+            return o;
         }
 
         /// <summary>
@@ -84,7 +124,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         public sealed class PlacementBuilder {
             private string _cluster;
-            private List<string> _tags;
+            private IList<string> _tags;
 
             /// <summary>
             /// Set the cluster string.
@@ -121,7 +161,6 @@ namespace NATS.Client.JetStream
             /// </summary>
             /// <returns>The Placement</returns>
             public Placement Build() {
-                Validator.Required(_cluster, "Cluster");
                 return new Placement(_cluster, _tags);
             }
         }

@@ -376,16 +376,26 @@ namespace UnitTests.JetStream
 
         [Fact]
         public void TestPlacement() {
-            Assert.Throws<ArgumentException>(() => Placement.Builder().Build());
+            Assert.False(Placement.Builder().Build().HasData());
+            Assert.False(Placement.Builder().WithCluster(null).Build().HasData());
+            Assert.False(Placement.Builder().WithCluster("").Build().HasData());
+
+            Assert.False(new Placement((string)null).HasData());
+            Assert.False(new Placement((List<string>)null).HasData());
+            Assert.False(new Placement((IList<string>)null).HasData());
+            Assert.False(new Placement(null, (List<string>)null).HasData());
+            Assert.False(new Placement(null, (IList<string>)null).HasData());
 
             Placement p = Placement.Builder().WithCluster("cluster").Build();
             Assert.Equal("cluster", p.Cluster);
             Assert.Null(p.Tags);
+            Assert.True(p.HasData());
 
             List<string> tags = new List<string> { "a", "b" };
             p = Placement.Builder().WithCluster("cluster").WithTags(tags).Build();
             Assert.Equal("cluster", p.Cluster);
             Assert.Equal(2, p.Tags.Count);
+            Assert.True(p.HasData());
         }
 
         [Fact]

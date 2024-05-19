@@ -24,7 +24,7 @@
     </ItemGroup>
 
     <PropertyGroup>
-        <NoWarn>$(NoWarn);NU1701</NoWarn>
+        <NoWarn>$(NoWarn);NU1701;NU1902</NoWarn>
     </PropertyGroup>
 </Project>
 
