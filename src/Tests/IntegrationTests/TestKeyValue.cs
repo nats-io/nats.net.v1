@@ -1510,7 +1510,9 @@ namespace IntegrationTests
                     .WithMaxHistoryPerKey(3)
                     .WithStorageType(StorageType.Memory)
                     .Build();
+                kvm.Create(kvc);
 
+                // create watcher with consumer configuration
                 IKeyValue kv = c.CreateKeyValueContext(bucket);
                 TestKeyValueWatcher keyFullWatcher = new TestKeyValueWatcher(true);
 
@@ -1523,10 +1525,9 @@ namespace IntegrationTests
 
                 var kvConsumerConfig = KeyValueConsumerConfiguration.Builder().WithDescription(description).WithName(name).WithMetadata(metadata).Build();
 
-                var kvSub = kv.Watch("", keyFullWatcher, keyValueConsumerConfiguration: kvConsumerConfig, keyFullWatcher.WatchOptions);
+                _ = kv.Watch("", keyFullWatcher, keyValueConsumerConfiguration: kvConsumerConfig, keyFullWatcher.WatchOptions);
 
             
-                IJetStream js = c.CreateJetStreamContext();
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
                 ConsumerInfo consumerInfo = jsm.GetConsumerInfo($"KV_{bucket}", name);
                 Assert.Equal("bar", consumerInfo.ConsumerConfiguration.Metadata["foo"]);
