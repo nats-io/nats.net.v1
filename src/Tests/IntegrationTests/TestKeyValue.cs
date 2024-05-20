@@ -1525,7 +1525,7 @@ namespace IntegrationTests
 
                 var kvConsumerConfig = KeyValueConsumerConfiguration.Builder().WithDescription(description).WithName(name).WithMetadata(metadata).Build();
 
-                _ = kv.Watch("key", keyFullWatcher, keyValueConsumerConfiguration: kvConsumerConfig, keyFullWatcher.WatchOptions);
+                _ = kv.Watch("key", keyFullWatcher, keyValueConsumerConfiguration: kvConsumerConfig, 0, keyFullWatcher.WatchOptions);
 
             
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();

@@ -180,12 +180,6 @@ namespace NATS.Client.KeyValue
             Validator.ValidateNotNull(watcher, "Watcher is required");
             return new KeyValueWatchSubscription(this, new List<string> {key}, watcher, ConsumerConfiguration.UlongUnset, watchOptions);
         }
-        public KeyValueWatchSubscription Watch(string key, IKeyValueWatcher watcher, KeyValueConsumerConfiguration keyValueConsumerConfiguration, params KeyValueWatchOption[] watchOptions)
-        {
-            Validator.ValidateKvKeyWildcardAllowedRequired(key);
-            Validator.ValidateNotNull(watcher, "Watcher is required");
-            return new KeyValueWatchSubscription(this, new List<string> {key}, watcher, keyValueConsumerConfiguration, ConsumerConfiguration.UlongUnset, watchOptions);
-        }
 
         public KeyValueWatchSubscription Watch(string key, IKeyValueWatcher watcher, ulong fromRevision, params KeyValueWatchOption[] watchOptions)
         {
@@ -208,13 +202,6 @@ namespace NATS.Client.KeyValue
             return new KeyValueWatchSubscription(this, keys, watcher, ConsumerConfiguration.UlongUnset, watchOptions);
         }
 
-
-        public KeyValueWatchSubscription Watch(IList<string> keys, IKeyValueWatcher watcher, KeyValueConsumerConfiguration keyValueConsumerConfiguration, params KeyValueWatchOption[] watchOptions)
-        {
-            Validator.ValidateKvKeysWildcardAllowedRequired(keys);
-            Validator.ValidateNotNull(watcher, "Watcher is required");
-            return new KeyValueWatchSubscription(this, keys, watcher, keyValueConsumerConfiguration, ConsumerConfiguration.UlongUnset, watchOptions);
-        }
         public KeyValueWatchSubscription Watch(IList<string> keys, IKeyValueWatcher watcher, ulong fromRevision, params KeyValueWatchOption[] watchOptions)
         {
             Validator.ValidateKvKeysWildcardAllowedRequired(keys);
@@ -226,18 +213,13 @@ namespace NATS.Client.KeyValue
         {
             Validator.ValidateKvKeysWildcardAllowedRequired(keys);
             Validator.ValidateNotNull(watcher, "Watcher is required");
-            return new KeyValueWatchSubscription(this, keys, watcher, keyValueConsumerConfiguration, fromRevision, watchOptions);        }
+            return new KeyValueWatchSubscription(this, keys, watcher, keyValueConsumerConfiguration, fromRevision, watchOptions);        
+        }
 
         public KeyValueWatchSubscription WatchAll(IKeyValueWatcher watcher, params KeyValueWatchOption[] watchOptions)
         {
             Validator.ValidateNotNull(watcher, "Watcher is required");
             return new KeyValueWatchSubscription(this, new List<string> {">"}, watcher, ConsumerConfiguration.UlongUnset, watchOptions);
-        }
-
-        public KeyValueWatchSubscription WatchAll(IKeyValueWatcher watcher, KeyValueConsumerConfiguration keyValueConsumerConfiguration, params KeyValueWatchOption[] watchOptions)
-        {
-            Validator.ValidateNotNull(watcher, "Watcher is required");
-            return new KeyValueWatchSubscription(this, new List<string> {">"}, watcher, keyValueConsumerConfiguration, ConsumerConfiguration.UlongUnset, watchOptions);
         }
 
         public KeyValueWatchSubscription WatchAll(IKeyValueWatcher watcher, ulong fromRevision, params KeyValueWatchOption[] watchOptions)

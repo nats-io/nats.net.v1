@@ -19,7 +19,7 @@ using static NATS.Client.Internals.Validator;
 
 namespace NATS.Client.KeyValue
 {
-    public sealed class KeyValueConsumerConfiguration : JsonSerializable
+    public sealed class KeyValueConsumerConfiguration
     {
         public string Description { get; }
         public string Name { get; }
@@ -42,32 +42,6 @@ namespace NATS.Client.KeyValue
             _metadata = builder._metadata;
         }
 
-        public override JSONNode ToJsonNode()
-        {
-            JSONObject o = new JSONObject();
-
-            AddField(o, ApiConstants.Description, Description);
-            AddField(o, ApiConstants.Name, Name);
-            AddField(o, ApiConstants.Metadata, Metadata);
-            return o;
-        }
-
-        internal IList<string> GetChanges(KeyValueConsumerConfiguration server)
-        {
-            IList<string> changes = new List<string>();
-                   
-            RecordWouldBeChange(Description, server.Description, "Description", changes);
-            RecordWouldBeChange(Name, server.Name, "Name", changes);
-            if (_metadata != null && !DictionariesEqual(_metadata, server._metadata)) { changes.Add("Metadata"); }
-
-            return changes;
-        }
-
-        private void RecordWouldBeChange(string request, string server, string field, IList<string> changes)
-        {
-            string r = EmptyAsNull(request);
-            if (r != null && !r.Equals(EmptyAsNull(server))) { changes.Add(field); }
-        }
 
         public static KeyValueConsumerConfigurationBuilder Builder()
         {
