@@ -117,6 +117,16 @@ namespace NATS.Client.KeyValue
         KeyValueWatchSubscription Watch(string key, IKeyValueWatcher watcher, params KeyValueWatchOption[] watchOptions);
 
         /// <summary>
+        /// Watch updates for a specific key.
+        /// </summary>
+        /// <param name="key">the key</param>
+        /// <param name="watcher">the watcher</param>
+        /// <param name="KeyValueConsumerConfiguration">the ConsumerConfiguration object.</param>
+        /// <param name="watchOptions">the watch options to apply. If multiple conflicting options are supplied, the last options wins.</param>
+        /// <returns></returns>
+        KeyValueWatchSubscription Watch(string key, IKeyValueWatcher watcher, KeyValueConsumerConfiguration keyValueConsumerConfiguration, params KeyValueWatchOption[] watchOptions);
+
+        /// <summary>
         /// Watch updates for a specific key, starting from a specific revision.
         /// </summary>
         /// <param name="key">the key</param>
@@ -127,6 +137,17 @@ namespace NATS.Client.KeyValue
         KeyValueWatchSubscription Watch(string key, IKeyValueWatcher watcher, ulong fromRevision, params KeyValueWatchOption[] watchOptions);
 
         /// <summary>
+        /// Watch updates for a specific key, starting from a specific revision.
+        /// </summary>
+        /// <param name="key">the key</param>
+        /// <param name="watcher">the watcher</param>
+        /// <param name="KeyValueConsumerConfiguration">the ConsumerConfiguration object.</param>
+        /// <param name="fromRevision">the revision to start from</param>
+        /// <param name="watchOptions">the watch options to apply. If multiple conflicting options are supplied, the last options wins.</param>
+        /// <returns></returns>
+        KeyValueWatchSubscription Watch(string key, IKeyValueWatcher watcher, KeyValueConsumerConfiguration keyValueConsumerConfiguration,ulong fromRevision, params KeyValueWatchOption[] watchOptions);
+
+        /// <summary>
         /// Watch updates for a specific keys.
         /// </summary>
         /// <param name="keys">the keys</param>
@@ -134,6 +155,16 @@ namespace NATS.Client.KeyValue
         /// <param name="watchOptions">the watch options to apply. If multiple conflicting options are supplied, the last options wins.</param>
         /// <returns></returns>
         KeyValueWatchSubscription Watch(IList<string> keys, IKeyValueWatcher watcher, params KeyValueWatchOption[] watchOptions);
+
+        /// <summary>
+        /// Watch updates for a specific keys.
+        /// </summary>
+        /// <param name="keys">the keys</param>
+        /// <param name="KeyValueConsumerConfiguration">the ConsumerConfiguration object.</param>
+        /// <param name="watcher">the watcher</param>
+        /// <param name="watchOptions">the watch options to apply. If multiple conflicting options are supplied, the last options wins.</param>
+        /// <returns></returns>
+        KeyValueWatchSubscription Watch(IList<string> keys, IKeyValueWatcher watcher, KeyValueConsumerConfiguration keyValueConsumerConfiguration, params KeyValueWatchOption[] watchOptions);
 
         /// <summary>
         /// Watch updates for a specific keys, starting from a specific revision.
@@ -146,12 +177,32 @@ namespace NATS.Client.KeyValue
         KeyValueWatchSubscription Watch(IList<string> keys, IKeyValueWatcher watcher, ulong fromRevision, params KeyValueWatchOption[] watchOptions);
 
         /// <summary>
+        /// Watch updates for a specific keys, starting from a specific revision.
+        /// </summary>
+        /// <param name="keys">the keys</param>
+        /// <param name="watcher">the watcher</param>
+        /// <param name="KeyValueConsumerConfiguration">the ConsumerConfiguration object.</param>
+        /// <param name="fromRevision">the revision to start from</param>
+        /// <param name="watchOptions">the watch options to apply. If multiple conflicting options are supplied, the last options wins.</param>
+        /// <returns></returns>
+        KeyValueWatchSubscription Watch(IList<string> keys, IKeyValueWatcher watcher, KeyValueConsumerConfiguration keyValueConsumerConfiguration,ulong fromRevision, params KeyValueWatchOption[] watchOptions);
+
+        /// <summary>
         /// Watch updates for all keys
         /// </summary>
         /// <param name="watcher">the watcher</param>
         /// <param name="watchOptions">the watch options to apply. If multiple conflicting options are supplied, the last options wins.</param>
         /// <returns>The KeyValueWatchSubscription</returns>
         KeyValueWatchSubscription WatchAll(IKeyValueWatcher watcher, params KeyValueWatchOption[] watchOptions);
+
+        /// <summary>
+        /// Watch updates for all keys
+        /// </summary>
+        /// <param name="watcher">the watcher</param>
+        /// <param name="KeyValueConsumerConfiguration">the ConsumerConfiguration object.</param>
+        /// <param name="watchOptions">the watch options to apply. If multiple conflicting options are supplied, the last options wins.</param>
+        /// <returns>The KeyValueWatchSubscription</returns>
+        KeyValueWatchSubscription WatchAll(IKeyValueWatcher watcher, KeyValueConsumerConfiguration keyValueConsumerConfiguration, params KeyValueWatchOption[] watchOptions);
 
         /// <summary>
         /// Watch updates for all keys, starting from a specific revision
@@ -161,6 +212,16 @@ namespace NATS.Client.KeyValue
         /// <param name="watchOptions">the watch options to apply. If multiple conflicting options are supplied, the last options wins.</param>
         /// <returns>The KeyValueWatchSubscription</returns>
         KeyValueWatchSubscription WatchAll(IKeyValueWatcher watcher, ulong fromRevision, params KeyValueWatchOption[] watchOptions);
+
+        /// <summary>
+        /// Watch updates for all keys, starting from a specific revision
+        /// </summary>
+        /// <param name="watcher">the watcher</param>
+        /// <param name="KeyValueConsumerConfiguration">the ConsumerConfiguration object.</param>
+        /// <param name="fromRevision">the revision to start from</param>
+        /// <param name="watchOptions">the watch options to apply. If multiple conflicting options are supplied, the last options wins.</param>
+        /// <returns>The KeyValueWatchSubscription</returns>
+        KeyValueWatchSubscription WatchAll(IKeyValueWatcher watcher, KeyValueConsumerConfiguration keyValueConsumerConfiguration, ulong fromRevision, params KeyValueWatchOption[] watchOptions);
 
         /// <summary>
         /// Get a list of the keys in a bucket.

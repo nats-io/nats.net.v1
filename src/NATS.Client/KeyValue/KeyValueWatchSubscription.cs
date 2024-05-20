@@ -26,6 +26,12 @@ namespace NATS.Client.KeyValue
 
         public KeyValueWatchSubscription(KeyValue kv, IList<string> keyPatterns,
             IKeyValueWatcher watcher, ulong fromRevision, params KeyValueWatchOption[] watchOptions)
+            : this(kv, keyPatterns, watcher, null, fromRevision, watchOptions)
+        {
+        }
+
+        public KeyValueWatchSubscription(KeyValue kv, IList<string> keyPatterns,
+            IKeyValueWatcher watcher,  KeyValueConsumerConfiguration consumerConfig, ulong fromRevision,params KeyValueWatchOption[] watchOptions)
         {
             subLock = new object();
             IList<string> subscribeSubjects = new List<string>();
@@ -67,18 +73,35 @@ namespace NATS.Client.KeyValue
                     endOfDataSent = new InterlockedBoolean();
                 }
             }
-            
+
+            var consumerConfigBuilder = ConsumerConfiguration.Builder()
+                .WithAckPolicy(AckPolicy.None)
+                .WithDeliverPolicy(deliverPolicy)
+                .WithStartSequence(fromRevision)
+                .WithHeadersOnly(headersOnly)
+                .WithFilterSubjects(subscribeSubjects);
+
+            // Apply the consumerConfig if provided
+            if (consumerConfig != null)
+            {
+                if (!string.IsNullOrEmpty(consumerConfig.Description))
+                {
+                    consumerConfigBuilder.WithDescription(consumerConfig.Description);
+                }
+                if (consumerConfig.Metadata != null && consumerConfig.Metadata.Count > 0)
+                {
+                    consumerConfigBuilder.WithMetadata(new Dictionary<string, string>(consumerConfig.Metadata));
+                }
+                if (!string.IsNullOrEmpty(consumerConfig.Name))
+                {
+                    consumerConfigBuilder.WithName(consumerConfig.Name);
+                }
+            }
+
             PushSubscribeOptions pso = PushSubscribeOptions.Builder()
                 .WithStream(kv.StreamName)
                 .WithOrdered(true)
-                .WithConfiguration(
-                    ConsumerConfiguration.Builder()
-                        .WithAckPolicy(AckPolicy.None)
-                        .WithDeliverPolicy(deliverPolicy)
-                        .WithStartSequence(fromRevision)
-                        .WithHeadersOnly(headersOnly)
-                        .WithFilterSubjects(subscribeSubjects)
-                        .Build())
+                .WithConfiguration(consumerConfigBuilder.Build())
                 .Build();
 
             void Handler(object sender, MsgHandlerEventArgs args)

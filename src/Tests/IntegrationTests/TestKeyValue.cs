@@ -1493,6 +1493,46 @@ namespace IntegrationTests
                 // Assert.Null(kv2.Get(key2));
             });
         }
+
+        [Fact]
+        public void TestKVConsumerConfiguration()
+        {
+            Context.RunInJsServer(c =>
+            {
+                // get the kv management context
+                IKeyValueManagement kvm = c.CreateKeyValueManagementContext();
+                c.CreateKeyValueManagementContext(KeyValueOptions.Builder(DefaultJsOptions).Build()); // coverage
+                string bucket = Bucket();
+                
+                // create the bucket
+                KeyValueConfiguration kvc = KeyValueConfiguration.Builder()
+                    .WithName(bucket)
+                    .WithMaxHistoryPerKey(3)
+                    .WithStorageType(StorageType.Memory)
+                    .Build();
+
+                IKeyValue kv = c.CreateKeyValueContext(bucket);
+                TestKeyValueWatcher keyFullWatcher = new TestKeyValueWatcher(true);
+
+                IDictionary<string, string> metadata = new Dictionary<string, string>
+                {
+                    ["foo"] = "bar"
+                };
+                var name = "consumerName";
+                var description = "description";
+
+                var kvConsumerConfig = KeyValueConsumerConfiguration.Builder().WithDescription(description).WithName(name).WithMetadata(metadata).Build();
+
+                var kvSub = kv.Watch("", keyFullWatcher, keyValueConsumerConfiguration: kvConsumerConfig, keyFullWatcher.WatchOptions);
+
+            
+                IJetStream js = c.CreateJetStreamContext();
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                ConsumerInfo consumerInfo = jsm.GetConsumerInfo($"KV_{bucket}", name);
+                Assert.Equal("bar", consumerInfo.ConsumerConfiguration.Metadata["foo"]);
+                Assert.Equal(description, consumerInfo.ConsumerConfiguration.Description);
+            });
+        }
     }
 
     class TestKeyValueWatcher : IKeyValueWatcher
