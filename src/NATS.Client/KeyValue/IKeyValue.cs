@@ -121,7 +121,7 @@ namespace NATS.Client.KeyValue
         /// </summary>
         /// <param name="key">the key</param>
         /// <param name="watcher">the watcher</param>
-        /// <param name="KeyValueConsumerConfiguration">the ConsumerConfiguration object.</param>
+        /// <param name="keyValueConsumerConfiguration">The KeyValueConsumerConfiguration object, passes information about kv consumer e.g description</param>
         /// <param name="watchOptions">the watch options to apply. If multiple conflicting options are supplied, the last options wins.</param>
         /// <returns></returns>
         KeyValueWatchSubscription Watch(string key, IKeyValueWatcher watcher, KeyValueConsumerConfiguration keyValueConsumerConfiguration, params KeyValueWatchOption[] watchOptions);
@@ -141,7 +141,7 @@ namespace NATS.Client.KeyValue
         /// </summary>
         /// <param name="key">the key</param>
         /// <param name="watcher">the watcher</param>
-        /// <param name="KeyValueConsumerConfiguration">the ConsumerConfiguration object.</param>
+        /// <param name="keyValueConsumerConfiguration">The KeyValueConsumerConfiguration object, passes information about kv consumer e.g description</param>
         /// <param name="fromRevision">the revision to start from</param>
         /// <param name="watchOptions">the watch options to apply. If multiple conflicting options are supplied, the last options wins.</param>
         /// <returns></returns>
@@ -160,7 +160,7 @@ namespace NATS.Client.KeyValue
         /// Watch updates for a specific keys.
         /// </summary>
         /// <param name="keys">the keys</param>
-        /// <param name="KeyValueConsumerConfiguration">the ConsumerConfiguration object.</param>
+        /// <param name="keyValueConsumerConfiguration">The KeyValueConsumerConfiguration object, passes information about kv consumer e.g description</param>
         /// <param name="watcher">the watcher</param>
         /// <param name="watchOptions">the watch options to apply. If multiple conflicting options are supplied, the last options wins.</param>
         /// <returns></returns>
@@ -181,7 +181,7 @@ namespace NATS.Client.KeyValue
         /// </summary>
         /// <param name="keys">the keys</param>
         /// <param name="watcher">the watcher</param>
-        /// <param name="KeyValueConsumerConfiguration">the ConsumerConfiguration object.</param>
+        /// <param name="keyValueConsumerConfiguration">The KeyValueConsumerConfiguration object, passes information about kv consumer e.g description</param>
         /// <param name="fromRevision">the revision to start from</param>
         /// <param name="watchOptions">the watch options to apply. If multiple conflicting options are supplied, the last options wins.</param>
         /// <returns></returns>
@@ -199,7 +199,7 @@ namespace NATS.Client.KeyValue
         /// Watch updates for all keys
         /// </summary>
         /// <param name="watcher">the watcher</param>
-        /// <param name="KeyValueConsumerConfiguration">the ConsumerConfiguration object.</param>
+        /// <param name="keyValueConsumerConfiguration">The KeyValueConsumerConfiguration object, passes information about kv consumer e.g description</param>
         /// <param name="watchOptions">the watch options to apply. If multiple conflicting options are supplied, the last options wins.</param>
         /// <returns>The KeyValueWatchSubscription</returns>
         KeyValueWatchSubscription WatchAll(IKeyValueWatcher watcher, KeyValueConsumerConfiguration keyValueConsumerConfiguration, params KeyValueWatchOption[] watchOptions);
@@ -217,7 +217,7 @@ namespace NATS.Client.KeyValue
         /// Watch updates for all keys, starting from a specific revision
         /// </summary>
         /// <param name="watcher">the watcher</param>
-        /// <param name="KeyValueConsumerConfiguration">the ConsumerConfiguration object.</param>
+        /// <param name="keyValueConsumerConfiguration">The KeyValueConsumerConfiguration object, passes information about kv consumer e.g description</param>
         /// <param name="fromRevision">the revision to start from</param>
         /// <param name="watchOptions">the watch options to apply. If multiple conflicting options are supplied, the last options wins.</param>
         /// <returns>The KeyValueWatchSubscription</returns>
