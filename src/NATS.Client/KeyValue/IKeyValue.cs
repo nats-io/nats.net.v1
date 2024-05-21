@@ -125,18 +125,7 @@ namespace NATS.Client.KeyValue
         /// <param name="watchOptions">the watch options to apply. If multiple conflicting options are supplied, the last options wins.</param>
         /// <returns></returns>
         KeyValueWatchSubscription Watch(string key, IKeyValueWatcher watcher, ulong fromRevision, params KeyValueWatchOption[] watchOptions);
-
-        /// <summary>
-        /// Watch updates for a specific key, starting from a specific revision.
-        /// </summary>
-        /// <param name="key">the key</param>
-        /// <param name="watcher">the watcher</param>
-        /// <param name="keyValueConsumerConfiguration">The KeyValueConsumerConfiguration object, passes information about kv consumer e.g description</param>
-        /// <param name="fromRevision">the revision to start from</param>
-        /// <param name="watchOptions">the watch options to apply. If multiple conflicting options are supplied, the last options wins.</param>
-        /// <returns></returns>
-        KeyValueWatchSubscription Watch(string key, IKeyValueWatcher watcher, KeyValueConsumerConfiguration keyValueConsumerConfiguration,ulong fromRevision, params KeyValueWatchOption[] watchOptions);
-
+        
         /// <summary>
         /// Watch updates for a specific keys.
         /// </summary>

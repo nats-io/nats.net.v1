@@ -188,13 +188,6 @@ namespace NATS.Client.KeyValue
             return new KeyValueWatchSubscription(this, new List<string> {key}, watcher, fromRevision, watchOptions);
         }
 
-        public KeyValueWatchSubscription Watch(string key, IKeyValueWatcher watcher, KeyValueConsumerConfiguration keyValueConsumerConfiguration, ulong fromRevision, params KeyValueWatchOption[] watchOptions)
-        {
-            Validator.ValidateKvKeyWildcardAllowedRequired(key);
-            Validator.ValidateNotNull(watcher, "Watcher is required");
-            return new KeyValueWatchSubscription(this, new List<string> {key}, watcher, keyValueConsumerConfiguration, fromRevision, watchOptions);
-        }
-
         public KeyValueWatchSubscription Watch(IList<string> keys, IKeyValueWatcher watcher, params KeyValueWatchOption[] watchOptions)
         {
             Validator.ValidateKvKeysWildcardAllowedRequired(keys);
