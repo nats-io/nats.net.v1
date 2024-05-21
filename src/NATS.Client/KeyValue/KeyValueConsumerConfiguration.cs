@@ -1,4 +1,4 @@
-// Copyright 2021-2023 The NATS Authors
+// Copyright 2024 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at:
@@ -12,9 +12,6 @@
 // limitations under the License.
 
 using System.Collections.Generic;
-using NATS.Client.Internals.SimpleJSON;
-using NATS.Client.JetStream;
-using static NATS.Client.Internals.JsonUtils;
 using static NATS.Client.Internals.Validator;
 
 namespace NATS.Client.KeyValue
@@ -26,15 +23,6 @@ namespace NATS.Client.KeyValue
         internal IDictionary<string, string> _metadata;
         public IDictionary<string, string> Metadata => _metadata ?? new Dictionary<string, string>();
 
-        internal KeyValueConsumerConfiguration(string json) : this(JSON.Parse(json)) {}
-
-        internal KeyValueConsumerConfiguration(JSONNode ccNode)
-        {
-            Description = ccNode[ApiConstants.Description].Value;
-            Name = ccNode[ApiConstants.Name].Value;
-            _metadata = StringStringDictionary(ccNode, ApiConstants.Metadata, true);
-        }
-
         private KeyValueConsumerConfiguration(KeyValueConsumerConfigurationBuilder builder)
         {
             Description = builder._description;
@@ -42,15 +30,9 @@ namespace NATS.Client.KeyValue
             _metadata = builder._metadata;
         }
 
-
         public static KeyValueConsumerConfigurationBuilder Builder()
         {
             return new KeyValueConsumerConfigurationBuilder();
-        }
-        
-        public static KeyValueConsumerConfigurationBuilder Builder(ConsumerConfiguration cc)
-        {
-            return new KeyValueConsumerConfigurationBuilder(cc);
         }
 
         public sealed class KeyValueConsumerConfigurationBuilder
@@ -58,23 +40,6 @@ namespace NATS.Client.KeyValue
             internal string _description;
             internal string _name;      
             internal Dictionary<string, string> _metadata;
-            public KeyValueConsumerConfigurationBuilder() {}
-
-            public KeyValueConsumerConfigurationBuilder(ConsumerConfiguration cc)
-            {
-                if (cc == null) return;
-                _description = cc.Description;
-                _name = cc.Name;
-
-                if (cc._metadata != null)
-                {
-                    _metadata = new Dictionary<string, string>();
-                    foreach (string key in cc.Metadata.Keys)
-                    {
-                        _metadata[key] = cc.Metadata[key];
-                    }
-                }
-            }
 
             /// <summary>
             /// Sets the description.
