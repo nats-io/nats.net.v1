@@ -148,6 +148,7 @@ namespace NATS.Client.KeyValue
         /// Watch updates for a specific keys, starting from a specific revision.
         /// </summary>
         /// <param name="keys">the keys</param>
+        /// <note> Can pass <em>one or more key</em> to watch updates for.</note>
         /// <param name="watcher">the watcher</param>
         /// <param name="keyValueConsumerConfiguration">The KeyValueConsumerConfiguration object, passes information about kv consumer e.g description</param>
         /// <param name="fromRevision">the revision to start from</param>
