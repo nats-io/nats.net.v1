@@ -4,7 +4,7 @@
 
 A [C# .NET](https://msdn.microsoft.com/en-us/vstudio/aa496123.aspx) client for the [NATS messaging system](https://nats.io) multi targetting `.NET4.6+` and `.NETStandard1.6`.
 
-**Current Release**: 1.1.4 &nbsp; **Current Head**: 1.1.5
+**Current Release**: 1.1.5 &nbsp; **Current Head**: 1.1.6
 
 [![License Apache 2.0](https://img.shields.io/badge/License-Apache2-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![API Documentation](https://img.shields.io/badge/doc-Doxygen-brightgreen.svg?style=flat)](http://nats-io.github.io/nats.net)
