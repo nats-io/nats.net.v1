@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">1.1.4</span>
+   &#160;<span id="projectnumber">1.1.5</span>
    </div>
    <div id="projectbrief">The NATS.io .NET C# Client</div>
   </td>
@@ -114,6 +114,10 @@ AccountStatistics&#160;</td><td class="memItemRight" valign="bottom"><b>GetAccou
 <tr class="separator:aa52f66ba76144a66463b705aa63c060e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a45cc3a8533a0840a9ed690347f2eba56"><td class="memItemLeft" align="right" valign="top">ConsumerInfo&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#a45cc3a8533a0840a9ed690347f2eba56">AddOrUpdateConsumer</a> (string streamName, ConsumerConfiguration config)</td></tr>
 <tr class="separator:a45cc3a8533a0840a9ed690347f2eba56"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4c5149206d3e03cb1291992f4e926b5c"><td class="memItemLeft" align="right" valign="top">ConsumerInfo&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#a4c5149206d3e03cb1291992f4e926b5c">CreateConsumer</a> (string streamName, ConsumerConfiguration config)</td></tr>
+<tr class="separator:a4c5149206d3e03cb1291992f4e926b5c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1ee4e1f4c433ce498766947c137ca8d2"><td class="memItemLeft" align="right" valign="top">ConsumerInfo&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#a1ee4e1f4c433ce498766947c137ca8d2">UpdateConsumer</a> (string streamName, ConsumerConfiguration config)</td></tr>
+<tr class="separator:a1ee4e1f4c433ce498766947c137ca8d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a02e7c0197b637d6f31d08652222dad37"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#a02e7c0197b637d6f31d08652222dad37">DeleteConsumer</a> (string streamName, string consumer)</td></tr>
 <tr class="separator:a02e7c0197b637d6f31d08652222dad37"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1d0538e51f4c27dfe0d88c3141e64534"><td class="memItemLeft" align="right" valign="top">ConsumerPauseResponse&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#a1d0538e51f4c27dfe0d88c3141e64534">PauseConsumer</a> (string streamName, string consumer, DateTime pauseUntil)</td></tr>
@@ -214,6 +218,44 @@ AccountStatistics&#160;</td><td class="memItemRight" valign="bottom"><b>GetAccou
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Stream information</dd></dl>
+
+</div>
+</div>
+<a id="a4c5149206d3e03cb1291992f4e926b5c" name="a4c5149206d3e03cb1291992f4e926b5c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4c5149206d3e03cb1291992f4e926b5c">&#9670;&nbsp;</a></span>CreateConsumer()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">ConsumerInfo NATS.Client.JetStream.IJetStreamManagement.CreateConsumer </td>
+          <td>(</td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>streamName</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">ConsumerConfiguration&#160;</td>
+          <td class="paramname"><em>config</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Creates a consumer. Must not already exist. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">streamName</td><td>The name of the stream the consumer is attached to.</td></tr>
+    <tr><td class="paramname">config</td><td>The consumer configuration to use.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd></dd></dl>
 
 </div>
 </div>
@@ -934,6 +976,44 @@ AccountStatistics&#160;</td><td class="memItemRight" valign="bottom"><b>GetAccou
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>True if the resume succeeded.</dd></dl>
+
+</div>
+</div>
+<a id="a1ee4e1f4c433ce498766947c137ca8d2" name="a1ee4e1f4c433ce498766947c137ca8d2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1ee4e1f4c433ce498766947c137ca8d2">&#9670;&nbsp;</a></span>UpdateConsumer()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">ConsumerInfo NATS.Client.JetStream.IJetStreamManagement.UpdateConsumer </td>
+          <td>(</td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>streamName</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">ConsumerConfiguration&#160;</td>
+          <td class="paramname"><em>config</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Updates an existing consumer. Must already exist. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">streamName</td><td>The name of the stream the consumer is attached to.</td></tr>
+    <tr><td class="paramname">config</td><td>The consumer configuration to use.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd></dd></dl>
 
 </div>
 </div>

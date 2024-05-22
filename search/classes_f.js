@@ -14,9 +14,10 @@ var searchData=
   ['statistics_11',['Statistics',['../class_n_a_t_s_1_1_client_1_1_statistics.html',1,'NATS::Client']]],
   ['statsresponse_12',['StatsResponse',['../class_n_a_t_s_1_1_client_1_1_service_1_1_stats_response.html',1,'NATS::Client::Service']]],
   ['statuseventargs_13',['StatusEventArgs',['../class_n_a_t_s_1_1_client_1_1_status_event_args.html',1,'NATS::Client']]],
-  ['subjecttransform_14',['SubjectTransform',['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_subject_transform.html',1,'NATS::Client::JetStream']]],
-  ['subjecttransformbuilder_15',['SubjectTransformBuilder',['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_subject_transform_1_1_subject_transform_builder.html',1,'NATS::Client::JetStream::SubjectTransform']]],
-  ['subscribeoptions_16',['SubscribeOptions',['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_subscribe_options.html',1,'NATS::Client::JetStream']]],
-  ['subscription_17',['Subscription',['../class_n_a_t_s_1_1_client_1_1_subscription.html',1,'NATS::Client']]],
-  ['syncsubscription_18',['SyncSubscription',['../class_n_a_t_s_1_1_client_1_1_sync_subscription.html',1,'NATS::Client']]]
+  ['stringuserjwthandler_14',['StringUserJWTHandler',['../class_n_a_t_s_1_1_client_1_1_string_user_j_w_t_handler.html',1,'NATS::Client']]],
+  ['subjecttransform_15',['SubjectTransform',['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_subject_transform.html',1,'NATS::Client::JetStream']]],
+  ['subjecttransformbuilder_16',['SubjectTransformBuilder',['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_subject_transform_1_1_subject_transform_builder.html',1,'NATS::Client::JetStream::SubjectTransform']]],
+  ['subscribeoptions_17',['SubscribeOptions',['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_subscribe_options.html',1,'NATS::Client::JetStream']]],
+  ['subscription_18',['Subscription',['../class_n_a_t_s_1_1_client_1_1_subscription.html',1,'NATS::Client']]],
+  ['syncsubscription_19',['SyncSubscription',['../class_n_a_t_s_1_1_client_1_1_sync_subscription.html',1,'NATS::Client']]]
 ];

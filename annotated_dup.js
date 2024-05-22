@@ -107,6 +107,7 @@ var annotated_dup =
         [ "ReconnectDelayEventArgs", "class_n_a_t_s_1_1_client_1_1_reconnect_delay_event_args.html", "class_n_a_t_s_1_1_client_1_1_reconnect_delay_event_args" ],
         [ "Statistics", "class_n_a_t_s_1_1_client_1_1_statistics.html", "class_n_a_t_s_1_1_client_1_1_statistics" ],
         [ "StatusEventArgs", "class_n_a_t_s_1_1_client_1_1_status_event_args.html", null ],
+        [ "StringUserJWTHandler", "class_n_a_t_s_1_1_client_1_1_string_user_j_w_t_handler.html", "class_n_a_t_s_1_1_client_1_1_string_user_j_w_t_handler" ],
         [ "Subscription", "class_n_a_t_s_1_1_client_1_1_subscription.html", "class_n_a_t_s_1_1_client_1_1_subscription" ],
         [ "SyncSubscription", "class_n_a_t_s_1_1_client_1_1_sync_subscription.html", "class_n_a_t_s_1_1_client_1_1_sync_subscription" ],
         [ "UnhandledStatusEventArgs", "class_n_a_t_s_1_1_client_1_1_unhandled_status_event_args.html", null ],

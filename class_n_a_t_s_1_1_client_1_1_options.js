@@ -9,6 +9,8 @@ var class_n_a_t_s_1_1_client_1_1_options =
     [ "SetUserCredentialHandlers", "class_n_a_t_s_1_1_client_1_1_options.html#a580582ae80f0dbe26ac9c3d1ddbea0d0", null ],
     [ "SetUserCredentials", "class_n_a_t_s_1_1_client_1_1_options.html#a969f92baa3fe0afaf28cfdcdca042bd8", null ],
     [ "SetUserCredentials", "class_n_a_t_s_1_1_client_1_1_options.html#ad5c6e77c8bab3d203260009a14e61f39", null ],
+    [ "SetUserCredentialsFromString", "class_n_a_t_s_1_1_client_1_1_options.html#ad18e62060e3a163f44defb0406f44771", null ],
+    [ "SetUserCredentialsFromStrings", "class_n_a_t_s_1_1_client_1_1_options.html#a106a33884e7eb4ac96f8a4b367b120b2", null ],
     [ "ToString", "class_n_a_t_s_1_1_client_1_1_options.html#a06f85fd3986c1a735b867153cab4ba26", null ],
     [ "AsyncErrorEventHandler", "class_n_a_t_s_1_1_client_1_1_options.html#a2df13bb7ca6daac4fda3afd097cb6f82", null ],
     [ "ClosedEventHandler", "class_n_a_t_s_1_1_client_1_1_options.html#a910d4dcebe9046e2ab1772f2007dce0e", null ],

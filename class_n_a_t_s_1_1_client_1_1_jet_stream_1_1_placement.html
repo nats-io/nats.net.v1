@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">1.1.4</span>
+   &#160;<span id="projectnumber">1.1.5</span>
    </div>
    <div id="projectbrief">The NATS.io .NET C# Client</div>
   </td>
@@ -107,6 +107,10 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:ab935616512a3691b298539e68dbb0ce1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9545d9f830e5404c41dc8db7873d0cb2"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_placement.html#a9545d9f830e5404c41dc8db7873d0cb2">Placement</a> (string cluster, List&lt; string &gt; tags)</td></tr>
 <tr class="separator:a9545d9f830e5404c41dc8db7873d0cb2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6c24789074834af0787def482f50c767"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_placement.html#a6c24789074834af0787def482f50c767">Placement</a> (string cluster, IList&lt; string &gt; tags)</td></tr>
+<tr class="separator:a6c24789074834af0787def482f50c767"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aadda9a80fa8810ebc31d75e3c7e8d191"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_placement.html#aadda9a80fa8810ebc31d75e3c7e8d191">Placement</a> (IList&lt; string &gt; tags)</td></tr>
+<tr class="separator:aadda9a80fa8810ebc31d75e3c7e8d191"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
@@ -126,7 +130,7 @@ List&lt; string &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>Tags<
 <div class="textblock"><p ><a class="el" href="class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_placement.html" title="Placement requirements for a stream">Placement</a> requirements for a stream </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="ab935616512a3691b298539e68dbb0ce1" name="ab935616512a3691b298539e68dbb0ce1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab935616512a3691b298539e68dbb0ce1">&#9670;&nbsp;</a></span>Placement() <span class="overload">[1/2]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#ab935616512a3691b298539e68dbb0ce1">&#9670;&nbsp;</a></span>Placement() <span class="overload">[1/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -152,7 +156,7 @@ List&lt; string &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>Tags<
 </div>
 </div>
 <a id="a9545d9f830e5404c41dc8db7873d0cb2" name="a9545d9f830e5404c41dc8db7873d0cb2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9545d9f830e5404c41dc8db7873d0cb2">&#9670;&nbsp;</a></span>Placement() <span class="overload">[2/2]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a9545d9f830e5404c41dc8db7873d0cb2">&#9670;&nbsp;</a></span>Placement() <span class="overload">[2/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -181,6 +185,69 @@ List&lt; string &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>Tags<
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">cluster</td><td>The cluster name</td></tr>
+    <tr><td class="paramname">tags</td><td>The list of tags. May be null or empty</td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a6c24789074834af0787def482f50c767" name="a6c24789074834af0787def482f50c767"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6c24789074834af0787def482f50c767">&#9670;&nbsp;</a></span>Placement() <span class="overload">[3/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">NATS.Client.JetStream.Placement.Placement </td>
+          <td>(</td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>cluster</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">IList&lt; string &gt;&#160;</td>
+          <td class="paramname"><em>tags</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Construct the <a class="el" href="class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_placement.html" title="Placement requirements for a stream">Placement</a> object </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">cluster</td><td>The cluster name</td></tr>
+    <tr><td class="paramname">tags</td><td>The list of tags. May be null or empty</td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="aadda9a80fa8810ebc31d75e3c7e8d191" name="aadda9a80fa8810ebc31d75e3c7e8d191"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aadda9a80fa8810ebc31d75e3c7e8d191">&#9670;&nbsp;</a></span>Placement() <span class="overload">[4/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">NATS.Client.JetStream.Placement.Placement </td>
+          <td>(</td>
+          <td class="paramtype">IList&lt; string &gt;&#160;</td>
+          <td class="paramname"><em>tags</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Construct the <a class="el" href="class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_placement.html" title="Placement requirements for a stream">Placement</a> object </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
     <tr><td class="paramname">tags</td><td>The list of tags. May be null or empty</td></tr>
   </table>
   </dd>

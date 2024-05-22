@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">1.1.4</span>
+   &#160;<span id="projectnumber">1.1.5</span>
    </div>
    <div id="projectbrief">The NATS.io .NET C# Client</div>
   </td>
@@ -98,6 +98,10 @@ $(document).ready(function(){initNavTree('class_n_a_t_s_1_1_client_1_1_options.h
 Public Member Functions</h2></td></tr>
 <tr class="memitem:ad5c6e77c8bab3d203260009a14e61f39"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#ad5c6e77c8bab3d203260009a14e61f39">SetUserCredentials</a> (string credentialsPath, string privateKeyPath)</td></tr>
 <tr class="separator:ad5c6e77c8bab3d203260009a14e61f39"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad18e62060e3a163f44defb0406f44771"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#ad18e62060e3a163f44defb0406f44771">SetUserCredentialsFromString</a> (string credentialsText)</td></tr>
+<tr class="separator:ad18e62060e3a163f44defb0406f44771"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a106a33884e7eb4ac96f8a4b367b120b2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a106a33884e7eb4ac96f8a4b367b120b2">SetUserCredentialsFromStrings</a> (string userJwtText, string nkeySeedText)</td></tr>
+<tr class="separator:a106a33884e7eb4ac96f8a4b367b120b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a969f92baa3fe0afaf28cfdcdca042bd8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a969f92baa3fe0afaf28cfdcdca042bd8">SetUserCredentials</a> (string credentialsPath)</td></tr>
 <tr class="separator:a969f92baa3fe0afaf28cfdcdca042bd8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a580582ae80f0dbe26ac9c3d1ddbea0d0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a580582ae80f0dbe26ac9c3d1ddbea0d0">SetUserCredentialHandlers</a> (EventHandler&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_user_j_w_t_event_args.html">UserJWTEventArgs</a> &gt; userJWTEventHandler, EventHandler&lt; <a class="el" href="class_n_a_t_s_1_1_client_1_1_user_signature_event_args.html">UserSignatureEventArgs</a> &gt; userSignatureEventHandler)</td></tr>
@@ -577,6 +581,69 @@ The certificate's password is incorrect.</li>
   <table class="params">
     <tr><td class="paramname">credentialsPath</td><td>A user JWT, e.g user.jwt</td></tr>
     <tr><td class="paramname">privateKeyPath</td><td>Private Key file</td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ad18e62060e3a163f44defb0406f44771" name="ad18e62060e3a163f44defb0406f44771"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad18e62060e3a163f44defb0406f44771">&#9670;&nbsp;</a></span>SetUserCredentialsFromString()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void NATS.Client.Options.SetUserCredentialsFromString </td>
+          <td>(</td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>credentialsText</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Sets user credentials from text instead of a file using the <a class="el" href="namespace_n_a_t_s.html">NATS</a> 2.0 security scheme. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">credentialsText</td><td>The text containing the "-----BEGIN NATS USER JWT-----" block and the text containing the "-----BEGIN USER NKEY SEED-----" block</td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a106a33884e7eb4ac96f8a4b367b120b2" name="a106a33884e7eb4ac96f8a4b367b120b2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a106a33884e7eb4ac96f8a4b367b120b2">&#9670;&nbsp;</a></span>SetUserCredentialsFromStrings()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void NATS.Client.Options.SetUserCredentialsFromStrings </td>
+          <td>(</td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>userJwtText</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>nkeySeedText</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Sets user credentials from text instead of a file using the <a class="el" href="namespace_n_a_t_s.html">NATS</a> 2.0 security scheme. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">userJwtText</td><td>The text containing the "-----BEGIN NATS USER JWT-----" block</td></tr>
+    <tr><td class="paramname">nkeySeedText</td><td>The text containing the "-----BEGIN USER NKEY SEED-----" block or the seed begining with "SU". May be the same as the jwt string if they are chained.</td></tr>
   </table>
   </dd>
 </dl>

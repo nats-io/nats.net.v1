@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">1.1.4</span>
+   &#160;<span id="projectnumber">1.1.5</span>
    </div>
    <div id="projectbrief">The NATS.io .NET C# Client</div>
   </td>
@@ -105,6 +105,10 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:afb33188bd29410735ecc4badc4871faa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4141225b0545bec21b02bcc6a9593c02"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html">IConnection</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection_factory.html#a4141225b0545bec21b02bcc6a9593c02">CreateConnection</a> (string url, string jwt, string privateNkey, bool reconnectOnConnect=false)</td></tr>
 <tr class="separator:a4141225b0545bec21b02bcc6a9593c02"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a37babd25a9febe29cfa8ee73a07ebcd0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html">IConnection</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection_factory.html#a37babd25a9febe29cfa8ee73a07ebcd0">CreateConnectionWithCredentials</a> (string url, string credentialsText, bool reconnectOnConnect=false)</td></tr>
+<tr class="separator:a37babd25a9febe29cfa8ee73a07ebcd0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adf9a8526b1e9e2f0ded3168dc0f84193"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html">IConnection</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection_factory.html#adf9a8526b1e9e2f0ded3168dc0f84193">CreateConnectionWithCredentials</a> (string url, string userJwtText, string nkeySeedText, bool reconnectOnConnect=false)</td></tr>
+<tr class="separator:adf9a8526b1e9e2f0ded3168dc0f84193"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a73e8e30589e889204eef157ef1496e69"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html">IConnection</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection_factory.html#a73e8e30589e889204eef157ef1496e69">CreateSecureConnection</a> (string url, bool reconnectOnConnect=false)</td></tr>
 <tr class="separator:a73e8e30589e889204eef157ef1496e69"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af0ac9b4908bbbcd1093d3989fd5aedfa"><td class="memItemLeft" align="right" valign="top"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html">IConnection</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection_factory.html#af0ac9b4908bbbcd1093d3989fd5aedfa">CreateConnection</a> (bool reconnectOnConnect=false)</td></tr>
@@ -362,6 +366,104 @@ Static Public Member Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="a37babd25a9febe29cfa8ee73a07ebcd0" name="a37babd25a9febe29cfa8ee73a07ebcd0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a37babd25a9febe29cfa8ee73a07ebcd0">&#9670;&nbsp;</a></span>CreateConnectionWithCredentials() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html">IConnection</a> NATS.Client.ConnectionFactory.CreateConnectionWithCredentials </td>
+          <td>(</td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>url</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>credentialsText</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>reconnectOnConnect</em> = <code>false</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Attempt to connect to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server referenced by <em>url</em>  with <a class="el" href="namespace_n_a_t_s.html">NATS</a> 2.0 the user jwt and nkey seed credentials provided directly in the string. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">url</td><td></td></tr>
+    <tr><td class="paramname">credentialsText</td><td>The text containing the "-----BEGIN NATS USER JWT-----" block and the text containing the "-----BEGIN USER NKEY SEED-----" block</td></tr>
+    <tr><td class="paramname">reconnectOnConnect</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd></dd></dl>
+
+</div>
+</div>
+<a id="adf9a8526b1e9e2f0ded3168dc0f84193" name="adf9a8526b1e9e2f0ded3168dc0f84193"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adf9a8526b1e9e2f0ded3168dc0f84193">&#9670;&nbsp;</a></span>CreateConnectionWithCredentials() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html">IConnection</a> NATS.Client.ConnectionFactory.CreateConnectionWithCredentials </td>
+          <td>(</td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>url</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>userJwtText</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>nkeySeedText</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>reconnectOnConnect</em> = <code>false</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Attempt to connect to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> server referenced by <em>url</em>  with <a class="el" href="namespace_n_a_t_s.html">NATS</a> 2.0 the user jwt and nkey seed credentials provided directly via strings. </p>
+<p ><em>url</em>  Comma seperated arrays are also supported, e.g. <code>&quot;urlA, urlB&quot;</code>.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">url</td><td>A string containing the URL (or URLs) to the <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server. See the Remarks section for more information.</td></tr>
+    <tr><td class="paramname">userJwtText</td><td>The text containing the "-----BEGIN NATS USER JWT-----" block</td></tr>
+    <tr><td class="paramname">nkeySeedText</td><td>The text containing the "-----BEGIN USER NKEY SEED-----" block or the seed begining with "SU". May be the same as the jwt string if they are chained.</td></tr>
+    <tr><td class="paramname">reconnectOnConnect</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd></dd></dl>
 
 </div>
 </div>

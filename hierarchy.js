@@ -141,6 +141,7 @@ var hierarchy =
       [ "NATS.Client.JetStream.Source", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_source.html", null ]
     ] ],
     [ "NATS.Client.JetStream.Source.SourceBuilder", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_source_1_1_source_builder.html", null ],
+    [ "NATS.Client.StringUserJWTHandler", "class_n_a_t_s_1_1_client_1_1_string_user_j_w_t_handler.html", null ],
     [ "NATS.Client.JetStream.SubjectTransform", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_subject_transform.html", null ],
     [ "NATS.Client.JetStream.SubjectTransform.SubjectTransformBuilder", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_subject_transform_1_1_subject_transform_builder.html", null ],
     [ "NATS.Client.JetStream.SubscribeOptions", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_subscribe_options.html", null ],

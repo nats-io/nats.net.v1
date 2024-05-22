@@ -2,6 +2,7 @@ var interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management =
 [
     [ "AddOrUpdateConsumer", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#a45cc3a8533a0840a9ed690347f2eba56", null ],
     [ "AddStream", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#a692b3246c03470138c9c7341a51b77f0", null ],
+    [ "CreateConsumer", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#a4c5149206d3e03cb1291992f4e926b5c", null ],
     [ "DeleteConsumer", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#a02e7c0197b637d6f31d08652222dad37", null ],
     [ "DeleteMessage", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#ad79499879e746332fa4d3df6695f0df7", null ],
     [ "DeleteMessage", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#a619f09d3627094d0b5c094a6cb57c4d2", null ],
@@ -25,5 +26,6 @@ var interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management =
     [ "PurgeStream", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#aea32e85e5bd25f461d2320f80906f9ce", null ],
     [ "PurgeStream", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#aa52f66ba76144a66463b705aa63c060e", null ],
     [ "ResumeConsumer", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#a34c9e837237c979a82255a7a3acb2974", null ],
+    [ "UpdateConsumer", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#a1ee4e1f4c433ce498766947c137ca8d2", null ],
     [ "UpdateStream", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_jet_stream_management.html#a40de8a074ad7f267a327bddf46a1cdd6", null ]
 ];
