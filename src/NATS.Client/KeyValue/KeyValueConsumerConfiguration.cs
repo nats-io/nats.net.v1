@@ -19,14 +19,12 @@ namespace NATS.Client.KeyValue
     public sealed class KeyValueConsumerConfiguration
     {
         public string Description { get; }
-        public string Name { get; }
         internal IDictionary<string, string> _metadata;
         public IDictionary<string, string> Metadata => _metadata ?? new Dictionary<string, string>();
 
         private KeyValueConsumerConfiguration(KeyValueConsumerConfigurationBuilder builder)
         {
             Description = builder._description;
-            Name = builder._name;
             _metadata = builder._metadata;
         }
 
@@ -38,7 +36,6 @@ namespace NATS.Client.KeyValue
         public sealed class KeyValueConsumerConfigurationBuilder
         {   
             internal string _description;
-            internal string _name;      
             internal Dictionary<string, string> _metadata;
 
             /// <summary>
@@ -49,18 +46,6 @@ namespace NATS.Client.KeyValue
             public KeyValueConsumerConfigurationBuilder WithDescription(string description)
             {
                 _description = EmptyAsNull(description);
-                return this;
-            }
-
-            /// <summary>
-            /// Sets the name of the consumer.
-            /// Null or empty clears the field
-            /// </summary>
-            /// <param name="name">name of the consumer.</param>
-            /// <returns>The KeyValueConsumerConfigurationBuilder</returns>
-            public KeyValueConsumerConfigurationBuilder WithName(string name)
-            {
-                _name = ValidateConsumerName(name, false);
                 return this;
             }
 

@@ -1520,18 +1520,17 @@ namespace IntegrationTests
                 {
                     ["foo"] = "bar"
                 };
-                var name = "consumerName";
                 var description = "description";
 
-                var kvConsumerConfig = KeyValueConsumerConfiguration.Builder().WithDescription(description).WithName(name).WithMetadata(metadata).Build();
+                var kvConsumerConfig = KeyValueConsumerConfiguration.Builder().WithDescription(description).WithMetadata(metadata).Build();
 
                 _ = kv.Watch(new List<string> { "key" }, keyFullWatcher, keyValueConsumerConfiguration: kvConsumerConfig, 0, keyFullWatcher.WatchOptions);
 
             
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
-                ConsumerInfo consumerInfo = jsm.GetConsumerInfo($"KV_{bucket}", name);
-                Assert.Equal("bar", consumerInfo.ConsumerConfiguration.Metadata["foo"]);
-                Assert.Equal(description, consumerInfo.ConsumerConfiguration.Description);
+                IList<ConsumerInfo> consumersInfo = jsm.GetConsumers($"KV_{bucket}").Where( consumer => consumer.ConsumerConfiguration.Description == description).ToList();
+                Assert.Single(consumersInfo);
+                Assert.Equal("bar", consumersInfo[0].ConsumerConfiguration.Metadata["foo"]);
             });
         }
     }

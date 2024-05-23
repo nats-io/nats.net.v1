@@ -92,10 +92,6 @@ namespace NATS.Client.KeyValue
                 {
                     consumerConfigBuilder.WithMetadata(new Dictionary<string, string>(consumerConfig.Metadata));
                 }
-                if (!string.IsNullOrEmpty(consumerConfig.Name))
-                {
-                    consumerConfigBuilder.WithName(consumerConfig.Name);
-                }
             }
 
             PushSubscribeOptions pso = PushSubscribeOptions.Builder()
