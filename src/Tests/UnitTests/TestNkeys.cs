@@ -79,6 +79,23 @@ namespace UnitTests
             pk = Nkeys.PublicKeyFromSeed("SUAGDLNBWI2SGHDRYBHD63NH5FGZSVJUW2J7GAJZXWANQFLDW6G5SXZESU");
             Assert.Equal("UBICBTHDKQRB4LIYA6BMIJ7EA2G7YS7FIWMMVKZJE6M3HS5IVCOLKDY2", pk);
         }
+
+        [Fact]
+        public void TestNKEYFromPublicKey()
+        {
+            string user = Nkeys.CreateUserSeed();
+
+            var userKey1 = Nkeys.FromSeed(user);
+            var pubKey1 = userKey1.EncodedPublicKey;
+
+            var userKey2 = Nkeys.FromPublicKey(pubKey1);
+
+            Assert.Equal(userKey1.PublicKey, userKey2.PublicKey);
+
+            var pubKey2 = userKey2.EncodedPublicKey;
+
+            Assert.Equal(pubKey1, pubKey2);
+        }
     }
     
 #pragma warning restore CS0618

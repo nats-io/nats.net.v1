@@ -11,12 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+
 using System;
 using System.IO;
 using System.Security.Cryptography;
-using System.Text;
 using NATS.Client.NaCl;
-
 namespace NATS.Client
 {
     internal static class Crc16
@@ -115,7 +114,7 @@ namespace NATS.Client
         public byte[] PrivateKeySeed => seed;
 
         public string EncodedSeed => Nkeys.Encode(Nkeys.PrefixFromType(Type), true, seed);
-        
+
         /// <summary>
         /// Wipes clean the internal private keys.
         /// </summary>
@@ -137,7 +136,7 @@ namespace NATS.Client
             return rv;
         }
 
-#region IDisposable Support
+        #region IDisposable Support
         private bool disposedValue = false; // To detect redundant calls
 
         /// <summary>
@@ -164,7 +163,7 @@ namespace NATS.Client
         {
             Dispose(true);
         }
-#endregion
+        #endregion
     }
 
     /// <summary>
@@ -195,7 +194,7 @@ namespace NATS.Client
 
         // PrefixByteUnknown is for unknown prefixes.
         internal const byte PrefixByteUknown = 23 << 3; // Base32-encodes to 'X...'
-        
+
         public enum PrefixType
         {
             User,
@@ -224,7 +223,7 @@ namespace NATS.Client
 
             if (crc != Crc16.Checksum(data))
                 throw new NATSException("Invalid CRC");
- 
+
             return data;
         }
 
@@ -286,7 +285,7 @@ namespace NATS.Client
             // This code commented out b/c string.remove does not touch the original string.
             // There is not way to really wipe the contents of a string.
             // if (src != null && src.Length > 0)
-                // src.Remove(0);
+            // src.Remove(0);
         }
 
         internal static byte[] DecodeSeed(byte[] raw)
@@ -337,12 +336,11 @@ namespace NATS.Client
         {
             return DecodeSeed(Nkeys.Decode(src), out type);
         }
-        
-        public static NkeyPair FromPublicKey(char[] publicKey)
+
+        public static NkeyPair FromPublicKey(string publicKey)
         {
-            string pkStr = new string(publicKey);
-            byte[] raw = Nkeys.Decode(pkStr);
-            byte prefix = (byte)(raw[0] & 0xFF);
+            byte[] raw = Nkeys.Decode(publicKey);
+            byte prefix = raw[0];
 
             PrefixType? tfp = TypeFromPrefix(prefix);
             if (!tfp.HasValue)
@@ -350,7 +348,15 @@ namespace NATS.Client
                 throw new NATSException("Not a valid public NKey");
             }
 
-            return new NkeyPair(Encoding.ASCII.GetBytes(pkStr), null, tfp.Value);
+            var pk = new byte[32];
+            Buffer.BlockCopy(raw, 1, pk, 0, 32);
+
+            return new NkeyPair(pk, null, tfp.Value);
+        }
+
+        public static NkeyPair FromPublicKey(char[] publicKey)
+        {
+            return FromPublicKey(new string(publicKey));
         }
 
         /// <summary>
@@ -372,7 +378,7 @@ namespace NATS.Client
                 Wipe(ref userSeed);
             }
         }
-        
+
         internal static string Encode(byte prefixbyte, bool seed, byte[] src)
         {
             if (!IsValidPublicPrefixByte(prefixbyte))
