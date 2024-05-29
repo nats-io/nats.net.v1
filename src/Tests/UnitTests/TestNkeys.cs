@@ -80,21 +80,20 @@ namespace UnitTests
             Assert.Equal("UBICBTHDKQRB4LIYA6BMIJ7EA2G7YS7FIWMMVKZJE6M3HS5IVCOLKDY2", pk);
         }
 
-        [Fact]
-        public void TestNKEYFromPublicKey()
+        [Theory]
+        [InlineData("SUAHBVFYZF3DIEO4UIHIZMJICVLURLBM5JJPK7GSVGP2QUC3NZ323BRE6A", "UCM5BG6AAZSEGREBCLG7PG4GFQNJABSAVIXC6VWS7TDHZFPIYFVYHIDG")]
+        [InlineData("SAADARCQJ3JA737Z443YNAZBNJNTFP7YNAF4QFUXKTBFBS4KAVK55DGSOQ", "AD2HQTUKOPBUGOPHA6KFRE6ZW5TH43D7P7E56OAQBZQLW2ECMNML6MVA")]
+        [InlineData("SNAH645525YA4PNXHWWS46VNXXQTYAXOPKGHXYAHXZZ43XTDDG2ZQAX7LY", "NBZCD2OSMSDRVYCAI77HUN6A2WNDWNT2DMVVEW66DHNWCDXVOUWRCCK7")]
+        [InlineData("SOAF5OP7UPK6XJCMNRYEJRET6YQSOE3FD4I4ERSN6WKHLYUC5AQDCOAFVY", "OA6SJACXYP2QGNLU4QYLJTVRVZPCZEEUNO2UQOVNGXYUPUJJHCVZIZQ2")]
+        [InlineData("SCAP4LGVURDWVL37AZIM5O47UKANFI6FKBY77HMYF55CKW2XFKLNUBTTFE", "CAO36T42KFA2LMIZ6YHJKPQEJWT5ULYSV633FWBCEJ7MREZPHHC56BSC")]
+        public void TestNKEYFromPublicKey(string encodedSeed, string encodedPubKey)
         {
-            string user = Nkeys.CreateUserSeed();
+            NkeyPair fromSeed = Nkeys.FromSeed(encodedSeed); 
+            NkeyPair fromKey = Nkeys.FromPublicKey(fromSeed.EncodedPublicKey); 
 
-            var userKey1 = Nkeys.FromSeed(user);
-            var pubKey1 = userKey1.EncodedPublicKey;
-
-            var userKey2 = Nkeys.FromPublicKey(pubKey1);
-
-            Assert.Equal(userKey1.PublicKey, userKey2.PublicKey);
-
-            var pubKey2 = userKey2.EncodedPublicKey;
-
-            Assert.Equal(pubKey1, pubKey2);
+            Assert.Equal(fromSeed.PublicKey, fromKey.PublicKey); 
+            Assert.Equal(encodedPubKey, fromSeed.EncodedPublicKey); 
+            Assert.Equal(encodedPubKey, fromKey.EncodedPublicKey);
         }
     }
     
