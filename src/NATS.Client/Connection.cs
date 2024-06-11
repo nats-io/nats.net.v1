@@ -394,16 +394,17 @@ namespace NATS.Client
                         if (!task.Wait(TimeSpan.FromMilliseconds(options.Timeout)))
                         {
                             nce = new NATSConnectionException("timeout");
+                            task.ContinueWith(t => close(client));
                         }
                     }
                     catch (Exception e)
                     {
                         nce = new NATSConnectionException(e.Message);
+                        close(client);
                     }
 
                     if (nce != null)
                     {
-                        close(client);
                         client = null;
                         throw nce;
                     }
@@ -435,11 +436,10 @@ namespace NATS.Client
             public virtual void close(TcpClient c)
             {
 #if NET46
-                    c?.Close();
+                c?.Close();
 #else
                 c?.Dispose();
 #endif
-                c = null;
             }
 
             public void makeTLS()
