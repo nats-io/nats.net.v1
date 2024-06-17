@@ -204,7 +204,7 @@ namespace NATS.Client.ObjectStore
             }
             else {
                 IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(
-                    PubSubChunkSubject(oi.Nuid),
+                    RawChunkSubject(oi.Nuid),
                     PushSubscribeOptions.Builder()
                         .WithStream(StreamName)
                         .WithOrdered(true)
