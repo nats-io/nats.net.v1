@@ -226,6 +226,9 @@ namespace IntegrationTests
             }
         }
 
+        public const string HubDomain = "HUB";
+        public const string LeafDomain = "LEAF";
+
         public void RunInJsHubLeaf(TestServerInfo hubServerInfo,
             TestServerInfo hubLeafInfo, 
             TestServerInfo leafServerInfo, Action<IConnection, IConnection> test)
@@ -233,22 +236,25 @@ namespace IntegrationTests
             string hubConfFile = TestBase.TempConfFile();
             StreamWriter streamWriter = File.CreateText(hubConfFile);
             streamWriter.WriteLine("port: " + hubServerInfo.Port); 
-            streamWriter.WriteLine("server_name: HUB");
+            streamWriter.WriteLine("server_name: " + HubDomain);
             streamWriter.WriteLine("jetstream {");
-            streamWriter.WriteLine("    domain: HUB");
+            streamWriter.WriteLine("    store_dir: " + TestBase.TempConfDir());
+            streamWriter.WriteLine("    domain: " + HubDomain);
             streamWriter.WriteLine("}");
             streamWriter.WriteLine("leafnodes {");
             streamWriter.WriteLine("  listen = 127.0.0.1:" + hubLeafInfo.Port);
             streamWriter.WriteLine("}");
             streamWriter.Flush();
             streamWriter.Close();
-
+                
             string leafConfFile = TestBase.TempConfFile();
+            string leafJsStoreDir = TestBase.TempConfDir();
             streamWriter = File.CreateText(leafConfFile);
             streamWriter.WriteLine("port: " + leafServerInfo.Port); 
-            streamWriter.WriteLine("server_name: LEAF");
+            streamWriter.WriteLine("server_name: " + LeafDomain);
             streamWriter.WriteLine("jetstream {");
-            streamWriter.WriteLine("    domain: LEAF");
+            streamWriter.WriteLine("    store_dir: " + TestBase.TempConfDir());
+            streamWriter.WriteLine("    domain: " + LeafDomain);
             streamWriter.WriteLine("}");
             streamWriter.WriteLine("leafnodes {");
             streamWriter.WriteLine("  remotes = [ { url: \"leaf://127.0.0.1:" + hubLeafInfo.Port + "\" } ]");
@@ -473,8 +479,10 @@ namespace IntegrationTests
     public class JetStreamPushAsyncSuiteContext : OneServerSuiteContext {}
     public class JetStreamPushSyncSuiteContext : OneServerSuiteContext {}
     public class JetStreamPushSyncQueueSuiteContext : OneServerSuiteContext {}
+    public class KeyValueSuiteContext : HubLeafSuiteContext {}
+    public class ObjectStoreSuiteContext : HubLeafSuiteContext {}
 
-    public class KeyValueSuiteContext : SuiteContext
+    public class HubLeafSuiteContext : SuiteContext
     {
         private const int SeedPort = TestSeedPorts.KvSuite;
 
@@ -489,7 +497,7 @@ namespace IntegrationTests
         public void RunInJsHubLeaf(Action<IConnection, IConnection> test) => 
             base.RunInJsHubLeaf(Server1, Server2, Server3, test);
     }
-    
+
     public class OneServerSuiteContext : SuiteContext
     {
         public readonly TestServerInfo Server1;

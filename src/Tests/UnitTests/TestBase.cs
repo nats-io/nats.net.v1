@@ -114,6 +114,11 @@ namespace UnitTests
             return DateTime.Parse(dtString).ToUniversalTime();
         }
 
+        public static string TempConfDir()
+        {
+            return Path.GetTempPath().Replace("\\", "\\\\"); // when on windows this is necessary. unix doesn't have backslash
+        }
+
         public static string TempConfFile()
         {
             return Path.GetTempPath() + "nats_net_test" + Guid.NewGuid() + ".conf";
