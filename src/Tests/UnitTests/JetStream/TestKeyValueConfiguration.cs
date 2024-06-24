@@ -33,7 +33,7 @@ namespace UnitTests.JetStream
                 .WithName("bucketName")
                 .WithMaxHistoryPerKey(44)
                 .WithMaxBucketSize(555)
-                .WithMaxValueSize(666)
+                .WithMaximumValueSize(666)
                 .WithTtl(Duration.OfMillis(777))
                 .WithStorageType(StorageType.Memory)
                 .WithReplicas(2)
@@ -59,7 +59,7 @@ namespace UnitTests.JetStream
             Assert.Equal("bucketName", kvc.BucketName);
             Assert.Equal(44, kvc.MaxHistoryPerKey);
             Assert.Equal(555, kvc.MaxBucketSize);
-            Assert.Equal(666, kvc.MaxValueSize);
+            Assert.Equal(666, kvc.MaximumValueSize);
             Assert.Equal(Duration.OfMillis(777), kvc.Ttl);
             Assert.Equal(StorageType.Memory, kvc.StorageType);
             Assert.True(kvc.AllowDirect);
@@ -171,8 +171,8 @@ namespace UnitTests.JetStream
             Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithMaxHistoryPerKey(65));
             Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithMaxBucketSize(0));
             Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithMaxBucketSize(-2));
-            Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithMaxValueSize(0));
-            Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithMaxValueSize(-2));
+            Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithMaximumValueSize(0));
+            Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithMaximumValueSize(-2));
             Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithTtl(Duration.OfNanos(-1)));
             Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithReplicas(0));
             Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder().WithReplicas(6));
