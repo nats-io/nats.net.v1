@@ -58,7 +58,13 @@ namespace NATS.Client.KeyValue
         /// <summary>
         /// The maximum size for an individual value in the bucket
         /// </summary>
-        public long MaxValueSize => BackingConfig.MaxMsgSize;
+        [Obsolete("The server value is a 32-bit signed value. Use MaximumValueSize.", false)]
+        public long MaxValueSize => BackingConfig.MaximumMessageSize;
+
+        /// <summary>
+        /// The maximum size for an individual value in the bucket
+        /// </summary>
+        public int MaximumValueSize => BackingConfig.MaximumMessageSize;
 
         /// <summary>
         /// The maximum age for a value in this bucket
@@ -215,8 +221,19 @@ namespace NATS.Client.KeyValue
             /// </summary>
             /// <param name="maxValueSize">the maximum size for a value</param>
             /// <returns></returns>
+            [Obsolete("The server value is a 32-bit signed value. Use WithMaximumValueSize.", false)]
             public KeyValueConfigurationBuilder WithMaxValueSize(long maxValueSize) {
-                scBuilder.WithMaxMsgSize(Validator.ValidateMaxValueSize(maxValueSize));
+                scBuilder.WithMaximumMessageSize((int)Validator.ValidateMaxValueSize(maxValueSize));
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the maximum size for an individual value in the KeyValueConfiguration.
+            /// </summary>
+            /// <param name="maxValueSize">the maximum size for a value</param>
+            /// <returns></returns>
+            public KeyValueConfigurationBuilder WithMaximumValueSize(int maxValueSize) {
+                scBuilder.WithMaximumMessageSize((int)Validator.ValidateMaxValueSize(maxValueSize));
                 return this;
             }
 

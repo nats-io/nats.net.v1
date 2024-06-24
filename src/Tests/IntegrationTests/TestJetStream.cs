@@ -1064,7 +1064,7 @@ namespace IntegrationTests
                         .WithName(streamName)
                         .WithStorageType(StorageType.Memory)
                         .WithSubjects(subject1, subject2)
-                        .WithMaxMsgSize(1000)
+                        .WithMaximumMessageSize(1000)
                         .Build()
                     );
 

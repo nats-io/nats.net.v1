@@ -76,6 +76,8 @@ namespace IntegrationTests
                 Assert.Equal(-1, kvc.MaxBucketSize);
                 Assert.Equal(-1, status.MaxValueSize);
                 Assert.Equal(-1, kvc.MaxValueSize);
+                Assert.Equal(-1, status.MaximumValueSize);
+                Assert.Equal(-1, kvc.MaximumValueSize);
                 Assert.Equal(Duration.Zero, status.Ttl);
                 Assert.Equal(Duration.Zero, kvc.Ttl);
                 Assert.Equal(StorageType.Memory, status.StorageType);
@@ -557,7 +559,7 @@ namespace IntegrationTests
                 Assert.Empty(kvs.Description);
                 Assert.Equal(1, kvs.MaxHistoryPerKey);
                 Assert.Equal(-1, kvs.MaxBucketSize);
-                Assert.Equal(-1, kvs.MaxValueSize);
+                Assert.Equal(-1, kvs.MaximumValueSize);
                 Assert.Equal(Duration.Zero, kvs.Ttl);
                 Assert.Equal(StorageType.Memory, kvs.StorageType);
                 Assert.Equal(1, kvs.Replicas);
@@ -580,7 +582,7 @@ namespace IntegrationTests
                     .WithDescription(Plain)
                     .WithMaxHistoryPerKey(3)
                     .WithMaxBucketSize(10_000)
-                    .WithMaxValueSize(100)
+                    .WithMaximumValueSize(100)
                     .WithTtl(Duration.OfHours(1))
                     .Build();
 
@@ -591,6 +593,7 @@ namespace IntegrationTests
                 Assert.Equal(3, kvs.MaxHistoryPerKey);
                 Assert.Equal(10_000, kvs.MaxBucketSize);
                 Assert.Equal(100, kvs.MaxValueSize);
+                Assert.Equal(100, kvs.MaximumValueSize);
                 Assert.Equal(Duration.OfHours(1), kvs.Ttl);
                 Assert.Equal(StorageType.Memory, kvs.StorageType);
                 Assert.Equal(1, kvs.Replicas);

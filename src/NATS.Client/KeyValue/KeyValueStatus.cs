@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
@@ -67,7 +68,13 @@ namespace NATS.Client.KeyValue
         /// <summary>
         /// The maximum size for an individual value in the bucket
         /// </summary>
-        public long MaxValueSize => Config.MaxValueSize;
+        [Obsolete("The server value is a 32-bit signed value. Use MaximumValueSize.", false)]
+        public long MaxValueSize => Config.MaximumValueSize;
+
+        /// <summary>
+        /// The maximum size for an individual value in the bucket
+        /// </summary>
+        public long MaximumValueSize => Config.MaximumValueSize;
 
         /// <summary>
         /// The maximum age for a value in this bucket
@@ -111,7 +118,7 @@ namespace NATS.Client.KeyValue
 
         public override string ToString()
         {
-            return $"BucketName: {BucketName}, Description: {Description}, EntryCount: {EntryCount}, MaxHistoryPerKey: {MaxHistoryPerKey}, MaxBucketSize: {MaxBucketSize}, MaxValueSize: {MaxValueSize}, Ttl: {Ttl}, StorageType: {StorageType}, Replicas: {Replicas}, BackingStore: {BackingStore}";
+            return $"BucketName: {BucketName}, Description: {Description}, EntryCount: {EntryCount}, MaxHistoryPerKey: {MaxHistoryPerKey}, MaxBucketSize: {MaxBucketSize}, MaximumValueSize: {MaximumValueSize}, Ttl: {Ttl}, StorageType: {StorageType}, Replicas: {Replicas}, BackingStore: {BackingStore}";
         }
     }
 }
