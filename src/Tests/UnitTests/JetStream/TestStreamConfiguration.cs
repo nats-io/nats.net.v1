@@ -108,9 +108,6 @@ namespace UnitTests.JetStream
             Assert.Throws<ArgumentException>(() => StreamConfiguration.Builder().WithMaxBytes(-2));
             Assert.Throws<ArgumentException>(() => StreamConfiguration.Builder().WithMaxAge(Duration.OfNanos(-1)));
             Assert.Throws<ArgumentException>(() => StreamConfiguration.Builder().WithMaxAge(-1));
-            Assert.Throws<ArgumentException>(() => StreamConfiguration.Builder().WithMaxMsgSize(0));
-            Assert.Throws<ArgumentException>(() => StreamConfiguration.Builder().WithMaxMsgSize(-2));
-            Assert.Throws<ArgumentException>(() => StreamConfiguration.Builder().WithMaxMsgSize((long)int.MaxValue + 1));
             Assert.Throws<ArgumentException>(() => StreamConfiguration.Builder().WithMaximumMessageSize(0));
             Assert.Throws<ArgumentException>(() => StreamConfiguration.Builder().WithMaximumMessageSize(-2));
             Assert.Throws<ArgumentException>(() => StreamConfiguration.Builder().WithReplicas(0));
@@ -285,7 +282,6 @@ namespace UnitTests.JetStream
                 Assert.Equal(732, sc.MaxBytes);
                 Assert.Equal(Duration.OfNanos(43000000000L), sc.MaxAge);
                 Assert.Equal(Duration.OfNanos(42000000000L), sc.DuplicateWindow);
-                Assert.Equal(734, sc.MaxMsgSize);
                 Assert.Equal(734, sc.MaximumMessageSize);
                 Assert.Equal(StorageType.Memory, sc.StorageType);
                 Assert.Equal(DiscardPolicy.New, sc.DiscardPolicy);
