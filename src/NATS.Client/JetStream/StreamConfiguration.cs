@@ -151,7 +151,7 @@ namespace NATS.Client.JetStream
             AddField(o, ApiConstants.MaxMsgsPerSubject, MaxMsgsPerSubject);
             AddField(o, ApiConstants.MaxBytes, MaxBytes);
             AddField(o, ApiConstants.MaxAge, MaxAge.Nanos);
-            AddField(o, ApiConstants.MaxMsgSize, MaxMsgSize);
+            AddField(o, ApiConstants.MaxMsgSize, MaximumMessageSize);
             AddField(o, ApiConstants.NumReplicas, Replicas);
             AddField(o, ApiConstants.NoAck, NoAck);
             AddField(o, ApiConstants.TemplateOwner, TemplateOwner);
