@@ -22,7 +22,7 @@ tls {}
 allow_non_tls: true
 ```
 
-Before this, the reason that the client would not connect is 
+Before this, the client would not connect 
 because the server was not requiring tls for the proxy, 
 but the client was configured as secure because it was connecting securely to the proxy. 
 The client thought that this was a mismatch and would not connect, 
