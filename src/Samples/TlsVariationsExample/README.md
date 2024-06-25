@@ -28,7 +28,7 @@ but the client was configured as secure because it was connecting securely to th
 The client thought that this was a mismatch and would not connect, 
 essentially failing fast instead of waiting for the server to reject the connection attempt.
 
-The latest version of the client is able recognize this server configuration 
+The latest version of the client is able to recognize this server configuration 
 and understands that it's okay to connect securely to the proxy regardless of the 
 server configuration.
 
