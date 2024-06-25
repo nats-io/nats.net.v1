@@ -359,14 +359,25 @@ namespace NATS.Client.Internals
             return ValidateGtZeroOrMinus1(max, "Max BucketBytes"); // max bucket bytes is a kv alias to max bytes
         }
 
+        internal static long ValidateMaxMessageSize(long max, string label)
+        {
+            long l = ValidateGtZeroOrMinus1(max, label);
+            if (l > int.MaxValue)
+            {
+                throw new ArgumentException($"{label} cannot be larger than {int.MaxValue}");
+            }
+
+            return l;
+        }
+
         internal static long ValidateMaxMessageSize(long max)
         {
-            return ValidateGtZeroOrMinus1(max, "Max Message Size");
+            return ValidateMaxMessageSize(max, "Max Message Size");
         }
 
         internal static long ValidateMaxValueSize(long max)
         {
-            return ValidateGtZeroOrMinus1(max, "Max Value Size"); // max value size is a kv alias to max message size
+            return ValidateMaxMessageSize(max, "Max Value Size"); // max value size is a kv alias to max message size
         }
 
         internal static int ValidateNumberOfReplicas(int replicas)

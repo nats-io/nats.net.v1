@@ -31,7 +31,7 @@ namespace NATS.Client.JetStream
         public long MaxMsgsPerSubject { get; }
         public long MaxBytes { get; }
         public Duration MaxAge { get; }
-        public long MaxMsgSize { get; }
+        public int MaximumMessageSize { get; }
         public StorageType StorageType { get; }
         public int Replicas { get; }
         public bool NoAck { get; }
@@ -54,8 +54,10 @@ namespace NATS.Client.JetStream
         public IDictionary<string, string> Metadata { get; }
         public ulong FirstSequence { get; private set; }
 
-        [Obsolete("MaxMsgSize was mistakenly renamed in a previous change.", false)]
-        public long MaxValueSize => MaxMsgSize;
+        [Obsolete("The server value is a 32-bit signed value. Use MaximumMessageSize.", false)]
+        public long MaxMsgSize => MaximumMessageSize;
+        [Obsolete("MaxMsgSize was mistakenly renamed in a previous change. Use MaximumMessageSize.", false)]
+        public long MaxValueSize => MaximumMessageSize;
 
         internal StreamConfiguration(string json) : this(JSON.Parse(json)) { }
         
@@ -73,7 +75,7 @@ namespace NATS.Client.JetStream
             MaxMsgsPerSubject = AsLongOrMinus1(scNode, ApiConstants.MaxMsgsPerSubject);
             MaxBytes = AsLongOrMinus1(scNode, ApiConstants.MaxBytes);
             MaxAge = AsDuration(scNode, ApiConstants.MaxAge, Duration.Zero);
-            MaxMsgSize = AsLongOrMinus1(scNode, ApiConstants.MaxMsgSize);
+            MaximumMessageSize = AsIntOrMinus1(scNode, ApiConstants.MaxMsgSize);
             Replicas = scNode[ApiConstants.NumReplicas].AsInt;
             NoAck = scNode[ApiConstants.NoAck].AsBool;
             TemplateOwner = scNode[ApiConstants.TemplateOwner].Value;
@@ -107,7 +109,7 @@ namespace NATS.Client.JetStream
             MaxMsgsPerSubject = builder._maxMsgsPerSubject;
             MaxBytes = builder._maxBytes;
             MaxAge = builder._maxAge;
-            MaxMsgSize = builder._maxMsgSize;
+            MaximumMessageSize = builder._maxMsgSize;
             StorageType = builder._storageType;
             Replicas = builder._replicas;
             NoAck = builder._noAck;
@@ -149,7 +151,7 @@ namespace NATS.Client.JetStream
             AddField(o, ApiConstants.MaxMsgsPerSubject, MaxMsgsPerSubject);
             AddField(o, ApiConstants.MaxBytes, MaxBytes);
             AddField(o, ApiConstants.MaxAge, MaxAge.Nanos);
-            AddField(o, ApiConstants.MaxMsgSize, MaxMsgSize);
+            AddField(o, ApiConstants.MaxMsgSize, MaximumMessageSize);
             AddField(o, ApiConstants.NumReplicas, Replicas);
             AddField(o, ApiConstants.NoAck, NoAck);
             AddField(o, ApiConstants.TemplateOwner, TemplateOwner);
@@ -197,7 +199,7 @@ namespace NATS.Client.JetStream
             internal long _maxMsgsPerSubject = -1;
             internal long _maxBytes = -1;
             internal Duration _maxAge = Duration.Zero;
-            internal long _maxMsgSize = -1;
+            internal int _maxMsgSize = -1;
             internal StorageType _storageType = StorageType.File;
             internal int _replicas = 1;
             internal bool _noAck;
@@ -236,7 +238,7 @@ namespace NATS.Client.JetStream
                     _maxMsgsPerSubject = sc.MaxMsgsPerSubject;
                     _maxBytes = sc.MaxBytes;
                     _maxAge = sc.MaxAge;
-                    _maxMsgSize = sc.MaxMsgSize;
+                    _maxMsgSize = sc.MaximumMessageSize;
                     _storageType = sc.StorageType;
                     _replicas = sc.Replicas;
                     _noAck = sc.NoAck;
@@ -424,8 +426,19 @@ namespace NATS.Client.JetStream
             /// </summary>
             /// <param name="maxMsgSize">the maximum message size</param>
             /// <returns>The StreamConfigurationBuilder</returns>
+            [Obsolete("The server value is a 32-bit signed value. Use WithMaximumMessageSize.", false)]
             public StreamConfigurationBuilder WithMaxMsgSize(long maxMsgSize) {
-                _maxMsgSize = Validator.ValidateMaxMessageSize(maxMsgSize);
+                _maxMsgSize = (int)Validator.ValidateMaxMessageSize(maxMsgSize);
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the maximum message size in the StreamConfiguration.
+            /// </summary>
+            /// <param name="maxMsgSize">the maximum message size</param>
+            /// <returns>The StreamConfigurationBuilder</returns>
+            public StreamConfigurationBuilder WithMaximumMessageSize(int maxMsgSize) {
+                _maxMsgSize = (int)Validator.ValidateMaxMessageSize(maxMsgSize);
                 return this;
             }
 
