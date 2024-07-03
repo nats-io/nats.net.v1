@@ -15,18 +15,31 @@ using System.Text;
 
 namespace NATS.Client
 {
+    /// <summary>
+    /// Options used when calling IConnection.Reconnect
+    /// </summary>
     public sealed class ReconnectOptions
     {
         private int flushTimeout = 0;
+        
+        /// <summary>
+        /// Milliseconds. If supplied and at least 1 millisecond, the Reconnect will
+        /// call IConnection.Flush(timeout) before closing and reconnecting. 
+        /// </summary>
         public int FlushTimeout        
         {
             get { return flushTimeout; }
             set { flushTimeout = value < 1 ? 0 : flushTimeout; }
         }
 
-        public ReconnectOptions WithFlushTimeout(int i)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="timeout">The number of milliseconds to wait for the flush to complete.</param>
+        /// <returns></returns>
+        public ReconnectOptions WithFlushTimeout(int timeout)
         {
-            FlushTimeout = i;
+            FlushTimeout = timeout;
             return this;
         }
     }
