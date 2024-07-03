@@ -119,6 +119,12 @@ namespace UnitTests
             return Path.GetTempPath().Replace("\\", "\\\\"); // when on windows this is necessary. unix doesn't have backslash
         }
 
+        public static string TempJsStoreDir()
+        {
+            DirectoryInfo info = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), Nuid.NextGlobalSequence()));
+            return info.FullName.Replace("\\", "\\\\"); // when on windows this is necessary. unix doesn't have backslash
+        }
+
         public static string TempConfFile()
         {
             return Path.GetTempPath() + "nats_net_test" + Guid.NewGuid() + ".conf";

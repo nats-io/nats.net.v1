@@ -66,7 +66,6 @@ namespace IntegrationTests
         public const int DefaultSuiteNormalClusterServers = 4551; //7pc
 
         public const int AuthorizationSuite = 11490; //3pc
-        public const int ReconnectSuite = 11493; //1pc
         public const int PublishErrorsDuringReconnectSuite = 11494; //1pc
         public const int ClusterSuite = 11495; //10pc
         public const int ConnectionSuite = 11505;//2pc
@@ -79,8 +78,7 @@ namespace IntegrationTests
         public const int RxSuite = 11517; //1pc
         public const int AsyncAwaitDeadlocksSuite = 11518; //1pc
         public const int ConnectionIpV6Suite = 11519; //1pc
-        public const int KvSuite = 11520; //4pc
-        public const int ConnectionBehaviorSuite = 11524; //2pc
+        public const int ConnectionBehaviorSuite = 11520; //2pc
 
         public static InterlockedInt AutoPort = new InterlockedInt(11550);
     }
@@ -238,7 +236,7 @@ namespace IntegrationTests
             streamWriter.WriteLine("port: " + hubServerInfo.Port); 
             streamWriter.WriteLine("server_name: " + HubDomain);
             streamWriter.WriteLine("jetstream {");
-            streamWriter.WriteLine("    store_dir: " + TestBase.TempConfDir());
+            streamWriter.WriteLine("    store_dir: " + TestBase.TempJsStoreDir());
             streamWriter.WriteLine("    domain: " + HubDomain);
             streamWriter.WriteLine("}");
             streamWriter.WriteLine("leafnodes {");
@@ -253,7 +251,7 @@ namespace IntegrationTests
             streamWriter.WriteLine("port: " + leafServerInfo.Port); 
             streamWriter.WriteLine("server_name: " + LeafDomain);
             streamWriter.WriteLine("jetstream {");
-            streamWriter.WriteLine("    store_dir: " + TestBase.TempConfDir());
+            streamWriter.WriteLine("    store_dir: " + TestBase.TempJsStoreDir());
             streamWriter.WriteLine("    domain: " + LeafDomain);
             streamWriter.WriteLine("}");
             streamWriter.WriteLine("leafnodes {");
@@ -276,6 +274,72 @@ namespace IntegrationTests
                     {
                         CleanupJs(cHub);
                         CleanupJs(cLeaf);
+                    }
+                }
+            }
+        }
+
+        private static String makeClusterConfFile(string cluster, string serverPrefix, int serverId, TestServerInfo port, TestServerInfo listen, TestServerInfo route1, TestServerInfo route2) {
+            string confFile = TestBase.TempConfFile();
+            StreamWriter streamWriter = File.CreateText(confFile);
+            streamWriter.WriteLine("port: " + port.Port); 
+            streamWriter.WriteLine("jetstream {");
+            streamWriter.WriteLine("    store_dir=" + TestBase.TempJsStoreDir());
+            streamWriter.WriteLine("}");
+            streamWriter.WriteLine("server_name=" + serverPrefix + serverId);
+            streamWriter.WriteLine("cluster {");
+            streamWriter.WriteLine("  name: " + cluster);
+            streamWriter.WriteLine("  listen: 127.0.0.1:" + listen.Port);
+            streamWriter.WriteLine("  routes: [");
+            streamWriter.WriteLine("    nats-route://127.0.0.1:" + route1.Port);
+            streamWriter.WriteLine("    nats-route://127.0.0.1:" + route2.Port);
+            streamWriter.WriteLine("  ]");
+            streamWriter.WriteLine("}");
+            streamWriter.Flush();
+            streamWriter.Close();
+            return confFile;
+        }
+
+        public void RunInJsCluster(Action<Options> optionsModifier, 
+            TestServerInfo info1, TestServerInfo info2, TestServerInfo info3,
+            TestServerInfo listen1, TestServerInfo listen2, TestServerInfo listen3, 
+            Action<IConnection, IConnection, IConnection> test)
+        {
+            string unique = Nuid.NextGlobalSequence();
+            string cluster = $"clstr{unique}";
+            string serverPrefix = $"srvr{unique}";
+
+            string confFile1 = makeClusterConfFile(cluster, serverPrefix, 1, info1, listen1, listen2, listen3);
+            string confFile2 = makeClusterConfFile(cluster, serverPrefix, 2, info2, listen2, listen1, listen3);
+            string confFile3 = makeClusterConfFile(cluster, serverPrefix, 3, info3, listen3, listen1, listen2);
+            
+            Action<Options> ClusterOptionsModifier = options =>
+            {
+                options.Servers = new []{ info1.Url.ToString(), info2.Url.ToString(), info3.Url.ToString() };
+                NATSServer.QuietOptionsModifier.Invoke(options);
+                if (optionsModifier != null)
+                {
+                    optionsModifier.Invoke(options);
+                }
+            };
+            
+            using (var srv1 = NATSServer.CreateJetStreamFast(int.MinValue, $"--config {confFile1}"))
+            using (var srv2 = NATSServer.CreateJetStreamFast(int.MinValue, $"--config {confFile2}"))
+            using (var srv3 = NATSServer.CreateJetStreamFast(int.MinValue, $"--config {confFile3}"))
+            {
+                using (var c1 = OpenConnection(info1.Port, ClusterOptionsModifier))
+                using (var c2 = OpenConnection(info2.Port, ClusterOptionsModifier))
+                using (var c3 = OpenConnection(info3.Port, ClusterOptionsModifier))
+                {
+                    try
+                    {
+                        test(c1, c2, c3);
+                    }
+                    finally
+                    {
+                        CleanupJs(c1);
+                        CleanupJs(c2);
+                        CleanupJs(c3);
                     }
                 }
             }
@@ -436,13 +500,6 @@ namespace IntegrationTests
         public readonly TestServerInfo Server1 = new TestServerInfo(SeedPort);
     }
 
-    public class ReconnectSuiteContext : SuiteContext
-    {
-        private const int SeedPort = TestSeedPorts.ReconnectSuite;
-
-        public readonly TestServerInfo Server1 = new TestServerInfo(SeedPort);
-    }
-
     public class PublishErrorsDuringReconnectSuiteContext : SuiteContext
     {
         private const int SeedPort = TestSeedPorts.PublishErrorsDuringReconnectSuite;
@@ -479,25 +536,31 @@ namespace IntegrationTests
     public class JetStreamPushAsyncSuiteContext : OneServerSuiteContext {}
     public class JetStreamPushSyncSuiteContext : OneServerSuiteContext {}
     public class JetStreamPushSyncQueueSuiteContext : OneServerSuiteContext {}
-    public class KeyValueSuiteContext : HubLeafSuiteContext {}
-    public class ObjectStoreSuiteContext : HubLeafSuiteContext {}
+    public class KeyValueSuiteContext : JsClusterSuiteContext {}
+    public class ObjectStoreSuiteContext : JsClusterSuiteContext {}
+    public class ReconnectSuiteContext : JsClusterSuiteContext {}
 
-    public class HubLeafSuiteContext : SuiteContext
+    public class JsClusterSuiteContext : SuiteContext
     {
-        private const int SeedPort = TestSeedPorts.KvSuite;
+        public readonly TestServerInfo Server1 = new TestServerInfo(TestSeedPorts.AutoPort.Increment());
+        public readonly TestServerInfo Cluster0 = new TestServerInfo(TestSeedPorts.AutoPort.Increment());
+        public readonly TestServerInfo Cluster1 = new TestServerInfo(TestSeedPorts.AutoPort.Increment());
+        public readonly TestServerInfo Cluster2 = new TestServerInfo(TestSeedPorts.AutoPort.Increment());
+        public readonly TestServerInfo Listen0 = new TestServerInfo(TestSeedPorts.AutoPort.Increment());
+        public readonly TestServerInfo Listen1 = new TestServerInfo(TestSeedPorts.AutoPort.Increment());
+        public readonly TestServerInfo Listen2 = new TestServerInfo(TestSeedPorts.AutoPort.Increment());
 
-        public readonly TestServerInfo Server1 = new TestServerInfo(SeedPort);
-        public readonly TestServerInfo Server2 = new TestServerInfo(SeedPort + 1);
-        public readonly TestServerInfo Server3 = new TestServerInfo(SeedPort + 2);
-        public readonly TestServerInfo Server4 = new TestServerInfo(SeedPort + 3);
-
-        public void RunInJsServer(Action<IConnection> test) => base.RunInJsServer(Server4, test);
-        public void RunInJsServer(Func<ServerInfo, bool> versionCheck, Action<IConnection> test) => base.RunInJsServer(Server4, versionCheck, null, test);
-        public void RunInServer(Action<IConnection> test) => base.RunInServer(Server4, test);
+        public void RunInJsServer(Action<IConnection> test) => base.RunInJsServer(Server1, test);
+        public void RunInJsServer(Func<ServerInfo, bool> versionCheck, Action<IConnection> test) => base.RunInJsServer(Server1, versionCheck, null, test);
+        public void RunInServer(Action<IConnection> test) => base.RunInServer(Server1, test);
         public void RunInJsHubLeaf(Action<IConnection, IConnection> test) => 
-            base.RunInJsHubLeaf(Server1, Server2, Server3, test);
+            base.RunInJsHubLeaf(Cluster0, Cluster1, Cluster2, test);
+        public void RunInJsCluster(Action<IConnection, IConnection, IConnection> test) => 
+            base.RunInJsCluster(null, Cluster0, Cluster1, Cluster2, Listen0, Listen1, Listen2, test);
+        public void RunInJsCluster(Action<Options> optionsModifier, Action<IConnection, IConnection, IConnection> test) => 
+            base.RunInJsCluster(optionsModifier, Cluster0, Cluster1, Cluster2, Listen0, Listen1, Listen2, test);
     }
-
+    
     public class OneServerSuiteContext : SuiteContext
     {
         public readonly TestServerInfo Server1;
