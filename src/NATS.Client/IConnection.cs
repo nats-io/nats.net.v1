@@ -93,6 +93,12 @@ namespace NATS.Client
         Exception LastError { get; }
 
         /// <summary>
+        /// Manually start reconnect behavior.
+        /// <param name="reconnectOptions">ReconnectOptions, optional</param>
+        /// </summary>
+        void Reconnect(ReconnectOptions reconnectOptions = null);
+        
+        /// <summary>
         /// Publishes <paramref name="data"/> to the given <paramref name="subject"/>.
         /// </summary>
         /// <remarks>

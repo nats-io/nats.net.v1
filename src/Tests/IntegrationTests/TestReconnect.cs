@@ -18,7 +18,10 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NATS.Client;
+using NATS.Client.JetStream;
+using UnitTests;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IntegrationTests
 {
@@ -674,6 +677,36 @@ namespace IntegrationTests
             latch.Signal();
 
             t.Join(5000);
+        }
+        
+        
+        [Fact]
+        public void TestForceReconnect()
+        {
+            Action<Options> OptionsModifier = options =>
+            {
+                options.IgnoreDiscoveredServers = true;
+                options.NoRandomize = true;
+            };
+
+            Context.RunInJsCluster(OptionsModifier, (c0, c1, c2) =>
+            {
+                ServerInfo si = c0.ServerInfo;
+                string connectedServer = si.ServerId;
+
+                c0.Reconnect(null);
+                for (int x = 0; x < 10; x++)
+                {
+                    if (c0.State == ConnState.CONNECTED)
+                    {
+                        break;
+                    }
+                    Thread.Sleep(100);
+                }
+
+                si = c0.ServerInfo;
+                Assert.NotEqual(connectedServer, si.ServerId);
+            });
         }
     }
 

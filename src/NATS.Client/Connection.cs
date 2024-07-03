@@ -1534,6 +1534,26 @@ namespace NATS.Client
                 return;
         }
 
+        public void Reconnect(ReconnectOptions reconnectOptions = null)
+        {
+            if (reconnectOptions != null)
+            {
+                if (reconnectOptions.FlushTimeout > 0)
+                {
+                    try
+                    {
+                        Flush(reconnectOptions.FlushTimeout);
+                    }
+                    catch (Exception)
+                    {
+                        // don't really care since we are going to try to reconnect anyway
+                    }
+                }
+            }
+            lastEx = null;
+            processReconnect();
+        }
+
         // This will process a disconnect when reconnect is allowed.
         // The lock should not be held on entering this function.
         private void processReconnect()
