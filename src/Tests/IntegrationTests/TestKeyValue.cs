@@ -37,9 +37,9 @@ namespace IntegrationTests
         {
             DateTime utcNow = DateTime.UtcNow;
 
-            string byteKey = "byteKey";
-            string stringKey = "stringKey";
-            string longKey = "longKey";
+            string byteKey = "key.byte" + Variant();
+            string stringKey = "key.string" + Variant();
+            string longKey = "key.long" + Variant();
             string notFoundKey = "notFound";
             string byteValue1 = "Byte Value 1";
             string byteValue2 = "Byte Value 2";
@@ -213,6 +213,9 @@ namespace IntegrationTests
                 
                 // should have exactly these 3 keys
                 AssertKeys(kv.Keys(), byteKey, stringKey, longKey);
+                AssertKeys(kv.Keys("key.>"), byteKey, stringKey, longKey);
+                AssertKeys(kv.Keys(byteKey), byteKey);
+                AssertKeys(kv.Keys(new[]{longKey, stringKey}), longKey, stringKey);
 
                 // purge
                 kv.Purge(longKey);
@@ -1493,6 +1496,30 @@ namespace IntegrationTests
                 // Assert.Null(kv2.Get(key2));
             });
         }
+
+
+        [Fact]
+        public void TestSubjectFiltersAgainst209OptOut()
+        {
+            Context.RunInJsServer(c =>
+            {
+                IKeyValueManagement kvm = c.CreateKeyValueManagementContext();
+
+                string bucket = Bucket();
+                kvm.Create(KeyValueConfiguration.Builder()
+                    .WithName(bucket)
+                    .WithStorageType(StorageType.Memory)
+                    .Build());
+
+                JetStreamOptions jso = JetStreamOptions.Builder().WithOptOut290ConsumerCreate(true).Build();
+                KeyValueOptions kvo = KeyValueOptions.Builder().WithJetStreamOptions(jso).Build();
+                IKeyValue kv = c.CreateKeyValueContext(bucket, kvo);
+                kv.Put("one", 1);
+                kv.Put("two", 2);
+                AssertKeys(kv.Keys(new []{"one", "two"}), "one", "two");
+            });
+        }
+        
     }
 
     class TestKeyValueWatcher : IKeyValueWatcher

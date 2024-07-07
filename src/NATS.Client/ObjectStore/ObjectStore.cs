@@ -45,7 +45,7 @@ namespace NATS.Client.ObjectStore
 
         internal string RawAllMetaSubject()
         {
-            return RawMetaPrefix + ">";
+            return RawMetaPrefix + NatsConstants.GreaterThan;
         }
 
         internal string PubSubMetaSubject(string name) {
