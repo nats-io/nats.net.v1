@@ -19,7 +19,7 @@ namespace NATS.Client.JetStream
 {
     public sealed class OrderedConsumerConfiguration
     {
-        public const string DefaultFilterSubject = ">";
+        public const string DefaultFilterSubject = NatsConstants.GreaterThan;
         
         public DeliverPolicy? DeliverPolicy { get; private set; }
         public ulong StartSequence { get; private set; }

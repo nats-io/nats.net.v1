@@ -64,7 +64,7 @@ namespace NATSExamples
                             // .WithMaxConsumers(...)
                             // .WithMaxBytes(...)
                             // .WithMaxAge(...)
-                            // .WithMaxMsgSize(...)
+                            // .WithMaximumMessageSize(...)
                             .WithStorageType(StorageType.Memory)
                             // .WithReplicas(...)
                             // .WithNoAck(...)

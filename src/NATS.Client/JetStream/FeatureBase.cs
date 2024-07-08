@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using NATS.Client.Internals;
 
 namespace NATS.Client.JetStream
@@ -74,20 +75,27 @@ namespace NATS.Client.JetStream
                 throw;
             }
         }
- 
-        internal void VisitSubject(string subject, DeliverPolicy deliverPolicy, bool headersOnly, bool ordered, Action<Msg> action) {
+
+        internal void VisitSubject(string subject, DeliverPolicy deliverPolicy, bool headersOnly, bool ordered, Action<Msg> action)
+        {
+            VisitSubject(new []{subject}, deliverPolicy, headersOnly, ordered, action);
+        }
+        
+        internal void VisitSubject(IList<string> subjects, DeliverPolicy deliverPolicy, bool headersOnly, bool ordered, Action<Msg> action)
+        {
+            ConsumerConfiguration.ConsumerConfigurationBuilder ccb = ConsumerConfiguration.Builder()
+                .WithAckPolicy(AckPolicy.None)
+                .WithDeliverPolicy(deliverPolicy)
+                .WithHeadersOnly(headersOnly)
+                .WithFilterSubjects(subjects);
+            
             PushSubscribeOptions pso = PushSubscribeOptions.Builder()
                 .WithStream(StreamName)
                 .WithOrdered(ordered)
-                .WithConfiguration(
-                    ConsumerConfiguration.Builder()
-                        .WithAckPolicy(AckPolicy.None)
-                        .WithDeliverPolicy(deliverPolicy)
-                        .WithHeadersOnly(headersOnly)
-                        .Build())
+                .WithConfiguration(ccb.Build())
                 .Build();
 
-            IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(subject, pso);
+            IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(null, pso);
             try
             {
                 bool lastTimedOut = false;

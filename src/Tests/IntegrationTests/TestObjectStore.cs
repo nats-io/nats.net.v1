@@ -13,6 +13,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
@@ -32,9 +33,9 @@ using static NATS.Client.ObjectStore.ObjectStoreWatchOption;
 namespace IntegrationTests
 {
     [SuppressMessage("ReSharper", "ParameterOnlyUsedForPreconditionCheck.Local")]
-    public class TestObjectStore : TestSuite<OneServerSuiteContext>
+    public class TestObjectStore : TestSuite<ObjectStoreSuiteContext>
     {
-        public TestObjectStore(OneServerSuiteContext context) : base(context) { }
+        public TestObjectStore(ObjectStoreSuiteContext context) : base(context) { }
 
         [Fact]
         public void TestWorkFlow()
@@ -596,6 +597,67 @@ namespace IntegrationTests
                     Assert.Equal(Size, oi.Size);
                 }
             }
+        }
+
+        [Fact]
+        public void TestObjectStoreDomains() {
+            Context.RunInJsHubLeaf((hubNc, leafNc) =>
+            {
+                IObjectStoreManagement hubOsm = hubNc.CreateObjectStoreManagementContext();
+
+                // Create main OS on HUB
+                String hubBucket = Bucket();
+                ObjectStoreStatus hubStatus = hubOsm.Create(ObjectStoreConfiguration.Builder()
+                    .WithName(hubBucket)
+                    .WithStorageType(StorageType.Memory)
+                    .WithReplicas(1)
+                    .Build());
+                
+                Assert.Equal(0U, hubStatus.Size);
+                Assert.Equal(1, hubStatus.Replicas);
+
+                IObjectStore hubOs = hubNc.CreateObjectStoreContext(hubBucket);
+                IObjectStore leafOs = leafNc.CreateObjectStoreContext(hubBucket, 
+                    ObjectStoreOptions.Builder().WithJsDomain(SuiteContext.HubDomain).Build());
+
+                String objectName = Name();
+                ObjectMeta meta = ObjectMeta.Builder(objectName)
+                    .WithChunkSize(8 * 1024)
+                    .Build();
+
+                Object[] input = GetInput(4 * 8 * 1024, ".", long.MaxValue, null);
+                FileInfo fileInfo = (FileInfo)input[1];
+                hubOs.Put(meta, fileInfo.OpenRead());
+
+                hubStatus = hubOs.GetStatus();
+                Assert.True(hubStatus.Size > 0);
+
+                ObjectStoreStatus leafStatus = leafOs.GetStatus();
+
+                Assert.Equal(hubStatus.BucketName, leafStatus.BucketName);
+                Assert.Equal(hubStatus.Size, leafStatus.Size);
+
+                ObjectInfo hubInfo = hubOs.GetInfo(objectName);
+                ObjectInfo leafInfo = leafOs.GetInfo(objectName);
+
+                Assert.Equal(hubInfo.Nuid, leafInfo.Nuid);
+                Assert.Equal(hubInfo.Size, leafInfo.Size);
+                Assert.Equal(hubInfo.ObjectMeta.ObjectName, leafInfo.ObjectMeta.ObjectName);
+
+                MemoryStream hubMs = new MemoryStream();
+                ObjectInfo hubOi = hubOs.Get(objectName, hubMs);
+                byte[] hubBytes = hubMs.ToArray();
+
+                MemoryStream leafMs = new MemoryStream();
+                ObjectInfo leafOi = leafOs.Get(objectName, leafMs);
+                byte[] leafBytes = leafMs.ToArray();
+
+                Assert.Equal(hubBytes.Length, leafBytes.Length);
+                for (int x = 0; x < hubBytes.Length; x++)
+                {
+                    Assert.Equal(hubBytes[x], leafBytes[x]);
+                }
+            });
         }
     }
     

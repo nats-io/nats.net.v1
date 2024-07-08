@@ -37,9 +37,9 @@ namespace IntegrationTests
         {
             DateTime utcNow = DateTime.UtcNow;
 
-            string byteKey = "byteKey";
-            string stringKey = "stringKey";
-            string longKey = "longKey";
+            string byteKey = "key.byte" + Variant();
+            string stringKey = "key.string" + Variant();
+            string longKey = "key.long" + Variant();
             string notFoundKey = "notFound";
             string byteValue1 = "Byte Value 1";
             string byteValue2 = "Byte Value 2";
@@ -74,8 +74,8 @@ namespace IntegrationTests
                 Assert.Equal(3, kvc.MaxHistoryPerKey);
                 Assert.Equal(-1, status.MaxBucketSize);
                 Assert.Equal(-1, kvc.MaxBucketSize);
-                Assert.Equal(-1, status.MaxValueSize);
-                Assert.Equal(-1, kvc.MaxValueSize);
+                Assert.Equal(-1, status.MaximumValueSize);
+                Assert.Equal(-1, kvc.MaximumValueSize);
                 Assert.Equal(Duration.Zero, status.Ttl);
                 Assert.Equal(Duration.Zero, kvc.Ttl);
                 Assert.Equal(StorageType.Memory, status.StorageType);
@@ -213,6 +213,9 @@ namespace IntegrationTests
                 
                 // should have exactly these 3 keys
                 AssertKeys(kv.Keys(), byteKey, stringKey, longKey);
+                AssertKeys(kv.Keys("key.>"), byteKey, stringKey, longKey);
+                AssertKeys(kv.Keys(byteKey), byteKey);
+                AssertKeys(kv.Keys(new[]{longKey, stringKey}), longKey, stringKey);
 
                 // purge
                 kv.Purge(longKey);
@@ -557,7 +560,7 @@ namespace IntegrationTests
                 Assert.Empty(kvs.Description);
                 Assert.Equal(1, kvs.MaxHistoryPerKey);
                 Assert.Equal(-1, kvs.MaxBucketSize);
-                Assert.Equal(-1, kvs.MaxValueSize);
+                Assert.Equal(-1, kvs.MaximumValueSize);
                 Assert.Equal(Duration.Zero, kvs.Ttl);
                 Assert.Equal(StorageType.Memory, kvs.StorageType);
                 Assert.Equal(1, kvs.Replicas);
@@ -580,7 +583,7 @@ namespace IntegrationTests
                     .WithDescription(Plain)
                     .WithMaxHistoryPerKey(3)
                     .WithMaxBucketSize(10_000)
-                    .WithMaxValueSize(100)
+                    .WithMaximumValueSize(100)
                     .WithTtl(Duration.OfHours(1))
                     .Build();
 
@@ -590,7 +593,7 @@ namespace IntegrationTests
                 Assert.Equal(Plain, kvs.Description);
                 Assert.Equal(3, kvs.MaxHistoryPerKey);
                 Assert.Equal(10_000, kvs.MaxBucketSize);
-                Assert.Equal(100, kvs.MaxValueSize);
+                Assert.Equal(100, kvs.MaximumValueSize);
                 Assert.Equal(Duration.OfHours(1), kvs.Ttl);
                 Assert.Equal(StorageType.Memory, kvs.StorageType);
                 Assert.Equal(1, kvs.Replicas);
@@ -1531,6 +1534,28 @@ namespace IntegrationTests
                 IList<ConsumerInfo> consumersInfo = jsm.GetConsumers($"KV_{bucket}").Where( consumer => consumer.ConsumerConfiguration.Description == description).ToList();
                 Assert.Single(consumersInfo);
                 Assert.Equal("bar", consumersInfo[0].ConsumerConfiguration.Metadata["foo"]);
+            });
+        }
+
+        [Fact]
+        public void TestSubjectFiltersAgainst209OptOut()
+        {
+            Context.RunInJsServer(c =>
+            {
+                IKeyValueManagement kvm = c.CreateKeyValueManagementContext();
+
+                string bucket = Bucket();
+                kvm.Create(KeyValueConfiguration.Builder()
+                    .WithName(bucket)
+                    .WithStorageType(StorageType.Memory)
+                    .Build());
+
+                JetStreamOptions jso = JetStreamOptions.Builder().WithOptOut290ConsumerCreate(true).Build();
+                KeyValueOptions kvo = KeyValueOptions.Builder().WithJetStreamOptions(jso).Build();
+                IKeyValue kv = c.CreateKeyValueContext(bucket, kvo);
+                kv.Put("one", 1);
+                kv.Put("two", 2);
+                AssertKeys(kv.Keys(new []{"one", "two"}), "one", "two");
             });
         }
     }

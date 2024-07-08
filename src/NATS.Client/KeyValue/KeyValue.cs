@@ -212,13 +212,13 @@ namespace NATS.Client.KeyValue
         public KeyValueWatchSubscription WatchAll(IKeyValueWatcher watcher, params KeyValueWatchOption[] watchOptions)
         {
             Validator.ValidateNotNull(watcher, "Watcher is required");
-            return new KeyValueWatchSubscription(this, new List<string> {">"}, watcher, ConsumerConfiguration.UlongUnset, watchOptions);
+            return new KeyValueWatchSubscription(this, new List<string> {NatsConstants.GreaterThan}, watcher, ConsumerConfiguration.UlongUnset, watchOptions);
         }
 
         public KeyValueWatchSubscription WatchAll(IKeyValueWatcher watcher, ulong fromRevision, params KeyValueWatchOption[] watchOptions)
         {
             Validator.ValidateNotNull(watcher, "Watcher is required");
-            return new KeyValueWatchSubscription(this, new List<string> {">"}, watcher, fromRevision, watchOptions);
+            return new KeyValueWatchSubscription(this, new List<string> {NatsConstants.GreaterThan}, watcher, fromRevision, watchOptions);
         }
 
         public KeyValueWatchSubscription WatchAll(IKeyValueWatcher watcher, KeyValueConsumerConfiguration keyValueConsumerConfiguration, ulong fromRevision, params KeyValueWatchOption[] watchOptions)
@@ -234,8 +234,28 @@ namespace NATS.Client.KeyValue
 
         public IList<string> Keys()
         {
+            return _keys(new []{ReadSubject(NatsConstants.GreaterThan)});
+        }
+
+        public IList<string> Keys(string filter)
+        {
+            return _keys(new []{ReadSubject(filter)});
+        }
+
+        public IList<string> Keys(IList<string> filters)
+        {
+            IList<string> readSubjectFilters = new List<string>(filters.Count);
+            foreach (string f in filters)
+            {
+                readSubjectFilters.Add(ReadSubject(f));
+            }
+            return _keys(readSubjectFilters);
+        }
+
+        internal IList<string> _keys(IList<string> readSubjectFilters)
+        {
             IList<string> list = new List<string>();
-            VisitSubject(ReadSubject(">"), DeliverPolicy.LastPerSubject, true, false, m => {
+            VisitSubject(readSubjectFilters, DeliverPolicy.LastPerSubject, true, false, m => {
                 KeyValueOperation op = GetOperation(m.Header, KeyValueOperation.Put);
                 if (op.Equals(KeyValueOperation.Put)) {
                     list.Add(new BucketAndKey(m).Key);

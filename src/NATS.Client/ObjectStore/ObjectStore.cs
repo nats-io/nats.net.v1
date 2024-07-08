@@ -45,7 +45,7 @@ namespace NATS.Client.ObjectStore
 
         internal string RawAllMetaSubject()
         {
-            return RawMetaPrefix + ">";
+            return RawMetaPrefix + NatsConstants.GreaterThan;
         }
 
         internal string PubSubMetaSubject(string name) {
@@ -204,7 +204,7 @@ namespace NATS.Client.ObjectStore
             }
             else {
                 IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(
-                    PubSubChunkSubject(oi.Nuid),
+                    RawChunkSubject(oi.Nuid),
                     PushSubscribeOptions.Builder()
                         .WithStream(StreamName)
                         .WithOrdered(true)

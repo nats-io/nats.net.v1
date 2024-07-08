@@ -190,6 +190,22 @@ namespace NATS.Client.KeyValue
         IList<string> Keys();
 
         /// <summary>
+        /// Get a list of the keys in a bucket filtered by a
+        /// subject-like string, for instance "key" or "key.foo.*" or "key.&gt;"
+        /// </summary>
+        /// <param name="filter">the subject like key filter</param>
+        /// <returns>The list of keys</returns>
+        IList<string> Keys(string filter);
+
+        /// <summary>
+        /// Get a list of the keys in a bucket filtered by
+        /// subject-like strings, for instance "aaa.*", "bbb.*;"
+        /// </summary>
+        /// <param name="filters">the subject like key filters</param>
+        /// <returns>The list of keys</returns>
+        IList<string> Keys(IList<string> filters);
+
+        /// <summary>
         /// Get the history (list of KeyValueEntry) for a key
         /// </summary>
         /// <param name="key">the key</param>

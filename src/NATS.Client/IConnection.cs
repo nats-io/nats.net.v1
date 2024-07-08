@@ -93,6 +93,12 @@ namespace NATS.Client
         Exception LastError { get; }
 
         /// <summary>
+        /// Manually start reconnect behavior.
+        /// <param name="reconnectOptions">ReconnectOptions, optional</param>
+        /// </summary>
+        void Reconnect(ReconnectOptions reconnectOptions = null);
+        
+        /// <summary>
         /// Publishes <paramref name="data"/> to the given <paramref name="subject"/>.
         /// </summary>
         /// <remarks>
@@ -1156,7 +1162,6 @@ namespace NATS.Client
 
         /// <summary>
         /// Gets a context for a Object Store 
-        /// OBJECT STORE IMPLEMENTATION IS EXPERIMENTAL AND SUBJECT TO CHANGE.
         /// </summary>
         /// <param name="bucketName">The name of the bucket</param>
         /// <param name="options">Optional ObjectStoreOptions.</param>
@@ -1165,7 +1170,6 @@ namespace NATS.Client
 
         /// <summary>
         /// Gets a context for administrating Object Stores
-        /// OBJECT STORE IMPLEMENTATION IS EXPERIMENTAL AND SUBJECT TO CHANGE.
         /// </summary>
         /// <param name="options">Optional ObjectStoreOptions.</param>
         /// <returns></returns>

@@ -12,8 +12,8 @@ This folder contains a number of samples:
 1. `Replier` - A sample replier for the Requestor application.
 1. `RxSample` - Rx integration / functionality
 1. `Subscribe` - A sample subscriber.
-1. `WinFormsSample`
-1. `TlsVariationsExample`
+1. `WinFormsSample` - Use the client within a Windows application.
+1. `TlsVariationsExample` - Some examples setting up the client for TLS
 1. `JetStreamStarter` - A starter app for JetStream projects. 
 
 ### Simplification
