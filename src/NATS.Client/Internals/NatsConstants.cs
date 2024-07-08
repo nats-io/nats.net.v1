@@ -32,5 +32,7 @@ namespace NATS.Client.Internals
         internal const byte Colon = (byte)':';
         internal const byte Cr = (byte)'\r';
         internal const byte Lf = (byte)'\n';
+        internal const string GreaterThan = ">";
+
     }
 }

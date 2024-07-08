@@ -127,7 +127,7 @@ namespace NATS.Client.JetStream
                 }
 
                 string fs = config.FilterSubject;  // we've already determined not multiple so this gives us 1 or null
-                if (fs == null || fs.Equals(">"))
+                if (fs == null || fs.Equals(NatsConstants.GreaterThan))
                 {
                     subj = string.Format(JetStreamConstants.JsapiConsumerCreateV290, streamName, consumerName);
                 }

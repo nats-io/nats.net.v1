@@ -551,7 +551,7 @@ namespace NATS.Client.JetStream
                 return true;
             }
 
-            if (string.IsNullOrWhiteSpace(filterSubject) || filterSubject.Equals(">")) {
+            if (string.IsNullOrWhiteSpace(filterSubject) || filterSubject.Equals(NatsConstants.GreaterThan)) {
                 // lookup stream subject returns null if there is not exactly one subject
                 string streamSubject = LookupStreamSubject(stream);
                 return subscribeSubject.Equals(streamSubject);

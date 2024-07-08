@@ -59,7 +59,7 @@ namespace NATS.Client.JetStream
             }
 
             public StreamInfoOptionsBuilder WithAllSubjects() {
-                _subjectsFilter = ">";
+                _subjectsFilter = NatsConstants.GreaterThan;
                 return this;
             }
 
