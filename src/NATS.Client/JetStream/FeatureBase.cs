@@ -86,16 +86,8 @@ namespace NATS.Client.JetStream
             ConsumerConfiguration.ConsumerConfigurationBuilder ccb = ConsumerConfiguration.Builder()
                 .WithAckPolicy(AckPolicy.None)
                 .WithDeliverPolicy(deliverPolicy)
-                .WithHeadersOnly(headersOnly);
-
-            if (subjects.Count == 1)
-            {
-                ccb.WithFilterSubject(subjects[0]);
-            }
-            else
-            {
-                ccb.WithFilterSubjects(subjects);
-            }
+                .WithHeadersOnly(headersOnly)
+                .WithFilterSubjects(subjects);
             
             PushSubscribeOptions pso = PushSubscribeOptions.Builder()
                 .WithStream(StreamName)
