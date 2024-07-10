@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 namespace NATS.Client
 {
     /// <summary>
+    /// ENCODED CONNECTIONS, WHILE STILL FUNCTIONAL, WILL NO LONGER BE SUPPORTED
     /// Represents a connection to a NATS Server which uses a client specified
     /// encoding scheme.
     /// </summary>

@@ -225,6 +225,7 @@ namespace NATS.Client
         }
 
         /// <summary>
+        /// ENCODED CONNECTIONS, WHILE STILL FUNCTIONAL, WILL NO LONGER BE SUPPORTED
         /// Attempt to connect to the NATS server, with an encoded connection, using the default options.
         /// </summary>
         /// <param name="reconnectOnConnect">if true, the connection will treat the initial connection as any other and attempt reconnects on failure</param>
@@ -241,6 +242,7 @@ namespace NATS.Client
         }
 
         /// <summary>
+        /// ENCODED CONNECTIONS, WHILE STILL FUNCTIONAL, WILL NO LONGER BE SUPPORTED
         /// Attempt to connect to the NATS server, with an encoded connection, referenced by <paramref name="url"/>.
         /// </summary>
         /// <remarks>
@@ -262,6 +264,7 @@ namespace NATS.Client
         }
 
         /// <summary>
+        /// ENCODED CONNECTIONS, WHILE STILL FUNCTIONAL, WILL NO LONGER BE SUPPORTED
         /// Attempt to connect to the NATS server, with an encoded connection, using the given options.
         /// </summary>
         /// <param name="opts">The NATS client options to use for this connection.</param>
