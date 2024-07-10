@@ -38,6 +38,7 @@ namespace NATS.Client
     public delegate Object Deserializer(byte[] data);
 
     /// <summary>
+    /// ENCODED CONNECTIONS, WHILE STILL FUNCTIONAL, WILL NO LONGER BE SUPPORTED
     /// Provides decoded messages received by subscriptions or requests.
     /// </summary>
     public class EncodedMessageEventArgs : EventArgs
@@ -89,7 +90,8 @@ namespace NATS.Client
     }
 
     /// <summary>
-    /// Represents an <see cref="Connection"/> which uses a client specified
+    /// ENCODED CONNECTIONS, WHILE STILL FUNCTIONAL, WILL NO LONGER BE SUPPORTED
+    /// Represents a <see cref="Connection"/> which uses a client specified
     /// encoding scheme.
     /// </summary>
     public class EncodedConnection : Connection, IEncodedConnection
