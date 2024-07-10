@@ -1,3 +1,10 @@
+### :mega: :warning: This repository will be renamed to `nats.net.v1` on Wednesday, July 17th, 2024
+
+Please be prepared to update your references to the new name.
+You can also read the [announcement](REPO_RENAME.md) for more information.
+
+---
+
 ![NATS](https://raw.githubusercontent.com/nats-io/nats.net/main/documentation/large-logo.png)
 
 # NATS - .NET V1 C# Client
