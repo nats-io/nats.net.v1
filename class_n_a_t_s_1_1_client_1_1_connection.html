@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">1.1.5</span>
+   &#160;<span id="projectnumber">1.1.6</span>
    </div>
    <div id="projectbrief">The NATS.io .NET C# Client</div>
   </td>
@@ -100,7 +100,7 @@ Inheritance diagram for NATS.Client.Connection:</div>
   <img src="class_n_a_t_s_1_1_client_1_1_connection.png" usemap="#NATS.Client.Connection_map" alt=""/>
   <map id="NATS.Client.Connection_map" name="NATS.Client.Connection_map">
 <area href="interface_n_a_t_s_1_1_client_1_1_i_connection.html" title="Represents a connection to the NATS server." alt="NATS.Client.IConnection" shape="rect" coords="0,0,199,24"/>
-<area href="class_n_a_t_s_1_1_client_1_1_encoded_connection.html" title="Represents an Connection which uses a client specified encoding scheme." alt="NATS.Client.EncodedConnection" shape="rect" coords="0,112,199,136"/>
+<area href="class_n_a_t_s_1_1_client_1_1_encoded_connection.html" title="ENCODED CONNECTIONS, WHILE STILL FUNCTIONAL, WILL NO LONGER BE SUPPORTED Represents a Connection whic..." alt="NATS.Client.EncodedConnection" shape="rect" coords="0,112,199,136"/>
   </map>
 </div></div>
 <table class="memberdecls">
@@ -111,6 +111,9 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:a4f208502d8c335aa5b089f6074677a39"><td class="memItemLeft" align="right" valign="top"><a id="a4f208502d8c335aa5b089f6074677a39" name="a4f208502d8c335aa5b089f6074677a39"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>Reconnect</b> (<a class="el" href="class_n_a_t_s_1_1_client_1_1_reconnect_options.html">ReconnectOptions</a> reconnectOptions=null)</td></tr>
+<tr class="separator:a4f208502d8c335aa5b089f6074677a39"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a26f31f03e9c61ad7db39dda563b1a9f6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#a26f31f03e9c61ad7db39dda563b1a9f6">Publish</a> (string subject, byte[] data)</td></tr>
 <tr class="separator:a26f31f03e9c61ad7db39dda563b1a9f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab8d786b1443b0f660b4654d9b5cc0d09"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#ab8d786b1443b0f660b4654d9b5cc0d09">Publish</a> (string subject, <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg_header.html">MsgHeader</a> headers, byte[] data)</td></tr>
@@ -249,6 +252,9 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a27866b95c0fce8ce3a2d91b7b79a8a5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a58f3fdfc2f88257f79f22df4d067e6d1"><td class="memItemLeft" align="right" valign="top">IObjectStoreManagement&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html#a58f3fdfc2f88257f79f22df4d067e6d1">CreateObjectStoreManagementContext</a> (ObjectStoreOptions options=null)</td></tr>
 <tr class="separator:a58f3fdfc2f88257f79f22df4d067e6d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3eb69fd488c172679980349ef753d68f"><td class="memItemLeft" align="right" valign="top"><a id="a3eb69fd488c172679980349ef753d68f" name="a3eb69fd488c172679980349ef753d68f"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>Reconnect</b> (<a class="el" href="class_n_a_t_s_1_1_client_1_1_reconnect_options.html">ReconnectOptions</a> reconnectOptions=null)</td></tr>
+<tr class="separator:a3eb69fd488c172679980349ef753d68f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a707a183a5abd113ff9b6744a7aa84f09"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a707a183a5abd113ff9b6744a7aa84f09">Publish</a> (string subject, byte[] data)</td></tr>
 <tr class="separator:a707a183a5abd113ff9b6744a7aa84f09"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5b284a7d69223028b72881cdd678ef7c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_connection.html#a5b284a7d69223028b72881cdd678ef7c">Publish</a> (string subject, <a class="el" href="class_n_a_t_s_1_1_client_1_1_msg_header.html">MsgHeader</a> headers, byte[] data)</td></tr>

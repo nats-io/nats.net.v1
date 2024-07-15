@@ -105,6 +105,7 @@ var annotated_dup =
         [ "NUID", "class_n_a_t_s_1_1_client_1_1_n_u_i_d.html", "class_n_a_t_s_1_1_client_1_1_n_u_i_d" ],
         [ "Options", "class_n_a_t_s_1_1_client_1_1_options.html", "class_n_a_t_s_1_1_client_1_1_options" ],
         [ "ReconnectDelayEventArgs", "class_n_a_t_s_1_1_client_1_1_reconnect_delay_event_args.html", "class_n_a_t_s_1_1_client_1_1_reconnect_delay_event_args" ],
+        [ "ReconnectOptions", "class_n_a_t_s_1_1_client_1_1_reconnect_options.html", "class_n_a_t_s_1_1_client_1_1_reconnect_options" ],
         [ "Statistics", "class_n_a_t_s_1_1_client_1_1_statistics.html", "class_n_a_t_s_1_1_client_1_1_statistics" ],
         [ "StatusEventArgs", "class_n_a_t_s_1_1_client_1_1_status_event_args.html", null ],
         [ "StringUserJWTHandler", "class_n_a_t_s_1_1_client_1_1_string_user_j_w_t_handler.html", "class_n_a_t_s_1_1_client_1_1_string_user_j_w_t_handler" ],

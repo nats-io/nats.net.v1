@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">1.1.5</span>
+   &#160;<span id="projectnumber">1.1.6</span>
    </div>
    <div id="projectbrief">The NATS.io .NET C# Client</div>
   </td>
@@ -97,7 +97,7 @@ Inheritance diagram for NATS.Client.IEncodedConnection:</div>
  <div class="center">
   <img src="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.png" usemap="#NATS.Client.IEncodedConnection_map" alt=""/>
   <map id="NATS.Client.IEncodedConnection_map" name="NATS.Client.IEncodedConnection_map">
-<area href="class_n_a_t_s_1_1_client_1_1_encoded_connection.html" title="Represents an Connection which uses a client specified encoding scheme." alt="NATS.Client.EncodedConnection" shape="rect" coords="0,56,202,80"/>
+<area href="class_n_a_t_s_1_1_client_1_1_encoded_connection.html" title="ENCODED CONNECTIONS, WHILE STILL FUNCTIONAL, WILL NO LONGER BE SUPPORTED Represents a Connection whic..." alt="NATS.Client.EncodedConnection" shape="rect" coords="0,56,202,80"/>
   </map>
 </div></div>
 <table class="memberdecls">
@@ -178,7 +178,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>SubscriptionCount</b><
 <tr class="separator:aed54b0d9d75b12eaceafec7ffa787930"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p >Represents a connection to a <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server which uses a client specified encoding scheme. </p>
+<div class="textblock"><p >ENCODED CONNECTIONS, WHILE STILL FUNCTIONAL, WILL NO LONGER BE SUPPORTED Represents a connection to a <a class="el" href="namespace_n_a_t_s.html">NATS</a> Server which uses a client specified encoding scheme. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="a166c840eb8f42cf2b022e3fe8f72fc75" name="a166c840eb8f42cf2b022e3fe8f72fc75"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a166c840eb8f42cf2b022e3fe8f72fc75">&#9670;&nbsp;</a></span>Close()</h2>
@@ -550,7 +550,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>SubscriptionCount</b><
 </div><div class="memdoc">
 
 <p>Sends a request payload and returns the deserialized response. </p>
-<p ><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a43c0c4feae4ac2a1405d08fbbf3cdf74" title="Sends a request payload and returns the deserialized response.">Request(string, object)</a> will create an unique inbox for this request, sharing a single subscription for all replies to this <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html" title="Represents a connection to a NATS Server which uses a client specified encoding scheme.">IEncodedConnection</a> instance. However, if <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a0dd67697b2487a4fbb5abf0f4fd06509" title="Gets or sets a value indicating whether or not the old request pattern should be used.">Options.UseOldRequestStyle</a> is set, each request will have its own underlying subscription. The old behavior is not recommended as it may cause unnecessary overhead on connected <a class="el" href="namespace_n_a_t_s.html">NATS</a> servers. </p>
+<p ><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a43c0c4feae4ac2a1405d08fbbf3cdf74" title="Sends a request payload and returns the deserialized response.">Request(string, object)</a> will create an unique inbox for this request, sharing a single subscription for all replies to this <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html" title="ENCODED CONNECTIONS, WHILE STILL FUNCTIONAL, WILL NO LONGER BE SUPPORTED Represents a connection to a...">IEncodedConnection</a> instance. However, if <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a0dd67697b2487a4fbb5abf0f4fd06509" title="Gets or sets a value indicating whether or not the old request pattern should be used.">Options.UseOldRequestStyle</a> is set, each request will have its own underlying subscription. The old behavior is not recommended as it may cause unnecessary overhead on connected <a class="el" href="namespace_n_a_t_s.html">NATS</a> servers. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">subject</td><td>The subject to publish <em>obj</em>  to over the current connection.</td></tr>
@@ -598,7 +598,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>SubscriptionCount</b><
 </div><div class="memdoc">
 
 <p>Sends a request payload and returns the deserialized response, or throws <a class="el" href="class_n_a_t_s_1_1_client_1_1_n_a_t_s_timeout_exception.html" title="The exception that is thrown when a NATS operation times out.">NATSTimeoutException</a> if the <em>timeout</em>  expires. </p>
-<p ><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a3cd59e9f8c96da8fcb6565f92527b37e" title="Sends a request payload and returns the deserialized response, or throws NATSTimeoutException if the ...">Request(string, object, int)</a> will create an unique inbox for this request, sharing a single subscription for all replies to this <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html" title="Represents a connection to a NATS Server which uses a client specified encoding scheme.">IEncodedConnection</a> instance. However, if <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a0dd67697b2487a4fbb5abf0f4fd06509" title="Gets or sets a value indicating whether or not the old request pattern should be used.">Options.UseOldRequestStyle</a> is set, each request will have its own underlying subscription. The old behavior is not recommended as it may cause unnecessary overhead on connected <a class="el" href="namespace_n_a_t_s.html">NATS</a> servers. </p>
+<p ><a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html#a3cd59e9f8c96da8fcb6565f92527b37e" title="Sends a request payload and returns the deserialized response, or throws NATSTimeoutException if the ...">Request(string, object, int)</a> will create an unique inbox for this request, sharing a single subscription for all replies to this <a class="el" href="interface_n_a_t_s_1_1_client_1_1_i_encoded_connection.html" title="ENCODED CONNECTIONS, WHILE STILL FUNCTIONAL, WILL NO LONGER BE SUPPORTED Represents a connection to a...">IEncodedConnection</a> instance. However, if <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a0dd67697b2487a4fbb5abf0f4fd06509" title="Gets or sets a value indicating whether or not the old request pattern should be used.">Options.UseOldRequestStyle</a> is set, each request will have its own underlying subscription. The old behavior is not recommended as it may cause unnecessary overhead on connected <a class="el" href="namespace_n_a_t_s.html">NATS</a> servers. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">subject</td><td>The subject to publish <em>obj</em>  to over the current connection.</td></tr>

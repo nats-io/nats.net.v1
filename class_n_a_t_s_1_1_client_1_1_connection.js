@@ -34,6 +34,7 @@ var class_n_a_t_s_1_1_client_1_1_connection =
     [ "Publish", "class_n_a_t_s_1_1_client_1_1_connection.html#a1f4342af714561004d09f030b91f839b", null ],
     [ "Publish", "class_n_a_t_s_1_1_client_1_1_connection.html#adc35b925e16413499b84938ebbc60947", null ],
     [ "Publish", "class_n_a_t_s_1_1_client_1_1_connection.html#a44874271051bdd937f962145b5fa7640", null ],
+    [ "Reconnect", "class_n_a_t_s_1_1_client_1_1_connection.html#a4f208502d8c335aa5b089f6074677a39", null ],
     [ "Request", "class_n_a_t_s_1_1_client_1_1_connection.html#ae3200a17efaba93d5806cac480ec50aa", null ],
     [ "Request", "class_n_a_t_s_1_1_client_1_1_connection.html#aa4a8fc72d273110d38a684c6f7a729f6", null ],
     [ "Request", "class_n_a_t_s_1_1_client_1_1_connection.html#a7584bac414a977fb982810cc4347e1c1", null ],

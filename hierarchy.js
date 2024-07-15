@@ -122,6 +122,7 @@ var hierarchy =
     [ "NATS.Client.JetStream.PullSubscribeOptions.PullSubscribeOptionsSubscribeOptionsBuilder", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_pull_subscribe_options_1_1_pull_subscribe_options_subscribe_options_builder.html", null ],
     [ "NATS.Client.JetStream.PurgeOptions.PurgeOptionsBuilder", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_purge_options_1_1_purge_options_builder.html", null ],
     [ "NATS.Client.ReconnectDelayEventArgs", "class_n_a_t_s_1_1_client_1_1_reconnect_delay_event_args.html", null ],
+    [ "NATS.Client.ReconnectOptions", "class_n_a_t_s_1_1_client_1_1_reconnect_options.html", null ],
     [ "NATS.Client.JetStream.Republish", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_republish.html", null ],
     [ "NATS.Client.JetStream.Republish.RepublishBuilder", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_republish_1_1_republish_builder.html", null ],
     [ "NATS.Client.Service.Service", "class_n_a_t_s_1_1_client_1_1_service_1_1_service.html", null ],
