@@ -9,7 +9,7 @@
     <PackageProjectUrl>https://nats.io</PackageProjectUrl>
     <PackageIcon>package-icon.png</PackageIcon>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <PackageReleaseNotes>https://github.com/nats-io/nats.net/releases</PackageReleaseNotes>
+    <PackageReleaseNotes>https://github.com/nats-io/nats.net.v1/releases</PackageReleaseNotes>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageTags>CNCF NATS Messaging Cloud Publish Subscribe PubSub</PackageTags>
     <DebugType>pdbonly</DebugType>

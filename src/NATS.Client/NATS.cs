@@ -36,7 +36,7 @@ using NATS.Client.JetStream;
  * information, refer to the following:
  *
  * - [General Documentation for nats.io](https://nats-io.github.io/docs/)
- * - [NATS .NET C# Client found on GitHub](https://github.com/nats-io/nats.net)
+ * - [NATS .NET C# Client found on GitHub](https://github.com/nats-io/nats.net.v1)
  * - [The NATS server found on GitHub](https://github.com/nats-io/nats-server)
  */
 

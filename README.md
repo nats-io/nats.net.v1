@@ -1,11 +1,11 @@
-### :mega: :warning: This repository will be renamed to `nats.net.v1` on Wednesday, July 17th, 2024
+### :mega: :warning: This repository was renamed from `nats.net` on Wednesday, July 17th, 2024
 
 Please be prepared to update your references to the new name.
 You can also read the [announcement](REPO_RENAME.md) for more information.
 
 ---
 
-![NATS](https://raw.githubusercontent.com/nats-io/nats.net/main/documentation/large-logo.png)
+![NATS](https://raw.githubusercontent.com/nats-io/nats.net.v1/main/documentation/large-logo.png)
 
 # NATS - .NET V1 C# Client
 
@@ -27,7 +27,7 @@ NATS.Net V2
 * Only supports Async I/O (async/await)
 * Target current .NET LTS releases (currently .NET 6.0 & .NET 8.0)
 
-Checkout https://github.com/nats-io/nats.net.v2
+Checkout https://github.com/nats-io/nats.net
 
 ## Getting started
 The easiest and recommended way to start using NATS in your .NET projects, is to use the [NuGet package]((https://www.nuget.org/packages/NATS.Client)). For examples on how to use the client, see below or in any of the included sample projects.
@@ -38,7 +38,7 @@ The easiest and recommended way to start using NATS in your .NET projects, is to
 First, download the source code:
 
 ```text
-git clone git@github.com:nats-io/nats.net.git
+git clone git@github.com:nats-io/nats.net.v1.git
 ```
 
 ### Project files

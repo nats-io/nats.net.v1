@@ -12,7 +12,7 @@ popd
 
 : Step 2. From the parent directory clone the repo
 rd nats.net-gh-pages /S /Q
-git clone https://github.com/nats-io/nats.net nats.net-gh-pages
+git clone https://github.com/nats-io/nats.net.v1 nats.net-gh-pages
 
 : Step 3. Go into the the repo directory
 cd nats.net-gh-pages
@@ -24,11 +24,14 @@ git switch gh-pages
 rd search /S /Q`
 del *.* /Q
 
-: Step 6. Move the generated docs by copying then removing the original
+: Step 6. Copy the _config.yml file
+copy ..\nats.net\documentation\_config.yml
+
+: Step 7. Move the generated docs by copying then removing the original
 xcopy ..\nats.net\documentation\NATS.Client\html /S
 rd ..\nats.net\documentation\NATS.Client /S /Q
 
-: Step 7. git add, commit and push
+: Step 8. git add, commit and push
 git add -A
 git commit -m "Docs for 1.1.7"
 git push origin gh-pages
