@@ -27,7 +27,7 @@ NATS.Net V2
 * Only supports Async I/O (async/await)
 * Target current .NET LTS releases (currently .NET 6.0 & .NET 8.0)
 
-Checkout https://github.com/nats-io/nats.net.v2
+Checkout https://github.com/nats-io/nats.net
 
 ## Getting started
 The easiest and recommended way to start using NATS in your .NET projects, is to use the [NuGet package]((https://www.nuget.org/packages/NATS.Client)). For examples on how to use the client, see below or in any of the included sample projects.
