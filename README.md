@@ -1,4 +1,4 @@
-### :mega: :warning: This repository will be renamed to `nats.net.v1` on Wednesday, July 17th, 2024
+### :mega: :warning: This repository was renamed from `nats.net` on Wednesday, July 17th, 2024
 
 Please be prepared to update your references to the new name.
 You can also read the [announcement](REPO_RENAME.md) for more information.
