@@ -5,7 +5,7 @@ You can also read the [announcement](REPO_RENAME.md) for more information.
 
 ---
 
-![NATS](https://raw.githubusercontent.com/nats-io/nats.net/main/documentation/large-logo.png)
+![NATS](https://raw.githubusercontent.com/nats-io/nats.net.v1/main/documentation/large-logo.png)
 
 # NATS - .NET V1 C# Client
 
@@ -38,7 +38,7 @@ The easiest and recommended way to start using NATS in your .NET projects, is to
 First, download the source code:
 
 ```text
-git clone git@github.com:nats-io/nats.net.git
+git clone git@github.com:nats-io/nats.net.v1.git
 ```
 
 ### Project files

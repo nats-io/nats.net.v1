@@ -12,7 +12,7 @@ popd
 
 : Step 2. From the parent directory clone the repo
 rd nats.net-gh-pages /S /Q
-git clone https://github.com/nats-io/nats.net nats.net-gh-pages
+git clone https://github.com/nats-io/nats.net.v1 nats.net-gh-pages
 
 : Step 3. Go into the the repo directory
 cd nats.net-gh-pages
