@@ -1,4 +1,4 @@
-﻿![NATS](https://raw.githubusercontent.com/nats-io/nats.net/main/documentation/large-logo.png)
+﻿![NATS](https://raw.githubusercontent.com/nats-io/nats.net.v1/main/documentation/large-logo.png)
 
 # Nats .NET Client Samples
 
