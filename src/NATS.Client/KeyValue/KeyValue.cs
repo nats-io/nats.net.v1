@@ -180,7 +180,7 @@ namespace NATS.Client.KeyValue
             Validator.ValidateNotNull(watcher, "Watcher is required");
             return new KeyValueWatchSubscription(this, new List<string> {key}, watcher, ConsumerConfiguration.UlongUnset, watchOptions);
         }
-        
+
         public KeyValueWatchSubscription Watch(string key, IKeyValueWatcher watcher, ulong fromRevision, params KeyValueWatchOption[] watchOptions)
         {
             Validator.ValidateKvKeyWildcardAllowedRequired(key);
@@ -202,6 +202,13 @@ namespace NATS.Client.KeyValue
             return new KeyValueWatchSubscription(this, keys, watcher, fromRevision, watchOptions);
         }
 
+        public KeyValueWatchSubscription Watch(IList<string> keys, IKeyValueWatcher watcher, KeyValueConsumerConfiguration keyValueConsumerConfiguration, ulong fromRevision, params KeyValueWatchOption[] watchOptions)
+        {
+            Validator.ValidateKvKeysWildcardAllowedRequired(keys);
+            Validator.ValidateNotNull(watcher, "Watcher is required");
+            return new KeyValueWatchSubscription(this, keys, watcher, keyValueConsumerConfiguration, fromRevision, watchOptions);        
+        }
+
         public KeyValueWatchSubscription WatchAll(IKeyValueWatcher watcher, params KeyValueWatchOption[] watchOptions)
         {
             Validator.ValidateNotNull(watcher, "Watcher is required");
@@ -212,6 +219,12 @@ namespace NATS.Client.KeyValue
         {
             Validator.ValidateNotNull(watcher, "Watcher is required");
             return new KeyValueWatchSubscription(this, new List<string> {NatsConstants.GreaterThan}, watcher, fromRevision, watchOptions);
+        }
+
+        public KeyValueWatchSubscription WatchAll(IKeyValueWatcher watcher, KeyValueConsumerConfiguration keyValueConsumerConfiguration, ulong fromRevision, params KeyValueWatchOption[] watchOptions)
+        {
+            Validator.ValidateNotNull(watcher, "Watcher is required");
+            return new KeyValueWatchSubscription(this, new List<string> {">"}, watcher, keyValueConsumerConfiguration, fromRevision, watchOptions);
         }
 
         private PublishAck _write(string key, byte[] data, MsgHeader h) {
