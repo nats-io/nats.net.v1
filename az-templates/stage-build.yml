@@ -22,7 +22,7 @@ stages:
       displayName: 'UnitTests Net Standard 2.0'
       inputs:
         testSelector: 'testAssemblies'
-        testAssemblyVer2: 'src/Tests/UnitTests/bin/$(BuildConfiguration)/netstandard2.0/UnitTests.dll'
+        testAssemblyVer2: 'src/Tests/UnitTests/bin/$(BuildConfiguration)/net462/UnitTests.dll'
         configuration: $(BuildConfiguration)
         testRunTitle: 'UnitTests Net Standard 2.0'
   
@@ -44,7 +44,7 @@ stages:
         GODEBUG: x509sha1=1
       inputs:
         testSelector: 'testAssemblies'
-        testAssemblyVer2: 'src/Tests/IntegrationTests/bin/$(BuildConfiguration)/netstandard2.0/IntegrationTests.dll'
+        testAssemblyVer2: 'src/Tests/IntegrationTests/bin/$(BuildConfiguration)/net462/IntegrationTests.dll'
         configuration: $(BuildConfiguration)
         rerunFailedTests: True
         rerunMaxAttempts: 2
@@ -56,7 +56,7 @@ stages:
         GODEBUG: x509sha1=1
       inputs:
         testSelector: 'testAssemblies'
-        testAssemblyVer2: 'src/Tests/IntegrationTestsInternal/bin/$(BuildConfiguration)/netstandard2.0/IntegrationTestsInternal.dll'
+        testAssemblyVer2: 'src/Tests/IntegrationTestsInternal/bin/$(BuildConfiguration)/net462/IntegrationTestsInternal.dll'
         configuration: $(BuildConfiguration)
         rerunFailedTests: True
         rerunMaxAttempts: 2
