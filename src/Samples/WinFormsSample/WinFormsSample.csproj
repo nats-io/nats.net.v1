@@ -9,7 +9,7 @@
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk.WindowsDesktop" Condition="$(OS) == 'Windows_NT'" />
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp3.1</TargetFrameworks>
+    <TargetFramework>net462</TargetFramework>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
