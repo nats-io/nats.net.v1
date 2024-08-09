@@ -394,7 +394,16 @@ namespace NATS.Client
                         if (!task.Wait(TimeSpan.FromMilliseconds(options.Timeout)))
                         {
                             nce = new NATSConnectionException("timeout");
-                            task.ContinueWith(t => close(client));
+
+                            // The client field may be sets to null before ContinueWith executes and calls close.
+                            var localClient = client;
+                            task.ContinueWith(t =>
+                            {
+                                // Check property to mark possible exceptions as observed to prevent TaskScheduler.UnobservedTaskException events.
+                                var ignored = t.Exception;
+
+                                close(localClient);
+                            });
                         }
                     }
                     catch (Exception e)

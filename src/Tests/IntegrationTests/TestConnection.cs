@@ -213,6 +213,42 @@ namespace IntegrationTests
         }
 
         [Fact]
+        public async Task TestConnectionToNotStartedServerAsync()
+        {
+            TaskScheduler.UnobservedTaskException += FailOnUnhandled;
+
+            try
+            {
+                const int maxIterations = 10;
+                for (int i = 0; i < maxIterations && caughtUnobservedException == false; i++)
+                {
+                    Assert.Throws<NATSConnectionException>(() =>
+                    {
+                        using (var c = Context.OpenConnection(Context.Server1.Port, options => { options.Timeout = 1; })) {};
+                    });
+
+                    await Task.Delay(TimeSpan.FromMilliseconds(500));
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                    GC.Collect();
+                }
+
+                Assert.False(caughtUnobservedException);
+            }
+            finally
+            {
+                TaskScheduler.UnobservedTaskException -= FailOnUnhandled;
+            }
+        }
+
+        private bool caughtUnobservedException;
+
+        private void FailOnUnhandled(object sender, UnobservedTaskExceptionEventArgs e)
+        {
+            caughtUnobservedException = true;
+        }
+
+        [Fact]
         public void TestClosedConnections()
         {
             using (NATSServer.CreateFastAndVerify(Context.Server1.Port))
