@@ -792,6 +792,18 @@ namespace NATS.Client
         }
 
         /// <summary>
+        /// Clears all X.509 certificates added through <see cref="AddCertificate(string)"/>.
+        /// </summary>
+        /// <remarks>
+        /// Can be used to renew the client certificate without recreating the <see cref="Connection"/>.
+        /// </remarks>
+        public void ClearCertificates()
+        {
+	        certificates?.Clear();
+        }
+
+
+        /// <summary>
         /// Overrides the default NATS RemoteCertificationValidationCallback.
         /// </summary>
         /// <remarks>
