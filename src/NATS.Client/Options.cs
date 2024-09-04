@@ -21,7 +21,7 @@ using static NATS.Client.Defaults;
 namespace NATS.Client
 {
     /// <summary>
-    /// This class is used to setup all NATs client options.
+    /// This class is used to set up all NATs client options.
     /// </summary>
     public sealed class Options
     {
@@ -188,7 +188,7 @@ namespace NATS.Client
         /// </summary>
         /// <remarks>
         /// A server in lame duck mode will gradually disconnect all its connections
-        /// before shuting down. This is often used in deployments when upgrading
+        /// before shutting down. This is often used in deployments when upgrading
         /// NATS Servers.
         /// </remarks>
         public EventHandler<ConnEventArgs> LameDuckModeEventHandler;
@@ -209,7 +209,7 @@ namespace NATS.Client
         public EventHandler<ReconnectDelayEventArgs> ReconnectDelayHandler;
 
         /// <summary>
-        /// Represents the method that will handle an heartbeat alarm
+        /// Represents the method that will handle a heartbeat alarm
         /// </summary>
         public EventHandler<HeartbeatAlarmEventArgs> HeartbeatAlarmEventHandler;
         public EventHandler<HeartbeatAlarmEventArgs> HeartbeatAlarmEventHandlerOrDefault => HeartbeatAlarmEventHandler ?? DefaultHeartbeatAlarmEventHandler();
@@ -287,8 +287,8 @@ namespace NATS.Client
         /// Sets user credentials from text instead of a file using the NATS 2.0 security scheme.
         /// </summary>
         /// <param name="userJwtText">The text containing the "-----BEGIN NATS USER JWT-----" block</param>
-        /// <param name="nkeySeedText">The text containing the "-----BEGIN USER NKEY SEED-----" block or the seed begining with "SU".
-        /// May be the same as the jwt string if they are chained.</param>
+        /// <param name="nkeySeedText">The text containing the "-----BEGIN USER NKEY SEED-----" block or the seed beginning with "SU".
+        /// Maybe the same as the jwt string if they are chained.</param>
         public void SetUserCredentialsFromStrings(string userJwtText, string nkeySeedText)
         {
             var handler = new StringUserJWTHandler(userJwtText, nkeySeedText);
@@ -299,7 +299,7 @@ namespace NATS.Client
         /// <summary>
         /// Sets user credentials using the NATS 2.0 security scheme.
         /// </summary>
-        /// <param name="credentialsPath">A chained credentials file, e.g user.cred</param>
+        /// <param name="credentialsPath">A chained credentials file, e.g. user.cred</param>
         public void SetUserCredentials(string credentialsPath)
         {
             if (string.IsNullOrWhiteSpace(credentialsPath))
@@ -311,7 +311,7 @@ namespace NATS.Client
 
         /// <summary>
         /// SetUserJWT will set the callbacks to retrieve the user's JWT and
-        /// the signature callback to sign the server nonce. This an the Nkey
+        /// the signature callback to sign the server nonce. This and the Nkey
         /// option are mutually exclusive.
         /// </summary>
         /// <param name="userJWTEventHandler">A User JWT Event Handler</param>
@@ -332,7 +332,7 @@ namespace NATS.Client
         public void SetNkey(string publicNkey, EventHandler<UserSignatureEventArgs> userSignatureEventHandler)
         {
             if (string.IsNullOrWhiteSpace(publicNkey))
-                throw new ArgumentException("Invalid Nkey", "publicNkey");
+                throw new ArgumentException("Invalid Nkey", nameof(publicNkey));
 
             UserSignatureEventHandler = userSignatureEventHandler ?? throw new ArgumentNullException(nameof(userSignatureEventHandler));
             nkey = publicNkey;
@@ -363,8 +363,8 @@ namespace NATS.Client
         /// <param name="SignatureEventHandler"></param>
         public void SetJWTEventHandlers(EventHandler<UserJWTEventArgs> JWTEventHandler, EventHandler<UserSignatureEventArgs> SignatureEventHandler)
         {
-            UserJWTEventHandler = JWTEventHandler ?? throw new ArgumentNullException("JWTEventHandler");
-            UserSignatureEventHandler = SignatureEventHandler ?? throw new ArgumentNullException("SignatureEventHandler");
+            UserJWTEventHandler = JWTEventHandler ?? throw new ArgumentNullException(nameof(JWTEventHandler));
+            UserSignatureEventHandler = SignatureEventHandler ?? throw new ArgumentNullException(nameof(SignatureEventHandler));
         }
 
         internal int maxPingsOut = MaxPingOut;
@@ -616,7 +616,7 @@ namespace NATS.Client
         public static int ReconnectForever = -1;
 
         /// <summary>
-        /// Gets or sets the maxmimum number of times a connection will
+        /// Gets or sets the maximum number of times a connection will
         /// attempt to reconnect.  To reconnect indefinitely set this value to
         /// <see cref="Options.ReconnectForever"/>
         /// </summary>
@@ -659,7 +659,8 @@ namespace NATS.Client
                 if (value < 0)
                 {
                     throw new ArgumentOutOfRangeException(
-                        "Timeout must be zero or greater.");
+	                    nameof(value),
+	                    "Timeout must be zero or greater.");
                 }
 
                 timeout = value;
@@ -765,7 +766,7 @@ namespace NATS.Client
         public void AddCertificate(string fileName)
         {
             if (fileName == null)
-                throw new ArgumentNullException("fileName");
+                throw new ArgumentNullException(nameof(fileName));
             X509Certificate2 cert = new X509Certificate2(fileName);
             AddCertificate(cert);
         }
@@ -773,7 +774,7 @@ namespace NATS.Client
         /// <summary>
         /// Adds an X.509 certificate for use with a secure connection.
         /// </summary>
-        /// <param name="certificate">An X.509 certificate represented as an <see cref="X509Certificate2"/> object.</param>
+        /// <param name="certificate">An X.509 certificate represented as a <see cref="X509Certificate2"/> object.</param>
         /// <exception cref="ArgumentNullException"><paramref name="certificate"/> is <c>null</c>.</exception>
         /// <exception cref="System.Security.Cryptography.CryptographicException">An error with the certificate
         /// occurred. For example:
@@ -784,12 +785,24 @@ namespace NATS.Client
         public void AddCertificate(X509Certificate2 certificate)
         {
             if (certificate == null)
-                throw new ArgumentNullException("certificate");
+                throw new ArgumentNullException(nameof(certificate));
             if (certificates == null)
                 certificates = new X509Certificate2Collection();
 
             certificates.Add(certificate);
         }
+
+        /// <summary>
+        /// Clears all X.509 certificates added through <see cref="AddCertificate(string)"/>.
+        /// </summary>
+        /// <remarks>
+        /// Can be used to renew the client certificate without recreating the <see cref="Connection"/>.
+        /// </remarks>
+        public void ClearCertificates()
+        {
+	        certificates?.Clear();
+        }
+
 
         /// <summary>
         /// Overrides the default NATS RemoteCertificationValidationCallback.
@@ -830,7 +843,9 @@ namespace NATS.Client
             {
                 if (value < 0)
                 {
-                    throw new ArgumentOutOfRangeException("SubscriberDeliveryTaskCount must be 0 or greater.");
+                    throw new ArgumentOutOfRangeException(
+	                    nameof(value),
+	                    "SubscriberDeliveryTaskCount must be 0 or greater.");
                 }
                 subscriberDeliveryTaskCount = value;
             }
@@ -853,7 +868,9 @@ namespace NATS.Client
             {
                 if (value <= 0)
                 {
-                    throw new ArgumentOutOfRangeException("value", "Subscription batch size must be greater than 0");
+                    throw new ArgumentOutOfRangeException(
+	                    nameof(value),
+	                    "Subscription batch size must be greater than 0");
                 }
 
                 subscriptionBatchSize = value;
@@ -873,7 +890,7 @@ namespace NATS.Client
         public bool IgnoreDiscoveredServers { get => ignoreDiscoveredServers; set => ignoreDiscoveredServers = value; }
         
         /// <summary>
-        /// Whether or not to to do Tls Handshake First. Valid against servers 2.10.3 and later
+        /// Whether or not to do Tls Handshake First. Valid against servers 2.10.3 and later
         /// </summary>
         public bool TlsFirst { get => tlsFirst; set => tlsFirst = value; }
 
@@ -922,7 +939,7 @@ namespace NATS.Client
             {
                 if (value < -1)
                 {
-                    throw new ArgumentOutOfRangeException("value", "Reconnect buffer size must be greater than or equal to -1");
+                    throw new ArgumentOutOfRangeException(nameof(value), "Reconnect buffer size must be greater than or equal to -1");
                 }
 
                 reconnectBufSize = value;
@@ -930,7 +947,7 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Sets the the upper bound for a random delay in milliseconds added to
+        /// Sets the upper bound for a random delay in milliseconds added to
         /// ReconnectWait during a reconnect for clear and TLS connections.
         /// </summary>
         /// <remarks>
@@ -952,7 +969,7 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Get the the upper bound for a random delay added to
+        /// Get the upper bound for a random delay added to
         /// ReconnectWait during a reconnect for connections.
         /// </summary>
         /// <seealso cref="ReconnectDelayHandler"/>
@@ -963,7 +980,7 @@ namespace NATS.Client
 
 
         /// <summary>
-        /// Get the the upper bound for a random delay added to
+        /// Get the upper bound for a random delay added to
         /// ReconnectWait during a reconnect for TLS connections.
         /// </summary>
         /// <seealso cref="ReconnectDelayHandler"/>
