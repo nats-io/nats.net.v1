@@ -4193,8 +4193,7 @@ namespace NATS.Client
 
         internal void RemoveSubscription(Subscription s)
         {
-            Subscription ignore;
-            subs.TryRemove(s.sid, out ignore);
+            subs.TryRemove(s.sid, out _);
         }
 
         // caller must lock
@@ -4489,8 +4488,7 @@ namespace NATS.Client
         // caller must lock
         internal virtual void removeSub(Subscription s)
         {
-            Subscription ignore;
-            subs.TryRemove(s.sid, out ignore);
+            subs.TryRemove(s.sid, out _);
             if (s.mch != null)
             {
                 if (s.ownsChannel)
