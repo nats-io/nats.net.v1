@@ -135,8 +135,8 @@ namespace NATS.Client
 
         private ServerInfo     serverInfo = null;
 
-        private Dictionary<Int64, Subscription> subs = 
-            new Dictionary<Int64, Subscription>();
+        private ConcurrentDictionary<Int64, Subscription> subs = 
+            new ConcurrentDictionary<Int64, Subscription>();
         
         private readonly ConcurrentQueue<SingleUseChannel<bool>> pongs = new ConcurrentQueue<SingleUseChannel<bool>>();
 
@@ -155,10 +155,10 @@ namespace NATS.Client
         private readonly string globalRequestInbox;
 
         // used to map replies to requests from client (should lock)
-        private long nextRequestId = 0;
+        private InterlockedLong nextRequestId = new InterlockedLong(0);
 
-        private readonly Dictionary<string, InFlightRequest> waitingRequests
-            = new Dictionary<string, InFlightRequest>(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<string, InFlightRequest> waitingRequests
+            = new ConcurrentDictionary<string, InFlightRequest>(StringComparer.OrdinalIgnoreCase);
 
         // Prepare protocol messages for efficiency
         private byte[] PING_P_BYTES = null;
@@ -2930,7 +2930,8 @@ namespace NATS.Client
         {
             lock (mu)
             {
-                waitingRequests.Remove(requestId);
+                InFlightRequest ignored;
+                waitingRequests.TryRemove(requestId, out ignored);
             }
         }
 
@@ -2959,7 +2960,9 @@ namespace NATS.Client
                     //  _INBOX.<nuid>.<requestId>
                     var requestId = subject.Substring(globalRequestInbox.Length + 1);
                     if (!waitingRequests.TryGetValue(requestId, out request))
+                    {
                         return;
+                    }
                 }
                 else
                 {
@@ -3003,10 +3006,7 @@ namespace NATS.Client
 
         private InFlightRequest setupRequest(int timeout, CancellationToken token)
         {
-            var requestId = Interlocked.Increment(ref nextRequestId);
-            if (requestId < 0) //Check if recycled
-                requestId = (requestId + long.MaxValue + 1);
-
+            var requestId = nextRequestId.Increment();
             var request = new InFlightRequest(requestId.ToString(CultureInfo.InvariantCulture), token, timeout, RemoveOutstandingRequest);
             request.Waiter.Task.ContinueWith(t => GC.KeepAlive(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
 
@@ -3014,14 +3014,21 @@ namespace NATS.Client
             {
                 // We shouldn't ever get an Argument exception because the ID is incrementing
                 // and since this is performant sensitive code, skipping an existence check.
-                waitingRequests.Add(request.Id, request);
+                if (!waitingRequests.TryAdd(request.Id, request))
+                {
+                    
+                }
 
                 if (globalRequestSubscription != null)
+                {
                     return request;
+                }
 
                 if (globalRequestSubscription == null)
-                    globalRequestSubscription = subscribeAsync(string.Concat(globalRequestInbox, ".*"), null,
-                        RequestResponseHandler);
+                {
+                    globalRequestSubscription = 
+                        subscribeAsync(string.Concat(globalRequestInbox, ".*"), null, RequestResponseHandler);
+                }
             }
 
             return request;
@@ -4186,7 +4193,8 @@ namespace NATS.Client
 
         internal void RemoveSubscription(Subscription s)
         {
-            subs.Remove(s.sid);
+            Subscription ignore;
+            subs.TryRemove(s.sid, out ignore);
         }
 
         // caller must lock
@@ -4481,7 +4489,8 @@ namespace NATS.Client
         // caller must lock
         internal virtual void removeSub(Subscription s)
         {
-            subs.Remove(s.sid);
+            Subscription ignore;
+            subs.TryRemove(s.sid, out ignore);
             if (s.mch != null)
             {
                 if (s.ownsChannel)
@@ -4489,7 +4498,6 @@ namespace NATS.Client
 
                 s.mch = null;
             }
-
             s.closed = true;
         }
 
