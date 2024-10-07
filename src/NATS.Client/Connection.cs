@@ -2930,8 +2930,7 @@ namespace NATS.Client
         {
             lock (mu)
             {
-                InFlightRequest ignored;
-                waitingRequests.TryRemove(requestId, out ignored);
+                waitingRequests.TryRemove(requestId, out _);
             }
         }
 
