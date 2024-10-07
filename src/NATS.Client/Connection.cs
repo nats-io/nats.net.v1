@@ -3011,13 +3011,8 @@ namespace NATS.Client
 
             lock (mu)
             {
-                // We shouldn't ever get an Argument exception because the ID is incrementing
-                // and since this is performant sensitive code, skipping an existence check.
-                if (!waitingRequests.TryAdd(request.Id, request))
-                {
-                    
-                }
-
+                waitingRequests.TryAdd(request.Id, request);
+                
                 if (globalRequestSubscription != null)
                 {
                     return request;
