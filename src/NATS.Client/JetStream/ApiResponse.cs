@@ -40,6 +40,12 @@ namespace NATS.Client.JetStream
             InitJson(json, throwOnError);
         }
 
+        internal ApiResponse(Error error)
+        {
+            Type = NoType;
+            Error = error;
+        }
+
         private void InitJson(string json, bool throwOnError)
         {
             JsonNode = JSON.Parse(json);

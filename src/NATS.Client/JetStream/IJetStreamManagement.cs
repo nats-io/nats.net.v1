@@ -12,7 +12,9 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace NATS.Client.JetStream
 {
@@ -211,6 +213,23 @@ namespace NATS.Client.JetStream
         /// <param name="subject">The subject to get the next message for.</param>
         /// <returns>Message information.</returns>
         MessageInfo GetNextMessage(string streamName, ulong sequence, string subject);
+            
+        /// <summary>
+        /// Request a batch of messages
+        /// </summary>
+        /// <param name="streamName">the name of the stream</param>
+        /// <param name="messageBatchGetRequest">the request details</param>
+        /// <returns>a list of MessageInfos</returns>
+        IList<MessageInfo> FetchMessageBatch(String streamName, MessageBatchGetRequest messageBatchGetRequest);
+            
+        /// <summary>
+        /// Request a batch of messages
+        /// </summary>
+        /// <param name="streamName">the name of the stream</param>
+        /// <param name="messageBatchGetRequest">the request details</param>
+        /// <param name="handler">The <see cref="EventHandler{MessagInfoHandlerEventArgs}"/> invoked when messages are received 
+        /// <returns>A task</returns>
+        Task<bool> RequestMessageBatch(String streamName, MessageBatchGetRequest messageBatchGetRequest, EventHandler<MessagInfoHandlerEventArgs> handler);
 
         /// <summary>
         /// Deletes a message, overwriting the message data with garbage

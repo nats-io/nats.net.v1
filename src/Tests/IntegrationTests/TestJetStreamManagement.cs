@@ -100,17 +100,18 @@ namespace IntegrationTests
             {
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
 
+                string stream = Variant();
                 StreamConfiguration sc = StreamConfiguration.Builder()
-                    .WithName(STREAM)
+                    .WithName(stream)
                     .WithStorageType(StorageType.Memory)
                     .Build();
 
                 StreamInfo si = jsm.AddStream(sc);
                 sc = si.Config;
-                Assert.Equal(STREAM, sc.Name);
+                Assert.Equal(stream, sc.Name);
 
                 Assert.Single(sc.Subjects);
-                Assert.Equal(STREAM, sc.Subjects[0]);
+                Assert.Equal(stream, sc.Subjects[0]);
 
                 Assert.Equal(RetentionPolicy.Limits, sc.RetentionPolicy);
                 Assert.Equal(DiscardPolicy.Old, sc.DiscardPolicy);
@@ -1321,6 +1322,136 @@ namespace IntegrationTests
                 ci = jsmPre290.CreateConsumer(stream4, cc4);
                 Assert.Equal(fs1, ci.ConsumerConfiguration.FilterSubject);
             });
+        }
+
+        [Fact]
+        public void TestBatchDirectGet()
+        {
+            Context.RunInJsServer(AtLeast2_11, c =>
+            {
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                IJetStream js = c.CreateJetStreamContext();
+
+                string stream = Variant();
+                string name = Name();
+                string subject = Name();
+
+                StreamConfiguration sc = StreamConfiguration.Builder()
+                    .WithName(stream)
+                    .WithStorageType(StorageType.Memory)
+                    .WithSubjects(subject)
+                    .Build();
+                StreamInfo si = jsm.AddStream(sc);
+                Assert.False(si.Config.AllowDirect);
+
+                IList<MessageInfo> list = new List<MessageInfo>();
+                Assert.Throws<NATSJetStreamClientException>(() => {
+                    jsm.RequestMessageBatch(stream, MessageBatchGetRequest.Builder().Build(), (s, e) => list.Add(e.MessageInfo));
+                });
+
+                // Enable AllowDirect.
+                jsm.DeleteStream(stream);
+                sc = StreamConfiguration.Builder()
+                    .WithName(stream)
+                    .WithStorageType(StorageType.Memory)
+                    .WithSubjects(subject)
+                    .WithAllowDirect(true)
+                    .Build();
+                si = jsm.AddStream(sc);
+                Assert.True(si.Config.AllowDirect);
+
+                // Empty (Invalid) request errors.
+                list.Clear();
+                MessageBatchGetRequest request = MessageBatchGetRequest.Builder().Build();
+                jsm.RequestMessageBatch(stream, request, (s, e) => list.Add(e.MessageInfo));
+                Assert.Equal(1, list.Count);
+                MessageInfo miErr = list[0];
+                Assert.False(miErr.IsMessage());
+                Assert.False(miErr.IsEobStatus());
+                Assert.True(miErr.IsErrorStatus());
+
+                // Requests stay the same for all options.
+                MessageBatchGetRequest request1 = MessageBatchGetRequest.Builder()
+                    .WithBatch(3)
+                    .WithSubject(subject)
+                    .Build();
+                MessageBatchGetRequest request2 = MessageBatchGetRequest.Builder()
+                    .WithBatch(3)
+                    .WithMinSequence(4)
+                    .WithSubject(subject)
+                    .Build();
+
+                // no messages yet - handler
+                list.Clear();
+                jsm.RequestMessageBatch(stream, request1, (s, e) => list.Add(e.MessageInfo));
+                verifyError(list);
+
+                // no messages yet - fetch
+                verifyError(jsm.FetchMessageBatch(stream, request1));
+
+                for (int x = 0; x < 5; x++) {
+                    js.Publish(subject, Encoding.ASCII.GetBytes("" + x));
+                }
+
+                // Get using handler.
+                list.Clear();
+                jsm.RequestMessageBatch(stream, request1, (s, e) => list.Add(e.MessageInfo));
+                verifyRequest1(list, true);
+
+                list.Clear();
+                jsm.RequestMessageBatch(stream, request2, (s, e) => list.Add(e.MessageInfo));
+                verifyRequest2(list, true);
+
+                // Get using fetch.
+                verifyRequest1(jsm.FetchMessageBatch(stream, request1), false);
+                verifyRequest2(jsm.FetchMessageBatch(stream, request2), false);
+            });
+        }
+
+        private static void verifyRequest1(IList<MessageInfo> list, bool lastIsEob) {
+            Assert.Equal(lastIsEob ? 4 : 3, list.Count);
+            MessageInfo mi = list[2];
+            Assert.Equal(2U, mi.NumPending);
+            Assert.Equal(3U, mi.Sequence);
+            Assert.Equal(2U, mi.LastSequence);
+            verifyMessage(mi);
+            verifyEob(list, lastIsEob, 3);
+        }
+
+        private static void verifyRequest2(IList<MessageInfo> list, bool lastIsEob) {
+            Assert.Equal(lastIsEob ? 3 : 2, list.Count);
+            MessageInfo mi = list[1];
+            Assert.Equal(0U, mi.NumPending);
+            Assert.Equal(5U, mi.Sequence);
+            Assert.Equal(4U, mi.LastSequence);
+
+            verifyMessage(mi);
+            verifyEob(list, lastIsEob, 2);
+        }
+
+        private static void verifyMessage(MessageInfo mi) {
+            Assert.True(mi.IsMessage());
+            Assert.False(mi.IsStatus());
+            Assert.False(mi.IsEobStatus());
+            Assert.False(mi.IsErrorStatus());
+        }
+
+        private static void verifyEob(IList<MessageInfo> list, bool lastIsEob, int ix) {
+            if (lastIsEob) {
+                MessageInfo mi = list[ix];
+                Assert.False(mi.IsMessage());
+                Assert.True(mi.IsStatus());
+                Assert.True(mi.IsEobStatus());
+                Assert.False(mi.IsErrorStatus());
+            }
+        }
+
+        private static void verifyError(IList<MessageInfo> list) {
+            MessageInfo mi = list[0];
+            Assert.False(mi.IsMessage());
+            Assert.True(mi.IsStatus());
+            Assert.False(mi.IsEobStatus());
+            Assert.True(mi.IsErrorStatus());
         }
     }
 }

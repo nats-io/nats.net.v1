@@ -274,6 +274,8 @@ namespace NATS.Client
         public static readonly ClientExDetail JsConsumerCreate290NotAvailable = new ClientExDetail(Con, 90301, "Name field not valid when v2.9.0 consumer create api is not available.");
         public static readonly ClientExDetail JsConsumerNameDurableMismatch = new ClientExDetail(Con, 90302, "Name must match durable if both are supplied.");
         public static readonly ClientExDetail JsMultipleFilterSubjects210NotAvailable = new ClientExDetail(Con, 90303, "Multiple filter subjects not available until server version 2.10.0.");
+        public static readonly ClientExDetail JsAllowDirectRequired = new ClientExDetail(Con, 90304, "Stream must have allow direct set.");
+        public static readonly ClientExDetail JsDirectBatchGet211NotAvailable = new ClientExDetail(Con, 90305, "Batch direct get not available until server version 2.11.0.");
 
         private const string Sub = "SUB";
         private const string So = "SO";

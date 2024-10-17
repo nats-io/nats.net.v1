@@ -123,6 +123,7 @@ namespace NATS.Client.JetStream
         public const string Mirror = "mirror";
         public const string MirrorDirect = "mirror_direct";
         public const string Msgs = "msgs";
+        public const string MultiLast = "multi_last";
         public const string Name = "name";
         public const string NextBySubject = "next_by_subj";
         public const string NoAck = "no_ack";
@@ -173,6 +174,7 @@ namespace NATS.Client.JetStream
         public const string Sources = "sources";
         public const string Src = "src";
         public const string Started = "started";
+        public const string StartTime = "start_time";
         public const string State = "state";
         public const string Stats = "stats";
         public const string Storage = "storage";
@@ -197,6 +199,8 @@ namespace NATS.Client.JetStream
         public const string TlsAvailable = "tls_available";
         public const string Total = "total";
         public const string Type = "type";
+        public const string UoToSeq = "up_to_seq";
+        public const string UpToTime = "up_to_time";
         public const string Version = "version";
     }
 }

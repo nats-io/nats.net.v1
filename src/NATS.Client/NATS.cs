@@ -530,12 +530,25 @@ namespace NATS.Client
             Message = message;
         }
     
-
         /// <summary>
         /// Retrieves the message.
         /// </summary>
         public Msg Message { get; }
     }
 
-    // Borrowed from:  https://stackoverflow.com/a/7135008
+    /// <summary>
+    /// Provides the message info.
+    /// </summary>
+    public class MessagInfoHandlerEventArgs : EventArgs
+    {
+        public MessagInfoHandlerEventArgs(MessageInfo messageInfo)
+        {
+            MessageInfo = messageInfo;
+        }
+    
+        /// <summary>
+        /// Retrieves the MessageInfo.
+        /// </summary>
+        public MessageInfo MessageInfo { get; }
+    }
 }

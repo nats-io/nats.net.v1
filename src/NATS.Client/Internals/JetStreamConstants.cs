@@ -181,6 +181,7 @@ namespace NATS.Client.Internals
         public const string NatsTimestamp    = "Nats-Time-Stamp";
         public const string NatsSubject      = "Nats-Subject";
         public const string NatsLastSequence = "Nats-Last-Sequence";
+        public const string NatsNumPending   = "Nats-Num-Pending";
         
         public const string NatsPendingMessages = "Nats-Pending-Messages";
         public const string NatsPendingBytes    = "Nats-Pending-Bytes";
@@ -188,6 +189,8 @@ namespace NATS.Client.Internals
         public const int JsConsumerNotFoundErr = 10014;
         public const int JsNoMessageFoundErr = 10037;
         public const int JsWrongLastSequence = 10071;
+
+        public const int EOB = 204;
 
         public const string BadRequest                 = "Bad Request"; // 400
         public const string NoMessages                 = "No Messages"; // 404

@@ -12,7 +12,10 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
 using NATS.Client.Internals;
 
 namespace NATS.Client.JetStream
@@ -234,6 +237,98 @@ namespace NATS.Client.JetStream
                 string subj = string.Format(JetStreamConstants.JsapiMsgGet, streamName);
                 Msg m = RequestResponseRequired(subj, messageGetRequest.Serialize(), Timeout);
                 return new MessageInfo(m, streamName, false, true);
+            }
+        }
+
+        public IList<MessageInfo> FetchMessageBatch(string streamName, MessageBatchGetRequest messageBatchGetRequest)
+        {
+            validateMessageBatchGetRequest(streamName, messageBatchGetRequest);
+            IList<MessageInfo> results = new List<MessageInfo>();
+            Task<bool> task = RequestMessageBatchInternal(streamName, messageBatchGetRequest, false, (s, e) =>
+            {
+                results.Add(e.MessageInfo);
+            });
+            task.Wait();
+            return results;
+        }
+        
+        public Task<bool> RequestMessageBatch(string streamName, MessageBatchGetRequest messageBatchGetRequest, EventHandler<MessagInfoHandlerEventArgs> handler)
+        {
+            validateMessageBatchGetRequest(streamName, messageBatchGetRequest);
+            return RequestMessageBatchInternal(streamName, messageBatchGetRequest, true, handler);
+        }
+
+        private async Task<bool> RequestMessageBatchInternal(string streamName, MessageBatchGetRequest messageBatchGetRequest, bool sendEob, EventHandler<MessagInfoHandlerEventArgs> handler)
+        {
+            ISyncSubscription sub = null;
+
+            try
+            {
+                string replyTo = Conn.NewInbox();
+                sub = Conn.SubscribeSync(replyTo);
+                
+                string requestSubject = PrependPrefix(string.Format(JetStreamConstants.JsapiDirectGet, streamName));
+                Conn.Publish(requestSubject, replyTo, Encoding.ASCII.GetBytes(messageBatchGetRequest.ToJsonString()));
+
+                while (true) {
+                    Msg msg = sub.NextMessage(Timeout);
+                    if (msg.HasStatus)
+                    {
+                        if (msg.status.IsEob())
+                        {
+                            return true; // will send eob in finally if caller asked
+                        }
+
+                        // All non eob statuses, always send, but it is the last message to the caller
+                        sendEob = false;
+                        handler.Invoke(this, 
+                            new MessagInfoHandlerEventArgs(new MessageInfo(msg.status, streamName, true)));
+                        return false; // since this was an error
+                    }
+
+                    if (!msg.HasHeaders || msg.Header.GetLast(JetStreamConstants.NatsNumPending) == null) {
+                        throw ClientExDetail.JsDirectBatchGet211NotAvailable.Instance();
+                    }
+
+                    MessageInfo messageInfo = new MessageInfo(msg, streamName, true, false);
+                    handler.Invoke(this, new MessagInfoHandlerEventArgs(messageInfo));
+                }
+
+                return true;
+            }
+            catch (NATSTimeoutException)
+            {
+                return false; // should not time out before eob
+            }
+            finally
+            {
+                if (sendEob)
+                {
+                    try
+                    {
+                        handler.Invoke(this,
+                            new MessagInfoHandlerEventArgs(new MessageInfo(MsgStatus.Eob, streamName, true)));
+                    }
+                    catch (Exception) { /* user handler runtime error */ }
+                    try
+                    {
+                        sub.Unsubscribe();
+                    }
+                    catch (Exception) { /* don't want this to fail here */ }
+                }
+            }
+        }
+
+        private void validateMessageBatchGetRequest(String streamName, MessageBatchGetRequest messageBatchGetRequest) {
+            Validator.ValidateNotNull(messageBatchGetRequest, "Message Batch Get Request");
+
+            if (!DirectBatchGet211Available()) {
+                throw ClientExDetail.JsDirectBatchGet211NotAvailable.Instance();
+            }
+
+            CachedStreamInfo csi = GetCachedStreamInfo(streamName);
+            if (!csi.AllowDirect) {
+                throw ClientExDetail.JsAllowDirectRequired.Instance();
             }
         }
 

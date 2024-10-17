@@ -16,6 +16,7 @@ namespace NATS.Client.Internals
         internal const int NotFoundCode = 404;
         internal const int RequestTimeoutCode = 408;
         internal const int ConflictCode = 409;
+        internal const int EobCode = 204;
         
         internal const string InvalidHeaderVersion = "Invalid header version";
         
