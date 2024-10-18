@@ -244,21 +244,18 @@ namespace NATS.Client.JetStream
         {
             validateMessageBatchGetRequest(streamName, messageBatchGetRequest);
             IList<MessageInfo> results = new List<MessageInfo>();
-            Task<bool> task = RequestMessageBatchInternal(streamName, messageBatchGetRequest, false, (s, e) =>
-            {
-                results.Add(e.MessageInfo);
-            });
-            task.Wait();
+            RequestMessageBatchImpl(streamName, messageBatchGetRequest, false, (s, e) => { results.Add(e.MessageInfo); });
             return results;
         }
         
         public Task<bool> RequestMessageBatch(string streamName, MessageBatchGetRequest messageBatchGetRequest, EventHandler<MessagInfoHandlerEventArgs> handler)
         {
             validateMessageBatchGetRequest(streamName, messageBatchGetRequest);
-            return RequestMessageBatchInternal(streamName, messageBatchGetRequest, true, handler);
+            return Task.Run(() => RequestMessageBatchImpl(streamName, messageBatchGetRequest, true, handler));
         }
 
-        private async Task<bool> RequestMessageBatchInternal(string streamName, MessageBatchGetRequest messageBatchGetRequest, bool sendEob, EventHandler<MessagInfoHandlerEventArgs> handler)
+        private bool RequestMessageBatchImpl(string streamName, MessageBatchGetRequest messageBatchGetRequest,
+            bool sendEob, EventHandler<MessagInfoHandlerEventArgs> handler)
         {
             ISyncSubscription sub = null;
 
@@ -266,11 +263,13 @@ namespace NATS.Client.JetStream
             {
                 string replyTo = Conn.NewInbox();
                 sub = Conn.SubscribeSync(replyTo);
-                
-                string requestSubject = PrependPrefix(string.Format(JetStreamConstants.JsapiDirectGet, streamName));
-                Conn.Publish(requestSubject, replyTo, Encoding.ASCII.GetBytes(messageBatchGetRequest.ToJsonString()));
 
-                while (true) {
+                string requestSubject = PrependPrefix(string.Format(JetStreamConstants.JsapiDirectGet, streamName));
+                Conn.Publish(requestSubject, replyTo,
+                    Encoding.ASCII.GetBytes(messageBatchGetRequest.ToJsonString()));
+
+                while (true)
+                {
                     Msg msg = sub.NextMessage(Timeout);
                     if (msg.HasStatus)
                     {
@@ -281,20 +280,19 @@ namespace NATS.Client.JetStream
 
                         // All non eob statuses, always send, but it is the last message to the caller
                         sendEob = false;
-                        handler.Invoke(this, 
+                        handler.Invoke(this,
                             new MessagInfoHandlerEventArgs(new MessageInfo(msg.status, streamName, true)));
                         return false; // since this was an error
                     }
 
-                    if (!msg.HasHeaders || msg.Header.GetLast(JetStreamConstants.NatsNumPending) == null) {
+                    if (!msg.HasHeaders || msg.Header.GetLast(JetStreamConstants.NatsNumPending) == null)
+                    {
                         throw ClientExDetail.JsDirectBatchGet211NotAvailable.Instance();
                     }
 
                     MessageInfo messageInfo = new MessageInfo(msg, streamName, true, false);
                     handler.Invoke(this, new MessagInfoHandlerEventArgs(messageInfo));
                 }
-
-                return true;
             }
             catch (NATSTimeoutException)
             {
@@ -309,12 +307,19 @@ namespace NATS.Client.JetStream
                         handler.Invoke(this,
                             new MessagInfoHandlerEventArgs(new MessageInfo(MsgStatus.Eob, streamName, true)));
                     }
-                    catch (Exception) { /* user handler runtime error */ }
+                    catch (Exception)
+                    {
+                        /* user handler runtime error */
+                    }
+
                     try
                     {
                         sub.Unsubscribe();
                     }
-                    catch (Exception) { /* don't want this to fail here */ }
+                    catch (Exception)
+                    {
+                        /* don't want this to fail here */
+                    }
                 }
             }
         }

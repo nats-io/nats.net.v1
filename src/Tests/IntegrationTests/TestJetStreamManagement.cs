@@ -14,6 +14,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 using NATS.Client;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
@@ -1363,7 +1364,7 @@ namespace IntegrationTests
                 // Empty (Invalid) request errors.
                 list.Clear();
                 MessageBatchGetRequest request = MessageBatchGetRequest.Builder().Build();
-                jsm.RequestMessageBatch(stream, request, (s, e) => list.Add(e.MessageInfo));
+                jsm.RequestMessageBatch(stream, request, (s, e) => list.Add(e.MessageInfo)).Wait();
                 Assert.Equal(1, list.Count);
                 MessageInfo miErr = list[0];
                 Assert.False(miErr.IsMessage());
@@ -1383,7 +1384,7 @@ namespace IntegrationTests
 
                 // no messages yet - handler
                 list.Clear();
-                jsm.RequestMessageBatch(stream, request1, (s, e) => list.Add(e.MessageInfo));
+                jsm.RequestMessageBatch(stream, request1, (s, e) => list.Add(e.MessageInfo)).Wait();
                 verifyError(list);
 
                 // no messages yet - fetch
@@ -1393,13 +1394,13 @@ namespace IntegrationTests
                     js.Publish(subject, Encoding.ASCII.GetBytes("" + x));
                 }
 
-                // Get using handler.
+                // Get using handler
                 list.Clear();
-                jsm.RequestMessageBatch(stream, request1, (s, e) => list.Add(e.MessageInfo));
+                jsm.RequestMessageBatch(stream, request1, (s, e) => list.Add(e.MessageInfo)).Wait();
                 verifyRequest1(list, true);
 
                 list.Clear();
-                jsm.RequestMessageBatch(stream, request2, (s, e) => list.Add(e.MessageInfo));
+                jsm.RequestMessageBatch(stream, request2, (s, e) => list.Add(e.MessageInfo)).Wait();
                 verifyRequest2(list, true);
 
                 // Get using fetch.

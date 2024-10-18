@@ -223,11 +223,11 @@ namespace NATS.Client.JetStream
         IList<MessageInfo> FetchMessageBatch(String streamName, MessageBatchGetRequest messageBatchGetRequest);
             
         /// <summary>
-        /// Request a batch of messages
+        /// Request a batch of messages asynchronously
         /// </summary>
         /// <param name="streamName">the name of the stream</param>
         /// <param name="messageBatchGetRequest">the request details</param>
-        /// <param name="handler">The <see cref="EventHandler{MessagInfoHandlerEventArgs}"/> invoked when messages are received 
+        /// <param name="handler">The <see cref="EventHandler{MessagInfoHandlerEventArgs}"/> invoked when messages are received</param> 
         /// <returns>A task</returns>
         Task<bool> RequestMessageBatch(String streamName, MessageBatchGetRequest messageBatchGetRequest, EventHandler<MessagInfoHandlerEventArgs> handler);
 
