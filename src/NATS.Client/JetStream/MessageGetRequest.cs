@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client.JetStream
@@ -51,20 +52,9 @@ namespace NATS.Client.JetStream
         public override JSONNode ToJsonNode()
         {
             JSONObject jso = new JSONObject();
-            if (Sequence > 0)
-            {
-                jso[ApiConstants.Seq] = Sequence;
-            }
-
-            if (LastBySubject != null)
-            {
-                jso[ApiConstants.LastBySubject] = LastBySubject;
-            }
-
-            if (NextBySubject != null)
-            {
-                jso[ApiConstants.NextBySubject] = NextBySubject;
-            }
+            JsonUtils.AddFieldWhenGtZero(jso, ApiConstants.Seq, Sequence);
+            JsonUtils.AddField(jso, ApiConstants.LastBySubject, LastBySubject);
+            JsonUtils.AddField(jso, ApiConstants.NextBySubject, NextBySubject);
 
             return jso;
         }

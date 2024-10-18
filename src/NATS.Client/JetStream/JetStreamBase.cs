@@ -41,6 +41,7 @@ namespace NATS.Client.JetStream
 
         private bool? _consumerCreate290Available;
         private bool? _multipleSubjectFilter210Available;
+        private bool? _directBatchGet211Available;
 
         protected bool ConsumerCreate290Available()
         {
@@ -56,9 +57,18 @@ namespace NATS.Client.JetStream
         {
             if (!_multipleSubjectFilter210Available.HasValue)
             {
-                _multipleSubjectFilter210Available = Conn.ServerInfo.IsSameOrNewerThanVersion("2.9.99");
+                _multipleSubjectFilter210Available = Conn.ServerInfo.IsNewerVersionThan("2.9.99");
             }
             return _multipleSubjectFilter210Available.Value;
+        }
+
+        protected bool DirectBatchGet211Available()
+        {
+            if (!_directBatchGet211Available.HasValue)
+            {
+                _directBatchGet211Available = Conn.ServerInfo.IsNewerVersionThan("2.10.99");
+            }
+            return _directBatchGet211Available.Value;
         }
 
         protected JetStreamBase(IConnection connection, JetStreamOptions options)
@@ -78,6 +88,7 @@ namespace NATS.Client.JetStream
             Timeout = jetStreamBase.Timeout;
             _consumerCreate290Available = jetStreamBase._consumerCreate290Available;
             _multipleSubjectFilter210Available = jetStreamBase._multipleSubjectFilter210Available;
+            _directBatchGet211Available = jetStreamBase._directBatchGet211Available;
         }
 
         internal static ServerInfo ServerInfoOrException(IConnection conn)

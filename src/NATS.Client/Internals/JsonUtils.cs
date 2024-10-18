@@ -376,6 +376,14 @@ namespace NATS.Client.Internals
             o[field] = value;
         }
 
+        public static void AddFieldWhenGtZero(JSONObject o, string field, ulong value)
+        {
+            if (value > 0)
+            {
+                o[field] = value;
+            }
+        }
+
         public static void AddFieldWhenGreaterThan(JSONObject o, string field, ulong value, ulong gt)
         {
             if (value > gt)
