@@ -21,9 +21,12 @@ namespace NATS.Client
         private const string FlowControlText = "FlowControl Request";
         private const string HeartbeatText = "Idle Heartbeat";
         private const string NoRespondersText = "No Responders Available For Request";
+        private const string EobText = "EOB";
         
         private readonly int _code;
         private readonly string _message;
+
+        internal static readonly MsgStatus Eob = new MsgStatus(NatsConstants.EobCode, EobText);
         
         public MsgStatus(int code, string message)
         {
@@ -73,6 +76,10 @@ namespace NATS.Client
 
         public bool IsNoResponders() {
             return _code == NatsConstants.NoRespondersCode && _message.Equals(NoRespondersText);
+        }
+
+        public bool IsEob() {
+            return _code == NatsConstants.EobCode && _message.Equals(EobText);
         }
 
         public override string ToString()
