@@ -98,7 +98,7 @@ namespace NATS.Client.JetStream
         [Obsolete("This property is obsolete. Use RateLimitBps.", false)]
         public long RateLimit => (long)GetOrUnset(_rateLimitBps);
 
-        internal ConsumerConfiguration(string json) : this(JSON.Parse(json)) {}
+        public ConsumerConfiguration(string json) : this(JSON.Parse(json)) {}
 
         internal ConsumerConfiguration(JSONNode ccNode)
         {

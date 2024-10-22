@@ -59,7 +59,7 @@ namespace NATS.Client.JetStream
         [Obsolete("MaxMsgSize was mistakenly renamed in a previous change. Use MaximumMessageSize.", false)]
         public long MaxValueSize => MaximumMessageSize;
 
-        internal StreamConfiguration(string json) : this(JSON.Parse(json)) { }
+        public StreamConfiguration(string json) : this(JSON.Parse(json)) { }
         
         internal StreamConfiguration(JSONNode scNode)
         {
