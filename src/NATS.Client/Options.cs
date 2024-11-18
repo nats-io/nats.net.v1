@@ -288,7 +288,7 @@ namespace NATS.Client
         /// </summary>
         /// <param name="userJwtText">The text containing the "-----BEGIN NATS USER JWT-----" block</param>
         /// <param name="nkeySeedText">The text containing the "-----BEGIN USER NKEY SEED-----" block or the seed beginning with "SU".
-        /// Maybe the same as the jwt string if they are chained.</param>
+        /// Both strings can contain the credentials and the jwt block since they will be parsed for the required data.</param>
         public void SetUserCredentialsFromStrings(string userJwtText, string nkeySeedText)
         {
             var handler = new StringUserJWTHandler(userJwtText, nkeySeedText);
