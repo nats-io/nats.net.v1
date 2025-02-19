@@ -19,7 +19,6 @@ namespace NATS.Client.ObjectStore
 {
     /// <summary>
     /// The ObjectMeta is Object Meta is high level information about an object.
-    /// OBJECT STORE IMPLEMENTATION IS EXPERIMENTAL AND SUBJECT TO CHANGE.
     /// </summary>
     public class ObjectMetaOptions : JsonSerializable
     {

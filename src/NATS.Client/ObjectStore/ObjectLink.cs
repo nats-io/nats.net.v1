@@ -19,7 +19,6 @@ namespace NATS.Client.ObjectStore
 {
     /// <summary>
     /// The ObjectLink is used to embed links to other objects.
-    /// OBJECT STORE IMPLEMENTATION IS EXPERIMENTAL AND SUBJECT TO CHANGE.
     /// </summary>
     public sealed class ObjectLink : JsonSerializable
     {

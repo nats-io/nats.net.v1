@@ -1980,9 +1980,6 @@ namespace IntegrationTests
         [Fact(Skip = "Manual")]
         public void TestJetStreamSubjectHandling()
         {
-            // Start a NATS server with experimental -js feature and create a stream and consumer
-            // as described in issue https://github.com/nats-io/nats.net.v1/issues/364
-
             // publish a message into JS
             using (var c = new ConnectionFactory().CreateConnection())
             {
