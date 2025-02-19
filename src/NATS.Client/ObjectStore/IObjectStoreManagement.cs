@@ -19,7 +19,6 @@ namespace NATS.Client.ObjectStore
     {
         /// <summary>
         /// Create an object store.
-        /// OBJECT STORE IMPLEMENTATION IS EXPERIMENTAL AND SUBJECT TO CHANGE.
         /// </summary>
         /// <param name="config">the object store configuration</param>
         /// <returns>bucket info</returns>
@@ -27,14 +26,12 @@ namespace NATS.Client.ObjectStore
 
         /// <summary>
         /// Get the list of object stores bucket names
-        /// OBJECT STORE IMPLEMENTATION IS EXPERIMENTAL AND SUBJECT TO CHANGE.
         /// </summary>
         /// <returns>list of object stores bucket names</returns>
         IList<string> GetBucketNames();
 
         /// <summary>
         /// Gets the status for an existing object store.
-        /// OBJECT STORE IMPLEMENTATION IS EXPERIMENTAL AND SUBJECT TO CHANGE.
         /// </summary>
         /// <param name="bucketName">the object store bucket name to get info for</param>
         ObjectStoreStatus GetStatus(string bucketName);
@@ -47,7 +44,6 @@ namespace NATS.Client.ObjectStore
 
         /// <summary>
         /// Deletes an existing object store. Will throw a JetStreamApiException if the delete fails.
-        /// OBJECT STORE IMPLEMENTATION IS EXPERIMENTAL AND SUBJECT TO CHANGE.
         /// </summary>
         void Delete(string bucketName);
     }
