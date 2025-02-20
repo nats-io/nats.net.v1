@@ -2,6 +2,7 @@ var class_n_a_t_s_1_1_client_1_1_options =
 [
     [ "AddCertificate", "class_n_a_t_s_1_1_client_1_1_options.html#a2c59d422c06ab0333a82977b61f56163", null ],
     [ "AddCertificate", "class_n_a_t_s_1_1_client_1_1_options.html#addbbdf0d44db4ddbe1ae01b369c9e80e", null ],
+    [ "ClearCertificates", "class_n_a_t_s_1_1_client_1_1_options.html#a8535662f95648587d67117f2f79c0f4f", null ],
     [ "SetJWTEventHandlers", "class_n_a_t_s_1_1_client_1_1_options.html#a4a3ab6d631f9fbc2f47520f9185a655a", null ],
     [ "SetNkey", "class_n_a_t_s_1_1_client_1_1_options.html#a4135968bea53f5027c28b6eb27a5f37c", null ],
     [ "SetNkey", "class_n_a_t_s_1_1_client_1_1_options.html#a29331ed9423c35117522175fea2cb3ac", null ],

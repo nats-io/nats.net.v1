@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">1.1.6</span>
+   &#160;<span id="projectnumber">1.1.7</span>
    </div>
    <div id="projectbrief">The NATS.io .NET C# Client</div>
   </td>
@@ -116,6 +116,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a2c59d422c06ab0333a82977b61f56163"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:addbbdf0d44db4ddbe1ae01b369c9e80e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#addbbdf0d44db4ddbe1ae01b369c9e80e">AddCertificate</a> (X509Certificate2 certificate)</td></tr>
 <tr class="separator:addbbdf0d44db4ddbe1ae01b369c9e80e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8535662f95648587d67117f2f79c0f4f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a8535662f95648587d67117f2f79c0f4f">ClearCertificates</a> ()</td></tr>
+<tr class="separator:a8535662f95648587d67117f2f79c0f4f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad8a36daf7fd376fca630130c61f6898e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#ad8a36daf7fd376fca630130c61f6898e">SetReconnectJitter</a> (int jitter, int tlsJitter)</td></tr>
 <tr class="separator:ad8a36daf7fd376fca630130c61f6898e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a06f85fd3986c1a735b867153cab4ba26"><td class="memItemLeft" align="right" valign="top">override string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a06f85fd3986c1a735b867153cab4ba26">ToString</a> ()</td></tr>
@@ -260,7 +262,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>ClientSideLimitChecks
 <tr class="separator:a7a36d716e8bafde1d44a78768309197c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p >This class is used to setup all NATs client options. </p>
+<div class="textblock"><p >This class is used to set up all NATs client options. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="a2c59d422c06ab0333a82977b61f56163" name="a2c59d422c06ab0333a82977b61f56163"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a2c59d422c06ab0333a82977b61f56163">&#9670;&nbsp;</a></span>AddCertificate() <span class="overload">[1/2]</span></h2>
@@ -322,7 +324,7 @@ The certificate's password is incorrect.</li>
 <p>Adds an X.509 certificate for use with a secure connection. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">certificate</td><td>An X.509 certificate represented as an X509Certificate2 object.</td></tr>
+    <tr><td class="paramname">certificate</td><td>An X.509 certificate represented as a X509Certificate2 object.</td></tr>
   </table>
   </dd>
 </dl>
@@ -341,6 +343,26 @@ The certificate's password is incorrect.</li>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="a8535662f95648587d67117f2f79c0f4f" name="a8535662f95648587d67117f2f79c0f4f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8535662f95648587d67117f2f79c0f4f">&#9670;&nbsp;</a></span>ClearCertificates()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void NATS.Client.Options.ClearCertificates </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Clears all X.509 certificates added through <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a2c59d422c06ab0333a82977b61f56163" title="Adds an X.509 certificate from a file for use with a secure connection.">AddCertificate(string)</a>. </p>
+<p >Can be used to renew the client certificate without recreating the <a class="el" href="class_n_a_t_s_1_1_client_1_1_connection.html" title="Connection represents a bare connection to a NATS server. Users should create an IConnection instance...">Connection</a>. </p>
 
 </div>
 </div>
@@ -481,9 +503,9 @@ The certificate's password is incorrect.</li>
       </table>
 </div><div class="memdoc">
 
-<p>Sets the the upper bound for a random delay in milliseconds added to ReconnectWait during a reconnect for clear and TLS connections. </p>
+<p>Sets the upper bound for a random delay in milliseconds added to ReconnectWait during a reconnect for clear and TLS connections. </p>
 <p >Defaults are 100 ms and 1s for TLS. </p>
-<dl class="section see"><dt>See also</dt><dd><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a7495773ca6b4f6445da4c01283770c95" title="Represents the optional method that is used to get from the user the desired delay the client should ...">ReconnectDelayHandler</a>, <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a5c378136179aa27d8b2e8709833b6971" title="Get the the upper bound for a random delay added to ReconnectWait during a reconnect for connections.">ReconnectJitter</a>, <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a2745d49c9a87c02e10e8d2f17cb839d9" title="Get the the upper bound for a random delay added to ReconnectWait during a reconnect for TLS connecti...">ReconnectJitterTLS</a>, <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a06448007abc18cdf961a341c9ae1f9ea" title="Gets or sets the amount of time, in milliseconds, the client will wait before attempting a reconnecti...">ReconnectWait</a></dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a7495773ca6b4f6445da4c01283770c95" title="Represents the optional method that is used to get from the user the desired delay the client should ...">ReconnectDelayHandler</a>, <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a5c378136179aa27d8b2e8709833b6971" title="Get the upper bound for a random delay added to ReconnectWait during a reconnect for connections.">ReconnectJitter</a>, <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a2745d49c9a87c02e10e8d2f17cb839d9" title="Get the upper bound for a random delay added to ReconnectWait during a reconnect for TLS connections.">ReconnectJitterTLS</a>, <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a06448007abc18cdf961a341c9ae1f9ea" title="Gets or sets the amount of time, in milliseconds, the client will wait before attempting a reconnecti...">ReconnectWait</a></dd></dl>
 
 </div>
 </div>
@@ -513,7 +535,7 @@ The certificate's password is incorrect.</li>
       </table>
 </div><div class="memdoc">
 
-<p>SetUserJWT will set the callbacks to retrieve the user's JWT and the signature callback to sign the server nonce. This an the Nkey option are mutually exclusive. </p>
+<p>SetUserJWT will set the callbacks to retrieve the user's JWT and the signature callback to sign the server nonce. This and the Nkey option are mutually exclusive. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">userJWTEventHandler</td><td>A User JWT Event Handler</td></tr>
@@ -543,7 +565,7 @@ The certificate's password is incorrect.</li>
 <p>Sets user credentials using the <a class="el" href="namespace_n_a_t_s.html">NATS</a> 2.0 security scheme. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">credentialsPath</td><td>A chained credentials file, e.g user.cred</td></tr>
+    <tr><td class="paramname">credentialsPath</td><td>A chained credentials file, e.g. user.cred</td></tr>
   </table>
   </dd>
 </dl>
@@ -643,7 +665,7 @@ The certificate's password is incorrect.</li>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">userJwtText</td><td>The text containing the "-----BEGIN NATS USER JWT-----" block</td></tr>
-    <tr><td class="paramname">nkeySeedText</td><td>The text containing the "-----BEGIN USER NKEY SEED-----" block or the seed begining with "SU". May be the same as the jwt string if they are chained.</td></tr>
+    <tr><td class="paramname">nkeySeedText</td><td>The text containing the "-----BEGIN USER NKEY SEED-----" block or the seed beginning with "SU". Maybe the same as the jwt string if they are chained.</td></tr>
   </table>
   </dd>
 </dl>
@@ -665,7 +687,7 @@ The certificate's password is incorrect.</li>
       </table>
 </div><div class="memdoc">
 
-<p>Returns a string representation of the value of this <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html" title="This class is used to setup all NATs client options.">Options</a> instance. </p>
+<p>Returns a string representation of the value of this <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html" title="This class is used to set up all NATs client options.">Options</a> instance. </p>
 <dl class="section return"><dt>Returns</dt><dd>string value of this instance.</dd></dl>
 
 </div>
@@ -684,7 +706,7 @@ The certificate's password is incorrect.</li>
 </div><div class="memdoc">
 
 <p>Represents the method that will handle an event raised when the server notifies the connection that it entered lame duck mode. </p>
-<p >A server in lame duck mode will gradually disconnect all its connections before shuting down. This is often used in deployments when upgrading <a class="el" href="namespace_n_a_t_s.html">NATS</a> Servers. </p>
+<p >A server in lame duck mode will gradually disconnect all its connections before shutting down. This is often used in deployments when upgrading <a class="el" href="namespace_n_a_t_s.html">NATS</a> Servers. </p>
 
 </div>
 </div>
@@ -751,7 +773,7 @@ The certificate's password is incorrect.</li>
 </div><div class="memdoc">
 
 <p>Represents the optional method that is used to get from the user the desired delay the client should pause before attempting to reconnect again. </p>
-<p >Note that this is invoked after the library tried the entire list of URLs and failed to reconnect. By default, the client will use the sum of <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a06448007abc18cdf961a341c9ae1f9ea" title="Gets or sets the amount of time, in milliseconds, the client will wait before attempting a reconnecti...">ReconnectWait</a> and a random value between zero and <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a5c378136179aa27d8b2e8709833b6971" title="Get the the upper bound for a random delay added to ReconnectWait during a reconnect for connections.">Options.ReconnectJitter</a> or <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a2745d49c9a87c02e10e8d2f17cb839d9" title="Get the the upper bound for a random delay added to ReconnectWait during a reconnect for TLS connecti...">Options.ReconnectJitterTLS</a> </p>
+<p >Note that this is invoked after the library tried the entire list of URLs and failed to reconnect. By default, the client will use the sum of <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a06448007abc18cdf961a341c9ae1f9ea" title="Gets or sets the amount of time, in milliseconds, the client will wait before attempting a reconnecti...">ReconnectWait</a> and a random value between zero and <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a5c378136179aa27d8b2e8709833b6971" title="Get the upper bound for a random delay added to ReconnectWait during a reconnect for connections.">Options.ReconnectJitter</a> or <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a2745d49c9a87c02e10e8d2f17cb839d9" title="Get the upper bound for a random delay added to ReconnectWait during a reconnect for TLS connections.">Options.ReconnectJitterTLS</a> </p>
 
 </div>
 </div>
@@ -869,8 +891,8 @@ The certificate's password is incorrect.</li>
 </table>
 </div><div class="memdoc">
 
-<p>Get the the upper bound for a random delay added to ReconnectWait during a reconnect for connections. </p>
-<dl class="section see"><dt>See also</dt><dd><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a7495773ca6b4f6445da4c01283770c95" title="Represents the optional method that is used to get from the user the desired delay the client should ...">ReconnectDelayHandler</a>, <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a2745d49c9a87c02e10e8d2f17cb839d9" title="Get the the upper bound for a random delay added to ReconnectWait during a reconnect for TLS connecti...">ReconnectJitterTLS</a>, <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a06448007abc18cdf961a341c9ae1f9ea" title="Gets or sets the amount of time, in milliseconds, the client will wait before attempting a reconnecti...">ReconnectWait</a>, <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#ad8a36daf7fd376fca630130c61f6898e" title="Sets the the upper bound for a random delay in milliseconds added to ReconnectWait during a reconnect...">SetReconnectJitter(int, int)</a></dd></dl>
+<p>Get the upper bound for a random delay added to ReconnectWait during a reconnect for connections. </p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a7495773ca6b4f6445da4c01283770c95" title="Represents the optional method that is used to get from the user the desired delay the client should ...">ReconnectDelayHandler</a>, <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a2745d49c9a87c02e10e8d2f17cb839d9" title="Get the upper bound for a random delay added to ReconnectWait during a reconnect for TLS connections.">ReconnectJitterTLS</a>, <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a06448007abc18cdf961a341c9ae1f9ea" title="Gets or sets the amount of time, in milliseconds, the client will wait before attempting a reconnecti...">ReconnectWait</a>, <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#ad8a36daf7fd376fca630130c61f6898e" title="Sets the upper bound for a random delay in milliseconds added to ReconnectWait during a reconnect for...">SetReconnectJitter(int, int)</a></dd></dl>
 
 </div>
 </div>
@@ -894,8 +916,8 @@ The certificate's password is incorrect.</li>
 </table>
 </div><div class="memdoc">
 
-<p>Get the the upper bound for a random delay added to ReconnectWait during a reconnect for TLS connections. </p>
-<dl class="section see"><dt>See also</dt><dd><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a7495773ca6b4f6445da4c01283770c95" title="Represents the optional method that is used to get from the user the desired delay the client should ...">ReconnectDelayHandler</a>, <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a5c378136179aa27d8b2e8709833b6971" title="Get the the upper bound for a random delay added to ReconnectWait during a reconnect for connections.">ReconnectJitter</a>, <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#ad8a36daf7fd376fca630130c61f6898e" title="Sets the the upper bound for a random delay in milliseconds added to ReconnectWait during a reconnect...">SetReconnectJitter(int, int)</a></dd></dl>
+<p>Get the upper bound for a random delay added to ReconnectWait during a reconnect for TLS connections. </p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a7495773ca6b4f6445da4c01283770c95" title="Represents the optional method that is used to get from the user the desired delay the client should ...">ReconnectDelayHandler</a>, <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#a5c378136179aa27d8b2e8709833b6971" title="Get the upper bound for a random delay added to ReconnectWait during a reconnect for connections.">ReconnectJitter</a>, <a class="el" href="class_n_a_t_s_1_1_client_1_1_options.html#ad8a36daf7fd376fca630130c61f6898e" title="Sets the upper bound for a random delay in milliseconds added to ReconnectWait during a reconnect for...">SetReconnectJitter(int, int)</a></dd></dl>
 
 </div>
 </div>
