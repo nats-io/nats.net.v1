@@ -24,6 +24,7 @@ using NATS.Client.Internals.SimpleJSON;
 using NATS.Client.JetStream;
 using NATS.Client.Service;
 using Xunit;
+using Xunit.Abstractions;
 using static UnitTests.TestBase;
 
 namespace IntegrationTestsInternal
@@ -31,8 +32,13 @@ namespace IntegrationTestsInternal
     [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
     public class TestService : TestSuite<AutoServerSuiteContext>
     {
-        public TestService(AutoServerSuiteContext context) : base(context) {}
-        
+        public TestService(ITestOutputHelper output, AutoServerSuiteContext context) : base(context)
+        {
+            this.output = output;
+            Console.SetOut(new ConsoleWriter(output));
+        }
+        private readonly ITestOutputHelper output;
+
         const string ServiceName1 = "Service1";
         const string ServiceName2 = "Service2";
         const string EchoEndpointName = "EchoEndpoint";
@@ -42,9 +48,10 @@ namespace IntegrationTestsInternal
         const string SortEndpointDescendingName = "SortEndpointDescending";
         const string SortEndpointAscendingSubject = "ascending";
         const string SortEndpointDescendingSubject = "descending";
+        const string ReverseEndpointName = "ReverseEndpoint";
+        const string ReverseEndpointSubject = "reverse";
         const string CustomQGroup = "customQ";
-
-
+        
         [Fact]
         public void TestServiceWorkflow()
         {
@@ -135,7 +142,7 @@ namespace IntegrationTestsInternal
 
                     Assert.NotEqual(serviceId1, serviceId2);
 
-                    Thread.Sleep(1000); // just make sure services are all started, for slow CI machines
+                    Thread.Sleep(500); // just make sure services are all started, for slow CI machines. FlushBuffer change should help
 
                     // service request execution
                     int requestCount = 10;
@@ -261,6 +268,39 @@ namespace IntegrationTestsInternal
                     VerifyStatsDiscovery(discovery.StatsForNameAndId(ServiceName1, serviceId1), statsResponse1);
                     Assert.Null(discovery.StatsForNameAndId(ServiceName1, "badId"));
                     Assert.Null(discovery.StatsForNameAndId("bad", "badId"));
+                    
+                    // ---------------------------------------------------------------------------
+                    // TEST ADDING AN ENDPOINT TO A RUNNING SERVICE
+                    // ---------------------------------------------------------------------------
+                    Endpoint endReverse = Endpoint.Builder()
+                        .WithName(ReverseEndpointName)
+                        .WithSubject(ReverseEndpointSubject)
+                        .Build();
+
+                    ServiceEndpoint seRev1 = ServiceEndpoint.Builder()
+                        .WithEndpoint(endReverse)
+                        .WithHandler((source, args) => { args.Message.Respond(serviceNc1, Reverse(args.Message.Data)); })
+                        .Build();
+
+                    service1.AddServiceEndpoint(seRev1);
+                    Thread.Sleep(100);
+
+                    for (int x = 0; x < requestCount; x++)
+                    {
+                        VerifyServiceExecution(clientNc, ReverseEndpointName, ReverseEndpointSubject, null);
+                    }
+
+                    infoResponse1 = service1.InfoResponse;
+                    bool found = false;
+                    foreach (Endpoint e in infoResponse1.Endpoints)
+                    {
+                        if (e.Name.Equals(ReverseEndpointName))
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                    Assert.True(found);
 
                     // shutdown
                     service1.Stop();
@@ -302,6 +342,9 @@ namespace IntegrationTestsInternal
                 case SortEndpointDescendingName:
                     Assert.Equal(SortD(request), response);
                     break;
+                case ReverseEndpointName:
+                    Assert.Equal(Reverse(request), response);
+                    break;
             }
         }
 
@@ -335,7 +378,201 @@ namespace IntegrationTestsInternal
         private string SortD(string data) {
             return SortD(Encoding.UTF8.GetBytes(data));
         }
+        
+        private static string Reverse(string data)
+        {
+            char[] charArray = data.ToCharArray();
+            Array.Reverse(charArray);
+            return new string(charArray);
+        }
+        
+        private static string Reverse(byte[] data)
+        {
+            return Reverse(Encoding.UTF8.GetString(data));
+        }
+            
+        [Fact]
+        public void TestQueueGroup() {
+            TestServerInfo server = Context.AutoServer();
+            using (var s = NATSServer.CreateFastAndVerify(server.Port))
+            {
+                using (IConnection serviceNc1 = Context.OpenConnection(server.Port))
+                using (IConnection serviceNc2 = Context.OpenConnection(server.Port))
+                using (IConnection clientNc = Context.OpenConnection(server.Port))
+                {
+                    string yesQueueSubject = "subjyes";
+                    string noQueueSubject = "subjno";
+    
+                    Endpoint ep1 = Endpoint.Builder()
+                        .WithName("with")
+                        .WithSubject(yesQueueSubject)
+                        .Build();
+    
+                    Endpoint ep2 = Endpoint.Builder()
+                        .WithName("without")
+                        .WithSubject(noQueueSubject)
+                        .WithNoQueueGroup()
+                        .Build();
+    
+                    ServiceEndpoint service1Ep1 = ServiceEndpoint.Builder()
+                        .WithEndpoint(ep1)
+                        .WithHandler((source, args) => { args.Message.Respond(serviceNc1, Echo(args.Message.Data)); })
+                        .Build();
+    
+                    ServiceEndpoint service1Ep2 = ServiceEndpoint.Builder()
+                        .WithEndpoint(ep2)
+                        .WithHandler((source, args) => { args.Message.Respond(serviceNc2, Echo(args.Message.Data)); })
+                        .Build();
+    
+                    ServiceEndpoint service2Ep1 = ServiceEndpoint.Builder()
+                        .WithEndpoint(ep1)
+                        .WithHandler((source, args) => { args.Message.Respond(serviceNc1, Echo(args.Message.Data)); })
+                        .Build();
+    
+                    ServiceEndpoint service2Ep2 = ServiceEndpoint.Builder()
+                        .WithEndpoint(ep2)
+                        .WithHandler((source, args) => { args.Message.Respond(serviceNc2, Echo(args.Message.Data)); })
+                        .Build();
+    
+                    Service service1 = new ServiceBuilder()
+                        .WithName(ServiceName1)
+                        .WithVersion("1.0.0")
+                        .WithConnection(serviceNc1)
+                        .AddServiceEndpoint(service1Ep1)
+                        .AddServiceEndpoint(service1Ep2)
+                        .Build();
+    
+                    Service service2 = new ServiceBuilder()
+                        .WithName(ServiceName2)
+                        .WithVersion("1.0.0")
+                        .WithConnection(serviceNc2)
+                        .AddServiceEndpoint(service2Ep1)
+                        .AddServiceEndpoint(service2Ep2)
+                        .Build();
+    
+                    service1.StartService();
+                    service2.StartService();
+                    
+                    Thread.Sleep(500); // make sure service has time to start
+    
+                    string replyTo = "qreplyto";
+                    InterlockedInt y1Count = new InterlockedInt();
+                    InterlockedInt y2Count = new InterlockedInt();
+                    InterlockedInt n1Count = new InterlockedInt();
+                    InterlockedInt n2Count = new InterlockedInt();
+                    CountdownEvent latch = new CountdownEvent(6);
+                    clientNc.SubscribeAsync(replyTo, (obj, args) => {
+                        switch (Encoding.UTF8.GetString(args.Message.Data)) {
+                            case "Echo y1": y1Count.Increment(); break;
+                            case "Echo y2": y2Count.Increment(); break;
+                            case "Echo n1": n1Count.Increment(); break;
+                            case "Echo n2": n2Count.Increment(); break;
+                        }
+                        latch.Signal();
+                    });
+    
+                    clientNc.Publish(yesQueueSubject, replyTo, Encoding.UTF8.GetBytes("y1"));
+                    clientNc.Publish(yesQueueSubject, replyTo, Encoding.UTF8.GetBytes("y2"));
+                    clientNc.Publish(noQueueSubject, replyTo, Encoding.UTF8.GetBytes("n1"));
+                    clientNc.Publish(noQueueSubject, replyTo, Encoding.UTF8.GetBytes("n2"));
+    
+                    Assert.True(latch.Wait(2000));
+                    Assert.Equal(2, y1Count.Read() + y2Count.Read());
+                    Assert.Equal(4, n1Count.Read() + n2Count.Read());
+                }
+            }
+        }
 
+        [Fact]
+        public void TestResponsesFromAllInstances() {
+            TestServerInfo server = Context.AutoServer();
+            using (var s = NATSServer.CreateFastAndVerify(server.Port))
+            {
+                using (IConnection serviceNc1 = Context.OpenConnection(server.Port))
+                using (IConnection serviceNc2 = Context.OpenConnection(server.Port))
+                using (IConnection clientNc = Context.OpenConnection(server.Port))
+                {
+                    Endpoint ep = Endpoint.Builder()
+                        .WithName("ep")
+                        .WithSubject("eps")
+                        .Build();
+    
+                    ServiceEndpoint service1Ep1 = ServiceEndpoint.Builder()
+                        .WithEndpoint(ep)
+                        .WithHandler((source, args) => { args.Message.Respond(serviceNc1, Echo(args.Message.Data)); })
+                        .Build();
+    
+                    ServiceEndpoint service2Ep1 = ServiceEndpoint.Builder()
+                        .WithEndpoint(ep)
+                        .WithHandler((source, args) => { args.Message.Respond(serviceNc2, Echo(args.Message.Data)); })
+                        .Build();
+    
+                    Service service1 = new ServiceBuilder()
+                        .WithName(ServiceName1)
+                        .WithVersion("1.0.0")
+                        .WithConnection(serviceNc1)
+                        .AddServiceEndpoint(service1Ep1)
+                        .Build();
+    
+                    Service service2 = new ServiceBuilder()
+                        .WithName(ServiceName2)
+                        .WithVersion("1.0.0")
+                        .WithConnection(serviceNc2)
+                        .AddServiceEndpoint(service2Ep1)
+                        .Build();
+    
+                    service1.StartService();
+                    service2.StartService();
+    
+                    Thread.Sleep(500); // make sure service has time to start
+                    
+                    Discovery discovery = new Discovery(clientNc);
+    
+                    IList<PingResponse> prs = discovery.Ping();
+                    bool one = false;
+                    bool two = false;
+                    foreach (PingResponse response in prs) {
+                        if (response.Name.Equals(ServiceName1)) {
+                            one = true;
+                        }
+                        else if (response.Name.Equals(ServiceName2)) {
+                            two = true;
+                        }
+                    }
+                    Assert.True(one);
+                    Assert.True(two);
+
+                    IList<InfoResponse> irs = discovery.Info();
+                    one = false;
+                    two = false;
+                    foreach (InfoResponse response in irs) {
+                        if (response.Name.Equals(ServiceName1)) {
+                            one = true;
+                        }
+                        else if (response.Name.Equals(ServiceName2)) {
+                            two = true;
+                        }
+                    }
+                    Assert.True(one);
+                    Assert.True(two);
+    
+                    IList<StatsResponse> srs = discovery.Stats();
+                    one = false;
+                    two = false;
+                    foreach (StatsResponse response in srs) {
+                        if (response.Name.Equals(ServiceName1)) {
+                            one = true;
+                        }
+                        else if (response.Name.Equals(ServiceName2)) {
+                            two = true;
+                        }
+                    }
+                    Assert.True(one);
+                    Assert.True(two);
+                }
+            }
+        }
+        
         [Fact]
         public void TestServiceBuilderConstruction()
         {
@@ -513,43 +750,54 @@ namespace IntegrationTestsInternal
         }
                
         [Fact]
-        public void TestEndpointConstruction() {
+        public void TestEndpointConstruction()
+        {
+            IDictionary<string, string> metadata = new Dictionary<string, string>();
+            
             Endpoint e = new Endpoint(NAME);
-            Assert.Equal(NAME, e.Name);
-            Assert.Equal(NAME, e.Subject);
+            assertEpNameSubQ(e, NAME);
+            Assert.Equal(e, Endpoint.Builder().WithEndpoint(e).Build());
+            Assert.Null(e.Metadata);
+            
+            e = new Endpoint(NAME, metadata);
+            assertEpNameSubQ(e, NAME);
             Assert.Equal(e, Endpoint.Builder().WithEndpoint(e).Build());
             Assert.Null(e.Metadata);
     
             e = new Endpoint(NAME, SUBJECT);
-            Assert.Equal(NAME, e.Name);
-            Assert.Equal(SUBJECT, e.Subject);
+            assertEpNameSubQ(e);
             Assert.Equal(e, Endpoint.Builder().WithEndpoint(e).Build());
     
             e = Endpoint.Builder()
                 .WithName(NAME).WithSubject(SUBJECT)
                 .Build();
-            Assert.Equal(NAME, e.Name);
-            Assert.Equal(SUBJECT, e.Subject);
+            assertEpNameSubQ(e);
             Assert.Equal(e, Endpoint.Builder().WithEndpoint(e).Build());
 
-            IDictionary<string, string> metadata = new Dictionary<string, string>();
             e = Endpoint.Builder()
                 .WithName(NAME).WithSubject(SUBJECT)
                 .WithMetadata(metadata)
                 .Build();
-            Assert.Equal(NAME, e.Name);
-            Assert.Equal(SUBJECT, e.Subject);
+            assertEpNameSubQ(e);
             Assert.Null(e.Metadata);
     
             metadata["k"] = "v";
+                
+            e = new Endpoint(NAME, SUBJECT, metadata);
+            assertEpNameSubQ(e);
+            Assert.True(Validator.DictionariesEqual(metadata, e.Metadata));
+
             e = Endpoint.Builder()
                 .WithName(NAME).WithSubject(SUBJECT)
                 .WithMetadata(metadata)
                 .Build();
-            Assert.Equal(NAME, e.Name);
-            Assert.Equal(SUBJECT, e.Subject);
+            assertEpNameSubQ(e);
             Assert.True(Validator.DictionariesEqual(metadata, e.Metadata));
-    
+
+            // internal allows null queue group
+            e = new Endpoint(NAME, SUBJECT, null, metadata, false);
+            Assert.Null(e.QueueGroup);
+
             // some subject testing
             e = new Endpoint(NAME, "foo.>");
             Assert.Equal("foo.>", e.Subject);
@@ -581,7 +829,17 @@ namespace IntegrationTestsInternal
                 }
             }
         }
+        
+        private static void assertEpNameSubQ(Endpoint ep) {
+            assertEpNameSubQ(ep, SUBJECT);
+        }
     
+        private static void assertEpNameSubQ(Endpoint ep, string exSubject) {
+            Assert.Equal(NAME, ep.Name);
+            Assert.Equal(exSubject, ep.Subject);
+            Assert.Equal(Endpoint.DefaultQueueGroup, ep.QueueGroup);
+        }
+
         [Fact]
         public void TestEndpointStatsConstruction()
         {
@@ -838,7 +1096,8 @@ namespace IntegrationTestsInternal
             ServiceEndpoint se = new ServiceEndpoint(ep, (sender, args) => { });
             IList<ServiceEndpoint> endList = new List<ServiceEndpoint>();
             endList.Add(se);
-            InfoResponse ir1 = new InfoResponse("id", "name", "0.0.0", metadata, "desc", endList);
+            InfoResponse ir1 = new InfoResponse("id", "name", "0.0.0", metadata, "desc");
+            ir1.AddServiceEndpoints(endList);
             InfoResponse ir2 = new InfoResponse(ir1.ToJsonString());
             ValidateApiInOutInfoResponse(ir1);
             ValidateApiInOutInfoResponse(ir2);

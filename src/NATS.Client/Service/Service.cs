@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using NATS.Client.Internals;
@@ -36,7 +37,7 @@ namespace NATS.Client.Service
 
         private readonly IConnection conn;
         public int DrainTimeoutMillis { get; }
-        private readonly IDictionary<string, EndpointContext> serviceContexts;
+        private readonly ConcurrentDictionary<string, EndpointContext> serviceContexts;
         private readonly IList<EndpointContext> discoveryContexts;
 
         /// <summary>
@@ -60,22 +61,43 @@ namespace NATS.Client.Service
             DrainTimeoutMillis = b.DrainTimeoutMillis;
             startStopLock = new object();
 
+            // build responses first. info needs to be available when adding service endpoints.
+            PingResponse = new PingResponse(id, b.Name, b.Version, b.Metadata);
+            InfoResponse = new InfoResponse(id, b.Name, b.Version, b.Metadata, b.Description);
+
             // set up the service contexts
             // ! also while we are here, we need to collect the endpoints for the SchemaResponse
-            serviceContexts = new Dictionary<string, EndpointContext>();
-            foreach (ServiceEndpoint se in b.ServiceEndpoints.Values)
-            {
-                serviceContexts[se.Name] = new EndpointContext(conn, false, se);
-            }
-
-            // build static responses
-            PingResponse = new PingResponse(id, b.Name, b.Version, b.Metadata);
-            InfoResponse = new InfoResponse(id, b.Name, b.Version, b.Metadata, b.Description, b.ServiceEndpoints.Values);
+            serviceContexts = new ConcurrentDictionary<string, EndpointContext>();
+            AddServiceEndpoints(b.ServiceEndpoints.Values);
 
             discoveryContexts = new List<EndpointContext>();
             AddDiscoveryContexts(SrvPing, PingResponse);
             AddDiscoveryContexts(SrvInfo, InfoResponse);
             AddStatsContexts();
+        }
+
+        public void AddServiceEndpoint(ServiceEndpoint serviceEndpoint)
+        {
+            AddServiceEndpoints(new List<ServiceEndpoint>() {serviceEndpoint});
+        }
+        
+        public void AddServiceEndpoints(ICollection<ServiceEndpoint> serviceEndpoints)
+        {
+            lock (startStopLock)
+            {
+                InfoResponse.AddServiceEndpoints(serviceEndpoints);
+                foreach (ServiceEndpoint se in serviceEndpoints)
+                {
+                    EndpointContext ctx = new EndpointContext(conn, false, se);
+                    serviceContexts[se.Name] = ctx;
+                    
+                    // if the service is already started, start the newly added context
+                    if (runningIndicator != null)
+                    {
+                        ctx.Start();
+                    }
+                }
+            }
         }
 
         private void AddDiscoveryContexts(string discoveryName, EventHandler<ServiceMsgHandlerEventArgs> handler) {
@@ -93,8 +115,7 @@ namespace NATS.Client.Service
         }
 
         private void AddDiscoveryContexts(string discoveryName, ServiceResponse sr) {
-            byte[] responseBytes = sr.Serialize();
-            void Handler(object sender, ServiceMsgHandlerEventArgs args) => args.Message.Respond(conn, responseBytes);
+            void Handler(object sender, ServiceMsgHandlerEventArgs args) => args.Message.Respond(conn, sr.Serialize());
             AddDiscoveryContexts(discoveryName, Handler);
         }
 

@@ -32,19 +32,37 @@ namespace NATS.Client.Service
         /// <value>List of endpoints</value>
         public IList<Endpoint> Endpoints { get; }
 
-        public InfoResponse(string id, string name, string version, IDictionary<string, string> metadata, string description, ICollection<ServiceEndpoint> serviceEndpoints)
+        public InfoResponse(string id, string name, string version, IDictionary<string, string> metadata, string description)
             : base(ResponseType, id, name, version, metadata)
         {
             Description = description;
             Endpoints = new List<Endpoint>();
-            foreach (ServiceEndpoint se in serviceEndpoints) {
-                Endpoints.Add(new Endpoint(
-                    se.Name,
-                    se.Subject,
-                    se.QueueGroup,
-                    se.Metadata
-                ));
+        }
+
+        internal InfoResponse AddServiceEndpoint(ServiceEndpoint se)
+        {
+            _addServiceEndpoint(se);
+            resetSerialized();
+            return this;
+        }
+
+        internal void AddServiceEndpoints(ICollection<ServiceEndpoint> serviceEndpoints)
+        {
+            foreach (ServiceEndpoint se in serviceEndpoints)
+            {
+                _addServiceEndpoint(se);
             }
+            resetSerialized();
+        }
+
+        private void _addServiceEndpoint(ServiceEndpoint se)
+        {
+            Endpoints.Add(new Endpoint(
+                se.Name,
+                se.Subject,
+                se.QueueGroup,
+                se.Metadata
+            ));
         }
 
         internal InfoResponse(string json) : this(JSON.Parse(json)) {}
@@ -60,6 +78,12 @@ namespace NATS.Client.Service
         {
             JSONObject jso = BaseJsonObject();
             JsonUtils.AddField(jso, ApiConstants.Description, Description);
+            JSONArray arr = new JSONArray();
+            foreach (var ess in Endpoints)
+            {
+                arr.Add(null, ess.ToJsonNode());
+            }
+            jso[ApiConstants.Endpoints] = arr;
             JsonUtils.AddField(jso, ApiConstants.Endpoints, Endpoints);
             return jso;
         }
