@@ -214,39 +214,6 @@ namespace IntegrationTestsInternal
                     Assert.Null(discovery.PingForNameAndId(ServiceName1, "badId"));
                     Assert.Null(discovery.PingForNameAndId("bad", "badId"));
 
-                    // ---------------------------------------------------------------------------
-                    // TEST ADDING AN ENDPOINT TO A RUNNING SERVICE
-                    // ---------------------------------------------------------------------------
-                    Endpoint endReverse = Endpoint.Builder()
-                        .WithName(ReverseEndpointName)
-                        .WithSubject(ReverseEndpointSubject)
-                        .Build();
-
-                    ServiceEndpoint seRev1 = ServiceEndpoint.Builder()
-                        .WithEndpoint(endReverse)
-                        .WithHandler((source, args) => { args.Message.Respond(serviceNc1, Reverse(args.Message.Data)); })
-                        .Build();
-
-                    service1.AddServiceEndpoint(seRev1);
-                    Thread.Sleep(100);
-
-                    for (int x = 0; x < requestCount; x++)
-                    {
-                        VerifyServiceExecution(clientNc, ReverseEndpointName, ReverseEndpointSubject, null);
-                    }
-
-                    infoResponse1 = service1.InfoResponse;
-                    bool found = false;
-                    foreach (Endpoint e in infoResponse1.Endpoints)
-                    {
-                        if (e.Name.Equals(ReverseEndpointName))
-                        {
-                            found = true;
-                            break;
-                        }
-                    }
-                    Assert.True(found);
-
                     // info discovery
                     void VerifyInfoDiscovery(InfoResponse r, InfoResponse exp) {
                         VerifyServiceResponseFields(r, exp);
@@ -301,6 +268,39 @@ namespace IntegrationTestsInternal
                     VerifyStatsDiscovery(discovery.StatsForNameAndId(ServiceName1, serviceId1), statsResponse1);
                     Assert.Null(discovery.StatsForNameAndId(ServiceName1, "badId"));
                     Assert.Null(discovery.StatsForNameAndId("bad", "badId"));
+                    
+                    // ---------------------------------------------------------------------------
+                    // TEST ADDING AN ENDPOINT TO A RUNNING SERVICE
+                    // ---------------------------------------------------------------------------
+                    Endpoint endReverse = Endpoint.Builder()
+                        .WithName(ReverseEndpointName)
+                        .WithSubject(ReverseEndpointSubject)
+                        .Build();
+
+                    ServiceEndpoint seRev1 = ServiceEndpoint.Builder()
+                        .WithEndpoint(endReverse)
+                        .WithHandler((source, args) => { args.Message.Respond(serviceNc1, Reverse(args.Message.Data)); })
+                        .Build();
+
+                    service1.AddServiceEndpoint(seRev1);
+                    Thread.Sleep(100);
+
+                    for (int x = 0; x < requestCount; x++)
+                    {
+                        VerifyServiceExecution(clientNc, ReverseEndpointName, ReverseEndpointSubject, null);
+                    }
+
+                    infoResponse1 = service1.InfoResponse;
+                    bool found = false;
+                    foreach (Endpoint e in infoResponse1.Endpoints)
+                    {
+                        if (e.Name.Equals(ReverseEndpointName))
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                    Assert.True(found);
 
                     // shutdown
                     service1.Stop();
