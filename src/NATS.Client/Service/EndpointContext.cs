@@ -28,6 +28,8 @@ namespace NATS.Client.Service
         private readonly string qGroup;
         internal IAsyncSubscription Sub { get; private set; }
 
+        private bool running;
+        
         private DateTime started;
         private string lastError;
         private readonly InterlockedLong numRequests;
@@ -40,16 +42,26 @@ namespace NATS.Client.Service
             this.se = se;
             this.recordStats = !internalEndpoint;
             qGroup = internalEndpoint ? null : se.QueueGroup;
-
+            running = false;
+            
             numRequests = new InterlockedLong();
             numErrors = new InterlockedLong();
             processingTime = new InterlockedLong();
-            started = DateTime.UtcNow;
         }
 
+        // this method does not need a lock because it is only
+        // called from Service start which is already locked
         internal void Start()
         {
-            Sub = conn.SubscribeAsync(se.Subject, qGroup, OnMessage);
+            if (!running)
+            {
+                Sub = qGroup == null
+                    ? conn.SubscribeAsync(se.Subject, OnMessage)
+                    : conn.SubscribeAsync(se.Subject, qGroup, OnMessage);
+                conn.FlushBuffer();
+                started = DateTime.UtcNow;
+                running = true;
+            }
         }
 
         internal void OnMessage(object sender, MsgHandlerEventArgs args)

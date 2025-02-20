@@ -91,7 +91,6 @@ namespace NATS.Client.Service
             {
                 arr.Add(null, ess.ToJsonNode());
             }
-
             jso[ApiConstants.Endpoints] = arr;
             return jso;
         }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 using NATS.Client.JetStream;
@@ -28,6 +29,9 @@ namespace NATS.Client.Service
         /// <value>A copy of the metadata for the service, or null if there is no metadata</value>
         public IDictionary<string, string> Metadata =>
             _metadata == null ? null : new Dictionary<string, string>(_metadata);
+
+        private byte[] serialized;
+        private readonly object lazyLock = new object();
 
         internal ServiceResponse(string type, string id, string name, string version, IDictionary<string, string> metadata)
         {
@@ -63,7 +67,27 @@ namespace NATS.Client.Service
             Version = Validator.ValidateSemVer(node[ApiConstants.Version], "Version", true);
             _metadata = JsonUtils.StringStringDictionary(node, ApiConstants.Metadata);
         }
+
+        internal void resetSerialized()
+        {
+            lock (lazyLock)
+            {
+                serialized = null;
+            }
+        }
         
+        public override byte[] Serialize()
+        {
+            lock (lazyLock)
+            {
+                if (serialized == null)
+                {
+                    serialized = JsonUtils.Serialize(ToJsonNode());
+                }
+            }
+            return serialized;
+        }
+
         protected JSONObject BaseJsonObject()
         {
             JSONObject jso = new JSONObject();
