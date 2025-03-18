@@ -52,7 +52,9 @@ namespace NATS.Client.JetStream
         public bool DenyPurge { get; }
         public bool DiscardNewPerSubject { get; }
         public IDictionary<string, string> Metadata { get; }
-        public ulong FirstSequence { get; private set; }
+        public ulong FirstSequence { get; }
+        public bool AllowMsgTtl { get; }
+        public Duration SubjectDeleteMarkerTtl { get; }
 
         [Obsolete("The server value is a 32-bit signed value. Use MaximumMessageSize.", false)]
         public long MaxMsgSize => MaximumMessageSize;
@@ -95,6 +97,8 @@ namespace NATS.Client.JetStream
             DiscardNewPerSubject = scNode[ApiConstants.DiscardNewPerSubject].AsBool;
             Metadata = JsonUtils.StringStringDictionary(scNode, ApiConstants.Metadata);
             FirstSequence = AsUlongOr(scNode, ApiConstants.FirstSequence, 1U);
+            AllowMsgTtl = scNode[ApiConstants.AllowMsgTtl].AsBool;
+            SubjectDeleteMarkerTtl = AsDuration(scNode, ApiConstants.SubjectDeleteMarkerTtl, Duration.Zero);
         }
         
         private StreamConfiguration(StreamConfigurationBuilder builder)
@@ -131,6 +135,8 @@ namespace NATS.Client.JetStream
             DiscardNewPerSubject = builder._discardNewPerSubject;
             Metadata = builder._metadata;
             FirstSequence = builder._firstSequence;
+            AllowMsgTtl = builder._allowMsgTtl;
+            SubjectDeleteMarkerTtl = builder._subjectDeleteMarkerTtl;
         }
 
         public override JSONNode ToJsonNode()
@@ -174,6 +180,8 @@ namespace NATS.Client.JetStream
             AddField(o, ApiConstants.DiscardNewPerSubject, DiscardNewPerSubject);
             AddField(o, ApiConstants.Metadata, Metadata);
             AddFieldWhenGreaterThan(o, ApiConstants.FirstSequence, FirstSequence, 1);
+            AddField(o, ApiConstants.AllowMsgTtl, AllowMsgTtl);
+            AddField(o, ApiConstants.SubjectDeleteMarkerTtl, SubjectDeleteMarkerTtl.Nanos);
             return o;
         }
 
@@ -221,6 +229,8 @@ namespace NATS.Client.JetStream
             internal bool _discardNewPerSubject;
             internal Dictionary<string, string> _metadata = new Dictionary<string, string>();
             internal ulong _firstSequence;
+            internal bool _allowMsgTtl;
+            internal Duration _subjectDeleteMarkerTtl = Duration.Zero;
 
             public StreamConfigurationBuilder() {}
             
@@ -259,6 +269,8 @@ namespace NATS.Client.JetStream
                     _denyPurge = sc.DenyPurge;
                     _discardNewPerSubject = sc.DiscardNewPerSubject;
                     _firstSequence = sc.FirstSequence;
+                    _allowMsgTtl = sc.AllowMsgTtl;
+                    _subjectDeleteMarkerTtl = sc.SubjectDeleteMarkerTtl;
                     foreach (string key in sc.Metadata.Keys)
                     {
                         _metadata[key] = sc.Metadata[key];
@@ -704,7 +716,35 @@ namespace NATS.Client.JetStream
                 _firstSequence = firstSequence == 0 ? 1 : firstSequence;
                 return this;
             }
-            
+
+            // public StreamConfigurationBuilder WithAllowMsgTtl()
+            // {
+            //     _allowMsgTtl = true;
+            //     return this;
+            // }
+            //
+            // public StreamConfigurationBuilder WithAllowMsgTtl(bool allowMsgTtl)
+            // {
+            //     _allowMsgTtl = allowMsgTtl;
+            //     return this;
+            // }
+
+            public StreamConfigurationBuilder WithSubjectDeleteMarkerTtl(Duration subjectDeleteMarkerTtl)
+            {
+                if (subjectDeleteMarkerTtl == null || subjectDeleteMarkerTtl.IsNegative())
+                {
+                    _subjectDeleteMarkerTtl = Duration.Zero;
+                }
+
+                if (subjectDeleteMarkerTtl.Millis < 1000)
+                {
+                    throw new ArgumentException("Subject Delete Marker Ttl must be at least 1 second.");
+                }
+                _subjectDeleteMarkerTtl = subjectDeleteMarkerTtl;
+                   
+                return this;
+            }
+
             /// <summary>
             /// Set this stream to be sealed. This is irreversible.
             /// </summary>
