@@ -47,10 +47,12 @@ namespace NATS.Client.JetStream
         public int ExpiresInMillis { get; }
         public int IdleHeartbeat { get; }
         public int ThresholdPercent { get; }
+        public bool NoWait { get; }
+        public bool RaiseStatusWarnings { get; }
 
         public override string ToString()
         {
-            return $"Messages: {Messages}, Bytes: {Bytes}, ExpiresIn: {ExpiresInMillis}, IdleHeartbeat: {IdleHeartbeat}, ThresholdPercent: {ThresholdPercent}";
+            return $"Messages: {Messages}, Bytes: {Bytes}, ExpiresIn: {ExpiresInMillis}, IdleHeartbeat: {IdleHeartbeat}, ThresholdPercent: {ThresholdPercent}, RaiseStatusWarnings: {RaiseStatusWarnings}";
         }
 
         protected BaseConsumeOptions(IBaseConsumeOptionsBuilder b)
@@ -68,6 +70,9 @@ namespace NATS.Client.JetStream
             ThresholdPercent = b.ThresholdPercent;
             ExpiresInMillis = b.ExpiresIn;
 
+            NoWait = b.NoWait;
+            RaiseStatusWarnings = b.RaiseStatusWarnings;
+
             // calculated
             IdleHeartbeat = Math.Min(MaxHearbeatMillis, ExpiresInMillis * MaxIdleHeartbeatPercent / 100);
         }
@@ -78,6 +83,8 @@ namespace NATS.Client.JetStream
             long Bytes { get; }
             int ThresholdPercent { get; }
             int ExpiresIn { get; }
+            bool NoWait { get; }
+            bool RaiseStatusWarnings { get; }
         }
 
         public abstract class BaseConsumeOptionsBuilder<TB, TCo> : IBaseConsumeOptionsBuilder
@@ -86,14 +93,22 @@ namespace NATS.Client.JetStream
             long _bytes = 0;
             int _thresholdPercent = DefaultThresholdPercent;
             int _expiresIn = DefaultExpiresInMillis;
+            bool _noWait = false;
+            bool _raiseStatusWarnings = false;
 
             public int Messages => _messages;
             public long Bytes => _bytes;
             public int ThresholdPercent => _thresholdPercent;
             public int ExpiresIn => _expiresIn;
+            public bool NoWait => _noWait;
+            public bool RaiseStatusWarnings => _raiseStatusWarnings;
 
             protected abstract TB GetThis();
             
+            protected TB WithNoWait() {
+                return GetThis();
+            }
+
             protected TB WithMessages(int messages) {
                 this._messages = messages < 1 ? -1 : messages;
                 return GetThis();
@@ -143,6 +158,29 @@ namespace NATS.Client.JetStream
             /// <returns>the builder</returns>
             public TB WithThresholdPercent(int thresholdPercent) {
                 this._thresholdPercent = thresholdPercent < 1 ? DefaultThresholdPercent : Math.Min(100, thresholdPercent);
+                return GetThis();
+            }
+
+            /// <summary>
+            /// Raise status warning turns on sending status messages to the error listener.
+            /// The default of to not raise status warning.
+            /// </summary>
+            /// <returns>the builder</returns>
+            public TB WithRaiseStatusWarnings()
+            {
+                this._raiseStatusWarnings = true;
+                return GetThis();
+            }
+
+            /// <summary>
+            /// Turn on or off raise status warning turns. When on, status messages are sent to the error listener.
+            /// The default of to not raise status warning.
+            /// </summary>
+            /// <param name="raiseStatusWarnings"></param>
+            /// <returns>the builder</returns>
+            public TB WithRaiseStatusWarnings(bool raiseStatusWarnings)
+            {
+                this._raiseStatusWarnings = raiseStatusWarnings;
                 return GetThis();
             }
 

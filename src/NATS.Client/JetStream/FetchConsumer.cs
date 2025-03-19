@@ -39,7 +39,7 @@ namespace NATS.Client.JetStream
                 .WithIdleHeartbeat(fetchConsumeOptions.IdleHeartbeat)
                 .Build();
             InitSub(subscriptionMaker.Subscribe(null, null, inactiveThreshold));
-            pullSubject = ((JetStreamPullSubscription)sub).pullImpl.Pull(pro, false, null);
+            pullSubject = ((JetStreamPullSubscription)sub).pullImpl.Pull(pro, fetchConsumeOptions.RaiseStatusWarnings, null);
             startTicks = -1;
         }
 
