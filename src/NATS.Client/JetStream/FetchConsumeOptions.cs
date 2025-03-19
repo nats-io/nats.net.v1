@@ -114,7 +114,7 @@ namespace NATS.Client.JetStream
             /// </summary>
             /// <param name="expiresInMillis"></param>
             /// <returns>the builder</returns>
-            public FetchConsumeOptionsBuilder WithNoWait(int expiresInMillis)
+            public FetchConsumeOptionsBuilder WithNoWaitExpiresIn(int expiresInMillis)
             {
                 _noWait = true;
                 if (expiresInMillis < 1) {

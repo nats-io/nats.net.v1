@@ -970,5 +970,88 @@ namespace IntegrationTests
             Assert.Equal(ReplayPolicy.Original, occ.ReplayPolicy);
             Assert.True(occ.HeadersOnly);
         }
+        
+        [Fact]
+        public void TestFetchNoWaitPlusExpires() {
+            Context.RunInJsServer(AtLeast2_9_1, c => {
+                string stream = Stream(Nuid.NextGlobal());
+                string subject = Subject(Nuid.NextGlobal());
+                string consumer = Name(Nuid.NextGlobal());
+
+                IJetStream js = c.CreateJetStreamContext();
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                CreateMemoryStream(jsm, stream, subject);
+
+                jsm.AddOrUpdateConsumer(stream, ConsumerConfiguration.Builder()
+                    .WithName(consumer)
+                    .WithInactiveThreshold(100000) // I could have used a durable, but this is long enough for the test
+                    .WithFilterSubject(subject)
+                    .Build());
+
+            IConsumerContext cc = c.GetConsumerContext(stream, consumer);
+            FetchConsumeOptions fco = FetchConsumeOptions.Builder().WithMaxMessages(10).WithNoWait().Build();
+
+            long veryFastExpected = 250;
+            int regularWaitExpected = 1000;
+
+            // No Wait, No Messages
+            IFetchConsumer fc = cc.Fetch(fco);
+            long[] result = readMessages(fc);
+            Assert.Equal(0, result[0]); // no messages
+            Assert.True(result[1] < veryFastExpected); // comes back very fast
+
+            // No Wait, One Message
+            js.Publish(subject, Encoding.UTF8.GetBytes("DATA-A"));
+            fc = cc.Fetch(fco);
+            result = readMessages(fc);
+            Assert.Equal(1, result[0]); // 1 message
+            Assert.True(result[1] < veryFastExpected); // comes back very fast
+
+            // No Wait, Two Messages
+            js.Publish(subject, Encoding.UTF8.GetBytes("DATA-B"));
+            js.Publish(subject, Encoding.UTF8.GetBytes("DATA-C"));
+            fc = cc.Fetch(fco);
+            result = readMessages(fc);
+            Assert.Equal(2, result[0]); // 2 messages
+            Assert.True(result[1] < veryFastExpected); // comes back very fast
+
+            // With Expires, No Messages
+            fco = FetchConsumeOptions.Builder().WithMaxMessages(10).WithNoWaitExpiresIn(regularWaitExpected).Build();
+            fc = cc.Fetch(fco);
+            result = readMessages(fc);
+            Assert.Equal(0, result[0]); // 0 messages
+            Assert.True(result[1] >= regularWaitExpected); // comes after full expires
+
+            // With Expires, One to Three Message
+            fco = FetchConsumeOptions.Builder().WithMaxMessages(10).WithNoWaitExpiresIn(regularWaitExpected).Build();
+            fc = cc.Fetch(fco);
+            js.Publish(subject, Encoding.UTF8.GetBytes("DATA-D"));
+            js.Publish(subject, Encoding.UTF8.GetBytes("DATA-E"));
+            js.Publish(subject, Encoding.UTF8.GetBytes("DATA-F"));
+            result = readMessages(fc);
+            long count = result[0];
+
+            // With Long (Default) Expires, Leftovers
+            long left = 3 - count;
+            fc = cc.Fetch(fco);
+            result = readMessages(fc);
+            Assert.Equal(left, result[0]);
+            });
+        }
+        
+        private static long[] readMessages(IFetchConsumer fc) {
+            long count = 0;
+            Stopwatch sw = Stopwatch.StartNew();
+            while (!fc.Finished) {
+                Msg m = fc.NextMessage();
+                if (m != null) {
+                    m.Ack();
+                    ++count;
+                }
+            }
+            sw.Stop();
+            return new long[]{count, sw.ElapsedMilliseconds};
+        }
+
     }
 }
