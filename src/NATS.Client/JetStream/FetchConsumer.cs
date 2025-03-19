@@ -20,6 +20,7 @@ namespace NATS.Client.JetStream
     /// </summary>
     internal class FetchConsumer : MessageConsumerBase, IFetchConsumer, IPullManagerObserver
     {
+        private readonly bool isNoWaitNoExpires;
         private readonly long maxWaitTicks;
         private readonly string pullSubject;
         private long startTicks;
@@ -27,16 +28,27 @@ namespace NATS.Client.JetStream
         internal FetchConsumer(SimplifiedSubscriptionMaker subscriptionMaker,
             ConsumerInfo cachedConsumerInfo,
             FetchConsumeOptions fetchConsumeOptions) 
-            : base(cachedConsumerInfo)  
+            : base(cachedConsumerInfo)
         {
+            bool isNoWait = fetchConsumeOptions.NoWait;
             long expiresInMillis = fetchConsumeOptions.ExpiresInMillis;
-            maxWaitTicks = expiresInMillis * TimeSpan.TicksPerMillisecond;
+            isNoWaitNoExpires = isNoWait && expiresInMillis == ConsumerConfiguration.IntUnset;
 
-            long inactiveThreshold = expiresInMillis * 110 / 100; // ten % longer than the wait
+            long inactiveThreshold;
+            if (expiresInMillis == ConsumerConfiguration.IntUnset) { // can be for noWait
+                maxWaitTicks = BaseConsumeOptions.MinExpiresMills * TimeSpan.TicksPerMillisecond;
+                inactiveThreshold = BaseConsumeOptions.MinExpiresMills; // no need to do the 10% longer
+            }
+            else {
+                maxWaitTicks = expiresInMillis * TimeSpan.TicksPerMillisecond;
+                inactiveThreshold = expiresInMillis * 110 / 100; // 10% longer than the wait
+            }
+
             PullRequestOptions pro = PullRequestOptions.Builder(fetchConsumeOptions.MaxMessages)
                 .WithMaxBytes(fetchConsumeOptions.MaxBytes)
                 .WithExpiresIn(fetchConsumeOptions.ExpiresInMillis)
                 .WithIdleHeartbeat(fetchConsumeOptions.IdleHeartbeat)
+                .WithNoWait(isNoWait)
                 .Build();
             InitSub(subscriptionMaker.Subscribe(null, null, inactiveThreshold));
             pullSubject = ((JetStreamPullSubscription)sub).pullImpl.Pull(pro, fetchConsumeOptions.RaiseStatusWarnings, null);
