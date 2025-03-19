@@ -20,8 +20,9 @@ namespace NATS.Client.JetStream
         public const string AckWait = "ack_wait";
         public const string Action = "action";
         public const string Active = "active";
-        public const string AllowRollupHdrs = "allow_rollup_hdrs";
         public const string AllowDirect = "allow_direct";
+        public const string AllowRollupHdrs = "allow_rollup_hdrs";
+        public const string AllowMsgTtl = "allow_msg_ttl";
         public const string Api = "api";
         public const string AuthRequired = "auth_required";
         public const string AverageProcessingTime = "average_processing_time";        
@@ -182,6 +183,7 @@ namespace NATS.Client.JetStream
         public const string Stream = "stream";
         public const string Streams = "streams";
         public const string Subject = "subject";
+        public const string SubjectDeleteMarkerTtl = "subject_delete_marker_ttl";
         public const string SubjectTransform = "subject_transform";
         public const string SubjectTransforms = "subject_transforms";
         public const string Subjects = "subjects";
