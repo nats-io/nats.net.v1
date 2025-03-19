@@ -1328,7 +1328,7 @@ namespace IntegrationTests
         public void TestNoRespondersWhenConsumerDeleted()
         {
             TestEventHandler listener = new TestEventHandler();
-            Context.RunInJsServer(listener.Modifier, nc =>
+            Context.RunInJsServer(AtLeast2_10_26, listener.Modifier, nc =>
             {
                 IJetStreamManagement jsm = nc.CreateJetStreamManagementContext();
                 IJetStream js = nc.CreateJetStreamContext();
