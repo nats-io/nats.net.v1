@@ -18,9 +18,9 @@ namespace NATS.Client
 {
     public sealed class MsgStatus
     {
-        private const string FlowControlText = "FlowControl Request";
-        private const string HeartbeatText = "Idle Heartbeat";
-        private const string NoRespondersText = "No Responders Available For Request";
+        public const string FlowControlText = "FlowControl Request";
+        public const string HeartbeatText = "Idle Heartbeat";
+        public const string NoRespondersText = "No Responders Available For Request";
         
         private readonly int _code;
         private readonly string _message;

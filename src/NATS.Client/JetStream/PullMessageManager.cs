@@ -156,6 +156,7 @@ namespace NATS.Client.JetStream
             {
                 case NatsConstants.NotFoundCode:
                 case NatsConstants.RequestTimeoutCode:
+                case NatsConstants.NoRespondersCode:
                     if (raiseStatusWarnings)
                     {
                         Conn.Opts.PullStatusWarningEventHandlerOrDefault.Invoke(this,

@@ -14,6 +14,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using NATS.Client;
 using NATS.Client.Internals;
 using NATS.Client.JetStream;
@@ -1321,6 +1322,103 @@ namespace IntegrationTests
                 ci = jsmPre290.CreateConsumer(stream4, cc4);
                 Assert.Equal(fs1, ci.ConsumerConfiguration.FilterSubject);
             });
+        }
+
+        [Fact]
+        public void TestNoRespondersWhenConsumerDeleted()
+        {
+            TestEventHandler listener = new TestEventHandler();
+            Context.RunInJsServer(AtLeast2_10_26, listener.Modifier, nc =>
+            {
+                IJetStreamManagement jsm = nc.CreateJetStreamManagementContext();
+                IJetStream js = nc.CreateJetStreamContext();
+
+                String stream = Stream();
+                String subject = Subject();
+
+                Assert.Throws<NATSJetStreamException>(() => jsm.GetMessage(stream, 1));
+
+                CreateMemoryStream(nc, stream, subject);
+
+                for (int x = 0; x < 5; x++) {
+                    js.Publish(subject, null);
+                }
+                
+                String consumer = create1026Consumer(jsm, stream, subject);
+                PullSubscribeOptions so = PullSubscribeOptions.FastBindTo(stream, consumer);
+                IJetStreamPullSubscription sub = js.PullSubscribe(null, so);
+                jsm.DeleteConsumer(stream, consumer);
+                sub.Pull(5);
+                validate1026(() => sub.NextMessage(500), listener, true, true);
+                
+                IConsumerContext context = setupFor1026Simplification(nc, jsm, listener, stream, subject);
+                validate1026(() => context.Next(1000), listener, false, false); // simplification next never raises warnings, so empty = true
+
+                context = setupFor1026Simplification(nc, jsm, listener, stream, subject);
+                IFetchConsumer fc = context.Fetch(FetchConsumeOptions.Builder().WithMaxMessages(1).WithRaiseStatusWarnings(false).Build());
+                validate1026(() => fc.NextMessage(), listener, false, false); // we said not to raise status warnings in the FetchConsumeOptions
+
+                context = setupFor1026Simplification(nc, jsm, listener, stream, subject);
+                fc = context.Fetch(FetchConsumeOptions.Builder().WithMaxMessages(1).WithRaiseStatusWarnings().Build());
+                validate1026(() => fc.NextMessage(), listener, true, false); // we said raise status warnings in the FetchConsumeOptions
+                
+                context = setupFor1026Simplification(nc, jsm, listener, stream, subject);
+                IIterableConsumer ic = context.Iterate(ConsumeOptions.Builder().WithRaiseStatusWarnings(false).Build());
+                validate1026(() => ic.NextMessage(1000), listener, false, false); // we said not to raise status warnings in the ConsumeOptions
+
+                context = setupFor1026Simplification(nc, jsm, listener, stream, subject);
+                ic = context.Iterate(ConsumeOptions.Builder().WithRaiseStatusWarnings().Build());
+                validate1026(() => ic.NextMessage(1000), listener, true, false); // we said raise status warnings in the ConsumeOptions
+
+                int count = 0;
+                EventHandler<MsgHandlerEventArgs> handler = (sender, args) => { ++count; };
+
+                context = setupFor1026Simplification(nc, jsm, listener, stream, subject);
+                //noinspection resource
+                context.Consume(handler, ConsumeOptions.Builder().WithRaiseStatusWarnings(false).Build());
+                Thread.Sleep(100); // give time to get a message
+                Assert.Equal(0, count);
+                Assert.False(listener.PullStatusWarningOrWait(MsgStatus.NoRespondersText, 1000));
+
+                context = setupFor1026Simplification(nc, jsm, listener, stream, subject);
+                //noinspection resource
+                context.Consume(handler, ConsumeOptions.Builder().WithRaiseStatusWarnings().Build());
+                Thread.Sleep(100); // give time to get a message
+                Assert.Equal(0, count);
+                Assert.True(listener.PullStatusWarningOrWait(MsgStatus.NoRespondersText, 1000));
+            });
+        }
+
+        delegate T Publisher<T>(string subject, byte[] payload);
+
+        private static void validate1026(Func<Msg> fun, TestEventHandler handler, bool hasStatus, bool shouldTimeOut) {
+            try
+            {
+                Msg m = fun.Invoke();
+                Assert.False(shouldTimeOut, "Should have timed out.");
+            }
+            catch (NATSTimeoutException)
+            {
+                Assert.True(shouldTimeOut, "Should not have timed out.");
+            }
+            Assert.Equal(hasStatus, handler.PullStatusWarningOrWait(MsgStatus.NoRespondersText, 1000));
+        }
+
+        private static IConsumerContext setupFor1026Simplification(IConnection c, IJetStreamManagement jsm, TestEventHandler handler, string stream, string subject) {
+            handler.Reset();
+            String consumer = create1026Consumer(jsm, stream, subject);
+            IConsumerContext cCtx = c.GetConsumerContext(stream, consumer);
+            jsm.DeleteConsumer(stream, consumer);
+            return cCtx;
+        }
+
+        private static String create1026Consumer(IJetStreamManagement jsm, string stream, string subject) {
+            String consumer = Name();
+            jsm.AddOrUpdateConsumer(stream, ConsumerConfiguration.Builder()
+                .WithDurable(consumer)
+                .WithFilterSubject(subject)
+                .Build());
+            return consumer;
         }
     }
 }

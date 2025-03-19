@@ -96,6 +96,35 @@ namespace NATS.Client.JetStream
             }
 
             /// <summary>
+            /// Set no wait to true.
+            /// When no wait is true, the fetch will return immediately with as many messages as are available. Between zero and the maximum configured.
+            /// </summary>
+            /// <returns>the builder</returns>
+            public FetchConsumeOptionsBuilder WithNoWait()
+            {
+                _noWait = true;
+                _expiresIn = ConsumerConfiguration.IntUnset;
+                return this;
+            }
+            
+            /// <summary>
+            /// Set no wait to true with an expiration. This is the common configuration to receive messages as soon as they arrive in the stream without excessive pulling.
+            /// When no wait is true with expire, the fetch will return immediately with as many messages as are available, but at least one message. Between one and the maximum configured.
+            /// When no message is available it will wait for new messages to arrive till it expires.
+            /// </summary>
+            /// <param name="expiresInMillis"></param>
+            /// <returns>the builder</returns>
+            public FetchConsumeOptionsBuilder WithNoWaitExpiresIn(int expiresInMillis)
+            {
+                _noWait = true;
+                if (expiresInMillis < 1) {
+                    _expiresIn = ConsumerConfiguration.IntUnset;
+                    return this;
+                }
+                return WithExpiresIn(expiresInMillis);
+            }
+
+            /// <summary>
             /// Build the FetchConsumeOptions
             /// </summary>
             /// <returns>a FetchConsumeOptions instance</returns>

@@ -52,6 +52,10 @@ namespace IntegrationTests
             return si.IsSameOrNewerThanVersion("2.10.3");
         }
 
+        public bool AtLeast2_10_26(ServerInfo si) {
+            return si.IsSameOrNewerThanVersion("2.10.26");
+        }
+
         public bool AtLeast2_11(ServerInfo si) {
             return si.IsNewerVersionThan("2.10.99");
         }
@@ -574,6 +578,8 @@ namespace IntegrationTests
         public void RunInJsServer(Action<IConnection> test) => base.RunInJsServer(Server1, null, null, test);
         public void RunInJsServer(Func<ServerInfo, bool> versionCheck, Action<IConnection> test) => base.RunInJsServer(Server1, versionCheck, null, test);
         public void RunInJsServer(Action<Options> optionsModifier, Action<IConnection> test) => base.RunInJsServer(Server1, optionsModifier, test);
+        public void RunInJsServer(Func<ServerInfo, bool> versionCheck, Action<Options> optionsModifier, Action<IConnection> test) => 
+            base.RunInJsServer(Server1, versionCheck, optionsModifier, test);
     }
     
     public class AutoServerSuiteContext : SuiteContext

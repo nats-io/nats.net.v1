@@ -970,5 +970,82 @@ namespace IntegrationTests
             Assert.Equal(ReplayPolicy.Original, occ.ReplayPolicy);
             Assert.True(occ.HeadersOnly);
         }
+
+        [Fact]
+        public void TestFetchNoWaitPlusExpires()
+        {
+            Context.RunInJsServer(AtLeast2_9_1, c =>
+            {
+                string stream = Stream(Nuid.NextGlobal());
+                string subject = Subject(Nuid.NextGlobal());
+                string consumer = Name(Nuid.NextGlobal());
+
+                IJetStream js = c.CreateJetStreamContext();
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                CreateMemoryStream(jsm, stream, subject);
+
+                jsm.AddOrUpdateConsumer(stream, ConsumerConfiguration.Builder()
+                    .WithName(consumer)
+                    .WithInactiveThreshold(100000) // I could have used a durable, but this is long enough for the test
+                    .WithFilterSubject(subject)
+                    .Build());
+
+                IConsumerContext cc = c.GetConsumerContext(stream, consumer);
+                FetchConsumeOptions fco = FetchConsumeOptions.Builder().WithMaxMessages(10).WithNoWait().Build();
+
+                // No Wait, No Messages
+                IFetchConsumer fc = cc.Fetch(fco);
+                int count = readMessages(fc);
+                Assert.Equal(0, count); // no messages
+
+                // No Wait, One Message
+                js.Publish(subject, Encoding.UTF8.GetBytes("DATA-A"));
+                fc = cc.Fetch(fco);
+                count = readMessages(fc);
+                Assert.Equal(1, count); // 1 message
+
+                // No Wait, Two Messages
+                js.Publish(subject, Encoding.UTF8.GetBytes("DATA-B"));
+                js.Publish(subject, Encoding.UTF8.GetBytes("DATA-C"));
+                fc = cc.Fetch(fco);
+                count = readMessages(fc);
+                Assert.Equal(2, count); // 2 messages
+
+                // With Expires, No Messages
+                fco = FetchConsumeOptions.Builder().WithMaxMessages(10).WithNoWaitExpiresIn(1000)
+                    .Build();
+                fc = cc.Fetch(fco);
+                count = readMessages(fc);
+                Assert.Equal(0, count); // 0 messages
+
+                // With Expires, One to Three Message
+                fco = FetchConsumeOptions.Builder().WithMaxMessages(10).WithNoWaitExpiresIn(1000)
+                    .Build();
+                fc = cc.Fetch(fco);
+                js.Publish(subject, Encoding.UTF8.GetBytes("DATA-D"));
+                js.Publish(subject, Encoding.UTF8.GetBytes("DATA-E"));
+                js.Publish(subject, Encoding.UTF8.GetBytes("DATA-F"));
+                count = readMessages(fc);
+
+                // With Long (Default) Expires, Leftovers
+                long left = 3 - count;
+                fc = cc.Fetch(fco);
+                count = readMessages(fc);
+                Assert.Equal(left, count);
+            });
+        }
+
+        private static int readMessages(IFetchConsumer fc) {
+            int count = 0;
+            while (!fc.Finished) {
+                Msg m = fc.NextMessage();
+                if (m != null) {
+                    m.Ack();
+                    ++count;
+                }
+            }
+            return count;
+        }
+
     }
 }

@@ -109,7 +109,7 @@ namespace NATS.Client.JetStream
                 .WithExpiresIn(opts.ExpiresInMillis)
                 .WithIdleHeartbeat(opts.IdleHeartbeat)
                 .Build();
-            pullImpl.Pull(pro, false, this);
+            pullImpl.Pull(pro, opts.RaiseStatusWarnings, this);
         }
     }
 }
