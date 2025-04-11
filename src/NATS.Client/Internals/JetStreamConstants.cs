@@ -15,6 +15,8 @@ namespace NATS.Client.Internals
         /// </summary>
         public const int MaxHistoryPerKey = 64;
 
+        public const long ServerDefaultDuplicateWindowMs = 120_000; // 1000ms/sec * 60sec/min * 2 min
+
         /// <summary>
         /// The standard JetStream Prefix prefix 
         /// </summary>

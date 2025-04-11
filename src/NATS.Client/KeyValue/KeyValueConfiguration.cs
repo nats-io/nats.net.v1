@@ -142,6 +142,7 @@ namespace NATS.Client.KeyValue
         public sealed class KeyValueConfigurationBuilder
         {
             string _name;
+            Duration _ttl;
             Mirror _mirror;
             readonly List<Source> _sources = new List<Source>();
             readonly StreamConfigurationBuilder scBuilder;
@@ -242,7 +243,9 @@ namespace NATS.Client.KeyValue
             /// </summary>
             /// <param name="ttl">Sets the maximum age</param>
             /// <returns></returns>
-            public KeyValueConfigurationBuilder WithTtl(Duration ttl) {
+            public KeyValueConfigurationBuilder WithTtl(Duration ttl)
+            {
+                _ttl = ttl;
                 scBuilder.WithMaxAge(ttl);
                 return this;
             }
@@ -439,6 +442,17 @@ namespace NATS.Client.KeyValue
                     scBuilder.WithSubjects(ToStreamSubject(_name));
                 }
                 
+                // When stream's MaxAge is not set, server uses 2 minutes as the default
+                // for the duplicate window. If MaxAge is set, and lower than 2 minutes,
+                // then the duplicate window will be set to that. If MaxAge is greater,
+                // we will cap the duplicate window to 2 minutes (to be consistent with
+                // previous behavior).
+                long dupeMs = JetStreamConstants.ServerDefaultDuplicateWindowMs;
+                if (_ttl != null && _ttl.Millis > 0 && _ttl.Millis < JetStreamConstants.ServerDefaultDuplicateWindowMs) {
+                    dupeMs = _ttl.Millis;
+                }
+                scBuilder.WithDuplicateWindow(dupeMs);
+
                 return new KeyValueConfiguration(scBuilder.Build());
             }
         }

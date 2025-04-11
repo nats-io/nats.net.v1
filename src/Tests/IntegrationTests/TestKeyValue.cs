@@ -1496,8 +1496,7 @@ namespace IntegrationTests
                 // Assert.Null(kv2.Get(key2));
             });
         }
-
-
+        
         [Fact]
         public void TestSubjectFiltersAgainst209OptOut()
         {
@@ -1520,6 +1519,46 @@ namespace IntegrationTests
             });
         }
         
+        [Fact]
+        public void TestTtlAndDuplicateWindow()
+        {
+            Context.RunInJsServer(AtLeast2_10, c =>
+            {
+                IKeyValueManagement kvm = c.CreateKeyValueManagementContext();
+
+                string bucket = Bucket();
+
+                KeyValueConfiguration config = KeyValueConfiguration.Builder()
+                    .WithName(bucket)
+                    .WithStorageType(StorageType.Memory)
+                    .Build();
+                KeyValueStatus status = kvm.Create(config);
+
+                StreamConfiguration sc = status.BackingStreamInfo.Config;
+                Assert.Equal(0, sc.MaxAge.Millis);
+                Assert.Equal(JetStreamConstants.ServerDefaultDuplicateWindowMs, sc.DuplicateWindow.Millis);
+
+                config = KeyValueConfiguration.Builder(status.Config)
+                    .WithTtl(Duration.OfSeconds(10))
+                    .Build();
+                status = kvm.Update(config);
+                sc = status.BackingStreamInfo.Config;
+                Assert.Equal(10_000, sc.MaxAge.Millis);
+                Assert.Equal(10_000, sc.DuplicateWindow.Millis);
+
+                bucket = Bucket();
+                config = KeyValueConfiguration.Builder()
+                    .WithName(bucket)
+                    .WithStorageType(StorageType.Memory)
+                    .WithTtl(Duration.OfMillis(JetStreamConstants.ServerDefaultDuplicateWindowMs * 2))
+                    .Build();
+                status = kvm.Create(config);
+
+                sc = status.BackingStreamInfo.Config;
+                Assert.Equal(JetStreamConstants.ServerDefaultDuplicateWindowMs * 2, sc.MaxAge.Millis);
+                Assert.Equal(JetStreamConstants.ServerDefaultDuplicateWindowMs, sc.DuplicateWindow.Millis);
+            });
+        }
     }
 
     class TestKeyValueWatcher : IKeyValueWatcher
