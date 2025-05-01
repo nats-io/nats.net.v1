@@ -92,6 +92,21 @@ namespace NATS.Client.KeyValue
         public Republish Republish => BackingConfig.Republish;
 
         /// <summary>
+        /// The mirror definition for this configuration
+        /// </summary>
+        public Mirror Mirror => BackingConfig.Mirror;
+
+        /// <summary>
+        /// The sources for this configuration
+        /// </summary>
+        public IList<Source> Sources => BackingConfig.Sources;
+
+        /// <summary>
+        /// The limit marker ttl if set
+        /// </summary>
+        public Duration LimitMarkerTtl => BackingConfig.SubjectDeleteMarkerTtl;
+        
+        /// <summary>
         /// Allow Direct setting
         /// </summary>
         public bool AllowDirect => BackingConfig.AllowDirect;
@@ -143,6 +158,8 @@ namespace NATS.Client.KeyValue
         {
             string _name;
             Mirror _mirror;
+            Duration _ttl = Duration.Zero;
+            Duration _limitMarkerTtl;
             readonly List<Source> _sources = new List<Source>();
             readonly StreamConfigurationBuilder scBuilder;
 
@@ -242,8 +259,10 @@ namespace NATS.Client.KeyValue
             /// </summary>
             /// <param name="ttl">Sets the maximum age</param>
             /// <returns></returns>
-            public KeyValueConfigurationBuilder WithTtl(Duration ttl) {
-                scBuilder.WithMaxAge(ttl);
+            public KeyValueConfigurationBuilder WithTtl(Duration ttl)
+            {
+                _ttl = ttl == null ? Duration.Zero : ttl;
+                scBuilder.WithMaxAge(_ttl);
                 return this;
             }
 
@@ -395,6 +414,34 @@ namespace NATS.Client.KeyValue
                 scBuilder.WithMetadata(metadata);
                 return this;
             }
+            
+            /// <summary>
+            /// The limit marker TTL duration. Server accepts 1 second or more.
+            /// Null or empty has the effect of clearing the limit marker ttl
+            /// </summary>
+            /// <param name="limitMarkerTtl">the TTL duration</param>
+            /// <returns>The KeyValueConfigurationBuilder</returns>
+            public KeyValueConfigurationBuilder WithLimitMarker(Duration limitMarkerTtl)
+            {
+                _limitMarkerTtl = Validator.ValidateDurationNotRequiredGtOrEqSeconds(1, limitMarkerTtl, null, "Limit Marker Ttl");
+                return this;
+            }
+
+            /// <summary>
+            /// The limit marker TTL duration in milliseconds. Server accepts 1 second or more.
+            /// 0 or less has the effect of clearing the limit marker ttl
+            /// </summary>
+            /// <param name="limitMarkerTtlMillis">the TTL duration</param>
+            /// <returns>The KeyValueConfigurationBuilder</returns>
+            public KeyValueConfigurationBuilder WithLimitMarker(long limitMarkerTtlMillis) {
+                if (limitMarkerTtlMillis <= 0) {
+                    _limitMarkerTtl = null;
+                }
+                else {
+                    _limitMarkerTtl = Validator.ValidateDurationGtOrEqSeconds(1, limitMarkerTtlMillis, "Limit Marker Ttl");
+                }
+                return this;
+            }
 
             /// <summary>
             /// Builds the KeyValueConfiguration
@@ -439,6 +486,21 @@ namespace NATS.Client.KeyValue
                     scBuilder.WithSubjects(ToStreamSubject(_name));
                 }
                 
+                if (_limitMarkerTtl != null) {
+                    scBuilder.WithSubjectDeleteMarkerTtl(_limitMarkerTtl).WithAllowMessageTtl();
+                }
+                
+                // When stream's MaxAge is not set, server uses 2 minutes as the default
+                // for the duplicate window. If MaxAge is set, and lower than 2 minutes,
+                // then the duplicate window will be set to that. If MaxAge is greater,
+                // we will cap the duplicate window to 2 minutes (to be consistent with
+                // previous behavior).
+                long dupeMs = JetStreamConstants.ServerDefaultDuplicateWindowMs;
+                if (_ttl.Millis > 0 && _ttl.Millis < JetStreamConstants.ServerDefaultDuplicateWindowMs) {
+                    dupeMs = _ttl.Millis;
+                }
+                scBuilder.WithDuplicateWindow(dupeMs);
+
                 return new KeyValueConfiguration(scBuilder.Build());
             }
         }

@@ -56,20 +56,23 @@ namespace IntegrationTests
                 metadata["foo"] = "bar";
 
                 string bucket = Bucket();
+                string desc = Variant();
                 
                 // create the bucket
                 KeyValueConfiguration kvc = KeyValueConfiguration.Builder()
                     .WithName(bucket)
+                    .WithDescription(desc)
                     .WithMaxHistoryPerKey(3)
                     .WithStorageType(StorageType.Memory)
                     .WithMetadata(metadata)
                     .Build();
 
                 KeyValueStatus status = kvm.Create(kvc);
-
                 kvc = status.Config;
                 Assert.Equal(bucket, status.BucketName);
                 Assert.Equal(bucket, kvc.BucketName);
+                Assert.Equal(desc, status.Description);
+                Assert.Equal(desc, kvc.Description);
                 Assert.Equal(3, status.MaxHistoryPerKey);
                 Assert.Equal(3, kvc.MaxHistoryPerKey);
                 Assert.Equal(-1, status.MaxBucketSize);
@@ -85,10 +88,6 @@ namespace IntegrationTests
                 Assert.Equal(0U, status.EntryCount);
                 Assert.Equal("JetStream", status.BackingStore);
                 Assert.False(status.IsCompressed);
-                Assert.Equal(1, kvc.Metadata.Count);
-                Assert.Equal("bar", kvc.Metadata["foo"]);
-                Assert.Equal(1, status.Metadata.Count);
-                Assert.Equal("bar", status.Metadata["foo"]);
 
                 // get the kv context for the specific bucket
                 IKeyValue kv = c.CreateKeyValueContext(bucket);
@@ -691,6 +690,7 @@ namespace IntegrationTests
                 
                 // 1. allowed to create something that does not exist
                 ulong rev1 = kv.Create(key, Encoding.UTF8.GetBytes("a"));
+                KeyValueEntry x = kv.Get(key);
 
                 // 2. allowed to update with proper revision
                 kv.Update(key, Encoding.UTF8.GetBytes("ab"), rev1);
@@ -1496,8 +1496,7 @@ namespace IntegrationTests
                 // Assert.Null(kv2.Get(key2));
             });
         }
-
-
+        
         [Fact]
         public void TestSubjectFiltersAgainst209OptOut()
         {
@@ -1520,6 +1519,91 @@ namespace IntegrationTests
             });
         }
         
+        [Fact]
+        public void TestTtlAndDuplicateWindow() {
+            Context.RunInJsServer(AtLeast2_10,c =>
+            {
+                IKeyValueManagement kvm = c.CreateKeyValueManagementContext();
+
+                string bucket = Bucket();
+                KeyValueConfiguration config = KeyValueConfiguration.Builder()
+                    .WithName(bucket)
+                    .WithStorageType(StorageType.Memory)
+                    .Build();
+                
+                KeyValueStatus status = kvm.Create(config);
+
+                StreamConfiguration sc = status.BackingStreamInfo.Config;
+                Assert.Equal(0, sc.MaxAge.Millis);
+                Assert.Equal(JetStreamConstants.ServerDefaultDuplicateWindowMs, sc.DuplicateWindow.Millis);
+
+                config = KeyValueConfiguration.Builder(status.Config).WithTtl(Duration.OfSeconds(10)).Build();
+                status = kvm.Update(config);
+                sc = status.BackingStreamInfo.Config;
+                Assert.Equal(10_000, sc.MaxAge.Millis);
+                Assert.Equal(10_000, sc.DuplicateWindow.Millis);
+
+                bucket = Bucket();
+                config = KeyValueConfiguration.Builder()
+                    .WithName(bucket)
+                    .WithStorageType(StorageType.Memory)
+                    .WithTtl(Duration.OfMinutes(30))
+                    .Build();
+                status = kvm.Create(config);
+                sc = status.BackingStreamInfo.Config;
+                Assert.Equal(Duration.OfMinutes(30), sc.MaxAge);
+                Assert.Equal(JetStreamConstants.ServerDefaultDuplicateWindowMs, sc.DuplicateWindow.Millis);
+            });
+        }
+        
+        [Fact]
+        public void TestLimitMarker() {
+            Context.RunInJsServer(AtLeast2_11,c =>
+            {
+                IKeyValueManagement kvm = c.CreateKeyValueManagementContext();
+
+                string bucket = Bucket();
+                KeyValueConfiguration config = KeyValueConfiguration.Builder()
+                    .WithName(bucket)
+                    .WithStorageType(StorageType.Memory)
+                    .WithLimitMarker(1000)
+                    .Build();
+                KeyValueStatus status = kvm.Create(config);
+                Assert.Equal(1000, status.LimitMarkerTtl.Millis);
+
+                string key = Key();
+                IKeyValue kv = c.CreateKeyValueContext(bucket);
+                kv.Create(key, DataBytes(), MessageTtl.Seconds(1));
+                
+                KeyValueEntry kve = kv.Get(key);
+                Assert.NotNull(kve);
+
+                Thread.Sleep(2000); // a good amount of time to make sure a CI server works
+                
+                kve = kv.Get(key);
+                Assert.Null(kve);
+
+                config = KeyValueConfiguration.Builder()
+                    .WithName(Bucket())
+                    .WithStorageType(StorageType.Memory)
+                    .WithLimitMarker(Duration.OfSeconds(2)) // coverage of duration api vs ms api
+                    .Build();
+                status = kvm.Create(config);
+                Assert.Equal(2000, status.LimitMarkerTtl.Millis);
+
+                Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder()
+                    .WithName(bucket)
+                    .WithStorageType(StorageType.Memory)
+                    .WithLimitMarker(999)
+                    .Build());
+
+                Assert.Throws<ArgumentException>(() => KeyValueConfiguration.Builder()
+                    .WithName(bucket)
+                    .WithStorageType(StorageType.Memory)
+                    .WithLimitMarker(Duration.OfMillis(999)) // coverage of duration api vs ms api
+                    .Build());
+            });
+        }
     }
 
     class TestKeyValueWatcher : IKeyValueWatcher

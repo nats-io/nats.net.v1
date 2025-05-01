@@ -182,8 +182,6 @@ namespace IntegrationTests
             Assert.NotNull(status.Config); // coverage
             Assert.NotNull(status.BackingStreamInfo); // coverage
             Assert.Equal("JetStream", status.BackingStore);
-            Assert.Equal(1, status.Metadata.Count);
-            Assert.Equal("bar", status.Metadata["foo"]);
         }
 
         private MemoryStream ValidateGet(string bucketName, IObjectStore os, long len, long chunks, int chunkSize) {

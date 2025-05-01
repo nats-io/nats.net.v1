@@ -102,6 +102,11 @@ namespace NATS.Client.KeyValue
         public Republish Republish => Config.Republish;
 
         /// <summary>
+        /// The maximum age for a value in this bucket
+        /// </summary>
+        public Duration LimitMarkerTtl => BackingStreamInfo.Config.SubjectDeleteMarkerTtl;
+
+        /// <summary>
         /// Compression setting
         /// </summary>
         public bool IsCompressed => Config.IsCompressed;
@@ -118,7 +123,7 @@ namespace NATS.Client.KeyValue
 
         public override string ToString()
         {
-            return $"BucketName: {BucketName}, Description: {Description}, EntryCount: {EntryCount}, MaxHistoryPerKey: {MaxHistoryPerKey}, MaxBucketSize: {MaxBucketSize}, MaximumValueSize: {MaximumValueSize}, Ttl: {Ttl}, StorageType: {StorageType}, Replicas: {Replicas}, BackingStore: {BackingStore}";
+            return $"BucketName: {BucketName}, Description: {Description}, EntryCount: {EntryCount}, MaxHistoryPerKey: {MaxHistoryPerKey}, MaxBucketSize: {MaxBucketSize}, MaximumValueSize: {MaximumValueSize}, Ttl: {Ttl}, LimitMarkerTtl: {LimitMarkerTtl}, StorageType: {StorageType}, Replicas: {Replicas}, BackingStore: {BackingStore}";
         }
     }
 }

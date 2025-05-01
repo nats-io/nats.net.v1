@@ -15,6 +15,8 @@ namespace NATS.Client.Internals
         /// </summary>
         public const int MaxHistoryPerKey = 64;
 
+        public const long ServerDefaultDuplicateWindowMs = 120_000; // 1000ms/sec * 60sec/min * 2 min
+
         /// <summary>
         /// The standard JetStream Prefix prefix 
         /// </summary>
@@ -167,10 +169,13 @@ namespace NATS.Client.Internals
         /// </summary>
         public const string ExpLastSubjectSeqHeader = "Nats-Expected-Last-Subject-Sequence";
         
+        public const string MsgTtlHdr = "Nats-TTL";
+        
         public const string LastConsumerHeader = "Nats-Last-Consumer";
         public const string LastStreamHeader = "Nats-Last-Stream";
         public const string ConsumerStalledHeader = "Nats-Consumer-Stalled";
         public const string MsgSizeHeader = "Nats-Msg-Size";
+        public const string NatsMarkerReason = "Nats-Marker-Reason";
 
         public const string RollupHeader = "Nats-Rollup";
         public const string RollupHeaderSubject = "sub";

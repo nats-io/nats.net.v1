@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System.Collections.Generic;
+using NATS.Client.JetStream;
 
 namespace NATS.Client.KeyValue
 {
@@ -71,6 +72,16 @@ namespace NATS.Client.KeyValue
         /// <param name="value">the bytes of the value</param>
         /// <returns>the revision number for the key</returns>
         ulong Create(string key, byte[] value);
+
+        /// <summary>
+        /// Put as the value for a key iff the key does not exist (there is no history)
+        /// or is deleted (history shows the key is deleted)
+        /// </summary>
+        /// <param name="key">the key</param>
+        /// <param name="value">the bytes of the value</param>
+        /// <param name="messageTtl">the individual ttl for the key</param>
+        /// <returns>the revision number for the key</returns>
+        ulong Create(string key, byte[] value, MessageTtl messageTtl);
 
         /// <summary>
         /// Put as the value for a key iff the key exists and its last revision matches the expected

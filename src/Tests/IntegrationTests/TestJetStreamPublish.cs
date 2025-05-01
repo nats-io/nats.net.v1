@@ -17,6 +17,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NATS.Client;
+using NATS.Client.Internals;
 using NATS.Client.JetStream;
 using Xunit;
 using static UnitTests.TestBase;
@@ -309,6 +310,95 @@ namespace IntegrationTests
                 m = sub.NextMessage(DefaultTimeout);
                 Assert.NotNull(m);
                 Assert.Equal(data2, Encoding.ASCII.GetString(m.Data));
+            });
+        }
+
+        [Fact] 
+        public void TestPublishWithTTL()
+        {
+            Context.RunInJsServer(c =>
+            {
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                IJetStream js = c.CreateJetStreamContext();
+
+                string stream = Stream();
+                string subject = Subject();
+                jsm.AddStream(StreamConfiguration.Builder()
+                    .WithName(stream)
+                    .WithStorageType(StorageType.Memory)
+                    .WithSubjects(subject)
+                    .WithAllowMessageTtl()
+                    .Build()
+                );
+                
+                PublishOptions opts = PublishOptions.Builder().WithMessageTtlSeconds(1).Build();
+                PublishAck pa1 = js.Publish(subject, null, opts);
+                Assert.NotNull(pa1);
+
+                opts = PublishOptions.Builder().WithMessageTtlNever().Build();
+                PublishAck paNever = js.Publish(subject, null, opts);
+                Assert.NotNull(paNever);
+
+                MessageInfo mi1 = jsm.GetMessage(stream, pa1.Seq);
+                Assert.Equal("1s", mi1.Headers.GetFirst(JetStreamConstants.MsgTtlHdr));
+
+                MessageInfo miNever = jsm.GetMessage(stream, paNever.Seq);
+                Assert.Equal("never", miNever.Headers.GetFirst(JetStreamConstants.MsgTtlHdr));
+
+                Thread.Sleep(1200);
+
+                NATSJetStreamException e = Assert.Throws<NATSJetStreamException>(() => jsm.GetMessage(stream, pa1.Seq));
+                Assert.Equal(10037, e.ApiErrorCode);
+                Assert.NotNull((jsm.GetMessage(stream, paNever.Seq)));
+            });
+        }
+
+        [Fact] 
+        public void TestMsgDeleteMarkerMaxAge()
+        {
+            Context.RunInJsServer(c =>
+            {
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                IJetStream js = c.CreateJetStreamContext();
+
+                string stream = Stream();
+                string subject = Subject();
+                jsm.AddStream(StreamConfiguration.Builder()
+                    .WithName(stream)
+                    .WithStorageType(StorageType.Memory)
+                    .WithSubjects(subject)
+                    .WithAllowMessageTtl()
+                    .WithSubjectDeleteMarkerTtl(Duration.OfSeconds(50))
+                    .WithMaxAge(1000)
+                    .Build()
+                );
+                
+                PublishOptions opts = PublishOptions.Builder().WithMessageTtlSeconds(1).Build();
+                PublishAck pa = js.Publish(subject, null, opts);
+                Assert.NotNull(pa);
+
+                Thread.Sleep(1200);
+
+                MessageInfo mi = jsm.GetLastMessage(stream, subject);
+                
+                Assert.Equal("MaxAge", mi.Headers.GetFirst(JetStreamConstants.NatsMarkerReason));
+                Assert.Equal("50s", mi.Headers.GetFirst(JetStreamConstants.MsgTtlHdr));
+
+                Assert.Throws<ArgumentException>(() => StreamConfiguration.Builder()
+                    .WithName(stream)
+                    .WithStorageType(StorageType.Memory)
+                    .WithSubjects(subject)
+                    .WithAllowMessageTtl()
+                    .WithSubjectDeleteMarkerTtl(Duration.OfMillis(999))
+                    .Build());
+
+                Assert.Throws<ArgumentException>(() => StreamConfiguration.Builder()
+                    .WithName(stream)
+                    .WithStorageType(StorageType.Memory)
+                    .WithSubjects(subject)
+                    .WithAllowMessageTtl()
+                    .WithSubjectDeleteMarkerTtl(999)
+                    .Build());
             });
         }
     }

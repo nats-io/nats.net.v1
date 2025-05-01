@@ -446,6 +446,17 @@ namespace NATS.Client.Internals
             return ValidateDurationNotRequiredNotLessThanMin(Duration.OfMillis(millis), minimum);
         }
         
+        internal static Duration ValidateDurationNotRequiredGtOrEqSeconds(long minSeconds, Duration d, Duration ifNull, string label) {
+            return d == null ? ifNull : ValidateDurationGtOrEqSeconds(minSeconds, d.Millis, label);
+        }
+
+        internal static Duration ValidateDurationGtOrEqSeconds(long minSeconds, long millis, string label) {
+            if (millis < (minSeconds * 1000)) {
+                throw new ArgumentException(label + " must be greater than or equal to " + minSeconds + " second(s).");
+            }
+            return Duration.OfMillis(millis);
+        }
+
         internal static object ValidateNotNull(object o, string fieldName)
         {
             if (o == null)

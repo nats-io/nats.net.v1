@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using NATS.Client.Internals;
+using NATS.Client.JetStream;
 
 namespace NATS.Client.KeyValue
 {
@@ -33,6 +34,20 @@ namespace NATS.Client.KeyValue
             { KvOperationHeaderKey, KeyValueOperation.Purge.HeaderValue },
             { JetStreamConstants.RollupHeader, JetStreamConstants.RollupHeaderSubject }
         };
+
+        public static PublishOptions GetPublishOptions(ulong? expectedRevision, MessageTtl messageTtl) {
+            bool returnNull = true;
+            PublishOptions.PublishOptionsBuilder b = PublishOptions.Builder();
+            if (expectedRevision != null) {
+                returnNull = false;
+                b.WithExpectedLastSubjectSequence(expectedRevision.Value);
+            }
+            if (messageTtl != null) {
+                returnNull = false;
+                b.WithMessageTtl(messageTtl);
+            }
+            return returnNull ? null : b.Build();
+        }
 
         public static string ExtractBucketName(string streamName) {
             return streamName.Substring(KvStreamPrefixLen);

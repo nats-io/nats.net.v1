@@ -24,8 +24,8 @@ namespace UnitTests.JetStream
         public void TestDefaultBuilder()
         {
             var po = PublishOptions.Builder().Build();
-            Assert.Equal(PublishOptions.DefaultLastSequence, po.ExpectedLastSeq);
-            Assert.Equal(PublishOptions.DefaultLastSequence, po.ExpectedLastSubjectSeq);
+            Assert.Null(po.ExpectedLastSequence);
+            Assert.Null(po.ExpectedLastSubjectSequence);
             Assert.Equal(PublishOptions.DefaultStream, po.ExpectedStream);
             Assert.Equal(PublishOptions.DefaultTimeout, po.StreamTimeout);
             Assert.Null(po.ExpectedLastMsgId);
@@ -48,16 +48,16 @@ namespace UnitTests.JetStream
             var po = builder.Build();
             Assert.Equal("expectedstream", po.ExpectedStream);
             Assert.Equal("expectedmsgid", po.ExpectedLastMsgId);
-            Assert.Equal(42ul, po.ExpectedLastSeq);
-            Assert.Equal(43ul, po.ExpectedLastSubjectSeq);
+            Assert.Equal(42ul, po.ExpectedLastSequence);
+            Assert.Equal(43ul, po.ExpectedLastSubjectSequence);
             Assert.Equal("msgid", po.MessageId);
             Assert.Equal("stream", po.Stream);
             Assert.Equal(5150, po.StreamTimeout.Millis);
 
             po = builder.ClearExpected().Build();
             Assert.Null(po.ExpectedLastMsgId);
-            Assert.Equal(PublishOptions.DefaultLastSequence, po.ExpectedLastSeq);
-            Assert.Equal(PublishOptions.DefaultLastSequence, po.ExpectedLastSubjectSeq);
+            Assert.Null(po.ExpectedLastSequence);
+            Assert.Null(po.ExpectedLastSubjectSequence);
             Assert.Null(po.MessageId);
             Assert.Equal("stream", po.Stream);
             
