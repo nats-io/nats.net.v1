@@ -189,7 +189,14 @@ namespace NATS.Client.JetStream
             /// <returns>The PublishOptionsBuilder</returns>
             public PublishOptionsBuilder WithExpectedLastSequence(ulong sequence)
             {
-                _expectedLastSeq = sequence;
+                if (sequence == ulong.MaxValue)
+                {
+                    _expectedLastSeq = null;
+                }
+                else
+                {
+                    _expectedLastSeq = sequence;
+                }
                 return this;
             }
 
