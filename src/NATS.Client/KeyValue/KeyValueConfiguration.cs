@@ -157,7 +157,6 @@ namespace NATS.Client.KeyValue
         public sealed class KeyValueConfigurationBuilder
         {
             string _name;
-            Duration _ttl;
             Mirror _mirror;
             Duration _ttl = Duration.Zero;
             Duration _limitMarkerTtl;
