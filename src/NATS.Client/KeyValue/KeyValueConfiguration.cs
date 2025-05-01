@@ -157,6 +157,7 @@ namespace NATS.Client.KeyValue
         public sealed class KeyValueConfigurationBuilder
         {
             string _name;
+            Duration _ttl;
             Mirror _mirror;
             Duration _ttl = Duration.Zero;
             Duration _limitMarkerTtl;
@@ -489,7 +490,7 @@ namespace NATS.Client.KeyValue
                 if (_limitMarkerTtl != null) {
                     scBuilder.WithSubjectDeleteMarkerTtl(_limitMarkerTtl).WithAllowMessageTtl();
                 }
-                
+
                 // When stream's MaxAge is not set, server uses 2 minutes as the default
                 // for the duplicate window. If MaxAge is set, and lower than 2 minutes,
                 // then the duplicate window will be set to that. If MaxAge is greater,

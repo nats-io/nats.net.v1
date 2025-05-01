@@ -1520,8 +1520,9 @@ namespace IntegrationTests
         }
         
         [Fact]
-        public void TestTtlAndDuplicateWindow() {
-            Context.RunInJsServer(AtLeast2_10,c =>
+        public void TestTtlAndDuplicateWindow()
+        {
+            Context.RunInJsServer(AtLeast2_10, c =>
             {
                 IKeyValueManagement kvm = c.CreateKeyValueManagementContext();
 
@@ -1530,7 +1531,6 @@ namespace IntegrationTests
                     .WithName(bucket)
                     .WithStorageType(StorageType.Memory)
                     .Build();
-                
                 KeyValueStatus status = kvm.Create(config);
 
                 StreamConfiguration sc = status.BackingStreamInfo.Config;

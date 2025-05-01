@@ -1,18 +1,20 @@
-### :mega: :warning: This repository was renamed from `nats.net` on Wednesday, July 17th, 2024
+> [!IMPORTANT]
+>
+> This library will eventually be deprecated.
+> New code should use .NET V2 client: https://github.com/nats-io/nats.net
 
-Please be prepared to update your references to the new name.
-You can also read the [announcement](REPO_RENAME.md) for more information.
+> [!IMPORTANT]
+>
+> This repository was renamed from `nats.net` to `nats.net.v1` on Wednesday, July 17th, 2024  
+> Read the [announcement](REPO_RENAME.md) for more information.
 
 ---
-
-![NATS](https://raw.githubusercontent.com/nats-io/nats.net.v1/main/documentation/large-logo.png)
 
 # NATS - .NET V1 C# Client
 
 A [C# .NET](https://msdn.microsoft.com/en-us/vstudio/aa496123.aspx) client for the [NATS messaging system](https://nats.io) multi targetting `.NET4.6+` and `.NETStandard1.6`.
 
 **Current Release**: 1.1.7 &nbsp; **Current Head**: 1.1.8
-
 [![License Apache 2.0](https://img.shields.io/badge/License-Apache2-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![API Documentation](https://img.shields.io/badge/doc-Doxygen-brightgreen.svg?style=flat)](http://nats-io.github.io/nats.net)
 [![Build Status](https://dev.azure.com/NATS-CI/NATS-CI/_apis/build/status/nats-io.nats.net-CI?branchName=main)](https://dev.azure.com/NATS-CI/NATS-CI/_build/latest?definitionId=2&branchName=main)
@@ -27,7 +29,7 @@ NATS.Net V2
 * Only supports Async I/O (async/await)
 * Target current .NET LTS releases (currently .NET 6.0 & .NET 8.0)
 
-Checkout https://github.com/nats-io/nats.net
+Check out https://github.com/nats-io/nats.net
 
 ## Getting started
 The easiest and recommended way to start using NATS in your .NET projects, is to use the [NuGet package]((https://www.nuget.org/packages/NATS.Client)). For examples on how to use the client, see below or in any of the included sample projects.
