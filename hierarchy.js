@@ -72,6 +72,7 @@ var hierarchy =
       [ "NATS.Client.SyncSubscription", "class_n_a_t_s_1_1_client_1_1_sync_subscription.html", null ]
     ] ],
     [ "NATS.Client.KeyValue.KeyValueConfiguration.KeyValueConfigurationBuilder", "class_n_a_t_s_1_1_client_1_1_key_value_1_1_key_value_configuration_1_1_key_value_configuration_builder.html", null ],
+    [ "NATS.Client.JetStream.MessageTtl", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_message_ttl.html", null ],
     [ "NATS.Client.JetStream.MetaData", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_meta_data.html", null ],
     [ "NATS.Client.JetStream.Mirror.MirrorBuilder", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_mirror_1_1_mirror_builder.html", null ],
     [ "NATS.Client.Msg", "class_n_a_t_s_1_1_client_1_1_msg.html", null ],

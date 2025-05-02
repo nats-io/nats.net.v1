@@ -18,6 +18,7 @@ var namespace_n_a_t_s_1_1_client_1_1_jet_stream =
     [ "IMessageConsumer", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_message_consumer.html", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_message_consumer" ],
     [ "IOrderedConsumerContext", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_ordered_consumer_context.html", null ],
     [ "IStreamContext", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_stream_context.html", "interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_stream_context" ],
+    [ "MessageTtl", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_message_ttl.html", null ],
     [ "MetaData", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_meta_data.html", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_meta_data" ],
     [ "Mirror", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_mirror.html", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_mirror" ],
     [ "NATSJetStreamException", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_n_a_t_s_jet_stream_exception.html", "class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_n_a_t_s_jet_stream_exception" ],

@@ -22,5 +22,6 @@ var searchData=
   ['createorderedconsumer_19',['CreateOrderedConsumer',['../interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_stream_context.html#ac46e2a3ca88ece127e7b3b1d614c08fe',1,'NATS::Client::JetStream::IStreamContext']]],
   ['createorupdateconsumer_20',['CreateOrUpdateConsumer',['../interface_n_a_t_s_1_1_client_1_1_jet_stream_1_1_i_stream_context.html#a95d6648311eefbfd3f6a78a8ed4141fc',1,'NATS::Client::JetStream::IStreamContext']]],
   ['createsecureconnection_21',['CreateSecureConnection',['../class_n_a_t_s_1_1_client_1_1_connection_factory.html#a73e8e30589e889204eef157ef1496e69',1,'NATS::Client::ConnectionFactory']]],
-  ['createuserseed_22',['CreateUserSeed',['../class_n_a_t_s_1_1_client_1_1_nkeys.html#a6838af1e1ffa86788ae146d5347f6e52',1,'NATS::Client::Nkeys']]]
+  ['createuserseed_22',['CreateUserSeed',['../class_n_a_t_s_1_1_client_1_1_nkeys.html#a6838af1e1ffa86788ae146d5347f6e52',1,'NATS::Client::Nkeys']]],
+  ['custom_23',['Custom',['../class_n_a_t_s_1_1_client_1_1_jet_stream_1_1_message_ttl.html#a21b843a1463b5fbb44cec9f8b844ef47',1,'NATS::Client::JetStream::MessageTtl']]]
 ];

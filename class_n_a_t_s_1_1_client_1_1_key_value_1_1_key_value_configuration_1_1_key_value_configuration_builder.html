@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NATS .NET Client
-   &#160;<span id="projectnumber">1.1.7</span>
+   &#160;<span id="projectnumber">1.1.8</span>
    </div>
    <div id="projectbrief">The NATS.io .NET C# Client</div>
   </td>
@@ -140,6 +140,10 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:ae0e9fd61ec774d551434a867d1d4af19"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3afb7fb759c2c18f32fef140ecb0920f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_n_a_t_s_1_1_client_1_1_key_value_1_1_key_value_configuration_1_1_key_value_configuration_builder.html">KeyValueConfigurationBuilder</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_key_value_1_1_key_value_configuration_1_1_key_value_configuration_builder.html#a3afb7fb759c2c18f32fef140ecb0920f">WithMetadata</a> (IDictionary&lt; string, string &gt; metadata)</td></tr>
 <tr class="separator:a3afb7fb759c2c18f32fef140ecb0920f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad6c7b7e9db85205e4b362fe8bee78140"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_n_a_t_s_1_1_client_1_1_key_value_1_1_key_value_configuration_1_1_key_value_configuration_builder.html">KeyValueConfigurationBuilder</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_key_value_1_1_key_value_configuration_1_1_key_value_configuration_builder.html#ad6c7b7e9db85205e4b362fe8bee78140">WithLimitMarker</a> (Duration limitMarkerTtl)</td></tr>
+<tr class="separator:ad6c7b7e9db85205e4b362fe8bee78140"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3fc1b408830baeba9fe018fa1965c96b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_n_a_t_s_1_1_client_1_1_key_value_1_1_key_value_configuration_1_1_key_value_configuration_builder.html">KeyValueConfigurationBuilder</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_key_value_1_1_key_value_configuration_1_1_key_value_configuration_builder.html#a3fc1b408830baeba9fe018fa1965c96b">WithLimitMarker</a> (long limitMarkerTtlMillis)</td></tr>
+<tr class="separator:a3fc1b408830baeba9fe018fa1965c96b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afb43041f9d7e7fdbb8336c478ed1e963"><td class="memItemLeft" align="right" valign="top">KeyValueConfiguration&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n_a_t_s_1_1_client_1_1_key_value_1_1_key_value_configuration_1_1_key_value_configuration_builder.html#afb43041f9d7e7fdbb8336c478ed1e963">Build</a> ()</td></tr>
 <tr class="separator:afb43041f9d7e7fdbb8336c478ed1e963"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -378,6 +382,60 @@ Public Member Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd></dd></dl>
+
+</div>
+</div>
+<a id="ad6c7b7e9db85205e4b362fe8bee78140" name="ad6c7b7e9db85205e4b362fe8bee78140"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad6c7b7e9db85205e4b362fe8bee78140">&#9670;&nbsp;</a></span>WithLimitMarker() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_key_value_1_1_key_value_configuration_1_1_key_value_configuration_builder.html">KeyValueConfigurationBuilder</a> NATS.Client.KeyValue.KeyValueConfiguration.KeyValueConfigurationBuilder.WithLimitMarker </td>
+          <td>(</td>
+          <td class="paramtype">Duration&#160;</td>
+          <td class="paramname"><em>limitMarkerTtl</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>The limit marker TTL duration. Server accepts 1 second or more. Null or empty has the effect of clearing the limit marker ttl </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">limitMarkerTtl</td><td>the TTL duration</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The <a class="el" href="class_n_a_t_s_1_1_client_1_1_key_value_1_1_key_value_configuration_1_1_key_value_configuration_builder.html" title="KeyValueConfiguration is created using a Builder. The builder supports chaining and will create a def...">KeyValueConfigurationBuilder</a></dd></dl>
+
+</div>
+</div>
+<a id="a3fc1b408830baeba9fe018fa1965c96b" name="a3fc1b408830baeba9fe018fa1965c96b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3fc1b408830baeba9fe018fa1965c96b">&#9670;&nbsp;</a></span>WithLimitMarker() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="class_n_a_t_s_1_1_client_1_1_key_value_1_1_key_value_configuration_1_1_key_value_configuration_builder.html">KeyValueConfigurationBuilder</a> NATS.Client.KeyValue.KeyValueConfiguration.KeyValueConfigurationBuilder.WithLimitMarker </td>
+          <td>(</td>
+          <td class="paramtype">long&#160;</td>
+          <td class="paramname"><em>limitMarkerTtlMillis</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>The limit marker TTL duration in milliseconds. Server accepts 1 second or more. 0 or less has the effect of clearing the limit marker ttl </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">limitMarkerTtlMillis</td><td>the TTL duration</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The <a class="el" href="class_n_a_t_s_1_1_client_1_1_key_value_1_1_key_value_configuration_1_1_key_value_configuration_builder.html" title="KeyValueConfiguration is created using a Builder. The builder supports chaining and will create a def...">KeyValueConfigurationBuilder</a></dd></dl>
 
 </div>
 </div>
