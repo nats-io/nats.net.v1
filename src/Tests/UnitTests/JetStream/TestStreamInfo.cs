@@ -118,6 +118,11 @@ namespace UnitTests.JetStream
             Assert.Equal(2, si.SourceInfos.Count);
             ValidateSourceInfo(si.SourceInfos[0], 17);
             ValidateSourceInfo(si.SourceInfos[1], 18);
+            
+            // IList<Alternate> SourceInfos
+            Assert.Equal(2, si.StreamAlternates.Count);
+            validateStreamAlternate(si.StreamAlternates[0], 19);
+            validateStreamAlternate(si.StreamAlternates[1], 20);
         }
         
         private static void ValidateSourceInfo(SourceInfo sourceInfo, ulong id) {
@@ -132,6 +137,12 @@ namespace UnitTests.JetStream
             Assert.NotNull(e);
             Assert.Equal("api" + id, e.Api);
             Assert.Equal("dlvr" + id, e.Deliver);
+        }
+        
+        private static void validateStreamAlternate(StreamAlternate streamAlternate, int id) {
+            Assert.Equal("alt" + id, streamAlternate.Name);
+            Assert.Equal("domain" + id, streamAlternate.Domain);
+            Assert.Equal("cluster" + id, streamAlternate.Cluster);
         }
 
     }

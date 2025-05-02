@@ -23,6 +23,7 @@ namespace NATS.Client.JetStream
         public const string AllowDirect = "allow_direct";
         public const string AllowRollupHdrs = "allow_rollup_hdrs";
         public const string AllowMsgTtl = "allow_msg_ttl";
+        public const string Alternates = "alternates";
         public const string Api = "api";
         public const string AuthRequired = "auth_required";
         public const string AverageProcessingTime = "average_processing_time";        
