@@ -1,4 +1,4 @@
-// Copyright 2021 The NATS Authors
+// Copyright 2021-2025 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at:
@@ -26,6 +26,7 @@ namespace NATS.Client.JetStream
         public ClusterInfo ClusterInfo { get; private set; }
         public MirrorInfo MirrorInfo { get; private set; }
         public List<SourceInfo> SourceInfos { get; private set; }
+        public IList<StreamAlternate> StreamAlternates { get; private set; }
         public DateTime Timestamp { get; private set; }
 
         internal StreamInfo(Msg msg, bool throwOnError) : base(msg, throwOnError)
@@ -51,6 +52,7 @@ namespace NATS.Client.JetStream
             ClusterInfo = ClusterInfo.OptionalInstance(siNode[ApiConstants.Cluster]);
             MirrorInfo = MirrorInfo.OptionalInstance(siNode[ApiConstants.Mirror]);
             SourceInfos = SourceInfo.OptionalListOf(siNode[ApiConstants.Sources]);
+            StreamAlternates = StreamAlternate.OptionalListOf(siNode[ApiConstants.Alternates]);
             Timestamp = AsDate(siNode[ApiConstants.Timestamp]);
         }
 
@@ -64,6 +66,7 @@ namespace NATS.Client.JetStream
                    ", " + ObjectString("ClusterInfo", ClusterInfo) +
                    ", " + ObjectString("Mirror", MirrorInfo) +
                    ", SourceInfos=" + SourceInfos +
+                   ", StreamAlternates=" + StreamAlternates +
                    '}';
         }
     }
