@@ -62,8 +62,10 @@ namespace UnitTests.JetStream
             validateAccountLimits(tier.Limits, 700);
             
             acctStats = new AccountStatistics("{}", false);
-            Assert.Equal(0, acctStats.Memory);
-            Assert.Equal(0, acctStats.Storage);
+            Assert.Equal(0u, acctStats.MemoryBytes);
+            Assert.Equal(0u, acctStats.StorageBytes);
+            Assert.Equal(0u, acctStats.ReservedMemoryBytes);
+            Assert.Equal(0u, acctStats.ReservedStorageBytes);
             Assert.Equal(0, acctStats.Streams);
             Assert.Equal(0, acctStats.Consumers);
             
