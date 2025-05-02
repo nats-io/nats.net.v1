@@ -98,7 +98,6 @@ namespace NATS.Client.JetStream
             IJetStreamPushSyncSubscription sub = js.PushSubscribeSync(null, pso);
             try
             {
-                bool lastTimedOut = false;
                 ulong pending = sub.GetConsumerInformation().CalculatedPending;
                 while (pending > 0) // no need to loop if nothing pending
                 {
@@ -110,15 +109,10 @@ namespace NATS.Client.JetStream
                         {
                             return;
                         }
-                        lastTimedOut = false;
                     }
                     catch (NATSTimeoutException)
                     {
-                        if (lastTimedOut)
-                        {
-                            return; // two timeouts in a row is enough
-                        }
-                        lastTimedOut = true;
+                        return; // if there are no messages by the timeout, we are done.
                     }
                 }
             }
