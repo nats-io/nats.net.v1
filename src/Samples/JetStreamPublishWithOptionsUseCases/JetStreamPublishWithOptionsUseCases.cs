@@ -60,13 +60,13 @@ namespace NATSExamples
                     
                     // IMPORTANT!
                     // You can reuse the builder in 2 ways.
-                    // 1. Manually set a field to null or to DefaultLastSequence if you want to clear it out.
+                    // 1. Manually set a field to null or to ulong.MaxValue if you want to clear it out.
                     // 2. Use the clearExpected method to clear the expectedLastId, expectedLastSequence and messageId fields
 
                     // Manual re-use 1. Clearing some fields
                     builder
                         .WithExpectedLastMsgId("mid1")
-                        .WithExpectedLastSequence(PublishOptions.DefaultLastSequence)
+                        .WithExpectedLastSequence(ulong.MaxValue)
                         .WithMessageId(null);
                     pa = js.Publish(helper.Subject, Encoding.ASCII.GetBytes("message2"), builder.Build());
                     Console.WriteLine("Published message on subject {0}, stream {1}, seqno {2}.",
@@ -75,7 +75,7 @@ namespace NATSExamples
                     // Manual re-use 2. Setting all the expected fields again
                     builder
                         .WithExpectedLastMsgId(null)
-                        .WithExpectedLastSequence(PublishOptions.DefaultLastSequence)
+                        .WithExpectedLastSequence(ulong.MaxValue)
                         .WithMessageId("mid3");
                     pa = js.Publish(helper.Subject, Encoding.ASCII.GetBytes("message3"), builder.Build());
                     Console.WriteLine("Published message on subject {0}, stream {1}, seqno {2}.",

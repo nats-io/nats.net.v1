@@ -895,8 +895,11 @@ namespace IntegrationTests
                     // metadata server not null versus new not null but different
                     ChangeExPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithMetadata(metadataB), "Metadata");
 
-                    // metadata server not null versus new not null and same
-                    ChangeOkPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithMetadata(metadataA));
+                    if (c.ServerInfo.IsOlderThanVersion("2.11.0"))
+                    {
+                        // metadata server not null versus new not null and same
+                        ChangeOkPush(js, subject, PushDurableBuilder(subject, uname, deliver).WithMetadata(metadataA));
+                    }
                 }                
             });
         }

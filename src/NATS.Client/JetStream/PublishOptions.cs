@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using NATS.Client.Internals;
 
 namespace NATS.Client.JetStream
@@ -27,9 +28,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         public const string DefaultStream = null;
 
-        /// <summary>
-        /// Default Last Sequence Number (unset)
-        /// </summary>
+        [Obsolete("This property is obsolete, it is not used.", false)]
         public const ulong DefaultLastSequence = 0;
 
         /// <summary>
@@ -51,32 +50,45 @@ namespace NATS.Client.JetStream
         /// The Expected Last Message Id.
         /// </summary>
         public string ExpectedLastMsgId { get; }
+
+        [Obsolete("This property is obsolete, it represents a nullable value. ulong.MaxValue is returned for null/no value", false)]
+        public ulong ExpectedLastSeq => ExpectedLastSequence.GetValueOrDefault(ulong.MaxValue);
+        
+        [Obsolete("This property is obsolete, it represents a nullable value. ulong.MaxValue is returned for null/no value", false)]
+        public ulong ExpectedLastSubjectSeq => ExpectedLastSubjectSequence.GetValueOrDefault(ulong.MaxValue);
         
         /// <summary>
-        /// The Expected Last Sequence.
+        /// The Expected Last Sequence. No value if not set
         /// </summary>
-        public ulong ExpectedLastSeq { get; }
+        public ulong? ExpectedLastSequence { get; }
         
         /// <summary>
-        /// The Expected Last Sequence.
+        /// The Expected Last Subject Sequence. No value if not set
         /// </summary>
-        public ulong ExpectedLastSubjectSeq { get; }
+        public ulong? ExpectedLastSubjectSequence { get; }
         
         /// <summary>
         /// The Expected Message Id.
         /// </summary>
         public string MessageId { get; }
 
-        private PublishOptions(string stream, Duration streamTimeout, string expectedStream,
-            string expectedLastMsgId, ulong expectedLastSeq, ulong expectedLastSubjectSeq, string messageId)
+        /// <summary>
+        /// Gets the message ttl string. Might be null. Might be "never".
+        /// 10 seconds would be "10s" for the server
+        /// </summary>
+        public string MessageTtl => _messageTtl?.TtlString;
+        private MessageTtl _messageTtl;
+        
+        internal PublishOptions(PublishOptionsBuilder b)
         {
-            Stream = stream;
-            StreamTimeout = streamTimeout;
-            ExpectedStream = expectedStream;
-            ExpectedLastMsgId = expectedLastMsgId;
-            ExpectedLastSeq = expectedLastSeq;
-            ExpectedLastSubjectSeq = expectedLastSubjectSeq;
-            MessageId = messageId;
+            Stream = b._stream;
+            StreamTimeout = b._streamTimeout;
+            ExpectedStream = b._expectedStream;
+            ExpectedLastMsgId = b._expectedLastMsgId;
+            ExpectedLastSequence = b._expectedLastSeq;
+            ExpectedLastSubjectSequence = b._expectedLastSubjectSeq;
+            MessageId = b._messageId;
+            _messageTtl = b._messageTtl;
         }
         
         /// <summary>
@@ -95,13 +107,14 @@ namespace NATS.Client.JetStream
         /// </summary>
         public sealed class PublishOptionsBuilder
         {
-            private string _stream = DefaultStream;
-            private Duration _streamTimeout = DefaultTimeout;
-            private string _expectedStream;
-            private string _expectedLastMsgId;
-            private ulong _expectedLastSeq = DefaultLastSequence;
-            private ulong _expectedLastSubjectSeq = DefaultLastSequence;
-            private string _messageId;
+            internal string _stream = DefaultStream;
+            internal Duration _streamTimeout = DefaultTimeout;
+            internal string _expectedStream;
+            internal string _expectedLastMsgId;
+            internal ulong? _expectedLastSeq;
+            internal ulong? _expectedLastSubjectSeq;
+            internal string _messageId;
+            internal MessageTtl _messageTtl;
             
             /// <summary>
             /// Set the stream name.
@@ -176,7 +189,14 @@ namespace NATS.Client.JetStream
             /// <returns>The PublishOptionsBuilder</returns>
             public PublishOptionsBuilder WithExpectedLastSequence(ulong sequence)
             {
-                _expectedLastSeq = sequence;
+                if (sequence == ulong.MaxValue)
+                {
+                    _expectedLastSeq = null;
+                }
+                else
+                {
+                    _expectedLastSeq = sequence;
+                }
                 return this;
             }
 
@@ -199,9 +219,55 @@ namespace NATS.Client.JetStream
             public PublishOptionsBuilder ClearExpected() 
             {
                 _expectedLastMsgId = null;
-                _expectedLastSeq = DefaultLastSequence;
-                _expectedLastSubjectSeq = DefaultLastSequence;
+                _expectedLastSeq = null;
+                _expectedLastSubjectSeq = null;
                 _messageId = null;
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the TTL for this specific message to be published.
+            /// Less than 1 has the effect of clearing the message ttl.
+            /// </summary>
+            /// <param name="msgTtlSeconds">the ttl in seconds</param>
+            /// <returns>The PublishOptionsBuilder</returns>
+            public PublishOptionsBuilder WithMessageTtlSeconds(int msgTtlSeconds)
+            {
+                _messageTtl = msgTtlSeconds < 1 ? null : Client.JetStream.MessageTtl.Seconds(msgTtlSeconds);
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the TTL for this specific message to be published. Use at your own risk.
+            /// The current specification can be found here See <a href="https://github.com/nats-io/nats-architecture-and-design/blob/main/adr/ADR-43.md#per-message-ttl">JetStream Per-Message TTL</a>
+            /// Null or white space has the effect of clearing the message ttl
+            /// </summary>
+            /// <param name="msgTtlCustom"> the custom ttl string</param>
+            /// <returns>The PublishOptionsBuilder</returns>
+            public PublishOptionsBuilder WithMessageTtlCustom(string msgTtlCustom)
+            {
+                _messageTtl = string.IsNullOrWhiteSpace(msgTtlCustom) ? null : Client.JetStream.MessageTtl.Custom(msgTtlCustom);
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the TTL for this specific message to be published and never be expired
+            /// </summary>
+            /// <returns>The PublishOptionsBuilder</returns>
+            public PublishOptionsBuilder WithMessageTtlNever()
+            {
+                _messageTtl = Client.JetStream.MessageTtl.Never();
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the TTL for this specific message to be published and never be expired
+            /// </summary>
+            /// <param name="messageTtl">the message ttl instance</param>
+            /// <returns>The PublishOptionsBuilder</returns>
+            public PublishOptionsBuilder WithMessageTtl(MessageTtl messageTtl)
+            {
+                _messageTtl = messageTtl;
                 return this;
             }
 
@@ -211,7 +277,7 @@ namespace NATS.Client.JetStream
             /// <returns>The PublishOptions object.</returns>
             public PublishOptions Build() 
             {
-                return new PublishOptions(_stream, _streamTimeout, _expectedStream, _expectedLastMsgId, _expectedLastSeq, _expectedLastSubjectSeq, _messageId);
+                return new PublishOptions(this);
             }
         }
     }

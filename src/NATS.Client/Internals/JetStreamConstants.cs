@@ -169,10 +169,13 @@ namespace NATS.Client.Internals
         /// </summary>
         public const string ExpLastSubjectSeqHeader = "Nats-Expected-Last-Subject-Sequence";
         
+        public const string MsgTtlHdr = "Nats-TTL";
+        
         public const string LastConsumerHeader = "Nats-Last-Consumer";
         public const string LastStreamHeader = "Nats-Last-Stream";
         public const string ConsumerStalledHeader = "Nats-Consumer-Stalled";
         public const string MsgSizeHeader = "Nats-Msg-Size";
+        public const string NatsMarkerReason = "Nats-Marker-Reason";
 
         public const string RollupHeader = "Nats-Rollup";
         public const string RollupHeaderSubject = "sub";

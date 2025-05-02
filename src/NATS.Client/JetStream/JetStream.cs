@@ -33,19 +33,20 @@ namespace NATS.Client.JetStream
 
             if (opts != null)
             {
-                merged = MergeNum(merged, JetStreamConstants.ExpLastSeqHeader, opts.ExpectedLastSeq);
-                merged = MergeNum(merged, JetStreamConstants.ExpLastSubjectSeqHeader, opts.ExpectedLastSubjectSeq);
+                merged = MergeNum(merged, JetStreamConstants.ExpLastSeqHeader, opts.ExpectedLastSequence);
+                merged = MergeNum(merged, JetStreamConstants.ExpLastSubjectSeqHeader, opts.ExpectedLastSubjectSequence);
                 merged = MergeString(merged, JetStreamConstants.ExpLastIdHeader, opts.ExpectedLastMsgId);
                 merged = MergeString(merged, JetStreamConstants.ExpStreamHeader, opts.ExpectedStream);
                 merged = MergeString(merged, JetStreamConstants.MsgIdHeader, opts.MessageId);
+                merged = MergeString(merged, JetStreamConstants.MsgTtlHdr, opts.MessageTtl);
             }
 
             return merged;
         }
 
-        private MsgHeader MergeNum(MsgHeader h, string key, ulong value)
+        private MsgHeader MergeNum(MsgHeader h, string key, ulong? value)
         {
-            return value > 0 ? _MergeString(h, key, value.ToString()) : h;
+            return value.HasValue ? _MergeString(h, key, value.ToString()) : h;
         }
 
         private MsgHeader MergeString(MsgHeader h, string key, string value) 

@@ -27,8 +27,9 @@ namespace NATS.Client.KeyValue
         internal string StreamSubject { get; }
         internal string ReadPrefix { get; }
         internal string WritePrefix { get; }
-        
-        internal KeyValue(IConnection connection, string bucketName, KeyValueOptions kvo) : base(connection, kvo) {
+
+        internal KeyValue(IConnection connection, string bucketName, KeyValueOptions kvo) : base(connection, kvo)
+        {
             BucketName = Validator.ValidateBucketName(bucketName, true);
             StreamName = ToStreamName(BucketName);
 
@@ -62,12 +63,12 @@ namespace NATS.Client.KeyValue
         }
 
         public string BucketName { get; }
-        
+
         internal string ReadSubject(string key)
         {
             return ReadPrefix + key;
         }
-        
+
         internal string WriteSubject(string key)
         {
             return WritePrefix + key;
@@ -83,11 +84,13 @@ namespace NATS.Client.KeyValue
             return existingOnly(_getBySeq(Validator.ValidateNonWildcardKvKeyRequired(key), revision));
         }
 
-        private KeyValueEntry existingOnly(KeyValueEntry kve) {
+        private KeyValueEntry existingOnly(KeyValueEntry kve)
+        {
             return kve == null || !kve.Operation.Equals(KeyValueOperation.Put) ? null : kve;
         }
-        
-        KeyValueEntry _get(string key) {
+
+        KeyValueEntry _get(string key)
+        {
             MessageInfo mi = _getLast(ReadSubject(key));
             return mi == null ? null : new KeyValueEntry(mi);
         }
@@ -98,7 +101,8 @@ namespace NATS.Client.KeyValue
             if (mi != null)
             {
                 KeyValueEntry kve = new KeyValueEntry(mi);
-                if (key.Equals(kve.Key)) {
+                if (key.Equals(kve.Key))
+                {
                     return kve;
                 }
             }
@@ -108,7 +112,7 @@ namespace NATS.Client.KeyValue
 
         public ulong Put(string key, byte[] value)
         {
-            return _write(key, value, null).Seq;
+            return _write(key, value, null, null).Seq;
         }
 
         public ulong Put(string key, string value) => Put(key, Encoding.UTF8.GetBytes(value));
@@ -117,10 +121,15 @@ namespace NATS.Client.KeyValue
         
         public ulong Create(string key, byte[] value)
         {
+            return Create(key, value, null);
+        }
+
+        public ulong Create(string key, byte[] value, MessageTtl messageTtl)
+        {
             Validator.ValidateNonWildcardKvKeyRequired(key);
             try
             {
-                return Update(key, value, 0);
+                return _update(key, value, 0, messageTtl);
             }
             catch (NATSJetStreamException e)
             {
@@ -129,7 +138,7 @@ namespace NATS.Client.KeyValue
                     // must check if the last message for this subject is a delete or purge
                     KeyValueEntry kve = _get(key);
                     if (kve != null && !kve.Operation.Equals(KeyValueOperation.Put)) {
-                        return Update(key, value, kve.Revision);
+                        return _update(key, value, kve.Revision, messageTtl);
                     }
                 }
 
@@ -139,39 +148,34 @@ namespace NATS.Client.KeyValue
 
         public ulong Update(string key, byte[] value, ulong expectedRevision)
         {
-            MsgHeader h = new MsgHeader 
-            {
-                [JetStreamConstants.ExpLastSubjectSeqHeader] = expectedRevision.ToString()
-            };
-            return _write(key, value, h).Seq;
+            return _update(key, value, expectedRevision, null);
         }
 
+        internal ulong _update(string key, byte[] value, ulong? expectedRevision, MessageTtl messageTtl)
+        {
+            Validator.ValidateNonWildcardKvKeyRequired(key);
+            return _write(key, value, null, GetPublishOptions(expectedRevision, messageTtl)).Seq;
+        }
+        
         public void Delete(string key)
         {
-            Validator.ValidateKvKeyWildcardAllowedRequired(key);
-            _write(key, null, DeleteHeaders);
+            _write(key, null, DeleteHeaders, null);
         }
         
         public void Delete(string key, ulong expectedRevision)
         {
-            Validator.ValidateKvKeyWildcardAllowedRequired(key);
-            MsgHeader h = DeleteHeaders;
-            h[JetStreamConstants.ExpLastSubjectSeqHeader] = expectedRevision.ToString();
-            _write(key, null, h);
+            _write(key, null, DeleteHeaders, GetPublishOptions(expectedRevision, null));
         }
 
         public void Purge(string key)        
         {
-            Validator.ValidateKvKeyWildcardAllowedRequired(key);
-            _write(key, null, PurgeHeaders);
+            _write(key, null, PurgeHeaders, null);
         }
         
         public void Purge(string key, ulong expectedRevision)
         {
             Validator.ValidateKvKeyWildcardAllowedRequired(key);
-            MsgHeader h = PurgeHeaders;
-            h[JetStreamConstants.ExpLastSubjectSeqHeader] = expectedRevision.ToString();
-            _write(key, null, h);
+            _write(key, null, PurgeHeaders, GetPublishOptions(expectedRevision, null));
         }
         
         public KeyValueWatchSubscription Watch(string key, IKeyValueWatcher watcher, params KeyValueWatchOption[] watchOptions)
@@ -214,9 +218,9 @@ namespace NATS.Client.KeyValue
             return new KeyValueWatchSubscription(this, new List<string> {NatsConstants.GreaterThan}, watcher, fromRevision, watchOptions);
         }
 
-        private PublishAck _write(string key, byte[] data, MsgHeader h) {
+        private PublishAck _write(string key, byte[] data, MsgHeader h, PublishOptions popts) {
             Validator.ValidateNonWildcardKvKeyRequired(key);
-            return js.Publish(new Msg(WriteSubject(key), h, data));
+            return js.Publish(new Msg(WriteSubject(key), h, data), popts);
         }
 
         public IList<string> Keys()

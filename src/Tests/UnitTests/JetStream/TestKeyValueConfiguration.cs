@@ -41,6 +41,7 @@ namespace UnitTests.JetStream
                 .WithRepublish(r)
                 .WithAllowDirect(true)
                 .WithCompression(true)
+                .WithLimitMarker(8888)
                 .Build();
             Validate(kvc);
 
@@ -72,6 +73,7 @@ namespace UnitTests.JetStream
             Assert.Equal("dest", kvc.Republish.Destination);
             Assert.True(kvc.Republish.HeadersOnly);
             Assert.True(kvc.IsCompressed);
+            Assert.Equal(8888, kvc.LimitMarkerTtl.Millis);
         }
 
         [Fact]

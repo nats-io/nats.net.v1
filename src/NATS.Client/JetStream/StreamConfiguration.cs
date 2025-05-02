@@ -52,7 +52,9 @@ namespace NATS.Client.JetStream
         public bool DenyPurge { get; }
         public bool DiscardNewPerSubject { get; }
         public IDictionary<string, string> Metadata { get; }
-        public ulong FirstSequence { get; private set; }
+        public ulong FirstSequence { get; }
+        public bool AllowMessageTtl { get; }
+        public Duration SubjectDeleteMarkerTtl { get; }
 
         [Obsolete("The server value is a 32-bit signed value. Use MaximumMessageSize.", false)]
         public long MaxMsgSize => MaximumMessageSize;
@@ -95,6 +97,8 @@ namespace NATS.Client.JetStream
             DiscardNewPerSubject = scNode[ApiConstants.DiscardNewPerSubject].AsBool;
             Metadata = JsonUtils.StringStringDictionary(scNode, ApiConstants.Metadata);
             FirstSequence = AsUlongOr(scNode, ApiConstants.FirstSequence, 1U);
+            AllowMessageTtl = scNode[ApiConstants.AllowMsgTtl].AsBool;
+            SubjectDeleteMarkerTtl = AsDuration(scNode, ApiConstants.SubjectDeleteMarkerTtl, null);
         }
         
         private StreamConfiguration(StreamConfigurationBuilder builder)
@@ -131,6 +135,8 @@ namespace NATS.Client.JetStream
             DiscardNewPerSubject = builder._discardNewPerSubject;
             Metadata = builder._metadata;
             FirstSequence = builder._firstSequence;
+            AllowMessageTtl = builder._allowMsgTtl;
+            SubjectDeleteMarkerTtl = builder._subjectDeleteMarkerTtl;
         }
 
         public override JSONNode ToJsonNode()
@@ -174,6 +180,8 @@ namespace NATS.Client.JetStream
             AddField(o, ApiConstants.DiscardNewPerSubject, DiscardNewPerSubject);
             AddField(o, ApiConstants.Metadata, Metadata);
             AddFieldWhenGreaterThan(o, ApiConstants.FirstSequence, FirstSequence, 1);
+            AddField(o, ApiConstants.AllowMsgTtl, AllowMessageTtl);
+            AddField(o, ApiConstants.SubjectDeleteMarkerTtl, SubjectDeleteMarkerTtl);
             return o;
         }
 
@@ -221,6 +229,8 @@ namespace NATS.Client.JetStream
             internal bool _discardNewPerSubject;
             internal Dictionary<string, string> _metadata = new Dictionary<string, string>();
             internal ulong _firstSequence;
+            internal bool _allowMsgTtl;
+            internal Duration _subjectDeleteMarkerTtl;
 
             public StreamConfigurationBuilder() {}
             
@@ -259,6 +269,8 @@ namespace NATS.Client.JetStream
                     _denyPurge = sc.DenyPurge;
                     _discardNewPerSubject = sc.DiscardNewPerSubject;
                     _firstSequence = sc.FirstSequence;
+                    _allowMsgTtl = sc.AllowMessageTtl;
+                    _subjectDeleteMarkerTtl = sc.SubjectDeleteMarkerTtl;
                     foreach (string key in sc.Metadata.Keys)
                     {
                         _metadata[key] = sc.Metadata[key];
@@ -699,12 +711,60 @@ namespace NATS.Client.JetStream
             /// Sets the first sequence to be used. 1 is the default. 0 is treated as 1.
             /// </summary>
             /// <param name="firstSequence">specify the first_seq in the stream config when creating the stream.</param>
-            /// <returns></returns>
+            /// <returns>The StreamConfigurationBuilder</returns>
             public StreamConfigurationBuilder WithFirstSequence(ulong firstSequence) {
                 _firstSequence = firstSequence == 0 ? 1 : firstSequence;
                 return this;
             }
-            
+
+            /// <summary>
+            /// Set to allow per message TTL to true 
+            /// </summary>
+            /// <returns>The StreamConfigurationBuilder</returns>
+            public StreamConfigurationBuilder WithAllowMessageTtl()
+            {
+                _allowMsgTtl = true;
+                return this;
+            }
+
+            /// <summary>
+            /// Set allow per message TTL flag
+            /// </summary>
+            /// <param name="allowMsgTtl">the flag</param>
+            /// <returns>The StreamConfigurationBuilder</returns>
+            public StreamConfigurationBuilder WithAllowMessageTtl(bool allowMsgTtl)
+            {
+                _allowMsgTtl = allowMsgTtl;
+                return this;
+            }
+
+            /// <summary>
+            /// Set the subject delete marker TTL duration. Server accepts 1 second or more.
+            /// null has the effect of clearing the subject delete marker TTL
+            /// </summary>
+            /// <param name="subjectDeleteMarkerTtl">the TTL duration</param>
+            /// <returns>The StreamConfigurationBuilder</returns>
+            /// <exception cref="ArgumentException">If the duration is less than 1 second</exception>
+            public StreamConfigurationBuilder WithSubjectDeleteMarkerTtl(Duration subjectDeleteMarkerTtl)
+            {
+                _subjectDeleteMarkerTtl = Validator.ValidateDurationNotRequiredGtOrEqSeconds(1, subjectDeleteMarkerTtl, null, "Subject Delete Marker Ttl");
+                return this;
+            }
+
+            /// <summary>
+            /// Set the subject delete marker TTL duration in milliseconds. Server accepts 1 second or more.
+            /// 0 or less has the effect of clearing the subject delete marker TTL
+            /// </summary>
+            /// <param name="subjectDeleteMarkerTtlMillis">the TTL duration in milliseconds</param>
+            /// <returns>The StreamConfigurationBuilder</returns>
+            /// <exception cref="ArgumentException">If the duration is less than 1 second</exception>
+            public StreamConfigurationBuilder WithSubjectDeleteMarkerTtl(long subjectDeleteMarkerTtlMillis)
+            {
+                _subjectDeleteMarkerTtl = subjectDeleteMarkerTtlMillis <= 0 ? null : 
+                    Validator.ValidateDurationGtOrEqSeconds(1, subjectDeleteMarkerTtlMillis, "Subject Delete Marker Ttl");
+                return this;
+            }
+
             /// <summary>
             /// Set this stream to be sealed. This is irreversible.
             /// </summary>
