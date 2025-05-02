@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -21,34 +22,44 @@ namespace NATS.Client.JetStream
     public sealed class AccountStatistics : ApiResponse
     {
         // rollup contains the memory, storage, streams, consumers and limits from the top level
-        private AccountTier _rollup;
+        private AccountTier _rollupTier;
         
         /// <summary>
         /// Gets the amount of memory storage used by the JetStream deployment.
         /// </summary>
-        public long Memory => _rollup.Memory;
+        public ulong MemoryBytes => _rollupTier.MemoryBytes;
         
         /// <summary>
         /// Gets the amount of file storage used by the JetStream deployment.
         /// </summary>
-        public long Storage => _rollup.Storage;
+        public ulong StorageBytes => _rollupTier.StorageBytes;
+        
+        /// <summary>
+        /// Bytes that is reserved for memory usage by this account on the server.
+        /// </summary>
+        public ulong ReservedMemoryBytes => _rollupTier.ReservedMemoryBytes;
+        
+        /// <summary>
+        /// Bytes that is reserved for disk usage by this account on the server.
+        /// </summary>
+        public ulong ReservedStorageBytes => _rollupTier.ReservedStorageBytes;
         
         /// <summary>
         /// Gets the number of streams used by the JetStream deployment.
         /// </summary>
-        public long Streams => _rollup.Streams;
+        public long Streams => _rollupTier.Streams;
         
         /// <summary>
         /// Gets the number of consumers used by the JetStream deployment.
         /// </summary>
-        public long Consumers => _rollup.Consumers;
+        public long Consumers => _rollupTier.Consumers;
 
         /// <summary>
         /// Gets the Account Limits object. If the account has tiers,
         /// the object will be present but all values will be zero.
         /// See the Account Limits for the specific tier.
         /// </summary>
-        public AccountLimits Limits => _rollup.Limits;
+        public AccountLimits Limits => _rollupTier.Limits;
         
         /// <summary>
         /// Gets the account domain
@@ -73,7 +84,7 @@ namespace NATS.Client.JetStream
 
         private void Init()
         {
-            _rollup = new AccountTier(JsonNode);
+            _rollupTier = new AccountTier(JsonNode);
             Domain = JsonNode[ApiConstants.Domain].Value;
             Api = new ApiStats(JsonNode[ApiConstants.Api]);
             IDictionary<string, AccountTier> temp = new Dictionary<string, AccountTier>();
@@ -84,5 +95,11 @@ namespace NATS.Client.JetStream
             }
             Tiers = new ReadOnlyDictionary<string, AccountTier>(temp);
         }
+
+        [Obsolete("This property is obsolete in favor of MemoryBytes which has the proper type to match the server.", false)]
+        public long Memory => (long)MemoryBytes;
+        
+        [Obsolete("This property is obsolete in favor of StorageBytes which has the proper type to match the server.", false)]
+        public long Storage => (long)MemoryBytes;
     }
 }

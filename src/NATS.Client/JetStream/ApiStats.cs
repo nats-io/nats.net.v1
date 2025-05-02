@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 
@@ -19,19 +20,37 @@ namespace NATS.Client.JetStream
     public sealed class ApiStats
     {
         /// <summary>
+        /// The api level. For future use.
+        /// </summary>
+        public int Level { get; }
+        
+        /// <summary>
         /// Total number of API requests received for this account.
         /// </summary>
-        public long Total { get; }
+        public ulong TotalRequests { get; }
         
         /// <summary>
         /// API requests that resulted in an error response.
         /// </summary>
-        public long Errors { get; }
+        public ulong ErrorResponses { get; }
+        
+        /// <summary>
+        /// Total number of current in-flight requests.
+        /// </summary>
+        public ulong InFlight { get; }
 
         internal ApiStats(JSONNode jsonNode) 
         {
-            Total = JsonUtils.AsLongOrZero(jsonNode, ApiConstants.Total);
-            Errors = JsonUtils.AsLongOrZero(jsonNode, ApiConstants.Errors);
+            Level = jsonNode[ApiConstants.Level].AsInt;
+            TotalRequests = JsonUtils.AsUlongOrZero(jsonNode, ApiConstants.Total);
+            ErrorResponses = JsonUtils.AsUlongOrZero(jsonNode, ApiConstants.Errors);
+            InFlight = JsonUtils.AsUlongOrZero(jsonNode, ApiConstants.Inflight);
         }
+
+        [Obsolete("This property is obsolete in favor of TotalRequests which has the proper type to match the server.", false)]
+        public long Total => (long)TotalRequests;
+        
+        [Obsolete("This property is obsolete in favor of ErrorResponses which has the proper type to match the server.", false)]
+        public long Errors => (long)TotalRequests;
     }
 }

@@ -84,6 +84,7 @@ namespace NATS.Client.JetStream
         public const string Id = "id";
         public const string IdleHeartbeat = "idle_heartbeat";
         public const string InactiveThreshold = "inactive_threshold";
+        public const string Inflight = "inflight";
         public const string Internal = "internal";
         public const string Jetstream = "jetstream";
         public const string Keep = "keep";
@@ -95,6 +96,7 @@ namespace NATS.Client.JetStream
         public const string LastSeq = "last_seq";
         public const string LastTs = "last_ts";
         public const string Leader = "leader";
+        public const string Level = "level";
         public const string Limit = "limit";
         public const string Limits = "limits";
         public const string Link = "link";
@@ -162,6 +164,8 @@ namespace NATS.Client.JetStream
         public const string Replica = "replica";
         public const string Replicas = "replicas";
         public const string Request = "request";
+        public const string ReservedMemory   = "reserved_memory";
+        public const string ReservedStorage  = "reserved_storage";
         public const string Response = "response";
         public const string Retention = "retention";
         public const string SampleFreq = "sample_freq";
