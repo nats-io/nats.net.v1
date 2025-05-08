@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Title>NATS .NET Client</Title>
-    <Description>**NOTE** For .NET 6 upwards we recommend NATS.Net package - NATS acts as a central nervous system for distributed systems at scale for IoT, edge computing, and cloud native and on-premise applications.  This is the .NET client API.</Description>
+    <Description>Use NATS.Net instead. We will deprecate this package eventually.</Description>
     <PackageId>NATS.Client</PackageId>
     <PackageProjectUrl>https://nats.io</PackageProjectUrl>
     <PackageIcon>package-icon.png</PackageIcon>
