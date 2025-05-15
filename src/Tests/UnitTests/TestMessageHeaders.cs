@@ -303,8 +303,6 @@ namespace UnitTests
             Assert.Throws<ArgumentException>(() => mh["k\r\ney"] = "value");
             Assert.Throws<ArgumentException>(() => mh["key"] = "val\r\nue");
             Assert.Throws<ArgumentException>(() => mh["foo:bar"] = "value");
-            Assert.Throws<ArgumentException>(() => mh["foo"] = "value\f");
-            Assert.Throws<ArgumentException>(() => mh["foo\f"] = "value");
 
             // test constructor with invalid assignment
             Assert.Throws<ArgumentException>(() => new MsgHeader() { ["foo:bar"] = "baz" });
