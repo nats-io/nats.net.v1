@@ -66,6 +66,22 @@ namespace UnitTests
         }
 
         [Fact]
+        public void valueCharactersMustBeUSAsciiExceptForCRLF()
+        {
+            MsgHeader headers = new MsgHeader();
+            for (int c = 0; c < 256; c++) {
+                String val = "val" + (char)c;
+                if (c == 10 || c == 13 || c > 127) {
+                    Assert.Throws<ArgumentException>(() => { headers["key"] = val; });
+                }
+                else {
+                    headers["key"] = val;
+                    Assert.Equal(val, headers["key"]);
+                }
+            }
+        }
+
+        [Fact]
         public void TestHeaderDeserialization()
         {
             byte[] hb = Encoding.ASCII.GetBytes("NATS/1.0\r\nfoo:bar\r\nbaz:bam\r\n\r\n");
