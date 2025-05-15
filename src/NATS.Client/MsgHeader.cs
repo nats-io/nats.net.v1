@@ -117,11 +117,12 @@ namespace NATS.Client
             {
                 foreach (char c in value)
                 {
-                    // Generally more permissive than HTTP.  Allow only printable
-                    // characters and include tab (0x9) to cover what's allowed
-                    // in quoted strings and comments.
-                    if ((c < 32 && c != 9) || c > 126)
+                    // Like rfc822 section 3.1.2 (quoted in ADR 4)
+                    // The field-body may be composed of any US-ASCII characters, except CR or LF.
+                    if (c > 127 || c == 10 || c == 13)
+                    {
                         throw new ArgumentException(string.Format("Invalid character {0:X2} in value.", c));
+                    }
                 }
             }
         }
