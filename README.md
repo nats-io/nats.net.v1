@@ -17,7 +17,7 @@ A [C# .NET](https://msdn.microsoft.com/en-us/vstudio/aa496123.aspx) client for t
 **Current Release**: 1.1.8 &nbsp; **Current Head**: 1.1.9
 
 [![License Apache 2.0](https://img.shields.io/badge/License-Apache2-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
-[![API Documentation](https://img.shields.io/badge/doc-Doxygen-brightgreen.svg?style=flat)](http://nats-io.github.io/nats.net)
+[![API Documentation](https://img.shields.io/badge/doc-Doxygen-brightgreen.svg?style=flat)](http://nats-io.github.io/nats.net.v1)
 [![Build Status](https://dev.azure.com/NATS-CI/NATS-CI/_apis/build/status/nats-io.nats.net-CI?branchName=main)](https://dev.azure.com/NATS-CI/NATS-CI/_build/latest?definitionId=2&branchName=main)
 [![NuGet](https://img.shields.io/nuget/v/NATS.Client.svg?cacheSeconds=3600)](https://www.nuget.org/packages/NATS.Client)
 
@@ -88,7 +88,7 @@ documentation\build_doc.bat
 Doxygen will build the NATS .NET Client API documentation, placing it in the `documentation\NATS.Client\html` directory.
 Doxygen is required to be installed and in the PATH.  Version 1.8 is known to work.
 
-[Current API Documentation](http://nats-io.github.io/nats.net)
+[Current API Documentation](http://nats-io.github.io/nats.net.v1)
 
 ## Version Notes
 
