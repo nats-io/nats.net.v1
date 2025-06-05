@@ -11,22 +11,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
+
 namespace NATS.Client.KeyValue
 {
     public class KeyValueOperation
     {
         private readonly byte _id;
         public string HeaderValue { get; }
+        public string[] MarkerReasons { get; }
 
-        private KeyValueOperation(byte id, string headerValue)
+        private KeyValueOperation(byte id, string headerValue, string[] markerReasons)
         {
             _id = id;
             HeaderValue = headerValue;
+            MarkerReasons = markerReasons;
         }
 
-        public static readonly KeyValueOperation Put = new KeyValueOperation(1, "PUT");
-        public static readonly KeyValueOperation Delete = new KeyValueOperation(2, "DEL");
-        public static readonly KeyValueOperation Purge = new KeyValueOperation(3, "PURGE");
+        public static readonly KeyValueOperation Put = new KeyValueOperation(1, "PUT", new string[0]);
+        public static readonly KeyValueOperation Delete = new KeyValueOperation(2, "DEL", new []{"Remove"});
+        public static readonly KeyValueOperation Purge = new KeyValueOperation(3, "PURGE", new []{"MaxAge", "Purge"});
  
         public static KeyValueOperation GetOrDefault(string s, KeyValueOperation dflt)
         {
@@ -37,6 +41,26 @@ namespace NATS.Client.KeyValue
                 if (s.Equals(Purge.HeaderValue)) return Purge;
             }
             return dflt;
+        }
+
+        public static KeyValueOperation GetByMarkerReason(string markerReason)
+        {
+            if ("Remove".Equals(markerReason))
+            {
+                return Delete;
+                
+            }
+            if ("MaxAge".Equals(markerReason))
+            {
+                return Purge;
+                
+            }
+            if ("Purge".Equals(markerReason))
+            {
+                return Purge;
+                
+            }
+            return null;
         }
 
         public override bool Equals(object obj) => obj is KeyValueOperation other && Equals(other);
