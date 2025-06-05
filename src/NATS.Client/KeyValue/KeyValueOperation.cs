@@ -32,33 +32,38 @@ namespace NATS.Client.KeyValue
         public static readonly KeyValueOperation Delete = new KeyValueOperation(2, "DEL", new []{"Remove"});
         public static readonly KeyValueOperation Purge = new KeyValueOperation(3, "PURGE", new []{"MaxAge", "Purge"});
  
+        public static KeyValueOperation Instance(string s)
+        {
+            if (s.Equals(Put.HeaderValue))
+            {
+                return Put;
+            }
+            if (s.Equals(Delete.HeaderValue))
+            {
+                return Delete;
+            }
+            if (s.Equals(Purge.HeaderValue))
+            {
+                return Purge;
+            }
+            return null;
+        }
+ 
         public static KeyValueOperation GetOrDefault(string s, KeyValueOperation dflt)
         {
-            if (!string.IsNullOrWhiteSpace(s))
-            {
-                if (s.Equals(Put.HeaderValue)) return Put;
-                if (s.Equals(Delete.HeaderValue)) return Delete;
-                if (s.Equals(Purge.HeaderValue)) return Purge;
-            }
-            return dflt;
+            KeyValueOperation kvo = Instance(s);
+            return kvo == null ? dflt : kvo;
         }
 
-        public static KeyValueOperation GetByMarkerReason(string markerReason)
+        public static KeyValueOperation InstanceByMarkerReason(string markerReason)
         {
             if ("Remove".Equals(markerReason))
             {
                 return Delete;
-                
             }
-            if ("MaxAge".Equals(markerReason))
+            if ("MaxAge".Equals(markerReason) || "Purge".Equals(markerReason))
             {
                 return Purge;
-                
-            }
-            if ("Purge".Equals(markerReason))
-            {
-                return Purge;
-                
             }
             return null;
         }

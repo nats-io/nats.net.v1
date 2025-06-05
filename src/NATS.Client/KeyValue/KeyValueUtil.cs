@@ -86,13 +86,15 @@ namespace NATS.Client.KeyValue
         }
 
         public static KeyValueOperation GetOperation(MsgHeader h, KeyValueOperation dflt) {
-            KeyValueOperation kvo = KeyValueOperation.GetOrDefault(GetOperationHeader(h), dflt);
-            if (kvo == null)
-            {
-                string rh = GetNatsMarkerReasonHeader(h);
-                if (rh != null)
-                {
-                    kvo = KeyValueOperation.GetByMarkerReason(rh);
+            KeyValueOperation kvo = null;
+            string hs = GetOperationHeader(h);
+            if (hs != null) {
+                kvo = KeyValueOperation.Instance(hs);
+            }
+            if (kvo == null) {
+                hs = GetNatsMarkerReasonHeader(h);
+                if (hs != null) {
+                    kvo = KeyValueOperation.InstanceByMarkerReason(hs);
                 }
             }
             return kvo == null ? KeyValueOperation.Put : kvo;
