@@ -167,7 +167,7 @@ namespace NATS.Client.JetStream
                 case NatsConstants.ConflictCode:
                     // sometimes just a warning
                     string statMsg = msg.Status.Message;
-                    if (statMsg.StartsWith("Exceeded Max"))
+                    if (statMsg.StartsWith(JetStreamConstants.ExceededMaxPrefix) || statMsg.Equals(JetStreamConstants.ServerShutdown))
                     {
                         if (raiseStatusWarnings)
                         {
@@ -178,6 +178,7 @@ namespace NATS.Client.JetStream
                     }
 
                     if (statMsg.Equals(JetStreamConstants.BatchCompleted) ||
+                        statMsg.Equals(JetStreamConstants.LeadershipChange) ||
                         statMsg.Equals(JetStreamConstants.MessageSizeExceedsMaxBytes))
                     {
                         return ManageResult.StatusTerminus;

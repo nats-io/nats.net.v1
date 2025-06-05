@@ -41,7 +41,7 @@ namespace NATS.Client.JetStream
         {
             if (msg.Sid != TargetSid)
             {
-                return ManageResult.StatusHandled; // wrong sid is throwaway from previous consumer that errored
+                return ManageResult.StatusHandled; // wrong sid. message is a throwaway from previous consumer that errored
             }
 
             if (msg.IsJetStream)

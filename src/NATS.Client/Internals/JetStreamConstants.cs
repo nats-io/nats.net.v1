@@ -200,6 +200,7 @@ namespace NATS.Client.Internals
         public const string ConsumerIsPushBased        = "Consumer is push based"; // 409
 
         public const string MessageSizeExceedsMaxBytes = "Message Size Exceeds MaxBytes"; // 409
+        public const string ExceededMaxPrefix          = "Exceeded Max";
         public const string ExceededMaxWaiting         = "Exceeded MaxWaiting"; // 409
         public const string ExceededMaxRequestBatch    = "Exceeded MaxRequestBatch"; // 409
         public const string ExceededMaxRequestExpires  = "Exceeded MaxRequestExpires"; // 409
@@ -207,7 +208,8 @@ namespace NATS.Client.Internals
 
         public const string BatchCompleted             = "Batch Completed"; // 409 informational
         public const string ServerShutdown             = "Server Shutdown"; // 409 informational with headers
- 
+        public const string LeadershipChange          = "Leadership Change"; // 409
+
         [Obsolete("This property is obsolete. Use LastConsumerHeader instead.", false)]
         public const string LastConsumerHdr = "Nats-Last-Consumer";
 
