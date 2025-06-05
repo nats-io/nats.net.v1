@@ -80,8 +80,24 @@ namespace NATS.Client.KeyValue
             return h?[KvOperationHeaderKey];
         }
 
+        public static string GetNatsMarkerReasonHeader(MsgHeader h)
+        {
+            return h?[JetStreamConstants.NatsMarkerReason];
+        }
+
         public static KeyValueOperation GetOperation(MsgHeader h, KeyValueOperation dflt) {
-            return KeyValueOperation.GetOrDefault(GetOperationHeader(h), dflt);
+            KeyValueOperation kvo = null;
+            string hs = GetOperationHeader(h);
+            if (hs != null) {
+                kvo = KeyValueOperation.Instance(hs);
+            }
+            if (kvo == null) {
+                hs = GetNatsMarkerReasonHeader(h);
+                if (hs != null) {
+                    kvo = KeyValueOperation.InstanceByMarkerReason(hs);
+                }
+            }
+            return kvo == null ? KeyValueOperation.Put : kvo;
         }
     }
 

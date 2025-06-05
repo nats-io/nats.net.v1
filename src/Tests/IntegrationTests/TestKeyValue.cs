@@ -1604,6 +1604,43 @@ namespace IntegrationTests
                     .Build());
             });
         }
+        
+        [Fact]
+        public void TestLimitMarkerAlso() {
+            Context.RunInJsServer(AtLeast2_11,c =>
+            {
+                string bucket = Bucket();
+                string key = Key();
+
+                IKeyValueManagement kvm = c.CreateKeyValueManagementContext();
+                KeyValueConfiguration config = KeyValueConfiguration.Builder()
+                    .WithName(bucket)
+                    .WithStorageType(StorageType.Memory)
+                    .WithLimitMarker(6000)
+                    .Build();
+                kvm.Create(config);
+
+                IKeyValue kv = c.CreateKeyValueContext(bucket);
+
+                TestKeyValueWatcher watcher = new TestKeyValueWatcher(true);
+                KeyValueWatchSubscription watch = kv.WatchAll(watcher);
+
+                kv.Create(key, DataBytes(), MessageTtl.Seconds(2));
+
+                KeyValueEntry kve = kv.Get(key);
+                Assert.NotNull(kve);
+
+                Thread.Sleep(2100); // longer than the message ttl
+
+                kve = kv.Get(key);
+                Assert.Null(kve);
+
+                Assert.Equal(1, watcher.Puts);
+                Assert.Equal(0, watcher.Dels);
+                Assert.Equal(1, watcher.Purges);
+                Assert.Equal(1, watcher.EndOfDataReceived);
+            });
+        }
     }
 
     class TestKeyValueWatcher : IKeyValueWatcher
@@ -1614,6 +1651,9 @@ namespace IntegrationTests
         public bool MetaOnly;
         public int EndOfDataReceived;
         public bool EndBeforeEntries;
+        public int Puts;
+        public int Dels;
+        public int Purges;
 
         public TestKeyValueWatcher(bool beforeWatcher, params KeyValueWatchOption[] watchOptions)
         {
@@ -1632,6 +1672,18 @@ namespace IntegrationTests
         public void Watch(KeyValueEntry kve)
         {
             Entries.Add(kve);
+            if (kve.Operation == KeyValueOperation.Put)
+            {
+                ++Puts;
+            }
+            else if (kve.Operation == KeyValueOperation.Delete)
+            {
+                ++Dels;
+            }
+            else if (kve.Operation == KeyValueOperation.Purge)
+            {
+                ++Purges;
+            }
         }
 
         public void EndOfData()

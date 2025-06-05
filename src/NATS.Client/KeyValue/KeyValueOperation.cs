@@ -11,32 +11,61 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
+
 namespace NATS.Client.KeyValue
 {
     public class KeyValueOperation
     {
         private readonly byte _id;
         public string HeaderValue { get; }
+        public string[] MarkerReasons { get; }
 
-        private KeyValueOperation(byte id, string headerValue)
+        private KeyValueOperation(byte id, string headerValue, string[] markerReasons)
         {
             _id = id;
             HeaderValue = headerValue;
+            MarkerReasons = markerReasons;
         }
 
-        public static readonly KeyValueOperation Put = new KeyValueOperation(1, "PUT");
-        public static readonly KeyValueOperation Delete = new KeyValueOperation(2, "DEL");
-        public static readonly KeyValueOperation Purge = new KeyValueOperation(3, "PURGE");
+        public static readonly KeyValueOperation Put = new KeyValueOperation(1, "PUT", new string[0]);
+        public static readonly KeyValueOperation Delete = new KeyValueOperation(2, "DEL", new []{"Remove"});
+        public static readonly KeyValueOperation Purge = new KeyValueOperation(3, "PURGE", new []{"MaxAge", "Purge"});
+ 
+        public static KeyValueOperation Instance(string s)
+        {
+            if (s.Equals(Put.HeaderValue))
+            {
+                return Put;
+            }
+            if (s.Equals(Delete.HeaderValue))
+            {
+                return Delete;
+            }
+            if (s.Equals(Purge.HeaderValue))
+            {
+                return Purge;
+            }
+            return null;
+        }
  
         public static KeyValueOperation GetOrDefault(string s, KeyValueOperation dflt)
         {
-            if (!string.IsNullOrWhiteSpace(s))
+            KeyValueOperation kvo = Instance(s);
+            return kvo == null ? dflt : kvo;
+        }
+
+        public static KeyValueOperation InstanceByMarkerReason(string markerReason)
+        {
+            if ("Remove".Equals(markerReason))
             {
-                if (s.Equals(Put.HeaderValue)) return Put;
-                if (s.Equals(Delete.HeaderValue)) return Delete;
-                if (s.Equals(Purge.HeaderValue)) return Purge;
+                return Delete;
             }
-            return dflt;
+            if ("MaxAge".Equals(markerReason) || "Purge".Equals(markerReason))
+            {
+                return Purge;
+            }
+            return null;
         }
 
         public override bool Equals(object obj) => obj is KeyValueOperation other && Equals(other);
