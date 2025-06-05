@@ -98,21 +98,24 @@ namespace NATS.Client.JetStream
                             batchLeft--;
                             break;
                         case ManageResult.StatusTerminus:
-                            // if the status applies return null, otherwise it's ignored, fall through
+                            // if the status applies, return null, otherwise it's ignored, fall through
                             if (pullSubject.Equals(msg.Subject))
                             {
                                 return messages;
                             }
                             break;
                         case ManageResult.StatusError:
-                            // if the status applies throw exception, otherwise it's ignored, fall through
+                            // if the status applies, throw exception, otherwise it's ignored, fall through
                             if (pullSubject.Equals(msg.Subject))
                             {
                                 throw new NATSJetStreamStatusException(msg.Status, this);
                             }
                             break;
                     }
-                    // case STATUS, try again while we have time
+                    // These statuses don't apply to the message that came in,
+                    // so we just loop and move on to the next message.
+                    // 1. Any StatusHandled
+                    // 2. StatusTerminus or StatusError that aren't for expected pullSubject
                     timeLeft = maxWaitMillis - (int)sw.ElapsedMilliseconds;
                 }
             }
