@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net.Security;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -167,7 +168,7 @@ namespace NATSExamples
                 }
             }
 
-            void InspectExtension(ISet extSet, string label)
+            void InspectExtension(ISet<string> extSet, string label)
             {
                 if (extSet.Count > 0)
                 {
