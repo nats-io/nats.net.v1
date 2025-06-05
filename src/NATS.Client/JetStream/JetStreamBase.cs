@@ -152,7 +152,7 @@ namespace NATS.Client.JetStream
 
         internal string GenerateConsumerName()
         {
-            return Nuid.NextGlobalSequence();
+            return Nuid.NextGlobal();
         }
         
         internal ConsumerConfiguration ConsumerConfigurationForOrdered(
