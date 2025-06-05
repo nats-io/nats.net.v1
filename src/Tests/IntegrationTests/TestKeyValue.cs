@@ -1625,7 +1625,7 @@ namespace IntegrationTests
                 TestKeyValueWatcher watcher = new TestKeyValueWatcher(true);
                 KeyValueWatchSubscription watch = kv.WatchAll(watcher);
 
-                kv.Create(key, DataBytes(), MessageTtl.Seconds(1));
+                kv.Create(key, DataBytes(), MessageTtl.Seconds(2));
 
                 KeyValueEntry kve = kv.Get(key);
                 Assert.NotNull(kve);
