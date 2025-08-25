@@ -29,6 +29,8 @@ namespace NATS.Client.JetStream
 
     public enum ConsumerCreateRequestAction { Create, Update, CreateOrUpdate }
 
+    public enum PriorityPolicy { None, Overflow, PinnedClient }
+
     public static class ApiEnums
     {
         public static string GetString(this AckPolicy ackPolicy)
@@ -117,6 +119,17 @@ namespace NATS.Client.JetStream
             }
             return null;
         }
+        
+        public static string GetString(this PriorityPolicy priorityPolicy)
+        {
+            switch (priorityPolicy)
+            {
+                case PriorityPolicy.None:          return "none";
+                case PriorityPolicy.Overflow:      return "overflow";
+                case PriorityPolicy.PinnedClient:  return "pinned_client";
+            }
+            return null;
+        }
 
         public static AckPolicy? GetAckPolicy(string value)
         {
@@ -191,6 +204,21 @@ namespace NATS.Client.JetStream
             }
 
             return aDefault;
+        }
+
+        public static PriorityPolicy? GetPriorityPolicy(string value)
+        {
+            if (value != null)
+            {
+                switch (value)
+                {
+                    case "none":     return PriorityPolicy.None;
+                    case "overflow":      return PriorityPolicy.Overflow;
+                    case "pinned_client": return PriorityPolicy.PinnedClient;
+                }
+            }
+
+            return null;
         }
 
         public static StorageType GetValueOrDefault(string value, StorageType aDefault)

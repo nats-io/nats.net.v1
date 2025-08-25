@@ -56,7 +56,9 @@ namespace NATS.Client.JetStream
         internal bool? _memStorage;
         internal IList<Duration> _backoff;
         internal IDictionary<string, string> _metadata;
-
+        internal IList<string> _priorityGroups;
+        internal PriorityPolicy? _priorityPolicy;
+        
         public DeliverPolicy DeliverPolicy => _deliverPolicy ?? DeliverPolicy.All;
         public AckPolicy AckPolicy => _ackPolicy ?? AckPolicy.Explicit;
         public ReplayPolicy ReplayPolicy => _replayPolicy ?? ReplayPolicy.Instant;
@@ -94,6 +96,9 @@ namespace NATS.Client.JetStream
         public IList<string> FilterSubjects => _filterSubjects;
 
         public bool HasMultipleFilterSubjects => _filterSubjects != null && FilterSubjects.Count > 1;
+
+        public IList<string> PriorityGroups => _priorityGroups ?? new List<string>();
+        public PriorityPolicy PriorityPolicy => _priorityPolicy ?? PriorityPolicy.None;
 
         [Obsolete("This property is obsolete. Use RateLimitBps.", false)]
         public long RateLimit => (long)GetOrUnset(_rateLimitBps);
@@ -144,6 +149,9 @@ namespace NATS.Client.JetStream
                 _filterSubjects = new List<string>();
                 _filterSubjects.Add(tempFs);
             }
+
+            _priorityGroups = OptionalStringList(ccNode, ApiConstants.PriorityGroups);
+            _priorityPolicy = ApiEnums.GetPriorityPolicy(ccNode[ApiConstants.PriorityPolicy]);
         }
 
         private ConsumerConfiguration(ConsumerConfigurationBuilder builder)
@@ -181,6 +189,8 @@ namespace NATS.Client.JetStream
             _backoff = builder._backoff;
             _metadata = builder._metadata;
             _filterSubjects = builder._filterSubjects;
+            _priorityGroups = builder._priorityGroups;
+            _priorityPolicy = builder._priorityPolicy;
         }
 
         public override JSONNode ToJsonNode()
@@ -226,6 +236,9 @@ namespace NATS.Client.JetStream
                     AddField(o, ApiConstants.FilterSubjects, _filterSubjects);
                 }
             }
+
+            AddField(o, ApiConstants.PriorityPolicy, PriorityPolicy.GetString());
+            AddField(o, ApiConstants.PriorityGroups, _priorityGroups);
             return o;
         }
 
@@ -266,6 +279,8 @@ namespace NATS.Client.JetStream
             if (_backoff != null && !SequenceEqual(_backoff, server._backoff)) { changes.Add("Backoff"); }
             if (_metadata != null && !DictionariesEqual(_metadata, server._metadata)) { changes.Add("Metadata"); }
             if (_filterSubjects != null && !SequenceEqual(_filterSubjects, server._filterSubjects)) { changes.Add("FilterSubjects"); }
+            if (_priorityGroups != null && !SequenceEqual(_priorityGroups, server._priorityGroups)) { changes.Add("PriorityGroups"); }
+            if (_priorityPolicy != null && _priorityPolicy != server.PriorityPolicy) { changes.Add("PriorityPolicy"); }
 
             return changes;
         }
@@ -371,6 +386,8 @@ namespace NATS.Client.JetStream
             internal IList<Duration> _backoff;
             internal Dictionary<string, string> _metadata;
             internal IList<string> _filterSubjects;
+            internal IList<string> _priorityGroups;
+            internal PriorityPolicy? _priorityPolicy;
 
             public ConsumerConfigurationBuilder() {}
 
@@ -426,6 +443,12 @@ namespace NATS.Client.JetStream
                 {
                     _filterSubjects = new List<string>(cc.FilterSubjects);
                 }
+
+                if (cc.PriorityGroups != null)
+                {
+                    _priorityGroups = new List<string>(cc.PriorityGroups);
+                }
+                _priorityPolicy = cc._priorityPolicy;
             }
 
             /// <summary>
@@ -951,6 +974,58 @@ namespace NATS.Client.JetStream
                         _metadata[key] = metadata[key];
                     }
                 }
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the list of priorityGroups
+            /// </summary>
+            /// <param name="priorityGroups">zero or more priorityGroups or an array of priorityGroups</param>
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder WithPriorityGroups(params string[] priorityGroups)
+            {
+                return WithPriorityGroups((IList<string>)priorityGroups);
+            }
+    
+            /// <summary>
+            /// Sets the list of priorityGroups
+            /// </summary>
+            /// <param name="priorityGroups">list of priorityGroups</param>
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder WithPriorityGroups(IList<string> priorityGroups)
+            {
+                if (priorityGroups == null || priorityGroups.Count == 0)
+                {
+                    _priorityGroups = null;
+                }
+                else
+                {
+                    _priorityGroups = new List<string>();
+                    foreach (string s in priorityGroups)
+                    {
+                        if (s != null)
+                        {
+                            _priorityGroups.Add(s);
+                        }
+                    }
+
+                    if (_priorityGroups.Count == 0)
+                    {
+                        _priorityGroups = null;
+                    }
+                }
+
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the priority policy of the ConsumerConfiguration.
+            /// </summary>
+            /// <param name="policy">the priority policy.</param>
+            /// <returns>The ConsumerConfigurationBuilder</returns>
+            public ConsumerConfigurationBuilder WithPriorityPolicy(PriorityPolicy? policy)
+            {
+                _priorityPolicy = policy;
                 return this;
             }
 

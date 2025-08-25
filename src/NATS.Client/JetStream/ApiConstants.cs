@@ -152,6 +152,8 @@ namespace NATS.Client.JetStream
         public const string PauseRemaining = "pause_remaining";
         public const string PauseUntil = "pause_until";
         public const string Placement = "placement";
+        public const string PriorityGroups = "priority_groups";
+        public const string PriorityPolicy = "priority_policy";
         public const string ProcessingTime = "processing_time";
         public const string Republish = "republish";
         public const string Port = "port";
