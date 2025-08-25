@@ -547,6 +547,9 @@ namespace IntegrationTests
             Assert.Null(pro.ExpiresIn);
             Assert.Null(pro.IdleHeartbeat);
             Assert.False(pro.NoWait);
+            Assert.Null(pro.Group);
+            Assert.Equal(-1, pro.MinPending);
+            Assert.Equal(-1, pro.MinAckPending);
 
             pro = PullRequestOptions.Builder(31)
                 .WithMaxBytes(32)
@@ -570,6 +573,15 @@ namespace IntegrationTests
             Assert.Equal(43, pro.ExpiresIn.Millis);
             Assert.Equal(21, pro.IdleHeartbeat.Millis);
             Assert.False(pro.NoWait);
+
+            pro = PullRequestOptions.Builder(41)
+                .WithGroup("g")
+                .WithMinPending(1)
+                .WithMinAckPending(2)
+                .Build();
+            Assert.Equal("g", pro.Group);
+            Assert.Equal(1, pro.MinPending);
+            Assert.Equal(2, pro.MinAckPending);
         }
 
         delegate IJetStreamPullSubscription ConflictSetup(IJetStreamManagement jsm, IJetStream js, string stream, string subject);
@@ -824,6 +836,140 @@ namespace IntegrationTests
                 Assert.Throws<NATSTimeoutException>(() => sub.NextMessage(500));
                 CheckHandler(MessageSizeExceedsMaxBytes, TypeNone, handler);
             });
+        }
+        [Fact]
+        public void TestOverflow() {
+            TestEventHandler handler = new TestEventHandler();
+
+            Context.RunInJsServer(AtLeast2_11, handler.Modifier, c =>
+            {
+                string stream = Stream(Nuid.NextGlobal());
+                string subject = "subject-TestOverflow";
+                IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
+                CreateMemoryStream(jsm, stream, subject);
+
+                IJetStream js = c.CreateJetStreamContext();
+                JsPublish(js, subject, 100);
+    
+                // Setting PriorityPolicy requires at least one PriorityGroup to be set
+                ConsumerConfiguration ccNoGroup = ConsumerConfiguration.Builder()
+                    .WithPriorityPolicy(PriorityPolicy.Overflow)
+                    .Build();
+                NATSJetStreamException e = Assert.Throws<NATSJetStreamException>(
+                    () => jsm.AddOrUpdateConsumer(stream, ccNoGroup));
+                Assert.Equal(10159, e.ApiErrorCode);
+
+                // Testing errors
+                string group = Variant();
+                string consumer = Variant();
+    
+                ConsumerConfiguration cc = ConsumerConfiguration.Builder()
+                    .WithName(consumer)
+                    .WithPriorityPolicy(PriorityPolicy.Overflow)
+                    .WithPriorityGroups(group)
+                    .WithFilterSubjects(subject).Build();
+                jsm.AddOrUpdateConsumer(stream, cc);
+    
+                PullSubscribeOptions so = PullSubscribeOptions.FastBindTo(stream, consumer);
+                IJetStreamPullSubscription sub = js.PullSubscribe(null, so);
+    
+                // 400 Bad Request - Priority Group missing
+                sub.Pull(1);
+                Assert.Throws<NATSJetStreamStatusException>(() => sub.NextMessage(1000));
+    
+                // 400 Bad Request - Invalid Priority Group
+                sub.Pull(PullRequestOptions.Builder(5).WithGroup("bogus").Build());
+                Assert.Throws<NATSJetStreamStatusException>(() => sub.NextMessage(1000));
+    
+                // Testing min ack pending
+                group = Variant();
+                consumer = Variant();
+    
+                cc = ConsumerConfiguration.Builder()
+                    .WithName(consumer)
+                    .WithPriorityPolicy(PriorityPolicy.Overflow)
+                    .WithPriorityGroups(group)
+                    .WithAckWait(60_000)
+                    .WithFilterSubjects(subject).Build();
+                jsm.AddOrUpdateConsumer(stream, cc);
+    
+                so = PullSubscribeOptions.FastBindTo(stream, consumer);
+                IJetStreamPullSubscription subPrime = js.PullSubscribe(null, so);
+                IJetStreamPullSubscription subOver = js.PullSubscribe(null, so);
+    
+                PullRequestOptions proNoMin = PullRequestOptions.Builder(5)
+                    .WithGroup(group)
+                    .Build();
+    
+                PullRequestOptions proOverA = PullRequestOptions.Builder(5)
+                    .WithGroup(group)
+                    .WithMinAckPending(5)
+                    .Build();
+    
+                PullRequestOptions proOverB = PullRequestOptions.Builder(5)
+                    .WithGroup(group)
+                    .WithMinAckPending(10)
+                    .Build();
+    
+                _overflowCheck(subPrime, proNoMin, true, 5);
+                _overflowCheck(subOver, proNoMin, true, 5);
+    
+                _overflowCheck(subPrime, proNoMin, false, 5);
+                _overflowCheck(subOver, proOverA, true, 5);
+                _overflowCheck(subOver, proOverB, true, 0);
+    
+                // Testing min pending
+                group = Variant();
+                consumer = Variant();
+    
+                cc = ConsumerConfiguration.Builder()
+                    .WithName(consumer)
+                    .WithPriorityPolicy(PriorityPolicy.Overflow)
+                    .WithPriorityGroups(group)
+                    .WithFilterSubjects(subject).Build();
+                jsm.AddOrUpdateConsumer(stream, cc);
+    
+                so = PullSubscribeOptions.FastBindTo(stream, consumer);
+                subPrime = js.PullSubscribe(null, so);
+                subOver = js.PullSubscribe(null, so);
+    
+                proNoMin = PullRequestOptions.Builder(5)
+                    .WithGroup(group)
+                    .Build();
+    
+                proOverA = PullRequestOptions.Builder(5)
+                    .WithGroup(group)
+                    .WithMinPending(78)
+                    .Build();
+    
+                _overflowCheck(subPrime, proNoMin, true, 5);
+                _overflowCheck(subOver, proNoMin, true, 5);
+                _overflowCheck(subOver, proOverA, true, 5);
+                _overflowCheck(subOver, proOverA, true, 5);
+                // exactly 80 messages now pending, gt or eq to pull min pending for 3 (80, 79, 78)
+                _overflowCheck(subOver, proOverA, true, 3);
+                // exactly 77 messages now pending lt pull min pending
+                _overflowCheck(subOver, proOverA, true, 0);
+            });
+        }
+    
+        private static void _overflowCheck(IJetStreamPullSubscription sub, PullRequestOptions pro, bool ack, int expected) {
+            sub.Pull(pro);
+            int count = 0;
+            try
+            {
+                while (true) {
+                    Msg m = sub.NextMessage(1000);
+                    count++;
+                    if (ack) {
+                        m.Ack();
+                    }
+                }
+            }
+            catch (NATSTimeoutException)
+            {
+            }
+            Assert.Equal(expected, count);
         }
     }
 }
