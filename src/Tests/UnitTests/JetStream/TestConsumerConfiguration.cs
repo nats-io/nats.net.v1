@@ -56,6 +56,8 @@ namespace UnitTests.JetStream
                 .WithMemStorage(true)
                 .WithBackoff(1000, 2000, 3000)
                 .WithMetadata(metadata)
+                .WithPriorityGroups("pgroup1", "pgroup2")
+                .WithPriorityPolicy(PriorityPolicy.Overflow)
                 .Build();
 
             AssertAsBuilt(c, dt);
@@ -80,11 +82,12 @@ namespace UnitTests.JetStream
             Assert.Equal(502, c.IdleHeartbeat.Millis);
 
             // millis instead of duration coverage
-            // supply null as deliverPolicy, ackPolicy , replayPolicy,
+            // supply null as deliverPolicy, ackPolicy , replayPolicy, priorityPolicy
             c = ConsumerConfiguration.Builder()
                 .WithDeliverPolicy(null)
                 .WithAckPolicy(null)
                 .WithReplayPolicy(null)
+                .WithPriorityPolicy(null)
                 .WithAckWait(9000) // millis
                 .WithIdleHeartbeat(6000) // millis
                 .Build();
@@ -92,6 +95,7 @@ namespace UnitTests.JetStream
             Assert.Equal(AckPolicy.Explicit, c.AckPolicy);
             Assert.Equal(DeliverPolicy.All, c.DeliverPolicy);
             Assert.Equal(ReplayPolicy.Instant, c.ReplayPolicy);
+            Assert.Equal(PriorityPolicy.None, c.PriorityPolicy);
             Assert.Equal(Duration.OfSeconds(9), c.AckWait);
             Assert.Equal(Duration.OfSeconds(6), c.IdleHeartbeat);
             
@@ -131,6 +135,10 @@ namespace UnitTests.JetStream
             Assert.Equal(Duration.OfSeconds(3), c.Backoff[2]);
             Assert.Single(c.Metadata);
             Assert.Equal("meta-bar", c.Metadata["meta-foo"]);
+            Assert.Equal(PriorityPolicy.Overflow, c.PriorityPolicy);
+            Assert.Equal(2, c.PriorityGroups.Count);
+            Assert.Equal("pgroup1", c.PriorityGroups[0]);
+            Assert.Equal("pgroup2", c.PriorityGroups[1]);
         }
 
         [Fact]
@@ -169,6 +177,10 @@ namespace UnitTests.JetStream
             Assert.Equal(Duration.OfSeconds(1), c.Backoff[0]);
             Assert.Equal(Duration.OfSeconds(2), c.Backoff[1]);
             Assert.Equal(Duration.OfSeconds(3), c.Backoff[2]);
+            Assert.Equal(PriorityPolicy.Overflow, c.PriorityPolicy);
+            Assert.Equal(2, c.PriorityGroups.Count);
+            Assert.Equal("pgroup1", c.PriorityGroups[0]);
+            Assert.Equal("pgroup2", c.PriorityGroups[1]);
 
             AssertDefaultCc(new ConsumerConfiguration("{}"));
         }
@@ -178,6 +190,7 @@ namespace UnitTests.JetStream
             Assert.Equal(DeliverPolicy.All, c.DeliverPolicy);
             Assert.Equal(AckPolicy.Explicit, c.AckPolicy);
             Assert.Equal(ReplayPolicy.Instant, c.ReplayPolicy);
+            Assert.Equal(PriorityPolicy.None, c.PriorityPolicy);
             Assert.True(string.IsNullOrWhiteSpace(c.Durable));
             Assert.True(string.IsNullOrWhiteSpace(c.DeliverGroup));
             Assert.True(string.IsNullOrWhiteSpace(c.DeliverSubject));
@@ -203,6 +216,7 @@ namespace UnitTests.JetStream
             Assert.Equal(0U, c.StartSeq);
             Assert.Equal(0U, c.RateLimitBps);
             Assert.Equal(0, c.Backoff.Count);
+            Assert.Equal(0, c.PriorityGroups.Count);
         }
 
         private void AssertNotChange(ConsumerConfiguration original, ConsumerConfiguration server) {
@@ -340,6 +354,15 @@ namespace UnitTests.JetStream
             ccTest = Builder(orig).WithBackoff(1000, 2000).Build();
             AssertNotChange(ccTest, ccTest);
             AssertChange(ccTest, orig, "Backoff");
+            
+            AssertNotChange(Builder(orig).WithPriorityPolicy(PriorityPolicy.None).Build(), orig);
+            AssertChange(Builder(orig).WithPriorityPolicy(PriorityPolicy.Overflow).Build(), orig, "PriorityPolicy");
+
+            AssertNotChange(Builder(orig).WithPriorityGroups((string[])null).Build(), orig);
+            AssertNotChange(Builder(orig).WithPriorityGroups(Array.Empty<string>()).Build(), orig);
+            ccTest = Builder(orig).WithPriorityGroups("pgroup1", "pgroup2").Build();
+            AssertNotChange(ccTest, ccTest);
+            AssertChange(ccTest, orig, "PriorityGroups");
         }
     }
 }

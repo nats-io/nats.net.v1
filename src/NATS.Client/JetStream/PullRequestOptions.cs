@@ -47,6 +47,12 @@ namespace NATS.Client.JetStream
         /// </summary>
         public Duration IdleHeartbeat { get; }
 
+        public string Group { get; }
+        
+        public long MinPending { get; }
+        
+        public long MinAckPending { get; }
+
         protected PullRequestOptions(PullRequestOptionsBuilder pro)
         {
             BatchSize = pro._batchSize;
@@ -54,6 +60,9 @@ namespace NATS.Client.JetStream
             NoWait = pro._noWait;
             ExpiresIn = pro._expiresIn;
             IdleHeartbeat = pro._idleHeartbeat;
+            Group = pro._group;
+            MinPending = pro._minPending < 0 ? -1 : pro._minPending;
+            MinAckPending = pro._minAckPending < 0 ? -1 : pro._minAckPending;
         }
 
         public override JSONNode ToJsonNode()
@@ -75,6 +84,10 @@ namespace NATS.Client.JetStream
             {
                 jso[ApiConstants.IdleHeartbeat] = IdleHeartbeat.Nanos;
             }
+
+            JsonUtils.AddField(jso, ApiConstants.Group, Group);
+            JsonUtils.AddField(jso, ApiConstants.MinPending, MinPending);
+            JsonUtils.AddField(jso, ApiConstants.MinAckPending, MinAckPending);
 
             return jso;
         }
@@ -99,7 +112,10 @@ namespace NATS.Client.JetStream
             internal bool _noWait;
             internal Duration _expiresIn;
             internal Duration _idleHeartbeat;
-            
+            internal string _group;
+            internal long _minPending = -1;
+            internal long _minAckPending = -1;
+
             /// <summary>
             /// Set the batch size for the pull
             /// </summary>
@@ -184,6 +200,37 @@ namespace NATS.Client.JetStream
             public PullRequestOptionsBuilder WithIdleHeartbeat(Duration idleHeartbeat)
             {
                 _idleHeartbeat = idleHeartbeat;
+                return this;
+            }
+
+            /**
+             * Sets the group
+             * Replaces any other groups set in the builder
+             * @param group the priority group for this pull
+             * @return Builder
+             */
+            public PullRequestOptionsBuilder WithGroup(String group) {
+                _group = group;
+                return this;
+            }
+
+            /**
+             * When specified, the pull request will only receive messages when the consumer has at least this many pending messages.
+             * @param minPending the min pending
+             * @return the builder
+             */
+            public PullRequestOptionsBuilder WithMinPending(long minPending) {
+                _minPending = minPending < 1 ? -1 : minPending;
+                return this;
+            }
+
+            /**
+             * When specified, this Pull request will only receive messages when the consumer has at least this many ack pending messages.
+             * @param minAckPending the min ack pending
+             * @return the builder
+             */
+            public PullRequestOptionsBuilder WithMinAckPending(long minAckPending) {
+                _minAckPending = minAckPending < 1 ? -1 : minAckPending;
                 return this;
             }
 

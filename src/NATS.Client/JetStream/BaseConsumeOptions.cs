@@ -136,14 +136,7 @@ namespace NATS.Client.JetStream
             public TB WithExpiresIn(int expiresInMillis) {
                 this._expiresIn = expiresInMillis;
                 if (expiresInMillis < 1) {
-                    if (_noWait)
-                    {
-                        _expiresIn = ConsumerConfiguration.IntUnset;
-                    }
-                    else
-                    {
-                        _expiresIn = DefaultExpiresInMillis;
-                    }
+                    _expiresIn = DefaultExpiresInMillis;
                 }
                 else if (expiresInMillis < MinExpiresMills) {
                     throw new ArgumentException($"Expires must be greater than or equal to {MinExpiresMills}");

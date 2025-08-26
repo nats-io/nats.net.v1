@@ -77,6 +77,7 @@ namespace NATS.Client.JetStream
         public const string FirstTs = "first_ts";
         public const string FlowControl = "flow_control";
         public const string Go = "go";
+        public const string Group = "group";
         public const string Hdrs = "hdrs";
         public const string Headers = "headers";
         public const string HeadersOnly = "headers_only";
@@ -118,6 +119,8 @@ namespace NATS.Client.JetStream
         public const string MaxStorage = "max_storage";
         public const string MaxStreams = "max_streams";
         public const string MaxWaiting = "max_waiting";
+        public const string MinAckPending = "min_ack_pending";
+        public const string MinPending = "min_pending";
         public const string Memory = "memory";
         public const string MemoryMaxStreamBytes = "memory_max_stream_bytes";
         public const string MemStorage = "mem_storage";
@@ -152,6 +155,8 @@ namespace NATS.Client.JetStream
         public const string PauseRemaining = "pause_remaining";
         public const string PauseUntil = "pause_until";
         public const string Placement = "placement";
+        public const string PriorityGroups = "priority_groups";
+        public const string PriorityPolicy = "priority_policy";
         public const string ProcessingTime = "processing_time";
         public const string Republish = "republish";
         public const string Port = "port";
