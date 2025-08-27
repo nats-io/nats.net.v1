@@ -121,6 +121,42 @@ namespace IntegrationTests
             Assert.Throws<NATSJetStreamException>(() => streamContext.GetFirstMessage(subject));
         }
 
+        private void validateConsumerName(IBaseConsumerContext icc, IMessageConsumer consumer, string consumerName) {
+            Assert.Equal(consumerName, icc.ConsumerName);
+            if (consumer != null) {
+                Assert.NotNull(consumer.GetCachedConsumerInformation());
+                Assert.Equal(consumerName, consumer.GetConsumerName());
+                Assert.Equal(consumerName, consumer.GetConsumerInformation().Name);
+            }
+        }
+    
+        private string validateConsumerNameForOrdered(IBaseConsumerContext icc, IMessageConsumer consumer, string prefix) {
+            string iccConsumerName = icc.ConsumerName;
+            if (prefix == null) {
+                Assert.NotNull(iccConsumerName);
+            }
+            else
+            {
+                Assert.StartsWith(prefix, iccConsumerName);
+            }
+    
+            if (consumer != null) {
+                if (prefix == null) {
+                    Assert.NotNull(consumer.GetConsumerName());
+                    Assert.NotNull(consumer.GetConsumerInformation().Name);
+                }
+                else {
+                    Assert.StartsWith(prefix, consumer.GetConsumerName());
+                    Assert.StartsWith(prefix, consumer.GetConsumerInformation().Name);
+                }
+            }
+            return iccConsumerName;
+        }
+
+        const int FETCH_EPHEMERAL = 1;
+        const int FETCH_DURABLE = 2;
+        const int FETCH_ORDERED = 3;
+
         [Fact]
         public void TestFetch() {
             Context.RunInJsServer(AtLeast2_9_1, c => {
@@ -132,47 +168,88 @@ namespace IntegrationTests
                 for (int x = 1; x <= 20; x++) {
                     js.Publish(subject, Encoding.UTF8.GetBytes("test-fetch-msg-" + x));
                 }
-    
-                // 1. Different fetch sizes demonstrate expiration behavior
-    
-                // 1A. equal number of messages than the fetch size
-                _testFetch(stream, "1A", c, 20, 0, 20);
-    
-                // 1B. more messages than the fetch size
-                _testFetch(stream, "1B", c, 10, 0, 10);
-    
-                // 1C. fewer messages than the fetch size
-                _testFetch(stream, "1C", c, 40, 0, 40);
-    
-                // 1D. simple-consumer-40msgs was created in 1C and has no messages available
-                _testFetch(stream, "1D", c, 40, 0, 40);
-    
-                // 2. Different max bytes sizes demonstrate expiration behavior
-                //    - each test message is approximately 150 bytes
-    
-                // 2A. max bytes is reached before message count
-                _testFetch(stream, "2A", c, 0, 750, 20);
-    
-                // 2B. fetch size is reached before byte count
-                _testFetch(stream, "2B", c, 10, 1600, 10);
-    
-                // 2C. fewer bytes than the byte count
-                _testFetch(stream, "2C", c, 0, 3500, 40);
+
+                for (int f = FETCH_EPHEMERAL; f <= FETCH_ORDERED; f++)
+                {
+                    // 1. Different fetch sizes demonstrate expiration behavior
+
+                    // 1A. equal number of messages than the fetch size
+                    _testFetch(stream, "1A", c, 20, 0, 20, f, false);
+
+                    // 1B. more messages than the fetch size
+                    _testFetch(stream, "1B", c, 10, 0, 10, f, false);
+
+                    // 1C. fewer messages than the fetch size
+                    _testFetch(stream, "1C", c, 40, 0, 40, f, false);
+
+                    // 1D. simple-consumer-40msgs was created in 1C and has no messages available
+                    _testFetch(stream, "1D", c, 40, 0, 40, f, false);
+
+                    // 2. Different max bytes sizes demonstrate expiration behavior
+                    //    - each test message is approximately 150 bytes
+
+                    // 2A. max bytes is reached before message count
+                    _testFetch(stream, "2A", c, 0, 750, 20, f, false);
+
+                    // 2B. fetch size is reached before byte count
+                    _testFetch(stream, "2B", c, 10, 1600, 10, f, false);
+
+                    // 2C. fewer bytes than the byte count
+                    _testFetch(stream, "2C", c, 0, 3500, 40, f, false);
+
+                    if (f == FETCH_DURABLE) {
+                        // this is long-running, so don't want to test every time
+                        // 2C. fewer bytes than the byte count
+                        _testFetch(stream, "2C", c, 0, 3500, 40, f, false);
+                    }
+                    else if (f == FETCH_ORDERED) {
+                        // just to get coverage of testing with a consumer name prefix
+                        _testFetch(stream, "1A", c, 20, 0, 20, f, true);
+                        _testFetch(stream, "2A", c, 0, 750, 20, f, true);
+                    }
+                }
             });
         }
     
-        private static void _testFetch(string streamName, string label, IConnection c, int maxMessages, int maxBytes, int testAmount) {
+        private void _testFetch(string streamName, string label, IConnection c, int maxMessages, int maxBytes,
+            int testAmount, int fetchType, bool useConsumerPrefix) {
             IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
             IJetStream js = c.CreateJetStreamContext();
 
-            string name = generateConsumerName(maxMessages, maxBytes);
-    
-            // Pre define a consumer
-            ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithDurable(name).Build();
-            ConsumerInfo ci = jsm.AddOrUpdateConsumer(streamName, cc);
-    
-            // Consumer[Context]
-            IConsumerContext consumerContext = js.GetConsumerContext(streamName, name);
+            IStreamContext ctx = js.GetStreamContext(streamName);
+
+            string consumerName = null;
+            string consumerNamePrefix = null;
+            IBaseConsumerContext consumerContext = null;
+            if (fetchType == FETCH_ORDERED)
+            {
+                OrderedConsumerConfiguration occ = new OrderedConsumerConfiguration();
+                if (useConsumerPrefix) {
+                    consumerNamePrefix = Prefix();
+                    occ.WithConsumerNamePrefix(consumerNamePrefix);
+                }
+                consumerContext = ctx.CreateOrderedConsumer(occ);
+                Assert.Null(consumerContext.ConsumerName);
+            }
+            else
+            {
+                // Pre define a consumer
+                consumerName = generateConsumerName(maxMessages, maxBytes);
+                ConsumerConfiguration.ConsumerConfigurationBuilder ccBuilder = ConsumerConfiguration.Builder();
+                ConsumerConfiguration cc;
+                if (fetchType == FETCH_DURABLE) {
+                    consumerName = consumerName + "D";
+                    cc = ccBuilder.WithDurable(consumerName).Build();
+                }
+                else {
+                    consumerName = consumerName + "E";
+                    cc = ccBuilder.WithName(consumerName).WithInactiveThreshold(10_000).Build();
+                }
+
+                ConsumerInfo ci = jsm.AddOrUpdateConsumer(streamName, cc);
+                consumerContext = ctx.GetConsumerContext(consumerName);
+                Assert.Equal(consumerName, consumerContext.ConsumerName);
+            }
     
             // Custom consume options
             FetchConsumeOptions.FetchConsumeOptionsBuilder builder = FetchConsumeOptions.Builder().WithExpiresIn(2000);
@@ -193,6 +270,12 @@ namespace IntegrationTests
             int rcvd = 0;
             using (IFetchConsumer consumer = consumerContext.Fetch(fetchConsumeOptions))
             {
+                if (fetchType == FETCH_ORDERED) {
+                    validateConsumerNameForOrdered(consumerContext, consumer, consumerNamePrefix);
+                }
+                else {
+                    validateConsumerName(consumerContext, consumer, consumerName);
+                }
                 Msg msg = consumer.NextMessage();
                 while (msg != null)
                 {
@@ -250,16 +333,19 @@ namespace IntegrationTests
 
                 // Consumer[Context]
                 IConsumerContext consumerContext = js.GetConsumerContext(streamName, durable);
-    
+                validateConsumerName(consumerContext, null, durable);
+
                 int stopCount = 500;
                 // create the consumer then use it
                 using (IIterableConsumer consumer = consumerContext.Iterate())
                 {
+                    validateConsumerName(consumerContext, null, durable);
                     _testIterable(js, stopCount, consumer, subject);
                 }
                     
                 // coverage
                 IIterableConsumer consumer2 = consumerContext.Iterate(ConsumeOptions.DefaultConsumeOptions);
+                validateConsumerName(consumerContext, null, durable);
                 consumer2.Dispose();
             });
         }
@@ -279,9 +365,20 @@ namespace IntegrationTests
     
                 int stopCount = 500;
                 OrderedConsumerConfiguration occ = new OrderedConsumerConfiguration().WithFilterSubject(subject);
-                IOrderedConsumerContext ctx = sc.CreateOrderedConsumer(occ);
-                using (IIterableConsumer consumer = ctx.Iterate()) 
+                IOrderedConsumerContext occtx = sc.CreateOrderedConsumer(occ);
+                using (IIterableConsumer consumer = occtx.Iterate()) 
                 {
+                    validateConsumerNameForOrdered(occtx, consumer, null);
+                    _testIterable(js, stopCount, consumer, subject);
+                }
+
+                string consumerNamePrefix = Prefix();
+                occ = new OrderedConsumerConfiguration().WithFilterSubject(subject).WithConsumerNamePrefix(consumerNamePrefix);
+                occtx = sc.CreateOrderedConsumer(occ);
+                Assert.Null(occtx.ConsumerName);
+                using (IIterableConsumer consumer = occtx.Iterate()) 
+                {
+                    validateConsumerNameForOrdered(occtx, consumer, consumerNamePrefix);
                     _testIterable(js, stopCount, consumer, subject);
                 }
             });
@@ -354,8 +451,11 @@ namespace IntegrationTests
     
                 // Consumer[Context]
                 IConsumerContext consumerContext = js.GetConsumerContext(streamName, durable);
-    
-                CountdownEvent latch = new CountdownEvent(500);
+                validateConsumerName(consumerContext, null, durable);
+
+                int stopCount = 500;
+
+                CountdownEvent latch = new CountdownEvent(stopCount);
                 EventHandler<MsgHandlerEventArgs> handler = (s, e) => {
                     e.Message.Ack();
                     latch.Signal();
@@ -367,6 +467,57 @@ namespace IntegrationTests
                     consumer.Stop();
                     Assert.Equal(0, latch.CurrentCount);
                 }
+
+                IStreamContext sctx = c.GetStreamContext(streamName);
+
+                IOrderedConsumerContext orderedConsumerContext =
+                    sctx.CreateOrderedConsumer(new OrderedConsumerConfiguration().WithFilterSubject(subject));
+                Assert.Null(orderedConsumerContext.ConsumerName);
+
+                CountdownEvent latch2 = new CountdownEvent(1);
+                int count = 0;
+                handler = (s, e) => {
+                    e.Message.Ack();
+                    if (++count == stopCount)
+                    {
+                        latch2.Signal();
+                    }
+                };
+
+                using (IMessageConsumer consumer = orderedConsumerContext.Consume(handler))
+                {
+                    validateConsumerNameForOrdered(orderedConsumerContext, consumer, null);
+                    latch2.Wait(10_000);
+                    consumer.Stop();
+                    Assert.True(count > 500);
+                }
+
+                string prefix = Prefix();
+                IOrderedConsumerContext orderedConsumerContextPrefixed =
+                    sctx.CreateOrderedConsumer(new OrderedConsumerConfiguration()
+                        .WithFilterSubject(subject)
+                        .WithConsumerNamePrefix(prefix)
+                    );
+                Assert.Null(orderedConsumerContextPrefixed.ConsumerName);
+
+                CountdownEvent latch3 = new CountdownEvent(1);
+                count = 0;
+                handler = (s, e) => {
+                    e.Message.Ack();
+                    if (++count == stopCount)
+                    {
+                        latch3.Signal();
+                    }
+                };
+
+                using (IMessageConsumer consumer = orderedConsumerContextPrefixed.Consume(handler))
+                {
+                    validateConsumerNameForOrdered(orderedConsumerContextPrefixed, consumer, prefix);
+                    latch3.Wait(10_000);
+                    consumer.Stop();
+                    Assert.True(count > 500);
+                }
+
             });
         }
     
@@ -381,7 +532,7 @@ namespace IntegrationTests
                 IJetStream js = c.CreateJetStreamContext();
     
                 CreateMemoryStream(jsm, streamName, subject);
-                JsPublish(js, subject, 2);
+                JsPublish(js, subject, 4);
     
                 // Pre define a consumer
                 ConsumerConfiguration cc = ConsumerConfiguration.Builder().WithDurable(durable).Build();
@@ -389,11 +540,60 @@ namespace IntegrationTests
     
                 // Consumer[Context]
                 IConsumerContext consumerContext = js.GetConsumerContext(streamName, durable);
-    
+                validateConsumerName(consumerContext, null, durable);
+
                 Assert.Throws<ArgumentException>(() => consumerContext.Next(1));
                 Assert.NotNull(consumerContext.Next(1000));
                 Assert.NotNull(consumerContext.Next());
-                Assert.Null(consumerContext.Next(1000));
+
+                IStreamContext sctx = js.GetStreamContext(streamName);
+                IOrderedConsumerContext occtx = sctx.CreateOrderedConsumer(new OrderedConsumerConfiguration());
+                Assert.Null(occtx.ConsumerName);
+                Assert.Throws<ArgumentException>(() => occtx.Next(1)); // max wait too small
+    
+                Assert.NotNull(occtx.Next(1000));
+                string cname1 = validateConsumerNameForOrdered(occtx, null, null);
+    
+                Assert.NotNull(occtx.Next(1000));
+                string cname2 = validateConsumerNameForOrdered(occtx, null, null);
+                Assert.NotEqual(cname1, cname2);
+    
+                Assert.NotNull(occtx.Next(1000));
+                cname1 = validateConsumerNameForOrdered(occtx, null, null);
+                Assert.NotEqual(cname1, cname2);
+    
+                Assert.NotNull(occtx.Next(1000));
+                cname2 = validateConsumerNameForOrdered(occtx, null, null);
+                Assert.NotEqual(cname1, cname2);
+    
+                Assert.Null(occtx.Next(1000));
+                cname1 = validateConsumerNameForOrdered(occtx, null, null);
+                Assert.NotEqual(cname1, cname2);
+    
+                string prefix = Prefix();
+                IOrderedConsumerContext occtxPrefixed = sctx.CreateOrderedConsumer(new OrderedConsumerConfiguration()
+                    .WithConsumerNamePrefix(prefix));
+                Assert.Null(occtxPrefixed.ConsumerName);
+                Assert.Throws<ArgumentException>(() => occtxPrefixed.Next(1)); // max wait too small
+    
+                Assert.NotNull(occtxPrefixed.Next(1000));
+                cname1 = validateConsumerNameForOrdered(occtxPrefixed, null, prefix);
+    
+                Assert.NotNull(occtxPrefixed.Next(1000));
+                cname2 = validateConsumerNameForOrdered(occtxPrefixed, null, prefix);
+                Assert.NotEqual(cname1, cname2);
+    
+                Assert.NotNull(occtxPrefixed.Next(1000));
+                cname1 = validateConsumerNameForOrdered(occtxPrefixed, null, prefix);
+                Assert.NotEqual(cname1, cname2);
+    
+                Assert.NotNull(occtxPrefixed.Next(1000));
+                cname2 = validateConsumerNameForOrdered(occtxPrefixed, null, prefix);
+                Assert.NotEqual(cname1, cname2);
+    
+                Assert.Null(occtxPrefixed.Next(1000));
+                cname1 = validateConsumerNameForOrdered(occtxPrefixed, null, prefix);
+                Assert.NotEqual(cname1, cname2);
             });
         }
     

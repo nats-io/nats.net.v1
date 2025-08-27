@@ -40,8 +40,7 @@ namespace NATS.Client.JetStream
         private readonly object stateLock;
         private readonly StreamContext streamCtx;
         private readonly bool ordered;
-        private readonly ConsumerConfiguration originalOrderedCc;
-        private readonly string subscribeSubject;
+        private readonly ConsumerConfiguration initialOrderedConsumerConfig;
         private readonly PullSubscribeOptions unorderedBindPso;
         
         private ConsumerInfo cachedConsumerInfo;
@@ -53,8 +52,7 @@ namespace NATS.Client.JetStream
             stateLock = new object();
             streamCtx = sc;
             ordered = false;
-            originalOrderedCc = null;
-            subscribeSubject = null;
+            initialOrderedConsumerConfig = null;
             ConsumerName = ci.Name;
             unorderedBindPso = PullSubscribeOptions.FastBindTo(streamCtx.StreamName, ci.Name);
             cachedConsumerInfo = ci;
@@ -65,7 +63,8 @@ namespace NATS.Client.JetStream
             stateLock = new object();
             streamCtx = sc;
             ordered = true;
-            originalOrderedCc = ConsumerConfiguration.Builder()
+            initialOrderedConsumerConfig = ConsumerConfiguration.Builder()
+                .WithName(config.ConsumerNamePrefix)
                 .WithFilterSubject(config.FilterSubject)
                 .WithDeliverPolicy(config.DeliverPolicy)
                 .WithStartSequence(config.StartSequence)
@@ -73,9 +72,7 @@ namespace NATS.Client.JetStream
                 .WithReplayPolicy(config.ReplayPolicy)
                 .WithHeadersOnly(config.HeadersOnly)
                 .Build();
-            subscribeSubject = Validator.ValidateSubject(originalOrderedCc.FilterSubject, false);
             unorderedBindPso = null;
-
         }
 
         public IJetStreamSubscription Subscribe(EventHandler<MsgHandlerEventArgs> messageHandler, PullMessageManager optionalPmm, long? optionalInactiveThreshold) {
@@ -84,9 +81,7 @@ namespace NATS.Client.JetStream
                 if (lastConsumer != null) {
                     highestSeq = Math.Max(highestSeq, lastConsumer.pmm.LastStreamSeq);
                 }
-                ConsumerConfiguration cc = lastConsumer == null
-                    ? originalOrderedCc
-                    : streamCtx.js.ConsumerConfigurationForOrdered(originalOrderedCc, highestSeq, null, null, optionalInactiveThreshold);
+                ConsumerConfiguration cc = streamCtx.js.ConsumerConfigurationForOrdered(initialOrderedConsumerConfig, highestSeq, null, null, optionalInactiveThreshold);
                 pso = new OrderedPullSubscribeOptionsBuilder(streamCtx.StreamName, cc).Build();
             }
             else {
@@ -94,10 +89,14 @@ namespace NATS.Client.JetStream
             }
 
             if (messageHandler == null) {
-                return (JetStreamPullSubscription) streamCtx.js.CreateSubscription(subscribeSubject, null, pso, null, null, false, optionalPmm);
+                JetStreamPullSubscription ps = (JetStreamPullSubscription) streamCtx.js.CreateSubscription(null, null, pso, null, null, false, optionalPmm);
+                ConsumerName = ps.Consumer;
+                return ps;
             }
             
-            return (JetStreamPullAsyncSubscription)streamCtx.js.CreateSubscription(subscribeSubject, null, pso, null, messageHandler, false, optionalPmm);
+            JetStreamPullAsyncSubscription pas = (JetStreamPullAsyncSubscription)streamCtx.js.CreateSubscription(null, null, pso, null, messageHandler, false, optionalPmm);
+            ConsumerName = pas.Consumer;
+            return pas;
         }
     
         private void CheckState() {
@@ -148,7 +147,7 @@ namespace NATS.Client.JetStream
                 {
                     long inactiveThreshold = maxWaitMillis * 110 / 100; // 10% longer than the wait
                     mcb = new MessageConsumerBase(cachedConsumerInfo);
-                    mcb.InitSub(Subscribe(null, null, null));
+                    mcb.InitSub(Subscribe(null, null, null), false);
                     mcb.pullImpl.Pull(PullRequestOptions.Builder(1)
                         .WithExpiresIn(maxWaitMillis - JetStreamPullSubscription.ExpireAdjustment)
                         .Build(), false, null);

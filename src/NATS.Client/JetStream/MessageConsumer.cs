@@ -45,7 +45,7 @@ namespace NATS.Client.JetStream
             thresholdMessages = bm - rePullMessages;
             thresholdBytes = bb == 0 ? int.MinValue : bb - rePullBytes;
 
-            DoSub();
+            DoSub(true);
         }
 
         public void HeartbeatError() {
@@ -53,14 +53,14 @@ namespace NATS.Client.JetStream
                 // just close the current sub and make another one.
                 // this could go on endlessly
                 Dispose();
-                DoSub();
+                DoSub(false);
             }
             catch (Exception) {
                 SetupHbAlarmToTrigger();
             }
         }
 
-        void DoSub()
+        void DoSub(bool first)
         {
             EventHandler<MsgHandlerEventArgs> mh = null;
             if (userMessageHandler != null)
@@ -77,7 +77,7 @@ namespace NATS.Client.JetStream
 
             try
             {
-                base.InitSub(subscriptionMaker.Subscribe(mh, pmm, null));
+                base.InitSub(subscriptionMaker.Subscribe(mh, pmm, null), !first);
                 Repull();
                 Stopped = false;
                 Finished = false;

@@ -155,27 +155,28 @@ namespace NATS.Client.JetStream
             return Nuid.NextGlobal();
         }
         
+        internal string GenerateConsumerName(string prefix) {
+            return prefix + "-" + Nuid.NextGlobal();
+        }
+
         internal ConsumerConfiguration ConsumerConfigurationForOrdered(
-            ConsumerConfiguration originalCc,
+            ConsumerConfiguration initial,
             ulong lastStreamSeq,
             string newDeliverSubject, 
             string consumerName,
             long? inactiveThreshold)
         {
-            ConsumerConfiguration.ConsumerConfigurationBuilder builder = ConsumerConfiguration.Builder(originalCc)
-                .WithDeliverSubject(newDeliverSubject)
-                .WithStartTime(DateTime.MinValue); // clear start time in case it was originally set
+            ConsumerConfiguration.ConsumerConfigurationBuilder builder = ConsumerConfiguration.Builder(initial)
+                .WithDeliverSubject(newDeliverSubject);
 
             if (lastStreamSeq > 0)
             {
-                builder.WithDeliverPolicy(DeliverPolicy.ByStartSequence)
-                    .WithStartSequence(Math.Max(1, lastStreamSeq + 1));
+                builder
+                    .WithDeliverPolicy(DeliverPolicy.ByStartSequence)
+                    .WithStartSequence(Math.Max(1, lastStreamSeq + 1))
+                    .WithStartTime(DateTime.MinValue); // clear start time in case it was originally set
             }
             
-            if (consumerName != null && ConsumerCreate290Available()) {
-                builder.WithName(consumerName);
-            }
-
             if (inactiveThreshold.HasValue)
             {
                 builder.WithInactiveThreshold(inactiveThreshold.Value);

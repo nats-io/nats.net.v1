@@ -285,7 +285,7 @@ namespace NATS.Client.JetStream
             
             // 4. Does this consumer already exist? FastBind bypasses the lookup;
             //    the dev better know what they are doing...
-            if (!so.FastBind && consumerName != null) 
+            if (!so.FastBind && !so.Ordered && consumerName != null) 
             {
                 ConsumerInfo serverInfo = LookupConsumerInfo(settledStream, consumerName);
 
@@ -401,9 +401,21 @@ namespace NATS.Client.JetStream
                 ccBuilder.WithFilterSubjects(settledFilterSubjects);
 
                 ccBuilder.WithDeliverGroup(settledDeliverGroup);
+                
+                if (so.Ordered) {
+                    // we have to handle the fact that ordered consumers must always have a unique name
+                    // if the user supplied a name, well call generateConsumerName with the original name as a prefix
+                    if (consumerName != null) {
+                        consumerName = GenerateConsumerName(userCC.Name);
+                        ccBuilder.WithName(consumerName);
+                    }
+                    settledConsumerName = consumerName;
+                }
+                else {
+                    settledConsumerName = null; // the server will give us a name if the user's was null
+                }
 
                 settledCC = ccBuilder.Build();
-                settledConsumerName = null; // the server will give us a name
             }
 
             // 7. create the subscription
@@ -492,7 +504,7 @@ namespace NATS.Client.JetStream
             }
 
             // 8. The consumer might need to be created, do it here
-            if (settledConsumerName == null)
+            if (settledConsumerName == null || so.Ordered)
             {
                 try
                 {

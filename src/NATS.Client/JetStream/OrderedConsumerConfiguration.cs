@@ -26,6 +26,7 @@ namespace NATS.Client.JetStream
         public DateTime StartTime { get; private set; }
         public ReplayPolicy? ReplayPolicy { get; private set; }
         public bool? HeadersOnly { get; private set; }
+        public String ConsumerNamePrefix { get; private set; }
 
         public string FilterSubject => FilterSubjects.Count == 1 ? FilterSubjects[0] : null;
 
@@ -49,7 +50,7 @@ namespace NATS.Client.JetStream
         /// Sets the filter subject of the OrderedConsumerConfiguration.
         /// </summary>
         /// <param name="filterSubject">the filter subject</param>
-        /// <returns>Builder</returns>
+        /// <returns>OrderedConsumerConfiguration (which works like a builder)</returns>
         public OrderedConsumerConfiguration WithFilterSubject(string filterSubject) {
             FilterSubjects.Clear();
             if (string.IsNullOrEmpty(filterSubject))
@@ -102,7 +103,7 @@ namespace NATS.Client.JetStream
         /// Sets the delivery policy of the OrderedConsumerConfiguration.
         /// </summary>
         /// <param name="deliverPolicy">the delivery policy.</param>
-        /// <returns>Builder</returns>
+        /// <returns>OrderedConsumerConfiguration (which works like a builder)</returns>
         public OrderedConsumerConfiguration WithDeliverPolicy(DeliverPolicy? deliverPolicy) {
             DeliverPolicy = deliverPolicy;
             return this;
@@ -112,7 +113,7 @@ namespace NATS.Client.JetStream
         /// Sets the start sequence of the OrderedConsumerConfiguration.
         /// </summary>
         /// <param name="startSequence">the start sequence</param>
-        /// <returns>Builder</returns>
+        /// <returns>OrderedConsumerConfiguration (which works like a builder)</returns>
         public OrderedConsumerConfiguration WithStartSequence(ulong startSequence) {
             StartSequence = startSequence;
             return this;
@@ -122,7 +123,7 @@ namespace NATS.Client.JetStream
         /// Sets the start time of the OrderedConsumerConfiguration.
         /// </summary>
         /// <param name="startTime">the start time</param>
-        /// <returns>Builder</returns>
+        /// <returns>OrderedConsumerConfiguration (which works like a builder)</returns>
         public OrderedConsumerConfiguration WithStartTime(DateTime startTime) {
             StartTime = startTime;
             return this;
@@ -132,7 +133,7 @@ namespace NATS.Client.JetStream
         /// Sets the replay policy of the OrderedConsumerConfiguration.
         /// </summary>
         /// <param name="replayPolicy">the replay policy.</param>
-        /// <returns>Builder</returns>
+        /// <returns>OrderedConsumerConfiguration (which works like a builder)</returns>
         public OrderedConsumerConfiguration WithReplayPolicy(ReplayPolicy? replayPolicy) {
             ReplayPolicy = replayPolicy;
             return this;
@@ -143,13 +144,23 @@ namespace NATS.Client.JetStream
         /// messages in the stream and not the bodies
         /// </summary>
         /// <param name="headersOnly">the flag</param>
-        /// <returns>Builder</returns>
+        /// <returns>OrderedConsumerConfiguration (which works like a builder)</returns>
         public OrderedConsumerConfiguration WithHeadersOnly(bool? headersOnly) {
             HeadersOnly = null;
             if (headersOnly.HasValue && headersOnly.Value)
             {
                 HeadersOnly = true;
             }
+            return this;
+        }
+
+        /// <summary>
+        /// Sets the consumer name prefix for consumers created by this configuration.
+        /// </summary>
+        /// <param name="consumerNamePrefix">the prefix or null to clear</param>
+        /// <returns>OrderedConsumerConfiguration (which works like a builder)</returns>
+        public OrderedConsumerConfiguration WithConsumerNamePrefix(string consumerNamePrefix) {
+            ConsumerNamePrefix = Validator.EmptyAsNull(consumerNamePrefix);
             return this;
         }
     }
