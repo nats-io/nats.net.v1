@@ -135,8 +135,9 @@ namespace IntegrationTests
             if (prefix == null) {
                 Assert.NotNull(iccConsumerName);
             }
-            else {
-                Assert.True(iccConsumerName.StartsWith(prefix));
+            else
+            {
+                Assert.StartsWith(prefix, iccConsumerName);
             }
     
             if (consumer != null) {
@@ -145,8 +146,8 @@ namespace IntegrationTests
                     Assert.NotNull(consumer.GetConsumerInformation().Name);
                 }
                 else {
-                    Assert.True(consumer.GetConsumerName().StartsWith(prefix));
-                    Assert.True(consumer.GetConsumerInformation().Name.StartsWith(prefix));
+                    Assert.StartsWith(prefix, consumer.GetConsumerName());
+                    Assert.StartsWith(prefix, consumer.GetConsumerInformation().Name);
                 }
             }
             return iccConsumerName;
