@@ -25,6 +25,7 @@ namespace NATS.Client.JetStream
         internal PullMessageManager pmm;
         internal JetStreamPullApiImpl pullImpl;
         internal ConsumerInfo cachedConsumerInfo;
+        internal string consumerName;
 
         private readonly InterlockedBoolean _stopped;
         private readonly InterlockedBoolean _finished;
@@ -58,13 +59,25 @@ namespace NATS.Client.JetStream
         internal MessageConsumerBase(ConsumerInfo cachedConsumerInfo)
         {
             this.cachedConsumerInfo = cachedConsumerInfo;
+            if (cachedConsumerInfo != null) {
+                this.consumerName = cachedConsumerInfo.Name;
+            }
             _stopped = new InterlockedBoolean();
             _finished = new InterlockedBoolean();
         }
 
-        internal void InitSub(IJetStreamSubscription inSub)
+        internal void setConsumerName(string consumerName) {
+            this.consumerName = consumerName;
+        }
+
+        internal void InitSub(IJetStreamSubscription inSub, bool clearCachedConsumerInfo)
         {
             sub = inSub;
+            consumerName = sub.Consumer;
+            if (clearCachedConsumerInfo)
+            {
+                cachedConsumerInfo = null;
+            }
             if (sub is JetStreamPullSubscription syncSub)
             {
                 pmm = (PullMessageManager)syncSub.MessageManager;
@@ -79,15 +92,18 @@ namespace NATS.Client.JetStream
 
         public string GetConsumerName()
         {
-            return sub.Consumer;
+            if (consumerName == null && cachedConsumerInfo != null) {
+                consumerName = cachedConsumerInfo.Name;
+            }
+            return consumerName;
         }
 
         public ConsumerInfo GetConsumerInformation()
         {
-            // don't look up consumer info if it was never set - this check is for ordered consumer
-            if (cachedConsumerInfo != null)
+            if (cachedConsumerInfo == null)
             {
                 cachedConsumerInfo = sub.GetConsumerInformation();
+                consumerName = cachedConsumerInfo.Name;
             }
             return cachedConsumerInfo;
         }

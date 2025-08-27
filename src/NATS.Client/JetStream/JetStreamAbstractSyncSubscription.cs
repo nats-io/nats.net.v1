@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Diagnostics;
 
 namespace NATS.Client.JetStream
@@ -43,7 +44,9 @@ namespace NATS.Client.JetStream
             _consumer = consumer;
         }
 
-        public ConsumerInfo GetConsumerInformation() => Context.LookupConsumerInfo(Stream, Consumer);
+        public ConsumerInfo GetConsumerInformation() {
+            return Context.LookupConsumerInfo(Stream, Consumer);
+        }
         
         public override void Unsubscribe()
         {

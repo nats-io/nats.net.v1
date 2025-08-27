@@ -49,11 +49,14 @@ namespace NATS.Client.ObjectStore
                 endOfDataSent = new InterlockedBoolean(false);
             }
             
+            // it's used in WithName but it's really a prefix because that's how Ordered Consumers use it  
+            string consumerNamePrefix = (watcher is IObjectStoreWatcher2 w2) ? w2.getConsumerNamePrefix() : null;
             PushSubscribeOptions pso = PushSubscribeOptions.Builder()
                 .WithStream(os.StreamName)
                 .WithOrdered(true)
                 .WithConfiguration(
                     ConsumerConfiguration.Builder()
+                        .WithName(consumerNamePrefix)
                         .WithAckPolicy(AckPolicy.None)
                         .WithDeliverPolicy(deliverPolicy)
                         .WithHeadersOnly(headersOnly)

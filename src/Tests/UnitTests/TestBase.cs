@@ -154,6 +154,7 @@ namespace UnitTests
         public const string BUCKET = "bucket";
         public const string KEY = "key";
         public const string DATA = "data";
+        public const string PREFIX = "prefix";
         
         public static String Variant(object variant = null) {
             return variant == null ? Nuid.NextGlobalSequence() : variant.ToString();
@@ -162,6 +163,18 @@ namespace UnitTests
         public static string Stream(object seq = null)
         {
             return $"{STREAM}-{Variant(seq)}";
+        }
+
+        private static int pi0 = -1;
+        private static int pi1 = 0;
+        public static String Prefix() {
+            if (++pi0 == 26) {
+                pi0 = 0;
+                if (++pi1 == 26) {
+                    pi1 = 0;
+                }
+            }
+            return PREFIX + (char)('A' + pi1) + (char)('A' + pi0);
         }
 
         public static string Field(string field, object seq = null)
