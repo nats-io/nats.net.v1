@@ -1,6 +1,6 @@
 ﻿namespace NATS.Client.ObjectStore
 {
-    public interface IObjectStoreWatcher2 : IObjectStoreWatcher
+    public interface IObjectStoreWatcherPrefixable : IObjectStoreWatcher
     {
         string getConsumerNamePrefix();
     }

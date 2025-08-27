@@ -13,7 +13,7 @@
 
 namespace NATS.Client.KeyValue
 {
-    public interface IKeyValueWatcher2 : IKeyValueWatcher
+    public interface IKeyValueWatcherPrefixable : IKeyValueWatcher
     {
         string getConsumerNamePrefix();
     }

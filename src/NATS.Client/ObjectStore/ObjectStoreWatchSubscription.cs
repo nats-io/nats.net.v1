@@ -50,7 +50,7 @@ namespace NATS.Client.ObjectStore
             }
             
             // it's used in WithName but it's really a prefix because that's how Ordered Consumers use it  
-            string consumerNamePrefix = (watcher is IObjectStoreWatcher2 w2) ? w2.getConsumerNamePrefix() : null;
+            string consumerNamePrefix = (watcher is IObjectStoreWatcherPrefixable wp) ? wp.getConsumerNamePrefix() : null;
             PushSubscribeOptions pso = PushSubscribeOptions.Builder()
                 .WithStream(os.StreamName)
                 .WithOrdered(true)
