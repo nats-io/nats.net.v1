@@ -67,12 +67,15 @@ namespace NATS.Client.KeyValue
                     endOfDataSent = new InterlockedBoolean();
                 }
             }
-            
+
+            // it's used in WithName but it's really a prefix because that's how Ordered Consumers use it  
+            string consumerNamePrefix = (watcher is IKeyValueWatcherPrefixable wp) ? wp.getConsumerNamePrefix() : null;
             PushSubscribeOptions pso = PushSubscribeOptions.Builder()
                 .WithStream(kv.StreamName)
                 .WithOrdered(true)
                 .WithConfiguration(
                     ConsumerConfiguration.Builder()
+                        .WithName(consumerNamePrefix)
                         .WithAckPolicy(AckPolicy.None)
                         .WithDeliverPolicy(deliverPolicy)
                         .WithStartSequence(fromRevision)
