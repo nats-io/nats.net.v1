@@ -277,10 +277,11 @@ namespace NATS.Client.JetStream
             RecordWouldBeChange(DeliverGroup, server.DeliverGroup, "DeliverGroup", changes);
 
             if (_backoff != null && !SequenceEqual(_backoff, server._backoff)) { changes.Add("Backoff"); }
-            if (_metadata != null && !DictionariesEqual(_metadata, server._metadata)) { changes.Add("Metadata"); }
             if (_filterSubjects != null && !SequenceEqual(_filterSubjects, server._filterSubjects)) { changes.Add("FilterSubjects"); }
             if (_priorityGroups != null && !SequenceEqual(_priorityGroups, server._priorityGroups)) { changes.Add("PriorityGroups"); }
             if (_priorityPolicy != null && _priorityPolicy != server.PriorityPolicy) { changes.Add("PriorityPolicy"); }
+
+            if (_metadata != null && !MetaIsEquivalent(_metadata, server._metadata)) { changes.Add("Metadata"); }
 
             return changes;
         }

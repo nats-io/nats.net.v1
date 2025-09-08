@@ -17,6 +17,8 @@ namespace NATS.Client.Internals
 
         public const long ServerDefaultDuplicateWindowMs = 120_000; // 1000ms/sec * 60sec/min * 2 min
 
+        public const string NatsMetaKeyPrefix = "_nats.";
+
         /// <summary>
         /// The standard JetStream Prefix prefix 
         /// </summary>
