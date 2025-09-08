@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using NATS.Client.Internals.SimpleJSON;
 
@@ -19,7 +20,10 @@ namespace NATS.Client.JetStream
     public sealed class Subject
     {
         public string Name { get; }
-        public long Count { get; }
+        public ulong MessageCount { get; }
+
+        [Obsolete("This property is obsolete in favor of MessageCount which is matches better the possible size of the value as kept by the server.", false)]
+        public long Count => Convert.ToInt64(MessageCount);
 
         internal static IList<Subject> GetList(JSONNode subjectsNode)
         {
@@ -30,7 +34,10 @@ namespace NATS.Client.JetStream
                 while (e.MoveNext())
                 {
                     KeyValuePair<string, JSONNode> pair = e.Current;
-                    list.Add(new Subject(pair.Key, pair.Value.AsLong));
+                    if (!pair.Value.IsNull)
+                    {
+                        list.Add(new Subject(pair.Key, pair.Value.AsUlong));
+                    }
                 }
             }
             return list;
@@ -39,12 +46,18 @@ namespace NATS.Client.JetStream
         public Subject(string name, long count)
         {
             Name = name;
-            Count = count;
+            MessageCount = Convert.ToUInt64(count);
+        }
+
+        public Subject(string name, ulong count)
+        {
+            Name = name;
+            MessageCount = count;
         }
 
         public override string ToString()
         {
-            return $"{{Name: {Name}, Count: {Count}}}";
+            return $"{{Name: {Name}, Count: {MessageCount}}}";
         }
     }
 }

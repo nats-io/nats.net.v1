@@ -13,6 +13,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 
@@ -32,7 +33,10 @@ namespace NATS.Client.JetStream
         public IList<Subject> Subjects { get; }
         public IList<ulong> Deleted { get; }
         public LostStreamData LostStreamData { get; }
+        public IDictionary<string, ulong> SubjectDictionary => _subjectDictionary;
 
+        private IDictionary<string, ulong> _subjectDictionary;
+        
         internal static StreamState OptionalInstance(JSONNode streamState)
         {
             return streamState == null || streamState.Count == 0 ? null : new StreamState(streamState);
@@ -60,6 +64,12 @@ namespace NATS.Client.JetStream
             }      
             
             LostStreamData = LostStreamData.OptionalInstance(streamState[ApiConstants.Lost]);
+
+            _subjectDictionary = new Dictionary<string, ulong>();
+            foreach (var subject in Subjects)
+            {
+                _subjectDictionary[subject.Name] = subject.MessageCount;
+            }
         }
 
         internal void AddAll(IList<Subject> optional)

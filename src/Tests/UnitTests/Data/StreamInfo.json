@@ -41,7 +41,8 @@
     "subjects": {
       "sub0": 1,
       "sub1": 2,
-      "x.foo": 3
+      "x.foo": 3,
+      "hmmm": null
     },
     "deleted": [91, 92, 93, 94, 95, 96],
     "lost": {

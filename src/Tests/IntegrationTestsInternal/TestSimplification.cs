@@ -454,11 +454,15 @@ namespace IntegrationTests
                 validateConsumerName(consumerContext, null, durable);
 
                 int stopCount = 500;
+                int count = 0;
 
-                CountdownEvent latch = new CountdownEvent(stopCount);
+                CountdownEvent latch = new CountdownEvent(1);
                 EventHandler<MsgHandlerEventArgs> handler = (s, e) => {
                     e.Message.Ack();
-                    latch.Signal();
+                    if (++count == stopCount)
+                    {
+                        latch.Signal();
+                    }
                 };
 
                 using (IMessageConsumer consumer = consumerContext.Consume(handler))
@@ -475,7 +479,7 @@ namespace IntegrationTests
                 Assert.Null(orderedConsumerContext.ConsumerName);
 
                 CountdownEvent latch2 = new CountdownEvent(1);
-                int count = 0;
+                count = 0;
                 handler = (s, e) => {
                     e.Message.Ack();
                     if (++count == stopCount)
