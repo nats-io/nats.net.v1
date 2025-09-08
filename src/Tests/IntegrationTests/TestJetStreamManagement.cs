@@ -330,11 +330,11 @@ namespace IntegrationTests
                 {
                     Subject subj = map[Subject(x)];
                     Assert.NotNull(subj);
-                    Assert.Equal(x + 1, subj.Count);
+                    Assert.Equal((ulong)(x + 1), subj.MessageCount);
                 }
                 Subject s = map["foo.bar"];
                 Assert.NotNull(s);
-                Assert.Equal(6, s.Count);
+                Assert.Equal(6U, s.MessageCount);
 
                 foreach (PublishAck pa in packs) {
                     Assert.True(si.State.Deleted.Contains(pa.Seq));

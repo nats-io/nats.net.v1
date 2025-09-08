@@ -65,15 +65,15 @@ namespace UnitTests.JetStream
 
             Subject s = map["sub0"];
             Assert.NotNull(s);
-            Assert.Equal(1, s.Count);
+            Assert.Equal(1U, s.MessageCount);
 
             s = map["sub1"];
             Assert.NotNull(s);
-            Assert.Equal(2, s.Count);
+            Assert.Equal(2U, s.MessageCount);
 
             s = map["x.foo"];
             Assert.NotNull(s);
-            Assert.Equal(3, s.Count);
+            Assert.Equal(3U, s.MessageCount);
 
             Assert.Equal(6, si.State.DeletedCount);
             Assert.Equal(6, si.State.Deleted.Count);
