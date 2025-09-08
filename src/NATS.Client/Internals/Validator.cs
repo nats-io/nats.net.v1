@@ -822,5 +822,43 @@ namespace NATS.Client.Internals
 
             return true;
         }
+ 
+        // this is a special case map where the meta has both user and nats headers like
+        // _nats.req.level=0, _nats.ver=2.12.0-preview.2, _nats.level=2
+        // in this case we only want to compare the user keys
+        public static bool MetaIsEquivalent(IDictionary<string, string> d1, IDictionary<string, string> d2) 
+        {
+            if (d1 == null || d1.Count == 0) {
+                return d2 == null || d2.Count == 0;
+            }
+
+            // m1 isn't null or empty
+            if (d2 == null || d2.Count == 0) {
+                return false;
+            }
+
+            // 1. make sure all user keys from m1 are in m2
+            int user1 = 0;
+            foreach (KeyValuePair<string, string> pair in d1)
+            {
+                if (!pair.Key.StartsWith(JetStreamConstants.NatsMetaKeyPrefix)) {
+                    if (!d2.ContainsKey(pair.Key)) {
+                        return false;
+                    }
+                    user1++;
+                }
+            }
+
+            // 2. all m1 keys were found in m2, so count m2 user keys
+            int user2 = 0;
+            foreach (string key in d2.Keys) {
+                if (!key.StartsWith(JetStreamConstants.NatsMetaKeyPrefix)) {
+                    user2++;
+                }
+            }
+
+            // 3. just make sure m2 didn't have more keys
+            return user1 == user2;
+        }
     }
 }

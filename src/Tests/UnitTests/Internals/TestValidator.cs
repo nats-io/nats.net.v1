@@ -403,5 +403,34 @@ namespace UnitTests.Internals
             Assert.False(Validator.DictionariesEqual(d1, d2));
             Assert.False(Validator.DictionariesEqual(d1, dA));
         }
+        
+        [Fact]
+        public void TestMetaIsEquivalent() 
+        {
+            IDictionary<string, string> m1 = new Dictionary<string, string>();
+            IDictionary<string, string> m2 = new Dictionary<string, string>();
+    
+            Assert.True(Validator.MetaIsEquivalent(null, null));
+            Assert.True(Validator.MetaIsEquivalent(null, m1));
+            Assert.True(Validator.MetaIsEquivalent(m1, null));
+            Assert.True(Validator.MetaIsEquivalent(m1, m2));
+    
+            m1["A"] = "a";
+            m1[JetStreamConstants.NatsMetaKeyPrefix + "foo"] = "foo";
+            Assert.False(Validator.MetaIsEquivalent(m1, m2));
+    
+            m2["A"] = "a";
+            m2[JetStreamConstants.NatsMetaKeyPrefix + "bar"] = "bar";
+            Assert.True(Validator.MetaIsEquivalent(m1, m2));
+    
+            m1["B"] = "b";
+            Assert.False(Validator.MetaIsEquivalent(m1, m2));
+    
+            m2["B"] = "b";
+            Assert.True(Validator.MetaIsEquivalent(m1, m2));
+    
+            m2["C"] = "C";
+            Assert.False(Validator.MetaIsEquivalent(m1, m2));
+        }
     }
 }
