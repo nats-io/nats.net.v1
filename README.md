@@ -1037,27 +1037,3 @@ Lat8k (us)	500 msgs, 363.56 avg, 131.50 min, 39428.50 max, 1990.81 stddev
 A note:  The NATS C# .NET client was originally developed with the idea in mind that it would support the .NET 4.0 code base for increased adoption, and closely parallel the GO client (internally) for maintenance purposes.  So, some of the nice .NET APIs/features were intentionally left out.  While this has certainly paid off, after consideration, and some maturation of the NATS C# library, the NATS C# code will move toward more idiomatic .NET coding style where it makes sense.
 
 To that end, with any contributions, certainly feel free to code in a more .NET idiomatic style than what you see.  PRs are always welcome!
-
-## TODO
-
-* [x] Key Value
-* [x] Ordered Consumer
-* [x] Object Store
-* [x] JetStream
-* [ ] Another performance pass - look at stream directly over socket, contention, fastpath optimizations, rw locks.
-* [ ] Rx API (unified over NATS Streaming?)
-* [ ] Allow configuration for performance tuning (buffer sizes), defaults based on plaform.
-* [ ] Azure Service Bus Connector
-* [ ] Visual Studio [Starter Kit](https://msdn.microsoft.com/en-us/library/ccd9ychb.aspx)
-* [x] Expand Unit Tests to test internals (namely Parsing)
-* [X] Travis CI (Used AppVeyor instead)
-* [X] [.NET Core](https://github.com/dotnet/core) compatibility, TLS required.
-* [X] Convert unit tests to xunit
-* [X] Comprehensive benchmarking
-* [X] TLS
-* [X] Encoding (Serialization/Deserialization)
-* [X] Update delegates from traditional model to custom
-* [X] NuGet package
-* [X] Strong name the assembly
-
-Any suggestions and/or contributions are welcome!
