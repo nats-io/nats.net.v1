@@ -80,7 +80,7 @@ namespace NATS.Client.ObjectStore
             return ObjectName == other.ObjectName 
                    && Description == other.Description 
                    && Equals(Headers, other.Headers) 
-                   && Equals(Metadata, other.Metadata) 
+                   && Validator.DictionariesEqual(Metadata, other.Metadata) 
                    && Equals(ObjectMetaOptions, other.ObjectMetaOptions);
         }
 
