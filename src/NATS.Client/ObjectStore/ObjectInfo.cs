@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Text;
 using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
@@ -36,6 +37,7 @@ namespace NATS.Client.ObjectStore
         public string ObjectName => ObjectMeta.ObjectName;
         public string Description => ObjectMeta.Description;
         public MsgHeader Headers => ObjectMeta.Headers;
+        public IDictionary<string, string> Metadata => ObjectMeta.Metadata;
         public bool IsLink => ObjectMeta.ObjectMetaOptions.Link != null;
         public ObjectLink Link => ObjectMeta.ObjectMetaOptions.Link; 
 

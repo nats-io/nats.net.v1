@@ -86,12 +86,20 @@ namespace UnitTests.JetStream
             Assert.Equal(modified, oi.Modified);
             Assert.Equal(2, oi.Headers.Count);
             IList<string> list = oi.Headers.GetValues(Key(1));
+            Assert.NotNull(list);
             Assert.Equal(1, list.Count);
             Assert.Equal(Data(1), oi.Headers[Key(1)]);
             list = oi.Headers.GetValues(Key(2));
+            Assert.NotNull(list);
             Assert.Equal(2, list.Count);
             Assert.True(list.Contains(Data(21)));
             Assert.True(list.Contains(Data(22)));
+            
+            IDictionary<string, string> meta = oi.Metadata;
+            Assert.NotNull(meta);
+            Assert.Equal(2, meta.Count);
+            Assert.Equal("meta-data-1", meta["meta-key-1"]);
+            Assert.Equal("meta-data-2", meta["meta-key-2"]);
         }
 
         [Fact]
