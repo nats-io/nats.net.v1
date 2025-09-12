@@ -35,7 +35,6 @@ namespace NATS.Client.JetStream
         /// <summary>
         /// the name of the stream to check after the publish has succeeded
         /// </summary>
-        [Obsolete("This field isn't really very useful since it's used after the publish.", false)]
         public string Stream { get; }
 
         /// <summary>

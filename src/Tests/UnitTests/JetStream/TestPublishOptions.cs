@@ -26,7 +26,7 @@ namespace UnitTests.JetStream
             var po = PublishOptions.Builder().Build();
             Assert.Null(po.ExpectedLastSequence);
             Assert.Null(po.ExpectedLastSubjectSequence);
-            Assert.Equal(PublishOptions.DefaultStream, po.ExpectedStream);
+            Assert.Null(po.ExpectedStream);
             Assert.Equal(PublishOptions.DefaultTimeout, po.StreamTimeout);
             Assert.Null(po.ExpectedLastMsgId);
             Assert.Null(po.MessageId);
