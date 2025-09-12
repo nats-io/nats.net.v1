@@ -170,6 +170,11 @@ namespace NATS.Client.Internals
         /// JetStream expected last sequence header name.
         /// </summary>
         public const string ExpLastSubjectSeqHeader = "Nats-Expected-Last-Subject-Sequence";
+
+        /// <summary>
+        /// JetStream expected last subject sequence subject header name.
+        /// </summary>
+        public const string ExpLastSubjectSeqSubjectHeader = "Nats-Expected-Last-Subject-Sequence-Subject";
         
         public const string MsgTtlHdr = "Nats-TTL";
         

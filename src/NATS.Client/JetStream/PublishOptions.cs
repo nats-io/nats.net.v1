@@ -24,15 +24,16 @@ namespace NATS.Client.JetStream
         public static readonly Duration DefaultTimeout = Duration.OfMillis(Defaults.Timeout);
 
         /// <summary>
-        /// The default stream name (unset)
+        /// same as null, was used to unset the field in the builder
         /// </summary>
+        [Obsolete("Just use null to unset.", false)]
         public const string DefaultStream = null;
 
         [Obsolete("This property is obsolete, it is not used.", false)]
         public const ulong DefaultLastSequence = 0;
 
         /// <summary>
-        /// The stream name.
+        /// the name of the stream to check after the publish has succeeded
         /// </summary>
         public string Stream { get; }
 
@@ -68,6 +69,11 @@ namespace NATS.Client.JetStream
         public ulong? ExpectedLastSubjectSequence { get; }
         
         /// <summary>
+        /// The Expected Subject to limit last subject sequence number of the stream. No value if not set
+        /// </summary>
+        public string ExpectedLastSubjectSequenceSubject { get; }
+        
+        /// <summary>
         /// The Expected Message Id.
         /// </summary>
         public string MessageId { get; }
@@ -81,12 +87,13 @@ namespace NATS.Client.JetStream
         
         internal PublishOptions(PublishOptionsBuilder b)
         {
-            Stream = b._stream;
+            Stream = b._pubAckStream;
             StreamTimeout = b._streamTimeout;
             ExpectedStream = b._expectedStream;
             ExpectedLastMsgId = b._expectedLastMsgId;
             ExpectedLastSequence = b._expectedLastSeq;
             ExpectedLastSubjectSequence = b._expectedLastSubjectSeq;
+            ExpectedLastSubjectSequenceSubject = b._expectedLastSubjectSeqSubject;
             MessageId = b._messageId;
             _messageTtl = b._messageTtl;
         }
@@ -107,12 +114,13 @@ namespace NATS.Client.JetStream
         /// </summary>
         public sealed class PublishOptionsBuilder
         {
-            internal string _stream = DefaultStream;
+            internal string _pubAckStream = null;
             internal Duration _streamTimeout = DefaultTimeout;
             internal string _expectedStream;
             internal string _expectedLastMsgId;
             internal ulong? _expectedLastSeq;
             internal ulong? _expectedLastSubjectSeq;
+            internal string _expectedLastSubjectSeqSubject;
             internal string _messageId;
             internal MessageTtl _messageTtl;
             
@@ -123,7 +131,7 @@ namespace NATS.Client.JetStream
             /// <returns>The Builder</returns>
             public PublishOptionsBuilder WithStream(string stream)
             {
-                _stream = Validator.ValidateStreamName(stream, false);
+                _pubAckStream = Validator.ValidateStreamName(stream, false);
                 return this;
             }
 
@@ -212,6 +220,19 @@ namespace NATS.Client.JetStream
             }
 
             /// <summary>
+            /// Sets the filter subject for the expected last subject sequence
+            /// This can be used for a wildcard since it is used
+            /// in place of the message subject along with expectedLastSubjectSequence
+            /// </summary>
+            /// <param name="subject">The filter subject.</param>
+            /// <returns>The PublishOptionsBuilder</returns>
+            public PublishOptionsBuilder WithExpectedLastSubjectSequenceSubject(string subject)
+            {
+                _expectedLastSubjectSeqSubject = subject;
+                return this;
+            }
+
+            /// <summary>
             /// Clears the expected so the build can be re-used.
             /// Clears the expectedLastId, expectedLastSequence and messageId fields.
             /// </summary>
@@ -221,6 +242,7 @@ namespace NATS.Client.JetStream
                 _expectedLastMsgId = null;
                 _expectedLastSeq = null;
                 _expectedLastSubjectSeq = null;
+                _expectedLastSubjectSeqSubject = null;
                 _messageId = null;
                 return this;
             }
