@@ -22,6 +22,7 @@ using NATS.Client.JetStream;
 using Xunit;
 using static UnitTests.TestBase;
 using static IntegrationTests.JetStreamTestBase;
+using Subject = NATS.Client.JetStream.Subject;
 
 namespace IntegrationTests
 {
@@ -33,47 +34,50 @@ namespace IntegrationTests
         public void TestPublishVarieties() {
             Context.RunInJsServer(c =>
             {
-                CreateDefaultTestStream(c);
+                string stream = Stream();
+                string subject = Subject();
+                
+                CreateMemoryStream(c, stream, subject);
                 IJetStream js = c.CreateJetStreamContext();
 
-                PublishAck pa = js.Publish(SUBJECT, DataBytes(1));
-                AssertPublishAck(pa, 1);
+                PublishAck pa = js.Publish(subject, DataBytes(1));
+                AssertPublishAck(pa, stream, 1);
 
-                Msg msg = new Msg(SUBJECT, DataBytes(2));
+                Msg msg = new Msg(subject, DataBytes(2));
                 pa = js.Publish(msg);
-                AssertPublishAck(pa, 2);
+                AssertPublishAck(pa, stream, 2);
 
                 PublishOptions po = PublishOptions.Builder().Build();
-                pa = js.Publish(SUBJECT, DataBytes(3), po);
-                AssertPublishAck(pa, 3);
+                pa = js.Publish(subject, DataBytes(3), po);
+                AssertPublishAck(pa, stream, 3);
 
-                msg = new Msg(SUBJECT, DataBytes(4));
+                msg = new Msg(subject, DataBytes(4));
                 pa = js.Publish(msg, po);
-                AssertPublishAck(pa, 4);
+                AssertPublishAck(pa, stream, 4);
 
-                pa = js.Publish(SUBJECT, null);
-                AssertPublishAck(pa, 5);
+                pa = js.Publish(subject, null);
+                AssertPublishAck(pa, stream, 5);
 
-                msg = new Msg(SUBJECT);
+                msg = new Msg(subject);
                 pa = js.Publish(msg);
-                AssertPublishAck(pa, 6);
+                AssertPublishAck(pa, stream, 6);
 
-                pa = js.Publish(SUBJECT, null, po);
-                AssertPublishAck(pa, 7);
+                pa = js.Publish(subject, null, po);
+                AssertPublishAck(pa, stream, 7);
 
-                msg = new Msg(SUBJECT);
+                msg = new Msg(subject);
                 pa = js.Publish(msg, po);
-                AssertPublishAck(pa, 8);
+                AssertPublishAck(pa, stream, 8);
 
                 MsgHeader h = new MsgHeader { { "foo", "bar9" } };
-                pa = js.Publish(SUBJECT, h, DataBytes(9));
-                AssertPublishAck(pa, 9);
+                pa = js.Publish(subject, h, DataBytes(9));
+                AssertPublishAck(pa, stream, 9);
 
                 h = new MsgHeader { { "foo", "bar10" } };
-                pa = js.Publish(SUBJECT, h, DataBytes(10));
-                AssertPublishAck(pa, 10);
+                pa = js.Publish(subject, h, DataBytes(10));
+                AssertPublishAck(pa, stream, 10);
 
-                IJetStreamPushSyncSubscription s = js.PushSubscribeSync(SUBJECT);
+                IJetStreamPushSyncSubscription s = js.PushSubscribeSync(subject);
                 AssertNextMessage(s, Data(1), null);
                 AssertNextMessage(s, Data(2), null);
                 AssertNextMessage(s, Data(3), null);
@@ -184,62 +188,172 @@ namespace IntegrationTests
         {
             Context.RunInJsServer(c =>
             {
-                CreateMemoryStream(c, STREAM, Subject(1), Subject(2));
+                string stream1 = Stream();
+                string subject1Prefix = Variant();
+                string streamSubject = subject1Prefix + ".>";
+                string sub11 = subject1Prefix + ".foo.1";
+                string sub12 = subject1Prefix + ".foo.2";
+                string sub13 = subject1Prefix + ".bar.3";
+
+                CreateMemoryStream(c, stream1, streamSubject);
                 IJetStream js = c.CreateJetStreamContext();
 
                 PublishOptions po = PublishOptions.Builder()
-                    .WithExpectedStream(STREAM)
+                    .WithExpectedStream(stream1)
                     .WithMessageId(MessageId(1))
                     .Build();
-                PublishAck pa = js.Publish(Subject(1), DataBytes(1), po);
-                AssertPublishAck(pa, 1);
+                PublishAck pa = js.Publish(sub11, DataBytes(1), po);
+                AssertPublishAck(pa, stream1, 1);
 
                 po = PublishOptions.Builder()
                     .WithExpectedLastMsgId(MessageId(1))
                     .WithMessageId(MessageId(2))
                     .Build();
-                pa = js.Publish(Subject(1), DataBytes(2), po);
-                AssertPublishAck(pa, 2);
+                pa = js.Publish(sub11, DataBytes(2), po);
+                AssertPublishAck(pa, stream1, 2);
 
                 po = PublishOptions.Builder()
                     .WithExpectedLastSequence(2)
                     .WithMessageId(MessageId(3))
                     .Build();
-                pa = js.Publish(Subject(1), DataBytes(3), po);
-                AssertPublishAck(pa, 3);
+                pa = js.Publish(sub11, DataBytes(3), po);
+                AssertPublishAck(pa, stream1, 3);
 
                 po = PublishOptions.Builder()
                     .WithExpectedLastSequence(3)
                     .WithMessageId(MessageId(4))
                     .Build();
-                pa = js.Publish(Subject(2), DataBytes(4), po);
-                AssertPublishAck(pa, 4);
+                pa = js.Publish(sub12, DataBytes(4), po);
+                AssertPublishAck(pa, stream1, 4);
 
                 po = PublishOptions.Builder()
                     .WithExpectedLastSubjectSequence(3)
                     .WithMessageId(MessageId(5))
                     .Build();
-                pa = js.Publish(Subject(1), DataBytes(5), po);
-                AssertPublishAck(pa, 5);
+                pa = js.Publish(sub11, DataBytes(5), po);
+                AssertPublishAck(pa, stream1, 5);
 
                 po = PublishOptions.Builder()
                     .WithExpectedLastSubjectSequence(4)
                     .WithMessageId(MessageId(6))
                     .Build();
-                pa = js.Publish(Subject(2), DataBytes(6), po);
-                AssertPublishAck(pa, 6);
+                pa = js.Publish(sub12, DataBytes(6), po);
+                AssertPublishAck(pa, stream1, 6);
 
                 PublishOptions po1 = PublishOptions.Builder().WithExpectedStream(Stream(999)).Build();
-                Assert.Throws<NATSJetStreamException>(() => js.Publish(Subject(1), DataBytes(999), po1));
+                Assert.Throws<NATSJetStreamException>(() => js.Publish(sub11, DataBytes(999), po1));
 
                 PublishOptions po2 = PublishOptions.Builder().WithExpectedLastMsgId(MessageId(999)).Build();
-                Assert.Throws<NATSJetStreamException>(() => js.Publish(Subject(1), DataBytes(999), po2));
+                Assert.Throws<NATSJetStreamException>(() => js.Publish(sub11, DataBytes(999), po2));
 
                 PublishOptions po3 = PublishOptions.Builder().WithExpectedLastSequence(999).Build();
-                Assert.Throws<NATSJetStreamException>(() => js.Publish(Subject(1), DataBytes(999), po3));
+                Assert.Throws<NATSJetStreamException>(() => js.Publish(sub11, DataBytes(999), po3));
 
                 PublishOptions po4 = PublishOptions.Builder().WithExpectedLastSubjectSequence(999).Build();
-                Assert.Throws<NATSJetStreamException>(() => js.Publish(Subject(1), DataBytes(999), po4));
+                Assert.Throws<NATSJetStreamException>(() => js.Publish(sub11, DataBytes(999), po4));
+
+                // 0 has meaning to expectedLastSubjectSequence
+                string stream2 = Stream();
+                string sub22 = Subject();
+                CreateMemoryStream(c, stream2, sub22);
+                PublishOptions poLss = PublishOptions.Builder().WithExpectedLastSubjectSequence(0).Build();
+                pa = js.Publish(sub22, DataBytes(22), poLss);
+                AssertPublishAck(pa, stream2, 1U);
+               
+                NATSJetStreamException e = Assert.Throws<NATSJetStreamException>(() => js.Publish(sub22, DataBytes(999), poLss));
+                Assert.Equal(10071, e.ApiErrorCode);
+
+                // 0 has meaning
+                stream2 = Stream();
+                sub22 = Subject();
+                CreateMemoryStream(c, stream2, sub22);
+                PublishOptions poLs = PublishOptions.Builder().WithExpectedLastSequence(0).Build();
+                pa = js.Publish(sub22, DataBytes(331), poLs);
+                AssertPublishAck(pa, stream2, 1);
+
+                stream2 = Stream();
+                sub22 = Subject();
+                CreateMemoryStream(c, stream2, sub22);
+                poLs = PublishOptions.Builder().WithExpectedLastSequence(0).Build();
+                pa = js.Publish(sub22, DataBytes(441), poLs);
+                AssertPublishAck(pa, stream2, 1);
+
+                // expectedLastSubjectSequenceSubject
+
+                pa = js.Publish(sub13, DataBytes(500));
+                AssertPublishAck(pa, stream1, 7);
+
+                PublishOptions poLsss = PublishOptions.Builder()
+                    .WithExpectedLastSubjectSequence(5)
+                    .Build();
+                pa = js.Publish(sub11, DataBytes(501), poLsss);
+                AssertPublishAck(pa, stream1, 8);
+
+                poLsss = PublishOptions.Builder()
+                    .WithExpectedLastSubjectSequence(6)
+                    .Build();
+                pa = js.Publish(sub12, DataBytes(502), poLsss);
+                AssertPublishAck(pa, stream1, 9);
+
+                poLsss = PublishOptions.Builder()
+                    .WithExpectedLastSubjectSequence(9)
+                    .WithExpectedLastSubjectSequenceSubject(streamSubject)
+                    .Build();
+                pa = js.Publish(sub12, DataBytes(503), poLsss);
+                AssertPublishAck(pa, stream1, 10);
+
+                poLsss = PublishOptions.Builder()
+                    .WithExpectedLastSubjectSequence(10)
+                    .WithExpectedLastSubjectSequenceSubject(subject1Prefix + ".foo.*")
+                    .Build();
+                pa = js.Publish(sub12, DataBytes(504), poLsss);
+                AssertPublishAck(pa, stream1, 11);
+
+                Assert.Throws<NATSJetStreamException>(() => js.Publish(sub12, DataBytes(505), poLsss));
+
+                poLsss = PublishOptions.Builder()
+                    .WithExpectedLastSubjectSequence(7)
+                    .WithExpectedLastSubjectSequenceSubject(subject1Prefix + ".bar.*")
+                    .Build();
+                pa = js.Publish(sub13, DataBytes(506), poLsss);
+                AssertPublishAck(pa, stream1, 12);
+
+                poLsss = PublishOptions.Builder()
+                    .WithExpectedLastSubjectSequence(12)
+                    .WithExpectedLastSubjectSequenceSubject(streamSubject)
+                    .Build();
+                pa = js.Publish(sub13, DataBytes(507), poLsss);
+                AssertPublishAck(pa, stream1, 13);
+
+                poLsss = PublishOptions.Builder()
+                    .WithExpectedLastSubjectSequenceSubject("not-even-a-subject")
+                    .Build();
+                if (AtLeast2_12(c)) {
+                    Assert.Throws<NATSJetStreamException>(() => js.Publish(sub13, DataBytes(508), poLsss));
+                }
+                else {
+                    pa = js.Publish(sub13, DataBytes(508), poLsss);
+                    AssertPublishAck(pa, stream1, 14);
+                }
+
+                poLsss = PublishOptions.Builder()
+                    .WithExpectedLastSequence(14)
+                    .WithExpectedLastSubjectSequenceSubject("not-even-a-subject")
+                    .Build();
+                if (AtLeast2_12(c)) {
+                    Assert.Throws<NATSJetStreamException>(() => js.Publish(sub13, DataBytes(509), poLsss));
+                }
+                else {
+                    pa = js.Publish(sub13, DataBytes(509), poLsss);
+                    AssertPublishAck(pa, stream1, 15);
+                }
+
+                poLsss = PublishOptions.Builder()
+                    .WithExpectedLastSubjectSequence(15)
+                    .WithExpectedLastSubjectSequenceSubject("not-even-a-subject")
+                    .Build();
+                // JetStreamApiException: wrong last sequence: 0 [10071]
+                Assert.Throws<NATSJetStreamException>(() => js.Publish(sub13, DataBytes(510), poLsss));
             });
         }
 
@@ -268,8 +382,8 @@ namespace IntegrationTests
             });
         }
 
-        private void AssertPublishAck(PublishAck pa, ulong seqno) {
-            Assert.Equal(STREAM, pa.Stream);
+        private void AssertPublishAck(PublishAck pa, string stream, ulong seqno) {
+            Assert.Equal(stream, pa.Stream);
             Assert.Equal(seqno, pa.Seq);
             Assert.False(pa.Duplicate);
         }

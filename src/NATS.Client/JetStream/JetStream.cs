@@ -39,6 +39,7 @@ namespace NATS.Client.JetStream
                 merged = MergeString(merged, JetStreamConstants.ExpStreamHeader, opts.ExpectedStream);
                 merged = MergeString(merged, JetStreamConstants.MsgIdHeader, opts.MessageId);
                 merged = MergeString(merged, JetStreamConstants.MsgTtlHdr, opts.MessageTtl);
+                merged = MergeString(merged, JetStreamConstants.ExpLastSubjectSeqSubjectHeader, opts.ExpectedLastSubjectSequenceSubject);
             }
 
             return merged;
@@ -70,10 +71,10 @@ namespace NATS.Client.JetStream
 
             PublishAck ack = new PublishAck(resp);
             string ackStream = ack.Stream;
-            string pubStream = options?.Stream;
+            string optAckStream = options?.Stream;
             // stream specified in options but different than ack should not happen but...
-            if (!string.IsNullOrWhiteSpace(pubStream) && pubStream != ackStream) {
-                throw new NATSJetStreamException("Expected ack from stream " + pubStream + ", received from: " + ackStream);
+            if (!string.IsNullOrWhiteSpace(optAckStream) && optAckStream != ackStream) {
+                throw new NATSJetStreamException("Expected ack from stream " + optAckStream + ", received from: " + ackStream);
             }
             return ack;
         }
