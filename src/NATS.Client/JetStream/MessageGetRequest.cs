@@ -11,6 +11,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client.JetStream
@@ -20,32 +22,45 @@ namespace NATS.Client.JetStream
         public ulong Sequence { get; }
         public string LastBySubject { get; }
         public string NextBySubject { get; }
+        public DateTime? StartTime { get; }
 
         public bool IsSequenceOnly => Sequence > 0 && NextBySubject == null;
         public bool IsLastBySubject => LastBySubject != null;
         public bool IsNextBySubject => NextBySubject != null;
 
         public static MessageGetRequest ForSequence(ulong sequence) {
-            return new MessageGetRequest(sequence, null, null);
+            return new MessageGetRequest(sequence, null, null, null);
         }
 
         public static MessageGetRequest LastForSubject(string subject) {
-            return new MessageGetRequest(0, subject, null);
+            return new MessageGetRequest(0, subject, null, null);
         }
 
         public static MessageGetRequest FirstForSubject(string subject) {
-            return new MessageGetRequest(0, null, subject);
+            return new MessageGetRequest(0, null, subject, null);
+        }
+        
+        public static MessageGetRequest FirstForStartTime(DateTime startTime) {
+            return new MessageGetRequest(0, null, null, startTime);
+        }
+
+        public static MessageGetRequest FirstForStartTimeAndSubject(DateTime startTime, String subject) {
+            return new MessageGetRequest(0, null, subject, startTime);
         }
 
         public static MessageGetRequest NextForSubject(ulong sequence, string subject) {
-            return new MessageGetRequest(sequence, null, subject);
+            return new MessageGetRequest(sequence, null, subject, null);
         }
 
-        public MessageGetRequest(ulong sequence, string lastBySubject, string nextBySubject)
+        public MessageGetRequest(ulong sequence, string lastBySubject, string nextBySubject) : 
+            this(sequence, lastBySubject, nextBySubject, DateTime.MinValue) {}
+
+        public MessageGetRequest(ulong sequence, string lastBySubject, string nextBySubject, DateTime? startTime)
         {
             Sequence = sequence;
             LastBySubject = lastBySubject;
             NextBySubject = nextBySubject;
+            StartTime = startTime;
         }
 
         public override JSONNode ToJsonNode()
@@ -65,6 +80,8 @@ namespace NATS.Client.JetStream
             {
                 jso[ApiConstants.NextBySubject] = NextBySubject;
             }
+
+            JsonUtils.AddField(jso, ApiConstants.StartTime, StartTime);
 
             return jso;
         }
