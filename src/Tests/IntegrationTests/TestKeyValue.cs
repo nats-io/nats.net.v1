@@ -1437,6 +1437,57 @@ namespace IntegrationTests
             });
         }
 
+        class TestKeyValueWatcher : IKeyValueWatcher
+        {
+            public IList<KeyValueEntry> Entries = new List<KeyValueEntry>();
+            public KeyValueWatchOption[] WatchOptions;
+            public bool BeforeWatcher;
+            public bool MetaOnly;
+            public int EndOfDataReceived;
+            public bool EndBeforeEntries;
+            public int Puts;
+            public int Dels;
+            public int Purges;
+
+            public TestKeyValueWatcher(bool beforeWatcher, params KeyValueWatchOption[] watchOptions)
+            {
+                BeforeWatcher = beforeWatcher;
+                WatchOptions = watchOptions;
+                foreach (KeyValueWatchOption wo in watchOptions)
+                {
+                    if (wo == KeyValueWatchOption.MetaOnly)
+                    {
+                        MetaOnly = true;
+                        break;
+                    }
+                }
+            }
+
+            public void Watch(KeyValueEntry kve)
+            {
+                Entries.Add(kve);
+                if (kve.Operation == KeyValueOperation.Put)
+                {
+                    ++Puts;
+                }
+                else if (kve.Operation == KeyValueOperation.Delete)
+                {
+                    ++Dels;
+                }
+                else if (kve.Operation == KeyValueOperation.Purge)
+                {
+                    ++Purges;
+                }
+            }
+
+            public void EndOfData()
+            {
+                if (++EndOfDataReceived == 1 && Entries.Count == 0) {
+                    EndBeforeEntries = true;
+                }
+            }
+        }
+
         [Fact]
         public void TestKeyValueTransform() {
             Context.RunInJsServer(AtLeast2_10_3,c =>
@@ -1557,11 +1608,10 @@ namespace IntegrationTests
         }
         
         [Fact]
-        public void TestLimitMarker() {
-            Context.RunInJsServer(AtLeast2_11,c =>
+        public void TestLimitMarkerrCoverage() {
+            Context.RunInJsServer(AtLeast2_12,c =>
             {
                 IKeyValueManagement kvm = c.CreateKeyValueManagementContext();
-
                 string bucket = Bucket();
                 KeyValueConfiguration config = KeyValueConfiguration.Builder()
                     .WithName(bucket)
@@ -1606,72 +1656,111 @@ namespace IntegrationTests
         }
         
         [Fact]
-        public void TestLimitMarkerAlso() {
-            Context.RunInJsServer(AtLeast2_11,c =>
+        public void TestLimitMarkerBehavior() {
+            Context.RunInJsServer(AtLeast2_12,c =>
             {
                 string bucket = Bucket();
-                string key = Key();
+                string key1 = Key();
+                string key2 = Key();
+                string key3 = Key();
+                string key4 = Key();
 
                 IKeyValueManagement kvm = c.CreateKeyValueManagementContext();
                 KeyValueConfiguration config = KeyValueConfiguration.Builder()
                     .WithName(bucket)
                     .WithStorageType(StorageType.Memory)
-                    .WithLimitMarker(6000)
+                    .WithLimitMarker(5000)
                     .Build();
                 kvm.Create(config);
 
                 IKeyValue kv = c.CreateKeyValueContext(bucket);
 
-                TestKeyValueWatcher watcher = new TestKeyValueWatcher(true);
+                TestLimitMarkerWatcher watcher = new TestLimitMarkerWatcher();
                 KeyValueWatchSubscription watch = kv.WatchAll(watcher);
 
-                kv.Create(key, DataBytes(), MessageTtl.Seconds(2));
+                InterlockedInt rMessages = new InterlockedInt();
+                InterlockedInt rPurges = new InterlockedInt();
+                InterlockedInt rMaxAges = new InterlockedInt();
+                InterlockedInt rTtl2 = new InterlockedInt();
+                InterlockedInt rTtl5 = new InterlockedInt();
 
-                KeyValueEntry kve = kv.Get(key);
-                Assert.NotNull(kve);
+                void TestHandler(object sender, MsgHandlerEventArgs args)
+                {
+                    rMessages.Increment();
+                    if (args.Message.HasHeaders)
+                    {
+                        string h = args.Message.Header.GetFirst("KV-Operation");
+                        if (h != null && h.Equals("PURGE")) {
+                            rPurges.Increment();
+                        }
+                        h = args.Message.Header .GetFirst("Nats-Marker-Reason");
+                        if (h != null && h.Equals("MaxAge")) {
+                            rMaxAges.Increment();
+                        }
+                        h = args.Message.Header .GetFirst("Nats-TTL");
+                        if (h != null) {
+                            if (h.Equals("2s")) {
+                                rTtl2.Increment();
+                            }
+                            else {
+                                rTtl5.Increment();
+                            }
+                        }
 
-                Thread.Sleep(2100); // longer than the message ttl
+                    }
+                }
+                
+                c.CreateJetStreamContext().PushSubscribeAsync(null, TestHandler, true,
+                    PushSubscribeOptions.Builder()
+                        .WithStream("KV_" + bucket)
+                        .WithConfiguration(ConsumerConfiguration.Builder().WithFilterSubject(">")
+                            .Build())
+                        .Build());
 
-                kve = kv.Get(key);
-                Assert.Null(kve);
 
-                Assert.Equal(1, watcher.Puts);
+                kv.Create(key1, DataBytes(), MessageTtl.Seconds(2));
+                kv.Create(key2, DataBytes());
+                kv.Create(key3, DataBytes());
+
+                Assert.NotNull(kv.Get(key1));
+                Assert.NotNull(kv.Get(key2));
+                Assert.NotNull(kv.Get(key3));
+
+                kv.Purge(key2, MessageTtl.Seconds(2));
+                kv.Purge(key3);
+
+                // This section will have to be modified if there are changes
+                // to how purge markers are handled (double purge on ttl purge, fix for no purge of non-ttl purge)
+                Thread.Sleep(8000); // longer than the message ttl plus the limit marker since double purge plus some extra
+
+                Assert.Null(kv.Get(key1));
+                Assert.Null(kv.Get(key2));
+                Assert.Null(kv.Get(key3));
+
+                // create and put
+                Assert.Equal(3, watcher.Puts);
+                Assert.Equal(3, watcher.Purges); // the 2 message ttl purge markers, and the manual purge.
                 Assert.Equal(0, watcher.Dels);
-                Assert.Equal(1, watcher.Purges);
-                Assert.Equal(1, watcher.EndOfDataReceived);
+                Assert.Equal(1, watcher.Eod);
+
+                Assert.Equal(6, rMessages.Read());
+                Assert.Equal(2, rPurges.Read());
+                Assert.Equal(1, rMaxAges.Read());
+                Assert.Equal(2, rTtl2.Read());
+                Assert.Equal(1, rTtl5.Read());
             });
         }
     }
 
-    class TestKeyValueWatcher : IKeyValueWatcher
+    class TestLimitMarkerWatcher : IKeyValueWatcher
     {
-        public IList<KeyValueEntry> Entries = new List<KeyValueEntry>();
-        public KeyValueWatchOption[] WatchOptions;
-        public bool BeforeWatcher;
-        public bool MetaOnly;
-        public int EndOfDataReceived;
-        public bool EndBeforeEntries;
         public int Puts;
         public int Dels;
         public int Purges;
-
-        public TestKeyValueWatcher(bool beforeWatcher, params KeyValueWatchOption[] watchOptions)
-        {
-            BeforeWatcher = beforeWatcher;
-            WatchOptions = watchOptions;
-            foreach (KeyValueWatchOption wo in watchOptions)
-            {
-                if (wo == KeyValueWatchOption.MetaOnly)
-                {
-                    MetaOnly = true;
-                    break;
-                }
-            }
-        }
+        public int Eod;
 
         public void Watch(KeyValueEntry kve)
         {
-            Entries.Add(kve);
             if (kve.Operation == KeyValueOperation.Put)
             {
                 ++Puts;
@@ -1688,9 +1777,7 @@ namespace IntegrationTests
 
         public void EndOfData()
         {
-            if (++EndOfDataReceived == 1 && Entries.Count == 0) {
-                EndBeforeEntries = true;
-            }
+            ++Eod;
         }
     }
 }
