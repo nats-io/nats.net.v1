@@ -177,7 +177,19 @@ namespace NATS.Client.KeyValue
             Validator.ValidateKvKeyWildcardAllowedRequired(key);
             _write(key, null, PurgeHeaders, GetPublishOptions(expectedRevision, null));
         }
-        
+
+        public void Purge(string key, MessageTtl messageTtl)
+        {
+            Validator.ValidateKvKeyWildcardAllowedRequired(key);
+            _write(key, null, PurgeHeaders, GetPublishOptions(null, messageTtl));
+        }
+
+        public void Purge(string key, ulong expectedRevision, MessageTtl messageTtl)
+        {
+            Validator.ValidateKvKeyWildcardAllowedRequired(key);
+            _write(key, null, PurgeHeaders, GetPublishOptions(expectedRevision, messageTtl));
+        }
+
         public KeyValueWatchSubscription Watch(string key, IKeyValueWatcher watcher, params KeyValueWatchOption[] watchOptions)
         {
             Validator.ValidateKvKeyWildcardAllowedRequired(key);
