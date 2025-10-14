@@ -204,6 +204,16 @@ namespace NATS.Client.JetStream
             return _GetMessage(streamName, MessageGetRequest.FirstForSubject(subject));
         }
 
+        public MessageInfo GetFirstMessage(string streamName, DateTime startTime)
+        {
+            return _GetMessage(streamName, MessageGetRequest.FirstForStartTime(startTime));
+        }
+
+        public MessageInfo GetFirstMessage(string streamName, DateTime startTime, string subject)
+        {
+            return _GetMessage(streamName, MessageGetRequest.FirstForStartTimeAndSubject(startTime, subject));
+        }
+
         public MessageInfo GetNextMessage(string streamName, ulong sequence, string subject)
         {
             return _GetMessage(streamName, MessageGetRequest.NextForSubject(sequence, subject));
