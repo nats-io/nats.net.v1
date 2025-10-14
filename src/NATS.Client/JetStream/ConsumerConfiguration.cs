@@ -204,8 +204,8 @@ namespace NATS.Client.JetStream
             AddField(o, ApiConstants.DeliverSubject, DeliverSubject);
             AddField(o, ApiConstants.DeliverGroup, DeliverGroup);
             AddField(o, ApiConstants.OptStartSeq, StartSeq);
-            AddField(o, ApiConstants.OptStartTime, JsonUtils.ToString(StartTime));
-            AddField(o, ApiConstants.PauseUntil, JsonUtils.ToString(PauseUntil));
+            AddField(o, ApiConstants.OptStartTime, StartTime);
+            AddField(o, ApiConstants.PauseUntil, PauseUntil);
             AddField(o, ApiConstants.AckPolicy, AckPolicy.GetString());
             AddField(o, ApiConstants.AckWait, AckWait);
             AddField(o, ApiConstants.MaxDeliver, MaxDeliver);

@@ -203,6 +203,23 @@ namespace NATS.Client.JetStream
         MessageInfo GetFirstMessage(string streamName, string subject);
 
         /// <summary>
+        /// Get MessageInfo for the first message of the subject. This API works on Server 2.11 or later
+        /// </summary>
+        /// <param name="streamName">The name of the stream.</param>
+        /// <param name="startTime">The start time to get the first message for.</param>
+        /// <returns>Message information.</returns>
+        MessageInfo GetFirstMessage(string streamName, DateTime startTime);
+
+        /// <summary>
+        /// Get MessageInfo for the first message of the subject. This API works on Server 2.11 or later
+        /// </summary>
+        /// <param name="streamName">The name of the stream.</param>
+        /// <param name="startTime">The start time to get the first message for.</param>
+        /// <param name="subject">The subject to get the first message for.</param>
+        /// <returns>Message information.</returns>
+        MessageInfo GetFirstMessage(string streamName, DateTime startTime, string subject);
+
+        /// <summary>
         /// Get MessageInfo for the message of the message sequence
         /// is equal to or greater the requested sequence for the subject.
         /// </summary>

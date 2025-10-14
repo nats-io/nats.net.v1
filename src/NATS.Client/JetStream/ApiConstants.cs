@@ -184,6 +184,7 @@ namespace NATS.Client.JetStream
         public const string Sources = "sources";
         public const string Src = "src";
         public const string Started = "started";
+        public const string StartTime = "start_time";
         public const string State = "state";
         public const string Stats = "stats";
         public const string Storage = "storage";

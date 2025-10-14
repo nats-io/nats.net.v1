@@ -13,6 +13,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading;
 using NATS.Client;
@@ -988,67 +989,82 @@ namespace IntegrationTests
                 IJetStreamManagement jsm = c.CreateJetStreamManagementContext();
                 IJetStream js = c.CreateJetStreamContext();
 
+                string stream = Stream();
+                
                 StreamConfiguration sc = StreamConfiguration.Builder()
-                    .WithName(STREAM)
+                    .WithName(stream)
                     .WithStorageType(StorageType.Memory)
-                    .WithSubjects(Subject(1), Subject(2))
+                    .WithSubjects(Subject(0), Subject(1))
                     .Build();
                 StreamInfo si = jsm.AddStream(sc);
                 Assert.False(si.Config.AllowDirect);
                 
-                js.Publish(Subject(1), Encoding.UTF8.GetBytes("s1-q1"));
-                js.Publish(Subject(2), Encoding.UTF8.GetBytes("s2-q2"));
-                js.Publish(Subject(1), Encoding.UTF8.GetBytes("s1-q3"));
-                js.Publish(Subject(2), Encoding.UTF8.GetBytes("s2-q4"));
-                js.Publish(Subject(1), Encoding.UTF8.GetBytes("s1-q5"));
-                js.Publish(Subject(2), Encoding.UTF8.GetBytes("s2-q6"));
+                DateTime timeBeforeCreated = DateTime.Now;
+                Thread.Sleep(100);
+                js.Publish(buildTestGetMessage(0, 1));
+                js.Publish(buildTestGetMessage(1, 2));
+                js.Publish(buildTestGetMessage(0, 3));
+                js.Publish(buildTestGetMessage(1, 4));
+                js.Publish(buildTestGetMessage(0, 5));
+                js.Publish(buildTestGetMessage(1, 6));
 
-                ValidateGetMessage(jsm);
+                ValidateGetMessage(jsm, stream, timeBeforeCreated);
 
                 sc = StreamConfiguration.Builder(si.Config).WithAllowDirect(true).Build();
                 si = jsm.UpdateStream(sc);
                 Assert.True(si.Config.AllowDirect);
-                ValidateGetMessage(jsm);
+                ValidateGetMessage(jsm, stream, timeBeforeCreated);
 
                 // error case stream doesn't exist
                 Assert.Throws<NATSJetStreamException>(() => jsm.GetMessage(Stream(999), 1));
             });
         }
         
-        private void ValidateGetMessage(IJetStreamManagement jsm) {
+        private static Msg buildTestGetMessage(int s, int q) {
+            String data = "s" + s + "-q" + q;
+            MsgHeader h = new MsgHeader();
+            h["h"] = "h-" + data;
+            return new Msg(Subject(s), h, Encoding.UTF8.GetBytes(data));
+        }
 
-            AssertMessageInfo(1, 1, jsm.GetMessage(STREAM, 1));
-            AssertMessageInfo(1, 5, jsm.GetLastMessage(STREAM, Subject(1)));
-            AssertMessageInfo(2, 6, jsm.GetLastMessage(STREAM, Subject(2)));
+        private void ValidateGetMessage(IJetStreamManagement jsm, string stream, DateTime timeBeforeCreated) {
+            AssertMessageInfo(stream, 0, 1, jsm.GetMessage(stream, 1), timeBeforeCreated);
+            AssertMessageInfo(stream, 0, 5, jsm.GetLastMessage(stream, Subject(0)), timeBeforeCreated);
+            AssertMessageInfo(stream, 1, 6, jsm.GetLastMessage(stream, Subject(1)), timeBeforeCreated);
 
-            AssertMessageInfo(1, 1, jsm.GetNextMessage(STREAM, 0, Subject(1)));
-            AssertMessageInfo(2, 2, jsm.GetNextMessage(STREAM, 0, Subject(2)));
-            AssertMessageInfo(1, 1, jsm.GetFirstMessage(STREAM, Subject(1)));
-            AssertMessageInfo(2, 2, jsm.GetFirstMessage(STREAM, Subject(2)));
+            AssertMessageInfo(stream, 0, 1, jsm.GetNextMessage(stream, 0, Subject(0)), timeBeforeCreated);
+            AssertMessageInfo(stream, 1, 2, jsm.GetNextMessage(stream, 0, Subject(1)), timeBeforeCreated);
+            AssertMessageInfo(stream, 0, 1, jsm.GetNextMessage(stream, 0, Subject(0)), timeBeforeCreated);
+            AssertMessageInfo(stream, 1, 2, jsm.GetNextMessage(stream, 0, Subject(1)), timeBeforeCreated);
+            AssertMessageInfo(stream, 0, 1, jsm.GetFirstMessage(stream, Subject(0)), timeBeforeCreated);
+            AssertMessageInfo(stream, 1, 2, jsm.GetFirstMessage(stream, Subject(1)), timeBeforeCreated);
+            AssertMessageInfo(stream, 0, 1, jsm.GetFirstMessage(stream, timeBeforeCreated), timeBeforeCreated);
+            AssertMessageInfo(stream, 0, 1, jsm.GetFirstMessage(stream, timeBeforeCreated, Subject(0)), timeBeforeCreated);
+            AssertMessageInfo(stream, 1, 2, jsm.GetFirstMessage(stream, timeBeforeCreated, Subject(1)), timeBeforeCreated);
 
-            AssertMessageInfo(1, 1, jsm.GetNextMessage(STREAM, 1, Subject(1)));
-            AssertMessageInfo(2, 2, jsm.GetNextMessage(STREAM, 1, Subject(2)));
+            AssertMessageInfo(stream, 0, 1, jsm.GetNextMessage(stream, 1, Subject(0)), timeBeforeCreated);
+            AssertMessageInfo(stream, 1, 2, jsm.GetNextMessage(stream, 1, Subject(1)), timeBeforeCreated);
 
-            AssertMessageInfo(1, 3, jsm.GetNextMessage(STREAM, 2, Subject(1)));
-            AssertMessageInfo(2, 2, jsm.GetNextMessage(STREAM, 2, Subject(2)));
+            AssertMessageInfo(stream, 0, 3, jsm.GetNextMessage(stream, 2, Subject(0)), timeBeforeCreated);
+            AssertMessageInfo(stream, 1, 2, jsm.GetNextMessage(stream, 2, Subject(1)), timeBeforeCreated);
 
-            AssertMessageInfo(1, 5, jsm.GetNextMessage(STREAM, 5, Subject(1)));
-            AssertMessageInfo(2, 6, jsm.GetNextMessage(STREAM, 5, Subject(2)));
+            AssertMessageInfo(stream, 0, 5, jsm.GetNextMessage(stream, 5, Subject(0)), timeBeforeCreated);
+            AssertMessageInfo(stream, 1, 6, jsm.GetNextMessage(stream, 5, Subject(1)), timeBeforeCreated);
 
-            AssertStatus(10003, Assert.Throws<NATSJetStreamException>(() => jsm.GetMessage(STREAM, 0)));
-            AssertStatus(10037, Assert.Throws<NATSJetStreamException>(() => jsm.GetMessage(STREAM, 9)));
-            AssertStatus(10037, Assert.Throws<NATSJetStreamException>(() => jsm.GetLastMessage(STREAM, "not-a-subject")));
-            AssertStatus(10037, Assert.Throws<NATSJetStreamException>(() => jsm.GetFirstMessage(STREAM, "not-a-subject")));
-            AssertStatus(10037, Assert.Throws<NATSJetStreamException>(() => jsm.GetNextMessage(STREAM, 9, Subject(1))));
-            AssertStatus(10037, Assert.Throws<NATSJetStreamException>(() => jsm.GetNextMessage(STREAM, 1, "not-a-subject")));
+            AssertStatus(10003, Assert.Throws<NATSJetStreamException>(() => jsm.GetMessage(stream, 0)));
+            AssertStatus(10037, Assert.Throws<NATSJetStreamException>(() => jsm.GetMessage(stream, 9)));
+            AssertStatus(10037, Assert.Throws<NATSJetStreamException>(() => jsm.GetLastMessage(stream, "not-a-subject")));
+            AssertStatus(10037, Assert.Throws<NATSJetStreamException>(() => jsm.GetFirstMessage(stream, "not-a-subject")));
+            AssertStatus(10037, Assert.Throws<NATSJetStreamException>(() => jsm.GetNextMessage(stream, 9, Subject(0))));
+            AssertStatus(10037, Assert.Throws<NATSJetStreamException>(() => jsm.GetNextMessage(stream, 1, "not-a-subject")));
         }
 
         private void AssertStatus(int apiErrorCode, NATSJetStreamException e) {
             Assert.Equal(apiErrorCode, e.ApiErrorCode);
         }
         
-        private void AssertMessageInfo(int subj, ulong seq, MessageInfo mi) {
-            Assert.Equal(STREAM, mi.Stream);
+        private void AssertMessageInfo(string stream, int subj, ulong seq, MessageInfo mi, DateTime timeBeforeCreated) {
+            Assert.Equal(stream, mi.Stream);
             Assert.Equal(Subject(subj), mi.Subject);
             Assert.Equal(seq, mi.Sequence);
             Assert.Equal("s" + subj + "-q" + seq, Encoding.UTF8.GetString(mi.Data));

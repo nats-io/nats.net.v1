@@ -12,7 +12,7 @@
 
 # NATS - .NET V1 C# Client
 
-A [C# .NET](https://msdn.microsoft.com/en-us/vstudio/aa496123.aspx) client for the [NATS messaging system](https://nats.io) multi targetting `.NET4.6+` and `.NETStandard1.6`.
+A [C# .NET](https://msdn.microsoft.com/en-us/vstudio/aa496123.aspx) client for the [NATS messaging system](https://nats.io) multi targeting `.NET4.6+` and `.NETStandard1.6`.
 
 **Current Release**: 1.1.8 &nbsp; **Current Head**: 1.1.9
 
