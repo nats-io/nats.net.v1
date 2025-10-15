@@ -30,12 +30,7 @@ namespace NATS.Client.JetStream
         /// </summary>
         public long MaxBytes => Bytes;
 
-        public bool NoWait { get; }
-
-        protected FetchConsumeOptions(IBaseConsumeOptionsBuilder b) : base(b)
-        {
-            
-        }
+        protected FetchConsumeOptions(IBaseConsumeOptionsBuilder b) : base(b) {}
 
         /// <summary>
         /// Gets the FetchConsumeOptions builder.
