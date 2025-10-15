@@ -97,6 +97,7 @@ namespace NATS.Client.JetStream
         public const string LastSeq = "last_seq";
         public const string LastTs = "last_ts";
         public const string Leader = "leader";
+        public const string LeaderSince = "leader_since";
         public const string Level = "level";
         public const string Limit = "limit";
         public const string Limits = "limits";
@@ -164,6 +165,7 @@ namespace NATS.Client.JetStream
         public const string Purged = "purged";
         public const string PushBound = "push_bound";
         public const string QueueGroup = "queue_group";
+        public const string RaftGroup = "raft_group";
         public const string RateLimitBps = "rate_limit_bps";
         public const string ReplayPolicy = "replay_policy";
         public const string Replica = "replica";
@@ -200,6 +202,7 @@ namespace NATS.Client.JetStream
         public const string Subjects = "subjects";
         public const string SubjectsFilter = "subjects_filter";
         public const string Success = "success";
+        public const string SystemAccount = "system_account";
         public const string Tags = "tags";
         public const string TemplateOwner = "template_owner";
         public const string Tiers = "tiers";
@@ -209,6 +212,7 @@ namespace NATS.Client.JetStream
         public const string TlsRequired = Tls;
         public const string TlsAvailable = "tls_available";
         public const string Total = "total";
+        public const string TrafficAccount = "traffic_account";
         public const string Type = "type";
         public const string Version = "version";
     }

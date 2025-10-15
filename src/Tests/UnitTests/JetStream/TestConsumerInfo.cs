@@ -67,7 +67,11 @@ namespace UnitTests.JetStream
             ClusterInfo clusterInfo = ci.ClusterInfo;
             Assert.NotNull(clusterInfo);
             Assert.Equal("clustername", clusterInfo.Name);
+            Assert.Equal("raftgroupname", clusterInfo.RaftGroup);
             Assert.Equal("clusterleader", clusterInfo.Leader);
+            Assert.True(clusterInfo.SystemAccount);
+            Assert.Equal("trafficaccountname", clusterInfo.TrafficAccount);
+            Assert.Equal(AsDateTime("2025-08-29T19:33:21.163377Z"), clusterInfo.LeaderSince);
             IList<Replica> reps = clusterInfo.Replicas;
             Assert.NotNull(reps);
             Assert.Equal(2, reps.Count);
