@@ -117,6 +117,22 @@ namespace NATS.Client.KeyValue
         /// <param name="key">the key</param>
         /// <param name="expectedRevision">the expected last revision</param>
         void Purge(string key, ulong expectedRevision);
+        
+        /// <summary>
+        /// Purge all values/history from the specific key. 
+        /// </summary>
+        /// <param name="key">the key</param>
+        /// <param name="messageTtl">the individual ttl for the key</param>
+        void Purge(string key, MessageTtl messageTtl);
+        
+        /// <summary>
+        /// Purge all values/history from the specific key iff the key exists and its last revision matches the expected. 
+        /// </summary>
+        /// <param name="key">the key</param>
+        /// <param name="expectedRevision">the expected last revision</param>
+        /// <param name="messageTtl">the individual ttl for the key</param>
+        void Purge(string key, ulong expectedRevision, MessageTtl messageTtl);
+
 
         /// <summary>
         /// Watch updates for a specific key.

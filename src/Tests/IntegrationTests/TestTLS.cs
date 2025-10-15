@@ -29,7 +29,14 @@ namespace IntegrationTests
     /// </summary>
     public class TestTls : TestSuite<TlsSuiteContext>
     {
-        public TestTls(TlsSuiteContext context) : base(context) { }
+        // public TestTls(TlsSuiteContext context) : base(context) { }
+        private readonly ITestOutputHelper output;
+
+        public TestTls(ITestOutputHelper output, TlsSuiteContext context) : base(context)
+        {
+            this.output = output;
+            Console.SetOut(new TestBase.ConsoleWriter(output));
+        }
 
         // A hack to avoid issues with our test self signed cert.
         // We don't want to require the runner of the test to install the 
@@ -43,6 +50,7 @@ namespace IntegrationTests
             X509Certificate certificate, X509Chain chain,
             SslPolicyErrors sslPolicyErrors)
         {
+            Console.WriteLine($"verifyServerCert {sslPolicyErrors}");
             if (sslPolicyErrors == SslPolicyErrors.None)
                 return true;
 
@@ -53,6 +61,7 @@ namespace IntegrationTests
 #if NET46
             return serverCert.GetRawCertDataString().Equals(certificate.GetRawCertDataString());
 #else
+            Console.WriteLine($"verifyServerCert {serverCert.Issuer.Equals(certificate.Issuer)}");
             return serverCert.Issuer.Equals(certificate.Issuer);
 #endif
         }
