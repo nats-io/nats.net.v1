@@ -94,19 +94,25 @@ namespace UnitTests.JetStream
             
             // ClusterInfo ClusterInfo
             Assert.Equal("clustername", si.ClusterInfo.Name);
+            Assert.Equal("raftgroupname", si.ClusterInfo.RaftGroup);
             Assert.Equal("clusterleader", si.ClusterInfo.Leader);
+            Assert.True(si.ClusterInfo.SystemAccount);
+            Assert.Equal("trafficaccountname", si.ClusterInfo.TrafficAccount);
+            Assert.Equal(AsDateTime("2025-08-29T19:33:21.163377Z"), si.ClusterInfo.LeaderSince);
+
             Assert.Equal(2, si.ClusterInfo.Replicas.Count);
             Assert.Equal("name0", si.ClusterInfo.Replicas[0].Name);
             Assert.True(si.ClusterInfo.Replicas[0].Current);
             Assert.True(si.ClusterInfo.Replicas[0].Offline);
-            Assert.Equal(230000000000, si.ClusterInfo.Replicas[0].Active.Nanos);
+            Assert.Equal(230000000000L, si.ClusterInfo.Replicas[0].Active.Nanos);
             Assert.Equal(3, si.ClusterInfo.Replicas[0].Lag);
+
             Assert.Equal("name1", si.ClusterInfo.Replicas[1].Name);
             Assert.False(si.ClusterInfo.Replicas[1].Current);
             Assert.False(si.ClusterInfo.Replicas[1].Offline);
-            Assert.Equal(240000000000, si.ClusterInfo.Replicas[1].Active.Nanos);
+            Assert.Equal(240000000000L, si.ClusterInfo.Replicas[1].Active.Nanos);
             Assert.Equal(4, si.ClusterInfo.Replicas[1].Lag);
-            
+
             // MirrorInfo MirrorInfo
             Assert.Equal("mname", si.MirrorInfo.Name);
             Assert.Equal(16u, si.MirrorInfo.Lag);

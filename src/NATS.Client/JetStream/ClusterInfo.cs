@@ -11,7 +11,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
+using NATS.Client.Internals;
 using NATS.Client.Internals.SimpleJSON;
 
 namespace NATS.Client.JetStream
@@ -19,7 +21,11 @@ namespace NATS.Client.JetStream
     public sealed class ClusterInfo
     {
         public string Name { get; }
+        public string RaftGroup { get; }
         public string Leader { get; }
+        public DateTime? LeaderSince { get; }
+        public bool SystemAccount { get; }
+        public string TrafficAccount { get; }
         public List<Replica> Replicas { get; }
 
         internal static ClusterInfo OptionalInstance(JSONNode clusterNode)
@@ -30,17 +36,12 @@ namespace NATS.Client.JetStream
         private ClusterInfo(JSONNode clusterNode)
         {
             Name = clusterNode[ApiConstants.Name].Value;
+            RaftGroup = clusterNode[ApiConstants.RaftGroup].Value;
             Leader = clusterNode[ApiConstants.Leader].Value;
+            LeaderSince = JsonUtils.AsDate(clusterNode[ApiConstants.LeaderSince]);
+            SystemAccount = clusterNode[ApiConstants.SystemAccount].AsBool;
+            TrafficAccount = clusterNode[ApiConstants.TrafficAccount].Value;
             Replicas = Replica.OptionalListOf(clusterNode[ApiConstants.Replicas]);
-        }
-        
-        public override string ToString()
-        {
-            return "ClusterInfo{" +
-                   "Name='" + Name + '\'' +
-                   ", Leader='" + Leader + '\'' +
-                   ", Replicas=" + Replicas +
-                   '}';
         }
     }
 }
